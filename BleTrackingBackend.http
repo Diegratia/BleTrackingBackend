@@ -1,0 +1,6 @@
+@BleTrackingBackend_HostAddress = http://localhost:5242
+
+GET {{BleTrackingBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

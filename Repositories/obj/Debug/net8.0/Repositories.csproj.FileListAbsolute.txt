@@ -1,0 +1,17 @@
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.csproj.AssemblyReference.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.GeneratedMSBuildEditorConfig.editorconfig
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.AssemblyInfoInputs.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.AssemblyInfo.cs
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.csproj.CoreCompileInputs.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Repositories.deps.json
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Repositories.runtimeconfig.json
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Repositories.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Repositories.pdb
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Entities.Models.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/bin/Debug/net8.0/Entities.Models.pdb
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Reposito.787EC4B2.Up2Date
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/refint/Repositories.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.pdb
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.genruntimeconfig.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/ref/Repositories.dll
