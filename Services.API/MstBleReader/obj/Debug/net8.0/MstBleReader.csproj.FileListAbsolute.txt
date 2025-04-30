@@ -1,0 +1,8 @@
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.csproj.AssemblyReference.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.GeneratedMSBuildEditorConfig.editorconfig
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.AssemblyInfoInputs.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.AssemblyInfo.cs
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.csproj.CoreCompileInputs.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.MvcApplicationPartsAssemblyInfo.cs
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.MvcApplicationPartsAssemblyInfo.cache
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.sourcelink.json

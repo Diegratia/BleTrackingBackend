@@ -19,3 +19,4 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/Debug/net8.0/BusinessLogic.Services.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/Debug/net8.0/BusinessLogic.Services.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/Debug/net8.0/ref/BusinessLogic.Services.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/Debug/net8.0/BusinessLogic.Services.sourcelink.json

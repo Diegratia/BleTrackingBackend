@@ -15,3 +15,4 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/ref/Repositories.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/Debug/net8.0/Repositories.sourcelink.json

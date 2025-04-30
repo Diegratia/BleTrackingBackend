@@ -1,0 +1,6 @@
+@MstBleReader_HostAddress = http://localhost:5262
+
+GET {{MstBleReader_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

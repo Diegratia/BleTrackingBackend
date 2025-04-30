@@ -12,3 +12,4 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/ref/Data.ViewModels.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.sourcelink.json
