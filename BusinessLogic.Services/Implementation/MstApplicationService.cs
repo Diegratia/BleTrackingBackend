@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Implementation
     public class MstApplicationService : IMstApplicationService
     {
         private readonly BleTrackingDbContext _context;
-        private readonly IMapper _mapper; // Tambahkan IMapper
+        private readonly IMapper _mapper; 
 
         public MstApplicationService(BleTrackingDbContext context, IMapper mapper)
         {
