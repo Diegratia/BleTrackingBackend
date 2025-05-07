@@ -11,85 +11,72 @@ namespace BusinessLogic.Services.Implementation
 {
     public class MstApplicationService : IMstApplicationService
     {
-        private readonly BleTrackingDbContext _context;
-        private readonly IMapper _mapper; 
+        private readonly MstApplicationRepository _applicationRepository;
+        private readonly UserGroupRepository _userGroupRepository;
+        private readonly UserRepository _userRepository;
+        private readonly IMapper _mapper;
 
-        public MstApplicationService(BleTrackingDbContext context, IMapper mapper)
+        public MstApplicationService(
+            MstApplicationRepository applicationRepository,
+            UserGroupRepository userGroupRepository,
+            UserRepository userRepository,
+            IMapper mapper)
         {
-            _context = context;
+            _applicationRepository = applicationRepository;
+            _userGroupRepository = userGroupRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
         public async Task<IEnumerable<MstApplicationDto>> GetAllApplicationsAsync()
         {
-            var applications = await _context.MstApplications.ToListAsync();
+            var applications = await _applicationRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstApplicationDto>>(applications);
         }
 
         public async Task<MstApplicationDto> GetApplicationByIdAsync(Guid id)
         {
-            var application = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == id);
-            return _mapper.Map<MstApplicationDto>(application);
+            var application = await _applicationRepository.GetByIdAsync(id);
+            return application == null ? null : _mapper.Map<MstApplicationDto>(application);
         }
 
-        // public async Task<MstApplicationDto> CreateApplicationAsync(MstApplicationCreateDto dto)
-        // {
-        //     if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-        //     // Map dari DTO ke model
-        //     var application = _mapper.Map<MstApplication>(dto);
-        //     application.Id = Guid.NewGuid(); // Tetap hasilkan Id di server
-        //     application.ApplicationStatus = 1;
-
-        //     _context.MstApplications.Add(application);
-        //     await _context.SaveChangesAsync();
-
-        //     // Map kembali ke DTO untuk respons
-        //     return _mapper.Map<MstApplicationDto>(application);
-        // }
-
-                public async Task<MstApplicationDto> CreateApplicationAsync(MstApplicationCreateDto dto)
+        public async Task<MstApplicationDto> CreateApplicationAsync(MstApplicationCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            // Map dari DTO ke model
             var application = _mapper.Map<MstApplication>(dto);
             application.Id = Guid.NewGuid();
             application.ApplicationStatus = 1;
 
-            _context.MstApplications.Add(application);
-            await _context.SaveChangesAsync(); // Simpan aplikasi terlebih dahulu
+            var createdApplication = await _applicationRepository.AddAsync(application);
 
-            // Cari UserGroup dengan LevelPriority.Primary yang terkait dengan application ini
-            var userGroup = await _context.UserGroups
-                .FirstOrDefaultAsync(ug => ug.ApplicationId == application.Id && ug.LevelPriority == LevelPriority.Primary);
+            var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(
+                createdApplication.Id, LevelPriority.Primary);
 
-          if (userGroup == null)
-    {
-        userGroup = new UserGroup
-        {
-            Id = Guid.NewGuid(),
-            Name = $"Primary Group for {application.Id}",
-            LevelPriority = LevelPriority.Primary, // Enum bernilai 1
-            ApplicationId = application.Id,
-            CreatedBy = "system",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedBy = "system",
-            UpdatedAt = DateTime.UtcNow,
-            Status = 1
-        };
-        _context.UserGroups.Add(userGroup);
-        await _context.SaveChangesAsync();
-    }
+            if (userGroup == null)
+            {
+                userGroup = new UserGroup
+                {
+                    Id = Guid.NewGuid(),
+                    Name = $"Primary Group for {createdApplication.Id}",
+                    LevelPriority = LevelPriority.Primary,
+                    ApplicationId = createdApplication.Id,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                await _userGroupRepository.AddAsync(userGroup);
+            }
 
-            // Buat User dengan role Primary dan assign ke UserGroup yang sudah ada
             var primaryUser = new User
             {
                 Id = Guid.NewGuid(),
-                Username = $"primary_{application.Id}",
-                Password = "hashed_default_password", 
+                Username = $"primary_{createdApplication.Id}",
+                Password = "hashed_default_password",
                 IsCreatedPassword = 0,
-                Email = $"primary_{application.Id}@example.com",
+                Email = $"primary_{createdApplication.Id}@example.com",
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = Guid.NewGuid().ToString(),
                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
@@ -99,40 +86,27 @@ namespace BusinessLogic.Services.Implementation
                 GroupId = userGroup.Id
             };
 
-            _context.Users.Add(primaryUser);
-            await _context.SaveChangesAsync(); // Simpan User
+            await _userRepository.AddAsync(primaryUser);
 
-            // Map kembali ke DTO untuk respons
-            return _mapper.Map<MstApplicationDto>(application);
+            return _mapper.Map<MstApplicationDto>(createdApplication);
         }
 
         public async Task UpdateApplicationAsync(Guid id, MstApplicationUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var application = await _context.MstApplications.FindAsync(id);
+            var application = await _applicationRepository.GetByIdAsync(id);
             if (application == null)
-            {
-                throw new KeyNotFoundException($"Application with ID {id} not found.");
-            }
+                throw new KeyNotFoundException($"Application with ID {id} not found");
 
-            // Map dari DTO ke model yang sudah ada
             _mapper.Map(dto, application);
 
-            await _context.SaveChangesAsync();
+            await _applicationRepository.UpdateAsync(application);
         }
 
         public async Task DeleteApplicationAsync(Guid id)
         {
-            var application = await _context.MstApplications.FindAsync(id);
-            if (application == null)
-            {
-                throw new KeyNotFoundException($"Application with ID {id} not found.");
-            }
-
-            application.ApplicationStatus = 0;
-            // _context.MstApplications.Remove(application);
-            await _context.SaveChangesAsync();
+            await _applicationRepository.DeleteAsync(id);
         }
     }
 }

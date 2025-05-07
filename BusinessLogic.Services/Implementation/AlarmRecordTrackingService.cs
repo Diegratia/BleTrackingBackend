@@ -11,55 +11,55 @@ namespace BusinessLogic.Services.Implementation
 {
     public class AlarmRecordTrackingService : IAlarmRecordTrackingService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly AlarmRecordTrackingRepository _repository;
         private readonly IMapper _mapper;
 
-        public AlarmRecordTrackingService(BleTrackingDbContext context, IMapper mapper)
+        public AlarmRecordTrackingService(AlarmRecordTrackingRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<AlarmRecordTrackingDto> GetByIdAsync(Guid id)
         {
-            var alarm = await _context.AlarmRecordTrackings
-                .Include(a => a.Application)
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var alarm = await _repository.GetByIdAsync(id);
             return alarm == null ? null : _mapper.Map<AlarmRecordTrackingDto>(alarm);
         }
 
         public async Task<IEnumerable<AlarmRecordTrackingDto>> GetAllAsync()
         {
-            var alarms = await _context.AlarmRecordTrackings
-                .Include(a => a.Application)
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .ToListAsync();
+            var alarms = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<AlarmRecordTrackingDto>>(alarms);
         }
 
         public async Task<AlarmRecordTrackingDto> CreateAsync(AlarmRecordTrackingCreateDto createDto)
         {
             // Validasi relasi
-            var visitor = await _context.Visitors.FirstOrDefaultAsync(v => v.Id == createDto.VisitorId);
-            if (visitor == null) throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
+            var visitor = await _repository.GetVisitorByIdAsync(createDto.VisitorId);
+            if (visitor == null)
+                throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
 
-            var reader = await _context.MstBleReaders.FirstOrDefaultAsync(r => r.Id == createDto.ReaderId);
-            if (reader == null) throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
+            var reader = await _repository.GetReaderByIdAsync(createDto.ReaderId);
+            if (reader == null)
+                throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
 
-            var maskedArea = await _context.FloorplanMaskedAreas.FirstOrDefaultAsync(a => a.Id == createDto.FloorplanMaskedAreaId);
-            if (maskedArea == null) throw new ArgumentException($"Area with ID {createDto.FloorplanMaskedAreaId} not found.");
+            var maskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(createDto.FloorplanMaskedAreaId);
+            if (maskedArea == null)
+                throw new ArgumentException($"Area with ID {createDto.FloorplanMaskedAreaId} not found.");
 
-            var app = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == createDto.ApplicationId);
-            if (app == null) throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
+            var app = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
+            if (app == null)
+                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             var alarm = _mapper.Map<AlarmRecordTracking>(createDto);
 
-         // Set nilai default untuk properti yang tidak ada di DTO
+            // Set nilai default untuk properti yang tidak ada di DTO
+            alarm.Id = Guid.NewGuid();
+            alarm.Status = 1;
+            alarm.CreatedBy = "System";
+            alarm.CreatedAt = DateTime.UtcNow;
+            alarm.UpdatedBy = "System";
+            alarm.UpdatedAt = DateTime.UtcNow;
             alarm.Timestamp = DateTime.UtcNow;
             alarm.IdleTimestamp = DateTime.UtcNow;
             alarm.DoneTimestamp = DateTime.MaxValue;
@@ -73,59 +73,55 @@ namespace BusinessLogic.Services.Implementation
             alarm.InvestigatedBy = "System";
             alarm.InvestigatedDoneAt = DateTime.MaxValue;
 
-            _context.AlarmRecordTrackings.Add(alarm);
-            await _context.SaveChangesAsync();
-
-            var savedAlarm = await _context.AlarmRecordTrackings
-                .Include(a => a.Application)
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(a => a.Id == alarm.Id);
-            return _mapper.Map<AlarmRecordTrackingDto>(savedAlarm);
+            await _repository.AddAsync(alarm);
+            return _mapper.Map<AlarmRecordTrackingDto>(alarm);
         }
 
         public async Task UpdateAsync(Guid id, AlarmRecordTrackingUpdateDto updateDto)
         {
-            var alarm = await _context.AlarmRecordTrackings.FindAsync(id);
-            if (alarm == null) throw new KeyNotFoundException("Alarm record not found");
+            var alarm = await _repository.GetByIdAsync(id);
+            if (alarm == null)
+                throw new KeyNotFoundException("Alarm record not found");
 
             // Validasi relasi jika berubah
             if (alarm.VisitorId != updateDto.VisitorId)
             {
-                var visitor = await _context.Visitors.FirstOrDefaultAsync(v => v.Id == updateDto.VisitorId);
-                if (visitor == null) throw new ArgumentException($"Visitor with ID {updateDto.VisitorId} not found.");
+                var visitor = await _repository.GetVisitorByIdAsync(updateDto.VisitorId);
+                if (visitor == null)
+                    throw new ArgumentException($"Visitor with ID {updateDto.VisitorId} not found.");
             }
 
             if (alarm.ReaderId != updateDto.ReaderId)
             {
-                var reader = await _context.MstBleReaders.FirstOrDefaultAsync(r => r.Id == updateDto.ReaderId);
-                if (reader == null) throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
+                var reader = await _repository.GetReaderByIdAsync(updateDto.ReaderId);
+                if (reader == null)
+                    throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
             }
 
             if (alarm.FloorplanMaskedAreaId != updateDto.FloorplanMaskedAreaId)
             {
-                var maskedArea = await _context.FloorplanMaskedAreas.FirstOrDefaultAsync(a => a.Id == updateDto.FloorplanMaskedAreaId);
-                if (maskedArea == null) throw new ArgumentException($"Masked Area with ID {updateDto.FloorplanMaskedAreaId} not found.");
+                var maskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(updateDto.FloorplanMaskedAreaId);
+                if (maskedArea == null)
+                    throw new ArgumentException($"Masked Area with ID {updateDto.FloorplanMaskedAreaId} not found.");
             }
 
             if (alarm.ApplicationId != updateDto.ApplicationId)
             {
-                var app = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == updateDto.ApplicationId);
-                if (app == null) throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
+                var app = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
+                if (app == null)
+                    throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
             }
 
+            alarm.UpdatedBy = "System";
+            alarm.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, alarm);
-            await _context.SaveChangesAsync();
+
+            await _repository.UpdateAsync(alarm);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var alarm = await _context.AlarmRecordTrackings.FindAsync(id);
-            if (alarm == null) throw new KeyNotFoundException("Alarm record not found");
-
-            _context.AlarmRecordTrackings.Remove(alarm);
-            await _context.SaveChangesAsync();
+            await _repository.SoftDeleteAsync(id);
         }
     }
 }

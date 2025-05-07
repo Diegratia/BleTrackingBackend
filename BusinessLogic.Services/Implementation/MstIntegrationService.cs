@@ -11,97 +11,85 @@ namespace BusinessLogic.Services.Implementation
 {
     public class MstIntegrationService : IMstIntegrationService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly MstIntegrationRepository _repository;
         private readonly IMapper _mapper;
 
-        public MstIntegrationService(BleTrackingDbContext context, IMapper mapper)
+        public MstIntegrationService(MstIntegrationRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<MstIntegrationDto> GetByIdAsync(Guid id)
         {
-           var integration = await _context.MstIntegrations
-                .Include(i => i.Brand) // Memuat Brand
-                .FirstOrDefaultAsync(i => i.Id == id);
+            var integration = await _repository.GetByIdAsync(id);
             return integration == null ? null : _mapper.Map<MstIntegrationDto>(integration);
         }
 
         public async Task<IEnumerable<MstIntegrationDto>> GetAllAsync()
         {
-          var integrations = await _context.MstIntegrations
-                .Include(i => i.Brand) // Memuat Brand
-                .ToListAsync();
+            var integrations = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstIntegrationDto>>(integrations);
         }
 
         public async Task<MstIntegrationDto> CreateAsync(MstIntegrationCreateDto createDto)
         {
-           // Validasi BrandId
-            var brand = await _context.MstBrands.FirstOrDefaultAsync(b => b.Id == createDto.BrandId);
+            // Validasi BrandId
+            var brand = await _repository.GetBrandByIdAsync(createDto.BrandId);
             if (brand == null)
                 throw new ArgumentException($"Brand with ID {createDto.BrandId} not found.");
-            //validasi untuuk id application
-            var application = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == createDto.ApplicationId);
+
+            // Validasi ApplicationId
+            var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             var integration = _mapper.Map<MstIntegration>(createDto);
+            integration.Id = Guid.NewGuid();
             integration.Status = 1;
-            integration.CreatedBy ??= "";
-            integration.UpdatedBy ??= "";
-       
-           _context.MstIntegrations.Add(integration);
-            await _context.SaveChangesAsync();
+            integration.CreatedBy = "System";
+            integration.CreatedAt = DateTime.UtcNow;
+            integration.UpdatedBy = "System";
+            integration.UpdatedAt = DateTime.UtcNow;
 
-            // Muat kembali dengan brand dan applicaiton untuk DTO
-            var savedIntegration = await _context.MstIntegrations
-                .Include(i => i.Brand)
-                .Include(i => i.Application)
-                .FirstOrDefaultAsync(i => i.Id == integration.Id);
-            return _mapper.Map<MstIntegrationDto>(savedIntegration);    
+            await _repository.AddAsync(integration);
+            return _mapper.Map<MstIntegrationDto>(integration);
         }
 
         public async Task UpdateAsync(Guid id, MstIntegrationUpdateDto updateDto)
         {
-            var integration = await _context.MstIntegrations.FindAsync(id);
+            var integration = await _repository.GetByIdAsync(id);
             if (integration == null)
                 throw new KeyNotFoundException("Integration not found");
 
-          // Validasi BrandId jika berubah
+            // Validasi BrandId jika berubah
             if (integration.BrandId != updateDto.BrandId)
             {
-                var brand = await _context.MstBrands.FirstOrDefaultAsync(b => b.Id == updateDto.BrandId);
+                var brand = await _repository.GetBrandByIdAsync(updateDto.BrandId);
                 if (brand == null)
                     throw new ArgumentException($"Brand with ID {updateDto.BrandId} not found.");
-                // Tidak perlu set BrandData, cukup update BrandId
                 integration.BrandId = updateDto.BrandId;
             }
 
+            // Validasi ApplicationId jika berubah
             if (integration.ApplicationId != updateDto.ApplicationId)
             {
-                var application = await _context.MstApplications.FirstOrDefaultAsync(b => b.Id == updateDto.ApplicationId);
+                var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
                 if (application == null)
                     throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
                 integration.ApplicationId = updateDto.ApplicationId;
             }
 
-            integration.UpdatedBy ??= "";
+            integration.UpdatedBy = "System";
+            integration.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, integration);
-            await _context.SaveChangesAsync();
+
+            await _repository.UpdateAsync(integration);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var integration = await _context.MstIntegrations.FindAsync(id);
-            if (integration == null)
-                throw new KeyNotFoundException("Integration not found");
-
-            integration.Status = 0;
-
-            // _context.MstIntegrations.Remove(integration);
-            await _context.SaveChangesAsync();
+            await _repository.SoftDeleteAsync(id);
         }
     }
 }

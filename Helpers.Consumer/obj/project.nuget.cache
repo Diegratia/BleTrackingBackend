@@ -1,16 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "PBRW1d93Zmg=",
+  "dgSpecHash": "XvpHkStjgZI=",
   "success": true,
-  "projectFilePath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+  "projectFilePath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
   "expectedPackageFiles": [
-    "/Users/developerpci/.nuget/packages/microsoft.aspnetcore.openapi/8.0.13/microsoft.aspnetcore.openapi.8.0.13.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/microsoft.extensions.apidescription.server/6.0.5/microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/microsoft.openapi/1.6.14/microsoft.openapi.1.6.14.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/swashbuckle.aspnetcore/6.6.2/swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/swashbuckle.aspnetcore.swagger/6.6.2/swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.6.2/swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
-    "/Users/developerpci/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.6.2/swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512"
+    "C:\\Users\\Diegratia\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.13\\microsoft.aspnetcore.openapi.8.0.13.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\microsoft.openapi\\1.6.14\\microsoft.openapi.1.6.14.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\swashbuckle.aspnetcore\\6.6.2\\swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.6.2\\swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.6.2\\swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
+    "C:\\Users\\Diegratia\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.6.2\\swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512"
   ],
   "logs": []
 }

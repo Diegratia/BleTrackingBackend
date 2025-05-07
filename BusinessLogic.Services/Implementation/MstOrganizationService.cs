@@ -11,25 +11,25 @@ namespace BusinessLogic.Services.Implementation
 {
     public class MstOrganizationService : IMstOrganizationService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly MstOrganizationRepository _repository;
         private readonly IMapper _mapper;
 
-        public MstOrganizationService(BleTrackingDbContext context, IMapper mapper)
+        public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<IEnumerable<MstOrganizationDto>> GetAllOrganizationsAsync()
         {
-            var organizations = await _context.MstOrganizations.ToListAsync();
+            var organizations = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
         }
 
         public async Task<MstOrganizationDto> GetOrganizationByIdAsync(Guid id)
         {
-            var organization = await _context.MstOrganizations.FirstOrDefaultAsync(o => o.Id == id);
-            return _mapper.Map<MstOrganizationDto>(organization);
+            var organization = await _repository.GetByIdAsync(id);
+            return organization == null ? null : _mapper.Map<MstOrganizationDto>(organization);
         }
 
         public async Task<MstOrganizationDto> CreateOrganizationAsync(MstOrganizationCreateDto dto)
@@ -38,15 +38,13 @@ namespace BusinessLogic.Services.Implementation
 
             var organization = _mapper.Map<MstOrganization>(dto);
             organization.Id = Guid.NewGuid();
-            organization.Status = 1; 
+            organization.Status = 1;
             organization.CreatedBy = ""; 
             organization.CreatedAt = DateTime.UtcNow;
-            organization.UpdatedBy = ""; 
+            organization.UpdatedBy = "";
             organization.UpdatedAt = DateTime.UtcNow;
 
-            _context.MstOrganizations.Add(organization);
-            await _context.SaveChangesAsync();
-
+            await _repository.AddAsync(organization);
             return _mapper.Map<MstOrganizationDto>(organization);
         }
 
@@ -54,34 +52,28 @@ namespace BusinessLogic.Services.Implementation
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var organization = await _context.MstOrganizations.FindAsync(id);
-            if (organization == null || organization.Status == 0) 
-            {
+            var organization = await _repository.GetByIdAsync(id);
+            if (organization == null || organization.Status == 0)
                 throw new KeyNotFoundException($"Organization with ID {id} not found or has been deleted.");
-            }
 
-          
-            organization.UpdatedBy = ""; 
+            organization.UpdatedBy = "";
             organization.UpdatedAt = DateTime.UtcNow;
-            
-              _mapper.Map(dto, organization);
+            _mapper.Map(dto, organization);
 
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(organization);
         }
 
         public async Task DeleteOrganizationAsync(Guid id)
         {
-            var organization = await _context.MstOrganizations.FindAsync(id);
-            if (organization == null || organization.Status == 0) 
-            {
+            var organization = await _repository.GetByIdAsync(id);
+            if (organization == null || organization.Status == 0)
                 throw new KeyNotFoundException($"Organization with ID {id} not found or already deleted.");
-            }
 
             organization.Status = 0;
-            organization.UpdatedBy = ""; 
+            organization.UpdatedBy = "";
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(organization);
         }
     }
 }

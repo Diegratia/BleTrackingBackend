@@ -1,11 +1,13 @@
 
+using Microsoft.AspNetCore.Http;
+
 namespace Data.ViewModels
 {
     public class MstFloorDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
-        public string BuildingId { get; set; }
+        public Guid BuildingId { get; set; }
         public string Name { get; set; }
         public string FloorImage { get; set; }
         public long PixelX { get; set; }
@@ -23,7 +25,7 @@ namespace Data.ViewModels
 
     public class MstFloorCreateDto
         {
-            public string BuildingId { get; set; }
+            public Guid BuildingId { get; set; }
             public string Name { get; set; }
             public IFormFile FloorImage { get; set; }
             public long PixelX { get; set; }
@@ -36,7 +38,7 @@ namespace Data.ViewModels
 
         public class MstFloorUpdateDto
         {
-            public string BuildingId { get; set; }
+            public Guid BuildingId { get; set; }
             public string Name { get; set; }
             public IFormFile FloorImage { get; set; }
             public long PixelX { get; set; }

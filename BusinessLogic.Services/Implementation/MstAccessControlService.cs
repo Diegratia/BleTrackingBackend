@@ -11,25 +11,24 @@ namespace BusinessLogic.Services.Implementation
 {
     public class MstAccessControlService : IMstAccessControlService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly MstAccessControlRepository _repository;
         private readonly IMapper _mapper;
 
-        public MstAccessControlService(BleTrackingDbContext context, IMapper mapper)
+        public MstAccessControlService(MstAccessControlRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<MstAccessControlDto> GetByIdAsync(Guid id)
         {
-            var accessControl = await _context.MstAccessControls
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var accessControl = await _repository.GetByIdAsync(id);
             return accessControl == null ? null : _mapper.Map<MstAccessControlDto>(accessControl);
         }
 
         public async Task<IEnumerable<MstAccessControlDto>> GetAllAsync()
         {
-            var accessControls = await _context.MstAccessControls.ToListAsync();
+            var accessControls = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstAccessControlDto>>(accessControls);
         }
 
@@ -37,37 +36,33 @@ namespace BusinessLogic.Services.Implementation
         {
             var accessControl = _mapper.Map<MstAccessControl>(createDto);
             
-             accessControl.Status = 1;
-             accessControl.CreatedBy = "";
-             accessControl.UpdatedBy = "";
+            accessControl.Id = Guid.NewGuid();
+            accessControl.Status = 1;
+            accessControl.CreatedBy = "System";
+            accessControl.CreatedAt = DateTime.UtcNow;
+            accessControl.UpdatedBy = "System";
+            accessControl.UpdatedAt = DateTime.UtcNow;
 
-            _context.MstAccessControls.Add(accessControl);
-            await _context.SaveChangesAsync();
+            await _repository.AddAsync(accessControl);
             return _mapper.Map<MstAccessControlDto>(accessControl);
         }
 
         public async Task UpdateAsync(Guid id, MstAccessControlUpdateDto updateDto)
         {
-            var accessControl = await _context.MstAccessControls.FindAsync(id);
+            var accessControl = await _repository.GetByIdAsync(id);
             if (accessControl == null)
                 throw new KeyNotFoundException("Access Control not found");
 
-            accessControl.UpdatedBy = "";
+            accessControl.UpdatedBy = "System";
+            accessControl.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, accessControl);
-            // _context.MstAccessControls.Update(accessControl);
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(accessControl);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var accessControl = await _context.MstAccessControls.FindAsync(id);
-            if (accessControl == null)
-                throw new KeyNotFoundException("Access Control not found");
-
-            accessControl.Status = 0;
-            // _context.MstAccessControls.Remove(accessControl);
-            await _context.SaveChangesAsync();
+            await _repository.SoftDeleteAsync(id);
         }
     }
 }

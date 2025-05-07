@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Data.ViewModels
 {
     public class MstMemberDto

@@ -2,6 +2,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
@@ -11,27 +12,26 @@ namespace BusinessLogic.Services.Implementation
 {
     public class MstFloorService : IMstFloorService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly MstFloorRepository _repository;
         private readonly IMapper _mapper;
-        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" }; // tipe gambar
-        private const long MaxFileSize = 1 * 1024 * 1024; // maksimal 1mb
+        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
 
-        public MstFloorService(BleTrackingDbContext context, IMapper mapper)
+        public MstFloorService(MstFloorRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<MstFloorDto> GetByIdAsync(Guid id)
         {
-            var floor = await _context.MstFloors
-                .FirstOrDefaultAsync(f => f.Id == id);
+            var floor = await _repository.GetByIdAsync(id);
             return floor == null ? null : _mapper.Map<MstFloorDto>(floor);
         }
 
         public async Task<IEnumerable<MstFloorDto>> GetAllAsync()
         {
-            var floors = await _context.MstFloors.ToListAsync();
+            var floors = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstFloorDto>>(floors);
         }
 
@@ -39,102 +39,123 @@ namespace BusinessLogic.Services.Implementation
         {
             var floor = _mapper.Map<MstFloor>(createDto);
 
-            // upload gambar
+            // Upload gambar
             if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
             {
                 // Validasi tipe file
-                if (!_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
+                if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                    // Validasi ukuran file
+                // Validasi ukuran file
                 if (createDto.FloorImage.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 1 MB limit.");
 
-                // folder penyimpanan di lokal server
+                // Folder penyimpanan
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-                Directory.CreateDirectory(uploadDir); // akan membuat directory jika belum ada
+                Directory.CreateDirectory(uploadDir);
 
-                // buat nama file unik
-                var fileName = $"{Guid.NewGuid()}_{createDto.FloorImage.FileName}";
+                // Buat nama file unik
+                var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadDir, fileName);
 
-                // simpan file ke lokal
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                // Simpan file
+                try
                 {
-                    await createDto.FloorImage.CopyToAsync(stream);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createDto.FloorImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
                 }
 
-                // simpan path relatif ke database
+                // Simpan path relatif
                 floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
             }
 
-            floor.CreatedBy = "";
-            floor.UpdatedBy = "";
+            floor.Id = Guid.NewGuid();
             floor.Status = 1;
+            floor.CreatedBy = "System";
+            floor.CreatedAt = DateTime.UtcNow;
+            floor.UpdatedBy = "System";
+            floor.UpdatedAt = DateTime.UtcNow;
 
-            _context.MstFloors.Add(floor);
-            await _context.SaveChangesAsync();
+            await _repository.AddAsync(floor);
             return _mapper.Map<MstFloorDto>(floor);
         }
 
         public async Task<MstFloorDto> UpdateAsync(Guid id, MstFloorUpdateDto updateDto)
         {
-            var floor = await _context.MstFloors.FindAsync(id);
+            var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
                 throw new KeyNotFoundException("Floor not found");
 
-                 // Validasi tipe file
-                if (!_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
+            // Tangani update gambar jika ada
+            if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
+            {
+                // Validasi tipe file
+                if (string.IsNullOrEmpty(updateDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 // Validasi ukuran file
                 if (updateDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 2 MB limit.");
+                    throw new ArgumentException("File size exceeds 1 MB limit.");
 
-                // Tangani update gambar jika ada
-            if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
-            {
+                // Folder penyimpanan
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
                 Directory.CreateDirectory(uploadDir);
 
-                // Hapus file lama jika ada (opsional)
+                // Hapus file lama jika ada
                 if (!string.IsNullOrEmpty(floor.FloorImage))
                 {
                     var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floor.FloorImage.TrimStart('/'));
                     if (File.Exists(oldFilePath))
-                        File.Delete(oldFilePath);
+                    {
+                        try
+                        {
+                            File.Delete(oldFilePath);
+                        }
+                        catch (IOException ex)
+                        {
+                            throw new IOException("Failed to delete old image file.", ex);
+                        }
+                    }
                 }
 
                 // Simpan file baru
-                var fileName = $"{Guid.NewGuid()}_{updateDto.FloorImage.FileName}";
+                var fileExtension = Path.GetExtension(updateDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadDir, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await updateDto.FloorImage.CopyToAsync(stream);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await updateDto.FloorImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
                 }
 
                 floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
             }
 
-             floor.UpdatedBy = "";  
+            floor.UpdatedBy = "System";
+            floor.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, floor);
-           
 
-            // _context.MstFloors.Update(floor);
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(floor);
             return _mapper.Map<MstFloorDto>(floor);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var floor = await _context.MstFloors.FindAsync(id);
-            if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
-
-            floor.Status = 0;
-            // _context.MstFloors.Remove(floor);
-            await _context.SaveChangesAsync();
+            await _repository.SoftDeleteAsync(id);
         }
     }
 }

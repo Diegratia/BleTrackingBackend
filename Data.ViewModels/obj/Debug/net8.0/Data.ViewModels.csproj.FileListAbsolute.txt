@@ -13,3 +13,12 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/ref/Data.ViewModels.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.sourcelink.json
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.csproj.AssemblyReference.cache
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.GeneratedMSBuildEditorConfig.editorconfig
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.AssemblyInfoInputs.cache
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.AssemblyInfo.cs
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.csproj.CoreCompileInputs.cache
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.sourcelink.json
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.dll
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\refint\Data.ViewModels.dll
+E:\Berkas\Gawe\BleTrackingBackend\Data.ViewModels\obj\Debug\net8.0\Data.ViewModels.pdb

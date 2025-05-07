@@ -1,42 +1,52 @@
-    using AutoMapper;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.IdentityModel.Tokens;
-    using System;
-    using System.IdentityModel.Tokens.Jwt;
-    using System.Security.Claims;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Repositories.DbContexts;
-    using Entities.Models;
-    using Data.ViewModels;
-   
-    using BCrypt.Net;
+using AutoMapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using Repositories.Repository;
+using Entities.Models;
+using Data.ViewModels;
+using BCrypt.Net;
+using Microsoft.AspNetCore.Http;
 
- namespace BusinessLogic.Services.Interface
+namespace BusinessLogic.Services.Interface
+{
+    public interface IAuthService
     {
-            public interface IAuthService
-        {
-            Task<AuthResponseDto> LoginAsync(LoginDto dto);
-            Task<AuthResponseDto> RegisterAsync(RegisterDto dto); // Tambahkan ini
-        }
-
-
+        Task<AuthResponseDto> LoginAsync(LoginDto dto);
+        Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
+    }
 
     public class AuthService : IAuthService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly UserRepository _userRepository;
+        private readonly UserGroupRepository _userGroupRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        private readonly IHttpContextAccessor _httpContextAccessor; // Tambahkan untuk akses token
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
+        /*************  ✨ Windsurf Command ⭐  *************/
+        /// <summary>
+        /// Constructor for AuthService.
+        /// </summary>
+        /// <param name="userRepository">Repository for user operations.</param>
+        /// <param name="userGroupRepository">Repository for user group operations.</param>
+        /// <param name="mapper">Mapper for mapping between models and view models.</param>
+        /// <param name="configuration">Configuration for the application.</param>
+        /// <param name="httpContextAccessor">Accessor for getting the current HTTP context.</param>
+        /*******  bf336e64-480f-4912-bf6f-facdb2c87530  *******/
         public AuthService(
-            BleTrackingDbContext context, 
-            IMapper mapper, 
-            IConfiguration configuration, 
+            UserRepository userRepository,
+            UserGroupRepository userGroupRepository,
+            IMapper mapper,
+            IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _userRepository = userRepository;
+            _userGroupRepository = userGroupRepository;
             _mapper = mapper;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
@@ -44,9 +54,7 @@
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var user = await _context.Users
-                .Include(u => u.Group)
-                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
                 throw new Exception("Invalid email or password.");
             if (user.StatusActive != StatusActive.Active)
@@ -55,7 +63,7 @@
                 throw new Exception("Email not confirmed.");
 
             user.LastLoginAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await _userRepository.UpdateAsync(user);
 
             var token = GenerateJwtToken(user);
             return new AuthResponseDto
@@ -73,32 +81,26 @@
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
             // Cek apakah email sudah ada
-            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+            if (await _userRepository.EmailExistsAsync(dto.Email))
                 throw new Exception("Email is already registered.");
 
-            // ambil info dari token 
+            // Ambil info dari token
             var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(currentUserId))
                 throw new UnauthorizedAccessException("User not authenticated.");
 
-            var currentUser = await _context.Users
-                .Include(u => u.Group)
-                .FirstOrDefaultAsync(u => u.Id == Guid.Parse(currentUserId));
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
             if (currentUser == null)
                 throw new UnauthorizedAccessException("Current user not found.");
 
-            // cek role
+            // Cek role
             var currentUserRole = currentUser.Group?.LevelPriority;
             if (currentUserRole == LevelPriority.Primary)
             {
-                // jika role primary cuma bisa pilih role usercreated
-                var targetGroup = await _context.UserGroups
-                    .FirstOrDefaultAsync(g => g.Id == dto.GroupId);
-                if (targetGroup == null || targetGroup.LevelPriority != LevelPriority.UserCreated)
-                    throw new UnauthorizedAccessException("Users with Primary role can only create accounts with UserCreated role.");
+                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated);
             }
 
-            // buat akun
+            // Buat akun
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
@@ -106,7 +108,7 @@
                 Email = dto.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 IsCreatedPassword = 1,
-                IsEmailConfirmation = 0, // Harus konfirmasi email terlebih dahulu
+                IsEmailConfirmation = 0,
                 EmailConfirmationCode = Guid.NewGuid().ToString(),
                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
                 EmailConfirmationAt = DateTime.UtcNow,
@@ -115,13 +117,7 @@
                 GroupId = dto.GroupId
             };
 
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-
-            // load group
-    newUser.Group = await _context.UserGroups.FirstOrDefaultAsync(g => g.Id == newUser.GroupId);
-    if (newUser.Group == null)
-        throw new Exception("Assigned group not found.");
+            await _userRepository.AddAsync(newUser);
 
             var token = GenerateJwtToken(newUser);
             return new AuthResponseDto
@@ -151,7 +147,7 @@
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim("groupId", user.GroupId.ToString()),
-                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()) // Tambahkan role ke token
+                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString())
             };
 
             var token = new JwtSecurityToken(

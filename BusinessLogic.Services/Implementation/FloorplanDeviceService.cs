@@ -11,68 +11,51 @@ namespace BusinessLogic.Services.Implementation
 {
     public class FloorplanDeviceService : IFloorplanDeviceService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly FloorplanDeviceRepository _repository;
         private readonly IMapper _mapper;
 
-        public FloorplanDeviceService(BleTrackingDbContext context, IMapper mapper)
+        public FloorplanDeviceService(FloorplanDeviceRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<FloorplanDeviceDto> GetByIdAsync(Guid id)
         {
-            var device = await _context.FloorplanDevices
-                .Include(fd => fd.Floorplan)
-                .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Reader)
-                .Include(fd => fd.AccessControl)
-                .Include(fd => fd.FloorplanMaskedArea)
-                .Include(fd => fd.Application)
-                .FirstOrDefaultAsync(fd => fd.Id == id && fd.Status != 0);
-
+            var device = await _repository.GetByIdAsync(id);
             return device == null ? null : _mapper.Map<FloorplanDeviceDto>(device);
         }
 
         public async Task<IEnumerable<FloorplanDeviceDto>> GetAllAsync()
         {
-            var devices = await _context.FloorplanDevices
-                .Include(fd => fd.Floorplan)
-                .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Reader)
-                .Include(fd => fd.AccessControl)
-                .Include(fd => fd.FloorplanMaskedArea)
-                .Include(fd => fd.Application)
-                .Where(fd => fd.Status != 0)
-                .ToListAsync();
-
+            var devices = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
         }
 
         public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
         {
             // Validasi semua foreign key
-            var floorplan = await _context.MstFloorplans.FirstOrDefaultAsync(f => f.Id == dto.FloorplanId);
+            var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
             if (floorplan == null)
                 throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
 
-            var accessCctv = await _context.MstAccessCctvs.FirstOrDefaultAsync(c => c.Id == dto.AccessCctvId);
+            var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
             if (accessCctv == null)
                 throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
 
-            var reader = await _context.MstBleReaders.FirstOrDefaultAsync(r => r.Id == dto.ReaderId);
+            var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
             if (reader == null)
                 throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
 
-            var accessControl = await _context.MstAccessControls.FirstOrDefaultAsync(ac => ac.Id == dto.AccessControlId);
+            var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
             if (accessControl == null)
                 throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
 
-            var floorplanMaskedArea = await _context.FloorplanMaskedAreas.FirstOrDefaultAsync(fma => fma.Id == dto.FloorplanMaskedAreaId);
+            var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
             if (floorplanMaskedArea == null)
                 throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
 
-            var application = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == dto.ApplicationId);
+            var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
 
@@ -81,26 +64,23 @@ namespace BusinessLogic.Services.Implementation
             device.Status = 1;
             device.CreatedAt = DateTime.UtcNow;
             device.UpdatedAt = DateTime.UtcNow;
-            device.CreatedBy ??= "";
-            device.UpdatedBy ??= "";
+            device.CreatedBy = "System";
+            device.UpdatedBy = "System";
 
-            _context.FloorplanDevices.Add(device);
-            await _context.SaveChangesAsync();
-
-            // Kembalikan FloorplanDeviceDto tanpa relasi
+            await _repository.AddAsync(device);
             return _mapper.Map<FloorplanDeviceDto>(device);
         }
 
         public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
         {
-            var device = await _context.FloorplanDevices.FindAsync(id);
-            if (device == null || device.Status == 0)
+            var device = await _repository.GetByIdAsync(id);
+            if (device == null)
                 throw new KeyNotFoundException("FloorplanDevice not found");
 
             // Validasi foreign key jika berubah
             if (device.FloorplanId != dto.FloorplanId)
             {
-                var floorplan = await _context.MstFloorplans.FirstOrDefaultAsync(f => f.Id == dto.FloorplanId);
+                var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
                 if (floorplan == null)
                     throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
                 device.FloorplanId = dto.FloorplanId;
@@ -108,7 +88,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (device.AccessCctvId != dto.AccessCctvId)
             {
-                var accessCctv = await _context.MstAccessCctvs.FirstOrDefaultAsync(c => c.Id == dto.AccessCctvId);
+                var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
                 if (accessCctv == null)
                     throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
                 device.AccessCctvId = dto.AccessCctvId;
@@ -116,7 +96,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (device.ReaderId != dto.ReaderId)
             {
-                var reader = await _context.MstBleReaders.FirstOrDefaultAsync(r => r.Id == dto.ReaderId);
+                var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
                 if (reader == null)
                     throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
                 device.ReaderId = dto.ReaderId;
@@ -124,7 +104,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (device.AccessControlId != dto.AccessControlId)
             {
-                var accessControl = await _context.MstAccessControls.FirstOrDefaultAsync(ac => ac.Id == dto.AccessControlId);
+                var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
                 if (accessControl == null)
                     throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
                 device.AccessControlId = dto.AccessControlId;
@@ -132,7 +112,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (device.FloorplanMaskedAreaId != dto.FloorplanMaskedAreaId)
             {
-                var floorplanMaskedArea = await _context.FloorplanMaskedAreas.FirstOrDefaultAsync(fma => fma.Id == dto.FloorplanMaskedAreaId);
+                var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
                 if (floorplanMaskedArea == null)
                     throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
                 device.FloorplanMaskedAreaId = dto.FloorplanMaskedAreaId;
@@ -140,27 +120,22 @@ namespace BusinessLogic.Services.Implementation
 
             if (device.ApplicationId != dto.ApplicationId)
             {
-                var application = await _context.MstApplications.FirstOrDefaultAsync(a => a.Id == dto.ApplicationId);
+                var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
                 if (application == null)
                     throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
                 device.ApplicationId = dto.ApplicationId;
             }
 
-            device.UpdatedBy ??= "";
+            device.UpdatedBy = "System";
             device.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(dto, device);
 
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(device);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var device = await _context.FloorplanDevices.FindAsync(id);
-            if (device == null || device.Status == 0)
-                throw new KeyNotFoundException("FloorplanDevice not found");
-
-            device.Status = 0; // Soft delete
-            await _context.SaveChangesAsync();
+            await _repository.SoftDeleteAsync(id);
         }
     }
 }

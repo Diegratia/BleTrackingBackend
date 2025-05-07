@@ -6,17 +6,18 @@ using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
 using Repositories.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class TrackingTransactionService : ITrackingTransactionService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly TrackingTransactionRepository _repository;
         private readonly IMapper _mapper;
 
-        public TrackingTransactionService(BleTrackingDbContext context, IMapper mapper)
+        public TrackingTransactionService(TrackingTransactionRepository repository, IMapper mapper)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
@@ -27,27 +28,19 @@ namespace BusinessLogic.Services.Implementation
             var transaction = _mapper.Map<TrackingTransaction>(createDto);
             transaction.Id = Guid.NewGuid();
 
-            _context.TrackingTransactions.Add(transaction);
-            await _context.SaveChangesAsync();
-
+            await _repository.AddAsync(transaction);
             return _mapper.Map<TrackingTransactionDto>(transaction);
         }
 
         public async Task<TrackingTransactionDto> GetTrackingTransactionByIdAsync(Guid id)
         {
-            var transaction = await _context.TrackingTransactions
-                .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(t => t.Id == id);
-            return _mapper.Map<TrackingTransactionDto>(transaction);
+            var transaction = await _repository.GetByIdWithIncludesAsync(id);
+            return transaction == null ? null : _mapper.Map<TrackingTransactionDto>(transaction);
         }
 
         public async Task<IEnumerable<TrackingTransactionDto>> GetAllTrackingTransactionsAsync()
         {
-            var transactions = await _context.TrackingTransactions
-                .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea)
-                .ToListAsync();
+            var transactions = await _repository.GetAllWithIncludesAsync();
             return _mapper.Map<IEnumerable<TrackingTransactionDto>>(transactions);
         }
 
@@ -55,26 +48,21 @@ namespace BusinessLogic.Services.Implementation
         {
             if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
 
-            var transaction = await _context.TrackingTransactions.FindAsync(id);
+            var transaction = await _repository.GetByIdAsync(id);
             if (transaction == null)
-            {
                 throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
-            }
 
             _mapper.Map(updateDto, transaction);
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(transaction);
         }
 
         public async Task DeleteTrackingTransactionAsync(Guid id)
         {
-            var transaction = await _context.TrackingTransactions.FindAsync(id);
+            var transaction = await _repository.GetByIdAsync(id);
             if (transaction == null)
-            {
                 throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
-            }
 
-            _context.TrackingTransactions.Remove(transaction);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(transaction);
         }
     }
 }
