@@ -55,11 +55,6 @@ namespace BusinessLogic.Services.Implementation
 
             // Set nilai default untuk properti yang tidak ada di DTO
             alarm.Id = Guid.NewGuid();
-            alarm.Status = 1;
-            alarm.CreatedBy = "System";
-            alarm.CreatedAt = DateTime.UtcNow;
-            alarm.UpdatedBy = "System";
-            alarm.UpdatedAt = DateTime.UtcNow;
             alarm.Timestamp = DateTime.UtcNow;
             alarm.IdleTimestamp = DateTime.UtcNow;
             alarm.DoneTimestamp = DateTime.MaxValue;
@@ -112,8 +107,6 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
             }
 
-            alarm.UpdatedBy = "System";
-            alarm.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, alarm);
 
             await _repository.UpdateAsync(alarm);

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/Helpers.Consumer.props" />
-</Project>

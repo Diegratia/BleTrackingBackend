@@ -19,7 +19,7 @@ namespace Repositories.Repository
         public async Task<MstApplication> GetApplicationByIdAsync(Guid applicationId)
         {
             return await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId && a.Status != 0);
+                .FirstOrDefaultAsync(a => a.Id == applicationId && a.ApplicationStatus != 0);
         }
 
         public async Task<Visitor> GetVisitorByIdAsync(Guid visitorId)
@@ -47,7 +47,7 @@ namespace Repositories.Repository
                 .Include(a => a.Visitor)
                 .Include(a => a.Reader)
                 .Include(a => a.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<IEnumerable<AlarmRecordTracking>> GetAllAsync()
@@ -57,7 +57,6 @@ namespace Repositories.Repository
                 .Include(a => a.Visitor)
                 .Include(a => a.Reader)
                 .Include(a => a.FloorplanMaskedArea)
-                .Where(a => a.Status != 0)
                 .ToListAsync();
         }
 
@@ -80,7 +79,6 @@ namespace Repositories.Repository
             if (alarm == null)
                 throw new KeyNotFoundException("Alarm record not found");
 
-            alarm.Status = 0;
             await _context.SaveChangesAsync();
         }
     }

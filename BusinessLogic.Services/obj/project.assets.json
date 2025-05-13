@@ -2170,6 +2170,7 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -2193,6 +2194,7 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -2209,6 +2211,29 @@
           "bin/placeholder/Entities.Models.dll": {}
         }
       },
+      "Helpers.Consumer/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+          "BCrypt.Net": "0.1.0",
+          "Bogus": "35.6.2",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
+          "Microsoft.AspNetCore.Identity": "2.3.0",
+          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
+          "Microsoft.EntityFrameworkCore.SqlServer": "8.0.13",
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.IdentityModel.Tokens": "8.6.0",
+          "Swashbuckle.AspNetCore": "6.6.2",
+          "System.IdentityModel.Tokens.Jwt": "8.6.0"
+        },
+        "compile": {
+          "bin/placeholder/Helpers.Consumer.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Helpers.Consumer.dll": {}
+        }
+      },
       "Repositories/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -2217,6 +2242,7 @@
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
           "Entities.Models": "1.0.0",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -5594,6 +5620,11 @@
       "path": "../Entities.Models/Entities.Models.csproj",
       "msbuildProject": "../Entities.Models/Entities.Models.csproj"
     },
+    "Helpers.Consumer/1.0.0": {
+      "type": "project",
+      "path": "../Helpers.Consumer/Helpers.Consumer.csproj",
+      "msbuildProject": "../Helpers.Consumer/Helpers.Consumer.csproj"
+    },
     "Repositories/1.0.0": {
       "type": "project",
       "path": "../Repositories/Repositories.csproj",
@@ -5607,6 +5638,7 @@
       "Bogus >= 35.6.2",
       "Data.ViewModels >= 1.0.0",
       "Entities.Models >= 1.0.0",
+      "Helpers.Consumer >= 1.0.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 8.0.13",
       "Microsoft.AspNetCore.Identity >= 2.3.0",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 8.0.13",
@@ -5621,19 +5653,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Diegratia\\.nuget\\packages\\": {}
+    "/Users/developerpci/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Berkas\\Gawe\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
+      "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
       "projectName": "BusinessLogic.Services",
-      "projectPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
-      "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-      "outputPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\BusinessLogic.Services\\obj\\",
+      "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
+      "packagesPath": "/Users/developerpci/.nuget/packages/",
+      "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/developerpci/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -5645,14 +5677,17 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "E:\\Berkas\\Gawe\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
-              "projectPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj"
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
             },
-            "E:\\Berkas\\Gawe\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
-              "projectPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj"
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj"
             },
-            "E:\\Berkas\\Gawe\\BleTrackingBackend\\Repositories\\Repositories.csproj": {
-              "projectPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Repositories\\Repositories.csproj"
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+            },
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj"
             }
           }
         }
@@ -5745,7 +5780,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
       }
     }
   },

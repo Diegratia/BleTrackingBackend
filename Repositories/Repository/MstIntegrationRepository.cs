@@ -25,7 +25,7 @@ namespace Repositories.Repository
         public async Task<MstApplication> GetApplicationByIdAsync(Guid applicationId)
         {
             return await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId && a.Status != 0);
+                .FirstOrDefaultAsync(a => a.Id == applicationId && a.ApplicationStatus != 0);
         }
 
         public async Task<MstIntegration> GetByIdAsync(Guid id)

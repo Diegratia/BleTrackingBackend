@@ -1,7 +1,0 @@
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.csproj.AssemblyReference.cache
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.GeneratedMSBuildEditorConfig.editorconfig
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.AssemblyInfoInputs.cache
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.AssemblyInfo.cs
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.csproj.CoreCompileInputs.cache
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.MvcApplicationPartsAssemblyInfo.cs
-/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/Debug/net8.0/BleTrackingBackend.MvcApplicationPartsAssemblyInfo.cache

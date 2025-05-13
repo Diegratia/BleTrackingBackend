@@ -1,4 +1,4 @@
-namespace Entities.Models
+namespace Helpers.Consumer
 {
     public enum OrganizationType
     {
@@ -7,12 +7,12 @@ namespace Entities.Models
         Medium,
         Big,
         Corporate,
-        Government
+        Government 
     }
 
     public enum ApplicationType
     {
-        Empty, // default
+        Empty, // Represents the default empty string in SQL
         Vms,
         Smr,
         Signage,
@@ -56,7 +56,7 @@ namespace Entities.Models
     }
 
     public enum RestrictedStatus
-    {   
+    {
         Restrict,
         NonRestrict
     }
@@ -78,7 +78,28 @@ namespace Entities.Models
         Active
     }
 
-        public enum DeviceType
+        public enum AlarmRecordStatus
+    {
+        Block,
+        Help,
+        WrongZone,
+        Expired,
+        Lost
+    }
+
+        public enum ActionStatus
+    {
+        Idle,
+        Done,
+        Cancel,
+        Need,
+        Waiting,
+        Investigated,
+        DoneInvestigated,
+        PostponeInvestigated
+    }
+
+      public enum DeviceType
     {
         Cctv,
         AccessDoor,
@@ -94,26 +115,5 @@ namespace Entities.Models
         Open,
         Monitor,
         Alarm
-    }
-
-    public enum ActionStatus
-    {
-        Idle,
-        Done,
-        Cancel,
-        Need,
-        Waiting,
-        Investigated,
-        DoneInvestigated,
-        PostponeInvestigated
-    }
-
-        public enum AlarmRecordStatus
-    {
-        Block,
-        Help,
-        WrongZone,
-        Expired,
-        Lost
     }
 }

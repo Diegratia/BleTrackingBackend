@@ -3,6 +3,7 @@ using Repositories.DbContexts;
 using Entities.Models;
 using System;
 using System.Linq;
+using Helpers.Consumer;
 
 namespace TrackingBle.Seeding
 {

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {}
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {}
   },
   "projects": {
-    "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
         "projectName": "Helpers.Consumer",
-        "projectPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "E:\\Berkas\\Gawe\\BleTrackingBackend\\Helpers.Consumer\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -43,13 +43,61 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "BCrypt.Net": {
+              "target": "Package",
+              "version": "[0.1.0, )"
+            },
+            "Bogus": {
+              "target": "Package",
+              "version": "[35.6.2, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[8.0.13, )"
+            },
+            "Microsoft.AspNetCore.Identity": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.13, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.13, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.13, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.13, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[8.6.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.6.2, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.6.0, )"
             }
           },
           "imports": [
@@ -64,14 +112,11 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

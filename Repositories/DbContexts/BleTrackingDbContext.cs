@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Entities.Models;
+using Helpers.Consumer;
 
 namespace Repositories.DbContexts
 {
