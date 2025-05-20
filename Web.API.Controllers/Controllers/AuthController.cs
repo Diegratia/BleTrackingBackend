@@ -8,7 +8,7 @@ using BusinessLogic.Services.Interface;
 namespace Web.API.Controllers.Controllers
 {
     //test
-    [Route("/")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {

@@ -10,7 +10,6 @@ namespace BusinessLogic.Services.Extension
 {
     public class VisitorProfile : Profile
     {
-
         public VisitorProfile()
         {
             CreateMap<VisitorCreateDto, Visitor>()

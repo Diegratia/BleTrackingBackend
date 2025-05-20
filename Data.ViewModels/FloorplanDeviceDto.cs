@@ -34,7 +34,6 @@ namespace Data.ViewModels
 
      public class FloorplanDeviceCreateDto
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public Guid FloorplanId { get; set; }
@@ -53,7 +52,6 @@ namespace Data.ViewModels
 
      public class FloorplanDeviceUpdateDto
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public Guid FloorplanId { get; set; }

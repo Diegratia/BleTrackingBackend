@@ -8,16 +8,8 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstApplication
+    public class MstApplication : BaseModel
     {
-
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; } 
-
-        [Key]
-        public Guid Id { get; set; } = Guid.NewGuid(); 
-
         
         [Required]
         [StringLength(255)]

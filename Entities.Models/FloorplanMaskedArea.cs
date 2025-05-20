@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class FloorplanMaskedArea
+    public class FloorplanMaskedArea : BaseModel
     {
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

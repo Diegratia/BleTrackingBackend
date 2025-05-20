@@ -1255,6 +1255,7 @@
           "Bogus": "35.6.2",
           "Data.ViewModels": "1.0.0",
           "Entities.Models": "1.0.0",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -1277,6 +1278,7 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -1298,6 +1300,7 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -1314,12 +1317,34 @@
           }
         }
       },
+      "Helpers.Consumer/1.0.0": {
+        "dependencies": {
+          "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+          "BCrypt.Net": "0.1.0",
+          "Bogus": "35.6.2",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
+          "Microsoft.AspNetCore.Identity": "2.3.0",
+          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
+          "Microsoft.EntityFrameworkCore.SqlServer": "8.0.13",
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.IdentityModel.Tokens": "8.6.0",
+          "Swashbuckle.AspNetCore": "6.6.2",
+          "System.IdentityModel.Tokens.Jwt": "8.6.0"
+        },
+        "runtime": {
+          "Helpers.Consumer.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "Repositories/1.0.0": {
         "dependencies": {
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net": "0.1.0",
           "Bogus": "35.6.2",
           "Entities.Models": "1.0.0",
+          "Helpers.Consumer": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.13",
           "Microsoft.AspNetCore.Identity": "2.3.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.13",
@@ -2176,6 +2201,11 @@
       "sha512": ""
     },
     "Entities.Models/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Helpers.Consumer/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

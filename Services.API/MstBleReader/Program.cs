@@ -29,8 +29,8 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(MstBrandProfile));
-
+// builder.Services.AddAutoMapper(typeof(MstBrandProfile));
+builder.Services.AddAutoMapper(typeof(MstBleReaderProfile));
 
 builder.Services.AddControllers();
 
@@ -74,7 +74,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -127,12 +126,14 @@ builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<IMstBrandService, MstBrandService>();
-builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingService>();
-builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
-builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
+// builder.Services.AddScoped<IMstBrandService, MstBrandService>();
+// builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingService>();
+// builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
+// builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 
-builder.Services.AddScoped<MstBrandRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
+// builder.Services.AddScoped<MstBrandRepository>();
 
 var app = builder.Build();
 

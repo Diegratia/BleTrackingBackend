@@ -4,17 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstAccessCctv
+    public class MstAccessCctv : BaseModel
     {
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; }
-
-        [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         [StringLength(255)]

@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class TrackingTransaction
+    public class TrackingTransaction 
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();

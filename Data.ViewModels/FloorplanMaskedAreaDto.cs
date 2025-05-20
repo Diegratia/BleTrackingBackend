@@ -6,7 +6,7 @@ namespace Data.ViewModels
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
-        public string FloorplanId { get; set;}
+        public Guid FloorplanId { get; set;}
         public Guid FloorId { get; set; }
         public string Name { get; set; }
         public string AreaShape { get; set; }
@@ -22,11 +22,12 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
         public MstFloorDto Floor { get; set; }
+        public MstFloorplanDto Floorplan { get; set; }
     }
 
      public class FloorplanMaskedAreaCreateDto
     {
-        public string FloorplanId { get; set; }
+        public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
         public string Name { get; set; }   
         public string AreaShape { get; set; }
@@ -40,7 +41,7 @@ namespace Data.ViewModels
 
      public class FloorplanMaskedAreaUpdateDto
     {
-        public string FloorplanId { get; set; }
+        public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
         public string Name { get; set; }   
         public string AreaShape { get; set; }

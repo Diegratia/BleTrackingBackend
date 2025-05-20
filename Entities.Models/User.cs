@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 
 namespace Entities.Models
 {
@@ -13,17 +14,8 @@ namespace Entities.Models
         NonActive
     }
 
-    public class User
+    public class User : BaseModel
     {
-        [Column("_generate")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; }
-
-        [Key]
-        [Column("id")]
-        [StringLength(255)]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
         [Required]
         [Column("username")]
         [StringLength(255)]

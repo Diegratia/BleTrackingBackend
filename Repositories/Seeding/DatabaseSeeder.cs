@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using Helpers.Consumer;
 
-namespace TrackingBle.Seeding
+namespace Repositories.Seeding
 {
     public static class DatabaseSeeder
     {

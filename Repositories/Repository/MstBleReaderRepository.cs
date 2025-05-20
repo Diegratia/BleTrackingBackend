@@ -16,15 +16,23 @@ namespace Repositories.Repository
             _context = context;
         }
 
+          public async Task<MstBrand> GetBrandByIdAsync(Guid id)
+        {
+            return await _context.MstBrands
+                .FirstOrDefaultAsync(b => b.Id == id);
+        }
+
         public async Task<MstBleReader> GetByIdAsync(Guid id)
         {
             return await _context.MstBleReaders
+                .Include(fd => fd.Brand)
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 
         public async Task<IEnumerable<MstBleReader>> GetAllAsync()
         {
             return await _context.MstBleReaders
+                .Include(fd => fd.Brand)
                 .Where(b => b.Status != 0)
                 .ToListAsync();
         }

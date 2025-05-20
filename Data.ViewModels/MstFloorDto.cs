@@ -21,6 +21,8 @@ namespace Data.ViewModels
         public string UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
+
+        public MstBuildingDto Building { get; set; }
     }
 
     public class MstFloorCreateDto

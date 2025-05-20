@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MstBleReader")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1c0ef0a83684343e9816fae186300dce35b5d8c8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f5777de89f55cecad03a54379638f149313328bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("MstBleReader")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MstBleReader")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

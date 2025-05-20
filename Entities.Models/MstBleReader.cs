@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstBleReader
+    public class MstBleReader 
     {
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

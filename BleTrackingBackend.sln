@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repositories", "Repositorie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities.Models", "Entities.Models\Entities.Models.csproj", "{F3143D73-5A03-4CC0-A834-911BA10AA001}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services.API", "Services.API", "{72740AE6-7CB2-445B-AC32-645B44AD9D13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MstBleReader", "Services.API\MstBleReader\MstBleReader.csproj", "{BF868737-6CEF-447B-853C-ABA0E6E464EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,11 +54,18 @@ Global
 		{F3143D73-5A03-4CC0-A834-911BA10AA001}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3143D73-5A03-4CC0-A834-911BA10AA001}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3143D73-5A03-4CC0-A834-911BA10AA001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF868737-6CEF-447B-853C-ABA0E6E464EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF868737-6CEF-447B-853C-ABA0E6E464EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF868737-6CEF-447B-853C-ABA0E6E464EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF868737-6CEF-447B-853C-ABA0E6E464EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ADC76CA1-865F-49D6-86DD-23DE1E48A02F}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BF868737-6CEF-447B-853C-ABA0E6E464EF} = {72740AE6-7CB2-445B-AC32-645B44AD9D13}
 	EndGlobalSection
 EndGlobal

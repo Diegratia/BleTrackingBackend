@@ -9,7 +9,6 @@ namespace Repositories.DbContexts
         public BleTrackingDbContext(DbContextOptions<BleTrackingDbContext> dbContextOptions) 
             : base(dbContextOptions) { }
 
-        // DbSets for all models
         public DbSet<MstAccessCctv> MstAccessCctvs { get; set; }
         public DbSet<MstApplication> MstApplications { get; set; }
         public DbSet<MstIntegration> MstIntegrations { get; set; }
@@ -37,7 +36,6 @@ namespace Repositories.DbContexts
         {
             base.OnModelCreating(modelBuilder);
 
-            // Nama tabel sesuai SQL
             modelBuilder.Entity<MstApplication>().ToTable("mst_application");
             modelBuilder.Entity<MstIntegration>().ToTable("mst_integration");
             modelBuilder.Entity<MstAccessCctv>().ToTable("mst_access_cctv");

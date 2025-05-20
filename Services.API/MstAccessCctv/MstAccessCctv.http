@@ -1,0 +1,6 @@
+@MstAccessCctv_HostAddress = http://localhost:5001
+
+GET {{MstAccessCctv_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

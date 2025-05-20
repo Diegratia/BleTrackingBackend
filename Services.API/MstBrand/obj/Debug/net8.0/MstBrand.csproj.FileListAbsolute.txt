@@ -170,3 +170,5 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/ref/MstBrand.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.pdb

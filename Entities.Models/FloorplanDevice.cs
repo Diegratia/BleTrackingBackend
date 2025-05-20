@@ -9,15 +9,8 @@ using Helpers.Consumer;
 namespace Entities.Models
 {
 
-    public class FloorplanDevice
+    public class FloorplanDevice : BaseModel
     {
-        [Column("_generate")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; }
-
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; } = Guid.NewGuid(); 
 
         [Required]
         [StringLength(255)]

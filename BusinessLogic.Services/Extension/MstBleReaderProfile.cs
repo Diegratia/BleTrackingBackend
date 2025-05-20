@@ -13,6 +13,7 @@ namespace BusinessLogic.Services.Extension
         public MstBleReaderProfile()
         {
             CreateMap<MstBleReader, MstBleReaderDto>()
+                .ForMember(dest => dest.Brand, opt => opt.MapFrom(src => src.Brand))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<MstBleReaderCreateDto, MstBleReader>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -24,6 +25,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<MstBrand, MstBrandDto>();
         }
     }
 }

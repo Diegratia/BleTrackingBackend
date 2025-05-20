@@ -1,0 +1,6 @@
+@MstBuilding_HostAddress = http://localhost:5115
+
+GET {{MstBuilding_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -15,6 +15,7 @@ namespace Data.ViewModels
         public Guid IntegrationId { get; set; }
         public Guid ApplicationId { get; set; }
         public int? Status { get; set; }
+        public MstIntegrationDto Integration { get; set; }
     }
 
     public class MstAccessCctvCreateDto

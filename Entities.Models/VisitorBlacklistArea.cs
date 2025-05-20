@@ -4,18 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class VisitorBlacklistArea
+    public class VisitorBlacklistArea : BaseModel
     {
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; } 
-
-        [Key]
-        public Guid Id { get; set; } = Guid.NewGuid(); 
-
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
         public Guid FloorplanMaskedAreaId { get; set; }

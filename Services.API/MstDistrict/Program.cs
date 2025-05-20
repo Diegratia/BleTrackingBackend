@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(MstBrandProfile));
+builder.Services.AddAutoMapper(typeof(MstDistrictProfile));
 
 
 builder.Services.AddControllers();
@@ -127,10 +127,8 @@ builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<IMstBrandService, MstBrandService>();
-builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingService>();
-builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
-builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+builder.Services.AddScoped<IMstDistrictService, MstDistrictService>();
+
 
 builder.Services.AddScoped<MstBrandRepository>();
 
