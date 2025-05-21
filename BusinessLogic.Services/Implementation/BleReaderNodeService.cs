@@ -1,141 +1,102 @@
-// using AutoMapper;
-// using BusinessLogic.Services.Interface;
-// using System;
-// using System.Collections.Generic;
-// using System.Threading.Tasks;
-// using Data.ViewModels;
-// using Entities.Models;
-// using Repositories.Repository;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Data.ViewModels;
+using Entities.Models;
+using Microsoft.AspNetCore.Http;
+using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
-// namespace BusinessLogic.Services.Implementation
-// {
-//     public class BleReaderNodeService : IBleReaderNodeService
-//     {
-//           private readonly BleReaderNodeRepository _repository;
-//          private readonly IMapper _mapper;
+namespace BusinessLogic.Services.Implementation
+{
+    public class BleReaderNodeService : IBleReaderNodeService
+    {
+        private readonly BleReaderNodeRepository _repository;
+        private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-//             public BleReaderNodeService(BleReaderNodeRepository repository, IMapper mapper)
-//         {
-//             _repository = repository;
-//             _mapper = mapper;
-//         }
+        public BleReaderNodeService(
+            BleReaderNodeRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
+        {
+            _repository = repository;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
+        }
 
-//         public async Task<BleReaderNodeDto> GetByIdAsync(Guid id)
-//         {
-//             var bleReaderNode = await _context.BleReaderNodes.FirstOrDefaultAsync(n => n.Id == id);
-//             if (bleReaderNode == null) return null;
+        public async Task<BleReaderNodeDto> GetByIdAsync(Guid id)
+        {
+            var bleReaderNode = await _repository.GetByIdAsync(id);
+            return bleReaderNode == null ? null : _mapper.Map<BleReaderNodeDto>(bleReaderNode);
+        }
 
-//             var dto = _mapper.Map<BleReaderNodeDto>(bleReaderNode);
-//             dto.Reader = await GetReaderAsync(bleReaderNode.ReaderId);
-//             return dto;
-//         }
+        public async Task<IEnumerable<BleReaderNodeDto>> GetAllAsync()
+        {
+            var bleReaderNodes = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<BleReaderNodeDto>>(bleReaderNodes);
+        }
 
-//         public async Task<IEnumerable<BleReaderNodeDto>> GetAllAsync()
-//         {
-//             var bleReaderNodes = await _context.BleReaderNodes.ToListAsync();
-//             var dtos = _mapper.Map<List<BleReaderNodeDto>>(bleReaderNodes);
-//             foreach (var dto in dtos)
-//             {
-//                 dto.Reader = await GetReaderAsync(dto.ReaderId);
-//             }
-//             return dtos;
-//         }
+        public async Task<BleReaderNodeDto> CreateAsync(BleReaderNodeCreateDto createDto)
+        {
+            // Validasi DTO
+            var validationContext = new ValidationContext(createDto);
+            Validator.ValidateObject(createDto, validationContext, true);
 
-//         public async Task<BleReaderNodeDto> CreateAsync(BleReaderNodeCreateDto createDto)
-//         {
-//             var readerClient = _httpClientFactory.CreateClient("MstBleReaderService");
-//             var readerResponse = await readerClient.GetAsync($"/{createDto.ReaderId}");
-//             if (!readerResponse.IsSuccessStatusCode)
-//                 throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
+            // Validasi ReaderId
+            var reader = await _repository.GetReaderByIdAsync(createDto.ReaderId);
+            if (reader == null)
+                throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
 
-//             var appClient = _httpClientFactory.CreateClient("MstApplicationService");
-//             var appResponse = await appClient.GetAsync($"/{createDto.ApplicationId}");
-//             if (!appResponse.IsSuccessStatusCode)
-//                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
+            // Validasi ApplicationId
+            var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
+            if (application == null)
+                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
-//             var bleReaderNode = _mapper.Map<BleReaderNode>(createDto);
-//             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "";
-//             bleReaderNode.Id = Guid.NewGuid();
-//             bleReaderNode.CreatedBy = username;
-//             bleReaderNode.CreatedAt = DateTime.UtcNow;
-//             bleReaderNode.UpdatedBy = username;
-//             bleReaderNode.UpdatedAt = DateTime.UtcNow;
+            var bleReaderNode = _mapper.Map<BleReaderNode>(createDto);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            bleReaderNode.CreatedBy = username;
+            bleReaderNode.CreatedAt = DateTime.UtcNow;
+            bleReaderNode.UpdatedBy = username;
+            bleReaderNode.UpdatedAt = DateTime.UtcNow;
 
-//             _context.BleReaderNodes.Add(bleReaderNode);
-//             await _context.SaveChangesAsync();
+            await _repository.AddAsync(bleReaderNode);
+            return _mapper.Map<BleReaderNodeDto>(bleReaderNode);
+        }
 
-//             var dto = _mapper.Map<BleReaderNodeDto>(bleReaderNode);
-//             dto.Reader = await GetReaderAsync(bleReaderNode.ReaderId);
-//             return dto;
-//         }
+        public async Task UpdateAsync(Guid id, BleReaderNodeUpdateDto updateDto)
+        {
+            // Validasi DTO
+            var validationContext = new ValidationContext(updateDto);
+            Validator.ValidateObject(updateDto, validationContext, true);
 
-//         public async Task UpdateAsync(Guid id, BleReaderNodeUpdateDto updateDto)
-//         {
-//             var bleReaderNode = await _context.BleReaderNodes.FindAsync(id);
-//             if (bleReaderNode == null)
-//                 throw new KeyNotFoundException("BleReaderNode not found");
+            // Validasi ReaderId
+            var reader = await _repository.GetReaderByIdAsync(updateDto.ReaderId);
+            if (reader == null)
+                throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
 
-//             var readerClient = _httpClientFactory.CreateClient("MstBleReaderService");
-//             var readerResponse = await readerClient.GetAsync($"/{updateDto.ReaderId}");
-//             if (!readerResponse.IsSuccessStatusCode)
-//                 throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
+            // Validasi ApplicationId
+            var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
+            if (application == null)
+                throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
 
-//             var appClient = _httpClientFactory.CreateClient("MstApplicationService");
-//             var appResponse = await appClient.GetAsync($"/{updateDto.ApplicationId}");
-//             if (!appResponse.IsSuccessStatusCode)
-//                 throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
+            var bleReaderNode = await _repository.GetByIdAsync(id);
+            if (bleReaderNode == null)
+                throw new KeyNotFoundException("BleReaderNode not found");
 
-//             _mapper.Map(updateDto, bleReaderNode);
-//             bleReaderNode.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "";
-//             bleReaderNode.UpdatedAt = DateTime.UtcNow;
+            _mapper.Map(updateDto, bleReaderNode);
+            bleReaderNode.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            bleReaderNode.UpdatedAt = DateTime.UtcNow;
 
-//             await _context.SaveChangesAsync();
-//         }
+            await _repository.UpdateAsync(bleReaderNode);
+        }
 
-//         public async Task DeleteAsync(Guid id)
-//         {
-//             var bleReaderNode = await _context.BleReaderNodes.FindAsync(id);
-//             if (bleReaderNode == null)
-//                 throw new KeyNotFoundException("BleReaderNode not found");
-
-//             _context.BleReaderNodes.Remove(bleReaderNode);
-//             await _context.SaveChangesAsync();
-//         }
-
-//         private async Task<MstBleReaderDto> GetReaderAsync(Guid readerId)
-//         {
-//             var client = _httpClientFactory.CreateClient("MstBleReaderService");
-//             var response = await client.GetAsync($"/{readerId}");
-//             if (!response.IsSuccessStatusCode) return null;
-
-//             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<MstBleReaderDto>>();
-//             return apiResponse?.Collection?.Data;
-//         }
-//     }
-
-//     public class HttpClientAuthorizationDelegatingHandler : DelegatingHandler
-//     {
-//         private readonly IHttpContextAccessor _httpContextAccessor;
-
-//         public HttpClientAuthorizationDelegatingHandler(IHttpContextAccessor httpContextAccessor)
-//         {
-//             _httpContextAccessor = httpContextAccessor;
-//         }
-
-//         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-//         {
-//             var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-//             if (!string.IsNullOrEmpty(token))
-//             {
-//                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
-//                 // Console.WriteLine($"Forwarding token to request: {token}");
-//             }
-//             else
-//             {
-//                 Console.WriteLine("No Authorization token found in HttpContext.");
-//             }
-
-//             return await base.SendAsync(request, cancellationToken);
-//         }
-//     }
-// }
+        public async Task DeleteAsync(Guid id)
+        {
+            await _repository.DeleteAsync(id);
+        }
+    }
+}

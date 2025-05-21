@@ -110,21 +110,6 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingConnectionString")));
 
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidateLifetime = true,
-//             ValidateIssuerSigningKey = true,
-//             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//             ValidAudience = builder.Configuration["Jwt:Audience"],
-//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-//         };
-//     });
-
 
 builder.Services.AddHttpContextAccessor();
  
@@ -162,7 +147,7 @@ app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
 app.UseRouting();
-// app.UseAuthentication();
+// app.UseAuthentication();builder.Services.AddControllers().
 app.UseAuthorization();
 
 app.MapControllers();

@@ -5562,19 +5562,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/developerpci/.nuget/packages/": {}
+    "C:\\Users\\Diegratia\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
+      "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
       "projectName": "Entities.Models",
-      "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
-      "packagesPath": "/Users/developerpci/.nuget/packages/",
-      "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/obj/",
+      "projectPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
+      "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
+      "outputPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -5586,8 +5586,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+            "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+              "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
             }
           }
         }
@@ -5680,7 +5680,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
       }
     }
   },

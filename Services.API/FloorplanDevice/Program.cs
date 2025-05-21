@@ -1,39 +1,55 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Repositories.DbContexts;
-using BusinessLogic.Services.Extension;
-using BusinessLogic.Services.Implementation;
-using Microsoft.Extensions.FileProviders;
 using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Extension;
 using Repositories.Repository;
-using Entities.Models;
+using DotNetEnv;
 
+try
+{
+    Env.Load("././.env");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load .env file: {ex.Message}");
+}
 
 var builder = WebApplication.CreateBuilder(args);
-// Console.WriteLine($"Jwt:Issuer = {builder.Configuration["Jwt:Issuer"]}");
-// Console.WriteLine($"Jwt:Audience = {builder.Configuration["Jwt:Audience"]}");
-// Console.WriteLine($"Jwt:Key = {builder.Configuration["Jwt:Key"]}");
 
-
+// Konfigurasi CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin() 
-              .AllowAnyMethod() 
-              .AllowAnyHeader(); 
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
+// Konfigurasi sumber konfigurasi
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-builder.Services.AddAutoMapper(typeof(MstBrandProfile));
-
-
+// Konfigurasi Controllers
 builder.Services.AddControllers();
 
+// Konfigurasi DbContext
+builder.Services.AddDbContext<BleTrackingDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
+                         "Server=192.168.68.117,1433;Database=TrackingBleDevV4;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+
+// Konfigurasi AutoMapper
+builder.Services.AddAutoMapper(typeof(AuthProfile));
+
+// Konfigurasi Autentikasi JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -41,45 +57,43 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = false,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
-  options.Events = new JwtBearerEvents
-{
-    OnMessageReceived = context =>
-    {
-        var accessToken = context.Request.Headers["Authorization"].ToString();
-        if (!string.IsNullOrEmpty(accessToken) && accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        options.Events = new JwtBearerEvents
         {
-            context.Token = accessToken.Substring("Bearer ".Length).Trim();
-        }
-        return Task.CompletedTask;
-    },
-    OnAuthenticationFailed = context =>
-    {
-        Console.WriteLine("Authentication failed: " + context.Exception.Message);
-        Console.WriteLine("Token: " + context.Request.Headers["Authorization"]);
-        return Task.CompletedTask;
-    },
-    OnTokenValidated = context =>
-    {
-        Console.WriteLine("Token validated successfully");
-        return Task.CompletedTask;
-    }
-};
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine("Authentication failed: " + context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("Token validated successfully");
+                return Task.CompletedTask;
+            }
+        };
     });
 
+// Konfigurasi Otorisasi
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAuthenticatedUser", policy =>
+        policy.RequireAuthenticatedUser());
+    options.AddPolicy("RequirePrimaryRole", policy =>
+        policy.RequireRole("Primary"));
+    options.AddPolicy("RequireUserCreatedRole", policy =>
+        policy.RequireRole("UserCreated"));
+});
 
-
+// Konfigurasi Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TrackingBle API", Version = "v1" });
-
-    // detail token
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -88,7 +102,6 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -105,75 +118,54 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingConnectionString")));
- 
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidateLifetime = true,
-//             ValidateIssuerSigningKey = true,
-//             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//             ValidAudience = builder.Configuration["Jwt:Audience"],
-//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-//         };
-//     });
-
-
+// Konfigurasi IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+// Registrasi Services
+builder.Services.AddScoped<IAuthService, AuthService>();
 
-builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
-builder.Services.AddScoped<IMstAccessCctvService, MstAccessCctvService>();
-builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
-builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
-builder.Services.AddScoped<IMstAccessControlService, MstAccessControlService>();
+// Registrasi Repositories
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserGroupRepository>();
 
-
-builder.Services.AddScoped<FloorplanDeviceRepository>();
+// Konfigurasi port dan host
+var port = Environment.GetEnvironmentVariable("AUTH_PORT") ??
+           builder.Configuration["Ports:AuthService"] ?? "5001";
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+var host = env == "Production" ? "0.0.0.0" : "localhost";
+builder.WebHost.UseUrls($"http://{host}:{port}");
 
 var app = builder.Build();
 
+// Inisialisasi Database (opsional: migrasi atau seeding)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    // context.Database.Migrate();
-    // DatabaseSeeder.Seed(context);
+    try
+    {
+        // context.Database.Migrate(); // Aktifkan jika ingin migrasi otomatis
+        // DatabaseSeeder.Seed(context); // Aktifkan jika ada seeding
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
+        throw;
+    }
 }
-
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackingBle API v1");
-        c.RoutePrefix = string.Empty; 
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
+        c.RoutePrefix = "";
     });
 }
 
-// app.UseStaticFiles(new StaticFileOptions
-// {
-//     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
-//     RequestPath = "/Uploads"
-// });
 app.UseCors("AllowAll");
-
-
-app.UseHttpsRedirection();
-
-app.UseRouting();
-// app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
-
-
-

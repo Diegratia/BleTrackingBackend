@@ -17,11 +17,11 @@ namespace Entities.Models
 
         [Required]
         [Column("start_pos")]
-        public int StartPos { get; set; }
+        public string StartPos { get; set; }
 
         [Required]
         [Column("end_pos")]
-        public int EndPos { get; set; }
+        public string EndPos { get; set; }
 
         [Required]
         [Column("distance_px")]

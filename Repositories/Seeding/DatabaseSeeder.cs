@@ -733,8 +733,8 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .Select(r => r.Id)
                         .FirstOrDefault())
-                    .RuleFor(d => d.StartPos, f => f.Random.Number(0, 99))
-                    .RuleFor(d => d.EndPos, f => f.Random.Number(0, 99))
+                    .RuleFor(d => d.StartPos, f => f.Random.Number(0, 99).ToString())
+                    .RuleFor(d => d.EndPos, f => f.Random.Number(0, 99).ToString())
                     .RuleFor(d => d.DistancePx, f => f.Random.Decimal(0, 100))
                     .RuleFor(d => d.Distance, f => f.Random.Decimal(0, 100))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
