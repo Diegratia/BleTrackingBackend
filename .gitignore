@@ -488,4 +488,6 @@ $RECYCLE.BIN/
 .pdb
 *.props
 
-.obj/
+*.obj
+./obj
+obj/

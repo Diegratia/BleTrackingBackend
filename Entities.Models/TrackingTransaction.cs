@@ -11,38 +11,49 @@ namespace Entities.Models
     public class TrackingTransaction 
     {
         [Key]
+        [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
+        [Column("trans_time")]
         public DateTime TransTime { get; set; }
 
         [Required]
         [ForeignKey("Reader")]
+        [Column("reader_id")]
         public Guid ReaderId { get; set; } // rear_reader, reader terdekat
 
         [Required]
+        [Column("card_id")]
         public long CardId { get; set; }
 
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
+        [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Required]
+        [Column("coordinate_x")]
         public decimal CoordinateX { get; set; }
 
         [Required]
+        [Column("coordinate_y")]
         public decimal CoordinateY { get; set; }
 
         [Required]
+        [Column("coordinate_px_x")]
         public long CoordinatePxX { get; set; }
 
         [Required]
+        [Column("coordinate_px_y")]
         public long CoordinatePxY { get; set; }
 
         [Required]
+        [Column("alarm_status")]
         public AlarmStatus AlarmStatus { get; set; }
 
         [Required]
+        [Column("battery")]
         public long Battery { get; set; }
 
         public virtual MstBleReader Reader { get; set; }

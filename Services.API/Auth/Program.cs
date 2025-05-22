@@ -8,6 +8,7 @@ using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Extension;
 using Repositories.Repository;
+using Repositories.Seeding;
 using DotNetEnv;
 
 try
@@ -44,7 +45,7 @@ builder.Services.AddControllers();
 // Konfigurasi DbContext
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.173,1433;Database=TrackingBleDevV4;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.173,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 // Konfigurasi AutoMapper
 builder.Services.AddAutoMapper(typeof(AuthProfile));
@@ -143,8 +144,8 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
     try
     {
-        // context.Database.Migrate(); // Aktifkan jika ingin migrasi otomatis
-        // DatabaseSeeder.Seed(context); // Aktifkan jika ada seeding
+        // context.Database.Migrate(); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

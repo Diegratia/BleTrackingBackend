@@ -67,7 +67,7 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
-                        Name = "System",
+                        Name = "System Intial",
                         LevelPriority = LevelPriority.System,
                         ApplicationId = applicationId,
                         CreatedBy = "System",
@@ -79,7 +79,7 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Primary",
+                        Name = "Primary Initial",
                         LevelPriority = LevelPriority.Primary,
                         ApplicationId = applicationId,
                         CreatedBy = "System",
@@ -91,7 +91,7 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
-                        Name = "UserCreated",
+                        Name = "UserCreated Intial",
                         LevelPriority = LevelPriority.UserCreated,
                         ApplicationId = applicationId,
                         CreatedBy = "System",
@@ -112,10 +112,10 @@ namespace Repositories.Seeding
                 var userFaker = new Faker<User>()
                     .RuleFor(u => u.Id, f => Guid.NewGuid())
                     .RuleFor(u => u.Username, f => f.Internet.UserName())
-                    .RuleFor(u => u.Password, f => BCrypt.Net.BCrypt.HashPassword("Password123!"))
+                    .RuleFor(u => u.Password, f => BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"))
                     .RuleFor(u => u.IsCreatedPassword, f => 1)
                     .RuleFor(u => u.Email, f => f.Internet.Email())
-                    .RuleFor(u => u.IsEmailConfirmation, f => 1) // Semua user aktif sudah terkonfirmasi
+                    .RuleFor(u => u.IsEmailConfirmation, f => 1) 
                     .RuleFor(u => u.EmailConfirmationCode, f => f.Random.AlphaNumeric(8))
                     .RuleFor(u => u.EmailConfirmationExpiredAt, f => DateTime.UtcNow.AddDays(1))
                     .RuleFor(u => u.EmailConfirmationAt, f => DateTime.UtcNow)
@@ -127,10 +127,10 @@ namespace Repositories.Seeding
                         .First()
                         .Id);
 
-                // Generate beberapa user biasa
-                var users = userFaker.Generate(5);
+            
+                var users = userFaker.Generate(2);
 
-                // Tambahkan superadmin secara eksplisit
+            
                 var superadminGroup = context.UserGroups
                     .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.System && ug.Status != 0);
                 if (superadminGroup != null)
@@ -139,7 +139,7 @@ namespace Repositories.Seeding
                     {
                         Id = Guid.NewGuid(),
                         Username = "systemadmin",
-                        Password = BCrypt.Net.BCrypt.HashPassword("System123@"),
+                        Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                         IsCreatedPassword = 1,
                         Email = "systemadmin@test.com",
                         IsEmailConfirmation = 1,
@@ -157,7 +157,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 3. MstBuilding (dipindah ke atas karena dependensi MstFloor)
+            // 3. MstBuilding
             if (!context.MstBuildings.Any(b => b.Status != 0))
             {
                 var buildingFaker = new Faker<MstBuilding>()
@@ -180,7 +180,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 4. MstFloor (bergantung pada MstBuilding)
+            // 4. MstFloor 
             if (!context.MstFloors.Any(f => f.Status != 0))
             {
                 var floorFaker = new Faker<MstFloor>()

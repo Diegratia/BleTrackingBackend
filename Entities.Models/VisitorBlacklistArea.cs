@@ -12,10 +12,12 @@ namespace Entities.Models
     {
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
+        [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Required]
         [ForeignKey("Visitor")]
+        [Column("visitor_id")]
         public Guid VisitorId { get; set; }
 
         public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }

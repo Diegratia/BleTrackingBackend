@@ -11,20 +11,25 @@ namespace Entities.Models
     {
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("_generate")]
         public int Generate { get; set; } 
 
         [Key]
+        [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid(); 
         
         [Required]
         [StringLength(255)]
+        [Column("name")]
         public string Name { get; set; }
         
         [Required]
         [StringLength(255)]
+        [Column("tag")]
         public string Tag { get; set; }
         
         [Required]
+        [Column("status")]
         public int? Status { get; set; } = 1;
 
         // public virtual ICollection<MstIntegration> Integrations { get; set; } = new List<MstIntegration>(); 
@@ -32,4 +37,3 @@ namespace Entities.Models
         
     }
 }
-
