@@ -10,8 +10,9 @@ namespace Entities.Models
 {
     public enum StatusActive
     {
-        Active,
-        NonActive
+        NonActive,
+        Active
+        
     }
 
     public class User : BaseModel

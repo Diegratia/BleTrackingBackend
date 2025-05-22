@@ -28,16 +28,6 @@ namespace BusinessLogic.Services.Interface
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        /*************  ✨ Windsurf Command ⭐  *************/
-        /// <summary>
-        /// Constructor for AuthService.
-        /// </summary>
-        /// <param name="userRepository">Repository for user operations.</param>
-        /// <param name="userGroupRepository">Repository for user group operations.</param>
-        /// <param name="mapper">Mapper for mapping between models and view models.</param>
-        /// <param name="configuration">Configuration for the application.</param>
-        /// <param name="httpContextAccessor">Accessor for getting the current HTTP context.</param>
-        /*******  bf336e64-480f-4912-bf6f-facdb2c87530  *******/
         public AuthService(
             UserRepository userRepository,
             UserGroupRepository userGroupRepository,
@@ -54,13 +44,14 @@ namespace BusinessLogic.Services.Interface
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            var user = await _userRepository.GetByUsernameAsync(dto.Username.ToLower());
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-                throw new Exception("Invalid email or password.");
+                throw new Exception("Invalid Username or password.");
             if (user.StatusActive != StatusActive.Active)
                 throw new Exception("Account is not active.");
-            if (user.IsEmailConfirmation == 0)
-                throw new Exception("Email not confirmed.");
+            // if (user.IsEmailConfirmation == 0)
+            //     throw new Exception("Email not confirmed.");
 
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
@@ -134,9 +125,6 @@ namespace BusinessLogic.Services.Interface
 
         private string GenerateJwtToken(User user)
         {
-            Console.WriteLine($"AuthService Jwt:Issuer = {_configuration["Jwt:Issuer"]}");
-            Console.WriteLine($"AuthService Jwt:Audience = {_configuration["Jwt:Audience"]}");
-            Console.WriteLine($"AuthService Jwt:Key = {_configuration["Jwt:Key"]}");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -158,9 +146,6 @@ namespace BusinessLogic.Services.Interface
                 signingCredentials: creds);
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            Console.WriteLine($"Generated token: {tokenString}");
-            Console.WriteLine($"Token length: {tokenString.Length}");
-            Console.WriteLine($"Token parts: {tokenString.Split('.').Length}");
 
             return tokenString;
         }

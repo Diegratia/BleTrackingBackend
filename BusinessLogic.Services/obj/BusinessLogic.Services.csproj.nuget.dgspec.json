@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj": {}
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {}
   },
   "projects": {
-    "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
         "projectName": "BusinessLogic.Services",
-        "projectPath": "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -26,17 +26,17 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
               },
-              "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj"
               },
-              "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
               },
-              "D:\\g\\A\\BleTrackingBackend\\Repositories\\Repositories.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Repositories\\Repositories.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj"
               }
             }
           }
@@ -129,21 +129,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
         "projectName": "Data.ViewModels",
-        "projectPath": "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -155,8 +155,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
               }
             }
           }
@@ -249,21 +249,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
         "projectName": "Entities.Models",
-        "projectPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -275,8 +275,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
               }
             }
           }
@@ -369,21 +369,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
         "projectName": "Helpers.Consumer",
-        "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -485,21 +485,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\g\\A\\BleTrackingBackend\\Repositories\\Repositories.csproj": {
+    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Repositories\\Repositories.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj",
         "projectName": "Repositories",
-        "projectPath": "D:\\g\\A\\BleTrackingBackend\\Repositories\\Repositories.csproj",
-        "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-        "outputPath": "D:\\g\\A\\BleTrackingBackend\\Repositories\\obj\\",
+        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/Repositories.csproj",
+        "packagesPath": "/Users/developerpci/.nuget/packages/",
+        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Repositories/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -511,11 +511,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj"
               },
-              "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
-                "projectPath": "D:\\g\\A\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
+              "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+                "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
               }
             }
           }
@@ -608,7 +608,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

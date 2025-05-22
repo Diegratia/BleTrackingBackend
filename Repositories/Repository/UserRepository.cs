@@ -22,6 +22,13 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(u => u.Id == id && u.StatusActive != 0);
         }
 
+        public async Task<User> GetByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .Include(u => u.Group)
+                .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+        }
+
         public async Task<User> GetByEmailAsync(string email)
         {
             return await _context.Users
@@ -44,7 +51,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(User user)
         {
-            _context.Users.Update(user);
+            // _context.Users.Update(user);
             await _context.SaveChangesAsync();
         }
     }

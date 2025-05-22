@@ -15,6 +15,9 @@ namespace BusinessLogic.Services.Extension
             CreateMap<User, AuthResponseDto>()
                 .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.IsEmailConfirmation == 1))
                 .ForMember(dest => dest.StatusActive, opt => opt.MapFrom(src => src.StatusActive.ToString()));
+
+            CreateMap<UserGroup, UserGroupDto>()
+                .ForMember(dest => dest.LevelPriority, opt => opt.MapFrom(src => src.LevelPriority.ToString()));
         }
     }
 }

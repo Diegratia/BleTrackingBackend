@@ -10,7 +10,7 @@ using AutoMapper;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UserGroupController : ControllerBase
     {

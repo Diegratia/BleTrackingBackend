@@ -5683,19 +5683,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Diegratia\\.nuget\\packages\\": {}
+    "/Users/developerpci/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\g\\A\\BleTrackingBackend\\Web.API.Controllers\\Web.API.Controllers.csproj",
+      "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj",
       "projectName": "Web.API.Controllers",
-      "projectPath": "D:\\g\\A\\BleTrackingBackend\\Web.API.Controllers\\Web.API.Controllers.csproj",
-      "packagesPath": "C:\\Users\\Diegratia\\.nuget\\packages\\",
-      "outputPath": "D:\\g\\A\\BleTrackingBackend\\Web.API.Controllers\\obj\\",
+      "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj",
+      "packagesPath": "/Users/developerpci/.nuget/packages/",
+      "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Diegratia\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/developerpci/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -5707,11 +5707,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj": {
-              "projectPath": "D:\\g\\A\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj"
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj"
             },
-            "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
-              "projectPath": "D:\\g\\A\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj"
+            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
             }
           }
         }
@@ -5804,7 +5804,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
