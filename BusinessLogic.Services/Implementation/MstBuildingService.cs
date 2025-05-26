@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly MstBuildingRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstBuildingService(MstBuildingRepository repository, IMapper mapper)
+        public MstBuildingService(MstBuildingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor; 
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -34,10 +39,11 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto createDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var building = _mapper.Map<MstBuilding>(createDto);
             building.Id = Guid.NewGuid();
-            building.CreatedBy = "System"; 
-            building.UpdatedBy = "System";
+            building.CreatedBy = username; 
+            building.UpdatedBy = username;
             building.Status = 1;
 
             var createdBuilding = await _repository.AddAsync(building);
@@ -46,18 +52,22 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
 
             _mapper.Map(updateDto, building);
-            building.UpdatedBy = "System";
+            building.UpdatedBy = username;
 
             await _repository.UpdateAsync(building);
         }
 
         public async Task DeleteAsync(Guid id)
         {
+            var building = await _repository.GetByIdAsync(id);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            building.UpdatedBy = username;
             await _repository.DeleteAsync(id);
         }
     }

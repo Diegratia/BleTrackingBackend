@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly FloorplanMaskedAreaRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FloorplanMaskedAreaService(FloorplanMaskedAreaRepository repository, IMapper mapper)
+        public FloorplanMaskedAreaService(FloorplanMaskedAreaRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
@@ -40,11 +45,12 @@ namespace BusinessLogic.Services.Implementation
 
             var area = _mapper.Map<FloorplanMaskedArea>(createDto);
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             area.Id = Guid.NewGuid();
             area.Status = 1;
-            area.CreatedBy = "System";
+            area.CreatedBy = username;
             area.CreatedAt = DateTime.UtcNow;
-            area.UpdatedBy = "System";
+            area.UpdatedBy = username;
             area.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(area);
@@ -61,7 +67,8 @@ namespace BusinessLogic.Services.Implementation
             if (area == null)
                 throw new KeyNotFoundException("Area not found");
 
-            area.UpdatedBy = "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            area.UpdatedBy = username;
             area.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, area);
@@ -70,6 +77,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var area = await _repository.GetByIdAsync(id);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            area.UpdatedBy = username;
             await _repository.SoftDeleteAsync(id);
         }
     }

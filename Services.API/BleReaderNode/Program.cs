@@ -10,34 +10,42 @@ using Microsoft.Extensions.FileProviders;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
 using Entities.Models;
+using Repositories.Seeding;
+using DotNetEnv;
+
+try
+{
+    Env.Load("../../.env");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load .env file: {ex.Message}");
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Tambahkan logging ke console
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.SetMinimumLevel(LogLevel.Information);
-});
-
-// Konfigurasi CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.AllowAnyOrigin() 
+              .AllowAnyMethod() 
+              .AllowAnyHeader(); 
     });
 });
 
-// Konfigurasi AutoMapper
-builder.Services.AddAutoMapper(typeof(BleReaderNodeProfile));
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-// Konfigurasi Controllers
 builder.Services.AddControllers();
 
-// Konfigurasi Autentikasi JWT
+builder.Services.AddDbContext<BleTrackingDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
+                         "Server=192.168.1.173,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -45,41 +53,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = false,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Headers["Authorization"].ToString();
-                if (!string.IsNullOrEmpty(accessToken) && accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Token = accessToken.Substring("Bearer ".Length).Trim();
-                }
-                return Task.CompletedTask;
-            },
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine("Authentication failed: " + context.Exception.Message);
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("Token validated successfully");
-                return Task.CompletedTask;
-            }
-        };
     });
 
-// Konfigurasi Swagger
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAuthenticatedUser", policy =>
+        policy.RequireAuthenticatedUser());
+    options.AddPolicy("RequiredSystemUser", policy =>
+        policy.RequireRole("System"));
+    options.AddPolicy("RequirePrimaryRole", policy =>
+        policy.RequireRole("Primary"));
+    options.AddPolicy("RequireUserCreatedRole", policy =>
+        policy.RequireRole("UserCreated"));
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TrackingBle API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -88,6 +86,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -104,27 +103,36 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Konfigurasi DbContext
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingConnectionString")));
-
-// Konfigurasi IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddAutoMapper(typeof(BleReaderNodeProfile));
 // Registrasi Services
 builder.Services.AddScoped<IBleReaderNodeService, BleReaderNodeService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<BleReaderNodeRepository>();
 
+var port = Environment.GetEnvironmentVariable("BLE_READER_NODE_PORT") ??
+           builder.Configuration["Ports:BleReaderNodeService"];
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var host = env == "Production" ? "0.0.0.0" : "localhost";
+builder.WebHost.UseUrls($"http://{host}:{port}");
+
 var app = builder.Build();
 
-// Inisialisasi Database (opsional: migrasi atau seeding)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    // context.Database.Migrate(); // Aktifkan jika ingin migrasi otomatis
-    // DatabaseSeeder.Seed(context); // Aktifkan jika ada seeding
+    try
+    {
+        // context.Database.Migrate(); 
+        DatabaseSeeder.Seed(context); 
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
+        throw;
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -132,20 +140,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackingBle API v1");
-        c.RoutePrefix = string.Empty;
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
+        c.RoutePrefix = string.Empty; 
     });
 }
 
 app.UseCors("AllowAll");
-
-app.UseHttpsRedirection();
-
+// app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
+
+
+

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddRefreshToken : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -659,6 +659,27 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "refresh_token",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_refresh_token", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_refresh_token_user_user_id",
+                        column: x => x.user_id,
+                        principalTable: "user",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "floorplan_masked_area",
                 columns: table => new
                 {
@@ -1264,6 +1285,11 @@ namespace Repositories.Migrations
                 column: "MstApplicationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_refresh_token_user_id",
+                table: "refresh_token",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_tracking_transaction_floorplan_masked_area_id",
                 table: "tracking_transaction",
                 column: "floorplan_masked_area_id");
@@ -1355,10 +1381,10 @@ namespace Repositories.Migrations
                 name: "mst_member");
 
             migrationBuilder.DropTable(
-                name: "tracking_transaction");
+                name: "refresh_token");
 
             migrationBuilder.DropTable(
-                name: "user");
+                name: "tracking_transaction");
 
             migrationBuilder.DropTable(
                 name: "visitor_blacklist_area");
@@ -1379,10 +1405,10 @@ namespace Repositories.Migrations
                 name: "mst_organization");
 
             migrationBuilder.DropTable(
-                name: "mst_ble_reader");
+                name: "user");
 
             migrationBuilder.DropTable(
-                name: "user_group");
+                name: "mst_ble_reader");
 
             migrationBuilder.DropTable(
                 name: "floorplan_masked_area");
@@ -1392,6 +1418,9 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "mst_integration");
+
+            migrationBuilder.DropTable(
+                name: "user_group");
 
             migrationBuilder.DropTable(
                 name: "mst_floorplan");

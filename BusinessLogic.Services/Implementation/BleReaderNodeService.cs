@@ -57,7 +57,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             var bleReaderNode = _mapper.Map<BleReaderNode>(createDto);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ;
             bleReaderNode.CreatedBy = username;
             bleReaderNode.CreatedAt = DateTime.UtcNow;
             bleReaderNode.UpdatedBy = username;

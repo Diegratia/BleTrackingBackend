@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly FloorplanDeviceRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FloorplanDeviceService(FloorplanDeviceRepository repository, IMapper mapper)
+        public FloorplanDeviceService(FloorplanDeviceRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<FloorplanDeviceDto> GetByIdAsync(Guid id)
@@ -60,12 +65,10 @@ namespace BusinessLogic.Services.Implementation
                 throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
 
             var device = _mapper.Map<FloorplanDevice>(dto);
-            device.Id = Guid.NewGuid();
-            device.Status = 1;
-            device.CreatedAt = DateTime.UtcNow;
-            device.UpdatedAt = DateTime.UtcNow;
-            device.CreatedBy = "System";
-            device.UpdatedBy = "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        
+            device.CreatedBy = username;
+            device.UpdatedBy = username;
 
             await _repository.AddAsync(device);
             return _mapper.Map<FloorplanDeviceDto>(device);
@@ -126,8 +129,10 @@ namespace BusinessLogic.Services.Implementation
                 device.ApplicationId = dto.ApplicationId;
             }
 
-            device.UpdatedBy = "System";
-            device.UpdatedAt = DateTime.UtcNow;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            device.UpdatedBy = username;
+           
             _mapper.Map(dto, device);
 
             await _repository.UpdateAsync(device);
@@ -135,6 +140,10 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var device = await _repository.GetByIdAsync(id);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            device.UpdatedBy = username;
+
             await _repository.SoftDeleteAsync(id);
         }
     }

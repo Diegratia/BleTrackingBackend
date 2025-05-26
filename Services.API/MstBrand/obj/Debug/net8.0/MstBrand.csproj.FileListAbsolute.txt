@@ -11,6 +11,7 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Azure.Identity.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/BCrypt.Net.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Bogus.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/DotNetEnv.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Humanizer.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Microsoft.AspNetCore.Cryptography.Internal.dll
@@ -53,6 +54,7 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Mono.TextTemplating.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Sprache.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -141,12 +143,14 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/BusinessLogic.Services.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Data.ViewModels.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Entities.Models.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Repositories.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Web.API.Controllers.dll
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/BusinessLogic.Services.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Data.ViewModels.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Web.API.Controllers.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Entities.Models.pdb
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Repositories.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.csproj.AssemblyReference.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.GeneratedMSBuildEditorConfig.editorconfig
@@ -170,5 +174,3 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/MstBrand.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/obj/Debug/net8.0/ref/MstBrand.dll
-/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.dll
-/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBrand/bin/Debug/net8.0/Helpers.Consumer.pdb

@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly AlarmRecordTrackingRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AlarmRecordTrackingService(AlarmRecordTrackingRepository repository, IMapper mapper)
+        public AlarmRecordTrackingService(AlarmRecordTrackingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<AlarmRecordTrackingDto> GetByIdAsync(Guid id)
@@ -53,6 +58,7 @@ namespace BusinessLogic.Services.Implementation
 
             var alarm = _mapper.Map<AlarmRecordTracking>(createDto);
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             // Set nilai default untuk properti yang tidak ada di DTO
             alarm.Id = Guid.NewGuid();
             alarm.Timestamp = DateTime.UtcNow;
@@ -61,11 +67,11 @@ namespace BusinessLogic.Services.Implementation
             alarm.CancelTimestamp = DateTime.MaxValue;
             alarm.WaitingTimestamp = DateTime.MaxValue;
             alarm.InvestigatedTimestamp = DateTime.MaxValue;
-            alarm.IdleBy = "System";
-            alarm.DoneBy = "System";
-            alarm.CancelBy = "System";
-            alarm.WaitingBy = "System";
-            alarm.InvestigatedBy = "System";
+            alarm.IdleBy = username;
+            alarm.DoneBy = username;
+            alarm.CancelBy = username;
+            alarm.WaitingBy = username;
+            alarm.InvestigatedBy = username;
             alarm.InvestigatedDoneAt = DateTime.MaxValue;
 
             await _repository.AddAsync(alarm);

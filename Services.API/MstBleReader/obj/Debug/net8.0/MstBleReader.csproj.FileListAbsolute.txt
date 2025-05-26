@@ -172,3 +172,5 @@
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.pdb
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/MstBleReader.genruntimeconfig.cache
 /Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/Debug/net8.0/ref/MstBleReader.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/bin/Debug/net8.0/DotNetEnv.dll
+/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/bin/Debug/net8.0/Sprache.dll

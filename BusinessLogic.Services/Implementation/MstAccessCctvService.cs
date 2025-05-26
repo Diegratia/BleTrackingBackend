@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly MstAccessCctvRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstAccessCctvService(MstAccessCctvRepository repository, IMapper mapper)
+        public MstAccessCctvService(MstAccessCctvRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<MstAccessCctvDto> GetByIdAsync(Guid id)
@@ -36,15 +41,14 @@ namespace BusinessLogic.Services.Implementation
         {
             var accessCctv = _mapper.Map<MstAccessCctv>(createDto);
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             accessCctv.Id = Guid.NewGuid();
             accessCctv.Status = 1;
-            accessCctv.CreatedBy = "System";
+            accessCctv.CreatedBy = username;
             accessCctv.CreatedAt = DateTime.UtcNow;
-            accessCctv.UpdatedBy = "System";
+            accessCctv.UpdatedBy = username;
             accessCctv.UpdatedAt = DateTime.UtcNow;
 
-            // notes untuk nanti, jika ingin memisahkan service dan repository, bisa memisahkan proses logika bisnis
-            // dengan service, dan proses database dengan repository, contohnya pada _context
             await _repository.AddAsync(accessCctv);
             return _mapper.Map<MstAccessCctvDto>(accessCctv);
         }
@@ -55,7 +59,8 @@ namespace BusinessLogic.Services.Implementation
             if (accessCctv == null)
                 throw new KeyNotFoundException("Access CCTV not found");
 
-            accessCctv.UpdatedBy = "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            accessCctv.UpdatedBy = username;
             accessCctv.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, accessCctv);
@@ -64,6 +69,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var accessCctv = await _repository.GetByIdAsync(id);    
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            accessCctv.UpdatedBy = username;
             await _repository.SoftDeleteAsync(id);
         }
     }

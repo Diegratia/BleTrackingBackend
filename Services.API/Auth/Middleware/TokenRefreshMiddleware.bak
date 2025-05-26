@@ -1,0 +1,103 @@
+using BusinessLogic.Services.Interface;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Auth.Middleware
+{
+    public class TokenRefreshMiddleware
+    {
+        private readonly RequestDelegate _next;
+        private readonly string _jwtKey;
+        private readonly string _issuer;
+        private readonly string _audience;
+
+        public TokenRefreshMiddleware(RequestDelegate next, IConfiguration configuration)
+        {
+            _next = next;
+            _jwtKey = configuration["Jwt:Key"];
+            _issuer = configuration["Jwt:Issuer"];
+            _audience = configuration["Jwt:Audience"];
+        }
+
+        public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+
+            if (token != null)
+            {
+                try
+                {
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
+                    tokenHandler.ValidateToken(token, new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = false, // Allow expired tokens for refresh
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = _issuer,
+                        ValidAudience = _audience,
+                        IssuerSigningKey = key
+                    }, out SecurityToken validatedToken);
+
+                    var jwtToken = (JwtSecurityToken)validatedToken;
+                    var userId = Guid.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
+
+                    // Check if token is expired
+                    if (jwtToken.ValidTo < DateTime.UtcNow)
+                    {
+                        using var scope = serviceProvider.CreateScope();
+                        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+                        var newTokens = await authService.RefreshTokenForUserAsync(userId);
+                        context.Response.Headers.Add("X-New-Access-Token", newTokens.Token);
+                        context.Response.Headers.Add("X-New-Refresh-Token", newTokens.RefreshToken);
+
+                        // Set user claims for the request
+                        var claims = jwtToken.Claims.ToList();
+                        claims.RemoveAll(c => c.Type == "exp"); // Remove expiration claim
+                        context.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(claims, "jwt"));
+                    }
+                }
+                catch (SecurityTokenExpiredException)
+                {
+          // Token expired, try to refresh
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(token);
+                    var userId = Guid.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
+
+                    try
+                    {
+                        using var scope = serviceProvider.CreateScope();
+                        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+                        var newTokens = await authService.RefreshTokenForUserAsync(userId);
+                        context.Response.Headers.Add("X-New-Access-Token", newTokens.Token);
+                        context.Response.Headers.Add("X-New-Refresh-Token", newTokens.RefreshToken);
+
+                        // Set user claims for the request
+                        var claims = jwtToken.Claims.ToList();
+                        claims.RemoveAll(c => c.Type == "exp");
+                        context.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(claims, "jwt"));
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        context.Response.StatusCode = 401;
+                        await context.Response.WriteAsync("Unauthorized: No valid refresh token found.");
+                        return;
+                    }
+                }
+                catch
+                {
+                    // Invalid token, proceed without setting user
+                }
+            }
+
+            await _next(context);
+        }
+    }
+}

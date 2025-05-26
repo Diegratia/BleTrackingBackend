@@ -10,13 +10,19 @@ using Microsoft.Extensions.FileProviders;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
 using Entities.Models;
+using Repositories.Seeding;
+using DotNetEnv;
 
+try
+{
+    Env.Load("../../.env");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load .env file: {ex.Message}");
+}
 
 var builder = WebApplication.CreateBuilder(args);
-// Console.WriteLine($"Jwt:Issuer = {builder.Configuration["Jwt:Issuer"]}");
-// Console.WriteLine($"Jwt:Audience = {builder.Configuration["Jwt:Audience"]}");
-// Console.WriteLine($"Jwt:Key = {builder.Configuration["Jwt:Key"]}");
-
 
 builder.Services.AddCors(options =>
 {
@@ -28,11 +34,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-builder.Services.AddAutoMapper(typeof(MstFloorProfile));
-
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<BleTrackingDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
+                         "Server=192.168.1.173,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -41,45 +53,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = false,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
-  options.Events = new JwtBearerEvents
-{
-    OnMessageReceived = context =>
-    {
-        var accessToken = context.Request.Headers["Authorization"].ToString();
-        if (!string.IsNullOrEmpty(accessToken) && accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            context.Token = accessToken.Substring("Bearer ".Length).Trim();
-        }
-        return Task.CompletedTask;
-    },
-    OnAuthenticationFailed = context =>
-    {
-        Console.WriteLine("Authentication failed: " + context.Exception.Message);
-        Console.WriteLine("Token: " + context.Request.Headers["Authorization"]);
-        return Task.CompletedTask;
-    },
-    OnTokenValidated = context =>
-    {
-        Console.WriteLine("Token validated successfully");
-        return Task.CompletedTask;
-    }
-};
     });
 
-
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAuthenticatedUser", policy =>
+        policy.RequireAuthenticatedUser());
+    options.AddPolicy("RequiredSystemUser", policy =>
+        policy.RequireRole("System"));
+    options.AddPolicy("RequirePrimaryRole", policy =>
+        policy.RequireRole("Primary"));
+    options.AddPolicy("RequireUserCreatedRole", policy =>
+        policy.RequireRole("UserCreated"));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TrackingBle API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
 
-    // detail token
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -105,70 +103,107 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingConnectionString")));
- 
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidateLifetime = true,
-//             ValidateIssuerSigningKey = true,
-//             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//             ValidAudience = builder.Configuration["Jwt:Audience"],
-//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-//         };
-//     });
-
-
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 
-builder.Services.AddScoped<IMstBuildingService, MstBuildingService>();
+builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
+builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 
-builder.Services.AddScoped<MstFloorRepository>();
+builder.Services.AddScoped<MstFloorplanRepository>();
+
+
+
+var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ??
+           builder.Configuration["Ports:MstFloorplanService"];
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var host = env == "Production" ? "0.0.0.0" : "localhost";
+builder.WebHost.UseUrls($"http://{host}:{port}");
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    // context.Database.Migrate();
-    // DatabaseSeeder.Seed(context);
+    try
+    {
+        // context.Database.Migrate(); 
+        DatabaseSeeder.Seed(context); 
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
+        throw;
+    }
 }
-
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackingBle API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
         c.RoutePrefix = string.Empty; 
     });
 }
 
-// app.UseStaticFiles(new StaticFileOptions
-// {
-//     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
-//     RequestPath = "/Uploads"
-// });
 app.UseCors("AllowAll");
-
-
-app.UseHttpsRedirection();
-
+// app.UseHttpsRedirection();
 app.UseRouting();
-// app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

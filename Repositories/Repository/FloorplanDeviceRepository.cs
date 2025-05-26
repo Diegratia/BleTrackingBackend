@@ -60,7 +60,6 @@ namespace Repositories.Repository
                 .Include(fd => fd.Reader)
                 .Include(fd => fd.AccessControl)
                 .Include(fd => fd.FloorplanMaskedArea)
-                .Include(fd => fd.Application)
                 .FirstOrDefaultAsync(fd => fd.Id == id && fd.Status != 0);
         }
 
@@ -72,7 +71,6 @@ namespace Repositories.Repository
                 .Include(fd => fd.Reader)
                 .Include(fd => fd.AccessControl)
                 .Include(fd => fd.FloorplanMaskedArea)
-                .Include(fd => fd.Application)
                 .Where(fd => fd.Status != 0)
                 .ToListAsync();
         }
@@ -80,6 +78,10 @@ namespace Repositories.Repository
         public async Task<FloorplanDevice> AddAsync(FloorplanDevice device)
         {
             _context.FloorplanDevices.Add(device);
+            device.Id = Guid.NewGuid();
+            device.Status = 1;
+            device.CreatedAt = DateTime.UtcNow;
+            device.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return device;
         }
@@ -87,6 +89,7 @@ namespace Repositories.Repository
         public async Task UpdateAsync(FloorplanDevice device)
         {
             _context.FloorplanDevices.Update(device);
+            device.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
 
@@ -96,6 +99,7 @@ namespace Repositories.Repository
             if (device == null)
                 throw new KeyNotFoundException("FloorplanDevice not found");
 
+            device.UpdatedAt = DateTime.UtcNow;
             device.Status = 0;
             await _context.SaveChangesAsync();
         }

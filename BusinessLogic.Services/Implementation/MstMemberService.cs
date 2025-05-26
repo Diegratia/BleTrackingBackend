@@ -2,11 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -16,11 +18,13 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Max 5 MB
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstMemberService(MstMemberRepository repository, IMapper mapper)
+        public MstMemberService(MstMemberRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<MstMemberDto>> GetAllMembersAsync()
@@ -101,11 +105,12 @@ namespace BusinessLogic.Services.Implementation
                 member.FaceImage = null;
             }
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             member.Id = Guid.NewGuid();
             member.Status = 1;
-            member.CreatedBy = "System";
+            member.CreatedBy = username;
             member.CreatedAt = DateTime.UtcNow;
-            member.UpdatedBy = "System";
+            member.UpdatedBy = username;
             member.UpdatedAt = DateTime.UtcNow;
             member.JoinDate = DateOnly.FromDateTime(DateTime.UtcNow);
             member.ExitDate = DateOnly.MaxValue;
@@ -206,7 +211,8 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            member.UpdatedBy = "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            member.UpdatedBy = username;
             member.UpdatedAt = DateTime.UtcNow;
             member.BirthDate = updateDto.BirthDate;
 
@@ -217,6 +223,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteMemberAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var member = await _repository.GetByIdAsync(id);
+            member.UpdatedBy = username;
             await _repository.SoftDeleteAsync(id);
         }
     }

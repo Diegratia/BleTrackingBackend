@@ -24,6 +24,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
@@ -33,4 +34,5 @@
 		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
+
 </Project>

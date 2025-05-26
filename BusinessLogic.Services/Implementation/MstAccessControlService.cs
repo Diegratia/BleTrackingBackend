@@ -28,7 +28,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstAccessControlDto>> GetAllAsync()
         {
-            var accessControls = await _repository.GetAllAsync();
+            var accessControls = await _repository
+            .GetAllAsync();
             return _mapper.Map<IEnumerable<MstAccessControlDto>>(accessControls);
         }
 

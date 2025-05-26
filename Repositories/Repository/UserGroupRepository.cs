@@ -29,7 +29,7 @@ namespace Repositories.Repository
 
         public async Task<UserGroup> AddAsync(UserGroup userGroup)
         {
-            _context.UserGroups.Add(userGroup);
+            _context.UserGroups.AddRange(userGroup);
             await _context.SaveChangesAsync();
             return userGroup;
         }

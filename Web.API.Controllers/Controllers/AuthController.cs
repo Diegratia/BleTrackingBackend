@@ -104,5 +104,54 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        [HttpPost("refresh")]
+         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var response = await _authService.RefreshTokenAsync(dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Refresh successful",
+                    collection = new { data = response },
+                    code = 200
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    msg = ex.Message ?? "Invalid credentials",
+                    collection = new { data = (object)null },
+                    code = 401
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
     }
 }

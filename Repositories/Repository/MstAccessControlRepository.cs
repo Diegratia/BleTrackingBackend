@@ -19,12 +19,16 @@ namespace Repositories.Repository
         public async Task<MstAccessControl> GetByIdAsync(Guid id)
         {
             return await _context.MstAccessControls
+                .Include(a => a.Brand)
+                .Include(a => a.Integration)
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
         public async Task<IEnumerable<MstAccessControl>> GetAllAsync()
         {
             return await _context.MstAccessControls
+                .Include(a => a.Brand)
+                .Include(a => a.Integration)
                 .Where(a => a.Status != 0)
                 .ToListAsync();
         }

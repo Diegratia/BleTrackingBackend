@@ -2,7 +2,7 @@ services:
   auth:
     build:
       context: .
-      dockerfile: src/1.Auth/Dockerfile
+      dockerfile: Services.API/Auth/Dockerfile
     ports:
       - "5001:5001"
     volumes:
@@ -11,7 +11,7 @@ services:
   floorplan-device:
     build:
       context: .
-      dockerfile: src/3.FloorplanDevice/Dockerfile
+      dockerfile: Services.API/FloorplanDevice/Dockerfile
     ports:
       - "5003:5003"
     depends_on:
@@ -27,7 +27,7 @@ services:
   floorplan-masked-area:
     build:
       context: .
-      dockerfile: src/4.FloorplanMaskedArea/Dockerfile
+      dockerfile: Services.API/FloorplanMaskedArea/Dockerfile
     ports:
       - "5004:5004"
     depends_on:
@@ -39,7 +39,7 @@ services:
   mst-floor:
     build:
       context: .
-      dockerfile: src/13.MstFloor/Dockerfile
+      dockerfile: Services.API/MstFloor/Dockerfile
     ports:
       - "5013:5013"
     volumes:
@@ -49,7 +49,7 @@ services:
   mst-floorplan:
     build:
       context: .
-      dockerfile: src/14.MstFloorplan/Dockerfile
+      dockerfile: Services.API/MstFloorplan/Dockerfile
     ports:
       - "5014:5014"
     depends_on:
@@ -60,7 +60,7 @@ services:
   mst-integration:
     build:
       context: .
-      dockerfile: src/15.MstIntegration/Dockerfile
+      dockerfile: Services.API/MstIntegration/Dockerfile
     ports:
       - "5015:5015"
     depends_on:
@@ -72,7 +72,7 @@ services:
   mst-accesscontrol:
     build:
       context: .
-      dockerfile: src/6.MstAccessControl/Dockerfile
+      dockerfile: Services.API/MstAccessControl/Dockerfile
     ports:
       - "5006:5006"
     depends_on:
@@ -85,7 +85,7 @@ services:
   mst-accesscctv:
     build:
       context: .
-      dockerfile: src/5.MstAccessCctv/Dockerfile
+      dockerfile: Services.API/MstAccessCctv/Dockerfile
     ports:
       - "5005:5005"
     depends_on:
@@ -97,7 +97,7 @@ services:
   mst-blereader:
     build:
       context: .
-      dockerfile: src/8.MstBleReader/Dockerfile
+      dockerfile: Services.API/MstBleReader/Dockerfile
     ports:
       - "5008:5008"
     depends_on:
@@ -108,7 +108,7 @@ services:
   mst-brand:
     build:
       context: .
-      dockerfile: src/9.MstBrand/Dockerfile
+      dockerfile: Services.API/MstBrand/Dockerfile
     ports:
       - "5009:5009"
     volumes:
@@ -117,7 +117,7 @@ services:
   mst-application:
     build:
       context: .
-      dockerfile: src/7.MstApplication/Dockerfile
+      dockerfile: Services.API/MstApplication/Dockerfile
     ports:
       - "5007:5007"
     volumes:
@@ -126,7 +126,7 @@ services:
   visitor:
     build:
       context: .
-      dockerfile: src/19.Visitor/Dockerfile
+      dockerfile: Services.API/Visitor/Dockerfile
     ports:
       - "5019:5019"
     depends_on:
@@ -137,7 +137,7 @@ services:
   alarm-record-tracking:
     build:
       context: .
-      dockerfile: src/2.AlarmRecordTracking/Dockerfile
+      dockerfile: Services.API/AlarmRecordTracking/Dockerfile
     ports:
       - "5002:5002"
     depends_on:
@@ -151,7 +151,7 @@ services:
   mst-building:
     build:
       context: .
-      dockerfile: src/10.MstBuilding/Dockerfile
+      dockerfile: Services.API/MstBuilding/Dockerfile
     ports:
       - "5010:5010"
     depends_on:
@@ -162,7 +162,7 @@ services:
   mst-department:
     build:
       context: .
-      dockerfile: src/11.MstDepartment/Dockerfile
+      dockerfile: Services.API/MstDepartment/Dockerfile
     ports:
       - "5011:5011"
     depends_on:
@@ -173,7 +173,7 @@ services:
   mst-district:
     build:
       context: .
-      dockerfile: src/12.MstDistrict/Dockerfile
+      dockerfile: Services.API/MstDistrict/Dockerfile
     ports:
       - "5012:5012"
     depends_on:
@@ -184,7 +184,7 @@ services:
   mst-member:
     build:
       context: .
-      dockerfile: src/16.MstMember/Dockerfile
+      dockerfile: Services.API/MstMember/Dockerfile
     ports:
       - "5016:5016"
     depends_on:
@@ -199,7 +199,7 @@ services:
   mst-organization:
     build:
       context: .
-      dockerfile: src/17.MstOrganization/Dockerfile
+      dockerfile: Services.API/MstOrganization/Dockerfile
     ports:
       - "5017:5017"
     depends_on:
@@ -210,7 +210,7 @@ services:
   tracking-transaction:
     build:
       context: .
-      dockerfile: src/18.TrackingTransaction/Dockerfile
+      dockerfile: Services.API/TrackingTransaction/Dockerfile
     ports:
       - "5018:5018"
     depends_on:
@@ -222,7 +222,7 @@ services:
   visitor-blacklist-area:
     build:
       context: .
-      dockerfile: src/20.VisitorBlacklistArea/Dockerfile
+      dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
     ports:
       - "5020:5020"
     depends_on:
@@ -235,7 +235,7 @@ services:
   ble-reader-node:
     build:
       context: .
-      dockerfile: src/21.BleReaderNode/Dockerfile
+      dockerfile: Services.API/BleReaderNode/Dockerfile
     ports:
       - "5021:5021"
     depends_on:

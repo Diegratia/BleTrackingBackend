@@ -13,7 +13,7 @@ using DotNetEnv;
 
 try
 {
-    Env.Load("././.env");
+    Env.Load("../../.env");
 }
 catch (Exception ex)
 {
@@ -94,7 +94,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -128,7 +128,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
-
+builder.Services.AddScoped<RefreshTokenRepository>();
 // Konfigurasi port dan host
 var port = Environment.GetEnvironmentVariable("AUTH_PORT") ??
            builder.Configuration["Ports:AuthService"] ?? "5001";
@@ -159,13 +159,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
         c.RoutePrefix = "";
     });
 }
 
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
+// // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

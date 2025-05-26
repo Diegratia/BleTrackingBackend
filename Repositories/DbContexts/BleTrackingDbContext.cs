@@ -31,6 +31,8 @@ namespace Repositories.DbContexts
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,46 +53,49 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<VisitorBlacklistArea>().ToTable("visitor_blacklist_area");
             modelBuilder.Entity<MstBleReader>().ToTable("mst_ble_reader");
             modelBuilder.Entity<TrackingTransaction>().ToTable("tracking_transaction");
-            modelBuilder.Entity<AlarmRecordTracking>().ToTable("alarm_record_tracking"); 
-            modelBuilder.Entity<MstFloorplan>().ToTable("mst_floorplan"); 
-            modelBuilder.Entity<MstBuilding>().ToTable("mst_building"); 
-            modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node"); 
-            modelBuilder.Entity<User>().ToTable("user"); 
-            modelBuilder.Entity<UserGroup>().ToTable("user_group"); 
+            modelBuilder.Entity<AlarmRecordTracking>().ToTable("alarm_record_tracking");
+            modelBuilder.Entity<MstFloorplan>().ToTable("mst_floorplan");
+            modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
+            modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
+            modelBuilder.Entity<User>().ToTable("user");
+            modelBuilder.Entity<UserGroup>().ToTable("user_group");
+            modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
+
+
 
 
             // MstApplication
-        modelBuilder.Entity<MstApplication>(entity =>
-            {
-                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationType)
-                    .HasColumnType("nvarchar(255)")
-                    .IsRequired()
-                    .HasDefaultValue(OrganizationType.Single); 
+            modelBuilder.Entity<MstApplication>(entity =>
+                {
+                    entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                    entity.Property(e => e.OrganizationType)
+                        .HasColumnType("nvarchar(255)")
+                        .IsRequired()
+                        .HasDefaultValue(OrganizationType.Single);
                     // .HasConversion(
                     //     v => v.ToString().ToLower(), // Simpan ke DB sebagai "single"
                     //     v => (OrganizationType)Enum.Parse(typeof(OrganizationType), v, true)
                     // );
-                entity.Property(e => e.ApplicationType)
-                    .HasColumnType("nvarchar(255)")
-                    .IsRequired()
-                    .HasDefaultValue(ApplicationType.Empty)
-                    .HasConversion(
-                        v => v == ApplicationType.Empty ? "" : v.ToString().ToLower(),
-                        v => string.IsNullOrEmpty(v) ? ApplicationType.Empty : (ApplicationType)Enum.Parse(typeof(ApplicationType), v, true)
-                    );
-                entity.Property(e => e.LicenseType)
-                    .HasColumnType("nvarchar(255)")
-                    .IsRequired()
-                    .HasConversion(
-                        v => v.ToString().ToLower(),
-                        v => (LicenseType)Enum.Parse(typeof(LicenseType), v, true)
-                    );
+                    entity.Property(e => e.ApplicationType)
+                        .HasColumnType("nvarchar(255)")
+                        .IsRequired()
+                        .HasDefaultValue(ApplicationType.Empty)
+                        .HasConversion(
+                            v => v == ApplicationType.Empty ? "" : v.ToString().ToLower(),
+                            v => string.IsNullOrEmpty(v) ? ApplicationType.Empty : (ApplicationType)Enum.Parse(typeof(ApplicationType), v, true)
+                        );
+                    entity.Property(e => e.LicenseType)
+                        .HasColumnType("nvarchar(255)")
+                        .IsRequired()
+                        .HasConversion(
+                            v => v.ToString().ToLower(),
+                            v => (LicenseType)Enum.Parse(typeof(LicenseType), v, true)
+                        );
 
-                entity.Property(e => e.ApplicationStatus)
-                    .IsRequired()
-                    .HasDefaultValue(1);   
-            });
+                    entity.Property(e => e.ApplicationStatus)
+                        .IsRequired()
+                        .HasDefaultValue(1);
+                });
 
             modelBuilder.Entity<MstApplication>()
                 .HasQueryFilter(m => m.ApplicationStatus != 0);
@@ -117,7 +122,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstOrganization>()
                 .HasQueryFilter(m => m.Status != 0);
             modelBuilder.Entity<MstFloorplan>()
-                .HasQueryFilter(m => m.Status != 0);  
+                .HasQueryFilter(m => m.Status != 0);
 
             // MstIntegration
             modelBuilder.Entity<MstIntegration>(entity =>
@@ -149,10 +154,10 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BrandId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);   
+                    .HasDefaultValue(1);
             });
 
             // MstAccessCctv
@@ -171,10 +176,10 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
-                
+
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1); 
+                    .HasDefaultValue(1);
             });
 
             // MstAccessControl
@@ -194,9 +199,9 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.IntegrationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                 entity.Property(m => m.Status)
-                    .IsRequired()
-                    .HasDefaultValue(1);   
+                entity.Property(m => m.Status)
+                   .IsRequired()
+                   .HasDefaultValue(1);
             });
 
             // MstBrand
@@ -215,10 +220,10 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
-                
+
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);  
+                    .HasDefaultValue(1);
             });
 
             // MstDepartment
@@ -232,9 +237,9 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                 entity.Property(m => m.Status)
-                    .IsRequired()
-                    .HasDefaultValue(1);  
+                entity.Property(m => m.Status)
+                   .IsRequired()
+                   .HasDefaultValue(1);
             });
 
             // MstDistrict
@@ -250,7 +255,7 @@ namespace Repositories.DbContexts
 
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);  
+                    .HasDefaultValue(1);
             });
 
             // MstMember
@@ -295,10 +300,10 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.DistrictId)
                     .OnDelete(DeleteBehavior.NoAction);
-                
+
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);  
+                    .HasDefaultValue(1);
 
                 entity.HasIndex(m => m.PersonId);
                 entity.HasIndex(m => m.Email);
@@ -311,12 +316,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.BuildingId).HasMaxLength(36);
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1); 
-                    
+                    .HasDefaultValue(1);
+
                 entity.HasOne(m => m.Building)
                     .WithMany()
                     .HasForeignKey(m => m.BuildingId)
-                    .OnDelete(DeleteBehavior.NoAction);                
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // FloorplanMaskedArea
@@ -339,7 +344,7 @@ namespace Repositories.DbContexts
 
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);   
+                    .HasDefaultValue(1);
             });
 
             // Visitor
@@ -399,11 +404,11 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BrandId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+
                 entity.Property(m => m.Status)
                     .IsRequired()
                     .HasDefaultValue(1);
-                  
+
             });
 
             // TrackingTransaction
@@ -553,21 +558,21 @@ namespace Repositories.DbContexts
 
                 entity.Property(m => m.Status)
                     .IsRequired()
-                    .HasDefaultValue(1);  
+                    .HasDefaultValue(1);
             });
 
-             modelBuilder.Entity<User>()
-                .ToTable("user")
-                .HasOne(u => u.Group)
-                .WithMany()
-                .HasForeignKey(u => u.GroupId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<User>()
+               .ToTable("user")
+               .HasOne(u => u.Group)
+               .WithMany()
+               .HasForeignKey(u => u.GroupId)
+               .OnDelete(DeleteBehavior.Restrict);
 
-             modelBuilder.Entity<UserGroup>()
-                .ToTable("user_group");
+            modelBuilder.Entity<UserGroup>()
+               .ToTable("user_group");
 
-             modelBuilder.Entity<BleReaderNode>(entity =>
-             {
+            modelBuilder.Entity<BleReaderNode>(entity =>
+            {
                 entity.ToTable("ble_reader_node");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
@@ -580,19 +585,29 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 
                 entity.HasOne(t => t.Reader)
-                    .WithMany()
-                    .HasForeignKey(t => t.ReaderId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                     .WithMany()
+                     .HasForeignKey(t => t.ReaderId)
+                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Application)
-                    .WithMany()
-                    .HasForeignKey(m => m.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                     .WithMany()
+                     .HasForeignKey(m => m.ApplicationId)
+                     .OnDelete(DeleteBehavior.NoAction);
 
-                
+
                 entity.HasIndex(f => f.Generate).IsUnique();
 
-             });
+            });
+            
+            modelBuilder.Entity<RefreshToken>(Entity =>
+            {
+                Entity.HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId);
+            });   
+           
+
+            
         }
     }
 }

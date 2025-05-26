@@ -2,10 +2,13 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -13,11 +16,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly MstIntegrationRepository _repository;
         private readonly IMapper _mapper;
+        private  readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstIntegrationService(MstIntegrationRepository repository, IMapper mapper)
+        public MstIntegrationService(MstIntegrationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<MstIntegrationDto> GetByIdAsync(Guid id)
@@ -44,12 +49,13 @@ namespace BusinessLogic.Services.Implementation
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var integration = _mapper.Map<MstIntegration>(createDto);
             integration.Id = Guid.NewGuid();
             integration.Status = 1;
-            integration.CreatedBy = "System";
+            integration.CreatedBy = username;
             integration.CreatedAt = DateTime.UtcNow;
-            integration.UpdatedBy = "System";
+            integration.UpdatedBy = username;
             integration.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(integration);
@@ -80,7 +86,8 @@ namespace BusinessLogic.Services.Implementation
                 integration.ApplicationId = updateDto.ApplicationId;
             }
 
-            integration.UpdatedBy = "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            integration.UpdatedBy = username;
             integration.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, integration);
 
@@ -89,6 +96,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var integration = await _repository.GetByIdAsync(id);
+            integration.UpdatedBy = username;
             await _repository.SoftDeleteAsync(id);
         }
     }
