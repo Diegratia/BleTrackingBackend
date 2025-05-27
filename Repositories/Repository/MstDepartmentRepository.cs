@@ -50,7 +50,7 @@ namespace Repositories.Repository
             if (application == null)
                 throw new ArgumentException($"Application with ID {department.ApplicationId} not found.");
 
-            _context.MstDepartments.Update(department);
+            // _context.MstDepartments.Update(department);
             await _context.SaveChangesAsync();
         }
 

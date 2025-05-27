@@ -36,13 +36,13 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstBrand brand)
         {
-            _context.MstBrands.Update(brand);
+            // _context.MstBrands.Update(brand);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(MstBrand brand)
         {
-            _context.MstBrands.Update(brand); 
+            // _context.MstBrands.Update(brand); 
             await _context.SaveChangesAsync();
         }
     }

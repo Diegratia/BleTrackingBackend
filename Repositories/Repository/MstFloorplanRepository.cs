@@ -62,7 +62,7 @@ namespace Repositories.Repository
             if (application == null)
                 throw new ArgumentException($"Application with ID {floorplan.ApplicationId} not found.");
 
-            _context.MstFloorplans.Update(floorplan);
+            // _context.MstFloorplans.Update(floorplan);
             await _context.SaveChangesAsync();
         }
 

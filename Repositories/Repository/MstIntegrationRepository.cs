@@ -54,7 +54,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstIntegration integration)
         {
-            _context.MstIntegrations.Update(integration);
+            // _context.MstIntegrations.Update(integration);
             await _context.SaveChangesAsync();
         }
 

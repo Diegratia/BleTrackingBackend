@@ -54,7 +54,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(BleReaderNode bleReaderNode)
         {
-            _context.BleReaderNodes.Update(bleReaderNode);
+            // _context.BleReaderNodes.Update(bleReaderNode);
             await _context.SaveChangesAsync();
         }
 

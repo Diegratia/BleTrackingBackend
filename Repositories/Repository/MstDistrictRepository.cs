@@ -50,7 +50,7 @@ namespace Repositories.Repository
             if (application == null)
                 throw new ArgumentException($"Application with ID {district.ApplicationId} not found.");
 
-            _context.MstDistricts.Update(district);
+            // _context.MstDistricts.Update(district);
             await _context.SaveChangesAsync();
         }
 

@@ -88,7 +88,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(FloorplanDevice device)
         {
-            _context.FloorplanDevices.Update(device);
+            // _context.FloorplanDevices.Update(device);
             device.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }

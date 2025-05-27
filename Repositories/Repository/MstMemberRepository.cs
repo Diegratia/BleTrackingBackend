@@ -62,7 +62,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstMember member)
         {
-            _context.MstMembers.Update(member);
+            // _context.MstMembers.Update(member);
             await _context.SaveChangesAsync();
         }
 
@@ -74,7 +74,6 @@ namespace Repositories.Repository
 
             member.Status = 0;
             member.ExitDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            member.UpdatedBy = "System";
             member.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }

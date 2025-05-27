@@ -38,7 +38,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstFloor floor)
         {
-            _context.MstFloors.Update(floor);
+            // _context.MstFloors.Update(floor);
             await _context.SaveChangesAsync();
         }
 

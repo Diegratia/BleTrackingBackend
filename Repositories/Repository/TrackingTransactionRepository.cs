@@ -45,7 +45,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(TrackingTransaction transaction)
         {
-            _context.TrackingTransactions.Update(transaction);
+            // _context.TrackingTransactions.Update(transaction);
             await _context.SaveChangesAsync();
         }
 

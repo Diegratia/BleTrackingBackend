@@ -42,7 +42,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstAccessControl accessControl)
         {
-            _context.MstAccessControls.Update(accessControl);
+            // _context.MstAccessControls.Update(accessControl);
             await _context.SaveChangesAsync();
         }
 

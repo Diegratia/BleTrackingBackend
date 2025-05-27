@@ -46,7 +46,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(FloorplanMaskedArea area)
         {
-            _context.FloorplanMaskedAreas.Update(area);
+            // _context.FloorplanMaskedAreas.Update(area);
             await _context.SaveChangesAsync();
         }
 

@@ -34,13 +34,13 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstOrganization organization)
         {
-            _context.MstOrganizations.Update(organization);
+            // _context.MstOrganizations.Update(organization);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(MstOrganization organization)
         {
-            _context.MstOrganizations.Update(organization); // Soft delete logic
+            // _context.MstOrganizations.Update(organization); 
             await _context.SaveChangesAsync();
         }
     }

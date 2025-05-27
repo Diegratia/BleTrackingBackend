@@ -6,7 +6,8 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - ./.env:/app/.env
+      - ./.env:/app/Auth/.env
+    restart: always
 
   floorplan-device:
     build:
@@ -23,6 +24,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   floorplan-masked-area:
     build:
@@ -35,6 +37,7 @@ services:
       - mst-floorplan
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-floor:
     build:
@@ -45,6 +48,7 @@ services:
     volumes:
       - ./Uploads/FloorImages:/app/Uploads/FloorImages
       - ./.env:/app/.env
+    restart: always
 
   mst-floorplan:
     build:
@@ -56,6 +60,7 @@ services:
       - mst-floor
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-integration:
     build:
@@ -68,6 +73,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-accesscontrol:
     build:
@@ -81,6 +87,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-accesscctv:
     build:
@@ -93,6 +100,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-blereader:
     build:
@@ -104,6 +112,7 @@ services:
       - mst-brand
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-brand:
     build:
@@ -113,6 +122,7 @@ services:
       - "5009:5009"
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-application:
     build:
@@ -122,6 +132,7 @@ services:
       - "5007:5007"
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   visitor:
     build:
@@ -133,6 +144,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   alarm-record-tracking:
     build:
@@ -147,6 +159,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-building:
     build:
@@ -158,6 +171,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-department:
     build:
@@ -169,6 +183,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-district:
     build:
@@ -180,6 +195,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   mst-member:
     build:
@@ -195,6 +211,7 @@ services:
     volumes:
       - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
       - ./.env:/app/.env
+    restart: always
 
   mst-organization:
     build:
@@ -206,6 +223,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   tracking-transaction:
     build:
@@ -218,6 +236,7 @@ services:
       - floorplan-masked-area
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   visitor-blacklist-area:
     build:
@@ -231,6 +250,7 @@ services:
     volumes:
       - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
+    restart: always
 
   ble-reader-node:
     build:
@@ -243,6 +263,7 @@ services:
       - mst-application
     volumes:
       - ./.env:/app/.env
+    restart: always
 
   nginx:
     build:
@@ -273,3 +294,4 @@ services:
       - ble-reader-node
     volumes:
       - ./.env:/app/.env
+    restart: always

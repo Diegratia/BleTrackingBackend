@@ -38,7 +38,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstApplication application)
         {
-            _context.MstApplications.Update(application);
+            // _context.MstApplications.Update(application);
             await _context.SaveChangesAsync();
         }
 

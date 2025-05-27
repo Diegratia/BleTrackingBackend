@@ -69,7 +69,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(AlarmRecordTracking alarm)
         {
-            _context.AlarmRecordTrackings.Update(alarm);
+            // _context.AlarmRecordTrackings.Update(alarm);
             await _context.SaveChangesAsync();
         }
 

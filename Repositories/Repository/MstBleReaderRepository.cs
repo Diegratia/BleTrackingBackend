@@ -56,7 +56,7 @@ namespace Repositories.Repository
             if (brand == null)
                 throw new ArgumentException($"Brand with ID {bleReader.BrandId} not found.");
 
-            _context.MstBleReaders.Update(bleReader);
+            // _context.MstBleReaders.Update(bleReader);
             await _context.SaveChangesAsync();
         }
 

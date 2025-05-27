@@ -38,7 +38,7 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstAccessCctv accessCctv)
         {
-            _context.MstAccessCctvs.Update(accessCctv);
+            // _context.MstAccessCctvs.Update(accessCctv);
             await _context.SaveChangesAsync();
         }
 
