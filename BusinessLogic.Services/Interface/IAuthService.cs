@@ -354,6 +354,7 @@ namespace BusinessLogic.Services.Interface
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim("groupId", user.GroupId.ToString()),
+            new Claim("groupName", user.Group.Name),
             new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString())
         };
 

@@ -5,12 +5,13 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MstBuildingController : ControllerBase
     {
         private readonly IMstBuildingService _service;
@@ -139,7 +140,7 @@ namespace Web.API.Controllers.Controllers
                 });
             }
 
-           try
+            try
             {
                 await _service.UpdateAsync(id, dto); // No var assignment
                 return Ok(new
@@ -180,12 +181,12 @@ namespace Web.API.Controllers.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound(new
-                    {
-                        success = false,
-                        msg = "Building not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
+                {
+                    success = false,
+                    msg = "Building not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
             }
             catch (Exception ex)
             {

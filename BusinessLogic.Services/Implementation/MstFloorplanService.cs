@@ -18,7 +18,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstFloorplanService(MstFloorplanRepository repository, IMapper mapper, HttpContextAccessor httpContextAccessor)
+        public MstFloorplanService(MstFloorplanRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;

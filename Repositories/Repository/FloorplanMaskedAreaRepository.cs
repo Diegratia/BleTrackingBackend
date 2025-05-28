@@ -26,6 +26,7 @@ namespace Repositories.Repository
         {
             return await _context.FloorplanMaskedAreas
                 .Include(a => a.Floor)
+                .Include(a => a.Floorplan)
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
@@ -33,6 +34,7 @@ namespace Repositories.Repository
         {
             return await _context.FloorplanMaskedAreas
                 .Include(a => a.Floor)
+                .Include(a => a.Floorplan)
                 .Where(a => a.Status != 0)
                 .ToListAsync();
         }

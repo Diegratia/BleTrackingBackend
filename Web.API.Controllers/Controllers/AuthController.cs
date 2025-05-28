@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using DotNetEnv;
 
 namespace Web.API.Controllers.Controllers
 {

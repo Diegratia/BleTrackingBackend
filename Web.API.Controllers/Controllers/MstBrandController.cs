@@ -5,14 +5,13 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
   [Authorize ]
   [Route("api/[controller]")]
-    [ApiController]
+  [ApiController]
     public class MstBrandController : ControllerBase
     {
         private readonly IMstBrandService _mstBrandService;

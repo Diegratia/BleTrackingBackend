@@ -3,7 +3,7 @@ WORKDIR /app
 COPY ./ ./
 
 WORKDIR /app/Services.API/MstDistrict
-COPY Services.API/MstDistrict/*.csproj ./
+# COPY Services.API/MstDistrict/*.csproj ./
 # COPY Services.API/Common/ ./Common/
 RUN dotnet restore
 

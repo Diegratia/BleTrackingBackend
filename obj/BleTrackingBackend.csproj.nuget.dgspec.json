@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/developerpci/Projects/Remake/BleTrackingBackend/BleTrackingBackend.csproj": {}
+    "/Users/developerpci/Projects/Backend/BleTrackingBackend/BleTrackingBackend.csproj": {}
   },
   "projects": {
-    "/Users/developerpci/Projects/Remake/BleTrackingBackend/BleTrackingBackend.csproj": {
+    "/Users/developerpci/Projects/Backend/BleTrackingBackend/BleTrackingBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BleTrackingBackend.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BleTrackingBackend.csproj",
         "projectName": "BleTrackingBackend",
-        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BleTrackingBackend.csproj",
+        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BleTrackingBackend.csproj",
         "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/obj/",
+        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/developerpci/.nuget/NuGet/NuGet.Config"

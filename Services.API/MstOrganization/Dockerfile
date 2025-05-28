@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 COPY ./ ./
 
+WORKDIR /app/Services.API/MstOrganization
 # COPY Services.API/MstOrganization/*.csproj ./
 # COPY Services.API/Common/ ./Common/
 RUN dotnet restore

@@ -20,7 +20,7 @@ namespace BusinessLogic.Services.Implementation
         private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstFloorService(MstFloorRepository repository, IMapper mapper, HttpContextAccessor httpContextAccessor)
+        public MstFloorService(MstFloorRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;

@@ -43,7 +43,6 @@ namespace Repositories.Repository
         public async Task<AlarmRecordTracking> GetByIdAsync(Guid id)
         {
             return await _context.AlarmRecordTrackings
-                .Include(a => a.Application)
                 .Include(a => a.Visitor)
                 .Include(a => a.Reader)
                 .Include(a => a.FloorplanMaskedArea)
@@ -52,8 +51,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<AlarmRecordTracking>> GetAllAsync()
         {
-            return await _context.AlarmRecordTrackings
-                .Include(a => a.Application)
+            return await _context.AlarmRecordTracking
                 .Include(a => a.Visitor)
                 .Include(a => a.Reader)
                 .Include(a => a.FloorplanMaskedArea)

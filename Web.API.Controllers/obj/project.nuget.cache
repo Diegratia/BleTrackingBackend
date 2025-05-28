@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "NEvsljJUZME=",
+  "dgSpecHash": "9yoNTdWn5Js=",
   "success": true,
-  "projectFilePath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj",
+  "projectFilePath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj",
   "expectedPackageFiles": [
     "/Users/developerpci/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/Users/developerpci/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

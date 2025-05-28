@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "G+4lMsPMFRo=",
+  "dgSpecHash": "SiqLzd+Pfts=",
   "success": true,
-  "projectFilePath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
+  "projectFilePath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
   "expectedPackageFiles": [
     "/Users/developerpci/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/Users/developerpci/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

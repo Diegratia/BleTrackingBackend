@@ -15,7 +15,7 @@ using DotNetEnv;
 
 try
 {
-    Env.Load("../../.env");
+    Env.Load("/app/.env");
 }
 catch (Exception ex)
 {
@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.173,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -106,15 +106,15 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHttpContextAccessor();
 
 
-builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
-builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddAutoMapper(typeof(MstFloorProfile));
+builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 
-builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<MstFloorRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ??
-           builder.Configuration["Ports:MstFloorplanService"];
+var port = Environment.GetEnvironmentVariable("MST_FLOOR_PORT") ??
+           builder.Configuration["Ports:MstFloorService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
@@ -127,7 +127,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        DatabaseSeeder.Seed(context); 
+        // DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

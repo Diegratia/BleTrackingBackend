@@ -11,6 +11,8 @@ namespace Entities.Models
 
     public class FloorplanDevice : BaseModel
     {
+        private MstFloorplan floorplan;
+
 
         [Required]
         [StringLength(255)]
@@ -93,7 +95,7 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        public virtual MstFloorplan Floorplan { get; set; }
+        public virtual MstFloorplan Floorplan { get => floorplan; set => floorplan = value; }
         public virtual MstAccessCctv AccessCctv { get; set; }
         public virtual MstBleReader Reader { get; set; }
         public virtual MstAccessControl AccessControl { get; set; }

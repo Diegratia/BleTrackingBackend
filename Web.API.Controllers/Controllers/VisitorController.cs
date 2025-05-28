@@ -5,12 +5,13 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class VisitorController : ControllerBase
     {
         private readonly IVisitorService _visitorService;
@@ -24,7 +25,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] VisitorCreateDto visitorDto)
         {
-             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
+            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new

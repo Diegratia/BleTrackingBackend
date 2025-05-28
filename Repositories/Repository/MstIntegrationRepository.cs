@@ -32,7 +32,6 @@ namespace Repositories.Repository
         {
             return await _context.MstIntegrations
                 .Include(i => i.Brand)
-                .Include(i => i.Application)
                 .FirstOrDefaultAsync(i => i.Id == id && i.Status != 0);
         }
 
@@ -40,7 +39,6 @@ namespace Repositories.Repository
         {
             return await _context.MstIntegrations
                 .Include(i => i.Brand)
-                .Include(i => i.Application)
                 .Where(i => i.Status != 0)
                 .ToListAsync();
         }

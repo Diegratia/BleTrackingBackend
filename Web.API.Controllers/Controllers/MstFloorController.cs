@@ -5,12 +5,13 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MstFloorController : ControllerBase
     {
         private readonly IMstFloorService _mstFloorService;
@@ -84,7 +85,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstFloorCreateDto mstFloorDto)
-        {   
+        {
             if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
@@ -123,7 +124,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
         {
-           if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
+            if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -143,7 +144,7 @@ namespace Web.API.Controllers.Controllers
                     success = true,
                     msg = "Floor updated successfully",
                     collection = new { data = updatedFloor },
-                    code = 200 
+                    code = 200
                 });
             }
             catch (KeyNotFoundException)

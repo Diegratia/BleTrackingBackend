@@ -46,7 +46,6 @@ namespace Data.ViewModels
         public long PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
-        public string UpdatedBy { get; set; }
         public string DeviceStatus { get; set; }
     }
 
@@ -64,7 +63,6 @@ namespace Data.ViewModels
         public long PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
-        public string UpdatedBy { get; set; }
         public string DeviceStatus { get; set; }
     }
 }

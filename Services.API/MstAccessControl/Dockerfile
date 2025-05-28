@@ -12,7 +12,7 @@ RUN dotnet publish -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/Services.API/MstAccessControlout ./
+COPY --from=build /app/Services.API/MstAccessControl/out ./
 
 EXPOSE 5006
 ENTRYPOINT ["dotnet", "MstAccessControl.dll"] 

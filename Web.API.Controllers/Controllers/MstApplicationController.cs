@@ -5,12 +5,11 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize(Roles = "System")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MstApplicationController : ControllerBase

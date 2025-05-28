@@ -10165,11 +10165,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/MstBleReader.csproj",
+      "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Services.API/MstBleReader/MstBleReader.csproj",
       "projectName": "MstBleReader",
-      "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/MstBleReader.csproj",
+      "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Services.API/MstBleReader/MstBleReader.csproj",
       "packagesPath": "/Users/developerpci/.nuget/packages/",
-      "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Services.API/MstBleReader/obj/",
+      "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Services.API/MstBleReader/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/developerpci/.nuget/NuGet/NuGet.Config"
@@ -10184,14 +10184,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {
-              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj"
+            "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj"
             },
-            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
-              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
+            "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
             },
-            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj": {
-              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj"
+            "/Users/developerpci/Projects/Backend/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Web.API.Controllers/Web.API.Controllers.csproj"
             }
           }
         }

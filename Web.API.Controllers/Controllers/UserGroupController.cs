@@ -7,11 +7,13 @@ using BusinessLogic.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserGroupController : ControllerBase
     {
         private readonly BleTrackingDbContext _context;

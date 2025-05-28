@@ -19,12 +19,14 @@ namespace Repositories.Repository
         public async Task<MstFloor> GetByIdAsync(Guid id)
         {
             return await _context.MstFloors
+                .Include(f => f.Building)
                 .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllAsync()
         {
             return await _context.MstFloors
+                .Include(f => f.Building)
                 .Where(f => f.Status != 0)
                 .ToListAsync();
         }

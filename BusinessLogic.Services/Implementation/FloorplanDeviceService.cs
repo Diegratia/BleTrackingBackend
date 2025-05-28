@@ -31,6 +31,9 @@ namespace BusinessLogic.Services.Implementation
             return device == null ? null : _mapper.Map<FloorplanDeviceDto>(device);
         }
 
+    
+
+
         public async Task<IEnumerable<FloorplanDeviceDto>> GetAllAsync()
         {
             var devices = await _repository.GetAllAsync();

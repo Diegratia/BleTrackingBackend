@@ -43,7 +43,7 @@ namespace Repositories.Repository
 
         public async Task DeleteAsync(Visitor visitor)
         {
-            _context.Visitors.Remove(visitor);
+            // _context.Visitors.Remove(visitor);
             await _context.SaveChangesAsync();
         }
 

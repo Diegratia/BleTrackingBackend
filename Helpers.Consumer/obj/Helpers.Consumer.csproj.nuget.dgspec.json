@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {}
+    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {}
   },
   "projects": {
-    "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
         "projectName": "Helpers.Consumer",
-        "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
         "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/obj/",
+        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/developerpci/.nuget/NuGet/NuGet.Config"

@@ -16,7 +16,7 @@ using DotNetEnv;
 
 try
 {
-    Env.Load("../../.env");
+    Env.Load("/app/.env");
 }
 catch (Exception ex)
 {
@@ -44,7 +44,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.173,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -109,13 +109,13 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstAccessCctvProfile));
 // Registrasi Services
 builder.Services.AddScoped<IMstAccessCctvService, MstAccessCctvService>();
-builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
+// builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
 
 builder.Services.AddScoped<MstAccessCctvRepository>();
 
-var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ??
-           builder.Configuration["Ports:FloorplanMaskedAreaService"];
+var port = Environment.GetEnvironmentVariable("MST_ACCESS_CCTV_PORT") ??
+           builder.Configuration["Ports:MstAccessCctvService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
@@ -128,7 +128,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        DatabaseSeeder.Seed(context); 
+        // DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

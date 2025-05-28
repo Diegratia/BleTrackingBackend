@@ -5,13 +5,14 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class FloorplanDeviceController : ControllerBase
     {
         private readonly IFloorplanDeviceService _service;

@@ -6,7 +6,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - ./.env:/app/Auth/.env
+      - ./.env:/app/.env
     restart: always
 
   floorplan-device:
@@ -15,13 +15,13 @@ services:
       dockerfile: Services.API/FloorplanDevice/Dockerfile
     ports:
       - "5003:5003"
-    depends_on:
-      - mst-floorplan
-      - mst-accesscctv
-      - mst-blereader
-      - mst-accesscontrol
-      - floorplan-masked-area
-      - mst-application
+    # depends_on:
+    #   - mst-floorplan
+    #   - mst-accesscctv
+    #   - mst-blereader
+    #   - mst-accesscontrol
+    #   - floorplan-masked-area
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -32,9 +32,9 @@ services:
       dockerfile: Services.API/FloorplanMaskedArea/Dockerfile
     ports:
       - "5004:5004"
-    depends_on:
-      - mst-floor
-      - mst-floorplan
+    # depends_on:
+    #   - mst-floor
+    #   - mst-floorplan
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -56,8 +56,8 @@ services:
       dockerfile: Services.API/MstFloorplan/Dockerfile
     ports:
       - "5014:5014"
-    depends_on:
-      - mst-floor
+    # depends_on:
+    #   - mst-floor
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -68,9 +68,9 @@ services:
       dockerfile: Services.API/MstIntegration/Dockerfile
     ports:
       - "5015:5015"
-    depends_on:
-      - mst-brand
-      - mst-application
+    # depends_on:
+    #   - mst-brand
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -81,10 +81,10 @@ services:
       dockerfile: Services.API/MstAccessControl/Dockerfile
     ports:
       - "5006:5006"
-    depends_on:
-      - mst-brand
-      - mst-integration
-      - mst-application
+    # depends_on:
+    #   - mst-brand
+    #   - mst-integration
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -95,9 +95,9 @@ services:
       dockerfile: Services.API/MstAccessCctv/Dockerfile
     ports:
       - "5005:5005"
-    depends_on:
-      - mst-integration
-      - mst-application
+    # depends_on:
+    #   - mst-integration
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -108,8 +108,8 @@ services:
       dockerfile: Services.API/MstBleReader/Dockerfile
     ports:
       - "5008:5008"
-    depends_on:
-      - mst-brand
+    # depends_on:
+    #   - mst-brand
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -140,8 +140,8 @@ services:
       dockerfile: Services.API/Visitor/Dockerfile
     ports:
       - "5019:5019"
-    depends_on:
-      - mst-application
+    # depends_on:
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -152,11 +152,11 @@ services:
       dockerfile: Services.API/AlarmRecordTracking/Dockerfile
     ports:
       - "5002:5002"
-    depends_on:
-      - visitor
-      - mst-blereader
-      - floorplan-masked-area
-      - mst-application
+    # depends_on:
+    #   - visitor
+    #   - mst-blereader
+    #   - floorplan-masked-area
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -167,8 +167,8 @@ services:
       dockerfile: Services.API/MstBuilding/Dockerfile
     ports:
       - "5010:5010"
-    depends_on:
-      - mst-application
+    # depends_on:
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -179,8 +179,8 @@ services:
       dockerfile: Services.API/MstDepartment/Dockerfile
     ports:
       - "5011:5011"
-    depends_on:
-      - mst-application
+    # depends_on:
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -191,8 +191,8 @@ services:
       dockerfile: Services.API/MstDistrict/Dockerfile
     ports:
       - "5012:5012"
-    depends_on:
-      - mst-application
+    # depends_on:
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -203,11 +203,11 @@ services:
       dockerfile: Services.API/MstMember/Dockerfile
     ports:
       - "5016:5016"
-    depends_on:
-      - mst-application
-      - mst-organization
-      - mst-department
-      - mst-district
+    # depends_on:
+    #   - mst-application
+    #   - mst-organization
+    #   - mst-department
+    #   - mst-district
     volumes:
       - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
       - ./.env:/app/.env
@@ -219,8 +219,8 @@ services:
       dockerfile: Services.API/MstOrganization/Dockerfile
     ports:
       - "5017:5017"
-    depends_on:
-      - mst-application
+    # depends_on:
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -231,9 +231,9 @@ services:
       dockerfile: Services.API/TrackingTransaction/Dockerfile
     ports:
       - "5018:5018"
-    depends_on:
-      - mst-blereader
-      - floorplan-masked-area
+    # depends_on:
+    #   - mst-blereader
+    #   - floorplan-masked-area
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -244,9 +244,9 @@ services:
       dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
     ports:
       - "5020:5020"
-    depends_on:
-      - floorplan-masked-area
-      - visitor
+    # depends_on:
+    #   - floorplan-masked-area
+    #   - visitor
     volumes:
       - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
@@ -258,9 +258,9 @@ services:
       dockerfile: Services.API/BleReaderNode/Dockerfile
     ports:
       - "5021:5021"
-    depends_on:
-      - mst-blereader
-      - mst-application
+    # depends_on:
+    #   - mst-blereader
+    #   - mst-application
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -271,27 +271,27 @@ services:
       dockerfile: Dockerfile.nginx
     ports:
       - "5000:5000"
-    depends_on:
-      - auth
-      - floorplan-device
-      - floorplan-masked-area
-      - mst-accesscctv
-      - mst-accesscontrol
-      - mst-application
-      - mst-brand
-      - mst-blereader
-      - mst-department
-      - mst-district
-      - mst-floor
-      - mst-floorplan
-      - mst-integration
-      - mst-member
-      - mst-organization
-      - tracking-transaction
-      - visitor
-      - visitor-blacklist-area
-      - alarm-record-tracking
-      - ble-reader-node
+    # depends_on:
+    #   - auth
+    #   - floorplan-device
+    #   - floorplan-masked-area
+    #   - mst-accesscctv
+    #   - mst-accesscontrol
+    #   - mst-application
+    #   - mst-brand
+    #   - mst-blereader
+    #   - mst-department
+    #   - mst-district
+    #   - mst-floor
+    #   - mst-floorplan
+    #   - mst-integration
+    #   - mst-member
+    #   - mst-organization
+    #   - tracking-transaction
+    #   - visitor
+    #   - visitor-blacklist-area
+    #   - alarm-record-tracking
+    #   - ble-reader-node
     volumes:
       - ./.env:/app/.env
     restart: always

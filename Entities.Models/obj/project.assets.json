@@ -5567,11 +5567,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
+      "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
       "projectName": "Entities.Models",
-      "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
+      "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
       "packagesPath": "/Users/developerpci/.nuget/packages/",
-      "outputPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Entities.Models/obj/",
+      "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/developerpci/.nuget/NuGet/NuGet.Config"
@@ -5586,8 +5586,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-              "projectPath": "/Users/developerpci/Projects/Remake/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+            "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+              "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
             }
           }
         }
