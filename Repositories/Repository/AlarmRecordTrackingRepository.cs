@@ -51,7 +51,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<AlarmRecordTracking>> GetAllAsync()
         {
-            return await _context.AlarmRecordTracking
+            return await _context.AlarmRecordTrackings
                 .Include(a => a.Visitor)
                 .Include(a => a.Reader)
                 .Include(a => a.FloorplanMaskedArea)

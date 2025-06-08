@@ -94,6 +94,5 @@ namespace Data.ViewModels
         public string ReasonBlock { get; set; } = "";
         public string ReasonUnblock { get; set; } = "";
         public string Status { get; set; }
-
     }
 }

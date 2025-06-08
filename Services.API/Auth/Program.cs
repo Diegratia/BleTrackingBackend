@@ -13,7 +13,7 @@ using DotNetEnv;
 
 try
 {
-    Env.Load("/app/.env");
+    Env.Load("../../.env");
 }
 catch (Exception ex)
 {
