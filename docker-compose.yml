@@ -265,6 +265,19 @@ services:
       - ./.env:/app/.env
     restart: always
 
+  mst-engine:
+    build:
+      context: .
+      dockerfile: Services.API/MstEngine/Dockerfile
+    ports:
+      - "5022:5022"
+    # depends_on:
+    #   - mst-blereader
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
   nginx:
     build:
       context: .

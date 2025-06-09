@@ -758,7 +758,7 @@ namespace Repositories.Seeding
                 var engineFaker = new Faker<MstEngine>()
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
                     .RuleFor(e => e.Name, f => "Engine " + f.Random.Word())
-                    .RuleFor(e => e.EngineId, f => "topic" + Guid.NewGuid().ToString())
+                    .RuleFor(e => e.EngineId, f => "topic_" + Guid.NewGuid().ToString())
                     .RuleFor(e => e.Port, f => f.Random.Number(1000, 9999))
                     .RuleFor(e => e.Status, f => 1)
                     .RuleFor(e => e.IsLive, f => 1)

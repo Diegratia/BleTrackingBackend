@@ -22,6 +22,13 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(u => u.Id == id && u.StatusActive != 0);
         }
 
+            public async Task<List<User>> GetAllAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Group)
+                .ToListAsync();
+        }
+
         public async Task<User> GetByUsernameAsync(string username)
         {
             return await _context.Users

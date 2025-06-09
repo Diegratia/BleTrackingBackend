@@ -17,7 +17,7 @@ namespace Entities.Models
 
         [Required]
         [ForeignKey("Visitor")]
-        [Column("visitor")]
+        [Column("visitor_id")]
         public Guid VisitorId { get; set; }
 
         [Required]
@@ -93,9 +93,6 @@ namespace Entities.Models
         [Required]
         [Column("investigated_result")]
         public string InvestigatedResult { get; set; }
-
-
-
 
         public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }
