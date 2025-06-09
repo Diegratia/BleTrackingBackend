@@ -35,12 +35,18 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<FloorplanDevice, FloorplanDeviceDto>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => src.DeviceStatus.ToString()))
-                .ForMember(dest => dest.Floorplan, opt => opt.Ignore()) // Diisi di service
-                .ForMember(dest => dest.AccessCctv, opt => opt.Ignore()) // Diisi di service
-                .ForMember(dest => dest.Reader, opt => opt.Ignore()) // Diisi di service
-                .ForMember(dest => dest.AccessControl, opt => opt.Ignore()) // Diisi di service
-                .ForMember(dest => dest.FloorplanMaskedArea, opt => opt.Ignore()); // Diisi di service
+                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => src.DeviceStatus.ToString()));
+                // .ForMember(dest => dest.Floorplan, opt => opt.Ignore()) // Diisi di service
+                // .ForMember(dest => dest.AccessCctv, opt => opt.Ignore()) // Diisi di service
+                // .ForMember(dest => dest.Reader, opt => opt.Ignore()) // Diisi di service
+                // .ForMember(dest => dest.AccessControl, opt => opt.Ignore()) // Diisi di service
+                // .ForMember(dest => dest.FloorplanMaskedArea, opt => opt.Ignore()); // Diisi di service
+
+            CreateMap<MstFloorplan, MstFloorplanDto>();
+            CreateMap<MstAccessCctv, MstAccessCctvDto>();
+            CreateMap<MstBleReader, MstBleReaderDto>();
+            CreateMap<MstAccessControl, MstAccessControlDto>();
+            CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
         }
     }
 }
