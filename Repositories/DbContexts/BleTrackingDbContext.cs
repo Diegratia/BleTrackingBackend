@@ -29,6 +29,7 @@ namespace Repositories.DbContexts
         public DbSet<MstBuilding> MstBuildings { get; set; }
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
+        public DbSet<MstEngine> MstEngines { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -57,6 +58,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstFloorplan>().ToTable("mst_floorplan");
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
             modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
+            modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
@@ -122,6 +124,8 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstOrganization>()
                 .HasQueryFilter(m => m.Status != 0);
             modelBuilder.Entity<MstFloorplan>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstEngine>()
                 .HasQueryFilter(m => m.Status != 0);
 
             // MstIntegration
@@ -598,7 +602,26 @@ namespace Repositories.DbContexts
                 entity.HasIndex(f => f.Generate).IsUnique();
 
             });
-            
+
+            // MstEngine
+            modelBuilder.Entity<MstEngine>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.EngineId).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Port).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1); // untuk delete
+                entity.Property(e => e.IsLive).IsRequired().HasDefaultValue(1); // untuk monitoring status
+                entity.Property(e => e.LastLive).IsRequired();
+                entity.Property(e => e.ServiceStatus).HasMaxLength(50)
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
+                    );
+            });
+
             modelBuilder.Entity<RefreshToken>(Entity =>
             {
                 Entity.HasOne(rt => rt.User)

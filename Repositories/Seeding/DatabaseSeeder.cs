@@ -751,6 +751,24 @@ namespace Repositories.Seeding
                 context.BleReaderNodes.AddRange(blereadernodes);
                 context.SaveChanges();
             }
+
+               // 21. MstEngine
+                 if (!context.MstEngines.Any())
+            {
+                var engineFaker = new Faker<MstEngine>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.Name, f => "Engine " + f.Random.Word())
+                    .RuleFor(e => e.EngineId, f => "topic" + Guid.NewGuid().ToString())
+                    .RuleFor(e => e.Port, f => f.Random.Number(1000, 9999))
+                    .RuleFor(e => e.Status, f => 1)
+                    .RuleFor(e => e.IsLive, f => 1)
+                    .RuleFor(e => e.LastLive, f => f.Date.Recent())
+                    .RuleFor(e => e.ServiceStatus, f => f.PickRandom<ServiceStatus>());
+
+                var engines = engineFaker.Generate(3);
+                context.MstEngines.AddRange(engines);
+                context.SaveChanges();
+            }
         }
     }
 }

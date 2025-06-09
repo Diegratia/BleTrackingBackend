@@ -7,7 +7,7 @@ namespace Helpers.Consumer
         Medium,
         Big,
         Corporate,
-        Government 
+        Government
     }
 
     public enum ApplicationType
@@ -78,7 +78,7 @@ namespace Helpers.Consumer
         Active
     }
 
-        public enum AlarmRecordStatus
+    public enum AlarmRecordStatus
     {
         Block,
         Help,
@@ -87,7 +87,7 @@ namespace Helpers.Consumer
         Lost
     }
 
-        public enum ActionStatus
+    public enum ActionStatus
     {
         Idle,
         Done,
@@ -99,7 +99,7 @@ namespace Helpers.Consumer
         PostponeInvestigated
     }
 
-      public enum DeviceType
+    public enum DeviceType
     {
         Cctv,
         AccessDoor,
@@ -115,5 +115,11 @@ namespace Helpers.Consumer
         Open,
         Monitor,
         Alarm
+    }
+    
+    public enum ServiceStatus
+    {
+        Start,
+        Stop
     }
 }

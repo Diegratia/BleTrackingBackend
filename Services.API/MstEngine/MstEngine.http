@@ -1,0 +1,6 @@
+@MstEngine_HostAddress = http://localhost:5070
+
+GET {{MstEngine_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
