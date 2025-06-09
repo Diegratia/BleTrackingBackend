@@ -153,6 +153,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/MemberFaceImages");
+Directory.CreateDirectory(uploadsPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/MemberFaceImages"
+});
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();

@@ -21,7 +21,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet]   
         public async Task<IActionResult> GetAll()
         {
             var alarms = await _service.GetAllAsync();

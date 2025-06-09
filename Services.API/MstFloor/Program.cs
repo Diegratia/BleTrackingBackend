@@ -151,6 +151,24 @@ app.UseCors("AllowAll");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+//     RequestPath = "/Uploads"
+// });
+
+// Buat direktori Uploads/FloorImages jika belum ada
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
+Directory.CreateDirectory(uploadsPath);
+
+// Sajikan file statis di /Uploads/FloorImages/
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/FloorImages"
+});
+
 app.MapControllers();
 app.Run();
 

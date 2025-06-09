@@ -51,7 +51,7 @@ namespace BusinessLogic.Services.Implementation
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var application = _mapper.Map<MstApplication>(dto);
-            application.Id = Guid.NewGuid();
+            // application.Id = Guid.NewGuid();
             application.ApplicationStatus = 1;
 
             var createdApplication = await _applicationRepository.AddAsync(application);
@@ -203,7 +203,7 @@ namespace BusinessLogic.Services.Implementation
                 await _userRepository.AddAsync(user);
             }
 
-            await _applicationRepository.AddAsync(application);
+            // await _applicationRepository.AddAsync(application);
 
             return _mapper.Map<MstApplicationDto>(createdApplication);
         }

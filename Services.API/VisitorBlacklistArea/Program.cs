@@ -114,12 +114,12 @@ builder.Services.AddScoped<IVisitorBlacklistAreaService, VisitorBlacklistAreaSer
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
-builder.Services.AddScoped<TrackingTransactionRepository>();
+builder.Services.AddScoped<VisitorBlacklistAreaRepository>();
 
 
 
 var port = Environment.GetEnvironmentVariable("VISITOR_BLACKLIST_AREA_PORT") ??
-           builder.Configuration["Ports:VisitorBlacklistAreaService"];
+           builder.Configuration["Ports:VisitorBlacklistAreaService"] ?? "5020";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
