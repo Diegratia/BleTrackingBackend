@@ -115,7 +115,7 @@ namespace Repositories.Seeding
                     .RuleFor(u => u.Password, f => BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"))
                     .RuleFor(u => u.IsCreatedPassword, f => 1)
                     .RuleFor(u => u.Email, f => f.Internet.Email())
-                    .RuleFor(u => u.IsEmailConfirmation, f => 1) 
+                    .RuleFor(u => u.IsEmailConfirmation, f => 1)
                     .RuleFor(u => u.EmailConfirmationCode, f => f.Random.AlphaNumeric(8))
                     .RuleFor(u => u.EmailConfirmationExpiredAt, f => DateTime.UtcNow.AddDays(1))
                     .RuleFor(u => u.EmailConfirmationAt, f => DateTime.UtcNow)
@@ -127,10 +127,10 @@ namespace Repositories.Seeding
                         .First()
                         .Id);
 
-            
+
                 var users = userFaker.Generate(2);
 
-            
+
                 var superadminGroup = context.UserGroups
                     .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.System && ug.Status != 0);
                 if (superadminGroup != null)
@@ -723,7 +723,7 @@ namespace Repositories.Seeding
                 context.FloorplanDevices.AddRange(devices);
                 context.SaveChanges();
             }
-                         // 20. BleReaderNode
+            // 20. BleReaderNode
             if (!context.BleReaderNodes.Any())
             {
                 var blereadernodeFaker = new Faker<BleReaderNode>()
@@ -752,8 +752,10 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-               // 21. MstEngine
-                 if (!context.MstEngines.Any())
+         
+
+              // 21. MstEngine
+            if (!context.MstEngines.Any())
             {
                 var engineFaker = new Faker<MstEngine>()
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
@@ -769,6 +771,36 @@ namespace Repositories.Seeding
                 context.MstEngines.AddRange(engines);
                 context.SaveChanges();
             }
+
+               // 22. MstLogEngine
+            // if (!context.MstLogTrackings.Any())
+            // {
+            //     var logTrackingFaker = new Faker<MstLogTrackings>()
+            //         .RuleFor(e => e.Id, f => Guid.NewGuid())
+            //         .RuleFor(b => b.FloorplanId, f => context.MstFloorplans
+            //             .Where(a => a.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .Select(a => a.Id)
+            //             .FirstOrDefault())
+            //         .RuleFor(d => d.BeaconId, f => "BC572905DB80")
+            //         .RuleFor(d => d.FirstReaderId, f => "282C02227F1A")
+            //         .RuleFor(d => d.SecondReaderId, f => "282C02227F53")
+            //         .RuleFor(d => d.FirstDistance, f => 9)
+            //         .RuleFor(d => d.SecondDistance, f => 8)
+            //         .RuleFor(d => d.DistancePx, f => 31.62m)
+            //         .RuleFor(d => d.Distance, f => 31.62m)
+            //         .RuleFor(d => d.PointX, f => 48)
+            //         .RuleFor(d => d.PointY, f => 141)
+            //         .RuleFor(d => d.FirstReaderX, f => 40)
+            //         .RuleFor(d => d.FirstReaderY, f => 120)
+            //         .RuleFor(d => d.SecondReaderX, f => 50)
+            //         .RuleFor(d => d.SecondReaderY, f => 150)
+            //         .RuleFor(d => d.Timestamp, f => DateTime.Parse("2025-05-29 05:48:05,580"));
+
+            //     var logTrackings = logTrackingFaker.Generate(3);
+            //     context.MstLogTrackings.AddRange(logTrackings);
+            //     context.SaveChanges();
+            // }            
         }
     }
 }
