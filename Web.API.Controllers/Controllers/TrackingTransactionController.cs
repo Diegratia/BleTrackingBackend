@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/tracking-transaction")]
     [ApiController]
     [Authorize]
     public class TrackingTransactionController : ControllerBase

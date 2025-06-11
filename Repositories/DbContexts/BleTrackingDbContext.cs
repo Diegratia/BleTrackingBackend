@@ -30,7 +30,6 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
-        
         public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
         public DbSet<User> Users { get; set; }
@@ -718,12 +717,15 @@ namespace Repositories.DbContexts
                     .HasColumnName("floorplan_id")
                     .HasColumnType("uuid");
 
-                entity.HasOne(e => e.FloorplanDevices)
+                entity.HasOne(e => e.FloorplanDevice)
                     .WithMany()
-                    .HasForeignKey(e => e.FloorplanId)
+                    .HasForeignKey(e => e.FloorplanDeviceId)
                     .HasConstraintName("fk_mst_tracking_log_floorplan_device")
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+
+             
 
             // Configure RecordTrackingLog entity
             modelBuilder.Entity<RecordTrackingLog>(entity =>
@@ -753,11 +755,11 @@ namespace Repositories.DbContexts
                     .HasColumnName("floorplan_timestamp")
                     .HasColumnType("timestamp");
 
-                entity.HasOne(e => e.FloorplanDevices)
+                entity.HasOne(e => e.Floorplan)
                     .WithMany()
                     .HasForeignKey(e => e.FloorplanId)
-                    .HasConstraintName("fk_record_tracking_log_floorplan_device")
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasConstraintName("fk_record_tracking_log_floorplan")
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<RefreshToken>(Entity =>

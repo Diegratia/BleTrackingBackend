@@ -21,7 +21,7 @@ namespace Entities.Models
         public string TableName { get; set; }
 
         [Required]
-        [ForeignKey("FloorplanDevice")]
+        [ForeignKey("Floorplan")]
         [Column("floorplan_id")]
         public Guid FloorplanId { get; set; }
 
@@ -29,6 +29,6 @@ namespace Entities.Models
         [Column("floorplan_timestamp")]
         public DateTime FloorplanTimestamp { get; set; }
 
-        public virtual FloorplanDevice FloorplanDevices { get; set; }
+        public virtual MstFloorplan Floorplan { get; set; }
     }
 }

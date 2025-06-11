@@ -16,8 +16,10 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string Email { get; set; }
         public Guid GroupId { get; set; }
+        public string ApplicationId { get; set; }
         public bool IsEmailConfirmed { get; set; }
         public string StatusActive { get; set; }
+        
     }
 
     public class RegisterDto

@@ -51,11 +51,11 @@ namespace Entities.Models
 
         [Required]
         [Column("pos_px_x")]
-        public long PosPxX { get; set; }
+        public decimal PosPxX { get; set; }
 
         [Required]
         [Column("pos_px_y")]
-        public long PosPxY { get; set; }
+        public decimal PosPxY { get; set; }
 
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
@@ -93,8 +93,7 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        private MstFloorplan floorplan;
-        public virtual MstFloorplan Floorplan { get => floorplan; set => floorplan = value; }
+        public virtual MstFloorplan Floorplan { get; set; }
         public virtual MstAccessCctv AccessCctv { get; set; }
         public virtual MstBleReader Reader { get; set; }
         public virtual MstAccessControl AccessControl { get; set; }

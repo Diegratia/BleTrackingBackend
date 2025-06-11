@@ -77,9 +77,26 @@ namespace Entities.Models
 
         [Required]
         [ForeignKey("FloorplanDevice")]
+        [Column("floorplan_device_id")]
+        public Guid FloorplanDeviceId { get; set; }
+
+        [Required]
+        [ForeignKey("Floorplan")]
         [Column("floorplan_id")]
         public Guid FloorplanId { get; set; }
 
-        public virtual FloorplanDevice FloorplanDevices { get; set; }
+        [Required]
+        [ForeignKey("Floor")]
+        [Column("floor_id")]
+        public Guid FloorId { get; set; }
+
+        [Required]
+        [ForeignKey("FloorplanMaskedArea")]
+        [Column("floorplan_masked_area_id")]
+        public Guid FloorplanMaskedAreaId { get; set; }
+        public virtual MstFloorplan Floorplan { get; set; }
+        public virtual MstFloor Floor { get; set; }
+        public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
+        public virtual FloorplanDevice FloorplanDevice { get; set; }
     }
 }

@@ -19,14 +19,14 @@ namespace Repositories.Repository
         public async Task<IEnumerable<RecordTrackingLog>> GetRecordTrackingLogsAsync()
         {
             return await _context.RecordTrackingLogs
-                .Include(r => r.FloorplanDevices)
+                .Include(r => r.Floorplan)
                 .ToListAsync();
         }
 
         public async Task<RecordTrackingLog> GetRecordTrackingLogByIdAsync(Guid id)
         {
             return await _context.RecordTrackingLogs
-                .Include(r => r.FloorplanDevices)
+                .Include(r => r.Floorplan)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 

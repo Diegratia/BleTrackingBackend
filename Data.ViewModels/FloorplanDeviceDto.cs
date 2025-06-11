@@ -14,8 +14,8 @@ namespace Data.ViewModels
         public Guid AccessControlId { get; set; }
         public decimal PosX { get; set; }
         public decimal PosY { get; set; }
-        public long PosPxX { get; set; }
-        public long PosPxY { get; set; }
+        public decimal PosPxX { get; set; }
+        public decimal PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
@@ -43,8 +43,8 @@ namespace Data.ViewModels
         public Guid AccessControlId { get; set; }
         public decimal PosX { get; set; }
         public decimal PosY { get; set; }
-        public long PosPxX { get; set; }
-        public long PosPxY { get; set; }
+        public decimal PosPxX { get; set; }
+        public decimal PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string DeviceStatus { get; set; }
@@ -60,8 +60,8 @@ namespace Data.ViewModels
         public Guid AccessControlId { get; set; }
         public decimal PosX { get; set; }
         public decimal PosY { get; set; }
-        public long PosPxX { get; set; }
-        public long PosPxY { get; set; }
+        public decimal PosPxX { get; set; }
+        public decimal PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string DeviceStatus { get; set; }
