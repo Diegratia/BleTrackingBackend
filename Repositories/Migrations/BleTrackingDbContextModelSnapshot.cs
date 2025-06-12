@@ -829,6 +829,12 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
 
+                    b.Property<string>("Gmac")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("gmac");
+
                     b.Property<string>("Ip")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1746,124 +1752,6 @@ namespace Repositories.Migrations
                     b.ToTable("mst_organization", (string)null);
                 });
 
-            modelBuilder.Entity("Entities.Models.MstTrackingLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("BeaconId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("beacon_id");
-
-                    b.Property<string>("FirstReaderId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("first_reader_id");
-
-                    b.Property<decimal>("FirstReaderX")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("first_reader_x");
-
-                    b.Property<decimal>("FirstReaderY")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("first_reader_y");
-
-                    b.Property<Guid>("FloorId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floor_id");
-
-                    b.Property<Guid>("FloorplanDeviceId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floorplan_device_id");
-
-                    b.Property<Guid>("FloorplanId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("floorplan_id");
-
-                    b.Property<Guid>("FloorplanMaskedAreaId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floorplan_masked_area_id");
-
-                    b.Property<string>("Pair")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("pair");
-
-                    b.Property<decimal>("PointX")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("point_x");
-
-                    b.Property<decimal>("PointY")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("point_y");
-
-                    b.Property<string>("SecondReaderId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("second_reader_id");
-
-                    b.Property<decimal>("SecondReaderX")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("second_reader_x");
-
-                    b.Property<decimal>("SecondReaderY")
-                        .HasColumnType("decimal(18,6)")
-                        .HasColumnName("second_reader_y");
-
-                    b.Property<byte[]>("Time")
-                        .IsRequired()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("time");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FloorId");
-
-                    b.HasIndex("FloorplanDeviceId");
-
-                    b.HasIndex("FloorplanId");
-
-                    b.HasIndex("FloorplanMaskedAreaId");
-
-                    b.ToTable("mst_tracking_log", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.RecordTrackingLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("FloorplanId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("floorplan_id");
-
-                    b.Property<byte[]>("FloorplanTimestamp")
-                        .IsRequired()
-                        .HasColumnType("timestamp")
-                        .HasColumnName("floorplan_timestamp");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("table_name");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FloorplanId");
-
-                    b.ToTable("record_tracking_log", (string)null);
-                });
-
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2728,54 +2616,6 @@ namespace Repositories.Migrations
                         .HasForeignKey("MstApplicationId");
 
                     b.Navigation("Application");
-                });
-
-            modelBuilder.Entity("Entities.Models.MstTrackingLog", b =>
-                {
-                    b.HasOne("Entities.Models.MstFloor", "Floor")
-                        .WithMany()
-                        .HasForeignKey("FloorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.FloorplanDevice", "FloorplanDevice")
-                        .WithMany()
-                        .HasForeignKey("FloorplanDeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mst_tracking_log_floorplan_device");
-
-                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
-                        .WithMany()
-                        .HasForeignKey("FloorplanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
-                        .WithMany()
-                        .HasForeignKey("FloorplanMaskedAreaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Floor");
-
-                    b.Navigation("Floorplan");
-
-                    b.Navigation("FloorplanDevice");
-
-                    b.Navigation("FloorplanMaskedArea");
-                });
-
-            modelBuilder.Entity("Entities.Models.RecordTrackingLog", b =>
-                {
-                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
-                        .WithMany()
-                        .HasForeignKey("FloorplanId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("fk_record_tracking_log_floorplan");
-
-                    b.Navigation("Floorplan");
                 });
 
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>

@@ -38,6 +38,11 @@ namespace Entities.Models
         public string Ip { get; set; }
 
         [Required]
+        [StringLength(255)]
+        [Column("gmac")]
+        public string Gmac { get; set; }
+
+        [Required]
         [Column("location_x")]
         public decimal LocationX { get; set; }
 

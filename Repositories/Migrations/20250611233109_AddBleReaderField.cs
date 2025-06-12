@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRefreshToken : Migration
+    public partial class AddBleReaderField : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,6 +54,24 @@ namespace Repositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_mst_brand", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "mst_engine",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    engine_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    port = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    is_live = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    last_live = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    service_status = table.Column<string>(type: "nvarchar(255)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_mst_engine", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -285,6 +303,7 @@ namespace Repositories.Migrations
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     mac = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ip = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    gmac = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     location_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     location_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     location_px_x = table.Column<long>(type: "bigint", nullable: false),
@@ -730,7 +749,7 @@ namespace Repositories.Migrations
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    visitor = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
@@ -788,8 +807,8 @@ namespace Repositories.Migrations
                         principalTable: "visitor",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "FK_alarm_record_tracking_visitor_visitor",
-                        column: x => x.visitor,
+                        name: "FK_alarm_record_tracking_visitor_visitor_id",
+                        column: x => x.visitor_id,
                         principalTable: "visitor",
                         principalColumn: "id");
                 });
@@ -807,8 +826,8 @@ namespace Repositories.Migrations
                     access_control_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     pos_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     pos_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    pos_px_x = table.Column<long>(type: "bigint", nullable: false),
-                    pos_px_y = table.Column<long>(type: "bigint", nullable: false),
+                    pos_px_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    pos_px_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
@@ -1000,9 +1019,9 @@ namespace Repositories.Migrations
                 column: "MstBleReaderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_alarm_record_tracking_visitor",
+                name: "IX_alarm_record_tracking_visitor_id",
                 table: "alarm_record_tracking",
-                column: "visitor",
+                column: "visitor_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1376,6 +1395,9 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "floorplan_device");
+
+            migrationBuilder.DropTable(
+                name: "mst_engine");
 
             migrationBuilder.DropTable(
                 name: "mst_member");

@@ -30,8 +30,8 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
-        public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
-        public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
+        // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
+        // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -61,8 +61,8 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
             modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
-            modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
-            modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
+            // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
+            // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
@@ -627,40 +627,40 @@ namespace Repositories.DbContexts
                     );
             });
 
-             modelBuilder.Entity<MstTrackingLog>(entity =>
-            {
-                entity.ToTable("mst_tracking_log");
+            //  modelBuilder.Entity<MstTrackingLog>(entity =>
+            // {
+            //     entity.ToTable("mst_tracking_log");
 
-                entity.HasKey(e => e.Id);
+            //     entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasColumnType("uuid")
-                    .ValueGeneratedOnAdd();
+            //     entity.Property(e => e.Id)
+            //         .HasColumnName("id")
+            //         .HasColumnType("uuid")
+            //         .ValueGeneratedOnAdd();
 
-                entity.Property(e => e.BeaconId)
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .HasColumnName("beacon_id")
-                    .HasColumnType("varchar(50)");
+            //     entity.Property(e => e.BeaconId)
+            //         .IsRequired()
+            //         .HasMaxLength(50)
+            //         .HasColumnName("beacon_id")
+            //         .HasColumnType("varchar(50)");
 
-                entity.Property(e => e.Pair)
-                    .IsRequired()
-                    .HasMaxLength(100)
-                    .HasColumnName("pair")
-                    .HasColumnType("varchar(100)");
+            //     entity.Property(e => e.Pair)
+            //         .IsRequired()
+            //         .HasMaxLength(100)
+            //         .HasColumnName("pair")
+            //         .HasColumnType("varchar(100)");
 
-                entity.Property(e => e.FirstReaderId)
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .HasColumnName("first_reader_id")
-                    .HasColumnType("varchar(50)");
+            //     entity.Property(e => e.FirstReaderId)
+            //         .IsRequired()
+            //         .HasMaxLength(50)
+            //         .HasColumnName("first_reader_id")
+            //         .HasColumnType("varchar(50)");
 
-                entity.Property(e => e.SecondReaderId)
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .HasColumnName("second_reader_id")
-                    .HasColumnType("varchar(50)");
+            //     entity.Property(e => e.SecondReaderId)
+            //         .IsRequired()
+            //         .HasMaxLength(50)
+            //         .HasColumnName("second_reader_id")
+            //         .HasColumnType("varchar(50)");
 
                 // entity.Property(e => e.FirstDist)
                 //     .IsRequired()
@@ -677,90 +677,90 @@ namespace Repositories.DbContexts
                 //     .HasColumnName("jarak_meter")
                 //     .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.PointX)
-                    .IsRequired()
-                    .HasColumnName("point_x")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.PointX)
+            //         .IsRequired()
+            //         .HasColumnName("point_x")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.PointY)
-                    .IsRequired()
-                    .HasColumnName("point_y")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.PointY)
+            //         .IsRequired()
+            //         .HasColumnName("point_y")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.FirstReaderX)
-                    .IsRequired()
-                    .HasColumnName("first_reader_x")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.FirstReaderX)
+            //         .IsRequired()
+            //         .HasColumnName("first_reader_x")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.FirstReaderY)
-                    .IsRequired()
-                    .HasColumnName("first_reader_y")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.FirstReaderY)
+            //         .IsRequired()
+            //         .HasColumnName("first_reader_y")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.SecondReaderX)
-                    .IsRequired()
-                    .HasColumnName("second_reader_x")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.SecondReaderX)
+            //         .IsRequired()
+            //         .HasColumnName("second_reader_x")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.SecondReaderY)
-                    .IsRequired()
-                    .HasColumnName("second_reader_y")
-                    .HasColumnType("decimal(18,6)");
+            //     entity.Property(e => e.SecondReaderY)
+            //         .IsRequired()
+            //         .HasColumnName("second_reader_y")
+            //         .HasColumnType("decimal(18,6)");
 
-                entity.Property(e => e.Time)
-                    .IsRequired()
-                    .HasColumnName("time")
-                    .HasColumnType("timestamp");
+            //     entity.Property(e => e.Time)
+            //         .IsRequired()
+            //         .HasColumnName("time")
+            //         .HasColumnType("timestamp");
 
-                entity.Property(e => e.FloorplanId)
-                    .IsRequired()
-                    .HasColumnName("floorplan_id")
-                    .HasColumnType("uuid");
+            //     entity.Property(e => e.FloorplanId)
+            //         .IsRequired()
+            //         .HasColumnName("floorplan_id")
+            //         .HasColumnType("uuid");
 
-                entity.HasOne(e => e.FloorplanDevice)
-                    .WithMany()
-                    .HasForeignKey(e => e.FloorplanDeviceId)
-                    .HasConstraintName("fk_mst_tracking_log_floorplan_device")
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
+            //     entity.HasOne(e => e.FloorplanDevice)
+            //         .WithMany()
+            //         .HasForeignKey(e => e.FloorplanDeviceId)
+            //         .HasConstraintName("fk_mst_tracking_log_floorplan_device")
+            //         .OnDelete(DeleteBehavior.Cascade);
+            // });
 
 
              
 
             // Configure RecordTrackingLog entity
-            modelBuilder.Entity<RecordTrackingLog>(entity =>
-            {
-                entity.ToTable("record_tracking_log");
+            // modelBuilder.Entity<RecordTrackingLog>(entity =>
+            // {
+            //     entity.ToTable("record_tracking_log");
 
-                entity.HasKey(e => e.Id);
+            //     entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasColumnType("uuid")
-                    .ValueGeneratedOnAdd();
+            //     entity.Property(e => e.Id)
+            //         .HasColumnName("id")
+            //         .HasColumnType("uuid")
+            //         .ValueGeneratedOnAdd();
 
-                entity.Property(e => e.TableName)
-                    .IsRequired()
-                    .HasMaxLength(255)
-                    .HasColumnName("table_name")
-                    .HasColumnType("varchar(255)");
+            //     entity.Property(e => e.TableName)
+            //         .IsRequired()
+            //         .HasMaxLength(255)
+            //         .HasColumnName("table_name")
+            //         .HasColumnType("varchar(255)");
 
-                entity.Property(e => e.FloorplanId)
-                    .IsRequired()
-                    .HasColumnName("floorplan_id")
-                    .HasColumnType("uuid");
+            //     entity.Property(e => e.FloorplanId)
+            //         .IsRequired()
+            //         .HasColumnName("floorplan_id")
+            //         .HasColumnType("uuid");
 
-                entity.Property(e => e.FloorplanTimestamp)
-                    .IsRequired()
-                    .HasColumnName("floorplan_timestamp")
-                    .HasColumnType("timestamp");
+            //     entity.Property(e => e.FloorplanTimestamp)
+            //         .IsRequired()
+            //         .HasColumnName("floorplan_timestamp")
+            //         .HasColumnType("timestamp");
 
-                entity.HasOne(e => e.Floorplan)
-                    .WithMany()
-                    .HasForeignKey(e => e.FloorplanId)
-                    .HasConstraintName("fk_record_tracking_log_floorplan")
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
+            //     entity.HasOne(e => e.Floorplan)
+            //         .WithMany()
+            //         .HasForeignKey(e => e.FloorplanId)
+            //         .HasConstraintName("fk_record_tracking_log_floorplan")
+            //         .OnDelete(DeleteBehavior.NoAction);
+            // });
 
             modelBuilder.Entity<RefreshToken>(Entity =>
             {

@@ -10,6 +10,7 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Mac { get; set; }
         public string Ip { get; set; }
+        public string Gmac { get; set; }
         public decimal LocationX { get; set; }
         public decimal LocationY { get; set; }
         public long LocationPxX { get; set; }
@@ -29,6 +30,7 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Mac { get; set; }
         public string Ip { get; set; }
+        public string Gmac { get; set; }
         public decimal LocationX { get; set; }
         public decimal LocationY { get; set; }
         public long LocationPxX { get; set; }
@@ -42,6 +44,7 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Mac { get; set; }
         public string Ip { get; set; }
+        public string Gmac { get; set; }
         public decimal LocationX { get; set; }
         public decimal LocationY { get; set; }
         public long LocationPxX { get; set; }

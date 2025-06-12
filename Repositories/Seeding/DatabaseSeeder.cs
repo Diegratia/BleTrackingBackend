@@ -354,6 +354,7 @@ namespace Repositories.Seeding
                     .RuleFor(r => r.Name, f => "Reader " + f.Random.Word())
                     .RuleFor(r => r.Mac, f => f.Internet.Mac())
                     .RuleFor(r => r.Ip, f => f.Internet.Ip())
+                    .RuleFor(r => r.Gmac, f => f.Random.String2(8, 8, "0123456789ABCDEF"))
                     .RuleFor(r => r.LocationX, f => f.Random.Decimal(0, 100))
                     .RuleFor(r => r.LocationY, f => f.Random.Decimal(0, 100))
                     .RuleFor(r => r.LocationPxX, f => f.Random.Long(0, 1920))
