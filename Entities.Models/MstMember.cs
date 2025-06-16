@@ -74,7 +74,7 @@ namespace Entities.Models
 
         [Required]
         [Column("upload_fr")]
-        public int UploadFr { get; set; } = 0; 
+        public int UploadFr { get; set; } = 0;
 
         [Required]
         [Column("upload_fr_error")]
@@ -140,5 +140,6 @@ namespace Entities.Models
         public virtual MstDepartment Department { get; set; }
 
         public virtual MstDistrict District { get; set; }
+        public virtual CardRecord CardRecord { get; set; }
     }
 }

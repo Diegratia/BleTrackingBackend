@@ -27,6 +27,20 @@ namespace Helpers.Consumer
         Annual
     }
 
+    public enum VisitorType
+    {
+        Active,
+        Expired,
+        Cancelled
+    }
+
+        public enum CardType
+    {
+        rfid,
+        ble,
+        rfid_ble
+    }
+
     public enum IntegrationType
     {
         Sdk,

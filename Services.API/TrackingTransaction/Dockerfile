@@ -17,3 +17,6 @@ COPY --from=build /app/Services.API/TrackingTransaction/out ./
 
 EXPOSE 5018
 ENTRYPOINT ["dotnet", "TrackingTransaction.dll"] 
+
+
+

@@ -43,27 +43,27 @@ namespace BusinessLogic.Services.Implementation
         {
             var floor = _mapper.Map<MstFloor>(createDto);
 
-            // Upload gambar
+           
             if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
             {
-                // Validasi tipe file
+               
                 if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                // Validasi ukuran file
+              
                 if (createDto.FloorImage.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 1 MB limit.");
 
-                // Folder penyimpanan
+                
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
                 Directory.CreateDirectory(uploadDir);
 
-                // Buat nama file unik
+                
                 var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadDir, fileName);
 
-                // Simpan file
+             
                 try
                 {
                     using (var stream = new FileStream(filePath, FileMode.Create))
