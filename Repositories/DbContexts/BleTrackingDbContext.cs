@@ -30,6 +30,9 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
+        public DbSet<VisitorCard> VisitorCard { get; set; }
+        public DbSet<CardRecord> CardRecord { get; set; }
+        
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
         public DbSet<User> Users { get; set; }
@@ -61,6 +64,8 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
             modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
+            modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
+            modelBuilder.Entity<CardRecord>().ToTable("card_record");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
