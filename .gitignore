@@ -500,8 +500,3 @@ cache
 *.cache
 *cache
 .txt
-BusinessLogic.Services/obj/Debug/net8.0/BusinessLogic.Services.AssemblyInfoInputs.cache
-BusinessLogic.Services/obj/Debug/net8.0/BusinessLogic.Services.csproj.AssemblyReference.cache
-Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.AssemblyInfoInputs.cache
-Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.csproj.AssemblyReference.cache
-Data.ViewModels/obj/Debug/net8.0/Data.ViewModels.csproj.FileListAbsolute.txt
