@@ -20,17 +20,17 @@ namespace Entities.Models
         public string VisitorName { get; set; }
 
         [Required]
-        [ForeignKey("VisitorCard")]
+        [ForeignKey(nameof(VisitorCard))]
         [Column("card_id")]
         public Guid CardId { get; set; }
 
         [AllowNull]
-        [ForeignKey("Visitor")]
+        [ForeignKey(nameof(Visitor))]
         [Column("visitor_id")]
         public Guid? VisitorId { get; set; }
 
         [AllowNull]
-        [ForeignKey("Member")]
+        [ForeignKey(nameof(Member))]
         [Column("member_id")]
         public Guid? MemberId { get; set; }
 
@@ -41,13 +41,13 @@ namespace Entities.Models
         public DateTime? CheckinAt { get; set; }
 
         [Column("checkout_at")]
-        public DateTime? ChekoutAt { get; set; }
+        public DateTime? CheckoutAt { get; set; }
 
         [Column("checkin_by")]
-        public string? CheckinBy { get; set; }
+        public string CheckinBy { get; set; } = "";
 
         [Column("checkout_by")]
-        public string? CheckoutBy { get; set; }
+        public string CheckoutBy { get; set; } = "";
 
         [Column("checkout_site_id")]
         public Guid? CheckoutSiteId { get; set; }

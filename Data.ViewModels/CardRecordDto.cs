@@ -14,12 +14,15 @@ namespace Data.ViewModels
         public Guid? MemberId { get; set; }
         public DateTime Timestamp { get; set; }
         public DateTime? CheckinAt { get; set; }
-        public DateTime? ChekoutAt { get; set; }
-        public string? CheckinBy { get; set; }
-        public string? CheckoutBy { get; set; }
+        public DateTime? CheckoutAt { get; set; }
+        public string CheckinBy { get; set; } = "";
+        public string CheckoutBy { get; set; } = "";
         public Guid? CheckoutSiteId { get; set; }
         public Guid? CheckinSiteId { get; set; }
         public string? VisitorType { get; set; }
+        public CardRecordDto CardRecord { get; set; }
+        public VisitorDto Visitor { get; set; }
+        public MstMemberDto Member { get; set; }
     }
 
     public class CardRecordCreateDto

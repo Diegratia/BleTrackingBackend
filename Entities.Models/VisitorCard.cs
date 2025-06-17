@@ -22,8 +22,8 @@ namespace Entities.Models
         [Column("number")]
         public string Number { get; set; } = "";
 
-        [Column("type")]
-        public CardType Type { get; set; }
+        [Column("card_type")]
+        public CardType CardType { get; set; }
 
         [Column("qr_code")]
         public string QRCode { get; set; } = "";
@@ -38,7 +38,7 @@ namespace Entities.Models
         public int EnableStatus { get; set; }
 
         [Column("status")]
-        public int Status { get; set; }
+        public int Status { get; set; } = 1;
 
         [Column("site_id")]
         public Guid SiteId { get; set; }
@@ -46,6 +46,7 @@ namespace Entities.Models
         [Column("is_member")]
         public int IsMember { get; set; }
 
+        [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 

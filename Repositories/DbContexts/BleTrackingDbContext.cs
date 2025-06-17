@@ -30,8 +30,8 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
-        public DbSet<VisitorCard> VisitorCard { get; set; }
-        public DbSet<CardRecord> CardRecord { get; set; }
+        public DbSet<VisitorCard> VisitorCards { get; set; }
+        public DbSet<CardRecord> CardRecords{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -632,6 +632,135 @@ namespace Repositories.DbContexts
                     );
             });
 
+            modelBuilder.Entity<VisitorCard>(entity =>
+            {
+                entity.ToTable("visitor_card");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasColumnName("name");
+
+                entity.Property(e => e.Number)
+                    .HasColumnName("number");
+
+                entity.Property(e => e.CardType)
+                    .HasColumnName("card_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v == CardType.RfidBle? "rfid-ble" : v.ToString().ToLower(),
+                        v => v == "rfid-ble" ? CardType.RfidBle : (CardType)Enum.Parse(typeof(CardType), v, true)
+                    );
+
+                entity.Property(e => e.QRCode)
+                    .HasColumnName("qr_code");
+
+                entity.Property(e => e.mac)
+                    .HasColumnType("nvarchar(255)")
+                    .HasColumnName("mac");
+
+                entity.Property(e => e.CheckinStatus)
+                    .HasColumnName("checkin_status");
+
+                entity.Property(e => e.EnableStatus)
+                    .HasColumnName("enable_status");
+
+                entity.Property(e => e.Status)
+                    .HasColumnName("status")
+                    .HasDefaultValue(1);
+
+                entity.Property(e => e.SiteId)
+                    .HasColumnName("site_id");
+
+                entity.Property(e => e.IsMember)
+                    .HasColumnName("is_member");
+
+                entity.Property(e => e.ApplicationId)
+                    .HasColumnName("application_id");
+
+                //  Relasi ke MstApplication
+                entity.HasOne(e => e.Application)
+                    .WithMany() // kalau MstApplication gak punya VisitorCard list
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction); // atau NoAction
+
+                // Relasi ke CardRecord (inverse dari CardRecord.CardId)
+                entity.HasMany(e => e.CardRecords)
+                    .WithOne(e => e.VisitorCard)
+                    .HasForeignKey(e => e.CardId)
+                    .OnDelete(DeleteBehavior.NoAction); // biar gak auto hapus CardRecord
+
+                entity.HasQueryFilter(e => e.Status != 0);
+            });
+
+
+            modelBuilder.Entity<CardRecord>(entity =>
+            {
+                entity.ToTable("card_record");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.VisitorName)
+                    .IsRequired()
+                    .HasColumnName("visitor_name");
+
+                entity.Property(e => e.CardId)
+                    .IsRequired()
+                    .HasColumnName("card_id");
+
+                entity.Property(e => e.VisitorId)
+                    .HasColumnName("visitor_id");
+
+                entity.Property(e => e.MemberId)
+                    .HasColumnName("member_id");
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnName("timestamp");
+
+                entity.Property(e => e.CheckinAt)
+                    .HasColumnName("checkin_at");
+
+                entity.Property(e => e.CheckoutAt)
+                    .HasColumnName("checkout_at");
+
+                entity.Property(e => e.CheckinBy)
+                    .HasColumnName("checkin_by");
+
+                entity.Property(e => e.CheckoutBy)
+                    .HasColumnName("checkout_by");
+
+                entity.Property(e => e.CheckinSiteId)
+                    .HasColumnName("checkin_site_id");
+
+                entity.Property(e => e.CheckoutSiteId)
+                    .HasColumnName("checkout_site_id");
+
+                entity.Property(e => e.VisitorType)
+                    .HasColumnName("visitor_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                    );
+                   
+
+                entity.HasOne(e => e.VisitorCard)
+                    .WithMany() // asumsi ga ada collection di VisitorCard
+                    .HasForeignKey(e => e.CardId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Visitor)
+                    .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
+                    .HasForeignKey(e => e.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+
+                entity.HasOne(e => e.Member)
+                    .WithMany() // atau .WithMany(m => m.CardRecords)
+                    .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+            });
+
             //  modelBuilder.Entity<MstTrackingLog>(entity =>
             // {
             //     entity.ToTable("mst_tracking_log");
@@ -667,20 +796,20 @@ namespace Repositories.DbContexts
             //         .HasColumnName("second_reader_id")
             //         .HasColumnType("varchar(50)");
 
-                // entity.Property(e => e.FirstDist)
-                //     .IsRequired()
-                //     .HasColumnName("first_dist")
-                //     .HasColumnType("decimal(18,6)");
+            // entity.Property(e => e.FirstDist)
+            //     .IsRequired()
+            //     .HasColumnName("first_dist")
+            //     .HasColumnType("decimal(18,6)");
 
-                // entity.Property(e => e.SecondDist)
-                //     .IsRequired()
-                //     .HasColumnName("second_dist")
-                //     .HasColumnType("decimal(18,6)");
+            // entity.Property(e => e.SecondDist)
+            //     .IsRequired()
+            //     .HasColumnName("second_dist")
+            //     .HasColumnType("decimal(18,6)");
 
-                // entity.Property(e => e.JarakMeter)
-                //     .IsRequired()
-                //     .HasColumnName("jarak_meter")
-                //     .HasColumnType("decimal(18,6)");
+            // entity.Property(e => e.JarakMeter)
+            //     .IsRequired()
+            //     .HasColumnName("jarak_meter")
+            //     .HasColumnType("decimal(18,6)");
 
             //     entity.Property(e => e.PointX)
             //         .IsRequired()
@@ -730,7 +859,7 @@ namespace Repositories.DbContexts
             // });
 
 
-             
+
 
             // Configure RecordTrackingLog entity
             // modelBuilder.Entity<RecordTrackingLog>(entity =>

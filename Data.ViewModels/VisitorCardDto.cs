@@ -10,7 +10,7 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string Name { get; set; } = "";
         public string Number { get; set; } = "";
-        public string Type { get; set; }
+        public string CardType { get; set; }
         public string QRCode { get; set; } = "";
         public string mac { get; set; }
         public int CheckinStatus { get; set; }
@@ -25,7 +25,7 @@ namespace Data.ViewModels
     {
         public string Name { get; set; } = "";
         public string Number { get; set; } = "";
-        public string Type { get; set; }
+        public string CardType { get; set; }
         public string QRCode { get; set; } = "";
         public string mac { get; set; }
         public Guid SiteId { get; set; }
@@ -36,7 +36,7 @@ namespace Data.ViewModels
     {
         public string Name { get; set; } = "";
         public string Number { get; set; } = "";
-        public string Type { get; set; }
+        public string CardType { get; set; }
         public string QRCode { get; set; } = "";
         public string mac { get; set; }
         public Guid SiteId { get; set; }

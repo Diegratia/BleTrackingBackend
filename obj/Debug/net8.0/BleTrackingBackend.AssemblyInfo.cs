@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BleTrackingBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9ca2b7240f53584bedc0baf40e71f8bdd69206c7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf0b3d0d475f9d6d5f37869f9d32b2441a46d022")]
 [assembly: System.Reflection.AssemblyProductAttribute("BleTrackingBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BleTrackingBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

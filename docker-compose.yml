@@ -278,6 +278,26 @@ services:
       - ./.env:/app/.env
     restart: always
 
+  visitor-card:
+    build:
+      context: .
+      dockerfile: Services.API/VisitorCard/Dockerfile
+    ports:
+      - "5023:5023"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  card-record:
+    build:
+      context: .
+      dockerfile: Services.API/CardRecord/Dockerfile
+    ports:
+      - "5024:5024"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
   nginx:
     build:
       context: .

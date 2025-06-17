@@ -1,0 +1,6 @@
+@CardRecord_HostAddress = http://localhost:5052
+
+GET {{CardRecord_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

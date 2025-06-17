@@ -36,9 +36,9 @@ namespace Helpers.Consumer
 
         public enum CardType
     {
-        rfid,
-        ble,
-        rfid_ble
+        Rfid,
+        Ble,
+        RfidBle
     }
 
     public enum IntegrationType
