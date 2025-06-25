@@ -48,7 +48,7 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.LicenseType, f => f.PickRandom<LicenseType>())
                     .RuleFor(a => a.ApplicationStatus, f => 1);
 
-                var applications = appFaker.Generate(5);
+                var applications = appFaker.Generate(2);
                 context.MstApplications.AddRange(applications);
                 context.SaveChanges();
             }
@@ -175,7 +175,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(b => b.Status, f => 1);
 
-                var buildings = buildingFaker.Generate(5);
+                var buildings = buildingFaker.Generate(2);
                 context.MstBuildings.AddRange(buildings);
                 context.SaveChanges();
             }
@@ -204,7 +204,7 @@ namespace Repositories.Seeding
                     .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(f => f.Status, f => 1);
 
-                var floors = floorFaker.Generate(3);
+                var floors = floorFaker.Generate(2);
                 context.MstFloors.AddRange(floors);
                 context.SaveChanges();
             }
@@ -231,7 +231,7 @@ namespace Repositories.Seeding
                     .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(f => f.Status, f => 1);
 
-                var floorplans = floorplanFaker.Generate(5);
+                var floorplans = floorplanFaker.Generate(2);
                 context.MstFloorplans.AddRange(floorplans);
                 context.SaveChanges();
             }
@@ -264,7 +264,7 @@ namespace Repositories.Seeding
                     .RuleFor(i => i.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(i => i.Status, f => 1);
 
-                var integrations = intFaker.Generate(5);
+                var integrations = intFaker.Generate(2);
                 context.MstIntegrations.AddRange(integrations);
                 context.SaveChanges();
             }
@@ -352,13 +352,13 @@ namespace Repositories.Seeding
                         .First()
                         .Id)
                     .RuleFor(r => r.Name, f => "Reader " + f.Random.Word())
-                    .RuleFor(r => r.Mac, f => f.Internet.Mac())
+                    // .RuleFor(r => r.Mac, f => f.Internet.Mac())
                     .RuleFor(r => r.Ip, f => f.Internet.Ip())
                     .RuleFor(r => r.Gmac, f => f.Random.String2(8, 8, "0123456789ABCDEF"))
-                    .RuleFor(r => r.LocationX, f => f.Random.Decimal(0, 100))
-                    .RuleFor(r => r.LocationY, f => f.Random.Decimal(0, 100))
-                    .RuleFor(r => r.LocationPxX, f => f.Random.Long(0, 1920))
-                    .RuleFor(r => r.LocationPxY, f => f.Random.Long(0, 1080))
+                    // .RuleFor(r => r.LocationX, f => f.Random.Decimal(0, 100))
+                    // .RuleFor(r => r.LocationY, f => f.Random.Decimal(0, 100))
+                    // .RuleFor(r => r.LocationPxX, f => f.Random.Long(0, 1920))
+                    // .RuleFor(r => r.LocationPxY, f => f.Random.Long(0, 1080))
                     .RuleFor(r => r.EngineReaderId, f => "RDR" + f.Random.Number(1000, 9999))
                     .RuleFor(r => r.CreatedBy, f => "System")
                     .RuleFor(r => r.CreatedAt, f => DateTime.UtcNow)
@@ -366,7 +366,7 @@ namespace Repositories.Seeding
                     .RuleFor(r => r.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(r => r.Status, f => 1);
 
-                var readers = readerFaker.Generate(5);
+                var readers = readerFaker.Generate(2);
                 context.MstBleReaders.AddRange(readers);
                 context.SaveChanges();
             }
@@ -397,16 +397,16 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.ColorArea, f => f.Internet.Color())
                     .RuleFor(a => a.RestrictedStatus, f => f.PickRandom<RestrictedStatus>())
                     .RuleFor(a => a.EngineAreaId, f => "ENG" + f.Random.Number(100, 999))
-                    .RuleFor(a => a.WideArea, f => f.Random.Long(50, 200))
-                    .RuleFor(a => a.PositionPxX, f => f.Random.Long(0, 1920))
-                    .RuleFor(a => a.PositionPxY, f => f.Random.Long(0, 1080))
+                    // .RuleFor(a => a.WideArea, f => f.Random.Long(50, 200))
+                    // .RuleFor(a => a.PositionPxX, f => f.Random.Long(0, 1920))
+                    // .RuleFor(a => a.PositionPxY, f => f.Random.Long(0, 1080))
                     .RuleFor(a => a.CreatedBy, f => "System")
                     .RuleFor(a => a.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(a => a.UpdatedBy, f => "System")
                     .RuleFor(a => a.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(a => a.Status, f => 1);
 
-                var areas = areaFaker.Generate(10);
+                var areas = areaFaker.Generate(2);
                 context.FloorplanMaskedAreas.AddRange(areas);
                 context.SaveChanges();
             }
@@ -434,7 +434,7 @@ namespace Repositories.Seeding
                     .RuleFor(c => c.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(c => c.Status, f => 1);
 
-                var cctvs = cctvFaker.Generate(5);
+                var cctvs = cctvFaker.Generate(2);
                 context.MstAccessCctvs.AddRange(cctvs);
                 context.SaveChanges();
             }
@@ -471,7 +471,7 @@ namespace Repositories.Seeding
                     .RuleFor(c => c.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(c => c.Status, f => 1);
 
-                var controls = ctrlFaker.Generate(5);
+                var controls = ctrlFaker.Generate(2);
                 context.MstAccessControls.AddRange(controls);
                 context.SaveChanges();
             }
@@ -525,7 +525,7 @@ namespace Repositories.Seeding
                     .RuleFor(m => m.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(m => m.Status, f => 1);
 
-                var members = memberFaker.Generate(10);
+                var members = memberFaker.Generate(5);
                 context.MstMembers.AddRange(members);
                 context.SaveChanges();
             }
@@ -572,7 +572,7 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.ReasonUnblock, f => f.Lorem.Sentence())
                     .RuleFor(v => v.Status, f => f.PickRandom<VisitorStatus>());
 
-                var visitors = visitorFaker.Generate(5);
+                var visitors = visitorFaker.Generate(2);
                 context.Visitors.AddRange(visitors);
                 context.SaveChanges();
             }
@@ -621,7 +621,7 @@ namespace Repositories.Seeding
                         .First()
                         .Id);
 
-                var blacklists = blacklistFaker.Generate(5);
+                var blacklists = blacklistFaker.Generate(2);
                 context.VisitorBlacklistAreas.AddRange(blacklists);
                 context.SaveChanges();
             }
@@ -667,7 +667,7 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
                     .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Recent(1));
 
-                var alarms = alarmFaker.Generate(1);
+                var alarms = alarmFaker.Generate(0);
                 context.AlarmRecordTrackings.AddRange(alarms);
                 context.SaveChanges();
             }
@@ -720,7 +720,7 @@ namespace Repositories.Seeding
                     .RuleFor(d => d.DeviceStatus, f => f.PickRandom<DeviceStatus>())
                     .RuleFor(d => d.Status, f => 1);
 
-                var devices = deviceFaker.Generate(10);
+                var devices = deviceFaker.Generate(2);
                 context.FloorplanDevices.AddRange(devices);
                 context.SaveChanges();
             }
@@ -748,14 +748,12 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.UpdatedBy, f => "System")
                     .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
 
-                var blereadernodes = blereadernodeFaker.Generate(5);
+                var blereadernodes = blereadernodeFaker.Generate(2);
                 context.BleReaderNodes.AddRange(blereadernodes);
                 context.SaveChanges();
             }
 
-         
-
-              // 21. MstEngine
+            // 21. MstEngine
             if (!context.MstEngines.Any())
             {
                 var engineFaker = new Faker<MstEngine>()
@@ -770,6 +768,67 @@ namespace Repositories.Seeding
 
                 var engines = engineFaker.Generate(3);
                 context.MstEngines.AddRange(engines);
+                context.SaveChanges();
+            }
+
+            // 22. VisitorCard
+            if (!context.VisitorCards.Any())
+            {
+                var visitorcardFaker = new Faker<VisitorCard>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.Name, f => "Card " + f.Random.Number(1000, 9999))
+                    .RuleFor(e => e.Number, f => f.Random.Number(1000, 9999).ToString())
+                    .RuleFor(a => a.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.QRCode, f => f.Random.String(1000, 0))
+                    .RuleFor(e => e.Mac, f => f.Internet.Mac()).RuleFor(e => e.Status, f => 1)
+                    .RuleFor(e => e.CheckinStatus, f => 1)
+                    .RuleFor(e => e.EnableStatus, f => 1)
+                    .RuleFor(e => e.Status, f => 1)
+                    .RuleFor(e => e.SiteId, f => Guid.NewGuid())
+                    .RuleFor(e => e.IsMember, f => f.Random.Number(0, 1))
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(a => a.Id)
+                        .FirstOrDefault());
+
+                var visitorcards = visitorcardFaker.Generate(2);
+                context.VisitorCards.AddRange(visitorcards);
+                context.SaveChanges();
+            }
+
+            // 23. CardRecord
+            if (!context.CardRecords.Any())
+            {
+                var cardrecordFaker = new Faker<CardRecord>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.VisitorName, f => f.Name.FullName())
+                    .RuleFor(e => e.CardId, f => context.VisitorCards
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.VisitorId, f => context.Visitors
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.MemberId, f => context.MstMembers
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(v => v.Timestamp, f => f.Date.Recent(1))
+                    .RuleFor(v => v.CheckinAt, f => f.Date.Recent(1))
+                    .RuleFor(v => v.CheckoutAt, f => f.Date.Future(1))
+                    .RuleFor(b => b.CheckinBy, f => "System")
+                    .RuleFor(b => b.CheckoutBy, f => "System")
+                    .RuleFor(e => e.CheckoutSiteId, f => Guid.NewGuid())
+                    .RuleFor(e => e.CheckinSiteId, f => Guid.NewGuid())
+                    .RuleFor(a => a.VisitorType, f => f.PickRandom<VisitorType>());
+
+                var cardrecords = cardrecordFaker.Generate(2);
+                context.CardRecords.AddRange(cardrecords);
                 context.SaveChanges();
             }
 

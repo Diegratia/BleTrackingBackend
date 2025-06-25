@@ -29,7 +29,7 @@ namespace Entities.Models
         public string QRCode { get; set; } = "";
 
         [Column("mac")]
-        public string mac { get; set; }
+        public string Mac { get; set; }
 
         [Column("checkin_status")]
         public int CheckinStatus { get; set; }
