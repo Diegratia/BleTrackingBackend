@@ -204,5 +204,31 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        // [HttpPost("import")]
+        // public async Task<IActionResult> Import([FromForm] IFormFile file)
+        // {
+        //     try
+        //     {
+        //         var result = await _mstFloorService.ImportAsync(file);
+        //         return StatusCode(result.Success ? 200 : 400, new
+        //         {
+        //             success = result.Success,
+        //             msg = result.Msg,
+        //             collection = new { data = (object)null },
+        //             code = result.Success ? 200 : 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
     }
 }

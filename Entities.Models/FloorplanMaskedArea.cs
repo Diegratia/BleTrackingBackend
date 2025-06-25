@@ -52,17 +52,17 @@ namespace Entities.Models
         [Column("engine_area_id")]
         public string EngineAreaId { get; set; }
 
-        [Required]
-        [Column("wide_area")]
-        public long WideArea { get; set; }
+        // [Required]
+        // [Column("wide_area")]
+        // public long WideArea { get; set; }
 
-        [Required]
-        [Column("position_px_x")]
-        public long PositionPxX { get; set; }
+        // [Required]
+        // [Column("position_px_x")]
+        // public long PositionPxX { get; set; }
 
-        [Required]
-        [Column("position_px_y")]
-        public long PositionPxY { get; set; }
+        // [Required]
+        // [Column("position_px_y")]
+        // public long PositionPxY { get; set; }
 
         [Required]
         [StringLength(255)]

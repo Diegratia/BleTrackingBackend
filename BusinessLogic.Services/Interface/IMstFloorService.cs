@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -13,5 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task<MstFloorDto> CreateAsync(MstFloorCreateDto createDto);
         Task<MstFloorDto> UpdateAsync(Guid id, MstFloorUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task <MstFloorImportDto>ImportAsync(IFormFile file);
     }
 }

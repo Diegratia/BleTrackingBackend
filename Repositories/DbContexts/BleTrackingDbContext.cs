@@ -137,6 +137,8 @@ namespace Repositories.DbContexts
                 .HasQueryFilter(m => m.Status != 0);
             modelBuilder.Entity<MstEngine>()
                 .HasQueryFilter(m => m.Status != 0);
+            // modelBuilder.Entity<VisitorCard>()
+            //     .HasQueryFilter(m => m.Status != 0);
 
             // MstIntegration
             modelBuilder.Entity<MstIntegration>(entity =>
@@ -656,7 +658,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.QRCode)
                     .HasColumnName("qr_code");
 
-                entity.Property(e => e.mac)
+                entity.Property(e => e.Mac)
                     .HasColumnType("nvarchar(255)")
                     .HasColumnName("mac");
 

@@ -53,5 +53,17 @@ namespace Repositories.Repository
             floor.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<MstBuilding> GetBuildingByIdAsync(Guid id)
+        {
+            return await _context.MstBuildings
+                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+        }
+        
+         public async Task<bool> NameExistsAsync(Guid buildingId, string name)
+    {
+        return await _context.MstFloors
+            .AnyAsync(f => f.BuildingId == buildingId && f.Name == name && f.Status != 0);
+    }
     }
 }
