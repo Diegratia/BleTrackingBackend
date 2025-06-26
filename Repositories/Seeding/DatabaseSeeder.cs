@@ -779,7 +779,7 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.Name, f => "Card " + f.Random.Number(1000, 9999))
                     .RuleFor(e => e.Number, f => f.Random.Number(1000, 9999).ToString())
                     .RuleFor(a => a.CardType, f => f.PickRandom<CardType>())
-                    .RuleFor(e => e.QRCode, f => f.Random.String(1000, 0))
+                    .RuleFor(e => e.QRCode, f => f.Random.Number(1000, 9999).ToString())
                     .RuleFor(e => e.Mac, f => f.Internet.Mac()).RuleFor(e => e.Status, f => 1)
                     .RuleFor(e => e.CheckinStatus, f => 1)
                     .RuleFor(e => e.EnableStatus, f => 1)
