@@ -70,7 +70,6 @@ namespace Data.ViewModels
         public string Msg { get; set; }
         public int ProcessedRows { get; set; }
         public int SuccessfulRows { get; set; }
-    
         public int Code { get; set; }
 }
     }

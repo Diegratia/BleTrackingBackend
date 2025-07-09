@@ -155,10 +155,9 @@ namespace Entities.Models
         public VisitorStatus Status { get; set; }
 
         public virtual MstApplication Application { get; set; }
-        public virtual CardRecord CardRecord { get; set; }
         public virtual AlarmRecordTracking AlarmRecordTracking { get; set; }
         public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
         public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
-        
+        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }

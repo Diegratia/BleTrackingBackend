@@ -14,6 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task<MstFloorDto> CreateAsync(MstFloorCreateDto createDto);
         Task<MstFloorDto> UpdateAsync(Guid id, MstFloorUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task <MstFloorImportDto>ImportAsync(IFormFile file);
+        Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file);
     }
 }

@@ -140,6 +140,7 @@ namespace Entities.Models
         public virtual MstDepartment Department { get; set; }
 
         public virtual MstDistrict District { get; set; }
-        public virtual CardRecord CardRecord { get; set; }
+
+        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }
