@@ -59,11 +59,27 @@ namespace Repositories.Repository
             return await _context.MstBuildings
                 .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
         }
+
+        public async Task<bool> NameExistsAsync(Guid buildingId, string name)
+        {
+            return await _context.MstFloors
+                .AnyAsync(f => f.BuildingId == buildingId && f.Name == name && f.Status != 0);
+        }
+
+        public IQueryable<MstFloor> GetAllQueryable()
+        {
+            return _context.MstFloors
+                .Include(f => f.Building)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+
+       public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
+        {
+            return await _context.MstFloors.Include(f => f.Building).
+            Where(f => f.Status != 0).ToListAsync();
+        }
         
-         public async Task<bool> NameExistsAsync(Guid buildingId, string name)
-    {
-        return await _context.MstFloors
-            .AnyAsync(f => f.BuildingId == buildingId && f.Name == name && f.Status != 0);
-    }
+        
     }
 }
