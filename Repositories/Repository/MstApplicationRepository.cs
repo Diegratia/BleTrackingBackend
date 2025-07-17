@@ -52,5 +52,19 @@ namespace Repositories.Repository
             application.ApplicationStatus = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstApplication> GetAllQueryable()
+        {
+            return _context.MstApplications
+                .Where(f => f.ApplicationStatus != 0)
+                .AsQueryable();
+        }
+        
+             public async Task<IEnumerable<MstApplication>> GetAllExportAsync()
+        {
+            return await _context.MstApplications
+                .Where(a => a.ApplicationStatus != 0)
+                .ToListAsync();
+        }
     }
 }

@@ -10,8 +10,8 @@ namespace Data.ViewModels
         public Guid ReaderId { get; set; }
         public long CardId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public decimal CoordinateX { get; set; }
-        public decimal CoordinateY { get; set; }
+        public float CoordinateX { get; set; }
+        public float CoordinateY { get; set; }
         public long CoordinatePxX { get; set; }
         public long CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string
@@ -26,8 +26,8 @@ namespace Data.ViewModels
         public Guid ReaderId { get; set; }
         public long CardId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public decimal CoordinateX { get; set; }
-        public decimal CoordinateY { get; set; }
+        public float CoordinateX { get; set; }
+        public float CoordinateY { get; set; }
         public long CoordinatePxX { get; set; }
         public long CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string
@@ -40,8 +40,8 @@ namespace Data.ViewModels
         public Guid ReaderId { get; set; }
         public long CardId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public decimal CoordinateX { get; set; }
-        public decimal CoordinateY { get; set; }
+        public float CoordinateX { get; set; }
+        public float CoordinateY { get; set; }
         public long CoordinatePxX { get; set; }
         public long CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string

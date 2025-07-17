@@ -51,5 +51,19 @@ namespace Repositories.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        public IQueryable<MstEngine> GetAllQueryable()
+        {
+            return _context.MstEngines
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+
+        public async Task<IEnumerable<MstEngine>> GetAllExportAsync()
+        {
+            return await _context.MstEngines
+            .Where(f => f.Status != 0).ToListAsync();
+        } 
+        
     }
 }

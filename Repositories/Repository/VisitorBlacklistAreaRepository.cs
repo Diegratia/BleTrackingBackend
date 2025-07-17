@@ -58,5 +58,13 @@ namespace Repositories.Repository
         {
             return await _context.Visitors.AnyAsync(v => v.Id == id);
         }
+
+        public IQueryable<VisitorBlacklistArea> GetAllQueryable()
+        {
+            return _context.VisitorBlacklistAreas
+                .Include(t => t.Visitor)
+                .Include(t => t.FloorplanMaskedArea)
+                .AsQueryable();
+        }
     }
 }

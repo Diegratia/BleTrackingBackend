@@ -61,5 +61,23 @@ namespace Repositories.Repository
             area.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<FloorplanMaskedArea> GetAllQueryable()
+        {
+            return _context.FloorplanMaskedAreas
+                .Include(a => a.Floor)
+                .Include(a => a.Floorplan)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+          public async Task<IEnumerable<FloorplanMaskedArea>> GetAllExportAsync()
+        {
+            return await _context.FloorplanMaskedAreas
+                .Include(a => a.Floor)
+                .Include(a => a.Floorplan)
+                .Where(a => a.Status != 0)
+                .ToListAsync();
+        }
     }
 }

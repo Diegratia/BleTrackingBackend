@@ -13,5 +13,8 @@ namespace BusinessLogic.Services.Interface
         Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto);
         Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

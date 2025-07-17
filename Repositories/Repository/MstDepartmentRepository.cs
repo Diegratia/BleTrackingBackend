@@ -64,5 +64,19 @@ namespace Repositories.Repository
             department.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstDepartment> GetAllQueryable()
+        {
+            return _context.MstDepartments
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+          public async Task<IEnumerable<MstDepartment>> GetAllExportAsync()
+        {
+            return await _context.MstDepartments
+                .Where(d => d.Status != 0)
+                .ToListAsync();
+        }
     }
 }

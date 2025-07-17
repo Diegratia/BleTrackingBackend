@@ -12,5 +12,8 @@ namespace BusinessLogic.Services.Interface
         Task<MstEngineDto> CreateEngineAsync(MstEngineCreateDto dto);
         Task UpdateEngineAsync(Guid id, MstEngineUpdateDto dto);
         Task DeleteEngineAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

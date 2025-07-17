@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=103.193.15.120,5433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 

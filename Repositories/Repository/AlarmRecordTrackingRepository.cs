@@ -79,5 +79,22 @@ namespace Repositories.Repository
 
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<AlarmRecordTracking> GetAllQueryable()
+        {
+            return _context.AlarmRecordTrackings
+                .Include(a => a.Reader)
+                .Include(a => a.Visitor)
+                .Include(n => n.FloorplanMaskedArea)
+                .AsQueryable();
+        }
+          public async Task<IEnumerable<AlarmRecordTracking>> GetAllExportAsync()
+        {
+            return await _context.AlarmRecordTrackings
+                .Include(a => a.Visitor)
+                .Include(a => a.Reader)
+                .Include(a => a.FloorplanMaskedArea)
+                .ToListAsync();
+        }
     }
 }

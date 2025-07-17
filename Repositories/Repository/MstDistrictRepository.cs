@@ -64,5 +64,19 @@ namespace Repositories.Repository
             district.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstDistrict> GetAllQueryable()
+        {
+            return _context.MstDistricts
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+        public async Task<IEnumerable<MstDistrict>> GetAllExportAsync()
+        {
+            return await _context.MstDistricts
+                .Where(d => d.Status != 0)
+                .ToListAsync();
+        }
     }
 }

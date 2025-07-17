@@ -16,7 +16,7 @@ namespace Repositories.Repository
             _context = context;
         }
 
-          public async Task<MstBrand> GetBrandByIdAsync(Guid id)
+        public async Task<MstBrand> GetBrandByIdAsync(Guid id)
         {
             return await _context.MstBrands
                 .FirstOrDefaultAsync(b => b.Id == id);
@@ -67,8 +67,23 @@ namespace Repositories.Repository
             if (bleReader == null)
                 throw new KeyNotFoundException("BLE Reader not found");
 
-            bleReader.Status = 0; 
+            bleReader.Status = 0;
             await _context.SaveChangesAsync();
+        }
+
+        public IQueryable<MstBleReader> GetAllQueryable()
+        {
+            return _context.MstBleReaders
+                .Include(b => b.Brand)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        public async Task<IEnumerable<MstBleReader>> GetAllExportAsync()
+        {
+            return await _context.MstBleReaders
+                .Include(fd => fd.Brand)
+                .Where(b => b.Status != 0)
+                .ToListAsync();
         }
     }
 }

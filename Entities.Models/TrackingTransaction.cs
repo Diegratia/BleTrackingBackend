@@ -34,19 +34,19 @@ namespace Entities.Models
 
         [Required]
         [Column("coordinate_x")]
-        public decimal CoordinateX { get; set; }
+        public float CoordinateX { get; set; }
 
         [Required]
         [Column("coordinate_y")]
-        public decimal CoordinateY { get; set; }
+        public float CoordinateY { get; set; }
 
         [Required]
         [Column("coordinate_px_x")]
-        public long CoordinatePxX { get; set; }
+        public float CoordinatePxX { get; set; }
 
         [Required]
         [Column("coordinate_px_y")]
-        public long CoordinatePxY { get; set; }
+        public float CoordinatePxY { get; set; }
 
         [Required]
         [Column("alarm_status")]

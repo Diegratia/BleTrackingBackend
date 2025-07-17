@@ -38,10 +38,27 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        
+
         public async Task DeleteAsync(MstOrganization organization)
         {
             // _context.MstOrganizations.Update(organization); 
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstOrganization> GetAllQueryable()
+        {
+            return _context.MstOrganizations
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+        public async Task<IEnumerable<MstOrganization>> GetAllExportAsync()
+        {
+            return await _context.MstOrganizations
+                .Where(m => m.Status != 0)
+                .ToListAsync();
+        }
+        
     }
 }

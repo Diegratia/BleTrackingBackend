@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {}
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj": {}
   },
   "projects": {
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj": {
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
+        "projectUniqueName": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
         "projectName": "BusinessLogic.Services",
-        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/BusinessLogic.Services.csproj",
-        "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/BusinessLogic.Services/obj/",
+        "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\BusinessLogic.Services\\BusinessLogic.Services.csproj",
+        "packagesPath": "C:\\Users\\bioxp\\.nuget\\packages\\",
+        "outputPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\BusinessLogic.Services\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bioxp\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -26,17 +26,17 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj"
               },
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj"
               },
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
               },
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/Repositories.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/Repositories.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\Repositories.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\Repositories.csproj"
               }
             }
           }
@@ -67,6 +67,10 @@
             "Bogus": {
               "target": "Package",
               "version": "[35.6.2, )"
+            },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
@@ -104,6 +108,10 @@
               "target": "Package",
               "version": "[8.6.0, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2025.7.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.6.2, )"
@@ -111,6 +119,10 @@
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[8.6.0, )"
+            },
+            "System.Linq.Dynamic.Core": {
+              "target": "Package",
+              "version": "[1.6.6, )"
             }
           },
           "imports": [
@@ -129,21 +141,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.411/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj": {
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
+        "projectUniqueName": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj",
         "projectName": "Data.ViewModels",
-        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/Data.ViewModels.csproj",
-        "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Data.ViewModels/obj/",
+        "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\Data.ViewModels.csproj",
+        "packagesPath": "C:\\Users\\bioxp\\.nuget\\packages\\",
+        "outputPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Data.ViewModels\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bioxp\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -155,8 +167,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
               }
             }
           }
@@ -249,21 +261,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.411/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
+        "projectUniqueName": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
         "projectName": "Entities.Models",
-        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj",
-        "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/obj/",
+        "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj",
+        "packagesPath": "C:\\Users\\bioxp\\.nuget\\packages\\",
+        "outputPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bioxp\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -275,8 +287,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
               }
             }
           }
@@ -369,21 +381,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.411/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
+        "projectUniqueName": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
         "projectName": "Helpers.Consumer",
-        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj",
-        "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/obj/",
+        "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj",
+        "packagesPath": "C:\\Users\\bioxp\\.nuget\\packages\\",
+        "outputPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bioxp\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -485,21 +497,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.411/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/Repositories.csproj": {
+    "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\Repositories.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/Repositories.csproj",
+        "projectUniqueName": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\Repositories.csproj",
         "projectName": "Repositories",
-        "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/Repositories.csproj",
-        "packagesPath": "/Users/developerpci/.nuget/packages/",
-        "outputPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Repositories/obj/",
+        "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\Repositories.csproj",
+        "packagesPath": "C:\\Users\\bioxp\\.nuget\\packages\\",
+        "outputPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Repositories\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/developerpci/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bioxp\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -511,11 +523,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Entities.Models/Entities.Models.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Entities.Models\\Entities.Models.csproj"
               },
-              "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj": {
-                "projectPath": "/Users/developerpci/Projects/Backend/BleTrackingBackend/Helpers.Consumer/Helpers.Consumer.csproj"
+              "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj": {
+                "projectPath": "C:\\Migrasi\\Projects\\Backend\\BleTrackingBackend\\Helpers.Consumer\\Helpers.Consumer.csproj"
               }
             }
           }
@@ -608,7 +620,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.411/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

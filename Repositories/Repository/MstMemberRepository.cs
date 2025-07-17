@@ -77,5 +77,27 @@ namespace Repositories.Repository
             member.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
+
+           public IQueryable<MstMember> GetAllQueryable()
+         {
+            return _context.MstMembers
+                .Include(f => f.Organization)
+                .Include(f => f.Department)
+                .Include(f => f.District)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+
+            public async Task<IEnumerable<MstMember>> GetAllExportAsync()
+        {
+            return await _context.MstMembers
+                .Include(m => m.Department)
+                .Include(m => m.District)
+                .Include(m => m.Organization)
+                .Where(m => m.Status != 0)
+                .ToListAsync();
+        }
+
+        
     }
 }

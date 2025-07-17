@@ -14,7 +14,7 @@ namespace Data.ViewModels
         public long PixelY { get; set; }
         public long FloorX { get; set; }
         public long FloorY { get; set; }
-        public decimal MeterPerPx { get; set; }
+        public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -33,7 +33,7 @@ namespace Data.ViewModels
         public long PixelY { get; set; }
         public long FloorX { get; set; }
         public long FloorY { get; set; }
-        public decimal MeterPerPx { get; set; }
+        public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
     }
 
@@ -46,7 +46,7 @@ namespace Data.ViewModels
         public long PixelY { get; set; }
         public long FloorX { get; set; }
         public long FloorY { get; set; }
-        public decimal MeterPerPx { get; set; }
+        public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
     }
     public class MstFloorImportDto
@@ -58,7 +58,7 @@ namespace Data.ViewModels
         public long PixelY { get; set; }
         public long FloorX { get; set; }
         public long FloorY { get; set; }
-        public decimal MeterPerPx { get; set; }
+        public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
         public int? Status { get; set; } = 1;

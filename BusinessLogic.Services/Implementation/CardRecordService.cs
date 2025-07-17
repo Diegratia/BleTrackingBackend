@@ -12,6 +12,11 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using Repositories;
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Drawing;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -42,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var card = await _repository.GetCardByIdAsync(createDto.CardId);
             if (card == null)
                 throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
@@ -65,9 +70,9 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<CardRecordDto>(createdcardRecord);
         }
 
-         public async Task UpdateAsync(Guid id, CardRecordUpdateDto updateDto)
+        public async Task UpdateAsync(Guid id, CardRecordUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var card = await _repository.GetCardByIdAsync(updateDto.CardId);
             if (card == null)
                 throw new ArgumentException($"Card with ID {updateDto.CardId} not found.");
@@ -96,6 +101,158 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Card Record Not Found");
             }
             await _repository.DeleteAsync(id);
+        }
+
+        public async Task<object> FilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryable();
+
+            var searchableColumns = new[] { "Name", "VisitorName" };
+            var validSortColumns = new[] { "Name", "VisitorName", "CheckinAt", "CheckoutAt", "VisitorType", "Status" };
+
+            var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+        
+        public async Task<byte[]> ExportPdfAsync()
+        {
+            var records = await _repository.GetAllExportAsync();
+
+            var document = QuestPDF.Fluent.Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Size(PageSizes.A4.Landscape());
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    page.Header()
+                        .Text("Card Records Report")
+                        .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(35);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("#").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Visitor Name").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Card Id").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Visitor").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Member").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Visitor Type").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkin At").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkin By").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkout At").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkout By").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkout Site").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Checkin Site").SemiBold();
+                        });
+
+                        int index = 1;
+                        foreach (var record in records)
+                        {
+                            table.Cell().Element(CellStyle).Text(index++.ToString());
+                            table.Cell().Element(CellStyle).Text(record.VisitorName);
+                            table.Cell().Element(CellStyle).Text(record.CardId);
+                            table.Cell().Element(CellStyle).Text(record.Visitor);
+                            table.Cell().Element(CellStyle).Text(record.Member);
+                            table.Cell().Element(CellStyle).Text(record.VisitorType.ToString());
+                            table.Cell().Element(CellStyle).Text(record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(record.CheckinBy);
+                            table.Cell().Element(CellStyle).Text(record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(record.CheckoutBy);
+                            table.Cell().Element(CellStyle).Text(record.CheckoutSiteId?.ToString());
+                            table.Cell().Element(CellStyle).Text(record.CheckinSiteId?.ToString());
+                        }
+
+                        static IContainer CellStyle(IContainer container) =>
+                            container
+                                .BorderBottom(1)
+                                .BorderColor(Colors.Grey.Lighten2)
+                                .PaddingVertical(4)
+                                .PaddingHorizontal(6);
+                    });
+
+                    page.Footer()
+                        .AlignRight()
+                        .Text(txt =>
+                        {
+                            txt.Span("Generated at: ").SemiBold();
+                            txt.Span(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
+                        });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        public async Task<byte[]> ExportExcelAsync()
+        {
+            var records = await _repository.GetAllExportAsync();
+
+            using var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Card Records");
+
+            worksheet.Cell(1, 1).Value = "#";
+            worksheet.Cell(1, 2).Value = "Visitor Name";
+            worksheet.Cell(1, 3).Value = "Card Id";
+            worksheet.Cell(1, 4).Value = "Visitor";
+            worksheet.Cell(1, 5).Value = "Member";
+            worksheet.Cell(1, 6).Value = "Visitor Type";
+            worksheet.Cell(1, 7).Value = "Checkin At";
+            worksheet.Cell(1, 8).Value = "Checkin By";
+            worksheet.Cell(1, 9).Value = "Checkout At";
+            worksheet.Cell(1, 10).Value = "Checkout By";
+            worksheet.Cell(1, 11).Value = "Checkout Site";
+            worksheet.Cell(1, 12).Value = "Checkin Site";
+
+            int row = 2;
+            int no = 1;
+
+            foreach (var record in records)
+            {
+                worksheet.Cell(row, 1).Value = no++;
+                worksheet.Cell(row, 2).Value = record.VisitorName;
+                worksheet.Cell(row, 3).Value = record.CardId.ToString();
+                worksheet.Cell(row, 4).Value = record.Visitor.Name;
+                worksheet.Cell(row, 5).Value = record.Member.Name;
+                worksheet.Cell(row, 6).Value = record.VisitorType.ToString();
+                worksheet.Cell(row, 7).Value = record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss");
+                worksheet.Cell(row, 8).Value = record.CheckinBy;
+                worksheet.Cell(row, 9).Value = record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss");
+                worksheet.Cell(row, 10).Value = record.CheckoutBy;
+                worksheet.Cell(row, 11).Value = record.CheckoutSiteId?.ToString();
+                worksheet.Cell(row, 12).Value = record.CheckinSiteId?.ToString();
+                row++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
         }
 
     }

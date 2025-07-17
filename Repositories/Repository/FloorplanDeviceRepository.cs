@@ -103,5 +103,29 @@ namespace Repositories.Repository
             device.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<FloorplanDevice> GetAllQueryable()
+        {
+            return _context.FloorplanDevices
+                .Include(a => a.FloorplanMaskedArea)
+                .Include(a => a.Floorplan)
+                .Include(a => a.AccessControl)
+                .Include(a => a.AccessCctv)
+                .Include(a => a.Reader)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+          public async Task<IEnumerable<FloorplanDevice>> GetAllExportAsync()
+        {
+            return await _context.FloorplanDevices
+                .Include(fd => fd.Floorplan)
+                .Include(fd => fd.AccessCctv)
+                .Include(fd => fd.Reader)
+                .Include(fd => fd.AccessControl)
+                .Include(fd => fd.FloorplanMaskedArea)
+                .Where(fd => fd.Status != 0)
+                .ToListAsync();
+        }
     }
 }

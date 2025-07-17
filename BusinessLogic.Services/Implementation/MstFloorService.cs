@@ -11,11 +11,11 @@ using Repositories.Repository;
 using System.IO;
 using System.Globalization;
 using System.Linq;
-using ClosedXML.Excel;
 using System.IO;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -211,7 +211,7 @@ namespace BusinessLogic.Services.Implementation
                     PixelY = row.Cell(5).GetValue<long>(),
                     FloorX = row.Cell(6).GetValue<long>(),
                     FloorY = row.Cell(7).GetValue<long>(),
-                    MeterPerPx = row.Cell(8).GetValue<decimal>(),
+                    MeterPerPx = row.Cell(8).GetValue<float>(),
                     EngineFloorId = row.Cell(9).GetValue<long>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
@@ -232,8 +232,6 @@ namespace BusinessLogic.Services.Implementation
 
             return _mapper.Map<IEnumerable<MstFloorDto>>(floors);
         }
-
-
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
@@ -286,8 +284,6 @@ namespace BusinessLogic.Services.Implementation
                         // Table header
                         table.Header(header =>
                         {
-
-
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Building").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();

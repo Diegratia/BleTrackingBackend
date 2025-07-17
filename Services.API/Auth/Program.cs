@@ -13,7 +13,7 @@ using DotNetEnv;
 
 try
 {
-    Env.Load("../../.env");
+    Env.Load("/app/.env");
 }
 catch (Exception ex)
 {
@@ -45,7 +45,7 @@ builder.Services.AddControllers();
 // Konfigurasi DbContext
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=103.193.15.120,5433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 // Konfigurasi AutoMapper
 builder.Services.AddAutoMapper(typeof(AuthProfile));

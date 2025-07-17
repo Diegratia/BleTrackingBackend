@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
 {
@@ -29,4 +30,6 @@ namespace Data.ViewModels
         public Guid FloorId { get; set; }
         public Guid ApplicationId { get; set; }
     }
+
+    
 }

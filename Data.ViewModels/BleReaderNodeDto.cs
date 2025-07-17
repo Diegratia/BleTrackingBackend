@@ -13,8 +13,8 @@ namespace Data.ViewModels
         public string StartPos { get; set; }
         public string EndPos { get; set; }        
         
-        public decimal DistancePx { get; set; }
-        public decimal Distance { get; set; }
+        public float DistancePx { get; set; }
+        public float Distance { get; set; }
         public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -31,8 +31,8 @@ namespace Data.ViewModels
         // public int EndPos { get; set; }
         public string StartPos { get; set; }
         public string EndPos { get; set; }     
-        public decimal DistancePx { get; set; }
-        public decimal Distance { get; set; }
+        public float DistancePx { get; set; }
+        public float Distance { get; set; }
         public Guid ApplicationId { get; set; }
 
     }
@@ -44,8 +44,8 @@ namespace Data.ViewModels
         // public int EndPos { get; set; }
         public string StartPos { get; set; }
         public string EndPos { get; set; }     
-        public decimal DistancePx { get; set; }
-        public decimal Distance { get; set; }
+        public float DistancePx { get; set; }
+        public float Distance { get; set; }
         public Guid ApplicationId { get; set; }
 
     }

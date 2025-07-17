@@ -13,5 +13,9 @@ namespace BusinessLogic.Services.Interface
         Task<MstAccessControlDto> CreateAsync(MstAccessControlCreateDto createDto);
         Task UpdateAsync(Guid id, MstAccessControlUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
+
     }
 }

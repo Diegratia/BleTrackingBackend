@@ -13,5 +13,8 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<MstBuildingDto>> GetAllAsync();
         Task UpdateAsync(Guid id, MstBuildingUpdateDto dto);
         Task DeleteAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

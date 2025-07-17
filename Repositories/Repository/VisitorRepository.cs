@@ -51,5 +51,11 @@ namespace Repositories.Repository
         {
             return await _context.MstApplications.AnyAsync(f => f.Id == id);
         }
+
+           public IQueryable<Visitor> GetAllQueryable()
+        {
+            return _context.Visitors
+                .AsQueryable();
+        }
     }
 }

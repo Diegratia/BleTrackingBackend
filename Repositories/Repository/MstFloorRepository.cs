@@ -74,12 +74,10 @@ namespace Repositories.Repository
                 .AsQueryable();
         }
 
-       public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
+        public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
         {
             return await _context.MstFloors.Include(f => f.Building).
             Where(f => f.Status != 0).ToListAsync();
-        }
-        
-        
+        }        
     }
 }

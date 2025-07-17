@@ -54,5 +54,21 @@ namespace Repositories.Repository
             _context.TrackingTransactions.Remove(transaction);
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<TrackingTransaction> GetAllQueryable()
+        {
+            return _context.TrackingTransactions
+                .Include(t => t.Reader)
+                .Include(t => t.FloorplanMaskedArea)
+                .AsQueryable();
+        }
+
+            public async Task<IEnumerable<TrackingTransaction>> GetAllExportAsync()
+        {
+            return await _context.TrackingTransactions
+                .Include(t => t.Reader)
+                .Include(t => t.FloorplanMaskedArea)
+                .ToListAsync();
+        }
     }
 }

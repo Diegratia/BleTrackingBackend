@@ -27,11 +27,6 @@ namespace Entities.Models
         [Column("name")]
         public string Name { get; set; }
 
-        // [Required]
-        // [StringLength(255)]
-        // [Column("mac")]
-        // public string Mac { get; set; }
-
         [Required]
         [StringLength(255)]
         [Column("ip")]
@@ -41,22 +36,6 @@ namespace Entities.Models
         [StringLength(255)]
         [Column("gmac")]
         public string Gmac { get; set; }
-
-        // [Required]
-        // [Column("location_x")]
-        // public decimal LocationX { get; set; }
-
-        // [Required]
-        // [Column("location_y")]
-        // public decimal LocationY { get; set; }
-
-        // [Required]
-        // [Column("location_px_x")]
-        // public long LocationPxX { get; set; }
-
-        // [Required]
-        // [Column("location_px_y")]
-        // public long LocationPxY { get; set; }
 
         [Required]
         [StringLength(255)]
