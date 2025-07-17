@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 
@@ -70,7 +70,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequireUserCreatedRole", policy =>
+        options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+    });
+    options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+    });
+        options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
 

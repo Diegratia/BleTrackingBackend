@@ -176,6 +176,8 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<UserDto> GetUserByIdAsync(Guid id);
     }
 
     public class AuthService : IAuthService
@@ -205,6 +207,7 @@ namespace BusinessLogic.Services.Interface
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _userRepository.GetByUsernameAsync(dto.Username.ToLower());
+
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
                 throw new Exception("Invalid Username or password.");
@@ -236,6 +239,7 @@ namespace BusinessLogic.Services.Interface
                 Username = user.Username,
                 Email = user.Email,
                 GroupId = user.GroupId,
+                ApplicationId = user.Group.ApplicationId,
                 IsEmailConfirmed = user.IsEmailConfirmation == 1,
                 StatusActive = user.StatusActive.ToString()
             };
@@ -255,7 +259,7 @@ namespace BusinessLogic.Services.Interface
                 throw new UnauthorizedAccessException("Current user not found.");
 
             var currentUserRole = currentUser.Group?.LevelPriority;
-            if (currentUserRole == LevelPriority.Primary)
+            if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
             {
                 await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated);
             }
@@ -288,7 +292,7 @@ namespace BusinessLogic.Services.Interface
                 Token = refreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshTokenExpiryInDays")),
                 CreatedAt = DateTime.UtcNow,
-        
+
             };
 
             await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
@@ -376,6 +380,22 @@ namespace BusinessLogic.Services.Interface
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+
+            var users = await _userRepository.GetAllAsync();
+            var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+            return userDtos;
+        }
+        
+        public async Task<UserDto> GetUserByIdAsync(Guid id)
+        {
+
+            var user = await _userRepository.GetByIdAsync(id);
+
+            return user == null ? null : _mapper.Map<UserDto>(user);
         }
     }
 }

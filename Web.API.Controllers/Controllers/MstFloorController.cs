@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class MstFloorController : ControllerBase
     {
         private readonly IMstFloorService _mstFloorService;

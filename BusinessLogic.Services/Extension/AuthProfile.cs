@@ -18,6 +18,8 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<UserGroup, UserGroupDto>()
                 .ForMember(dest => dest.LevelPriority, opt => opt.MapFrom(src => src.LevelPriority.ToString()));
+
+            CreateMap<User, UserDto>();
         }
     }
 }

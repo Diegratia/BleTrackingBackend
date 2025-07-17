@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequireAll")]
     public class VisitorController : ControllerBase
     {
         private readonly IVisitorService _visitorService;
@@ -109,6 +109,7 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/Visitor
         [HttpGet]
+        [Authorize ("RequirePrimaryRole")]
         public async Task<IActionResult> GetAll()
         {
             try

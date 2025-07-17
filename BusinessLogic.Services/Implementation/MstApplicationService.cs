@@ -90,7 +90,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     Id = Guid.NewGuid(),
                     Name = "Admin",
-                    LevelPriority = LevelPriority.Primary,
+                    LevelPriority = LevelPriority.PrimaryAdmin,
                     ApplicationId = application.Id,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
@@ -101,8 +101,8 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Operator",
-                    LevelPriority = LevelPriority.Primary,
+                    Name = "Operator Admin",
+                    LevelPriority = LevelPriority.PrimaryAdmin,
                     ApplicationId = application.Id,
                      CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
@@ -113,7 +113,7 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Security",
+                    Name = "Operator Security",
                     LevelPriority = LevelPriority.Primary,
                     ApplicationId = application.Id,
                     CreatedBy = username,

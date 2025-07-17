@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequireAll")]
     public class TrxVisitorController : ControllerBase
     {
         private readonly ITrxVisitorService _trxVisitorService;

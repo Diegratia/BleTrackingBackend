@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class MstBleReaderController : ControllerBase
     {
         private readonly IMstBleReaderService _mstBleReaderService;
@@ -23,7 +23,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBleReader
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -51,7 +50,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -89,7 +87,6 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBleReader
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> Create([FromBody] MstBleReaderCreateDto mstBleReaderDto)
         {
             if (!ModelState.IsValid)
@@ -129,7 +126,6 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBleReader/{id}
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstBleReaderUpdateDto mstBleReaderDto)
         {
             if (!ModelState.IsValid)
@@ -179,7 +175,6 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstBleReader/{id}
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

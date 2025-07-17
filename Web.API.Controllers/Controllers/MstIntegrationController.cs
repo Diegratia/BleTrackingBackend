@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequiredSystemUser")]
     public class MstIntegrationController : ControllerBase
     {
         private readonly IMstIntegrationService _mstIntegrationService;

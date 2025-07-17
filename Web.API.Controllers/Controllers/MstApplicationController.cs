@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize]
+    [Authorize ("RequiredSystemUser")]
     [Route("api/[controller]")]
     [ApiController]
     public class MstApplicationController : ControllerBase

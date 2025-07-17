@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     [Route("api/[controller]")]
     [ApiController]
     public class MstEngineController : ControllerBase
@@ -23,7 +23,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstEngine
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -51,7 +50,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstEngine/{id}
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -89,7 +87,6 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstEngine
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> Create([FromBody] MstEngineCreateDto mstEngineDto)
         {
             if (!ModelState.IsValid)
@@ -129,7 +126,6 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstEngine/{id}
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstEngineUpdateDto mstEngineDto)
         {
             if (!ModelState.IsValid)
@@ -179,7 +175,6 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstEngine/{id}
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

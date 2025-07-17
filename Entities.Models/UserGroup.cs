@@ -10,6 +10,7 @@ namespace Entities.Models
     public enum LevelPriority
     {
         System,
+        PrimaryAdmin,
         Primary,
         UserCreated
     }

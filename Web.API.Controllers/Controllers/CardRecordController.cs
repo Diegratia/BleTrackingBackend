@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequiredSystemUser")]
     public class CardRecordController : ControllerBase
     {
         private readonly ICardRecordService _cardRecordService;
@@ -22,7 +22,6 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -50,7 +49,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -88,7 +86,6 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBleReader
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> Create([FromBody] CardRecordCreateDto cardRecordDto)
         {
             if (!ModelState.IsValid)
@@ -127,7 +124,6 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] CardRecordUpdateDto cardRecordDto)
         {
             if (!ModelState.IsValid)
@@ -177,7 +173,6 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstBleReader/{id}
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

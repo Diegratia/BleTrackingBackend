@@ -79,6 +79,18 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
+                        Name = "Primary Admin Initial",
+                        LevelPriority = LevelPriority.PrimaryAdmin,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
+                       new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
                         Name = "Primary Initial",
                         LevelPriority = LevelPriority.Primary,
                         ApplicationId = applicationId,
@@ -539,11 +551,35 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.IdentityId, f => "VID" + f.Random.Number(100, 999))
                     .RuleFor(v => v.CardNumber, f => "VCARD" + f.Random.Number(1000, 9999))
                     .RuleFor(v => v.BleCardNumber, f => "VBLE" + f.Random.Number(100, 999))
+                    .RuleFor(v => v.VisitorType, f => f.PickRandom<VisitorType>())
                     .RuleFor(v => v.Name, f => f.Name.FullName())
                     .RuleFor(v => v.Phone, f => f.Phone.PhoneNumber())
                     .RuleFor(v => v.Email, f => f.Internet.Email())
                     .RuleFor(v => v.Gender, f => f.PickRandom<Gender>())
                     .RuleFor(v => v.Address, f => f.Address.FullAddress())
+                    .RuleFor(v => v.OrganizationId, f => context.MstOrganizations
+                        .Where(o => o.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.DistrictId, f => context.MstDistricts
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.DepartmentId, f => context.MstDepartments
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.IsVip, f => f.Random.Bool())
+                    .RuleFor(v => v.IsEmailVerified, f => f.Random.Bool())
+                    .RuleFor(v => v.EmailVerficationSendAt, f => f.Date.Recent(1))
+                    .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
+                    .RuleFor(v => v.VisitorPeriodStart, f => f.Date.Recent(1))
+                    .RuleFor(v => v.VisitorPeriodEnd, f => f.Date.Recent(1))
+                    .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
+                    .RuleFor(v => v.Status, f => 1)
                     .RuleFor(v => v.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
                     .RuleFor(v => v.UploadFr, f => f.Random.Int(0, 2))
                     .RuleFor(v => v.UploadFrError, f => f.Random.Bool() ? "" : "Upload failed")
@@ -551,8 +587,7 @@ namespace Repositories.Seeding
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id)
-                    .RuleFor(m => m.Status, f => 1);
+                        .Id);
 
                 var visitors = visitorFaker.Generate(2);
                 context.Visitors.AddRange(visitors);

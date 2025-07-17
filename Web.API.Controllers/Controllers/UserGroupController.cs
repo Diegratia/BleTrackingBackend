@@ -13,7 +13,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class UserGroupController : ControllerBase
     {
         private readonly BleTrackingDbContext _context;

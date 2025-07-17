@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class AddBleReaderField : Migration
+    public partial class addNewServices : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -237,56 +237,27 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "visitor",
+                name: "visitor_card",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    person_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    identity_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ble_card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    phone = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    gender = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    address = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    face_image = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    upload_fr = table.Column<int>(type: "int", nullable: false),
-                    upload_fr_error = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    registered_date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    visitor_arrival = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    visitor_end = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    portal_key = table.Column<long>(type: "bigint", nullable: false),
-                    timestamp_pre_registration = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    timestamp_checked_in = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    timestamp_checked_out = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    timestamp_deny = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    timestamp_blocked = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    timestamp_unblocked = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    checkin_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    checkout_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    deny_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    block_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    unblock_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    reason_deny = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    reason_block = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    reason_unblock = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    status = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    number = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    card_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    qr_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    mac = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    checkin_status = table.Column<int>(type: "int", nullable: false),
+                    enable_status = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    is_member = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_visitor", x => x.id);
+                    table.PrimaryKey("PK_visitor_card", x => x.id);
                     table.ForeignKey(
-                        name: "FK_visitor_mst_application_MstApplicationId",
-                        column: x => x.MstApplicationId,
-                        principalTable: "mst_application",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_visitor_mst_application_application_id",
+                        name: "FK_visitor_card_mst_application_application_id",
                         column: x => x.application_id,
                         principalTable: "mst_application",
                         principalColumn: "id");
@@ -301,13 +272,8 @@ namespace Repositories.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     brand_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    mac = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ip = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     gmac = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    location_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    location_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    location_px_x = table.Column<long>(type: "bigint", nullable: false),
-                    location_px_y = table.Column<long>(type: "bigint", nullable: false),
                     engine_reader_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -372,11 +338,11 @@ namespace Repositories.Migrations
                     building_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     floor_image = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    pixel_x = table.Column<long>(type: "bigint", nullable: false),
-                    pixel_y = table.Column<long>(type: "bigint", nullable: false),
-                    floor_x = table.Column<long>(type: "bigint", nullable: false),
-                    floor_y = table.Column<long>(type: "bigint", nullable: false),
-                    meter_per_px = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    pixel_x = table.Column<float>(type: "real", nullable: false),
+                    pixel_y = table.Column<float>(type: "real", nullable: false),
+                    floor_x = table.Column<float>(type: "real", nullable: false),
+                    floor_y = table.Column<float>(type: "real", nullable: false),
+                    meter_per_px = table.Column<float>(type: "real", nullable: false),
                     engine_floor_id = table.Column<long>(type: "bigint", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -479,6 +445,70 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "visitor",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    person_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    identity_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ble_card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    visitor_type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    phone = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    gender = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    district_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    department_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    is_vip = table.Column<bool>(type: "bit", nullable: false),
+                    is_email_vervied = table.Column<bool>(type: "bit", nullable: false),
+                    email_verification_send_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    email_verification_token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    visitor_period_start = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    visitor_period_end = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    is_employee = table.Column<bool>(type: "bit", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    face_image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    upload_fr = table.Column<int>(type: "int", nullable: false),
+                    upload_fr_error = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    _generate = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_visitor", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_visitor_mst_application_MstApplicationId",
+                        column: x => x.MstApplicationId,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_mst_department_department_id",
+                        column: x => x.department_id,
+                        principalTable: "mst_department",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_mst_district_district_id",
+                        column: x => x.district_id,
+                        principalTable: "mst_district",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_mst_organization_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "mst_organization",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user",
                 columns: table => new
                 {
@@ -522,8 +552,8 @@ namespace Repositories.Migrations
                     ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     start_pos = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     end_pos = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    distance_px = table.Column<decimal>(type: "decimal(18,2)", maxLength: 255, nullable: false),
-                    distance = table.Column<decimal>(type: "decimal(18,2)", maxLength: 255, nullable: false),
+                    distance_px = table.Column<float>(type: "real", maxLength: 255, nullable: false),
+                    distance = table.Column<float>(type: "real", maxLength: 255, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -678,6 +708,99 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "card_record",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    visitor_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    checkin_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    checkin_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    checkout_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    checkout_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    checkin_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    VisitorCardId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_record", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_record_mst_member_MstMemberId",
+                        column: x => x.MstMemberId,
+                        principalTable: "mst_member",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_mst_member_member_id",
+                        column: x => x.member_id,
+                        principalTable: "mst_member",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_VisitorId1",
+                        column: x => x.VisitorId1,
+                        principalTable: "visitor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_card_VisitorCardId",
+                        column: x => x.VisitorCardId,
+                        principalTable: "visitor_card",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_card_card_id",
+                        column: x => x.card_id,
+                        principalTable: "visitor_card",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_visitor_id",
+                        column: x => x.visitor_id,
+                        principalTable: "visitor",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "trx_visitor",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    checked_in_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    checked_out_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    deny_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    block_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    unblock_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    checkin_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    checkout_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    deny_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    deny_reason = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    block_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    block_reason = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    invitation_created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    visitor_group_code = table.Column<long>(type: "bigint", nullable: false),
+                    visitor_number = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    visitor_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    vehicle_plate_number = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    site_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    parking_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_trx_visitor", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_trx_visitor_visitor_visitor_id",
+                        column: x => x.visitor_id,
+                        principalTable: "visitor",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "refresh_token",
                 columns: table => new
                 {
@@ -712,9 +835,6 @@ namespace Repositories.Migrations
                     color_area = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     restricted_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
                     engine_area_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    wide_area = table.Column<long>(type: "bigint", nullable: false),
-                    position_px_x = table.Column<long>(type: "bigint", nullable: false),
-                    position_px_y = table.Column<long>(type: "bigint", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
@@ -824,10 +944,10 @@ namespace Repositories.Migrations
                     access_cctv_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     access_control_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    pos_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    pos_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    pos_px_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    pos_px_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    pos_x = table.Column<float>(type: "real", nullable: false),
+                    pos_y = table.Column<float>(type: "real", nullable: false),
+                    pos_px_x = table.Column<float>(type: "real", nullable: false),
+                    pos_px_y = table.Column<float>(type: "real", nullable: false),
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
@@ -913,10 +1033,10 @@ namespace Repositories.Migrations
                     reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     card_id = table.Column<long>(type: "bigint", nullable: false),
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    coordinate_x = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    coordinate_y = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    coordinate_px_x = table.Column<long>(type: "bigint", nullable: false),
-                    coordinate_px_y = table.Column<long>(type: "bigint", nullable: false),
+                    coordinate_x = table.Column<float>(type: "real", nullable: false),
+                    coordinate_y = table.Column<float>(type: "real", nullable: false),
+                    coordinate_px_x = table.Column<float>(type: "real", nullable: false),
+                    coordinate_px_y = table.Column<float>(type: "real", nullable: false),
                     alarm_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
                     battery = table.Column<long>(type: "bigint", nullable: false),
                     FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1044,6 +1164,36 @@ namespace Repositories.Migrations
                 name: "IX_ble_reader_node_ble_reader_id",
                 table: "ble_reader_node",
                 column: "ble_reader_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_card_id",
+                table: "card_record",
+                column: "card_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_member_id",
+                table: "card_record",
+                column: "member_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_MstMemberId",
+                table: "card_record",
+                column: "MstMemberId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_visitor_id",
+                table: "card_record",
+                column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_VisitorCardId",
+                table: "card_record",
+                column: "VisitorCardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_VisitorId1",
+                table: "card_record",
+                column: "VisitorId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_floorplan_device__generate",
@@ -1329,6 +1479,11 @@ namespace Repositories.Migrations
                 column: "reader_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_visitor_id",
+                table: "trx_visitor",
+                column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_user_group_id",
                 table: "user",
                 column: "group_id");
@@ -1349,6 +1504,16 @@ namespace Repositories.Migrations
                 column: "application_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_visitor_department_id",
+                table: "visitor",
+                column: "department_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_district_id",
+                table: "visitor",
+                column: "district_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_visitor_email",
                 table: "visitor",
                 column: "email");
@@ -1357,6 +1522,11 @@ namespace Repositories.Migrations
                 name: "IX_visitor_MstApplicationId",
                 table: "visitor",
                 column: "MstApplicationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_organization_id",
+                table: "visitor",
+                column: "organization_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_visitor_person_id",
@@ -1382,6 +1552,11 @@ namespace Repositories.Migrations
                 name: "IX_visitor_blacklist_area_VisitorId1",
                 table: "visitor_blacklist_area",
                 column: "VisitorId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_card_application_id",
+                table: "visitor_card",
+                column: "application_id");
         }
 
         /// <inheritdoc />
@@ -1394,13 +1569,13 @@ namespace Repositories.Migrations
                 name: "ble_reader_node");
 
             migrationBuilder.DropTable(
+                name: "card_record");
+
+            migrationBuilder.DropTable(
                 name: "floorplan_device");
 
             migrationBuilder.DropTable(
                 name: "mst_engine");
-
-            migrationBuilder.DropTable(
-                name: "mst_member");
 
             migrationBuilder.DropTable(
                 name: "refresh_token");
@@ -1409,22 +1584,22 @@ namespace Repositories.Migrations
                 name: "tracking_transaction");
 
             migrationBuilder.DropTable(
+                name: "trx_visitor");
+
+            migrationBuilder.DropTable(
                 name: "visitor_blacklist_area");
+
+            migrationBuilder.DropTable(
+                name: "mst_member");
+
+            migrationBuilder.DropTable(
+                name: "visitor_card");
 
             migrationBuilder.DropTable(
                 name: "mst_access_cctv");
 
             migrationBuilder.DropTable(
                 name: "mst_access_control");
-
-            migrationBuilder.DropTable(
-                name: "mst_department");
-
-            migrationBuilder.DropTable(
-                name: "mst_district");
-
-            migrationBuilder.DropTable(
-                name: "mst_organization");
 
             migrationBuilder.DropTable(
                 name: "user");
@@ -1446,6 +1621,15 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "mst_floorplan");
+
+            migrationBuilder.DropTable(
+                name: "mst_department");
+
+            migrationBuilder.DropTable(
+                name: "mst_district");
+
+            migrationBuilder.DropTable(
+                name: "mst_organization");
 
             migrationBuilder.DropTable(
                 name: "mst_brand");

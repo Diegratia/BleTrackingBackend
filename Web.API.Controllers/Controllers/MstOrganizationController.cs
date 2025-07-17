@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class MstOrganizationController : ControllerBase
     {
         private readonly IMstOrganizationService _mstOrganizationService;
