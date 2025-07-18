@@ -113,7 +113,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Brand.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Status", "Brand.Name" };
+            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Status", "Brand.Name", "IntegrationType", "ApiTypeAuth", "ApiAuthUsername", "ApiAuthPassword" };
 
             var filterService = new GenericDataTableService<MstIntegration, MstIntegrationDto>(
                 query,

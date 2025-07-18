@@ -239,7 +239,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
-            var validSortColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "UpdatedAt", "Status", "Brand.Name" };
+            var validSortColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "UpdatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2","Status" , "Brand.Name" };
 
             var filterService = new GenericDataTableService<MstMember, MstMemberDto>(
                 query,

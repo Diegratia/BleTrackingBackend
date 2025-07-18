@@ -83,7 +83,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "Floor.Name", "Status" };
+            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Floor.Name", "Status" };
 
             var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(
                 query,

@@ -367,7 +367,7 @@ namespace BusinessLogic.Services.Interface
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddYears(30),
                 signingCredentials: creds);
 
 

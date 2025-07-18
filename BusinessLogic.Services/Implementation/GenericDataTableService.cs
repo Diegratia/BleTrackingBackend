@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
                 query = query.Where(predicates, search);
             }
 
-            // Terapkan filter tanggal
+            // date filter
             if (request.DateFilters != null && request.DateFilters.Any())
             {
                 foreach (var dateFilter in request.DateFilters)
@@ -91,7 +91,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // Terapkan filter properti kustom
+            // custom
             if (request.Filters != null && request.Filters.Any())
             {
                 foreach (var filter in request.Filters)
@@ -103,17 +103,23 @@ namespace BusinessLogic.Services.Implementation
                     if (value == null)
                         continue;
 
-                    // Handle JsonElement untuk mendukung deserialisasi dari System.Text.Json
+                    // handling json elmen
                     if (value is JsonElement jsonElement)
                     {
-                        // Coba konversi ke Guid untuk kolom seperti OrganizationId
-                        if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase) &&
-                            jsonElement.ValueKind == JsonValueKind.String &&
-                            Guid.TryParse(jsonElement.GetString(), out var guidValue))
+                        // guid
+                        if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                            query = query.Where($"{filter.Key} == @0", guidValue);
+                            var stringValue = jsonElement.GetString();
+                            if (Guid.TryParse(stringValue, out var guidValue))
+                            {
+                                query = query.Where($"{filter.Key} == @0", guidValue);
+                            }
+                            else
+                            {
+                                query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
+                            }
                         }
-                        // Coba konversi ke enum jika kolom adalah enum
+                        // enum
                         else if (_enumColumns.ContainsKey(filter.Key) && jsonElement.ValueKind == JsonValueKind.String)
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -127,22 +133,22 @@ namespace BusinessLogic.Services.Implementation
                                 throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
                             }
                         }
-                        // Coba konversi ke string untuk kolom non-enum
+
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
                             query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString().ToLower());
                         }
-                        // Coba konversi ke int
+
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
                         {
                             query = query.Where($"{filter.Key} == @0", intValue);
                         }
-                        // Coba konversi ke float
+
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetSingle(out var floatValue))
                         {
                             query = query.Where($"{filter.Key} == @0", floatValue);
                         }
-                        // Coba konversi ke bool
+
                         else if (jsonElement.ValueKind == JsonValueKind.True || jsonElement.ValueKind == JsonValueKind.False)
                         {
                             query = query.Where($"{filter.Key} == @0", jsonElement.GetBoolean());
@@ -152,10 +158,10 @@ namespace BusinessLogic.Services.Implementation
                             throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
                         }
                     }
-                    // Handle tipe lain seperti biasa
+                   
                     else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
                     {
-                        // Coba konversi ke enum jika kolom adalah enum
+                        // enum
                         if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -196,17 +202,15 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // Total setelah filter
+            // total after filter
             var filteredRecords = await query.CountAsync();
 
-            // Pengurutan
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
             query = query.OrderBy($"{request.SortColumn} {sortDirection}");
 
-            // Paging
+            // paging
             query = query.Skip(request.Start).Take(request.Length);
 
-            // Ambil data
             var data = await query.ToListAsync();
             var dtos = _mapper.Map<IEnumerable<TDto>>(data);
 

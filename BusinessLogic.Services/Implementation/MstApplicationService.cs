@@ -237,7 +237,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _applicationRepository.GetAllQueryable();
 
             var searchableColumns = new[] { "ApplicationName" };
-            var validSortColumns = new[] { "ApplicationName", "CreatedAt", "UpdatedAt", "ApplicationStatus" };
+            var validSortColumns = new[] { "ApplicationName", "ApplicationType", "OrganizationType" ,"ApplicationRegistered", "ApplicationExpired", "ApplicationStatus", "HostName", "HostAddress", "ApplicationCustomName", "ApplicationCustomDomain", "LicenseCode" };
 
             var filterService = new GenericDataTableService<MstApplication, MstApplicationDto>(
                 query,

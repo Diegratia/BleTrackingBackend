@@ -91,8 +91,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name", "Visitor.Name", "FloorplanMaskedArea.Name" }; 
-            var validSortColumns = new[] { "Name" ,  "Visitor.Name", "FloorplanMaskedArea.Name" };
+            var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
+            var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
 
             var filterService = new GenericDataTableService<VisitorBlacklistArea, VisitorBlacklistAreaDto>(
                 query,
