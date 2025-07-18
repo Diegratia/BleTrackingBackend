@@ -155,7 +155,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
         
-         [HttpGet]
+        [HttpGet("users")]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -181,7 +181,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("users/{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try

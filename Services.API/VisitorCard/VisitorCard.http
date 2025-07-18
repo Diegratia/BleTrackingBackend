@@ -1,6 +1,0 @@
-@VisitorCard_HostAddress = http://localhost:5190
-
-GET {{VisitorCard_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

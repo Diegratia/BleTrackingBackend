@@ -66,12 +66,24 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAuthenticatedUser", policy =>
         policy.RequireAuthenticatedUser());
     options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireAuthenticatedUser());
-    // options.AddPolicy("RequiredSystemUser", policy =>
-    //     policy.RequireRole("System")
-    //     .RequireClaim("Permission", "Create", "Read", "Update", "Delete"));
+        policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
+    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+    });
+     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+    });
+     options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+    });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });

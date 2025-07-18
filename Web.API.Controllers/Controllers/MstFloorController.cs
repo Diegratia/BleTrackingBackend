@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize("RequirePrimaryAdminOrSystemRole")]
     public class MstFloorController : ControllerBase
     {
         private readonly IMstFloorService _mstFloorService;
@@ -338,8 +338,8 @@ namespace Web.API.Controllers.Controllers
             try
             {
                 var excelBytes = await _mstFloorService.ExportExcelAsync();
-                return File(excelBytes, 
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "MstFloor_Report.xlsx");
             }
             catch (Exception ex)
@@ -353,9 +353,13 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
     }
 }
+
+
+
+
         
         
 
