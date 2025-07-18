@@ -15,11 +15,9 @@ namespace Entities.Models
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Required]
         [Column("visitor_name")]
         public string VisitorName { get; set; }
 
-        [Required]
         [ForeignKey(nameof(VisitorCard))]
         [Column("card_id")]
         public Guid CardId { get; set; }

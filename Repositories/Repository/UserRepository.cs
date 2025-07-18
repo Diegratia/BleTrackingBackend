@@ -26,6 +26,7 @@ namespace Repositories.Repository
         {
             return await _context.Users
                 .Include(u => u.Group)
+                .Where(u => u.StatusActive != 0)
                 .ToListAsync();
         }
 
@@ -35,7 +36,6 @@ namespace Repositories.Repository
                 .Include(u => u.Group)
                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
         }
-
         public async Task<User> GetByEmailAsync(string email)
         {
             return await _context.Users

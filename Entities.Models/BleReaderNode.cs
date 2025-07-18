@@ -25,11 +25,11 @@ namespace Entities.Models
 
         [Required]
         [Column("distance_px")]
-        public decimal DistancePx { get; set; }
+        public float DistancePx { get; set; }
 
         [Required]
         [Column("distance")]
-        public decimal Distance { get; set; }
+        public float Distance { get; set; }
 
         [Required]
         [ForeignKey("Application")]

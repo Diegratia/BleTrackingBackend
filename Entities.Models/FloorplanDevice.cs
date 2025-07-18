@@ -43,19 +43,19 @@ namespace Entities.Models
 
         [Required]
         [Column("pos_x")]
-        public decimal PosX { get; set; }
+        public float PosX { get; set; }
 
         [Required]
         [Column("pos_y")]
-        public decimal PosY { get; set; }
+        public float PosY { get; set; }
 
         [Required]
         [Column("pos_px_x")]
-        public decimal PosPxX { get; set; }
+        public float PosPxX { get; set; }
 
         [Required]
         [Column("pos_px_y")]
-        public decimal PosPxY { get; set; }
+        public float PosPxY { get; set; }
 
         [Required]
         [ForeignKey("FloorplanMaskedArea")]

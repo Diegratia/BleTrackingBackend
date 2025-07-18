@@ -12,7 +12,7 @@ namespace Helpers.Consumer
 
     public enum ApplicationType
     {
-        Empty, // Represents the default empty string in SQL
+        Empty,
         Vms,
         Smr,
         Signage,

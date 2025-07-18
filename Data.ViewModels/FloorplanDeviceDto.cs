@@ -12,10 +12,10 @@ namespace Data.ViewModels
         public Guid AccessCctvId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid AccessControlId { get; set; }
-        public decimal PosX { get; set; }
-        public decimal PosY { get; set; }
-        public decimal PosPxX { get; set; }
-        public decimal PosPxY { get; set; }
+        public float PosX { get; set; }
+        public float PosY { get; set; }
+        public float PosPxX { get; set; }
+        public float PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
@@ -41,10 +41,10 @@ namespace Data.ViewModels
         public Guid AccessCctvId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid AccessControlId { get; set; }
-        public decimal PosX { get; set; }
-        public decimal PosY { get; set; }
-        public decimal PosPxX { get; set; }
-        public decimal PosPxY { get; set; }
+        public float PosX { get; set; }
+        public float PosY { get; set; }
+        public float PosPxX { get; set; }
+        public float PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string DeviceStatus { get; set; }
@@ -58,10 +58,10 @@ namespace Data.ViewModels
         public Guid AccessCctvId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid AccessControlId { get; set; }
-        public decimal PosX { get; set; }
-        public decimal PosY { get; set; }
-        public decimal PosPxX { get; set; }
-        public decimal PosPxY { get; set; }
+        public float PosX { get; set; }
+        public float PosY { get; set; }
+        public float PosPxX { get; set; }
+        public float PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string DeviceStatus { get; set; }

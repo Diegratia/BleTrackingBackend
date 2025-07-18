@@ -13,5 +13,6 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync();
         Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto);
         Task DeleteVisitorAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
     }
 }

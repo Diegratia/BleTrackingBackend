@@ -189,14 +189,14 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<decimal>("Distance")
+                    b.Property<float>("Distance")
                         .HasMaxLength(255)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("real")
                         .HasColumnName("distance");
 
-                    b.Property<decimal>("DistancePx")
+                    b.Property<float>("DistancePx")
                         .HasMaxLength(255)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("real")
                         .HasColumnName("distance_px");
 
                     b.Property<string>("EndPos")
@@ -244,6 +244,91 @@ namespace Repositories.Migrations
                     b.HasIndex("ReaderId");
 
                     b.ToTable("ble_reader_node", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_id");
+
+                    b.Property<DateTime?>("CheckinAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkin_at");
+
+                    b.Property<string>("CheckinBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("checkin_by");
+
+                    b.Property<Guid?>("CheckinSiteId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("checkin_site_id");
+
+                    b.Property<DateTime?>("CheckoutAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkout_at");
+
+                    b.Property<string>("CheckoutBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("checkout_by");
+
+                    b.Property<Guid?>("CheckoutSiteId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("checkout_site_id");
+
+                    b.Property<Guid?>("MemberId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid?>("MstMemberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("timestamp");
+
+                    b.Property<Guid?>("VisitorCardId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("VisitorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
+                    b.Property<Guid?>("VisitorId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VisitorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_name");
+
+                    b.Property<string>("VisitorType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("MstMemberId");
+
+                    b.HasIndex("VisitorCardId");
+
+                    b.HasIndex("VisitorId");
+
+                    b.HasIndex("VisitorId1");
+
+                    b.ToTable("card_record", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanDevice", b =>
@@ -322,20 +407,20 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<decimal>("PosPxX")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("PosPxX")
+                        .HasColumnType("real")
                         .HasColumnName("pos_px_x");
 
-                    b.Property<decimal>("PosPxY")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("PosPxY")
+                        .HasColumnType("real")
                         .HasColumnName("pos_px_y");
 
-                    b.Property<decimal>("PosX")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("PosX")
+                        .HasColumnType("real")
                         .HasColumnName("pos_x");
 
-                    b.Property<decimal>("PosY")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("PosY")
+                        .HasColumnType("real")
                         .HasColumnName("pos_y");
 
                     b.Property<Guid>("ReaderId")
@@ -453,14 +538,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<long>("PositionPxX")
-                        .HasColumnType("bigint")
-                        .HasColumnName("position_px_x");
-
-                    b.Property<long>("PositionPxY")
-                        .HasColumnType("bigint")
-                        .HasColumnName("position_px_y");
-
                     b.Property<string>("RestrictedStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
@@ -482,10 +559,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("updated_by");
-
-                    b.Property<long>("WideArea")
-                        .HasColumnType("bigint")
-                        .HasColumnName("wide_area");
 
                     b.HasKey("Id");
 
@@ -840,28 +913,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ip");
-
-                    b.Property<long>("LocationPxX")
-                        .HasColumnType("bigint")
-                        .HasColumnName("location_px_x");
-
-                    b.Property<long>("LocationPxY")
-                        .HasColumnType("bigint")
-                        .HasColumnName("location_px_y");
-
-                    b.Property<decimal>("LocationX")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("location_x");
-
-                    b.Property<decimal>("LocationY")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("location_y");
-
-                    b.Property<string>("Mac")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("mac");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1246,12 +1297,12 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("floor_image");
 
-                    b.Property<long>("FloorX")
-                        .HasColumnType("bigint")
+                    b.Property<float>("FloorX")
+                        .HasColumnType("real")
                         .HasColumnName("floor_x");
 
-                    b.Property<long>("FloorY")
-                        .HasColumnType("bigint")
+                    b.Property<float>("FloorY")
+                        .HasColumnType("real")
                         .HasColumnName("floor_y");
 
                     b.Property<int>("Generate")
@@ -1261,8 +1312,8 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
 
-                    b.Property<decimal>("MeterPerPx")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("MeterPerPx")
+                        .HasColumnType("real")
                         .HasColumnName("meter_per_px");
 
                     b.Property<string>("Name")
@@ -1270,12 +1321,12 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
-                    b.Property<long>("PixelX")
-                        .HasColumnType("bigint")
+                    b.Property<float>("PixelX")
+                        .HasColumnType("real")
                         .HasColumnName("pixel_x");
 
-                    b.Property<long>("PixelY")
-                        .HasColumnType("bigint")
+                    b.Property<float>("PixelY")
+                        .HasColumnType("real")
                         .HasColumnName("pixel_y");
 
                     b.Property<int?>("Status")
@@ -1804,20 +1855,20 @@ namespace Repositories.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("card_id");
 
-                    b.Property<long>("CoordinatePxX")
-                        .HasColumnType("bigint")
+                    b.Property<float>("CoordinatePxX")
+                        .HasColumnType("real")
                         .HasColumnName("coordinate_px_x");
 
-                    b.Property<long>("CoordinatePxY")
-                        .HasColumnType("bigint")
+                    b.Property<float>("CoordinatePxY")
+                        .HasColumnType("real")
                         .HasColumnName("coordinate_px_y");
 
-                    b.Property<decimal>("CoordinateX")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("CoordinateX")
+                        .HasColumnType("real")
                         .HasColumnName("coordinate_x");
 
-                    b.Property<decimal>("CoordinateY")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<float>("CoordinateY")
+                        .HasColumnType("real")
                         .HasColumnName("coordinate_y");
 
                     b.Property<Guid>("FloorplanMaskedAreaId")
@@ -1851,6 +1902,125 @@ namespace Repositories.Migrations
                     b.HasIndex("ReaderId");
 
                     b.ToTable("tracking_transaction", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.TrxVisitor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("BlockAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("block_at");
+
+                    b.Property<string>("BlockBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("block_by");
+
+                    b.Property<string>("BlockReason")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("block_reason");
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checked_in_at");
+
+                    b.Property<DateTime>("CheckedOutAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checked_out_at");
+
+                    b.Property<string>("CheckinBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("checkin_by");
+
+                    b.Property<string>("CheckoutBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("checkout_by");
+
+                    b.Property<DateTime>("DenyAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("deny_at");
+
+                    b.Property<string>("DenyBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("deny_by");
+
+                    b.Property<string>("DenyReason")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("deny_reason");
+
+                    b.Property<DateTime>("InvitationCreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("invitation_created_at");
+
+                    b.Property<string>("ParkingId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("parking_id");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
+
+                    b.Property<DateTime>("UnblockAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("unblock_at");
+
+                    b.Property<string>("VehiclePlateNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("vehicle_plate_number");
+
+                    b.Property<string>("VisitorCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_code");
+
+                    b.Property<long>("VisitorGroupCode")
+                        .HasColumnType("bigint")
+                        .HasColumnName("visitor_group_code");
+
+                    b.Property<Guid>("VisitorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
+                    b.Property<string>("VisitorNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VisitorId");
+
+                    b.ToTable("trx_visitor", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>
@@ -2006,41 +2176,36 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ble_card_number");
 
-                    b.Property<string>("BlockBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("block_by");
-
                     b.Property<string>("CardNumber")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_number");
 
-                    b.Property<string>("CheckinBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("checkin_by");
+                    b.Property<Guid>("DepartmentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("department_id");
 
-                    b.Property<string>("CheckoutBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("checkout_by");
-
-                    b.Property<string>("DenyBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("deny_by");
+                    b.Property<Guid>("DistrictId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("district_id");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
+
+                    b.Property<DateTime>("EmailVerficationSendAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("email_verification_send_at");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("email_verification_token");
 
                     b.Property<string>("FaceImage")
                         .IsRequired()
@@ -2065,6 +2230,18 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_email_vervied");
+
+                    b.Property<bool>("IsEmployee")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_employee");
+
+                    b.Property<bool>("IsVip")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_vip");
+
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2073,6 +2250,11 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("organization_id");
 
                     b.Property<string>("PersonId")
                         .IsRequired()
@@ -2086,66 +2268,9 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("phone");
 
-                    b.Property<long>("PortalKey")
-                        .HasColumnType("bigint")
-                        .HasColumnName("portal_key");
-
-                    b.Property<string>("ReasonBlock")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("reason_block");
-
-                    b.Property<string>("ReasonDeny")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("reason_deny");
-
-                    b.Property<string>("ReasonUnblock")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("reason_unblock");
-
-                    b.Property<DateTime>("RegisteredDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("registered_date");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(255)")
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
                         .HasColumnName("status");
-
-                    b.Property<DateTime>("TimestampBlocked")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_blocked");
-
-                    b.Property<DateTime>("TimestampCheckedIn")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_checked_in");
-
-                    b.Property<DateTime>("TimestampCheckedOut")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_checked_out");
-
-                    b.Property<DateTime>("TimestampDeny")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_deny");
-
-                    b.Property<DateTime>("TimestampPreRegistration")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_pre_registration");
-
-                    b.Property<DateTime>("TimestampUnblocked")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("timestamp_unblocked");
-
-                    b.Property<string>("UnblockBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("unblock_by");
 
                     b.Property<int>("UploadFr")
                         .HasColumnType("int")
@@ -2156,21 +2281,33 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("upload_fr_error");
 
-                    b.Property<DateTime>("VisitorArrival")
+                    b.Property<DateTime>("VisitorPeriodEnd")
                         .HasColumnType("datetime2")
-                        .HasColumnName("visitor_arrival");
+                        .HasColumnName("visitor_period_end");
 
-                    b.Property<DateTime>("VisitorEnd")
+                    b.Property<DateTime>("VisitorPeriodStart")
                         .HasColumnType("datetime2")
-                        .HasColumnName("visitor_end");
+                        .HasColumnName("visitor_period_start");
+
+                    b.Property<string>("VisitorType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
 
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("DistrictId");
+
                     b.HasIndex("Email");
 
                     b.HasIndex("MstApplicationId");
+
+                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("PersonId");
 
@@ -2219,6 +2356,71 @@ namespace Repositories.Migrations
                     b.HasIndex("VisitorId1");
 
                     b.ToTable("visitor_blacklist_area", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("CardType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("card_type");
+
+                    b.Property<int>("CheckinStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("checkin_status");
+
+                    b.Property<int>("EnableStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("enable_status");
+
+                    b.Property<int>("IsMember")
+                        .HasColumnType("int")
+                        .HasColumnName("is_member");
+
+                    b.Property<string>("Mac")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("mac");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("number");
+
+                    b.Property<string>("QRCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("qr_code");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("site_id");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("visitor_card", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
@@ -2285,6 +2487,43 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("Reader");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardRecord", b =>
+                {
+                    b.HasOne("Entities.Models.VisitorCard", "VisitorCard")
+                        .WithMany()
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstMember", null)
+                        .WithMany("CardRecords")
+                        .HasForeignKey("MstMemberId");
+
+                    b.HasOne("Entities.Models.VisitorCard", null)
+                        .WithMany("CardRecords")
+                        .HasForeignKey("VisitorCardId");
+
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", null)
+                        .WithMany("CardRecords")
+                        .HasForeignKey("VisitorId1");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Visitor");
+
+                    b.Navigation("VisitorCard");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanDevice", b =>
@@ -2656,6 +2895,17 @@ namespace Repositories.Migrations
                     b.Navigation("Reader");
                 });
 
+            modelBuilder.Entity("Entities.Models.TrxVisitor", b =>
+                {
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Visitor");
+                });
+
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
                     b.HasOne("Entities.Models.UserGroup", "Group")
@@ -2690,11 +2940,35 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.MstDepartment", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstDistrict", "District")
+                        .WithMany()
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("Visitors")
                         .HasForeignKey("MstApplicationId");
 
+                    b.HasOne("Entities.Models.MstOrganization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Application");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("District");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Entities.Models.VisitorBlacklistArea", b =>
@@ -2722,6 +2996,17 @@ namespace Repositories.Migrations
                     b.Navigation("FloorplanMaskedArea");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanMaskedArea", b =>
@@ -2817,6 +3102,11 @@ namespace Repositories.Migrations
                     b.Navigation("FloorplanMaskedAreas");
                 });
 
+            modelBuilder.Entity("Entities.Models.MstMember", b =>
+                {
+                    b.Navigation("CardRecords");
+                });
+
             modelBuilder.Entity("Entities.Models.MstOrganization", b =>
                 {
                     b.Navigation("Members");
@@ -2835,6 +3125,13 @@ namespace Repositories.Migrations
                     b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("BlacklistAreas");
+
+                    b.Navigation("CardRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
+                {
+                    b.Navigation("CardRecords");
                 });
 #pragma warning restore 612, 618
         }

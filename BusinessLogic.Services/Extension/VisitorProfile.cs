@@ -15,13 +15,13 @@ namespace BusinessLogic.Services.Extension
             CreateMap<VisitorCreateDto, Visitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
-                .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) // Ditangani manual
+                .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) 
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
                 .ForMember(dest => dest.UploadFrError, opt => opt.Ignore());
             CreateMap<VisitorUpdateDto, Visitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
-                .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) // Ditangani manual
+                .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) 
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
                 .ForMember(dest => dest.UploadFrError, opt => opt.Ignore());
             CreateMap<Visitor, VisitorDto>();

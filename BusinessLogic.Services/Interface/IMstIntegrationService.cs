@@ -13,5 +13,8 @@ namespace BusinessLogic.Services.Interface
         Task<MstIntegrationDto> CreateAsync(MstIntegrationCreateDto createDto);
         Task UpdateAsync(Guid id, MstIntegrationUpdateDto updateDto); // Returns Task
         Task DeleteAsync(Guid id); // Returns Task
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

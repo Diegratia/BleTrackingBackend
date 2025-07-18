@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=103.193.15.120,5433;Database=BleTrackingDbDev;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -66,12 +66,24 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAuthenticatedUser", policy =>
         policy.RequireAuthenticatedUser());
     options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireAuthenticatedUser());
-    // options.AddPolicy("RequiredSystemUser", policy =>
-    //     policy.RequireRole("System")
-    //     .RequireClaim("Permission", "Create", "Read", "Update", "Delete"));
+        policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
+    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+    });
+     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+    });
+     options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+    });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
@@ -117,7 +129,7 @@ builder.Services.AddScoped<MstFloorplanRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ??
+var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ?? "5014" ??
            builder.Configuration["Ports:MstFloorplanService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

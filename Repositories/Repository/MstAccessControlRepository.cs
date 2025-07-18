@@ -55,5 +55,23 @@ namespace Repositories.Repository
             accessControl.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstAccessControl> GetAllQueryable()
+        {
+            return _context.MstAccessControls
+                .Include(a => a.Brand)
+                .Include(a => a.Integration)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+
+         public async Task<IEnumerable<MstAccessControl>> GetAllExportAsync()
+        {
+            return await _context.MstAccessControls
+                .Include(a => a.Brand)
+                .Include(a => a.Integration)
+                .Where(a => a.Status != 0)
+                .ToListAsync();
+        }
     }
 }

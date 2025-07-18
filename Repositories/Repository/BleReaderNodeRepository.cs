@@ -67,5 +67,22 @@ namespace Repositories.Repository
             _context.BleReaderNodes.Remove(bleReaderNode);
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<BleReaderNode> GetAllQueryable()
+        {
+            return _context.BleReaderNodes
+                .Include(a => a.Reader)
+                .Include(n => n.Application)
+                .AsQueryable();
+        }
+        
+           public async Task<IEnumerable<BleReaderNode>> GetAllExportAsync()
+        {
+            return await _context.BleReaderNodes
+                .Include(n => n.Reader)
+                .Include(n => n.Application)
+                .Where(n => n.Reader == null || n.Reader.Status != 0)
+                .ToListAsync();
+        }
     }
 }

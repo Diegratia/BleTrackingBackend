@@ -25,6 +25,9 @@ namespace Repositories.Repository
         public async Task<IEnumerable<CardRecord>> GetAllAsync()
         {
             return await _context.CardRecords
+                .Include(a => a.Visitor)
+                .Include(a => a.VisitorCard)
+                .Include(a => a.Member)
                 .ToListAsync();
         }
 
@@ -51,18 +54,34 @@ namespace Repositories.Repository
             return await _context.Visitors
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
-        
-           public async Task<MstMember> GetMemberByIdAsync(Guid id)
+
+        public async Task<MstMember> GetMemberByIdAsync(Guid id)
         {
             return await _context.MstMembers
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
-           public async Task<VisitorCard> GetCardByIdAsync(Guid id)
+        public async Task<VisitorCard> GetCardByIdAsync(Guid id)
         {
             return await _context.VisitorCards
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
+        public IQueryable<CardRecord> GetAllQueryable()
+        {
+            return _context.CardRecords
+                .Include(a => a.Visitor)
+                .Include(a => a.VisitorCard)
+                .Include(a => a.Member)
+                .AsQueryable();
+        }    
+        public async Task<IEnumerable<CardRecord>> GetAllExportAsync()
+        {
+            return await _context.CardRecords
+                .Include(a => a.Visitor)
+                .Include(a => a.VisitorCard)
+                .Include(a => a.Member)
+                .ToListAsync();
+        }
     }
 }

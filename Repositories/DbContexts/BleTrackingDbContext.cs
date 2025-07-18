@@ -32,6 +32,7 @@ namespace Repositories.DbContexts
         public DbSet<MstEngine> MstEngines { get; set; }
         public DbSet<VisitorCard> VisitorCards { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
+        public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -66,15 +67,12 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
             modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
+            modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
-            
-
-
-
 
             // MstApplication
             modelBuilder.Entity<MstApplication>(entity =>
@@ -368,6 +366,9 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
@@ -375,17 +376,33 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
-                entity.Property(e => e.Status)
+
+                entity.Property(e => e.VisitorType)
+                    .HasColumnName("visitor_type")
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorStatus)Enum.Parse(typeof(VisitorStatus), v, true)
+                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
                     );
 
                 entity.HasOne(v => v.Application)
                     .WithMany()
                     .HasForeignKey(v => v.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Department)
+                    .WithMany()
+                    .HasForeignKey(m => m.DepartmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(v => v.District)
+                    .WithMany()
+                    .HasForeignKey(v => v.DistrictId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(v => v.Organization)
+                    .WithMany()
+                    .HasForeignKey(v => v.OrganizationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(v => v.PersonId);
@@ -621,7 +638,6 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.EngineId).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.Port).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1); // untuk delete
                 entity.Property(e => e.IsLive).IsRequired().HasDefaultValue(1); // untuk monitoring status
                 entity.Property(e => e.LastLive).IsRequired();
@@ -704,11 +720,9 @@ namespace Repositories.DbContexts
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.VisitorName)
-                    .IsRequired()
                     .HasColumnName("visitor_name");
 
                 entity.Property(e => e.CardId)
-                    .IsRequired()
                     .HasColumnName("card_id");
 
                 entity.Property(e => e.VisitorId)
@@ -897,6 +911,72 @@ namespace Repositories.DbContexts
             //         .HasConstraintName("fk_record_tracking_log_floorplan")
             //         .OnDelete(DeleteBehavior.NoAction);
             // });
+
+            //TrxVisitor
+            modelBuilder.Entity<TrxVisitor>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.Status)
+                    .HasColumnName("visitor_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (VisitorStatus)Enum.Parse(typeof(VisitorStatus), v, true)
+                    );
+                 entity.HasOne(v => v.Visitor)
+                    .WithMany()
+                    .HasForeignKey(v => v.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // Visitor
+            modelBuilder.Entity<Visitor>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.Gender)
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (Gender)Enum.Parse(typeof(Gender), v, true)
+                    );
+
+                entity.Property(e => e.VisitorType)
+                    .HasColumnName("visitor_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                    );
+
+                entity.HasOne(v => v.Application)
+                    .WithMany()
+                    .HasForeignKey(v => v.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Department)
+                    .WithMany()
+                    .HasForeignKey(m => m.DepartmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(v => v.District)
+                    .WithMany()
+                    .HasForeignKey(v => v.DistrictId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(v => v.Organization)
+                    .WithMany()
+                    .HasForeignKey(v => v.OrganizationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(v => v.PersonId);
+                entity.HasIndex(v => v.Email);
+            });
 
             modelBuilder.Entity<RefreshToken>(Entity =>
             {

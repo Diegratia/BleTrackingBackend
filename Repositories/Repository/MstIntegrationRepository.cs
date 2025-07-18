@@ -65,5 +65,19 @@ namespace Repositories.Repository
             integration.Status = 0;
             await _context.SaveChangesAsync();
         }
+        public IQueryable<MstIntegration> GetAllQueryable()
+        {
+            return _context.MstIntegrations
+                .Include(f => f.Brand)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+        
+          public async Task<IEnumerable<MstIntegration>> GetAllExportAsync()
+        {
+            return await _context.MstIntegrations.Include(f => f.Brand).
+            Where(f => f.Status != 0).ToListAsync();
+        }  
+        
     }
 }

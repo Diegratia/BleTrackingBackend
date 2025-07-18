@@ -13,5 +13,8 @@ namespace BusinessLogic.Services.Interface
         Task<TrackingTransactionDto> GetTrackingTransactionByIdAsync(Guid id);
         Task UpdateTrackingTransactionAsync(Guid id, TrackingTransactionUpdateDto dto);
         Task DeleteTrackingTransactionAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

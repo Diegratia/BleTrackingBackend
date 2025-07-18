@@ -13,5 +13,8 @@ namespace BusinessLogic.Services.Interface
         Task<BleReaderNodeDto> CreateAsync(BleReaderNodeCreateDto createDto);
         Task UpdateAsync(Guid id, BleReaderNodeUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync(); 
     }
 }

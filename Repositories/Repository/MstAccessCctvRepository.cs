@@ -53,5 +53,21 @@ namespace Repositories.Repository
             accessCctv.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<MstAccessCctv> GetAllQueryable()
+        {
+            return _context.MstAccessCctvs
+                .Include(a => a.Integration)
+                .Where(f => f.Status != 0)
+                .AsQueryable();
+        }
+
+           public async Task<IEnumerable<MstAccessCctv>> GetAllExportAsync()
+        {
+            return await _context.MstAccessCctvs
+                .Include(a => a.Integration)
+                .Where(a => a.Status != 0)
+                .ToListAsync();
+        }
     }
 }

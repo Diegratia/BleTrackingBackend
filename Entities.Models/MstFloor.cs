@@ -34,23 +34,23 @@ namespace Entities.Models
 
    
         [Column("pixel_x")]
-        public long PixelX { get; set; }
+        public float PixelX { get; set; }
 
     
         [Column("pixel_y")]
-        public long PixelY { get; set; }
+        public float PixelY { get; set; }
 
 
         [Column("floor_x")]
-        public long FloorX { get; set; }
+        public float FloorX { get; set; }
 
 
         [Column("floor_y")]
-        public long FloorY { get; set; }
+        public float FloorY { get; set; }
 
 
         [Column("meter_per_px")]
-        public decimal MeterPerPx { get; set; }
+        public float MeterPerPx { get; set; }
 
     
         [Column("engine_floor_id")]

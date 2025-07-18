@@ -53,10 +53,16 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-            public async Task<MstApplication> GetApplicationByIdAsync(Guid id)
+        public async Task<MstApplication> GetApplicationByIdAsync(Guid id)
         {
             return await _context.MstApplications
                 .FirstOrDefaultAsync(a => a.Id == id && a.ApplicationStatus != 0);
+        }
+        
+         public IQueryable<VisitorCard> GetAllQueryable()
+        {
+            return _context.VisitorCards
+                .AsQueryable();
         }
 
     }

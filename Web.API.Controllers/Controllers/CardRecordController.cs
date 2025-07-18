@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize ("RequiredSystemUser")]
     public class CardRecordController : ControllerBase
     {
         private readonly ICardRecordService _cardRecordService;
@@ -22,7 +22,6 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -50,7 +49,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -88,7 +86,6 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBleReader
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> Create([FromBody] CardRecordCreateDto cardRecordDto)
         {
             if (!ModelState.IsValid)
@@ -127,7 +124,6 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] CardRecordUpdateDto cardRecordDto)
         {
             if (!ModelState.IsValid)
@@ -177,7 +173,6 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstBleReader/{id}
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -207,6 +202,96 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{filter}")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _cardRecordService.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card Records filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpGet("export/pdf")]
+        public async Task<IActionResult> ExportPdf()
+        {
+            try
+            {
+                var pdfBytes = await _cardRecordService.ExportPdfAsync();
+                return File(pdfBytes, "application/pdf", "CardRecord_Report.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate PDF: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("export/excel")]
+        public async Task<IActionResult> ExportExcel()
+        {
+            try
+            {
+                var excelBytes = await _cardRecordService.ExportExcelAsync();
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "CardRecord_Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

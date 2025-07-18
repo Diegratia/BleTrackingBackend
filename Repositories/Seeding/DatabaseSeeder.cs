@@ -79,6 +79,18 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
+                        Name = "Primary Admin Initial",
+                        LevelPriority = LevelPriority.PrimaryAdmin,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
+                       new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
                         Name = "Primary Initial",
                         LevelPriority = LevelPriority.Primary,
                         ApplicationId = applicationId,
@@ -192,11 +204,11 @@ namespace Repositories.Seeding
                         .Id)
                     .RuleFor(f => f.Name, f => f.Address.StreetName())
                     .RuleFor(f => f.FloorImage, f => $"https://example.com/floorplans/{f.Random.Word()}.png")
-                    .RuleFor(f => f.PixelX, f => f.Random.Long(1280, 1920))
-                    .RuleFor(f => f.PixelY, f => f.Random.Long(720, 1080))
-                    .RuleFor(f => f.FloorX, f => f.Random.Long(20, 100))
-                    .RuleFor(f => f.FloorY, f => f.Random.Long(20, 100))
-                    .RuleFor(f => f.MeterPerPx, f => f.Random.Decimal(0.01m, 0.1m))
+                    .RuleFor(f => f.PixelX, f => f.Random.Float(1280, 1920))
+                    .RuleFor(f => f.PixelY, f => f.Random.Float(720, 1080))
+                    .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
+                    .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
+                    .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
                     .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
                     .RuleFor(f => f.CreatedBy, f => "System")
                     .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
@@ -539,11 +551,35 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.IdentityId, f => "VID" + f.Random.Number(100, 999))
                     .RuleFor(v => v.CardNumber, f => "VCARD" + f.Random.Number(1000, 9999))
                     .RuleFor(v => v.BleCardNumber, f => "VBLE" + f.Random.Number(100, 999))
+                    .RuleFor(v => v.VisitorType, f => f.PickRandom<VisitorType>())
                     .RuleFor(v => v.Name, f => f.Name.FullName())
                     .RuleFor(v => v.Phone, f => f.Phone.PhoneNumber())
                     .RuleFor(v => v.Email, f => f.Internet.Email())
                     .RuleFor(v => v.Gender, f => f.PickRandom<Gender>())
                     .RuleFor(v => v.Address, f => f.Address.FullAddress())
+                    .RuleFor(v => v.OrganizationId, f => context.MstOrganizations
+                        .Where(o => o.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.DistrictId, f => context.MstDistricts
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.DepartmentId, f => context.MstDepartments
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(v => v.IsVip, f => f.Random.Bool())
+                    .RuleFor(v => v.IsEmailVerified, f => f.Random.Bool())
+                    .RuleFor(v => v.EmailVerficationSendAt, f => f.Date.Recent(1))
+                    .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
+                    .RuleFor(v => v.VisitorPeriodStart, f => f.Date.Recent(1))
+                    .RuleFor(v => v.VisitorPeriodEnd, f => f.Date.Recent(1))
+                    .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
+                    .RuleFor(v => v.Status, f => 1)
                     .RuleFor(v => v.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
                     .RuleFor(v => v.UploadFr, f => f.Random.Int(0, 2))
                     .RuleFor(v => v.UploadFrError, f => f.Random.Bool() ? "" : "Upload failed")
@@ -551,26 +587,7 @@ namespace Repositories.Seeding
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id)
-                    .RuleFor(v => v.RegisteredDate, f => f.Date.Past(1))
-                    .RuleFor(v => v.VisitorArrival, f => f.Date.Recent(1))
-                    .RuleFor(v => v.VisitorEnd, f => f.Date.Future(1))
-                    .RuleFor(v => v.PortalKey, f => f.Random.Long(1000, 9999))
-                    .RuleFor(v => v.TimestampPreRegistration, f => f.Date.Past(1))
-                    .RuleFor(v => v.TimestampCheckedIn, f => f.Date.Recent(1))
-                    .RuleFor(v => v.TimestampCheckedOut, f => f.Date.Future(1))
-                    .RuleFor(v => v.TimestampDeny, f => f.Date.Past(1))
-                    .RuleFor(v => v.TimestampBlocked, f => f.Date.Past(1))
-                    .RuleFor(v => v.TimestampUnblocked, f => f.Date.Future(1))
-                    .RuleFor(v => v.CheckinBy, f => "")
-                    .RuleFor(v => v.CheckoutBy, f => "")
-                    .RuleFor(v => v.DenyBy, f => "")
-                    .RuleFor(v => v.BlockBy, f => "")
-                    .RuleFor(v => v.UnblockBy, f => "")
-                    .RuleFor(v => v.ReasonDeny, f => f.Lorem.Sentence())
-                    .RuleFor(v => v.ReasonBlock, f => f.Lorem.Sentence())
-                    .RuleFor(v => v.ReasonUnblock, f => f.Lorem.Sentence())
-                    .RuleFor(v => v.Status, f => f.PickRandom<VisitorStatus>());
+                        .Id);
 
                 var visitors = visitorFaker.Generate(2);
                 context.Visitors.AddRange(visitors);
@@ -594,10 +611,10 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(t => t.CoordinateX, f => f.Random.Decimal(0, 100))
-                    .RuleFor(t => t.CoordinateY, f => f.Random.Decimal(0, 100))
-                    .RuleFor(t => t.CoordinatePxX, f => f.Random.Long(0, 1920))
-                    .RuleFor(t => t.CoordinatePxY, f => f.Random.Long(0, 1080))
+                    .RuleFor(t => t.CoordinateX, f => f.Random.Float(0, 100))
+                    .RuleFor(t => t.CoordinateY, f => f.Random.Float(0, 100))
+                    .RuleFor(t => t.CoordinatePxX, f => f.Random.Float(0, 1920))
+                    .RuleFor(t => t.CoordinatePxY, f => f.Random.Float(0, 1080))
                     .RuleFor(t => t.AlarmStatus, f => f.PickRandom<AlarmStatus>())
                     .RuleFor(t => t.Battery, f => f.Random.Long(0, 100));
 
@@ -699,10 +716,10 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(d => d.PosX, f => f.Random.Decimal(0, 1920))
-                    .RuleFor(d => d.PosY, f => f.Random.Decimal(0, 1080))
-                    .RuleFor(d => d.PosPxX, f => f.Random.Decimal(0, 100))
-                    .RuleFor(d => d.PosPxY, f => f.Random.Decimal(0, 100))
+                    .RuleFor(d => d.PosX, f => f.Random.Float(0, 1920))
+                    .RuleFor(d => d.PosY, f => f.Random.Float(0, 1080))
+                    .RuleFor(d => d.PosPxX, f => f.Random.Float(0, 100))
+                    .RuleFor(d => d.PosPxY, f => f.Random.Float(0, 100))
                     .RuleFor(d => d.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
                         .Where(a => a.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -736,8 +753,8 @@ namespace Repositories.Seeding
                         .FirstOrDefault())
                     .RuleFor(d => d.StartPos, f => f.Random.Number(0, 99).ToString())
                     .RuleFor(d => d.EndPos, f => f.Random.Number(0, 99).ToString())
-                    .RuleFor(d => d.DistancePx, f => f.Random.Decimal(0, 100))
-                    .RuleFor(d => d.Distance, f => f.Random.Decimal(0, 100))
+                    .RuleFor(d => d.DistancePx, f => f.Random.Float(0, 100))
+                    .RuleFor(d => d.Distance, f => f.Random.Float(0, 100))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -829,6 +846,41 @@ namespace Repositories.Seeding
 
                 var cardrecords = cardrecordFaker.Generate(2);
                 context.CardRecords.AddRange(cardrecords);
+                context.SaveChanges();
+            }
+
+              // 24. TrxVisitor
+            if (!context.TrxVisitors.Any())
+            {
+                var trxVisitorFaker = new Faker<TrxVisitor>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(v => v.CheckedInAt, f => f.Date.Recent(1))
+                    .RuleFor(v => v.CheckedOutAt, f => f.Date.Future(1))
+                    .RuleFor(v => v.DenyAt, f => f.Date.Future(1))
+                    .RuleFor(v => v.BlockAt, f => f.Date.Future(1))
+                    .RuleFor(v => v.UnblockAt, f => f.Date.Future(1))
+                    .RuleFor(b => b.CheckinBy, f => "System")
+                    .RuleFor(b => b.CheckoutBy, f => "System")
+                    .RuleFor(b => b.DenyBy, f => "System")
+                    .RuleFor(b => b.DenyReason, f => f.PickRandom(new[] { "No reason", "Card is not valid", "Card is expired", "Card is blocked", "Card is denied" }))
+                    
+                    .RuleFor(e => e.VisitorId, f => context.Visitors
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.Status, f => f.PickRandom<VisitorStatus>())
+                    .RuleFor(e => e.InvitationCreatedAt, f => f.Date.Recent(1))
+                    .RuleFor(e => e.VisitorGroupCode, f => f.Random.Number(1, 1000000))
+                    .RuleFor(e => e.VisitorNumber, f => f.Random.Number(1, 100).ToString())
+                    .RuleFor(e => e.VisitorCode, f => f.Random.String(10))
+                    .RuleFor(e => e.VehiclePlateNumber, f => f.Random.String(10))
+                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
+                    .RuleFor(e => e.SiteId, f => Guid.NewGuid().ToString())
+                    .RuleFor(e => e.ParkingId, f => Guid.NewGuid().ToString());
+
+                var trxVisitors = trxVisitorFaker.Generate(2);
+                context.TrxVisitors.AddRange(trxVisitors);
                 context.SaveChanges();
             }
 

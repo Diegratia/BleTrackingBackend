@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-  [Authorize ]
-  [Route("api/[controller]")]
-  [ApiController]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Route("api/[controller]")]
+    [ApiController]
     public class MstBrandController : ControllerBase
     {
         private readonly IMstBrandService _mstBrandService;
@@ -23,7 +23,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBrand
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -51,7 +50,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/MstBrand/{id}
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -89,7 +87,6 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBrand
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> Create([FromBody] MstBrandCreateDto mstBrandDto)
         {
             if (!ModelState.IsValid)
@@ -129,7 +126,6 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBrand/{id}
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstBrandUpdateDto mstBrandDto)
         {
             if (!ModelState.IsValid)
@@ -179,7 +175,6 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstBrand/{id}
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -209,6 +204,96 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{filter}")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _mstBrandService.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Brands filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpGet("export/pdf")]
+        public async Task<IActionResult> ExportPdf()
+        {
+            try
+            {
+                var pdfBytes = await _mstBrandService.ExportPdfAsync();
+                return File(pdfBytes, "application/pdf", "MstBrand_Report.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate PDF: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("export/excel")]
+        public async Task<IActionResult> ExportExcel()
+        {
+            try
+            {
+                var excelBytes = await _mstBrandService.ExportExcelAsync();
+                return File(excelBytes, 
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    "MstBrand_Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

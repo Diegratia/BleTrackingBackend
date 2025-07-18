@@ -298,6 +298,16 @@ services:
       - ./.env:/app/.env
     restart: always
 
+  trx-visitor:
+    build:
+      context: .
+      dockerfile: Services.API/TrxVisitor/Dockerfile
+    ports:
+      - "5025:5025"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
   nginx:
     build:
       context: .

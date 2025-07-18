@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Entities.Models
 {
@@ -32,6 +33,11 @@ namespace Entities.Models
 
         [Required]
         [StringLength(255)]
+        [Column("visitor_type")]
+        public VisitorType VisitorType { get; set; }
+
+        [Required]
+        [StringLength(255)]
         [Column("name")]
         public string Name { get; set; }
 
@@ -49,19 +55,54 @@ namespace Entities.Models
         [Column("gender")]
         public Gender Gender { get; set; }
 
-        [Required]
         [Column("address")]
         public string Address { get; set; }
 
         [Required]
+        [ForeignKey(nameof(Organization))]
+        [Column("organization_id")]
+        public Guid OrganizationId { get; set; }
+
+        [Required]
+        [ForeignKey(nameof(District))]
+        [Column("district_id")]
+        public Guid DistrictId { get; set; }
+
+        [Required]
+        [ForeignKey(nameof(Department))]
+        [Column("department_id")]
+        public Guid DepartmentId { get; set; }
+
+        [Column("is_vip")]
+        public bool IsVip { get; set; }
+
+        [Column("is_email_vervied")]
+        public bool IsEmailVerified { get; set; }
+
+        [Column("email_verification_send_at")]
+        public DateTime EmailVerficationSendAt { get; set; }
+
+        [Column("email_verification_token")]
+        public string EmailVerificationToken { get; set; }
+
+        [Column("visitor_period_start")]
+        public DateTime VisitorPeriodStart { get; set; }
+
+        [Column("visitor_period_end")]
+        public DateTime VisitorPeriodEnd { get; set; }
+
+        [Column("is_employee")]
+        public bool IsEmployee { get; set; }
+
+        [Column("status")]
+        public int Status { get; set; } = 1;
+
         [Column("face_image")]
         public string FaceImage { get; set; }
 
-        [Required]
         [Column("upload_fr")]
         public int UploadFr { get; set; } = 0;
 
-        [Required]
         [Column("upload_fr_error")]
         public string UploadFrError { get; set; }
 
@@ -69,91 +110,9 @@ namespace Entities.Models
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-
-        [Required]
-        [Column("registered_date")]
-        public DateTime RegisteredDate { get; set; }
-
-        [Required]
-        [Column("visitor_arrival")]
-        public DateTime VisitorArrival { get; set; }
-
-        [Required]
-        [Column("visitor_end")]
-        public DateTime VisitorEnd { get; set; }
-
-        [Required]
-        [Column("portal_key")]
-        public long PortalKey { get; set; }
-
-        [Required]
-        [Column("timestamp_pre_registration")]
-        public DateTime TimestampPreRegistration { get; set; }
-
-        [Required]
-        [Column("timestamp_checked_in")]
-        public DateTime TimestampCheckedIn { get; set; }
-
-        [Required]
-        [Column("timestamp_checked_out")]
-        public DateTime TimestampCheckedOut { get; set; }
-
-        [Required]
-        [Column("timestamp_deny")]
-        public DateTime TimestampDeny { get; set; }
-
-        [Required]
-        [Column("timestamp_blocked")]
-        public DateTime TimestampBlocked { get; set; }
-
-        [Required]
-        [Column("timestamp_unblocked")]
-        public DateTime TimestampUnblocked { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("checkin_by")]
-        public string CheckinBy { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("checkout_by")]
-        public string CheckoutBy { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("deny_by")]
-        public string DenyBy { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("block_by")]
-        public string BlockBy { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("unblock_by")]
-        public string UnblockBy { get; set; } ="";
-
-        [Required]
-        [StringLength(255)]
-        [Column("reason_deny")]
-        public string ReasonDeny { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("reason_block")]
-        public string ReasonBlock { get; set; } = "";
-
-        [Required]
-        [StringLength(255)]
-        [Column("reason_unblock")]
-        public string ReasonUnblock { get; set; } = "";
-
-        [Required]
-        [Column("status")]
-        public VisitorStatus Status { get; set; }
-
+        public virtual MstOrganization Organization { get; set; }
+        public virtual MstDepartment Department { get; set; }
+        public virtual MstDistrict District { get; set; }
         public virtual MstApplication Application { get; set; }
         public virtual AlarmRecordTracking AlarmRecordTracking { get; set; }
         public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();

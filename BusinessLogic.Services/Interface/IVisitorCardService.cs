@@ -13,5 +13,6 @@ namespace BusinessLogic.Services.Interface
         Task<VisitorCardDto> CreateAsync(VisitorCardCreateDto createDto);
         Task UpdateAsync(Guid id, VisitorCardUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task<object> FilterAsync(DataTablesRequest request); 
     }
 }

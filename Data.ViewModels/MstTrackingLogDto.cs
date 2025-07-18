@@ -12,12 +12,12 @@ namespace Data.ViewModels
         // public decimal FirstDist { get; set; }
         // public decimal SecondDist { get; set; }
         // public decimal JarakMeter { get; set; }
-        public decimal PointX { get; set; }
-        public decimal PointY { get; set; }
-        public decimal FirstReaderX { get; set; }
-        public decimal FirstReaderY { get; set; }
-        public decimal SecondReaderX { get; set; }
-        public decimal SecondReaderY { get; set; }
+        public float PointX { get; set; }
+        public float PointY { get; set; }
+        public float FirstReaderX { get; set; }
+        public float FirstReaderY { get; set; }
+        public float SecondReaderX { get; set; }
+        public float SecondReaderY { get; set; }
         public DateTime Time { get; set; }
         public Guid FloorplanId { get; set; }
     }
