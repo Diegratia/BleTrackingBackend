@@ -121,14 +121,14 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHttpContextAccessor();
 
 
-builder.Services.AddAutoMapper(typeof(VisitorProfile));
+builder.Services.AddAutoMapper(typeof(TrxVisitorProfile));
 
-builder.Services.AddScoped<IVisitorService, VisitorService>();
+builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 
 // builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
-builder.Services.AddScoped<VisitorRepository>();
+builder.Services.AddScoped<TrxVisitorRepository>();
 
 
 
@@ -166,14 +166,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/visitorFaceImages");
-Directory.CreateDirectory(uploadsPath);
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/Uploads/visitorFaceImages"
-});
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();

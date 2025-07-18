@@ -8,5 +8,13 @@ namespace Data.ViewModels
         public string SortColumn { get; set; }
         public string SortDir { get; set; }
         public string SearchValue { get; set; }
+        public Dictionary<string, DateRangeFilter> DateFilters { get; set; } = new Dictionary<string, DateRangeFilter>();
+        public Dictionary<string, object> Filters { get; set; } = new Dictionary<string, object>();
+    }
+
+    public class DateRangeFilter
+    {
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
     }
 }

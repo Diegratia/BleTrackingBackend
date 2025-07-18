@@ -35,7 +35,9 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
 
-
+        public MstOrganizationDto Organization { get; set; }
+        public MstDistrictDto District { get; set; }
+        public MstDepartmentDto Department { get; set; }
     }
 
     public class VisitorCreateDto

@@ -500,3 +500,4 @@ cache
 *.cache
 *cache
 .txt
+.DS_Store

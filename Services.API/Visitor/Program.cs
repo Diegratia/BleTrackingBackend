@@ -132,7 +132,7 @@ builder.Services.AddScoped<VisitorRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("VISITOR_PORT") ??
+var port = Environment.GetEnvironmentVariable("VISITOR_PORT") ?? "5019" ??
            builder.Configuration["Ports:VisitorService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

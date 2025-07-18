@@ -132,15 +132,15 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name", "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name" }; 
-            var validSortColumns = new[] { "Name" , "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "AlarmRecordStatus", "Action" };
+            var searchableColumns = new[] { "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name" }; 
+            var validSortColumns = new[] {  "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "Action" };
 
             var filterService = new GenericDataTableService<AlarmRecordTracking, AlarmRecordTrackingDto>(
                 query,
                 _mapper,
                 searchableColumns,
                 validSortColumns);
-
+              
             return await filterService.FilterAsync(request);
         }
 

@@ -249,6 +249,8 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
+
+
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;
@@ -326,8 +328,8 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-        
-            public async Task<byte[]> ExportExcelAsync()
+
+        public async Task<byte[]> ExportExcelAsync()
         {
             var floors = await _repository.GetAllExportAsync();
 
@@ -349,7 +351,7 @@ namespace BusinessLogic.Services.Implementation
 
             foreach (var floor in floors)
             {
-                await _repository.GetAllExportAsync(); 
+                await _repository.GetAllExportAsync();
 
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
@@ -371,5 +373,7 @@ namespace BusinessLogic.Services.Implementation
 
 
     }
-  
+
 }
+
+

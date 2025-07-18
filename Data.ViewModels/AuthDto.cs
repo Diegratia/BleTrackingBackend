@@ -48,7 +48,6 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string Email { get; set; }
         public Guid GroupId { get; set; }
-        public Guid ApplicationId { get; set; }
         public int IsEmailConfirmation { get; set; }
         public string EmailConfirmationCode { get; set; }
         public DateTime EmailConfirmationExpiredAt { get; set; }

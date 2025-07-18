@@ -19,14 +19,22 @@ namespace Repositories.Repository
         public async Task<List<Visitor>> GetAllAsync()
         {
             return await _context.Visitors
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
                 .Include(v => v.Application)
+                .Where(x => x.Status != 0)
                 .ToListAsync();
         }
 
         public async Task<Visitor> GetByIdAsync(Guid id)
         {
             return await _context.Visitors
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
                 .Include(v => v.Application)
+                .Where(x => x.Status != 0)
                 .FirstOrDefaultAsync(v => v.Id == id);
         }
 
@@ -51,10 +59,14 @@ namespace Repositories.Repository
         {
             return await _context.MstApplications.AnyAsync(f => f.Id == id);
         }
-
            public IQueryable<Visitor> GetAllQueryable()
         {
             return _context.Visitors
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Include(v => v.Application)
+                .Where(x => x.Status != 0)
                 .AsQueryable();
         }
     }
