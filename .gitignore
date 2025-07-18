@@ -484,20 +484,10 @@ $RECYCLE.BIN/
 *.swp
 
 
-*.dll
-.pdb
-*.props
-
-*.obj
-./obj
+bin/
 obj/
-Debug
-obj
+*.dll
+*.props
+*.targets
 
-Assemblyinfo
-.cache
-cache
-*.cache
-*cache
-.txt
-.DS_Store
+
