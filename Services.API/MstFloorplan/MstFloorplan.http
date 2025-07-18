@@ -1,6 +1,0 @@
-@MstFloorplan_HostAddress = http://localhost:5075
-
-GET {{MstFloorplan_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,6 +1,0 @@
-@MstDepartment_HostAddress = http://localhost:5287
-
-GET {{MstDepartment_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
