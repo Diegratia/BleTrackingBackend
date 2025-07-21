@@ -12,8 +12,8 @@ namespace Data.ViewModels
         public Guid FloorplanMaskedAreaId { get; set; }
         public float CoordinateX { get; set; }
         public float CoordinateY { get; set; }
-        public long CoordinatePxX { get; set; }
-        public long CoordinatePxY { get; set; }
+        public float CoordinatePxX { get; set; }
+        public float CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string
         public long Battery { get; set; }
         public MstBleReaderDto Reader { get; set; }
@@ -28,8 +28,8 @@ namespace Data.ViewModels
         public Guid FloorplanMaskedAreaId { get; set; }
         public float CoordinateX { get; set; }
         public float CoordinateY { get; set; }
-        public long CoordinatePxX { get; set; }
-        public long CoordinatePxY { get; set; }
+        public float CoordinatePxX { get; set; }
+        public float CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string
         public long Battery { get; set; }
     }
@@ -42,8 +42,8 @@ namespace Data.ViewModels
         public Guid FloorplanMaskedAreaId { get; set; }
         public float CoordinateX { get; set; }
         public float CoordinateY { get; set; }
-        public long CoordinatePxX { get; set; }
-        public long CoordinatePxY { get; set; }
+        public float CoordinatePxX { get; set; }
+        public float CoordinatePxY { get; set; }
         public string AlarmStatus { get; set; } // Enum sebagai string
         public long Battery { get; set; }
     }

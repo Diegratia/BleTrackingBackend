@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class VisitorBlacklistAreaDto
+    public class VisitorBlacklistAreaDto 
     {
         public long Generate { get; set; } 
 
