@@ -108,7 +108,7 @@ namespace BusinessLogic.Services.Implementation
                     {
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                                 // Handle single Guid or array of Guids
+                            // Handle single Guid or array of Guids
                             if (jsonElement.ValueKind == JsonValueKind.Array)
                             {
                                 var guidValues = jsonElement.EnumerateArray()
@@ -131,17 +131,35 @@ namespace BusinessLogic.Services.Implementation
                                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
-                        else if (_enumColumns.ContainsKey(filter.Key) && jsonElement.ValueKind == JsonValueKind.String)
+                        else if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
-                            var stringValue = jsonElement.GetString();
-                            if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                            if (jsonElement.ValueKind == JsonValueKind.Array)
                             {
-                                query = query.Where($"{filter.Key} == @0", enumValue);
+                                var enumValues = jsonElement.EnumerateArray()
+                                    .Select(e => Enum.TryParse(enumType, e.GetString(), true, out var enumValue) ? enumValue : null)
+                                    .Where(e => e != null)
+                                    .ToArray();
+                                if (enumValues.Any())
+                                {
+                                    query = query.Where($"@0.Contains({filter.Key})", enumValues);
+                                }
+                            }
+                            else if (jsonElement.ValueKind == JsonValueKind.String)
+                            {
+                                var stringValue = jsonElement.GetString();
+                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                                {
+                                    query = query.Where($"{filter.Key} == @0", enumValue);
+                                }
+                                else
+                                {
+                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                }
                             }
                             else
                             {
-                                throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
                             }
                         }
                         else if (jsonElement.ValueKind == JsonValueKind.String)
@@ -163,6 +181,18 @@ namespace BusinessLogic.Services.Implementation
                         else
                         {
                             throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
+                        }
+                    }
+                    else if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(filter.Key))
+                    {
+                        var enumType = _enumColumns[filter.Key];
+                        var enumValues = enumCollection
+                            .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var enumValue) ? enumValue : null)
+                            .Where(e => e != null)
+                            .ToArray();
+                        if (enumValues.Any())
+                        {
+                            query = query.Where($"@0.Contains({filter.Key})", enumValues);
                         }
                     }
                     else if (value is IEnumerable<Guid> guidCollection)
@@ -226,8 +256,7 @@ namespace BusinessLogic.Services.Implementation
                     .Select(f => new
                     {
                         Entity = f,
-                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0),
-                        DeviceCount = f.FloorplanDevices.Count(m => m.Status != 0)
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0)
                     });
             }
             else
@@ -240,10 +269,6 @@ namespace BusinessLogic.Services.Implementation
             if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount")
             {
                 projectionQuery = projectionQuery.OrderBy($"MaskedAreaCount {sortDirection}");
-            }
-            else if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "DeviceCount")
-            {
-                projectionQuery = projectionQuery.OrderBy($"DeviceCount {sortDirection}");
             }
             else
             {
@@ -263,9 +288,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     var dto = dtos.ElementAt(index);
                     var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount").GetValue(d);
-                    var deviceCount = (int)d.GetType().GetProperty("DeviceCount").GetValue(d);
                     dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
-                    dto.GetType().GetProperty("DeviceCount")?.SetValue(dto, deviceCount);
                     return dto;
                 }).ToList();
                 dtos = dtosWithCount;
@@ -281,5 +304,3 @@ namespace BusinessLogic.Services.Implementation
         }
     }
 }
-
-

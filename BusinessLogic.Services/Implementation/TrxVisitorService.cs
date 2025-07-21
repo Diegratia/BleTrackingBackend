@@ -40,6 +40,8 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
         }
 
+        
+
         public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
         {
             var trxvisitor = await _repository.GetByIdAsync(id);

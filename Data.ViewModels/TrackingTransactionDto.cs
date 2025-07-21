@@ -14,7 +14,7 @@ namespace Data.ViewModels
         public float CoordinateY { get; set; }
         public float CoordinatePxX { get; set; }
         public float CoordinatePxY { get; set; }
-        public string AlarmStatus { get; set; } // Enum sebagai string
+        public string AlarmStatus { get; set; } 
         public long Battery { get; set; }
         public MstBleReaderDto Reader { get; set; }
         public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }

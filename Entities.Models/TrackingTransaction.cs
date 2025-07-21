@@ -21,7 +21,7 @@ namespace Entities.Models
         [Required]
         [ForeignKey("Reader")]
         [Column("reader_id")]
-        public Guid ReaderId { get; set; } // rear_reader, reader terdekat
+        public Guid ReaderId { get; set; } 
 
         [Required]
         [Column("card_id")]

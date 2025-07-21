@@ -36,6 +36,7 @@ namespace Repositories.Repository
                 .Include(t => t.FloorplanMaskedArea)
                 .ToListAsync();
         }
+        
 
         public async Task AddAsync(TrackingTransaction transaction)
         {

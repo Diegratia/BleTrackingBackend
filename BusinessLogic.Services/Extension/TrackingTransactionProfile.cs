@@ -16,8 +16,12 @@ namespace BusinessLogic.Services.Extension
             CreateMap<TrackingTransactionCreateDto, TrackingTransaction>()
                 .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
 
-            CreateMap<TrackingTransaction, TrackingTransactionDto>()
-                .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => src.AlarmStatus.ToString()));
+            CreateMap<TrackingTransactionUpdateDto, TrackingTransaction>()
+                .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
+
+            CreateMap<TrackingTransaction, TrackingTransactionDto>();
+            CreateMap<MstBleReader, MstBleReaderDto>();
+            CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
         }
     }
 }

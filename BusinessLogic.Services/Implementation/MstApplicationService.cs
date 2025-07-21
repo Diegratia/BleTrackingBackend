@@ -15,6 +15,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -238,12 +239,14 @@ namespace BusinessLogic.Services.Implementation
 
             var searchableColumns = new[] { "ApplicationName" };
             var validSortColumns = new[] { "ApplicationName", "ApplicationType", "OrganizationType" ,"ApplicationRegistered", "ApplicationExpired", "ApplicationStatus", "HostName", "HostAddress", "ApplicationCustomName", "ApplicationCustomDomain", "LicenseCode" };
+            var enumColumns = new Dictionary<string, Type> { { "ApplicationType", typeof(ApplicationType) } };
 
             var filterService = new GenericDataTableService<MstApplication, MstApplicationDto>(
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }
