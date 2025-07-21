@@ -684,7 +684,7 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
                     .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Recent(1));
 
-                var alarms = alarmFaker.Generate(0);
+                var alarms = alarmFaker.Generate(1);
                 context.AlarmRecordTrackings.AddRange(alarms);
                 context.SaveChanges();
             }

@@ -64,7 +64,6 @@ namespace Data.ViewModels
         public bool IsEmployee { get; set; }        
         public IFormFile FaceImage { get; set; }
         public Guid ApplicationId { get; set; }
-        public string Status { get; set; }
 
     }
 
@@ -92,6 +91,5 @@ namespace Data.ViewModels
         public bool IsEmployee { get; set; }        
         public IFormFile FaceImage { get; set; }
         public Guid ApplicationId { get; set; }
-        public string Status { get; set; }
     }
 }
