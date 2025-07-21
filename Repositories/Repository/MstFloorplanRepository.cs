@@ -79,26 +79,42 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-      
 
-           public async Task<MstFloor> GetFloorByIdAsync(Guid id)
+
+        public async Task<MstFloor> GetFloorByIdAsync(Guid id)
         {
             return await _context.MstFloors
                 .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
         }
 
-           public async Task<IEnumerable<MstFloorplan>> GetAllExportAsync()
+        public async Task<IEnumerable<MstFloorplan>> GetAllExportAsync()
         {
             return await _context.MstFloorplans.Include(f => f.Floor).
             Where(f => f.Status != 0).ToListAsync();
-        } 
+        }
 
-            public IQueryable<MstFloorplan> GetAllQueryable()
+        public IQueryable<MstFloorplan> GetAllQueryable()
         {
             return _context.MstFloorplans
                 .Include(f => f.Floor)
                 .Where(f => f.Status != 0)
                 .AsQueryable();
         }
+        public IQueryable<object> GetAllQueryableWithMaskedAreaCount()
+        {
+            return _context.MstFloorplans
+                .Include(f => f.Floor)
+                .Where(f => f.Status != 0)
+                .Select(f => new
+                {
+                    Entity = f,
+                    MaskedAreaCount = f.FloorplanMaskedAreas.Count()
+                })
+                .AsNoTracking();
+        }
     }
 }
+
+
+
+

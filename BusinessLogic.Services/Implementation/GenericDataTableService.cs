@@ -1,4 +1,3 @@
-
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,6 +7,7 @@ using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
 using Data.ViewModels;
 using System.Text.Json;
+using Entities.Models;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -48,7 +48,7 @@ namespace BusinessLogic.Services.Implementation
 
             var totalRecords = await query.CountAsync();
 
-            // search
+            // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
                 var search = request.SearchValue.ToLower();
@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
                 query = query.Where(predicates, search);
             }
 
-            // date filter
+            // Date filter
             if (request.DateFilters != null && request.DateFilters.Any())
             {
                 foreach (var dateFilter in request.DateFilters)
@@ -78,7 +78,7 @@ namespace BusinessLogic.Services.Implementation
                     if (filter.DateFrom.HasValue && filter.DateTo.HasValue)
                     {
                         query = query.Where($"{dateFilter.Key} >= @0 && {dateFilter.Key} <= @1",
-                            filter.DateFrom.Value, filter.DateTo.Value.AddDays(1).AddTicks(-1)); 
+                            filter.DateFrom.Value, filter.DateTo.Value.AddDays(1).AddTicks(-1));
                     }
                     else if (filter.DateFrom.HasValue)
                     {
@@ -91,7 +91,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // custom
+            // Custom filters
             if (request.Filters != null && request.Filters.Any())
             {
                 foreach (var filter in request.Filters)
@@ -103,10 +103,8 @@ namespace BusinessLogic.Services.Implementation
                     if (value == null)
                         continue;
 
-                    // handling json elmen
                     if (value is JsonElement jsonElement)
                     {
-                        // guid
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
                             var stringValue = jsonElement.GetString();
@@ -119,7 +117,6 @@ namespace BusinessLogic.Services.Implementation
                                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
-                        // enum
                         else if (_enumColumns.ContainsKey(filter.Key) && jsonElement.ValueKind == JsonValueKind.String)
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -133,22 +130,18 @@ namespace BusinessLogic.Services.Implementation
                                 throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
                             }
                         }
-
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
                             query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString().ToLower());
                         }
-
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
                         {
                             query = query.Where($"{filter.Key} == @0", intValue);
                         }
-
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetSingle(out var floatValue))
                         {
                             query = query.Where($"{filter.Key} == @0", floatValue);
                         }
-
                         else if (jsonElement.ValueKind == JsonValueKind.True || jsonElement.ValueKind == JsonValueKind.False)
                         {
                             query = query.Where($"{filter.Key} == @0", jsonElement.GetBoolean());
@@ -158,10 +151,8 @@ namespace BusinessLogic.Services.Implementation
                             throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
                         }
                     }
-                   
                     else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
                     {
-                        // enum
                         if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -202,17 +193,48 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // total after filter
+            // Total after filter
             var filteredRecords = await query.CountAsync();
 
+            // projeksi sementara
+            IQueryable<object> projectionQuery;
+            if (typeof(TModel) == typeof(MstFloorplan))
+            {
+                projectionQuery = query.Cast<MstFloorplan>()
+                    .Select(f => new
+                    {
+                        Entity = f,
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count()
+                    });
+            }
+            else
+            {
+                projectionQuery = query.Select(f => new { Entity = f, MaskedAreaCount = 0 });
+            }
+
+            // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
-            query = query.OrderBy($"{request.SortColumn} {sortDirection}");
+            projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
 
-            // paging
-            query = query.Skip(request.Start).Take(request.Length);
+            // Paging
+            projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
 
-            var data = await query.ToListAsync();
-            var dtos = _mapper.Map<IEnumerable<TDto>>(data);
+            // Execute query
+            var data = await projectionQuery.ToListAsync();
+            var dtos = _mapper.Map<IEnumerable<TDto>>(data.Select(d => d.GetType().GetProperty("Entity").GetValue(d)));
+
+           
+            if (typeof(TModel) == typeof(MstFloorplan))
+            {
+                var dtosWithCount = data.Select((d, index) =>
+                {
+                    var dto = dtos.ElementAt(index);
+                    var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount").GetValue(d);
+                    dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
+                    return dto;
+                }).ToList();
+                dtos = dtosWithCount;
+            }
 
             return new
             {
