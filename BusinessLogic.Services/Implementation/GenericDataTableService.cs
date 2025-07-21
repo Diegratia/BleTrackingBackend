@@ -108,7 +108,7 @@ namespace BusinessLogic.Services.Implementation
                     {
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                            // Handle single Guid or array of Guids
+                                 // Handle single Guid or array of Guids
                             if (jsonElement.ValueKind == JsonValueKind.Array)
                             {
                                 var guidValues = jsonElement.EnumerateArray()
@@ -118,7 +118,7 @@ namespace BusinessLogic.Services.Implementation
                                     .ToArray();
                                 if (guidValues.Any())
                                 {
-                                    query = query.Where($"{filter.Key}.In(@0)", guidValues);
+                                    query = query.Where($"@0.Contains({filter.Key})", guidValues);
                                 }
                             }
                             else if (jsonElement.ValueKind == JsonValueKind.String && Guid.TryParse(jsonElement.GetString(), out var guidValue))
@@ -170,7 +170,7 @@ namespace BusinessLogic.Services.Implementation
                         var guidValues = guidCollection.ToArray();
                         if (guidValues.Any())
                         {
-                            query = query.Where($"{filter.Key}.In(@0)", guidValues);
+                            query = query.Where($"@0.Contains({filter.Key})", guidValues);
                         }
                     }
                     else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
@@ -237,11 +237,11 @@ namespace BusinessLogic.Services.Implementation
 
             // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
-            if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount" )
+            if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount")
             {
                 projectionQuery = projectionQuery.OrderBy($"MaskedAreaCount {sortDirection}");
             }
-             else if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "DeviceCount" )
+            else if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "DeviceCount")
             {
                 projectionQuery = projectionQuery.OrderBy($"DeviceCount {sortDirection}");
             }
