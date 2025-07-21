@@ -1,7 +1,9 @@
+
 using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
@@ -13,7 +15,7 @@ using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -23,7 +25,10 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstFloorplanService(MstFloorplanRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstFloorplanService(
+            MstFloorplanRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
@@ -74,6 +79,9 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var floorplan = await _repository.GetByIdAsync(id);
+            if (floorplan == null)
+                throw new KeyNotFoundException("Floorplan not found");
+
             floorplan.UpdatedBy = username;
             await _repository.DeleteAsync(id);
         }
@@ -83,13 +91,15 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Floor.Name", "Status" };
+            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
+            var enumColumns = new Dictionary<string, Type> { { "Status", typeof(int) } };
 
             var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }
@@ -104,10 +114,9 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1); // Lewati header
 
-            int rowNumber = 2; // Mulai dari baris 2 (setelah header)
+            int rowNumber = 2;
             foreach (var row in rows)
             {
-                // Validasi BuildingId
                 var floorIdStr = row.Cell(1).GetValue<string>();
                 if (!Guid.TryParse(floorIdStr, out var floorId))
                     throw new ArgumentException($"Invalid FloorId format at row {rowNumber}");
@@ -116,18 +125,15 @@ namespace BusinessLogic.Services.Implementation
                 if (floor == null)
                     throw new ArgumentException($"FloorId {floorId} not found at row {rowNumber}");
 
-                // Validasi Name
                 var name = row.Cell(2).GetValue<string>();
                 if (string.IsNullOrWhiteSpace(name))
                     throw new ArgumentException($"Name is required at row {rowNumber}");
 
-                // Buat entitas MstFloor
                 var floorplan = new MstFloorplan
                 {
                     Id = Guid.NewGuid(),
                     Name = name,
                     FloorId = floorId,
-                    // ApplicationId = applicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -139,7 +145,6 @@ namespace BusinessLogic.Services.Implementation
                 rowNumber++;
             }
 
-            // Simpan ke database
             foreach (var floorplan in floorplans)
             {
                 await _repository.AddAsync(floorplan);
@@ -147,11 +152,12 @@ namespace BusinessLogic.Services.Implementation
 
             return _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
         }
-        
-         public async Task<byte[]> ExportPdfAsync()
+
+        public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var floorplans = await _repository.GetAllExportAsync();
+            var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 
             var document = Document.Create(container =>
             {
@@ -168,37 +174,35 @@ namespace BusinessLogic.Services.Implementation
 
                     page.Content().Table(table =>
                     {
-                        // Define columns
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(35);   // No.
-                            columns.RelativeColumn(2); // Name
-                            columns.RelativeColumn(2); // Floor Name
-                            columns.RelativeColumn(2); // CreatedAt
-                            columns.RelativeColumn(2); // CreatedBy
+                            columns.ConstantColumn(35);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
                         });
 
-                        // Table header
                         table.Header(header =>
                         {
-
-
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Floor").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Masked Areas").SemiBold();
                             header.Cell().Element(CellStyle).Text("Created At").SemiBold();
                             header.Cell().Element(CellStyle).Text("Created By").SemiBold();
                         });
 
-                        // Table body
                         int index = 1;
-                        foreach (var floorplan in floorplans)
+                        foreach (var dto in dtos)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(floorplan.Floor?.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(floorplan.Name);
-                            table.Cell().Element(CellStyle).Text(floorplan.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(floorplan.CreatedBy ?? "-");
+                            table.Cell().Element(CellStyle).Text(dto.Floor.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(dto.Name);
+                            table.Cell().Element(CellStyle).Text(dto.MaskedAreaCount.ToString());
+                            table.Cell().Element(CellStyle).Text(dto.CreatedAt.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(dto.CreatedBy ?? "-");
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -221,35 +225,35 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-        
-            public async Task<byte[]> ExportExcelAsync()
+
+        public async Task<byte[]> ExportExcelAsync()
         {
             var floorplans = await _repository.GetAllExportAsync();
+            var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 
             using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Floors");
+            var worksheet = workbook.Worksheets.Add("Floorplans");
 
-            // Header
             worksheet.Cell(1, 1).Value = "No";
             worksheet.Cell(1, 2).Value = "Floor";
             worksheet.Cell(1, 3).Value = "Name";
-            worksheet.Cell(1, 4).Value = "Created By";
-            worksheet.Cell(1, 5).Value = "Created At";
-            worksheet.Cell(1, 6).Value = "Status";
+            worksheet.Cell(1, 4).Value = "Masked Areas";
+            worksheet.Cell(1, 5).Value = "Created By";
+            worksheet.Cell(1, 6).Value = "Created At";
+            worksheet.Cell(1, 7).Value = "Status";
 
             int row = 2;
             int no = 1;
 
-            foreach (var floorplan in floorplans)
+            foreach (var dto in dtos)
             {
-                await _repository.GetAllExportAsync(); 
-
                 worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = floorplan.Floor?.Name ?? "-";
-                worksheet.Cell(row, 3).Value = floorplan.Name;
-                worksheet.Cell(row, 4).Value = floorplan.CreatedBy;
-                worksheet.Cell(row, 5).Value = floorplan.CreatedAt.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cell(row, 6).Value = floorplan.Status == 1 ? "Active" : "Inactive";
+                worksheet.Cell(row, 2).Value = dto.Floor.Name ?? "-";
+                worksheet.Cell(row, 3).Value = dto.Name;
+                worksheet.Cell(row, 4).Value = dto.MaskedAreaCount;
+                worksheet.Cell(row, 5).Value = dto.CreatedBy;
+                worksheet.Cell(row, 6).Value = dto.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 7).Value = dto.Status == 1 ? "Active" : "Inactive";
                 row++;
             }
 

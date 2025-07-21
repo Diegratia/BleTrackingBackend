@@ -1,3 +1,4 @@
+
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -107,13 +108,26 @@ namespace BusinessLogic.Services.Implementation
                     {
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                            var stringValue = jsonElement.GetString();
-                            if (Guid.TryParse(stringValue, out var guidValue))
+                            // Handle single Guid or array of Guids
+                            if (jsonElement.ValueKind == JsonValueKind.Array)
+                            {
+                                var guidValues = jsonElement.EnumerateArray()
+                                    .Select(e => Guid.TryParse(e.GetString(), out var guid) ? guid : (Guid?)null)
+                                    .Where(g => g.HasValue)
+                                    .Select(g => g.Value)
+                                    .ToArray();
+                                if (guidValues.Any())
+                                {
+                                    query = query.Where($"{filter.Key}.In(@0)", guidValues);
+                                }
+                            }
+                            else if (jsonElement.ValueKind == JsonValueKind.String && Guid.TryParse(jsonElement.GetString(), out var guidValue))
                             {
                                 query = query.Where($"{filter.Key} == @0", guidValue);
                             }
                             else
                             {
+                                var stringValue = jsonElement.GetString();
                                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
@@ -149,6 +163,14 @@ namespace BusinessLogic.Services.Implementation
                         else
                         {
                             throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
+                        }
+                    }
+                    else if (value is IEnumerable<Guid> guidCollection)
+                    {
+                        var guidValues = guidCollection.ToArray();
+                        if (guidValues.Any())
+                        {
+                            query = query.Where($"{filter.Key}.In(@0)", guidValues);
                         }
                     }
                     else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
@@ -196,7 +218,7 @@ namespace BusinessLogic.Services.Implementation
             // Total after filter
             var filteredRecords = await query.CountAsync();
 
-            // projeksi sementara
+            // Proyeksi sementara
             IQueryable<object> projectionQuery;
             if (typeof(TModel) == typeof(MstFloorplan))
             {
@@ -204,7 +226,8 @@ namespace BusinessLogic.Services.Implementation
                     .Select(f => new
                     {
                         Entity = f,
-                        MaskedAreaCount = f.FloorplanMaskedAreas.Count()
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0),
+                        DeviceCount = f.FloorplanDevices.Count(m => m.Status != 0)
                     });
             }
             else
@@ -214,7 +237,18 @@ namespace BusinessLogic.Services.Implementation
 
             // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
-            projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
+            if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount" )
+            {
+                projectionQuery = projectionQuery.OrderBy($"MaskedAreaCount {sortDirection}");
+            }
+             else if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "DeviceCount" )
+            {
+                projectionQuery = projectionQuery.OrderBy($"DeviceCount {sortDirection}");
+            }
+            else
+            {
+                projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
+            }
 
             // Paging
             projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
@@ -223,14 +257,15 @@ namespace BusinessLogic.Services.Implementation
             var data = await projectionQuery.ToListAsync();
             var dtos = _mapper.Map<IEnumerable<TDto>>(data.Select(d => d.GetType().GetProperty("Entity").GetValue(d)));
 
-           
             if (typeof(TModel) == typeof(MstFloorplan))
             {
                 var dtosWithCount = data.Select((d, index) =>
                 {
                     var dto = dtos.ElementAt(index);
                     var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount").GetValue(d);
+                    var deviceCount = (int)d.GetType().GetProperty("DeviceCount").GetValue(d);
                     dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
+                    dto.GetType().GetProperty("DeviceCount")?.SetValue(dto, deviceCount);
                     return dto;
                 }).ToList();
                 dtos = dtosWithCount;

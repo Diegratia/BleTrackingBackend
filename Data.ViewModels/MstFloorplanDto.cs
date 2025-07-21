@@ -14,7 +14,7 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
         public int Status { get; set; }
         public int MaskedAreaCount { get; set; }
-
+        public int DeviceCount { get; set; }
         public MstFloorDto Floor { get; set; }
     }
 
