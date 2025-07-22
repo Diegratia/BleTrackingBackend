@@ -849,7 +849,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-              // 24. TrxVisitor
+            // 24. TrxVisitor
             if (!context.TrxVisitors.Any())
             {
                 var trxVisitorFaker = new Faker<TrxVisitor>()
@@ -863,7 +863,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.CheckoutBy, f => "System")
                     .RuleFor(b => b.DenyBy, f => "System")
                     .RuleFor(b => b.DenyReason, f => f.PickRandom(new[] { "No reason", "Card is not valid", "Card is expired", "Card is blocked", "Card is denied" }))
-                    
+
                     .RuleFor(e => e.VisitorId, f => context.Visitors
                         .Where(v => v.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -881,6 +881,27 @@ namespace Repositories.Seeding
 
                 var trxVisitors = trxVisitorFaker.Generate(2);
                 context.TrxVisitors.AddRange(trxVisitors);
+                context.SaveChanges();
+            }
+            
+               // 25. Card
+            if (!context.Cards.Any())
+            {
+                var cardFaker = new Faker<Card>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.Name, f => f.Random.Word())
+                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
+                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
+                    .RuleFor(e => e.CardBarcode, f => f.Random.String(10))
+                    .RuleFor(e => e.IsMultiSite, f => f.Random.Bool())
+                    .RuleFor(e => e.RegisteredSite, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(e => e.IsUsed, f => f.Random.Bool())
+                    .RuleFor(e => e.LastUsed, f => f.Person.FullName)
+                    .RuleFor(e => e.StatusCard, f => f.Random.Bool());
+
+                var cards = cardFaker.Generate(2);
+                context.Cards.AddRange(cards);
                 context.SaveChanges();
             }
 
