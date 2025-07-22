@@ -33,6 +33,7 @@ namespace Repositories.DbContexts
         public DbSet<VisitorCard> VisitorCards { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
+        public DbSet<Card> Cards{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -976,6 +977,19 @@ namespace Repositories.DbContexts
 
                 entity.HasIndex(v => v.PersonId);
                 entity.HasIndex(v => v.Email);
+            });
+
+            // Card
+            modelBuilder.Entity<Card>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.CardType)
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CardType)Enum.Parse(typeof(CardType), v, true)
+                    );
             });
 
             modelBuilder.Entity<RefreshToken>(Entity =>
