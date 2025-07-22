@@ -120,9 +120,9 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddAutoMapper(typeof(CardRecordProfile));
+builder.Services.AddAutoMapper(typeof(CardProfile));
 // Registrasi Services
-builder.Services.AddScoped<ICardRecordService, CardRecordService>();
+builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRecordRepository>();

@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequiredAllUser")]
+    [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class CardController : ControllerBase
     {
         private readonly ICardService _service;
@@ -30,7 +30,7 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = "Card Records retrieved successfully",
+                    msg = "Card retrieved successfully",
                     collection = new { data = cards },
                     code = 200
                 });
@@ -59,7 +59,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "Card Record not found",
+                        msg = "Card not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -67,7 +67,7 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = " Card Record retrieved successfully",
+                    msg = " Card retrieved successfully",
                     collection = new { data = card },
                     code = 200
                 });
@@ -106,7 +106,7 @@ namespace Web.API.Controllers.Controllers
                 return StatusCode(201, new
                 {
                     success = true,
-                    msg = "Card Record created successfully",
+                    msg = "Card created successfully",
                     collection = new { data = createdCard },
                     code = 201
                 });
@@ -154,7 +154,7 @@ namespace Web.API.Controllers.Controllers
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Card Record not found",
+                    msg = "Card not found",
                     collection = new { data = (object)null },
                     code = 404
                 });
@@ -191,7 +191,7 @@ namespace Web.API.Controllers.Controllers
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Card Record not found",
+                    msg = "Card not found",
                     collection = new { data = (object)null },
                     code = 404
                 });
@@ -229,7 +229,7 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = "Card Records filtered successfully",
+                    msg = "Card filtered successfully",
                     collection = result,
                     code = 200
                 });
