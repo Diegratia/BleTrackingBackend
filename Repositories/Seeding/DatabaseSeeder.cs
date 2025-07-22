@@ -898,7 +898,11 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.RegisteredSite, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
                     .RuleFor(e => e.IsUsed, f => f.Random.Bool())
                     .RuleFor(e => e.LastUsed, f => f.Person.FullName)
-                    .RuleFor(e => e.StatusCard, f => f.Random.Bool());
+                    .RuleFor(e => e.StatusCard, f => f.Random.Bool())
+                    .RuleFor(b => b.CreatedBy, f => "System")
+                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+                    .RuleFor(b => b.UpdatedBy, f => "System")
+                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
 
                 var cards = cardFaker.Generate(2);
                 context.Cards.AddRange(cards);
