@@ -87,7 +87,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBuilding
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MstBuildingCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] MstBuildingCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -126,7 +126,7 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBuilding/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] MstBuildingUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
