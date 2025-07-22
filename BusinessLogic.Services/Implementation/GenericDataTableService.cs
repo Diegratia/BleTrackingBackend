@@ -36,8 +36,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            if (request.Length < 1)
-                throw new ArgumentException("Length must be greater than or equal to 1.");
+            // if (request.Length < 1)
+            //     throw new ArgumentException("Length must be greater than or equal to 1.");
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
