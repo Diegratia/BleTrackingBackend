@@ -125,7 +125,7 @@ builder.Services.AddAutoMapper(typeof(CardProfile));
 builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
-builder.Services.AddScoped<CardRecordRepository>();
+builder.Services.AddScoped<CardRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
            builder.Configuration["Ports:CardService"] ?? "5026";
