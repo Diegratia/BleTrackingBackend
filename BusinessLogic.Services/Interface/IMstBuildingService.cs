@@ -11,7 +11,7 @@ namespace BusinessLogic.Services.Interface
         Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto dto);
         Task<MstBuildingDto> GetByIdAsync(Guid id);
         Task<IEnumerable<MstBuildingDto>> GetAllAsync();
-        Task UpdateAsync(Guid id, MstBuildingUpdateDto dto);
+        Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 
         Task<byte[]> ExportPdfAsync();

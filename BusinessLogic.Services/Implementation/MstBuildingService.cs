@@ -94,14 +94,14 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
-        public async Task UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
+        public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
 
-                if (updateDto.Image != null && updateDto.Image.Length > 0)
+            if (updateDto.Image != null && updateDto.Image.Length > 0)
             {
                 if (string.IsNullOrEmpty(updateDto.Image.ContentType) || !_allowedImageTypes.Contains(updateDto.Image.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
@@ -151,6 +151,8 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedBy = username;
 
             await _repository.UpdateAsync(building);
+            
+            return _mapper.Map<MstBuildingDto>(building);
         }
 
         public async Task DeleteAsync(Guid id)
