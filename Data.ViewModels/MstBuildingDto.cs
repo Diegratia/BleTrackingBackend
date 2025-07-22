@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
 {
@@ -17,14 +18,14 @@ namespace Data.ViewModels
     public class MstBuildingCreateDto
     {
         public string Name { get; set; }
-        public string Image { get; set; }
+        public IFormFile Image { get; set; }
         public Guid ApplicationId { get; set; }
     }
 
     public class MstBuildingUpdateDto
     {
         public string Name { get; set; }
-        public string Image { get; set; }
+        public IFormFile Image { get; set; }
         public Guid ApplicationId { get; set; }
     }
 }
