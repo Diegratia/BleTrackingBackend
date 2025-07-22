@@ -19,7 +19,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.CheckinStatus, opt => opt.Ignore())
                 .ForMember(dest => dest.EnableStatus, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
-                .ForMember(dest => dest.IsMember, opt => opt.Ignore());
+                .ForMember(dest => dest.IsVisitor, opt => opt.Ignore());
 
             CreateMap<VisitorCardUpdateDto, VisitorCard>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -27,7 +27,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.CheckinStatus, opt => opt.Ignore()) 
                 .ForMember(dest => dest.EnableStatus, opt => opt.Ignore()) 
                 .ForMember(dest => dest.Status, opt => opt.Ignore()) 
-                .ForMember(dest => dest.IsMember, opt => opt.Ignore()); 
+                .ForMember(dest => dest.IsVisitor, opt => opt.Ignore()); 
 
             CreateMap<VisitorCard, VisitorCardDto>()
                 .ForMember(dest => dest.CardType, opt => opt.MapFrom(src => src.CardType.ToString()));

@@ -17,21 +17,17 @@ namespace Helpers.Consumer
         [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [Required]
         [StringLength(255)]
         [Column("created_by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
 
-        [Required]
         [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
 
-        [Required]
         [Column("updated_by")]
-        public string UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
 
-        [Required]
         [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     } 
 }

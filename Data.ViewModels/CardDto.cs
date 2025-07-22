@@ -17,6 +17,10 @@ namespace Data.ViewModels
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
         public bool? StatusCard { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string UpdatedBy { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 
     public class CardCreateDto

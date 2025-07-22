@@ -19,12 +19,18 @@ namespace Repositories.Repository
         public async Task<VisitorCard> GetByIdAsync(Guid id)
         {
             return await _context.VisitorCards
+                .Include(b => b.Member)
+                .Include(b => b.Card)
+                .Include(b => b.Visitor)
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 
         public async Task<IEnumerable<VisitorCard>> GetAllAsync()
         {
             return await _context.VisitorCards
+                .Include(b => b.Member)
+                .Include(b => b.Card)
+                .Include(b => b.Visitor)
                 .Where(b => b.Status != 0)
                 .ToListAsync();
         }
@@ -58,10 +64,20 @@ namespace Repositories.Repository
             return await _context.MstApplications
                 .FirstOrDefaultAsync(a => a.Id == id && a.ApplicationStatus != 0);
         }
+
+             public async Task<Card> GetCardByIdAsync(Guid id)
+        {
+            return await _context.Cards
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false && a.IsUsed != true);
+        }
         
          public IQueryable<VisitorCard> GetAllQueryable()
         {
             return _context.VisitorCards
+                .Include(b => b.Member)
+                .Include(b => b.Card)
+                .Include(b => b.Visitor)
+                .Where(b => b.Status == 0)
                 .AsQueryable();
         }
 

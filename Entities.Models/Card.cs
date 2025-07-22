@@ -27,13 +27,13 @@ namespace Entities.Models
         public Guid? RegisteredSite { get; set; } // isikan  null jika bisa digunakan disemua site.
 
         [Column("is_used")]
-        public bool? IsUsed { get; set; }
+        public bool? IsUsed { get; set; } = false;
 
         [Column("last_used_by")]
-        public string? LastUsed { get; set; }
+        public string? LastUsed { get; set; } 
 
         [Column("status_card")]
-        public bool? StatusCard { get; set; }
+        public bool? StatusCard { get; set; } = true;
 
     }
 }

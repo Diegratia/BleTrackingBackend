@@ -802,11 +802,26 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.EnableStatus, f => 1)
                     .RuleFor(e => e.Status, f => 1)
                     .RuleFor(e => e.SiteId, f => Guid.NewGuid())
-                    .RuleFor(e => e.IsMember, f => f.Random.Number(0, 1))
+                    .RuleFor(e => e.IsVisitor, f => f.Random.Number(0, 1))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .Select(a => a.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.VisitorId, f => context.Visitors
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.MemberId, f => context.MstMembers
+                        .Where(v => v.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(e => e.CardId, f => context.Cards
+                        .Where(v => v.StatusCard != false)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
                         .FirstOrDefault());
 
                 var visitorcards = visitorcardFaker.Generate(2);
@@ -819,8 +834,8 @@ namespace Repositories.Seeding
             {
                 var cardrecordFaker = new Faker<CardRecord>()
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
-                    .RuleFor(e => e.VisitorName, f => f.Name.FullName())
-                    .RuleFor(e => e.CardId, f => context.VisitorCards
+                    .RuleFor(e => e.Name, f => f.Name.FullName())
+                    .RuleFor(e => e.VisitorCardId, f => context.VisitorCards
                         .Where(v => v.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .Select(v => v.Id)

@@ -69,6 +69,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
+            modelBuilder.Entity<Card>().ToTable("card_id");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
@@ -692,8 +693,8 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.SiteId)
                     .HasColumnName("site_id");
 
-                entity.Property(e => e.IsMember)
-                    .HasColumnName("is_member");
+                entity.Property(e => e.IsVisitor)
+                    .HasColumnName("is_visitor");
 
                 entity.Property(e => e.ApplicationId)
                     .HasColumnName("application_id");
@@ -707,8 +708,18 @@ namespace Repositories.DbContexts
                 // Relasi ke CardRecord (inverse dari CardRecord.CardId)
                 entity.HasMany(e => e.CardRecords)
                     .WithOne(e => e.VisitorCard)
-                    .HasForeignKey(e => e.CardId)
+                    .HasForeignKey(e => e.VisitorCardId)
                     .OnDelete(DeleteBehavior.NoAction); // biar gak auto hapus CardRecord
+
+                entity.HasOne(e => e.Visitor)
+                    .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
+                    .HasForeignKey(e => e.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+
+                entity.HasOne(e => e.Member)
+                    .WithMany() // atau .WithMany(m => m.CardRecords)
+                    .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction); 
 
                 entity.HasQueryFilter(e => e.Status != 0);
             });
@@ -720,11 +731,11 @@ namespace Repositories.DbContexts
 
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.VisitorName)
-                    .HasColumnName("visitor_name");
+                entity.Property(e => e.Name)
+                    .HasColumnName("name");
 
-                entity.Property(e => e.CardId)
-                    .HasColumnName("card_id");
+                entity.Property(e => e.VisitorCardId)
+                    .HasColumnName("visitor_card_id");
 
                 entity.Property(e => e.VisitorId)
                     .HasColumnName("visitor_id");
@@ -761,10 +772,9 @@ namespace Repositories.DbContexts
                         v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
                     );
                    
-
                 entity.HasOne(e => e.VisitorCard)
                     .WithMany() // asumsi ga ada collection di VisitorCard
-                    .HasForeignKey(e => e.CardId)
+                    .HasForeignKey(e => e.VisitorCardId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Visitor)

@@ -15,12 +15,12 @@ namespace Entities.Models
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Column("visitor_name")]
-        public string VisitorName { get; set; }
+        [Column("name")]
+        public string Name { get; set; }
 
         [ForeignKey(nameof(VisitorCard))]
-        [Column("card_id")]
-        public Guid CardId { get; set; }
+        [Column("visitor_card_id")]
+        public Guid VisitorCardId { get; set; }
 
         [AllowNull]
         [ForeignKey(nameof(Visitor))]
@@ -32,6 +32,8 @@ namespace Entities.Models
         [Column("member_id")]
         public Guid? MemberId { get; set; }
 
+        [Column("type")]
+        public CardType? Type { get; set; }
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }
 

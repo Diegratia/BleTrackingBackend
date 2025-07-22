@@ -48,15 +48,34 @@ namespace BusinessLogic.Services.Implementation
         public async Task<VisitorCardDto> CreateAsync(VisitorCardCreateDto createDto)
         {
             var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
+            var card = await _repository.GetCardByIdAsync(createDto.CardId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
+            if (card == null)
+                throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
+            if (card?.IsUsed == true)
+                throw new ArgumentException($"Card with ID {createDto.CardId} is already used.");
 
             var visitorCard = _mapper.Map<VisitorCard>(createDto);
             visitorCard.Id = Guid.NewGuid();
             visitorCard.CheckinStatus = 1;
+            visitorCard.CreatedAt = DateTime.UtcNow;
+            visitorCard.UpdatedAt = DateTime.UtcNow;
+            visitorCard.CreatedBy = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value ?? "";
+            visitorCard.UpdatedBy = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value ?? "";
             visitorCard.EnableStatus = 1;
-            visitorCard.IsMember = 1;
+            visitorCard.IsVisitor = 1;
             visitorCard.Status = 1;
+
+            if (visitorCard.MemberId == Guid.Empty)
+            {
+                visitorCard.IsVisitor = 1;
+            }
+            else if (visitorCard.VisitorId == Guid.Empty)
+            {
+                visitorCard.IsVisitor = 0;
+            }
+            visitorCard.Card.IsUsed = true;
 
             var createdvisitorCard = await _repository.AddAsync(visitorCard);
             return _mapper.Map<VisitorCardDto>(createdvisitorCard);
@@ -65,12 +84,29 @@ namespace BusinessLogic.Services.Implementation
         public async Task UpdateAsync(Guid id, VisitorCardUpdateDto updateDto)
         {
             var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
+            var card = await _repository.GetCardByIdAsync(updateDto.CardId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
+            if (card == null)
+                throw new ArgumentException($"Card with ID {updateDto.CardId} not found.");
+            if (card?.IsUsed == true)
+                throw new ArgumentException($"Card with ID {updateDto.CardId} is already used.");
 
             var visitorCard = await _repository.GetByIdAsync(id);
             if (visitorCard == null)
                 throw new KeyNotFoundException("VisitorCard not found");
+
+            if (visitorCard.MemberId == Guid.Empty)
+            {
+                visitorCard.IsVisitor = 1;
+            }
+            else if (visitorCard.VisitorId == Guid.Empty)
+            {
+                visitorCard.IsVisitor = 0;
+            }
+
+            visitorCard.UpdatedAt = DateTime.UtcNow;
+            visitorCard.UpdatedBy = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value ?? "";
 
             _mapper.Map(updateDto, visitorCard);
             await _repository.UpdateAsync(visitorCard);
@@ -80,6 +116,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var visitorCard = await _repository.GetByIdAsync(id);
             visitorCard.Status = 0;
+            visitorCard.Card.IsUsed = false;
             await _repository.DeleteAsync(id);
         }
 
@@ -88,7 +125,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" }; 
-            var validSortColumns = new[] { "Name" ,  "Card Type", "IsMember" };
+            var validSortColumns = new[] { "Name" ,  "Card Type", "IsVisitor" };
 
             var filterService = new GenericDataTableService<VisitorCard, VisitorCardDto>(
                 query,
@@ -147,7 +184,7 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(card.Name);
                             table.Cell().Element(CellStyle).Text(card.Number);
                             table.Cell().Element(CellStyle).Text(card.CardType.ToString());
-                            table.Cell().Element(CellStyle).Text(card.IsMember == 1 ? "Yes" : "No");
+                            table.Cell().Element(CellStyle).Text(card.IsVisitor == 1 ? "Yes" : "No");
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -194,7 +231,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = card.Name;
                 worksheet.Cell(row, 3).Value = card.Number;
                 worksheet.Cell(row, 4).Value = card.CardType.ToString();
-                worksheet.Cell(row, 5).Value = card.IsMember == 1 ? "Yes" : "No";
+                worksheet.Cell(row, 5).Value = card.IsVisitor == 1 ? "Yes" : "No";
                 row++;
             }
 

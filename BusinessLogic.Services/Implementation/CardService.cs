@@ -1,17 +1,20 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
-using Repositories.Repository;
-using Repositories.DbContexts;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
-using System.ComponentModel.DataAnnotations;
-using Repositories;
+using Repositories.Repository;
+using System.IO;
+using System.Globalization;
+using System.Linq;
+using System.IO;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -50,6 +53,10 @@ namespace BusinessLogic.Services.Implementation
             var card = _mapper.Map<Card>(createDto);
             card.Id = Guid.NewGuid();
             card.StatusCard = true;
+            card.CreatedAt = DateTime.UtcNow;
+            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedAt = DateTime.UtcNow;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var createdCard = await _repository.AddAsync(card);
             return _mapper.Map<CardDto>(createdCard);
@@ -62,6 +69,9 @@ namespace BusinessLogic.Services.Implementation
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 
+            card.UpdatedAt = DateTime.UtcNow;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
         }
@@ -69,6 +79,8 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var card = await _repository.GetByIdAsync(id);
+            card.UpdatedAt = DateTime.UtcNow;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             card.StatusCard = false;
             await _repository.DeleteAsync(id);
         }
@@ -78,7 +90,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "CardNumber", "CardBarcode" };
-            var validSortColumns = new[] { "Name", "CardNumber", "CardBarcode", "CardType", "IsMember" };
+            var validSortColumns = new[] { "Name", "CardNumber", "CardBarcode", "CardType", "IsVisitor" };
 
             var filterService = new GenericDataTableService<Card, CardDto>(
                 query,
