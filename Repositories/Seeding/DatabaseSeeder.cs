@@ -594,6 +594,31 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
+                         // 25. Card
+            if (!context.Cards.Any())
+            {
+                var cardFaker = new Faker<Card>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.Name, f => f.Random.Word())
+                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
+                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
+                    .RuleFor(e => e.CardBarcode, f => f.Random.String(10))
+                    .RuleFor(e => e.IsMultiSite, f => f.Random.Bool())
+                    .RuleFor(e => e.RegisteredSite, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(e => e.IsUsed, f => f.Random.Bool())
+                    .RuleFor(e => e.LastUsed, f => f.Person.FullName)
+                    .RuleFor(e => e.StatusCard, f => f.Random.Bool())
+                    .RuleFor(b => b.CreatedBy, f => "System")
+                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+                    .RuleFor(b => b.UpdatedBy, f => "System")
+                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
+
+                var cards = cardFaker.Generate(2);
+                context.Cards.AddRange(cards);
+                context.SaveChanges();
+            }
+
             // 16. TrackingTransaction
             if (!context.TrackingTransactions.Any())
             {
@@ -899,30 +924,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
             
-               // 25. Card
-            if (!context.Cards.Any())
-            {
-                var cardFaker = new Faker<Card>()
-                    .RuleFor(e => e.Id, f => Guid.NewGuid())
-                    .RuleFor(e => e.Name, f => f.Random.Word())
-                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
-                    .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
-                    .RuleFor(e => e.CardBarcode, f => f.Random.String(10))
-                    .RuleFor(e => e.IsMultiSite, f => f.Random.Bool())
-                    .RuleFor(e => e.RegisteredSite, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
-                    .RuleFor(e => e.IsUsed, f => f.Random.Bool())
-                    .RuleFor(e => e.LastUsed, f => f.Person.FullName)
-                    .RuleFor(e => e.StatusCard, f => f.Random.Bool())
-                    .RuleFor(b => b.CreatedBy, f => "System")
-                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.UpdatedBy, f => "System")
-                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
-
-                var cards = cardFaker.Generate(2);
-                context.Cards.AddRange(cards);
-                context.SaveChanges();
-            }
+  
 
                // 22. MstLogEngine
             // if (!context.MstLogTrackings.Any())

@@ -68,7 +68,13 @@ namespace Repositories.Repository
              public async Task<Card> GetCardByIdAsync(Guid id)
         {
             return await _context.Cards
-                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false && a.IsUsed != true);
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false !=true);
+        }
+
+            public async Task<Card> GetCardByIdAsyncTrue(Guid id)
+        {
+            return await _context.Cards
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false && a.IsUsed == true);
         }
         
          public IQueryable<VisitorCard> GetAllQueryable()

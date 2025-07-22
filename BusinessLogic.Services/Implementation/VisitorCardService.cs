@@ -49,12 +49,18 @@ namespace BusinessLogic.Services.Implementation
         {
             var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
             var card = await _repository.GetCardByIdAsync(createDto.CardId);
+            var cardtrue = await _repository.GetCardByIdAsyncTrue(createDto.CardId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
             if (card == null)
+            {
                 throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
-            if (card?.IsUsed == true)
+            }
+            else if (cardtrue?.IsUsed == true)
+            {
                 throw new ArgumentException($"Card with ID {createDto.CardId} is already used.");
+            }
+                
 
             var visitorCard = _mapper.Map<VisitorCard>(createDto);
             visitorCard.Id = Guid.NewGuid();
@@ -75,6 +81,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 visitorCard.IsVisitor = 0;
             }
+            visitorCard.Card = card;
             visitorCard.Card.IsUsed = true;
 
             var createdvisitorCard = await _repository.AddAsync(visitorCard);

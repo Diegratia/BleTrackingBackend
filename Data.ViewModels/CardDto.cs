@@ -7,6 +7,8 @@ namespace Data.ViewModels
 {
     public class CardDto
     {
+        public long Generate { get; set; }
+        public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Remarks { get; set; }
         public string? CardType { get; set; }
