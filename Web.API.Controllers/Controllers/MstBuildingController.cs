@@ -126,9 +126,9 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBuilding/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto mstBuildingDto)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || (mstBuildingDto.Image != null && mstBuildingDto.Image.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -142,13 +142,23 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _service.UpdateAsync(id, dto); // No var assignment
+                var updatedBuilding = await _service.UpdateAsync(id, mstBuildingDto);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Integration updated successfully",
+                    msg = "Building updated successfully",
+                    collection = new { data = updatedBuilding },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Floor not found",
                     collection = new { data = (object)null },
-                    code = 204
+                    code = 404
                 });
             }
             catch (Exception ex)
