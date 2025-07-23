@@ -594,7 +594,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-                         // 25. Card
+            // 25. Card
             if (!context.Cards.Any())
             {
                 var cardFaker = new Faker<Card>()
@@ -604,6 +604,7 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
                     .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
                     .RuleFor(e => e.CardBarcode, f => f.Random.String(10))
+                    .RuleFor(e => e.Dmac, f => f.Internet.Mac())
                     .RuleFor(e => e.IsMultiSite, f => f.Random.Bool())
                     .RuleFor(e => e.RegisteredSite, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
                     .RuleFor(e => e.IsUsed, f => f.Random.Bool())
@@ -624,7 +625,8 @@ namespace Repositories.Seeding
             {
                 var transFaker = new Faker<TrackingTransaction>()
                     .RuleFor(t => t.Id, f => Guid.NewGuid())
-                    .RuleFor(t => t.TransTime, f => f.Date.Recent(1))
+                    // .RuleFor(t => t.TransTime, f => f.Date.Recent(1))
+                    .RuleFor(a => a.TransTime, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
                     .RuleFor(t => t.ReaderId, f => context.MstBleReaders
                         .Where(r => r.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -643,7 +645,7 @@ namespace Repositories.Seeding
                     .RuleFor(t => t.AlarmStatus, f => f.PickRandom<AlarmStatus>())
                     .RuleFor(t => t.Battery, f => f.Random.Long(0, 100));
 
-                var transactions = transFaker.Generate(20);
+                var transactions = transFaker.Generate(200);
                 context.TrackingTransactions.AddRange(transactions);
                 context.SaveChanges();
             }
@@ -696,18 +698,18 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Recent(1))
+                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
                     .RuleFor(a => a.IdleBy, f => f.Name.FullName())
                     .RuleFor(a => a.DoneBy, f => f.Name.FullName())
                     .RuleFor(a => a.CancelBy, f => f.Name.FullName())
                     .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
                     .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
                     .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
-                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Recent(1));
+                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
 
                 var alarms = alarmFaker.Generate(1);
                 context.AlarmRecordTrackings.AddRange(alarms);

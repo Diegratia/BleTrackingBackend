@@ -20,6 +20,9 @@ namespace Entities.Models
         [Column("card_barcode")]
         public string? CardBarcode { get; set; }
 
+        [Column("dmac")]
+        public string? Dmac { get; set; }
+
         [Column("is_multi_site")]
         public bool? IsMultiSite { get; set; }
 

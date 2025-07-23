@@ -14,6 +14,7 @@ namespace Data.ViewModels
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
         public string? CardBarcode { get; set; }
+        public string? Dmac { get; set; }
         public bool? IsMultiSite { get; set; }
         public Guid? RegisteredSite { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
@@ -32,6 +33,7 @@ namespace Data.ViewModels
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
         public string? CardBarcode { get; set; }
+        public string? Dmac { get; set; }
         public bool? IsMultiSite { get; set; }
         public Guid? RegisteredSite { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
@@ -45,6 +47,7 @@ namespace Data.ViewModels
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
         public string? CardBarcode { get; set; }
+        public string? Dmac { get; set; }
         public bool? IsMultiSite { get; set; }
         public Guid? RegisteredSite { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }

@@ -50,7 +50,22 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<CardDto> CreateAsync(CardCreateDto createDto)
         {
+          
+
             var card = _mapper.Map<Card>(createDto);
+            if (card.CardBarcode == createDto.CardBarcode && createDto.CardBarcode != null)
+            {
+                throw new ArgumentException($"Card with Barcode {createDto.CardBarcode} already exists.");
+            }
+            else if (card.CardNumber == createDto.CardNumber && createDto.CardNumber != null)
+            {
+                throw new ArgumentException($"Card with Number {createDto.CardNumber} already exists.");
+            }
+             else if (card.Dmac == createDto.Dmac && createDto.Dmac != null)
+            {
+                throw new ArgumentException($"Card with Mac {createDto.Dmac} already exists.");
+            }
+            
             card.Id = Guid.NewGuid();
             card.StatusCard = true;
             card.CreatedAt = DateTime.UtcNow;
