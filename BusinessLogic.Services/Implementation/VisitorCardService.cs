@@ -48,18 +48,20 @@ namespace BusinessLogic.Services.Implementation
         public async Task<VisitorCardDto> CreateAsync(VisitorCardCreateDto createDto)
         {
             var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
-            var card = await _repository.GetCardByIdAsync(createDto.CardId);
-            var cardtrue = await _repository.GetCardByIdAsyncTrue(createDto.CardId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
-            if (card == null)
-            {
-                throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
-            }
-            else if (cardtrue?.IsUsed == true)
-            {
-                throw new ArgumentException($"Card with ID {createDto.CardId} is already used.");
-            }
+
+        var cardtrue = await _repository.GetCardByIdAsyncTrue(createDto.CardId);
+        if (cardtrue != null)
+        {
+            throw new ArgumentException($"Card with ID {createDto.CardId} is already used.");
+        }
+
+        var card = await _repository.GetCardByIdAsync(createDto.CardId);
+        if (card == null)
+        {
+            throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
+        }
                 
 
             var visitorCard = _mapper.Map<VisitorCard>(createDto);
@@ -132,7 +134,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" }; 
-            var validSortColumns = new[] { "Name" ,  "Card Type", "IsVisitor" };
+            var validSortColumns = new[] { "Name" ,  "CardType", "IsVisitor" };
 
             var filterService = new GenericDataTableService<VisitorCard, VisitorCardDto>(
                 query,

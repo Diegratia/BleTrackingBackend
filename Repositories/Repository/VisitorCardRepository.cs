@@ -68,7 +68,7 @@ namespace Repositories.Repository
              public async Task<Card> GetCardByIdAsync(Guid id)
         {
             return await _context.Cards
-                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false !=true);
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false && a.IsUsed == false);
         }
 
             public async Task<Card> GetCardByIdAsyncTrue(Guid id)

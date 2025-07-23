@@ -69,7 +69,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
-            modelBuilder.Entity<Card>().ToTable("card_id");
+            modelBuilder.Entity<Card>().ToTable("card");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
