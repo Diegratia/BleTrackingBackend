@@ -99,11 +99,21 @@ namespace BusinessLogic.Services.Implementation
                 {
                     if (string.IsNullOrEmpty(filter.Key))
                         continue;
+                    
 
                     var value = filter.Value;
+                    // if (value == null || value.ToString() == "empty")
+                    
+                    // return new
+                    // {
+                    //     draw = request.Draw,
+                    //     recordsTotal = totalRecords,
+                    //     recordsFiltered = 0,
+                    //     data = "",
+                    // };
                     if (value == null)
                         continue;
-
+            
                     if (value is JsonElement jsonElement)
                     {
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
@@ -293,7 +303,7 @@ namespace BusinessLogic.Services.Implementation
                 }).ToList();
                 dtos = dtosWithCount;
             }
-
+            
             return new
             {
                 draw = request.Draw,
