@@ -53,15 +53,15 @@ namespace BusinessLogic.Services.Implementation
           
 
             var card = _mapper.Map<Card>(createDto);
-            if (card.CardBarcode == createDto.CardBarcode && createDto.CardBarcode != null)
+            if (card.CardBarcode == createDto.CardBarcode && card.CardBarcode != null)
             {
                 throw new ArgumentException($"Card with Barcode {createDto.CardBarcode} already exists.");
             }
-            else if (card.CardNumber == createDto.CardNumber && createDto.CardNumber != null)
+            else if (card.CardNumber == createDto.CardNumber && card.CardNumber != null)
             {
                 throw new ArgumentException($"Card with Number {createDto.CardNumber} already exists.");
             }
-             else if (card.Dmac == createDto.Dmac && createDto.Dmac != null)
+             else if (card.Dmac == createDto.Dmac && card.Dmac != null)
             {
                 throw new ArgumentException($"Card with Mac {createDto.Dmac} already exists.");
             }
