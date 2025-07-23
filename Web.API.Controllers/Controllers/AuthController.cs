@@ -154,8 +154,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpGet("users")]
+        [Authorize("RequireAuthenticatedUser")]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -182,6 +183,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("users/{id}")]
+         [Authorize("RequireAuthenticatedUser")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try

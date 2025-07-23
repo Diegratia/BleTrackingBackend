@@ -176,6 +176,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
