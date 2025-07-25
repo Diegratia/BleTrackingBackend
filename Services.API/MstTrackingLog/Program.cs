@@ -169,7 +169,6 @@ app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();
-app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

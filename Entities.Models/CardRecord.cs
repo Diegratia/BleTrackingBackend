@@ -18,9 +18,9 @@ namespace Entities.Models
         [Column("name")]
         public string Name { get; set; }
 
-        [ForeignKey(nameof(VisitorCard))]
-        [Column("visitor_card_id")]
-        public Guid VisitorCardId { get; set; }
+        [ForeignKey(nameof(Card))]
+        [Column("card_id")]
+        public Guid CardId { get; set; }
 
         [AllowNull]
         [ForeignKey(nameof(Visitor))]
@@ -60,7 +60,7 @@ namespace Entities.Models
 
         public virtual Visitor Visitor { get; set; }
         public virtual MstMember Member { get; set; }
-        public virtual VisitorCard VisitorCard { get; set; }
+        public virtual Card Card { get; set; }
          
    
         

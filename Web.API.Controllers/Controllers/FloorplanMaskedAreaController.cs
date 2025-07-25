@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -14,11 +15,11 @@ namespace Web.API.Controllers.Controllers
     [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class FloorplanMaskedAreaController : ControllerBase
     {
-        private readonly IFloorplanMaskedAreaService _FloorplanMaskedAreaService;
+        private readonly IFloorplanMaskedAreaService _service;
 
         public FloorplanMaskedAreaController(IFloorplanMaskedAreaService FloorplanMaskedAreaService)
         {
-            _FloorplanMaskedAreaService = FloorplanMaskedAreaService;
+            _service = FloorplanMaskedAreaService;
         }
 
         // GET: api/FloorplanMaskedArea
@@ -27,7 +28,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var areas = await _FloorplanMaskedAreaService.GetAllAsync();
+                var areas = await _service.GetAllAsync();
                 return Ok(new
                 {
                     success = true,
@@ -54,7 +55,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var area = await _FloorplanMaskedAreaService.GetByIdAsync(id);
+                var area = await _service.GetByIdAsync(id);
                 if (area == null)
                 {
                     return NotFound(new
@@ -103,7 +104,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdArea = await _FloorplanMaskedAreaService.CreateAsync(FloorplanMaskedAreaDto);
+                var createdArea = await _service.CreateAsync(FloorplanMaskedAreaDto);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -142,7 +143,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _FloorplanMaskedAreaService.UpdateAsync(id, FloorplanMaskedAreaDto);
+                await _service.UpdateAsync(id, FloorplanMaskedAreaDto);
                 return Ok(new
                 {
                     success = true,
@@ -179,7 +180,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _FloorplanMaskedAreaService.DeleteAsync(id);
+                await _service.DeleteAsync(id);
                 return Ok(new
                 {
                     success = true,
@@ -196,6 +197,64 @@ namespace Web.API.Controllers.Controllers
                     msg = "Area not found",
                     collection = new { data = (object)null },
                     code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .xlsx files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var maskedAreas = await _service.ImportAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Masked Area imported successfully",
+                    collection = new { data = maskedAreas },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
                 });
             }
             catch (Exception ex)
@@ -227,7 +286,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _FloorplanMaskedAreaService.FilterAsync(request);
+                var result = await _service.FilterAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -263,7 +322,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var pdfBytes = await _FloorplanMaskedAreaService.ExportPdfAsync();
+                var pdfBytes = await _service.ExportPdfAsync();
                 return File(pdfBytes, "application/pdf", "FloorplanMaskedArea_Report.pdf");
             }
             catch (Exception ex)
@@ -283,7 +342,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var excelBytes = await _FloorplanMaskedAreaService.ExportExcelAsync();
+                var excelBytes = await _service.ExportExcelAsync();
                 return File(excelBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "FloorplanMaskedArea_Report.xlsx");

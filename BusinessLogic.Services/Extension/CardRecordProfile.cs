@@ -32,7 +32,7 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstMember, MstMemberDto>();
-            CreateMap<VisitorCard, VisitorCardDto>();
+            CreateMap<Card, CardDto>();
         }
     }
 }

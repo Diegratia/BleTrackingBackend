@@ -146,11 +146,11 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "TestPrimaryUser1",
-                    Password = BCrypt.Net.BCrypt.HashPassword("testprimaryuser123@"),
+                    Username = "Admin User",
+                    Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
-                    Email = "testprimaryuser1@example.com",
-                    IsEmailConfirmation = 0,
+                    Email = "admin@example.com",
+                    IsEmailConfirmation = 1,
                     EmailConfirmationCode = Guid.NewGuid().ToString(),
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
@@ -161,11 +161,11 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "TestPrimaryUser2",
-                    Password = BCrypt.Net.BCrypt.HashPassword("testprimaryuser123@"),
+                    Username = "Operator User",
+                    Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
-                    Email = "testprimaryuser2@example.com",
-                    IsEmailConfirmation = 0,
+                    Email = "operator@example.com",
+                    IsEmailConfirmation = 1,
                     EmailConfirmationCode = Guid.NewGuid().ToString(),
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
@@ -176,11 +176,11 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "TestPrimaryUser3",
-                    Password = BCrypt.Net.BCrypt.HashPassword("testprimaryuser123@"),
+                    Username = "Security User",
+                    Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
-                    Email = "testprimaryuser3@example.com",
-                    IsEmailConfirmation = 0,
+                    Email = "securityuser@example.com",
+                    IsEmailConfirmation = 1,
                     EmailConfirmationCode = Guid.NewGuid().ToString(),
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
@@ -191,11 +191,11 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "TestPrimaryUser4",
-                    Password = BCrypt.Net.BCrypt.HashPassword("testprimaryuser123@"),
+                    Username = "Other Primary User",
+                    Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
-                    Email = "testprimaryuser4@example.com",
-                    IsEmailConfirmation = 0,
+                    Email = "otherprimary@example.com",
+                    IsEmailConfirmation = 1,
                     EmailConfirmationCode = Guid.NewGuid().ToString(),
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,

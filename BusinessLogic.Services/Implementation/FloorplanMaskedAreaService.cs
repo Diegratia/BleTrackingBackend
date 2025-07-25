@@ -14,6 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -86,6 +87,68 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             area.UpdatedBy = username;
             await _repository.SoftDeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file)
+        {
+            var areas = new List<FloorplanMaskedArea>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            int rowNumber = 2; 
+            foreach (var row in rows)
+            {
+
+                var floorplanStr = row.Cell(1).GetValue<string>();
+                if (!Guid.TryParse(floorplanStr, out var floorplanId))
+                    throw new ArgumentException($"Invalid floorplanId format at row {rowNumber}");
+
+                var floorplan = await _repository.GetFloorplanByIdAsync(floorplanId);
+                if (floorplan == null)
+                    throw new ArgumentException($"floorplanId {floorplanId} not found at row {rowNumber}");
+
+                var floorStr = row.Cell(2).GetValue<string>();
+                if (!Guid.TryParse(floorStr, out var floorId))
+                    throw new ArgumentException($"Invalid FloorId format at row {rowNumber}");
+
+                var floor = await _repository.GetFloorByIdAsync(floorId);
+                if (floor == null)
+                    throw new ArgumentException($"FloorId {floorId} not found at row {rowNumber}");
+
+
+                var area = new FloorplanMaskedArea
+                {
+                    Id = Guid.NewGuid(),
+                    FloorplanId = floorplanId,
+                    FloorId = floorId,
+                    Name = row.Cell(3).GetValue<string>(),
+                    AreaShape = row.Cell(4).GetValue<string>(),
+                    ColorArea = row.Cell(5).GetValue<string>(),
+                    RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>()),
+                    EngineAreaId = row.Cell(7).GetValue<string>(),
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                areas.Add(area);
+                rowNumber++;
+            }
+
+            // Simpan ke database
+            foreach (var area in areas)
+            {
+                await _repository.AddAsync(area);
+            }
+
+            return _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(areas);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

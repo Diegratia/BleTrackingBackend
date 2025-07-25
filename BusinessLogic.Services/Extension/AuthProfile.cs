@@ -13,7 +13,6 @@ namespace BusinessLogic.Services.Extension
         public AuthProfile()
         {
             CreateMap<User, AuthResponseDto>()
-                .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.IsEmailConfirmation == 1))
                 .ForMember(dest => dest.StatusActive, opt => opt.MapFrom(src => src.StatusActive.ToString()));
 
             CreateMap<UserGroup, UserGroupDto>()

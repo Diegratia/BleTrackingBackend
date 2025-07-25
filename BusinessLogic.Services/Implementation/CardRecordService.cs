@@ -175,7 +175,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(record.Name);
-                            table.Cell().Element(CellStyle).Text(record.VisitorCardId);
+                            table.Cell().Element(CellStyle).Text(record.CardId);
                             table.Cell().Element(CellStyle).Text(record.Visitor);
                             table.Cell().Element(CellStyle).Text(record.Member);
                             table.Cell().Element(CellStyle).Text(record.VisitorType.ToString());
@@ -235,7 +235,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = record.Name;
-                worksheet.Cell(row, 3).Value = record.VisitorCardId.ToString();
+                worksheet.Cell(row, 3).Value = record.CardId.ToString();
                 worksheet.Cell(row, 4).Value = record.Visitor.Name;
                 worksheet.Cell(row, 5).Value = record.Member.Name;
                 worksheet.Cell(row, 6).Value = record.VisitorType.ToString();

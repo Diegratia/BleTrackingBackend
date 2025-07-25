@@ -25,7 +25,7 @@ namespace Helpers.Consumer
     {
         Perpetual,
         Annual
-    }
+  }
 
     public enum VisitorType
     {

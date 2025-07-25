@@ -30,7 +30,6 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
-        public DbSet<VisitorCard> VisitorCards { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         public DbSet<Card> Cards{ get; set; }
@@ -66,7 +65,6 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
             modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
-            modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
@@ -497,28 +495,28 @@ namespace Repositories.DbContexts
                         v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)
                     );
 
-                // Relasi one-to-one dengan Visitor
+                // Relasi one-to-many dengan Visitor
                 entity.HasOne(a => a.Visitor)
-                    .WithOne(v => v.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.VisitorId)
+                    .WithMany()
+                    .HasForeignKey(a => a.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan MstBleReader
+                // Relasi one-to-many dengan MstBleReader
                 entity.HasOne(a => a.Reader)
-                    .WithOne(r => r.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.ReaderId)
+                   .WithMany()
+                    .HasForeignKey(a => a.ReaderId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan FloorplanMaskedArea
+                // Relasi one-to-many dengan FloorplanMaskedArea
                 entity.HasOne(a => a.FloorplanMaskedArea)
-                    .WithOne(f => f.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.FloorplanMaskedAreaId)
+                   .WithMany()
+                    .HasForeignKey(a => a.FloorplanMaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan MstApplication
+                // Relasi one-to-many dengan MstApplication
                 entity.HasOne(a => a.Application)
-                    .WithOne(m => m.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.ApplicationId)
+                    .WithMany()
+                    .HasForeignKey(a => a.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(a => a.Generate)
@@ -652,79 +650,6 @@ namespace Repositories.DbContexts
                     );
             });
 
-            modelBuilder.Entity<VisitorCard>(entity =>
-            {
-                entity.ToTable("visitor_card");
-
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("name");
-
-                entity.Property(e => e.Number)
-                    .HasColumnName("number");
-
-                entity.Property(e => e.CardType)
-                    .HasColumnName("card_type")
-                    .HasColumnType("nvarchar(255)")
-                    .HasConversion(
-                        v => v == CardType.RfidBle? "rfid-ble" : v.ToString().ToLower(),
-                        v => v == "rfid-ble" ? CardType.RfidBle : (CardType)Enum.Parse(typeof(CardType), v, true)
-                    );
-
-                entity.Property(e => e.QRCode)
-                    .HasColumnName("qr_code");
-
-                entity.Property(e => e.Mac)
-                    .HasColumnType("nvarchar(255)")
-                    .HasColumnName("mac");
-
-                entity.Property(e => e.CheckinStatus)
-                    .HasColumnName("checkin_status");
-
-                entity.Property(e => e.EnableStatus)
-                    .HasColumnName("enable_status");
-
-                entity.Property(e => e.Status)
-                    .HasColumnName("status")
-                    .HasDefaultValue(1);
-
-                entity.Property(e => e.SiteId)
-                    .HasColumnName("site_id");
-
-                entity.Property(e => e.IsVisitor)
-                    .HasColumnName("is_visitor");
-
-                entity.Property(e => e.ApplicationId)
-                    .HasColumnName("application_id");
-
-                //  Relasi ke MstApplication
-                entity.HasOne(e => e.Application)
-                    .WithMany() // kalau MstApplication gak punya VisitorCard list
-                    .HasForeignKey(e => e.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction); // atau NoAction
-
-                // Relasi ke CardRecord (inverse dari CardRecord.CardId)
-                entity.HasMany(e => e.CardRecords)
-                    .WithOne(e => e.VisitorCard)
-                    .HasForeignKey(e => e.VisitorCardId)
-                    .OnDelete(DeleteBehavior.NoAction); // biar gak auto hapus CardRecord
-
-                entity.HasOne(e => e.Visitor)
-                    .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
-                    .HasForeignKey(e => e.VisitorId)
-                    .OnDelete(DeleteBehavior.NoAction); 
-
-                entity.HasOne(e => e.Member)
-                    .WithMany() // atau .WithMany(m => m.CardRecords)
-                    .HasForeignKey(e => e.MemberId)
-                    .OnDelete(DeleteBehavior.NoAction); 
-
-                entity.HasQueryFilter(e => e.Status != 0);
-            });
-
-
             modelBuilder.Entity<CardRecord>(entity =>
             {
                 entity.ToTable("card_record");
@@ -734,8 +659,8 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Name)
                     .HasColumnName("name");
 
-                entity.Property(e => e.VisitorCardId)
-                    .HasColumnName("visitor_card_id");
+                entity.Property(e => e.CardId)
+                    .HasColumnName("card_id");
 
                 entity.Property(e => e.VisitorId)
                     .HasColumnName("visitor_id");
@@ -771,11 +696,6 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
                     );
-                   
-                entity.HasOne(e => e.VisitorCard)
-                    .WithMany() // asumsi ga ada collection di VisitorCard
-                    .HasForeignKey(e => e.VisitorCardId)
-                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Visitor)
                     .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
@@ -1000,6 +920,7 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (CardType)Enum.Parse(typeof(CardType), v, true)
                     );
+                
             });
 
             modelBuilder.Entity<RefreshToken>(Entity =>

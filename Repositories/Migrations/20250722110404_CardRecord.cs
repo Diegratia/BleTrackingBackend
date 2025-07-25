@@ -6,11 +6,38 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class addNewServices : Migration
+    public partial class CardRecord : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "card",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    card_number = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    card_barcode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_multi_site = table.Column<bool>(type: "bit", nullable: true),
+                    registered_site = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    is_used = table.Column<bool>(type: "bit", nullable: true),
+                    last_used_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    status_card = table.Column<bool>(type: "bit", nullable: true),
+                    _generate = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card", x => x.id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "mst_application",
                 columns: table => new
@@ -234,33 +261,6 @@ namespace Repositories.Migrations
                         principalTable: "mst_application",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "visitor_card",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    number = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    card_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    qr_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    mac = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    checkin_status = table.Column<int>(type: "int", nullable: false),
-                    enable_status = table.Column<int>(type: "int", nullable: false),
-                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
-                    site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    is_member = table.Column<int>(type: "int", nullable: false),
-                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_visitor_card", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_visitor_card_mst_application_application_id",
-                        column: x => x.application_id,
-                        principalTable: "mst_application",
-                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -708,62 +708,6 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "card_record",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    visitor_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    checkin_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    checkin_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    checkout_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    checkout_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    checkin_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    VisitorCardId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_card_record", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_card_record_mst_member_MstMemberId",
-                        column: x => x.MstMemberId,
-                        principalTable: "mst_member",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_card_record_mst_member_member_id",
-                        column: x => x.member_id,
-                        principalTable: "mst_member",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_card_record_visitor_VisitorId1",
-                        column: x => x.VisitorId1,
-                        principalTable: "visitor",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_card_record_visitor_card_VisitorCardId",
-                        column: x => x.VisitorCardId,
-                        principalTable: "visitor_card",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_card_record_visitor_card_card_id",
-                        column: x => x.card_id,
-                        principalTable: "visitor_card",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_card_record_visitor_visitor_id",
-                        column: x => x.visitor_id,
-                        principalTable: "visitor",
-                        principalColumn: "id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "trx_visitor",
                 columns: table => new
                 {
@@ -795,6 +739,58 @@ namespace Repositories.Migrations
                     table.PrimaryKey("PK_trx_visitor", x => x.id);
                     table.ForeignKey(
                         name: "FK_trx_visitor_visitor_visitor_id",
+                        column: x => x.visitor_id,
+                        principalTable: "visitor",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "visitor_card",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    number = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    card_type = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    qr_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    mac = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    checkin_status = table.Column<int>(type: "int", nullable: true),
+                    enable_status = table.Column<int>(type: "int", nullable: true),
+                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    is_visitor = table.Column<int>(type: "int", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    _generate = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_visitor_card", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_visitor_card_card_card_id",
+                        column: x => x.card_id,
+                        principalTable: "card",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_visitor_card_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_card_mst_member_member_id",
+                        column: x => x.member_id,
+                        principalTable: "mst_member",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_visitor_card_visitor_visitor_id",
                         column: x => x.visitor_id,
                         principalTable: "visitor",
                         principalColumn: "id");
@@ -861,6 +857,63 @@ namespace Repositories.Migrations
                         principalTable: "mst_floorplan",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "card_record",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    visitor_card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    type = table.Column<int>(type: "int", nullable: true),
+                    timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    checkin_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    checkin_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    checkout_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    checkout_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    checkin_site_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    VisitorCardId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_record", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_record_mst_member_MstMemberId",
+                        column: x => x.MstMemberId,
+                        principalTable: "mst_member",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_mst_member_member_id",
+                        column: x => x.member_id,
+                        principalTable: "mst_member",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_VisitorId1",
+                        column: x => x.VisitorId1,
+                        principalTable: "visitor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_card_VisitorCardId1",
+                        column: x => x.VisitorCardId1,
+                        principalTable: "visitor_card",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_card_visitor_card_id",
+                        column: x => x.visitor_card_id,
+                        principalTable: "visitor_card",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_record_visitor_visitor_id",
+                        column: x => x.visitor_id,
+                        principalTable: "visitor",
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1166,11 +1219,6 @@ namespace Repositories.Migrations
                 column: "ble_reader_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_card_record_card_id",
-                table: "card_record",
-                column: "card_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_card_record_member_id",
                 table: "card_record",
                 column: "member_id");
@@ -1181,14 +1229,19 @@ namespace Repositories.Migrations
                 column: "MstMemberId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_card_record_visitor_card_id",
+                table: "card_record",
+                column: "visitor_card_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_card_record_visitor_id",
                 table: "card_record",
                 column: "visitor_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_card_record_VisitorCardId",
+                name: "IX_card_record_VisitorCardId1",
                 table: "card_record",
-                column: "VisitorCardId");
+                column: "VisitorCardId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_record_VisitorId1",
@@ -1557,6 +1610,21 @@ namespace Repositories.Migrations
                 name: "IX_visitor_card_application_id",
                 table: "visitor_card",
                 column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_card_card_id",
+                table: "visitor_card",
+                column: "card_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_card_member_id",
+                table: "visitor_card",
+                column: "member_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_visitor_card_visitor_id",
+                table: "visitor_card",
+                column: "visitor_id");
         }
 
         /// <inheritdoc />
@@ -1590,9 +1658,6 @@ namespace Repositories.Migrations
                 name: "visitor_blacklist_area");
 
             migrationBuilder.DropTable(
-                name: "mst_member");
-
-            migrationBuilder.DropTable(
                 name: "visitor_card");
 
             migrationBuilder.DropTable(
@@ -1609,6 +1674,12 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "floorplan_masked_area");
+
+            migrationBuilder.DropTable(
+                name: "card");
+
+            migrationBuilder.DropTable(
+                name: "mst_member");
 
             migrationBuilder.DropTable(
                 name: "visitor");

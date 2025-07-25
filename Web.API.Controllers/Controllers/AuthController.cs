@@ -183,7 +183,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("users/{id}")]
-         [Authorize("RequireAuthenticatedUser")]
+        [Authorize("RequireAuthenticatedUser")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -219,5 +219,102 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _authService.ConfirmEmailAsync(dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Email confirmed successfully, please set your password",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+        }
+
+        [HttpPost("set-password")]
+        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _authService.SetPasswordAsync(dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Password set successfully, you can now login",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+        }
     }
 }
+
+

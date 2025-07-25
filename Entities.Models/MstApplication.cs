@@ -86,8 +86,7 @@ namespace Entities.Models
        //relasi antar domain table database
        //mstapplication many to ... terhadap table dibawah ini
 
-        [Column("alarm_record_tracking")]
-        public virtual AlarmRecordTracking AlarmRecordTracking { get; set; }
+        public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public virtual ICollection<MstIntegration> Integrations { get; set; } = new List<MstIntegration>();
         public virtual ICollection<MstAccessCctv> AccessCctvs { get; set; } = new List<MstAccessCctv>();
         public virtual ICollection<MstAccessControl> AccessControls { get; set; } = new List<MstAccessControl>();

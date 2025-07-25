@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -14,11 +15,11 @@ namespace Web.API.Controllers.Controllers
     [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class MstBleReaderController : ControllerBase
     {
-        private readonly IMstBleReaderService _mstBleReaderService;
+        private readonly IMstBleReaderService _service;
 
         public MstBleReaderController(IMstBleReaderService mstBleReaderService)
         {
-            _mstBleReaderService = mstBleReaderService;
+            _service = mstBleReaderService;
         }
 
         // GET: api/MstBleReader
@@ -27,7 +28,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var bleReaders = await _mstBleReaderService.GetAllAsync();
+                var bleReaders = await _service.GetAllAsync();
                 return Ok(new
                 {
                     success = true,
@@ -54,7 +55,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var bleReader = await _mstBleReaderService.GetByIdAsync(id);
+                var bleReader = await _service.GetByIdAsync(id);
                 if (bleReader == null)
                 {
                     return NotFound(new
@@ -103,7 +104,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdBleReader = await _mstBleReaderService.CreateAsync(mstBleReaderDto);
+                var createdBleReader = await _service.CreateAsync(mstBleReaderDto);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -142,7 +143,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _mstBleReaderService.UpdateAsync(id, mstBleReaderDto);
+                await _service.UpdateAsync(id, mstBleReaderDto);
                 return Ok(new
                 {
                     success = true,
@@ -179,7 +180,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _mstBleReaderService.DeleteAsync(id);
+                await _service.DeleteAsync(id);
                 return Ok(new
                 {
                     success = true,
@@ -227,7 +228,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _mstBleReaderService.FilterAsync(request);
+                var result = await _service.FilterAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -258,12 +259,70 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .xlsx files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var floorplans = await _service.ImportAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Ble readers imported successfully",
+                    collection = new { data = floorplans },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpGet("export/pdf")]
         public async Task<IActionResult> ExportPdf()
         {
             try
             {
-                var pdfBytes = await _mstBleReaderService.ExportPdfAsync();
+                var pdfBytes = await _service.ExportPdfAsync();
                 return File(pdfBytes, "application/pdf", "MstBleReader_Report.pdf");
             }
             catch (Exception ex)
@@ -283,7 +342,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var excelBytes = await _mstBleReaderService.ExportExcelAsync();
+                var excelBytes = await _service.ExportExcelAsync();
                 return File(excelBytes, 
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
                     "MstBleReader_Report.xlsx");

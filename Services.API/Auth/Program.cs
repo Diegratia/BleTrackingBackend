@@ -64,19 +64,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
-        options.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine("Authentication failed: " + context.Exception.Message);
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("Token validated successfully");
-                return Task.CompletedTask;
-            }
-        };
+        // options.Events = new JwtBearerEvents
+        // {
+        //     OnAuthenticationFailed = context =>
+        //     {
+        //         Console.WriteLine("Authentication failed: " + context.Exception.Message);
+        //         return Task.CompletedTask;
+        //     },
+        //     OnTokenValidated = context =>
+        //     {
+        //         Console.WriteLine("Token validated successfully");
+        //         return Task.CompletedTask;
+        //     }
+        // };
     });
 
 // Konfigurasi Otorisasi
@@ -146,6 +146,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+// service email
+builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
 var port = Environment.GetEnvironmentVariable("AUTH_PORT") ??
            builder.Configuration["Ports:AuthService"] ?? "5001";
@@ -162,7 +164,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        DatabaseSeeder.Seed(context); 
+        // DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

@@ -164,6 +164,47 @@ namespace BusinessLogic.Services.Implementation
             await _repository.DeleteAsync(id);
         }
 
+         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
+        {
+            var buildings = new List<MstBuilding>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            int rowNumber = 2; 
+            foreach (var row in rows)
+            {
+
+                var building = new MstBuilding
+                {
+                    Id = Guid.NewGuid(),
+                    Name = row.Cell(1).GetValue<string>(),
+                    Image = row.Cell(2).GetValue<string>(),
+                    ApplicationId = Guid.Parse(userApplicationId),
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                buildings.Add(building);
+                rowNumber++;
+            }
+
+            // Simpan ke database
+            foreach (var building in buildings)
+            {
+                await _repository.AddAsync(building);
+            }
+
+            return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+        }
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();

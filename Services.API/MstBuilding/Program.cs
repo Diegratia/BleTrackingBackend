@@ -157,6 +157,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseCors("AllowAll");
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
 Directory.CreateDirectory(uploadsPath);
 
@@ -167,7 +168,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Uploads/BuildingImages"
 });
 
-app.UseCors("AllowAll");
+
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();

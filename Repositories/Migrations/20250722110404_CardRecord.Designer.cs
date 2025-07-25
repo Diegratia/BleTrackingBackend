@@ -12,8 +12,8 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250717031530_addNewServices")]
-    partial class addNewServices
+    [Migration("20250722110404_CardRecord")]
+    partial class CardRecord
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -249,16 +249,90 @@ namespace Repositories.Migrations
                     b.ToTable("ble_reader_node", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.Card", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CardBarcode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("card_barcode");
+
+                    b.Property<string>("CardNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("card_number");
+
+                    b.Property<string>("CardType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<bool?>("IsMultiSite")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_multi_site");
+
+                    b.Property<bool?>("IsUsed")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_used");
+
+                    b.Property<string>("LastUsed")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("last_used_by");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("RegisteredSite")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("registered_site");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<bool?>("StatusCard")
+                        .HasColumnType("bit")
+                        .HasColumnName("status_card");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("card", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<Guid>("CardId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("card_id");
 
                     b.Property<DateTime?>("CheckinAt")
                         .HasColumnType("datetime2")
@@ -293,11 +367,24 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("MstMemberId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
-                    b.Property<Guid?>("VisitorCardId")
+                    b.Property<int?>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("type");
+
+                    b.Property<Guid>("VisitorCardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_card_id");
+
+                    b.Property<Guid?>("VisitorCardId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("VisitorId")
@@ -307,11 +394,6 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("VisitorId1")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("VisitorName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("visitor_name");
-
                     b.Property<string>("VisitorType")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
@@ -319,13 +401,13 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId");
-
                     b.HasIndex("MemberId");
 
                     b.HasIndex("MstMemberId");
 
                     b.HasIndex("VisitorCardId");
+
+                    b.HasIndex("VisitorCardId1");
 
                     b.HasIndex("VisitorId");
 
@@ -2372,27 +2454,49 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<Guid>("CardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_id");
+
                     b.Property<string>("CardType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_type");
 
-                    b.Property<int>("CheckinStatus")
+                    b.Property<int?>("CheckinStatus")
                         .HasColumnType("int")
                         .HasColumnName("checkin_status");
 
-                    b.Property<int>("EnableStatus")
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<int?>("EnableStatus")
                         .HasColumnType("int")
                         .HasColumnName("enable_status");
 
-                    b.Property<int>("IsMember")
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<int?>("IsVisitor")
                         .HasColumnType("int")
-                        .HasColumnName("is_member");
+                        .HasColumnName("is_visitor");
 
                     b.Property<string>("Mac")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("mac");
+
+                    b.Property<Guid?>("MemberId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2400,16 +2504,14 @@ namespace Repositories.Migrations
                         .HasColumnName("name");
 
                     b.Property<string>("Number")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("number");
 
                     b.Property<string>("QRCode")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("qr_code");
 
-                    b.Property<Guid>("SiteId")
+                    b.Property<Guid?>("SiteId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("site_id");
 
@@ -2419,9 +2521,27 @@ namespace Repositories.Migrations
                         .HasDefaultValue(1)
                         .HasColumnName("status");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid?>("VisitorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("VisitorId");
 
                     b.ToTable("visitor_card", (string)null);
                 });
@@ -2494,12 +2614,6 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
                 {
-                    b.HasOne("Entities.Models.VisitorCard", "VisitorCard")
-                        .WithMany()
-                        .HasForeignKey("CardId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Entities.Models.MstMember", "Member")
                         .WithMany()
                         .HasForeignKey("MemberId")
@@ -2509,9 +2623,15 @@ namespace Repositories.Migrations
                         .WithMany("CardRecords")
                         .HasForeignKey("MstMemberId");
 
+                    b.HasOne("Entities.Models.VisitorCard", "VisitorCard")
+                        .WithMany()
+                        .HasForeignKey("VisitorCardId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.VisitorCard", null)
                         .WithMany("CardRecords")
-                        .HasForeignKey("VisitorCardId");
+                        .HasForeignKey("VisitorCardId1");
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
@@ -3009,7 +3129,29 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany()
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Application");
+
+                    b.Navigation("Card");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanMaskedArea", b =>

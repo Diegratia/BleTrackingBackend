@@ -6,13 +6,14 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.API.Controllers.Controllers
 {
 
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    // [Authorize ("RequirePrimaryAdminOrSystemRole")]
     public class FloorplanDeviceController : ControllerBase
     {
         private readonly IFloorplanDeviceService _service;
@@ -197,6 +198,64 @@ namespace Web.API.Controllers.Controllers
                     msg = "Floorplan device not found",
                     collection = new { data = (object)null },
                     code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+         [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .xlsx files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var devices = await _service.ImportAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan Devices imported successfully",
+                    collection = new { data = devices },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
                 });
             }
             catch (Exception ex)

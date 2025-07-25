@@ -108,6 +108,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var floorplans = new List<MstFloorplan>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
 
             using var stream = file.OpenReadStream();
             using var workbook = new XLWorkbook(stream);
@@ -117,7 +118,7 @@ namespace BusinessLogic.Services.Implementation
             int rowNumber = 2;
             foreach (var row in rows)
             {
-                var floorIdStr = row.Cell(1).GetValue<string>();
+                var floorIdStr = row.Cell(2).GetValue<string>();
                 if (!Guid.TryParse(floorIdStr, out var floorId))
                     throw new ArgumentException($"Invalid FloorId format at row {rowNumber}");
 
@@ -134,6 +135,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = name,
                     FloorId = floorId,
+                    ApplicationId = Guid.Parse(userApplicationId),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,

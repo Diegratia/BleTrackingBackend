@@ -19,12 +19,16 @@ namespace Repositories.Repository
         public async Task<Card> GetByIdAsync(Guid id)
         {
             return await _context.Cards
+                .Include(b => b.RegisteredMaskedArea)
                 .FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != false);
         }
 
         public async Task<IEnumerable<Card>> GetAllAsync()
         {
             return await _context.Cards
+                .Include(b => b.RegisteredMaskedArea)
+                .Include(b => b.Member)
+                .Include(b => b.Visitor)
                 .Where(b => b.StatusCard != false)
                 .ToListAsync();
         }
@@ -53,12 +57,21 @@ namespace Repositories.Repository
             card.StatusCard = false;
             await _context.SaveChangesAsync();
         }
-        
-         public IQueryable<Card> GetAllQueryable()
+
+        public IQueryable<Card> GetAllQueryable()
         {
             return _context.Cards
+                .Include(b => b.Member)
+                .Include(b => b.Visitor)
+                .Include(b => b.RegisteredMaskedAreas)
                 .Where(b => b.StatusCard != false)
                 .AsQueryable();
+        }
+        
+          public async Task<FloorplanMaskedArea> GetMaskedAreaByIdAsync(Guid id)
+        {
+            return await _context.FloorplanMaskedAreas
+                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 
     }
