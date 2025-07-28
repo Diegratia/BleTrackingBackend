@@ -7,12 +7,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Helpers.Consumer
 {
-    public class BaseModelWithTime
+    public class BaseModelWithTimeInt
     {
         [Required]
         [Column("_generate")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Generate { get; set; }
+        public int Generate { get; set; }
 
         [Required]
         [Key]

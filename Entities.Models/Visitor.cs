@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Entities.Models
 {
-    public class Visitor : BaseModel
+    public class Visitor : BaseModel, IApplicationEntity
     {
         [Required]
         [StringLength(255)]

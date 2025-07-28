@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstFloorplan : BaseModel
+    public class MstFloorplan : BaseModel, IApplicationEntity
     {
         [Required]
         [StringLength(255)]

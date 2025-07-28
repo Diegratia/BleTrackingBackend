@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class AlarmRecordTrackingDto
+    public class AlarmRecordTrackingDto: BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
@@ -10,7 +10,6 @@ namespace Data.ViewModels
         public Guid VisitorId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public Guid ApplicationId { get; set; }
         public string AlarmRecordStatus { get; set; }
         public string ActionStatus { get; set; }
         public DateTime IdleTimestamp { get; set; }
@@ -31,25 +30,23 @@ namespace Data.ViewModels
         public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
     }
 
-    public class AlarmRecordTrackingCreateDto
+    public class AlarmRecordTrackingCreateDto : BaseModelDto
     {
        
         public Guid VisitorId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public Guid ApplicationId { get; set; }
         public string AlarmRecordStatus { get; set; }
         public string ActionStatus { get; set; }
         public string InvestigatedResult { get; set; }
     }
 
-    public class AlarmRecordTrackingUpdateDto
+    public class AlarmRecordTrackingUpdateDto : BaseModelDto
     {
        
         public Guid VisitorId { get; set; }
         public Guid ReaderId { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
-        public Guid ApplicationId { get; set; }
         public string AlarmRecordStatus { get; set; }
         public string ActionStatus { get; set; }
         public string InvestigatedResult { get; set; }

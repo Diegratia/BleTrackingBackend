@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class BleReaderNodeDto
+    public class BleReaderNodeDto : BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
@@ -24,7 +24,7 @@ namespace Data.ViewModels
         
     }
 
-       public class BleReaderNodeCreateDto
+       public class BleReaderNodeCreateDto: BaseModelDto
     {
         public Guid ReaderId { get; set; }
         // public int StartPos { get; set; }
@@ -37,7 +37,7 @@ namespace Data.ViewModels
 
     }
 
-       public class BleReaderNodeUpdateDto
+       public class BleReaderNodeUpdateDto: BaseModelDto
     {
         public Guid ReaderId { get; set; }
         // public int StartPos { get; set; }

@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstMember : BaseModel
+    public class MstMember : BaseModelWithTime, IApplicationEntity
     {
         [Required]
         [StringLength(255)]
@@ -92,20 +92,6 @@ namespace Entities.Models
 
         [Column("status_employee")]
         public StatusEmployee StatusEmployee { get; set; }
-
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
 
         [Column("status")]
         public int? Status { get; set; } = 1;

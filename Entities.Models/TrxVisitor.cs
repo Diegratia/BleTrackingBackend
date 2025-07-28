@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class TrxVisitor
+    public class TrxVisitor : IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -87,6 +87,12 @@ namespace Entities.Models
         [ForeignKey(nameof(Visitor))]
         public Guid VisitorId { get; set; } 
 
+        [Required]
+        [ForeignKey("ApplicationId")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
+        public MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }     
 
     }

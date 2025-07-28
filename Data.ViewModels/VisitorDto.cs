@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
-{    public class VisitorDto
+{    public class VisitorDto : BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
@@ -40,7 +40,7 @@ namespace Data.ViewModels
         public MstDepartmentDto Department { get; set; }
     }
 
-    public class VisitorCreateDto
+    public class VisitorCreateDto : BaseModelDto
     {
         public string PersonId { get; set; }
         public string IdentityId { get; set; }
@@ -67,7 +67,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorUpdateDto
+    public class VisitorUpdateDto : BaseModelDto
     {
         public string PersonId { get; set; }
         public string IdentityId { get; set; }

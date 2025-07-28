@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class FloorplanMaskedAreaDto
+    public class FloorplanMaskedAreaDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -22,7 +22,7 @@ namespace Data.ViewModels
         public MstFloorplanDto Floorplan { get; set; }
     }
 
-     public class FloorplanMaskedAreaCreateDto
+     public class FloorplanMaskedAreaCreateDto : BaseModelDto
     {
         public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
@@ -36,7 +36,7 @@ namespace Data.ViewModels
         // public long PositionPxY { get; set; }
     }
 
-     public class FloorplanMaskedAreaUpdateDto
+     public class FloorplanMaskedAreaUpdateDto : BaseModelDto
     {
         public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }

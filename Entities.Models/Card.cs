@@ -1,10 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class Card : BaseModelWithTime
+    public class Card : BaseModelWithTime, IApplicationEntity
     {
         [Column("name")]
         public string? Name { get; set; }
@@ -55,8 +56,14 @@ namespace Entities.Models
 
         [Column("status_card")]
         public bool? StatusCard { get; set; } = true;
+
+        [Required]
+        [ForeignKey("Application")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
         // isikan  null jika bisa digunakan disemua area.
 
+        public virtual MstApplication Application { get; set; }
         public virtual MstMember Member { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual FloorplanMaskedArea RegisteredMaskedAreas { get; set; }

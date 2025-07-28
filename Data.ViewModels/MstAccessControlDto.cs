@@ -4,7 +4,6 @@ namespace Data.ViewModels
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
-        public Guid ControllerBrandId { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public string Description { get; set; }
@@ -24,7 +23,6 @@ namespace Data.ViewModels
 
     public class MstAccessControlCreateDto
     {
-        public Guid ControllerBrandId { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public string Description { get; set; }
@@ -37,7 +35,6 @@ namespace Data.ViewModels
 
     public class MstAccessControlUpdateDto
     {
-        public Guid ControllerBrandId { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public string Description { get; set; }

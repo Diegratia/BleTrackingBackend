@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models
 {
-    public class CardRecord
+    public class CardRecord : IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -58,6 +58,12 @@ namespace Entities.Models
         [Column("visitor_type")]
         public VisitorType VisitorType { get; set; }
 
+        [Required]
+        [ForeignKey("Application")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
+        public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual MstMember Member { get; set; }
         public virtual Card Card { get; set; }

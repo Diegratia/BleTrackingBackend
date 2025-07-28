@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class BleReaderNode : BaseModel
+    public class BleReaderNode : BaseModel, IApplicationEntity
     {
         
         [ForeignKey("Reader")]

@@ -9,6 +9,7 @@ namespace Helpers.Consumer
 {
     public class BaseModelIntGenerate
     {
+        [Required]
         [Column("_generate")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Generate { get; set; }

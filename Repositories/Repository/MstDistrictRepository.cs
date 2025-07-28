@@ -1,3 +1,142 @@
+// using System;
+// using System.Collections.Generic;
+// using System.Threading.Tasks;
+// using Entities.Models;
+// using Microsoft.EntityFrameworkCore;
+// using Repositories.DbContexts;
+// using Microsoft.AspNetCore.Http;
+// using System.Security.Claims;
+
+// namespace Repositories.Repository
+// {
+//     public class MstDistrictRepository
+//     {
+//         private readonly BleTrackingDbContext _context;
+//         private readonly IHttpContextAccessor _httpContextAccessor;
+
+//         public MstDistrictRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+//         {
+//             _context = context;
+//             _httpContextAccessor = httpContextAccessor;
+//         }
+
+//          private (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
+//         {
+//             var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
+//             if (isSystemAdmin == true)
+//             {
+//                 return (null, true); // System admin tidak perlu filter ApplicationId
+//             }
+
+//             // Prioritas 1: Dari token Bearer (claim di JWT)
+//             var applicationIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+//             if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
+//             {
+//                 return (applicationIdFromToken, false);
+//             }
+
+//             // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
+//             // var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+//             // if (integration?.ApplicationId != null)
+//             // {
+//             //     return (integration.ApplicationId, false);
+//             // }
+
+//             return (null, false);
+//         }
+
+//         public async Task<MstDistrict> GetByIdAsync(Guid id)
+//         {
+//             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+//             // if (!isSystemAdmin && applicationId == null)
+//             //     throw new UnauthorizedAccessException("ApplicationId not found in context");
+//             var query = _context.MstDistricts
+//                 .Where(d => d.Id == id && d.Status != 0);
+//             if (!isSystemAdmin)
+//             {
+//                 query = query.Where(d => d.ApplicationId == applicationId);
+//             }
+//                 return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("District not found");
+//         }
+
+//             public async Task<MstFloorplan> GetFloorplanByIdAsync(Guid floorplanId)
+//         {
+//             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+//             if (!isSystemAdmin && applicationId == null)
+//                 throw new UnauthorizedAccessException("ApplicationId not found in context");
+
+//             var query = _context.MstFloorplans
+//                 .Where(f => f.Id == floorplanId && f.Status != 0);
+//             if (!isSystemAdmin)
+//             {
+//                 query = query.Where(f => f.ApplicationId == applicationId);
+//             }
+
+//             return await query.FirstOrDefaultAsync();
+//         }
+
+//         public async Task<IEnumerable<MstDistrict>> GetAllAsync()
+//         {
+//             return await _context.MstDistricts
+//                 .Where(d => d.Status != 0)
+//                 .ToListAsync();
+//         }
+
+//         public async Task<MstDistrict> AddAsync(MstDistrict district)
+//         {
+//             // Validasi ApplicationId
+//             var application = await _context.MstApplications
+//                 .FirstOrDefaultAsync(a => a.Id == district.ApplicationId && a.ApplicationStatus != 0);
+//             if (application == null)
+//                 throw new ArgumentException($"Application with ID {district.ApplicationId} not found.");
+
+//             _context.MstDistricts.Add(district);
+//             await _context.SaveChangesAsync();
+//             return district;
+//         }
+
+//         public async Task UpdateAsync(MstDistrict district)
+//         {
+//             // Validasi ApplicationId
+//             var application = await _context.MstApplications
+//                 .FirstOrDefaultAsync(a => a.Id == district.ApplicationId && a.ApplicationStatus != 0);
+//             if (application == null)
+//                 throw new ArgumentException($"Application with ID {district.ApplicationId} not found.");
+
+//             // _context.MstDistricts.Update(district);
+//             await _context.SaveChangesAsync();
+//         }
+
+//         public async Task DeleteAsync(Guid id)
+//         {
+//             var district = await _context.MstDistricts
+//                 .FirstOrDefaultAsync(d => d.Id == id && d.Status != 0);
+//             if (district == null)
+//                 throw new KeyNotFoundException("District not found");
+
+//             district.Status = 0;
+//             await _context.SaveChangesAsync();
+//         }
+
+//         public IQueryable<MstDistrict> GetAllQueryable()
+//         {
+//             return _context.MstDistricts
+//                 .Where(f => f.Status != 0)
+//                 .AsQueryable();
+//         }
+
+//         public async Task<IEnumerable<MstDistrict>> GetAllExportAsync()
+//         {
+//             return await _context.MstDistricts
+//                 .Where(d => d.Status != 0)
+//                 .ToListAsync();
+//         }
+//     }
+// }
+
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,57 +148,23 @@ using System.Security.Claims;
 
 namespace Repositories.Repository
 {
-    public class MstDistrictRepository
+    public class MstDistrictRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
         public MstDistrictRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
-            _httpContextAccessor = httpContextAccessor;
-        }
-
-         private (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
-        {
-            var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
-            if (isSystemAdmin == true)
-            {
-                return (null, true); // System admin tidak perlu filter ApplicationId
-            }
-
-            // Prioritas 1: Dari token Bearer (claim di JWT)
-            var applicationIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
-            if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
-            {
-                return (applicationIdFromToken, false);
-            }
-
-            // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
-            // var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
-            // if (integration?.ApplicationId != null)
-            // {
-            //     return (integration.ApplicationId, false);
-            // }
-
-            return (null, false);
         }
 
         public async Task<MstDistrict> GetByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            // if (!isSystemAdmin && applicationId == null)
-            //     throw new UnauthorizedAccessException("ApplicationId not found in context");
             var query = _context.MstDistricts
                 .Where(d => d.Id == id && d.Status != 0);
-            if (!isSystemAdmin)
-            {
-                query = query.Where(d => d.ApplicationId == applicationId);
-            }
-                return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("District not found");
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("District not found");
         }
 
-            public async Task<MstFloorplan> GetFloorplanByIdAsync(Guid floorplanId)
+        public async Task<MstFloorplan> GetFloorplanByIdAsync(Guid floorplanId)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             if (!isSystemAdmin && applicationId == null)
@@ -67,28 +172,24 @@ namespace Repositories.Repository
 
             var query = _context.MstFloorplans
                 .Where(f => f.Id == floorplanId && f.Status != 0);
-            if (!isSystemAdmin)
-            {
-                query = query.Where(f => f.ApplicationId == applicationId);
-            }
-
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             return await query.FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstDistrict>> GetAllAsync()
         {
-            return await _context.MstDistricts
-                .Where(d => d.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDistricts
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
 
         public async Task<MstDistrict> AddAsync(MstDistrict district)
         {
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == district.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {district.ApplicationId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            await ValidateApplicationIdAsync(district.ApplicationId);
+            ValidateApplicationIdForEntity(district, applicationId, isSystemAdmin);
 
             _context.MstDistricts.Add(district);
             await _context.SaveChangesAsync();
@@ -97,20 +198,22 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstDistrict district)
         {
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == district.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {district.ApplicationId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            await ValidateApplicationIdAsync(district.ApplicationId);
+            ValidateApplicationIdForEntity(district, applicationId, isSystemAdmin);
 
-            // _context.MstDistricts.Update(district);
+            _context.MstDistricts.Update(district);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var district = await _context.MstDistricts
-                .FirstOrDefaultAsync(d => d.Id == id && d.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDistricts
+                .Where(d => d.Id == id && d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var district = await query.FirstOrDefaultAsync();
             if (district == null)
                 throw new KeyNotFoundException("District not found");
 
@@ -120,20 +223,22 @@ namespace Repositories.Repository
 
         public IQueryable<MstDistrict> GetAllQueryable()
         {
-            return _context.MstDistricts
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDistricts
+                .Where(d => d.Status != 0);
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<MstDistrict>> GetAllExportAsync()
         {
-            return await _context.MstDistricts
-                .Where(d => d.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDistricts
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
     }
 }
-
 
 
 

@@ -153,9 +153,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(district.Name);
                             table.Cell().Element(CellStyle).Text(district.DistrictHost);
                             table.Cell().Element(CellStyle).Text(district.CreatedBy);
-                            table.Cell().Element(CellStyle).Text(district.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.UpdatedBy);
-                            table.Cell().Element(CellStyle).Text(district.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.Status);
                         }
 

@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace Data.ViewModels
 {
-    public class CardDto
+    public class CardDto : BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
-           public string? Name { get; set; }
+        public string? Name { get; set; }
         public string? Remarks { get; set; }
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
@@ -28,7 +28,7 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
     }
 
-    public class CardCreateDto
+    public class CardCreateDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }
@@ -45,7 +45,7 @@ namespace Data.ViewModels
         public bool? StatusCard { get; set; } = true;
     }
 
-    public class CardUpdateDto
+    public class CardUpdateDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }

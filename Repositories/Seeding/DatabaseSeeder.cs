@@ -456,7 +456,7 @@ namespace Repositories.Seeding
             {
                 var ctrlFaker = new Faker<MstAccessControl>()
                     .RuleFor(c => c.Id, f => Guid.NewGuid())
-                    .RuleFor(c => c.ControllerBrandId, f => context.MstBrands
+                    .RuleFor(c => c.BrandId, f => context.MstBrands
                         .Where(b => b.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()

@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class AlarmRecordTracking : BaseModel
+    public class AlarmRecordTracking : BaseModel, IApplicationEntity
     {
 
         [Required]
@@ -30,11 +30,9 @@ namespace Entities.Models
         [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        [Required]
         [Column("alarm_record_status")]
         public AlarmRecordStatus Alarm { get; set; }
 
-        [Required]
         [Column("action")]
         public ActionStatus Action { get; set; }
 
@@ -43,56 +41,46 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        [Required]
         [Column("idle_timestamp")]
-        public DateTime IdleTimestamp { get; set; }
+        public DateTime? IdleTimestamp { get; set; }
 
-        [Required]
         [Column("done_timestamp")]
-        public DateTime DoneTimestamp { get; set; }
+        public DateTime? DoneTimestamp { get; set; }
 
-        [Required]
         [Column("cancel_timestamp")]
-        public DateTime CancelTimestamp { get; set; }
+        public DateTime? CancelTimestamp { get; set; }
 
-        [Required]
         [Column("waiting_timestamp")]
-        public DateTime WaitingTimestamp { get; set; }
+        public DateTime? WaitingTimestamp { get; set; }
 
-        [Required]
         [Column("investigated_timestamp")]
-        public DateTime InvestigatedTimestamp { get; set; }
+        public DateTime? InvestigatedTimestamp { get; set; }
 
-        [Required]
         [Column("investigated_done_at")]
-        public DateTime InvestigatedDoneAt { get; set; }
+        public DateTime? InvestigatedDoneAt { get; set; }
 
         [StringLength(255)]
         [Column("idle_by")]
-        public string IdleBy { get; set; } = "";
+        public string? IdleBy { get; set; } 
 
         [StringLength(255)]
         [Column("done_by")]
-        public string DoneBy { get; set; } = "";
+        public string? DoneBy { get; set; } 
 
-        [Required]
         [StringLength(255)]
         [Column("cancel_by")]
-        public string CancelBy { get; set; } = "";
+        public string? CancelBy { get; set; } 
 
-        [Required]
         [StringLength(255)]
         [Column("waiting_by")]
-        public string WaitingBy { get; set; } = "";
+        public string? WaitingBy { get; set; } 
 
-        [Required]
         [StringLength(255)]
         [Column("investigated_by")]
-        public string InvestigatedBy { get; set; } = "";
+        public string? InvestigatedBy { get; set; }
 
-        [Required]
         [Column("investigated_result")]
-        public string InvestigatedResult { get; set; }
+        public string? InvestigatedResult { get; set; }
 
         public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }

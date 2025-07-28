@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class MstBleReaderDto
+    public class MstBleReaderDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -19,7 +19,7 @@ namespace Data.ViewModels
         public MstBrandDto Brand { get; set; }
     }
 
-    public class MstBleReaderCreateDto
+    public class MstBleReaderCreateDto : BaseModelDto
     {
         public Guid BrandId { get; set; }
         public string Name { get; set; }
@@ -28,7 +28,7 @@ namespace Data.ViewModels
         public string EngineReaderId { get; set; }
     }
 
-    public class MstBleReaderUpdateDto
+    public class MstBleReaderUpdateDto : BaseModelDto
     {
         public Guid BrandId { get; set; }
         public string Name { get; set; }

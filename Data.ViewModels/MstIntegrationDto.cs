@@ -1,7 +1,7 @@
 
 namespace Data.ViewModels
 {
-    public class MstIntegrationDto
+    public class MstIntegrationDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -22,7 +22,7 @@ namespace Data.ViewModels
         public MstBrandDto Brand { get; set; }
     }
 
-    public class MstIntegrationCreateDto
+    public class MstIntegrationCreateDto : BaseModelDto
     {
         public Guid BrandId { get; set; }
         public string IntegrationType { get; set; }
@@ -35,7 +35,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
     }
 
-    public class MstIntegrationUpdateDto
+    public class MstIntegrationUpdateDto : BaseModelDto
     {
         public Guid BrandId { get; set; }
         public string IntegrationType { get; set; }

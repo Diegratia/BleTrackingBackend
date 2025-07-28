@@ -8,18 +8,8 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstFloor
+    public class MstFloor : BaseModelWithTimeInt ,IApplicationEntity
     {
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("generate")]
-        public int Generate { get; set; } 
-
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; } = Guid.NewGuid(); 
-
-      
         [ForeignKey("Building")]
         [Column("building_id")]
         public Guid BuildingId { get; set; }
@@ -56,27 +46,15 @@ namespace Entities.Models
         [Column("engine_floor_id")]
         public long EngineFloorId { get; set; }
 
-   
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-    
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-     
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-     
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
-    
         [Column("status")]
         public int? Status { get; set; } = 1;
 
+        [Required]
+        [ForeignKey("Application")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
+        public virtual MstApplication Application{ get; set; }
         public virtual MstBuilding Building { get; set; }
         public virtual ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
         public virtual ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
 {
-    public class MstFloorDto
+    public class MstFloorDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -24,7 +24,7 @@ namespace Data.ViewModels
         public MstBuildingDto Building { get; set; }
     }
 
-    public class MstFloorCreateDto
+    public class MstFloorCreateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
         public string Name { get; set; }
@@ -37,7 +37,7 @@ namespace Data.ViewModels
         public long EngineFloorId { get; set; }
     }
 
-    public class MstFloorUpdateDto
+    public class MstFloorUpdateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
         public string Name { get; set; }

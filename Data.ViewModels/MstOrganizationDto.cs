@@ -3,7 +3,7 @@ using System;
 namespace Data.ViewModels
 {
 
-    public class MstOrganizationDto
+    public class MstOrganizationDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public int Generate { get; set; }
@@ -18,7 +18,7 @@ namespace Data.ViewModels
         public int? Status { get; set; }
     }
 
-    public class MstOrganizationCreateDto
+    public class MstOrganizationCreateDto : BaseModelDto
     {
         public string Code { get; set; }
         public string Name { get; set; }
@@ -26,7 +26,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
     }
 
-    public class MstOrganizationUpdateDto
+    public class MstOrganizationUpdateDto : BaseModelDto
     {
         public string Code { get; set; }
         public string Name { get; set; }
