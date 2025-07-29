@@ -12,6 +12,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstBleReader/out ./
 
-EXPOSE 5008
+EXPOSE 10008
 
 ENTRYPOINT ["dotnet", "MstBleReader.dll"]

@@ -15,5 +15,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/VisitorBlacklistArea/out ./
 
-EXPOSE 5020
+EXPOSE 10020
 ENTRYPOINT ["dotnet", "VisitorBlacklistArea.dll"] 

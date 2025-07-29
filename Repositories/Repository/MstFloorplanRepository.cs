@@ -141,6 +141,7 @@ namespace Repositories.Repository
                 MaskedAreaCount = f.FloorplanMaskedAreas.Count()
             }).AsNoTracking();
         }
+        
 
         private async Task ValidateFloorOwnershipAsync(Guid floorId, Guid appId)
         {

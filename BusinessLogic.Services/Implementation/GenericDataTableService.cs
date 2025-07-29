@@ -266,7 +266,8 @@ namespace BusinessLogic.Services.Implementation
                     .Select(f => new
                     {
                         Entity = f,
-                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0)
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0),
+                        DeviceCount = f.FloorplanDevices.Count(m => m.Status != 0)
                     });
             }
             else
@@ -279,6 +280,10 @@ namespace BusinessLogic.Services.Implementation
             if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount")
             {
                 projectionQuery = projectionQuery.OrderBy($"MaskedAreaCount {sortDirection}");
+            }
+            if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "DeviceCount")
+            {
+                projectionQuery = projectionQuery.OrderBy($"DeviceCount {sortDirection}");
             }
             else
             {
@@ -298,11 +303,15 @@ namespace BusinessLogic.Services.Implementation
                 {
                     var dto = dtos.ElementAt(index);
                     var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount").GetValue(d);
+                    var deviceCount = (int)d.GetType().GetProperty("DeviceCount").GetValue(d);
                     dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
+                    dto.GetType().GetProperty("DeviceCount")?.SetValue(dto, deviceCount);
                     return dto;
                 }).ToList();
                 dtos = dtosWithCount;
             }
+
+            
             
             return new
             {

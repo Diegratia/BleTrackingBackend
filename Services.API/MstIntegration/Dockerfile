@@ -14,5 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstIntegration/out ./
 
-EXPOSE 5015
+EXPOSE 10015
 ENTRYPOINT ["dotnet", "MstIntegration.dll"] 

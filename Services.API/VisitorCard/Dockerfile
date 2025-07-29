@@ -15,5 +15,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/VisitorCard/out ./
 
-EXPOSE 5023
+EXPOSE 10023
 ENTRYPOINT ["dotnet", "VisitorCard.dll"] 

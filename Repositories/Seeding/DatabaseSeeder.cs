@@ -232,11 +232,11 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(f => f.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
+                    // .RuleFor(f => f.ApplicationId, f => context.MstApplications
+                    //     .Where(a => a.ApplicationStatus != 0)
+                    //     .OrderBy(r => Guid.NewGuid())
+                    //     .First()
+                    //     .Id)
                     .RuleFor(f => f.CreatedBy, f => "System")
                     .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(f => f.UpdatedBy, f => "System")

@@ -14,5 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstAccessControl/out ./
 
-EXPOSE 5006
+EXPOSE 10006
 ENTRYPOINT ["dotnet", "MstAccessControl.dll"] 
