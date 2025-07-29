@@ -131,7 +131,7 @@ builder.Services.AddScoped<MstBleReaderRepository>();
 //     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:MstBrandService"] ?? "http://localhost:5009");
 // }).AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>();
 
-var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ??
+var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ?? "5008" ??
            builder.Configuration["Ports:MstBleReaderService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -167,6 +167,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

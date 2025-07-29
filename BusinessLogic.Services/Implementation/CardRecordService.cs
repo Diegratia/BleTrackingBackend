@@ -108,7 +108,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "VisitorName" };
-            var validSortColumns = new[] { "Name", "VisitorName", "CheckinAt", "CheckoutAt", "VisitorType", "Status" };
+            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp","VisitorType", "Status", "VisitorType" };
 
             var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
                 query,
@@ -174,7 +174,7 @@ namespace BusinessLogic.Services.Implementation
                         foreach (var record in records)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(record.VisitorName);
+                            table.Cell().Element(CellStyle).Text(record.Name);
                             table.Cell().Element(CellStyle).Text(record.CardId);
                             table.Cell().Element(CellStyle).Text(record.Visitor);
                             table.Cell().Element(CellStyle).Text(record.Member);
@@ -234,7 +234,7 @@ namespace BusinessLogic.Services.Implementation
             foreach (var record in records)
             {
                 worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = record.VisitorName;
+                worksheet.Cell(row, 2).Value = record.Name;
                 worksheet.Cell(row, 3).Value = record.CardId.ToString();
                 worksheet.Cell(row, 4).Value = record.Visitor.Name;
                 worksheet.Cell(row, 5).Value = record.Member.Name;

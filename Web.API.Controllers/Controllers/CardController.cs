@@ -12,27 +12,26 @@ namespace Web.API.Controllers.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize ("RequirePrimaryAdminOrSystemRole")]
-    public class VisitorCardController : ControllerBase
+    public class CardController : ControllerBase
     {
-        private readonly IVisitorCardService _visitorCardService;
+        private readonly ICardService _service;
 
-        public VisitorCardController(IVisitorCardService visitorCardService)
+        public CardController(ICardService service)
         {
-            _visitorCardService = visitorCardService;
+            _service = service;
         }
 
         [HttpGet]
-
         public async Task<IActionResult> GetAll()
         {
             try
             {
-                var visitorCards = await _visitorCardService.GetAllAsync();
+                var cards = await _service.GetAllAsync();
                 return Ok(new
                 {
                     success = true,
-                    msg = "Visitor Cards retrieved successfully",
-                    collection = new { data = visitorCards },
+                    msg = "Card retrieved successfully",
+                    collection = new { data = cards },
                     code = 200
                 });
             }
@@ -54,13 +53,13 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var visitorCard = await _visitorCardService.GetByIdAsync(id);
-                if (visitorCard == null)
+                var card = await _service.GetByIdAsync(id);
+                if (card == null)
                 {
                     return NotFound(new
                     {
                         success = false,
-                        msg = "Visitor Card not found",
+                        msg = "Card not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -68,8 +67,8 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = " Visitor Card retrieved successfully",
-                    collection = new { data = visitorCard },
+                    msg = " Card retrieved successfully",
+                    collection = new { data = card },
                     code = 200
                 });
             }
@@ -87,7 +86,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBleReader
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] VisitorCardCreateDto visitorCardDto)
+        public async Task<IActionResult> Create([FromBody] CardCreateDto cardDto)
         {
             if (!ModelState.IsValid)
             {
@@ -103,12 +102,12 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdVisitorCard = await _visitorCardService.CreateAsync(visitorCardDto);
+                var createdCard = await _service.CreateAsync(cardDto);
                 return StatusCode(201, new
                 {
                     success = true,
-                    msg = "Visitor Card created successfully",
-                    collection = new { data = createdVisitorCard },
+                    msg = "Card created successfully",
+                    collection = new { data = createdCard },
                     code = 201
                 });
             }
@@ -125,7 +124,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] VisitorCardUpdateDto visitorCardDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] CardUpdateDto CardDto)
         {
             if (!ModelState.IsValid)
             {
@@ -141,11 +140,11 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _visitorCardService.UpdateAsync(id, visitorCardDto);
+                await _service.UpdateAsync(id, CardDto);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Visitor Card updated successfully",
+                    msg = "Card updated successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });
@@ -155,7 +154,7 @@ namespace Web.API.Controllers.Controllers
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Visitor Card not found",
+                    msg = "Card not found",
                     collection = new { data = (object)null },
                     code = 404
                 });
@@ -178,11 +177,11 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _visitorCardService.DeleteAsync(id);
+                await _service.DeleteAsync(id);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Visitor Card deleted successfully",
+                    msg = "Card deleted successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });
@@ -192,7 +191,7 @@ namespace Web.API.Controllers.Controllers
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Visitor Card not found",
+                    msg = "Card not found",
                     collection = new { data = (object)null },
                     code = 404
                 });
@@ -208,9 +207,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
-         [HttpPost("{filter}")]
-         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+
+        [HttpPost("{filter}")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -226,11 +225,11 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _visitorCardService.FilterAsync(request);
+                var result = await _service.FilterAsync(request);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Visitor Card filtered successfully",
+                    msg = "Card filtered successfully",
                     collection = result,
                     code = 200
                 });
@@ -251,6 +250,48 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpGet("export/pdf")]
+        public async Task<IActionResult> ExportPdf()
+        {
+            try
+            {
+                var pdfBytes = await _service.ExportPdfAsync();
+                return File(pdfBytes, "application/pdf", "Card_Report.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate PDF: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("export/excel")]
+        public async Task<IActionResult> ExportExcel()
+        {
+            try
+            {
+                var excelBytes = await _service.ExportExcelAsync();
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Card_Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

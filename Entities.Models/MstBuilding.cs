@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstBuilding : BaseModel
+    public class MstBuilding : BaseModelWithTimeInt, IApplicationEntity
     {
 
         [Required]
@@ -23,22 +23,6 @@ namespace Entities.Models
         [Column("application_id")]
         [ForeignKey("Application")]
         public Guid ApplicationId { get; set; }
-
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; } = "";
-
-        [Required]
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; } = "";
-
-        [Required]
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [Column("status")]

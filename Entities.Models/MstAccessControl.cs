@@ -8,12 +8,12 @@ using Helpers.Consumer;
 
 namespace Entities.Models 
 {
-    public class MstAccessControl : BaseModel
+    public class MstAccessControl : BaseModelWithTime, IApplicationEntity
     {
         [Required]
         [ForeignKey("Brand")]
-        [Column("controller_brand_id")]
-        public Guid ControllerBrandId { get; set; }
+        [Column("brand_id")]
+        public Guid BrandId { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -52,23 +52,6 @@ namespace Entities.Models
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-        [Required]
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Required]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-        [Required]
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [Column("status")]

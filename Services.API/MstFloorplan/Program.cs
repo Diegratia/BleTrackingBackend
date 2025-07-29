@@ -165,8 +165,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseApiKeyAuthentication();
+// app.UseAuthentication();
+// app.UseAuthorization();
 app.MapControllers();
 app.Run();
 

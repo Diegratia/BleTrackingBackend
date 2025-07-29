@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class TrackingTransaction 
+    public class TrackingTransaction : IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -21,7 +21,7 @@ namespace Entities.Models
         [Required]
         [ForeignKey("Reader")]
         [Column("reader_id")]
-        public Guid ReaderId { get; set; } // rear_reader, reader terdekat
+        public Guid ReaderId { get; set; } 
 
         [Required]
         [Column("card_id")]
@@ -56,6 +56,12 @@ namespace Entities.Models
         [Column("battery")]
         public long Battery { get; set; }
 
+        [Required]
+        [ForeignKey("ApplicationId")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
+        public virtual MstApplication Application { get; set; }
         public virtual MstBleReader Reader { get; set; }
 
         public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }

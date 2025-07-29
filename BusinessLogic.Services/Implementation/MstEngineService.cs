@@ -77,7 +77,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _engineRepository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "EngineId", "Status" };
+            var validSortColumns = new[] { "Name", "EngineId", "Status", "Port", "IsLive", "LastLive" };
 
             var filterService = new GenericDataTableService<MstEngine, MstEngineDto>(
                 query,

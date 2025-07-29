@@ -22,7 +22,7 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(u => u.Id == id && u.StatusActive != 0);
         }
 
-            public async Task<List<User>> GetAllAsync()
+        public async Task<List<User>> GetAllAsync()
         {
             return await _context.Users
                 .Include(u => u.Group)
@@ -36,11 +36,17 @@ namespace Repositories.Repository
                 .Include(u => u.Group)
                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
         }
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<User> GetByEmailConfirmPasswordAsync(string email)
         {
             return await _context.Users
                 .Include(u => u.Group)
-                .FirstOrDefaultAsync(u => u.Email == email && u.StatusActive != 0);
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 0 && u.StatusActive == 0);
+        }
+        public async Task<User> GetByEmailSetPasswordAsync(string email)
+        {
+            return await _context.Users
+                .Include(u => u.Group)
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 1 && u.StatusActive == 0);
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -63,3 +69,4 @@ namespace Repositories.Repository
         }
     }
 }
+

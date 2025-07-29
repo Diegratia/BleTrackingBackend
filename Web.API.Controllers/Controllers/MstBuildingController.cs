@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -87,7 +88,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBuilding
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MstBuildingCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] MstBuildingCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -126,9 +127,9 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBuilding/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] MstBuildingUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto mstBuildingDto)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || (mstBuildingDto.Image != null && mstBuildingDto.Image.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -142,13 +143,23 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _service.UpdateAsync(id, dto); // No var assignment
+                var updatedBuilding = await _service.UpdateAsync(id, mstBuildingDto);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Integration updated successfully",
+                    msg = "Building updated successfully",
+                    collection = new { data = updatedBuilding },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Floor not found",
                     collection = new { data = (object)null },
-                    code = 204
+                    code = 404
                 });
             }
             catch (Exception ex)
@@ -186,6 +197,64 @@ namespace Web.API.Controllers.Controllers
                     msg = "Building not found",
                     collection = new { data = (object)null },
                     code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+         [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .xlsx files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var buildings = await _service.ImportAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Buildings imported successfully",
+                    collection = new { data = buildings },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
                 });
             }
             catch (Exception ex)

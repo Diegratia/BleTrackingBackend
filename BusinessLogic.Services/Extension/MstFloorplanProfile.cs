@@ -12,7 +12,9 @@ namespace BusinessLogic.Services.Extension
     {
         public MstFloorplanProfile()
         {
-            CreateMap<MstFloorplan, MstFloorplanDto>();
+            CreateMap<MstFloorplan, MstFloorplanDto>()
+           .ForMember(dest => dest.MaskedAreaCount, opt => opt.MapFrom(src => src.FloorplanMaskedAreas.Count(m => m.Status != 0)))
+            .ForMember(dest => dest.DeviceCount, opt => opt.MapFrom(src => src.FloorplanDevices.Count(m => m.Status != 0)));
 
             CreateMap<MstFloorplanCreateDto, MstFloorplan>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

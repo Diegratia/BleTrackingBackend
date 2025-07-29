@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
 using Data.ViewModels;
 using System.Text.Json;
+using Entities.Models;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -35,8 +36,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            if (request.Length < 1)
-                throw new ArgumentException("Length must be greater than or equal to 1.");
+            // if (request.Length < 1)
+            //     throw new ArgumentException("Length must be greater than or equal to 1.");
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
@@ -48,7 +49,7 @@ namespace BusinessLogic.Services.Implementation
 
             var totalRecords = await query.CountAsync();
 
-            // search
+            // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
                 var search = request.SearchValue.ToLower();
@@ -66,7 +67,7 @@ namespace BusinessLogic.Services.Implementation
                 query = query.Where(predicates, search);
             }
 
-            // Terapkan filter tanggal
+            // Date filter
             if (request.DateFilters != null && request.DateFilters.Any())
             {
                 foreach (var dateFilter in request.DateFilters)
@@ -78,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
                     if (filter.DateFrom.HasValue && filter.DateTo.HasValue)
                     {
                         query = query.Where($"{dateFilter.Key} >= @0 && {dateFilter.Key} <= @1",
-                            filter.DateFrom.Value, filter.DateTo.Value.AddDays(1).AddTicks(-1)); 
+                            filter.DateFrom.Value, filter.DateTo.Value.AddDays(1).AddTicks(-1));
                     }
                     else if (filter.DateFrom.HasValue)
                     {
@@ -91,58 +92,98 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // Terapkan filter properti kustom
+            // Custom filters
             if (request.Filters != null && request.Filters.Any())
             {
                 foreach (var filter in request.Filters)
                 {
                     if (string.IsNullOrEmpty(filter.Key))
                         continue;
+                    
 
                     var value = filter.Value;
+                    // if (value == null || value.ToString() == "empty")
+                    
+                    // return new
+                    // {
+                    //     draw = request.Draw,
+                    //     recordsTotal = totalRecords,
+                    //     recordsFiltered = 0,
+                    //     data = "",
+                    // };
                     if (value == null)
                         continue;
-
-                    // Handle JsonElement untuk mendukung deserialisasi dari System.Text.Json
+            
                     if (value is JsonElement jsonElement)
                     {
-                        // Coba konversi ke Guid untuk kolom seperti OrganizationId
-                        if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase) &&
-                            jsonElement.ValueKind == JsonValueKind.String &&
-                            Guid.TryParse(jsonElement.GetString(), out var guidValue))
+                        if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                            query = query.Where($"{filter.Key} == @0", guidValue);
-                        }
-                        // Coba konversi ke enum jika kolom adalah enum
-                        else if (_enumColumns.ContainsKey(filter.Key) && jsonElement.ValueKind == JsonValueKind.String)
-                        {
-                            var enumType = _enumColumns[filter.Key];
-                            var stringValue = jsonElement.GetString();
-                            if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                            // Handle single Guid or array of Guids
+                            if (jsonElement.ValueKind == JsonValueKind.Array)
                             {
-                                query = query.Where($"{filter.Key} == @0", enumValue);
+                                var guidValues = jsonElement.EnumerateArray()
+                                    .Select(e => Guid.TryParse(e.GetString(), out var guid) ? guid : (Guid?)null)
+                                    .Where(g => g.HasValue)
+                                    .Select(g => g.Value)
+                                    .ToArray();
+                                if (guidValues.Any())
+                                {
+                                    query = query.Where($"@0.Contains({filter.Key})", guidValues);
+                                }
+                            }
+                            else if (jsonElement.ValueKind == JsonValueKind.String && Guid.TryParse(jsonElement.GetString(), out var guidValue))
+                            {
+                                query = query.Where($"{filter.Key} == @0", guidValue);
                             }
                             else
                             {
-                                throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                var stringValue = jsonElement.GetString();
+                                query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
-                        // Coba konversi ke string untuk kolom non-enum
+                        else if (_enumColumns.ContainsKey(filter.Key))
+                        {
+                            var enumType = _enumColumns[filter.Key];
+                            if (jsonElement.ValueKind == JsonValueKind.Array)
+                            {
+                                var enumValues = jsonElement.EnumerateArray()
+                                    .Select(e => Enum.TryParse(enumType, e.GetString(), true, out var enumValue) ? enumValue : null)
+                                    .Where(e => e != null)
+                                    .ToArray();
+                                if (enumValues.Any())
+                                {
+                                    query = query.Where($"@0.Contains({filter.Key})", enumValues);
+                                }
+                            }
+                            else if (jsonElement.ValueKind == JsonValueKind.String)
+                            {
+                                var stringValue = jsonElement.GetString();
+                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                                {
+                                    query = query.Where($"{filter.Key} == @0", enumValue);
+                                }
+                                else
+                                {
+                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                }
+                            }
+                            else
+                            {
+                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
+                            }
+                        }
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
                             query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString().ToLower());
                         }
-                        // Coba konversi ke int
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
                         {
                             query = query.Where($"{filter.Key} == @0", intValue);
                         }
-                        // Coba konversi ke float
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetSingle(out var floatValue))
                         {
                             query = query.Where($"{filter.Key} == @0", floatValue);
                         }
-                        // Coba konversi ke bool
                         else if (jsonElement.ValueKind == JsonValueKind.True || jsonElement.ValueKind == JsonValueKind.False)
                         {
                             query = query.Where($"{filter.Key} == @0", jsonElement.GetBoolean());
@@ -152,10 +193,28 @@ namespace BusinessLogic.Services.Implementation
                             throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
                         }
                     }
-                    // Handle tipe lain seperti biasa
+                    else if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(filter.Key))
+                    {
+                        var enumType = _enumColumns[filter.Key];
+                        var enumValues = enumCollection
+                            .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var enumValue) ? enumValue : null)
+                            .Where(e => e != null)
+                            .ToArray();
+                        if (enumValues.Any())
+                        {
+                            query = query.Where($"@0.Contains({filter.Key})", enumValues);
+                        }
+                    }
+                    else if (value is IEnumerable<Guid> guidCollection)
+                    {
+                        var guidValues = guidCollection.ToArray();
+                        if (guidValues.Any())
+                        {
+                            query = query.Where($"@0.Contains({filter.Key})", guidValues);
+                        }
+                    }
                     else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
                     {
-                        // Coba konversi ke enum jika kolom adalah enum
                         if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -196,20 +255,55 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // Total setelah filter
+            // Total after filter
             var filteredRecords = await query.CountAsync();
 
-            // Pengurutan
+            // Proyeksi sementara
+            IQueryable<object> projectionQuery;
+            if (typeof(TModel) == typeof(MstFloorplan))
+            {
+                projectionQuery = query.Cast<MstFloorplan>()
+                    .Select(f => new
+                    {
+                        Entity = f,
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0)
+                    });
+            }
+            else
+            {
+                projectionQuery = query.Select(f => new { Entity = f, MaskedAreaCount = 0 });
+            }
+
+            // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
-            query = query.OrderBy($"{request.SortColumn} {sortDirection}");
+            if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount")
+            {
+                projectionQuery = projectionQuery.OrderBy($"MaskedAreaCount {sortDirection}");
+            }
+            else
+            {
+                projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
+            }
 
             // Paging
-            query = query.Skip(request.Start).Take(request.Length);
+            projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
 
-            // Ambil data
-            var data = await query.ToListAsync();
-            var dtos = _mapper.Map<IEnumerable<TDto>>(data);
+            // Execute query
+            var data = await projectionQuery.ToListAsync();
+            var dtos = _mapper.Map<IEnumerable<TDto>>(data.Select(d => d.GetType().GetProperty("Entity").GetValue(d)));
 
+            if (typeof(TModel) == typeof(MstFloorplan))
+            {
+                var dtosWithCount = data.Select((d, index) =>
+                {
+                    var dto = dtos.ElementAt(index);
+                    var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount").GetValue(d);
+                    dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
+                    return dto;
+                }).ToList();
+                dtos = dtosWithCount;
+            }
+            
             return new
             {
                 draw = request.Draw,

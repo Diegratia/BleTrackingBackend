@@ -22,6 +22,12 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(f => f.Id == floorId && f.Status != 0);
         }
 
+        public async Task<MstFloorplan> GetFloorplanByIdAsync(Guid floorplanId)
+        {
+            return await _context.MstFloorplans
+                .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
+        }
+
         public async Task<FloorplanMaskedArea> GetByIdAsync(Guid id)
         {
             return await _context.FloorplanMaskedAreas

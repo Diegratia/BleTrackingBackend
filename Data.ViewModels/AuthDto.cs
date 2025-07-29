@@ -1,4 +1,5 @@
 using System;
+using Microsoft.AspNetCore.Identity;
 
 namespace Data.ViewModels
 {
@@ -17,16 +18,37 @@ namespace Data.ViewModels
         public string Email { get; set; }
         public Guid GroupId { get; set; }
         public Guid ApplicationId { get; set; }
-        public bool IsEmailConfirmed { get; set; }
+        public string LevelPriority { get; set; } 
+        public int IsEmailConfirmed { get; set; }
         public string StatusActive { get; set; }
     }
+
+    // public class RegisterDto
+    // {
+    //     public string Username { get; set; }
+    //     public string Email { get; set; }
+    //     public string Password { get; set; }
+    //     public Guid GroupId { get; set; }
+    // }
 
     public class RegisterDto
     {
         public string Username { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
         public Guid GroupId { get; set; }
+    }
+
+    public class ConfirmEmailDto
+    {
+        public string Email { get; set; }
+        public string ConfirmationCode { get; set; }
+    }
+
+    public class SetPasswordDto
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
     }
 
     public class UserGroupDto
@@ -56,3 +78,5 @@ namespace Data.ViewModels
         public int? StatusActive { get; set; }
     }
 }
+
+

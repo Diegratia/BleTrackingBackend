@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Entities.Models
 {
-    public class Visitor : BaseModel
+    public class Visitor : BaseModel, IApplicationEntity
     {
         [Required]
         [StringLength(255)]
@@ -114,7 +114,6 @@ namespace Entities.Models
         public virtual MstDepartment Department { get; set; }
         public virtual MstDistrict District { get; set; }
         public virtual MstApplication Application { get; set; }
-        public virtual AlarmRecordTracking AlarmRecordTracking { get; set; }
         public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
         public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();

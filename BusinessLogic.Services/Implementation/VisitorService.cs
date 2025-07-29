@@ -177,13 +177,14 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name" }; 
-            var validSortColumns = new[] { "Name" , "Organization.Name", "District.Name", "Department.Name",  "Gender", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+            var validSortColumns = new[] { "Name" , "Organization.Name", "District.Name", "Department.Name",  "Gender", "VisitorType", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,
                 _mapper,
                 searchableColumns,
                 validSortColumns);
+
 
             return await filterService.FilterAsync(request);
         }

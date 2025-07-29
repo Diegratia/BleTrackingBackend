@@ -153,13 +153,25 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = string.Empty;
     });
 }
 
 app.UseCors("AllowAll");
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+Directory.CreateDirectory(uploadsPath);
+
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/BuildingImages"
+});
+
+
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

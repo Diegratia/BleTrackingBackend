@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace Data.ViewModels
 {
-    public class TrxVisitorDto
+    public class TrxVisitorDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public DateTime CheckedInAt { get; set; }
@@ -32,7 +32,7 @@ namespace Data.ViewModels
         public Guid VisitorId { get; set; }
     }
 
-    public class TrxVisitorCreateDto
+    public class TrxVisitorCreateDto : BaseModelDto
     {
         public DateTime CheckedInAt { get; set; }
         public DateTime CheckedOutAt { get; set; }
@@ -57,7 +57,7 @@ namespace Data.ViewModels
         public Guid VisitorId { get; set; }
     }
     
-      public class TrxVisitorUpdateDto
+      public class TrxVisitorUpdateDto : BaseModelDto
     {
         public DateTime CheckedInAt { get; set; }
         public DateTime CheckedOutAt { get; set; }

@@ -8,8 +8,13 @@ using Data.ViewModels;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Globalization;
+using System.Linq;
+using System.IO;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -24,6 +29,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstBuildingRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
 
         public MstBuildingService(MstBuildingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
@@ -46,8 +53,38 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var building = _mapper.Map<MstBuilding>(createDto);
+            if (createDto.Image != null && createDto.Image.Length > 0)
+            {
+                if (string.IsNullOrEmpty(createDto.Image.ContentType) || !_allowedImageTypes.Contains(createDto.Image.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (createDto.Image.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 1 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                Directory.CreateDirectory(uploadDir);
+
+                var fileExtension = Path.GetExtension(createDto.Image.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createDto.Image.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
+
+                building.Image = $"/Uploads/BuildingImages/{fileName}";
+            }
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
             building.UpdatedBy = username;
@@ -57,17 +94,65 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
-        public async Task UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
+        public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
 
+            if (updateDto.Image != null && updateDto.Image.Length > 0)
+            {
+                if (string.IsNullOrEmpty(updateDto.Image.ContentType) || !_allowedImageTypes.Contains(updateDto.Image.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (updateDto.Image.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 1 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                Directory.CreateDirectory(uploadDir);
+
+                if (!string.IsNullOrEmpty(building.Image))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    if (File.Exists(oldFilePath))
+                    {
+                        try
+                        {
+                            File.Delete(oldFilePath);
+                        }
+                        catch (IOException ex)
+                        {
+                            throw new IOException("Failed to delete old image file.", ex);
+                        }
+                    }
+                }
+
+                var fileExtension = Path.GetExtension(updateDto.Image.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await updateDto.Image.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
+
+                building.Image = $"/Uploads/BuildingImages/{fileName}";
+            }
+
             _mapper.Map(updateDto, building);
             building.UpdatedBy = username;
 
             await _repository.UpdateAsync(building);
+            
+            return _mapper.Map<MstBuildingDto>(building);
         }
 
         public async Task DeleteAsync(Guid id)
@@ -75,7 +160,49 @@ namespace BusinessLogic.Services.Implementation
             var building = await _repository.GetByIdAsync(id);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             building.UpdatedBy = username;
+            building.Status = 0;
             await _repository.DeleteAsync(id);
+        }
+
+         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
+        {
+            var buildings = new List<MstBuilding>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            int rowNumber = 2; 
+            foreach (var row in rows)
+            {
+
+                var building = new MstBuilding
+                {
+                    Id = Guid.NewGuid(),
+                    Name = row.Cell(1).GetValue<string>(),
+                    Image = row.Cell(2).GetValue<string>(),
+                    ApplicationId = Guid.Parse(userApplicationId),
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                buildings.Add(building);
+                rowNumber++;
+            }
+
+            // Simpan ke database
+            foreach (var building in buildings)
+            {
+                await _repository.AddAsync(building);
+            }
+
+            return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

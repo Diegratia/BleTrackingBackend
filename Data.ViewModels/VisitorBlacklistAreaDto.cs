@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class VisitorBlacklistAreaDto
+    public class VisitorBlacklistAreaDto : BaseModelDto
     {
         public long Generate { get; set; } 
 
@@ -17,7 +17,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaCreateDto
+    public class VisitorBlacklistAreaCreateDto: BaseModelDto
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }
@@ -26,7 +26,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaUpdateDto
+    public class VisitorBlacklistAreaUpdateDto : BaseModelDto
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }

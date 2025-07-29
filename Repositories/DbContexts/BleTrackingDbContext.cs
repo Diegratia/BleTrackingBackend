@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Entities.Models;
 using Helpers.Consumer;
 
+
 namespace Repositories.DbContexts
 {
     public class BleTrackingDbContext : DbContext
@@ -30,9 +31,9 @@ namespace Repositories.DbContexts
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
         public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
-        public DbSet<VisitorCard> VisitorCards { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
+        public DbSet<Card> Cards{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -65,9 +66,9 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
             modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
-            modelBuilder.Entity<VisitorCard>().ToTable("visitor_card");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
+            modelBuilder.Entity<Card>().ToTable("card");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
@@ -282,14 +283,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
                 entity.Property(e => e.StatusEmployee)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v == StatusEmployee.NonActive ? "non-active" : v.ToString().ToLower(),
                         v => v == "non-active" ? StatusEmployee.NonActive : (StatusEmployee)Enum.Parse(typeof(StatusEmployee), v, true)
@@ -327,10 +326,16 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstFloor>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.BuildingId).HasMaxLength(36);
                 entity.Property(m => m.Status)
                     .IsRequired()
                     .HasDefaultValue(1);
+
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Building)
                     .WithMany()
@@ -359,6 +364,12 @@ namespace Repositories.DbContexts
                 entity.Property(m => m.Status)
                     .IsRequired()
                     .HasDefaultValue(1);
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // Visitor
@@ -371,7 +382,6 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
@@ -404,6 +414,11 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(v => v.OrganizationId)
                     .OnDelete(DeleteBehavior.NoAction);
+                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(v => v.PersonId);
                 entity.HasIndex(v => v.Email);
@@ -416,6 +431,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
 
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasOne(v => v.FloorplanMaskedArea)
                     .WithMany()
                     .HasForeignKey(v => v.FloorplanMaskedAreaId)
@@ -425,6 +446,8 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(v => v.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
+                
+                
             });
 
             // MstBleReader
@@ -432,6 +455,12 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.BrandId).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Brand)
                     .WithMany()
@@ -457,6 +486,11 @@ namespace Repositories.DbContexts
                         v => v == AlarmStatus.NonActive ? "non-active" : v.ToString().ToLower(),
                         v => v == "non-active" ? AlarmStatus.NonActive : (AlarmStatus)Enum.Parse(typeof(AlarmStatus), v, true)
                     );
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(t => t.Reader)
                     .WithMany()
@@ -495,28 +529,28 @@ namespace Repositories.DbContexts
                         v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)
                     );
 
-                // Relasi one-to-one dengan Visitor
+                // Relasi one-to-many dengan Visitor
                 entity.HasOne(a => a.Visitor)
-                    .WithOne(v => v.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.VisitorId)
+                    .WithMany()
+                    .HasForeignKey(a => a.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan MstBleReader
+                // Relasi one-to-many dengan MstBleReader
                 entity.HasOne(a => a.Reader)
-                    .WithOne(r => r.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.ReaderId)
+                   .WithMany()
+                    .HasForeignKey(a => a.ReaderId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan FloorplanMaskedArea
+                // Relasi one-to-many dengan FloorplanMaskedArea
                 entity.HasOne(a => a.FloorplanMaskedArea)
-                    .WithOne(f => f.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.FloorplanMaskedAreaId)
+                   .WithMany()
+                    .HasForeignKey(a => a.FloorplanMaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Relasi one-to-one dengan MstApplication
+                // Relasi one-to-many dengan MstApplication
                 entity.HasOne(a => a.Application)
-                    .WithOne(m => m.AlarmRecordTracking)
-                    .HasForeignKey<AlarmRecordTracking>(a => a.ApplicationId)
+                    .WithMany()
+                    .HasForeignKey(a => a.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(a => a.Generate)
@@ -529,7 +563,6 @@ namespace Repositories.DbContexts
             {
                 entity.ToTable("floorplan_device");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Type).HasConversion(v => v.ToString().ToLower(), v => (DeviceType)Enum.Parse(typeof(DeviceType), v, true));
                 entity.Property(e => e.FloorplanId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.AccessCctvId).HasMaxLength(36).IsRequired();
@@ -537,8 +570,6 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.AccessControlId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.UpdatedBy).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.DeviceStatus).HasConversion(v => v.ToString().ToLower(), v => (DeviceStatus)Enum.Parse(typeof(DeviceStatus), v, true));
                 entity.Property(e => e.Status).IsRequired();
 
@@ -558,11 +589,7 @@ namespace Repositories.DbContexts
             {
                 entity.ToTable("mst_building");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.Name).IsRequired();
-                entity.Property(e => e.Image).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(255);
-                entity.Property(e => e.UpdatedBy).HasMaxLength(255);
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
 
                 entity.HasOne(b => b.Application).WithMany().HasForeignKey(b => b.ApplicationId).OnDelete(DeleteBehavior.NoAction);
@@ -576,11 +603,8 @@ namespace Repositories.DbContexts
             {
                 entity.ToTable("mst_floorplan");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(255);
-                entity.Property(e => e.UpdatedBy).HasMaxLength(255);
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
 
                 entity.HasOne(f => f.Floor).WithMany().HasForeignKey(f => f.FloorId).OnDelete(DeleteBehavior.NoAction);
@@ -609,10 +633,6 @@ namespace Repositories.DbContexts
                 entity.ToTable("ble_reader_node");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.StartPos).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.EndPos).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.DistancePx).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.Distance).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.CreatedBy).HasMaxLength(255);
                 entity.Property(e => e.UpdatedBy).HasMaxLength(255);
@@ -636,82 +656,26 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstEngine>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.EngineId).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1); // untuk delete
                 entity.Property(e => e.IsLive).IsRequired().HasDefaultValue(1); // untuk monitoring status
                 entity.Property(e => e.LastLive).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.Property(e => e.ServiceStatus).HasMaxLength(50)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
+                
                     );
             });
-
-            modelBuilder.Entity<VisitorCard>(entity =>
-            {
-                entity.ToTable("visitor_card");
-
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("name");
-
-                entity.Property(e => e.Number)
-                    .HasColumnName("number");
-
-                entity.Property(e => e.CardType)
-                    .HasColumnName("card_type")
-                    .HasColumnType("nvarchar(255)")
-                    .HasConversion(
-                        v => v == CardType.RfidBle? "rfid-ble" : v.ToString().ToLower(),
-                        v => v == "rfid-ble" ? CardType.RfidBle : (CardType)Enum.Parse(typeof(CardType), v, true)
-                    );
-
-                entity.Property(e => e.QRCode)
-                    .HasColumnName("qr_code");
-
-                entity.Property(e => e.Mac)
-                    .HasColumnType("nvarchar(255)")
-                    .HasColumnName("mac");
-
-                entity.Property(e => e.CheckinStatus)
-                    .HasColumnName("checkin_status");
-
-                entity.Property(e => e.EnableStatus)
-                    .HasColumnName("enable_status");
-
-                entity.Property(e => e.Status)
-                    .HasColumnName("status")
-                    .HasDefaultValue(1);
-
-                entity.Property(e => e.SiteId)
-                    .HasColumnName("site_id");
-
-                entity.Property(e => e.IsMember)
-                    .HasColumnName("is_member");
-
-                entity.Property(e => e.ApplicationId)
-                    .HasColumnName("application_id");
-
-                //  Relasi ke MstApplication
-                entity.HasOne(e => e.Application)
-                    .WithMany() // kalau MstApplication gak punya VisitorCard list
-                    .HasForeignKey(e => e.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction); // atau NoAction
-
-                // Relasi ke CardRecord (inverse dari CardRecord.CardId)
-                entity.HasMany(e => e.CardRecords)
-                    .WithOne(e => e.VisitorCard)
-                    .HasForeignKey(e => e.CardId)
-                    .OnDelete(DeleteBehavior.NoAction); // biar gak auto hapus CardRecord
-
-                entity.HasQueryFilter(e => e.Status != 0);
-            });
-
 
             modelBuilder.Entity<CardRecord>(entity =>
             {
@@ -719,8 +683,8 @@ namespace Repositories.DbContexts
 
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.VisitorName)
-                    .HasColumnName("visitor_name");
+                entity.Property(e => e.Name)
+                    .HasColumnName("name");
 
                 entity.Property(e => e.CardId)
                     .HasColumnName("card_id");
@@ -759,11 +723,11 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
                     );
-                   
 
-                entity.HasOne(e => e.VisitorCard)
-                    .WithMany() // asumsi ga ada collection di VisitorCard
-                    .HasForeignKey(e => e.CardId)
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Visitor)
@@ -924,6 +888,11 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (VisitorStatus)Enum.Parse(typeof(VisitorStatus), v, true)
                     );
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
                  entity.HasOne(v => v.Visitor)
                     .WithMany()
                     .HasForeignKey(v => v.VisitorId)
@@ -953,6 +922,12 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
                     );
+                
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(v => v.Application)
                     .WithMany()
@@ -976,6 +951,24 @@ namespace Repositories.DbContexts
 
                 entity.HasIndex(v => v.PersonId);
                 entity.HasIndex(v => v.Email);
+            });
+
+            // Card
+            modelBuilder.Entity<Card>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.CardType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CardType)Enum.Parse(typeof(CardType), v, true)
+                    );
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
             });
 
             modelBuilder.Entity<RefreshToken>(Entity =>

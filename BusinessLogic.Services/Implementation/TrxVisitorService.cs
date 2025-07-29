@@ -40,6 +40,8 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
         }
 
+        
+
         public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
         {
             var trxvisitor = await _repository.GetByIdAsync(id);
@@ -114,7 +116,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
-            var validSortColumns = new[] { "CheckedInAt", "CheckedOutAt", "Status" };
+            var validSortColumns = new[] { "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "SiteId", "ParkingId" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,

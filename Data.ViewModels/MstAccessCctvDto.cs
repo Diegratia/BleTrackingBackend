@@ -2,7 +2,7 @@ using System;
 
 namespace Data.ViewModels
 {
-    public class MstAccessCctvDto
+    public class MstAccessCctvDto : BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
@@ -18,7 +18,7 @@ namespace Data.ViewModels
         public MstIntegrationDto Integration { get; set; }
     }
 
-    public class MstAccessCctvCreateDto
+    public class MstAccessCctvCreateDto : BaseModelDto
     {
         public string Name { get; set; }
         public string Rtsp { get; set; }
@@ -26,7 +26,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
     }
 
-    public class MstAccessCctvUpdateDto
+    public class MstAccessCctvUpdateDto : BaseModelDto
     {
         public string Name { get; set; }
         public string Rtsp { get; set; }

@@ -141,7 +141,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {
@@ -163,6 +163,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

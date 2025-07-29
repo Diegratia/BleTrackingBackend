@@ -127,7 +127,7 @@ builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 
-var port = Environment.GetEnvironmentVariable("FLOORPLAN_DEVICE_PORT") ??
+var port = Environment.GetEnvironmentVariable("FLOORPLAN_DEVICE_PORT") ?? "5003" ??
            builder.Configuration["Ports:FloorplanDeviceService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -163,6 +163,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

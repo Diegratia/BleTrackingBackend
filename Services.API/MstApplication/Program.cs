@@ -132,7 +132,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
 
 
-var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ??
+var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "5007" ??
            builder.Configuration["Ports:MstApplicationService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -168,6 +168,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

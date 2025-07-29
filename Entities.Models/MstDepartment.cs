@@ -8,16 +8,8 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstDepartment
+    public class MstDepartment : BaseModelWithTimeInt, IApplicationEntity
     {
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("_generate")]
-        public int Generate { get; set; } // Diubah ke int
-
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         [StringLength(255)]
@@ -40,28 +32,9 @@ namespace Entities.Models
         public Guid ApplicationId { get; set; } 
 
         [Required]
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-        [Required]
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-        [Required]
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
-
-        [Required]
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        [Column("application")]
         public virtual MstApplication Application { get; set; }
 
         public virtual ICollection<MstMember> Members { get; set; } = new List<MstMember>();

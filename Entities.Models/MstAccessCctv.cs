@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstAccessCctv : BaseModel
+    public class MstAccessCctv : BaseModelWithTime, IApplicationEntity
     {
         [Required]
         [StringLength(255)]
@@ -18,24 +18,6 @@ namespace Entities.Models
         [Required]
         [Column("rtsp")]
         public string Rtsp { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-        [Required]
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-        [Required]
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [ForeignKey("Integration")]

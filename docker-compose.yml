@@ -307,6 +307,15 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+  card:
+    build:
+      context: .
+      dockerfile: Services.API/Card/Dockerfile
+    ports:
+      - "5026:5026"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
 
   nginx:
     build:

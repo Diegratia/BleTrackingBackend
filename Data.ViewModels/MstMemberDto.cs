@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
 {
-    public class MstMemberDto
+    public class MstMemberDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public long Generate { get; set; }
@@ -38,7 +38,7 @@ namespace Data.ViewModels
         public MstDistrictDto District { get; set; }
     }
 
-     public class MstMemberCreateDto
+     public class MstMemberCreateDto : BaseModelDto
     {
         public string PersonId { get; set; }
         public Guid OrganizationId { get; set; }
@@ -60,7 +60,7 @@ namespace Data.ViewModels
         public string StatusEmployee { get; set; } // Enum sebagai string
     }
 
-     public class MstMemberUpdateDto
+     public class MstMemberUpdateDto : BaseModelDto
     {
         public string PersonId { get; set; }
         public Guid OrganizationId { get; set; }

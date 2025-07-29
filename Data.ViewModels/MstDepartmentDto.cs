@@ -1,7 +1,7 @@
 
 namespace Data.ViewModels
 {
-    public class MstDepartmentDto
+    public class MstDepartmentDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -17,7 +17,7 @@ namespace Data.ViewModels
         public MstApplicationDto Application { get; set; }
     }
 
-    public class MstDepartmentCreateDto
+    public class MstDepartmentCreateDto : BaseModelDto
     {
         public string Code { get; set; }
         public string Name { get; set; }
@@ -25,7 +25,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
     }
 
-    public class MstDepartmentUpdateDto
+    public class MstDepartmentUpdateDto : BaseModelDto
     {
         public string Code { get; set; }
         public string Name { get; set; }

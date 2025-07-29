@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class VisitorBlacklistArea : BaseModel
+    public class VisitorBlacklistArea : BaseModel, IApplicationEntity
     {
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
@@ -20,8 +20,13 @@ namespace Entities.Models
         [Column("visitor_id")]
         public Guid VisitorId { get; set; }
 
+        [Required]
+        [ForeignKey("ApplicationId")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
         public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
- 
+        public virtual MstApplication Application { get; set;}
         public virtual Visitor Visitor { get; set; }
     }
 }

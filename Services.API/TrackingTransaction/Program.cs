@@ -135,7 +135,7 @@ builder.Services.AddScoped<TrackingTransactionRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("TRACKING_TRANSACTION_PORT") ??
+var port = Environment.GetEnvironmentVariable("TRACKING_TRANSACTION_PORT") ?? "5018" ??
            builder.Configuration["Ports:TrackingTransactionService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -149,7 +149,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {
@@ -171,6 +171,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

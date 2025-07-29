@@ -130,7 +130,7 @@ builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaServi
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
-var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ??
+var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "5004" ??
            builder.Configuration["Ports:FloorplanMaskedAreaService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -166,6 +166,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

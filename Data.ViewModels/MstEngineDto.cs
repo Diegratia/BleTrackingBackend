@@ -3,7 +3,7 @@ using Helpers.Consumer;
 
 namespace Data.ViewModels
 {
-    public class MstEngineDto
+    public class MstEngineDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -15,7 +15,7 @@ namespace Data.ViewModels
         public ServiceStatus ServiceStatus { get; set; }
     }
 
-    public class MstEngineCreateDto
+    public class MstEngineCreateDto : BaseModelDto
     {
         public string Name { get; set; }
         public string EngineId { get; set; }
@@ -25,7 +25,7 @@ namespace Data.ViewModels
         public ServiceStatus ServiceStatus { get; set; }
     }
 
-    public class MstEngineUpdateDto
+    public class MstEngineUpdateDto : BaseModelDto
     {
         public string Name { get; set; }
     }

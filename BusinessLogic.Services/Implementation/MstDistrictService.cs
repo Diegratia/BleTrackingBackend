@@ -83,7 +83,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Status" };
+            var validSortColumns = new[] { "Name", "DistrictHost", "CreatedAt", "UpdatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstDistrict, MstDistrictDto>(
                 query,
@@ -153,9 +153,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(district.Name);
                             table.Cell().Element(CellStyle).Text(district.DistrictHost);
                             table.Cell().Element(CellStyle).Text(district.CreatedBy);
-                            table.Cell().Element(CellStyle).Text(district.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.UpdatedBy);
-                            table.Cell().Element(CellStyle).Text(district.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.Status);
                         }
 

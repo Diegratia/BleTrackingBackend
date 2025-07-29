@@ -9,7 +9,7 @@ using Helpers.Consumer;
 namespace Entities.Models
 {
 
-    public class FloorplanDevice : BaseModel
+    public class FloorplanDevice : BaseModelWithTime, IApplicationEntity
     {
         
         [Required]
@@ -66,24 +66,6 @@ namespace Entities.Models
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("created_by")]
-        public string CreatedBy { get; set; }
-
-        [Required]
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("updated_by")]
-        public string UpdatedBy { get; set; }
-
-        [Required]
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [Column("device_status")]

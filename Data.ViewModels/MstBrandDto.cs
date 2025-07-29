@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Data.ViewModels
 
 {
-    public class MstBrandDto
+    public class MstBrandDto: BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
@@ -14,13 +14,13 @@ namespace Data.ViewModels
         public int? Status { get; set; }
     }
 
-    public class MstBrandCreateDto
+    public class MstBrandCreateDto : BaseModelDto
     {
         public string Name { get; set; }
         public string Tag { get; set; }
     }
 
-    public class MstBrandUpdateDto
+    public class MstBrandUpdateDto : BaseModelDto
     {
         public string Name { get; set; }
         public string Tag { get; set; }

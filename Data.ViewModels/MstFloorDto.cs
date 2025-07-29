@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
 {
-    public class MstFloorDto
+    public class MstFloorDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
         public Guid BuildingId { get; set; }
         public string Name { get; set; }
         public string FloorImage { get; set; }
-        public long PixelX { get; set; }
-        public long PixelY { get; set; }
-        public long FloorX { get; set; }
-        public long FloorY { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
@@ -24,28 +24,28 @@ namespace Data.ViewModels
         public MstBuildingDto Building { get; set; }
     }
 
-    public class MstFloorCreateDto
+    public class MstFloorCreateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
         public string Name { get; set; }
         public IFormFile FloorImage { get; set; }
-        public long PixelX { get; set; }
-        public long PixelY { get; set; }
-        public long FloorX { get; set; }
-        public long FloorY { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
     }
 
-    public class MstFloorUpdateDto
+    public class MstFloorUpdateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
         public string Name { get; set; }
         public IFormFile FloorImage { get; set; }
-        public long PixelX { get; set; }
-        public long PixelY { get; set; }
-        public long FloorX { get; set; }
-        public long FloorY { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
     }
@@ -54,10 +54,10 @@ namespace Data.ViewModels
         public string BuildingId { get; set; } 
         public string Name { get; set; }
         public string FloorImage { get; set; } = "";
-        public long PixelX { get; set; }
-        public long PixelY { get; set; }
-        public long FloorX { get; set; }
-        public long FloorY { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }

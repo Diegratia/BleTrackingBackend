@@ -9,6 +9,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
+using Helpers.Consumer;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -35,9 +36,6 @@ namespace BusinessLogic.Services.Implementation
             var device = await _repository.GetByIdAsync(id);
             return device == null ? null : _mapper.Map<FloorplanDeviceDto>(device);
         }
-
-
-
 
         public async Task<IEnumerable<FloorplanDeviceDto>> GetAllAsync()
         {
@@ -153,6 +151,97 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedBy = username;
 
             await _repository.SoftDeleteAsync(id);
+        }
+
+          public async Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file)
+        {
+            var devices = new List<FloorplanDevice>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            int rowNumber = 2; 
+            foreach (var row in rows)
+            {
+
+                var floorplanStr = row.Cell(1).GetValue<string>();
+                if (!Guid.TryParse(floorplanStr, out var floorplanId))
+                    throw new ArgumentException($"Invalid floorplanId format at row {rowNumber}");
+
+                var floorplan = await _repository.GetFloorplanByIdAsync(floorplanId);
+                if (floorplan == null)
+                    throw new ArgumentException($"floorplanId {floorplanId} not found at row {rowNumber}");
+
+                var accessCctvStr = row.Cell(2).GetValue<string>();
+                if (!Guid.TryParse(accessCctvStr, out var accessCctvId))
+                    throw new ArgumentException($"Invalid AccessCctvId format at row {rowNumber}");
+
+                var accessCctv = await _repository.GetAccessCctvByIdAsync(accessCctvId);
+                if (accessCctv == null)
+                    throw new ArgumentException($"AccessCctvId {accessCctvId} not found at row {rowNumber}");
+
+                var readerStr = row.Cell(3).GetValue<string>();
+                if (!Guid.TryParse(readerStr, out var readerId))
+                    throw new ArgumentException($"Invalid ReaderId format at row {rowNumber}");
+
+                var reader = await _repository.GetReaderByIdAsync(readerId);
+                if (reader == null)
+                    throw new ArgumentException($"ReaderId {readerId} not found at row {rowNumber}");
+
+                var accessControlStr = row.Cell(4).GetValue<string>();
+                if (!Guid.TryParse(accessControlStr, out var accessControlId))
+                    throw new ArgumentException($"Invalid AccessControlId format at row {rowNumber}");
+
+                var accessControl = await _repository.GetAccessControlByIdAsync(accessControlId);
+                if (accessControl == null)
+                    throw new ArgumentException($"AccessControlId {accessControlId} not found at row {rowNumber}");
+
+                var floorplanMaskedAreaStr = row.Cell(5).GetValue<string>();
+                if (!Guid.TryParse(floorplanMaskedAreaStr, out var floorplanMaskedAreaId))
+                    throw new ArgumentException($"Invalid FloorplanMaskedAreaId format at row {rowNumber}");
+
+                var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(floorplanMaskedAreaId);
+                if (floorplanMaskedArea == null)
+                    throw new ArgumentException($"FloorplanMaskedAreaId {floorplanMaskedAreaId} not found at row {rowNumber}");
+
+                var device = new FloorplanDevice
+                {
+                    Id = Guid.NewGuid(),
+                    FloorplanId = floorplanId,
+                    AccessCctvId = accessCctvId,
+                    ReaderId = readerId,
+                    AccessControlId = accessControlId,
+                    FloorplanMaskedAreaId = floorplanMaskedAreaId,
+                    ApplicationId = Guid.Parse(userApplicationId),
+                    Name = row.Cell(6).GetValue<string>(),
+                    Type = (DeviceType)Enum.Parse(typeof(DeviceType), row.Cell(7).GetValue<string>()),
+                    PosX = row.Cell(8).GetValue<float>(),
+                    PosY = row.Cell(9).GetValue<float>(),
+                    PosPxX = row.Cell(10).GetValue<float>(),
+                    PosPxY = row.Cell(11).GetValue<float>(),
+                    DeviceStatus = (DeviceStatus)Enum.Parse(typeof(DeviceStatus), row.Cell(12).GetValue<string>()),
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                devices.Add(device);
+                rowNumber++;
+            }
+
+            // Simpan ke database
+            foreach (var device in devices)
+            {
+                await _repository.AddAsync(device);
+            }
+
+            return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

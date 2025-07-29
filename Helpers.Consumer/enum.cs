@@ -25,7 +25,7 @@ namespace Helpers.Consumer
     {
         Perpetual,
         Annual
-    }
+  }
 
     public enum VisitorType
     {
@@ -34,7 +34,7 @@ namespace Helpers.Consumer
         Cancelled
     }
 
-        public enum CardType
+    public enum CardType
     {
         Rfid,
         Ble,

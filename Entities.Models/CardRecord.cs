@@ -9,16 +9,16 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models
 {
-    public class CardRecord
+    public class CardRecord : IApplicationEntity
     {
         [Key]
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Column("visitor_name")]
-        public string VisitorName { get; set; }
+        [Column("name")]
+        public string Name { get; set; }
 
-        [ForeignKey(nameof(VisitorCard))]
+        [ForeignKey(nameof(Card))]
         [Column("card_id")]
         public Guid CardId { get; set; }
 
@@ -32,6 +32,8 @@ namespace Entities.Models
         [Column("member_id")]
         public Guid? MemberId { get; set; }
 
+        [Column("type")]
+        public CardType? Type { get; set; }
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }
 
@@ -56,9 +58,15 @@ namespace Entities.Models
         [Column("visitor_type")]
         public VisitorType VisitorType { get; set; }
 
+        [Required]
+        [ForeignKey("Application")]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+
+        public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual MstMember Member { get; set; }
-        public virtual VisitorCard VisitorCard { get; set; }
+        public virtual Card Card { get; set; }
          
    
         

@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize ("RequireAll")]
     public class MstDistrictController : ControllerBase
     {
         private readonly IMstDistrictService _mstDistrictService;

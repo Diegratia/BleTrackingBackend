@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstEngine
+    public class MstEngine : IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -44,5 +44,12 @@ namespace Entities.Models
         [MaxLength(50)]
         [Column("service_status")]
         public ServiceStatus ServiceStatus { get; set; }
+
+        [Required]
+        [ForeignKey(nameof(Application))]
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
+            
+        public virtual MstApplication Application { get; set; }
     }
 }

@@ -456,7 +456,7 @@ namespace Repositories.Seeding
             {
                 var ctrlFaker = new Faker<MstAccessControl>()
                     .RuleFor(c => c.Id, f => Guid.NewGuid())
-                    .RuleFor(c => c.ControllerBrandId, f => context.MstBrands
+                    .RuleFor(c => c.BrandId, f => context.MstBrands
                         .Where(b => b.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
@@ -594,12 +594,39 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
+            // 25. Card
+            if (!context.Cards.Any())
+            {
+                var cardFaker = new Faker<Card>()
+                    .RuleFor(e => e.Id, f => Guid.NewGuid())
+                    .RuleFor(e => e.Name, f => f.Random.Word())
+                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
+                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
+                    .RuleFor(e => e.QRCode, f => f.Random.String(10))
+                    .RuleFor(e => e.Dmac, f => f.Internet.Mac())
+                    .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
+                    .RuleFor(e => e.RegisteredMaskedArea, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(e => e.IsUsed, f => f.Random.Bool())
+                    .RuleFor(e => e.LastUsed, f => f.Person.FullName)
+                    .RuleFor(e => e.StatusCard, f => f.Random.Bool())
+                    .RuleFor(b => b.CreatedBy, f => "System")
+                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+                    .RuleFor(b => b.UpdatedBy, f => "System")
+                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
+
+                var cards = cardFaker.Generate(2);
+                context.Cards.AddRange(cards);
+                context.SaveChanges();
+            }
+
             // 16. TrackingTransaction
             if (!context.TrackingTransactions.Any())
             {
                 var transFaker = new Faker<TrackingTransaction>()
                     .RuleFor(t => t.Id, f => Guid.NewGuid())
-                    .RuleFor(t => t.TransTime, f => f.Date.Recent(1))
+                    // .RuleFor(t => t.TransTime, f => f.Date.Recent(1))
+                    .RuleFor(a => a.TransTime, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
                     .RuleFor(t => t.ReaderId, f => context.MstBleReaders
                         .Where(r => r.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -618,7 +645,7 @@ namespace Repositories.Seeding
                     .RuleFor(t => t.AlarmStatus, f => f.PickRandom<AlarmStatus>())
                     .RuleFor(t => t.Battery, f => f.Random.Long(0, 100));
 
-                var transactions = transFaker.Generate(20);
+                var transactions = transFaker.Generate(200);
                 context.TrackingTransactions.AddRange(transactions);
                 context.SaveChanges();
             }
@@ -671,20 +698,20 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Recent(1))
+                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
                     .RuleFor(a => a.IdleBy, f => f.Name.FullName())
                     .RuleFor(a => a.DoneBy, f => f.Name.FullName())
                     .RuleFor(a => a.CancelBy, f => f.Name.FullName())
                     .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
                     .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
                     .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
-                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Recent(1));
+                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
 
-                var alarms = alarmFaker.Generate(0);
+                var alarms = alarmFaker.Generate(1);
                 context.AlarmRecordTrackings.AddRange(alarms);
                 context.SaveChanges();
             }
@@ -788,43 +815,12 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 22. VisitorCard
-            if (!context.VisitorCards.Any())
-            {
-                var visitorcardFaker = new Faker<VisitorCard>()
-                    .RuleFor(e => e.Id, f => Guid.NewGuid())
-                    .RuleFor(e => e.Name, f => "Card " + f.Random.Number(1000, 9999))
-                    .RuleFor(e => e.Number, f => f.Random.Number(1000, 9999).ToString())
-                    .RuleFor(a => a.CardType, f => f.PickRandom<CardType>())
-                    .RuleFor(e => e.QRCode, f => f.Random.Number(1000, 9999).ToString())
-                    .RuleFor(e => e.Mac, f => f.Internet.Mac()).RuleFor(e => e.Status, f => 1)
-                    .RuleFor(e => e.CheckinStatus, f => 1)
-                    .RuleFor(e => e.EnableStatus, f => 1)
-                    .RuleFor(e => e.Status, f => 1)
-                    .RuleFor(e => e.SiteId, f => Guid.NewGuid())
-                    .RuleFor(e => e.IsMember, f => f.Random.Number(0, 1))
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .Select(a => a.Id)
-                        .FirstOrDefault());
-
-                var visitorcards = visitorcardFaker.Generate(2);
-                context.VisitorCards.AddRange(visitorcards);
-                context.SaveChanges();
-            }
-
             // 23. CardRecord
             if (!context.CardRecords.Any())
             {
                 var cardrecordFaker = new Faker<CardRecord>()
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
-                    .RuleFor(e => e.VisitorName, f => f.Name.FullName())
-                    .RuleFor(e => e.CardId, f => context.VisitorCards
-                        .Where(v => v.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .Select(v => v.Id)
-                        .FirstOrDefault())
+                    .RuleFor(e => e.Name, f => f.Name.FullName())
                     .RuleFor(e => e.VisitorId, f => context.Visitors
                         .Where(v => v.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -849,7 +845,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-              // 24. TrxVisitor
+            // 24. TrxVisitor
             if (!context.TrxVisitors.Any())
             {
                 var trxVisitorFaker = new Faker<TrxVisitor>()
@@ -863,7 +859,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.CheckoutBy, f => "System")
                     .RuleFor(b => b.DenyBy, f => "System")
                     .RuleFor(b => b.DenyReason, f => f.PickRandom(new[] { "No reason", "Card is not valid", "Card is expired", "Card is blocked", "Card is denied" }))
-                    
+
                     .RuleFor(e => e.VisitorId, f => context.Visitors
                         .Where(v => v.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -883,6 +879,8 @@ namespace Repositories.Seeding
                 context.TrxVisitors.AddRange(trxVisitors);
                 context.SaveChanges();
             }
+            
+  
 
                // 22. MstLogEngine
             // if (!context.MstLogTrackings.Any())

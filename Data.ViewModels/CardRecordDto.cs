@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Data.ViewModels
 {
-    public class CardRecordDto
+    public class CardRecordDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public string? VisitorName { get; set; }
@@ -20,12 +20,12 @@ namespace Data.ViewModels
         public Guid? CheckoutSiteId { get; set; }
         public Guid? CheckinSiteId { get; set; }
         public string? VisitorType { get; set; }
-        public VisitorCardDto VisitorCard { get; set; }
+        public CardDto Card { get; set; }
         public VisitorDto Visitor { get; set; }
         public MstMemberDto Member { get; set; }
     }
 
-    public class CardRecordCreateDto
+    public class CardRecordCreateDto : BaseModelDto
     {
         public string? VisitorName { get; set; }
         public Guid CardId { get; set; }
@@ -37,7 +37,7 @@ namespace Data.ViewModels
         public string? VisitorType { get; set; }
     }
 
-        public class CardRecordUpdateDto
+        public class CardRecordUpdateDto : BaseModelDto
     {
         public string? VisitorName { get; set; }
         public Guid CardId { get; set; }

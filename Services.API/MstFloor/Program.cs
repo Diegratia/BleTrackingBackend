@@ -163,11 +163,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("AllowAll");
-// app.UseHttpsRedirection();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
+
 
 // app.UseStaticFiles(new StaticFileOptions
 // {
@@ -175,6 +171,7 @@ app.UseAuthorization();
 //     RequestPath = "/Uploads"
 // });
 
+app.UseCors("AllowAll");
 // Buat direktori Uploads/FloorImages jika belum ada
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
 Directory.CreateDirectory(uploadsPath);
@@ -186,6 +183,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Uploads/FloorImages"
 });
 
+
+// app.UseHttpsRedirection();
+app.UseRouting();
+app.UseApiKeyAuthentication();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();
 

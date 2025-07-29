@@ -26,7 +26,7 @@ namespace Repositories.Repository
         {
             return await _context.CardRecords
                 .Include(a => a.Visitor)
-                .Include(a => a.VisitorCard)
+                .Include(a => a.Card)
                 .Include(a => a.Member)
                 .ToListAsync();
         }
@@ -61,17 +61,17 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
-        public async Task<VisitorCard> GetCardByIdAsync(Guid id)
+        public async Task<Card> GetCardByIdAsync(Guid id)
         {
-            return await _context.VisitorCards
-                .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
+            return await _context.Cards
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false);
         }
 
         public IQueryable<CardRecord> GetAllQueryable()
         {
             return _context.CardRecords
                 .Include(a => a.Visitor)
-                .Include(a => a.VisitorCard)
+                .Include(a => a.Card)
                 .Include(a => a.Member)
                 .AsQueryable();
         }    
@@ -79,7 +79,7 @@ namespace Repositories.Repository
         {
             return await _context.CardRecords
                 .Include(a => a.Visitor)
-                .Include(a => a.VisitorCard)
+                .Include(a => a.Card)
                 .Include(a => a.Member)
                 .ToListAsync();
         }

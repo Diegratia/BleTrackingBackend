@@ -109,7 +109,6 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/Visitor
         [HttpGet]
-        [Authorize ("RequirePrimaryRole")]
         public async Task<IActionResult> GetAll()
         {
             try
