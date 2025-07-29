@@ -24,7 +24,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<FloorplanDeviceUpdateDto, FloorplanDevice>()
-                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type)))
                 .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus)))
@@ -45,6 +45,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<MstFloorplan, MstFloorplanDto>();
             CreateMap<MstAccessCctv, MstAccessCctvDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
+            CreateMap<MstApplication, MstApplicationDto>();
             CreateMap<MstAccessControl, MstAccessControlDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
         }

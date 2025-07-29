@@ -29,12 +29,12 @@ namespace Entities.Models
         public bool? IsMultiMaskedArea { get; set; }
 
         [AllowNull]
-        [ForeignKey(nameof(FloorplanMaskedArea))]
+        [ForeignKey(nameof(RegisteredMaskedArea))]
         [Column("registered_masked_area")]
-        public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua area.
+        public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua area.
 
         [Column("is_used")]
-        public bool? IsUsed { get; set; } = false;
+        public bool? IsUsed { get; set; }
 
         [Column("last_used_by")]
         public string? LastUsed { get; set; }
@@ -42,20 +42,21 @@ namespace Entities.Models
         [AllowNull]
         [ForeignKey(nameof(Visitor))]
         [Column("visitor_id")]
-        public Guid? VisitorId { get; set; } 
- 
+        public Guid? VisitorId { get; set; }
+
         [AllowNull]
         [ForeignKey(nameof(Member))]
         [Column("member_id")]
-        public Guid? MemberId { get; set; } 
+        public Guid? MemberId { get; set; }
 
-        [Column("checked_in_at")]
-        public DateTime? CheckedInAt { get; set; }
-        [Column("checked_out_at")]
-        public DateTime? CheckedOutAt { get; set; }
+        [Column("checkin_at")]
+        public DateTime? CheckinAt { get; set; }
+
+        [Column("checkout_at")]
+        public DateTime? CheckoutAt { get; set; }
 
         [Column("status_card")]
-        public bool? StatusCard { get; set; } = true;
+        public int? StatusCard { get; set; }
 
         [Required]
         [ForeignKey("Application")]
@@ -66,7 +67,8 @@ namespace Entities.Models
         public virtual MstApplication Application { get; set; }
         public virtual MstMember Member { get; set; }
         public virtual Visitor Visitor { get; set; }
-        public virtual FloorplanMaskedArea RegisteredMaskedAreas { get; set; }
+        public virtual FloorplanMaskedArea RegisteredMaskedArea { get; set; }
+        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }
 

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 
-namespace Entities.Models
+namespace Entities.Models 
 {
     public enum LevelPriority
     {
@@ -15,7 +16,7 @@ namespace Entities.Models
         UserCreated
     }
 
-    public class UserGroup
+    public class UserGroup : BaseModel, IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -23,7 +24,7 @@ namespace Entities.Models
 
         [Required]
         [Column("name")]
-        public string Name { get; set; } 
+        public string Name { get; set; }
 
         [Required]
         [Column("level_priority")]
@@ -54,10 +55,16 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        
+
         [ForeignKey("ApplicationId")]
         public virtual MstApplication Application { get; set; } // Navigation property
         public virtual ICollection<User> Users { get; set; } = new List<User>();
-   
+
     }
 }
+
+
+
+
+
+

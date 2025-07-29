@@ -52,6 +52,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
             floorplan.Id = Guid.NewGuid();
+            floorplan.Status = 1;
             floorplan.CreatedBy = username;
             floorplan.UpdatedBy = username;
             floorplan.CreatedAt = DateTime.UtcNow;
@@ -83,6 +84,8 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Floorplan not found");
 
             floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+            floorplan.Status = 0;
             await _repository.DeleteAsync(id);
         }
 

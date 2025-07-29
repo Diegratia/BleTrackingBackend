@@ -45,21 +45,6 @@ namespace BusinessLogic.Services.Implementation
         public async Task<AlarmRecordTrackingDto> CreateAsync(AlarmRecordTrackingCreateDto createDto)
         {
             // Validasi relasi
-            var visitor = await _repository.GetVisitorByIdAsync(createDto.VisitorId);
-            if (visitor == null)
-                throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
-
-            var reader = await _repository.GetReaderByIdAsync(createDto.ReaderId);
-            if (reader == null)
-                throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
-
-            var maskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(createDto.FloorplanMaskedAreaId);
-            if (maskedArea == null)
-                throw new ArgumentException($"Area with ID {createDto.FloorplanMaskedAreaId} not found.");
-
-            var app = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
-            if (app == null)
-                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             var alarm = _mapper.Map<AlarmRecordTracking>(createDto);
 
@@ -89,44 +74,15 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new KeyNotFoundException("Alarm record not found");
 
-            // Validasi relasi jika berubah
-            if (alarm.VisitorId != updateDto.VisitorId)
-            {
-                var visitor = await _repository.GetVisitorByIdAsync(updateDto.VisitorId);
-                if (visitor == null)
-                    throw new ArgumentException($"Visitor with ID {updateDto.VisitorId} not found.");
-            }
-
-            if (alarm.ReaderId != updateDto.ReaderId)
-            {
-                var reader = await _repository.GetReaderByIdAsync(updateDto.ReaderId);
-                if (reader == null)
-                    throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
-            }
-
-            if (alarm.FloorplanMaskedAreaId != updateDto.FloorplanMaskedAreaId)
-            {
-                var maskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(updateDto.FloorplanMaskedAreaId);
-                if (maskedArea == null)
-                    throw new ArgumentException($"Masked Area with ID {updateDto.FloorplanMaskedAreaId} not found.");
-            }
-
-            if (alarm.ApplicationId != updateDto.ApplicationId)
-            {
-                var app = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
-                if (app == null)
-                    throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
-            }
-
             _mapper.Map(updateDto, alarm);
 
             await _repository.UpdateAsync(alarm);
         }
 
-        public async Task DeleteAsync(Guid id)
-        {
-            await _repository.SoftDeleteAsync(id);
-        }
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     await _repository.DeleteAsync(id);
+        // }
 
          public async Task<object> FilterAsync(DataTablesRequest request)
         {
@@ -189,7 +145,7 @@ namespace BusinessLogic.Services.Implementation
                         foreach (var record in records)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(record.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(record.Timestamp?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(record.Visitor?.Name);
                             table.Cell().Element(CellStyle).Text(record.Reader?.Name);
                             table.Cell().Element(CellStyle).Text(record.FloorplanMaskedArea?.Name);
@@ -239,7 +195,7 @@ namespace BusinessLogic.Services.Implementation
             foreach (var record in records)
             {
                 worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = record.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+                worksheet.Cell(row, 2).Value = record.Timestamp?.ToString("yyyy-MM-dd HH:mm:ss");
                 worksheet.Cell(row, 3).Value = record.Visitor?.Name;
                 worksheet.Cell(row, 4).Value = record.Reader?.Name;
                 worksheet.Cell(row, 5).Value = record.FloorplanMaskedArea?.Name;

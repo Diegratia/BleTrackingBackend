@@ -30,16 +30,16 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<TrackingTransactionDto> CreateTrackingTransactionAsync(TrackingTransactionCreateDto createDto)
-        {
-            if (createDto == null) throw new ArgumentNullException(nameof(createDto));
+        // public async Task<TrackingTransactionDto> CreateTrackingTransactionAsync(TrackingTransactionCreateDto createDto)
+        // {
+        //     if (createDto == null) throw new ArgumentNullException(nameof(createDto));
 
-            var transaction = _mapper.Map<TrackingTransaction>(createDto);
-            transaction.Id = Guid.NewGuid();
+        //     var transaction = _mapper.Map<TrackingTransaction>(createDto);
+        //     transaction.Id = Guid.NewGuid();
 
-            await _repository.AddAsync(transaction);
-            return _mapper.Map<TrackingTransactionDto>(transaction);
-        }
+        //     await _repository.AddAsync(transaction);
+        //     return _mapper.Map<TrackingTransactionDto>(transaction);
+        // }
 
         public async Task<TrackingTransactionDto> GetTrackingTransactionByIdAsync(Guid id)
         {
@@ -53,26 +53,26 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<TrackingTransactionDto>>(transactions);
         }
 
-        public async Task UpdateTrackingTransactionAsync(Guid id, TrackingTransactionUpdateDto updateDto)
-        {
-            if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
+        // public async Task UpdateTrackingTransactionAsync(Guid id, TrackingTransactionUpdateDto updateDto)
+        // {
+        //     if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
 
-            var transaction = await _repository.GetByIdAsync(id);
-            if (transaction == null)
-                throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
+        //     var transaction = await _repository.GetByIdAsync(id);
+        //     if (transaction == null)
+        //         throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
 
-            _mapper.Map(updateDto, transaction);
-            await _repository.UpdateAsync(transaction);
-        }
+        //     _mapper.Map(updateDto, transaction);
+        //     await _repository.UpdateAsync(transaction);
+        // }
 
-        public async Task DeleteTrackingTransactionAsync(Guid id)
-        {
-            var transaction = await _repository.GetByIdAsync(id);
-            if (transaction == null)
-                throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
+        // public async Task DeleteTrackingTransactionAsync(Guid id)
+        // {
+        //     var transaction = await _repository.GetByIdAsync(id);
+        //     if (transaction == null)
+        //         throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
 
-            await _repository.DeleteAsync(transaction);
-        }
+        //     await _repository.DeleteAsync(transaction);
+        // }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {

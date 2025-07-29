@@ -21,19 +21,17 @@ namespace Entities.Models
         [Column("floor_id")]
         public Guid FloorId { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [Required]
         [Column("area_shape")]
         public string AreaShape { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("color_area")]
-        public string ColorArea { get; set; }
+        public string? ColorArea { get; set; }
 
         [Required]
         [Column("restricted_status")]

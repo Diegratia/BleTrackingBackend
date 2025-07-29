@@ -1,83 +1,121 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstFloorRepository
+    public class MstFloorRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstFloorRepository(BleTrackingDbContext context)
+        public MstFloorRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<MstFloor> GetByIdAsync(Guid id)
+        public async Task<MstFloor?> GetByIdAsync(Guid id)
         {
-            return await _context.MstFloors
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloors
                 .Include(f => f.Building)
-                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+                .Where(f => f.Id == id && f.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllAsync()
         {
-            return await _context.MstFloors
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloors
                 .Include(f => f.Building)
-                .Where(f => f.Status != 0)
-                .ToListAsync();
+                .Where(f => f.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).ToListAsync();
         }
 
         public async Task<MstFloor> AddAsync(MstFloor floor)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId missing");
+
+                floor.ApplicationId = applicationId.Value;
+            }
+            else if (floor.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must provide ApplicationId");
+            }
+
+            await ValidateApplicationIdAsync(floor.ApplicationId);
+            ValidateApplicationIdForEntity(floor, applicationId, isSystemAdmin);
+
             _context.MstFloors.Add(floor);
             await _context.SaveChangesAsync();
+
             return floor;
         }
 
         public async Task UpdateAsync(MstFloor floor)
         {
-            // _context.MstFloors.Update(floor);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(floor.ApplicationId);
+            ValidateApplicationIdForEntity(floor, applicationId, isSystemAdmin);
+
             await _context.SaveChangesAsync();
         }
 
         public async Task SoftDeleteAsync(Guid id)
         {
-            var floor = await GetByIdAsync(id);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloors
+                .Where(f => f.Id == id && f.Status != 0);
+
+            var floor = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+
             if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
+                throw new KeyNotFoundException("Floor not found or unauthorized");
 
-            floor.Status = 0;
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<MstBuilding> GetBuildingByIdAsync(Guid id)
-        {
-            return await _context.MstBuildings
-                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
-        }
-
-        public async Task<bool> NameExistsAsync(Guid buildingId, string name)
-        {
-            return await _context.MstFloors
-                .AnyAsync(f => f.BuildingId == buildingId && f.Name == name && f.Status != 0);
         }
 
         public IQueryable<MstFloor> GetAllQueryable()
         {
-            return _context.MstFloors
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloors
                 .Include(f => f.Building)
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+                .Where(f => f.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        public async Task<MstBuilding?> GetBuildingByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBuildings
+                .Where(b => b.Id == id && b.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
         {
-            return await _context.MstFloors.Include(f => f.Building).
-            Where(f => f.Status != 0).ToListAsync();
-        }        
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstFloors
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
+        }
     }
 }

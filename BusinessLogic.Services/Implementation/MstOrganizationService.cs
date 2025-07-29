@@ -86,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
             organization.UpdatedBy = username;
             organization.UpdatedAt = DateTime.UtcNow;
 
-            await _repository.DeleteAsync(organization);
+            await _repository.DeleteAsync(id);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

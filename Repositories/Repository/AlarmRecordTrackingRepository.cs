@@ -1,100 +1,129 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
-    public class AlarmRecordTrackingRepository
+    public class AlarmRecordTrackingRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public AlarmRecordTrackingRepository(BleTrackingDbContext context)
+        public AlarmRecordTrackingRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<MstApplication> GetApplicationByIdAsync(Guid applicationId)
+        public async Task<List<AlarmRecordTracking>> GetAllAsync()
         {
-            return await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId && a.ApplicationStatus != 0);
+            return await GetAllQueryable().ToListAsync();
         }
 
-        public async Task<Visitor> GetVisitorByIdAsync(Guid visitorId)
+        public async Task<AlarmRecordTracking?> GetByIdAsync(Guid id)
         {
-            return await _context.Visitors
-                .FirstOrDefaultAsync(v => v.Id == visitorId && v.Status != 0);
-        }
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        public async Task<MstBleReader> GetReaderByIdAsync(Guid readerId)
-        {
-            return await _context.MstBleReaders
-                .FirstOrDefaultAsync(r => r.Id == readerId && r.Status != 0);
-        }
+            var query = _context.AlarmRecordTrackings
+                .Include(v => v.FloorplanMaskedArea)
+                .Include(v => v.Reader)
+                .Include(v => v.Visitor)
+                .Include(v => v.ApplicationId)
+                .Where(v => v.Id == id);
 
-        public async Task<FloorplanMaskedArea> GetFloorplanMaskedAreaByIdAsync(Guid floorplanMaskedAreaId)
-        {
-            return await _context.FloorplanMaskedAreas
-                .FirstOrDefaultAsync(fma => fma.Id == floorplanMaskedAreaId && fma.Status != 0);
-        }
-
-        public async Task<AlarmRecordTracking> GetByIdAsync(Guid id)
-        {
-            return await _context.AlarmRecordTrackings
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(a => a.Id == id);
-        }
-
-        public async Task<IEnumerable<AlarmRecordTracking>> GetAllAsync()
-        {
-            return await _context.AlarmRecordTrackings
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .ToListAsync();
-        }
-
-        public async Task<AlarmRecordTracking> AddAsync(AlarmRecordTracking alarm)
-        {
-            _context.AlarmRecordTrackings.Add(alarm);
-            await _context.SaveChangesAsync();
-            return alarm;
-        }
-
-        public async Task UpdateAsync(AlarmRecordTracking alarm)
-        {
-            // _context.AlarmRecordTrackings.Update(alarm);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task SoftDeleteAsync(Guid id)
-        {
-            var alarm = await GetByIdAsync(id);
-            if (alarm == null)
-                throw new KeyNotFoundException("Alarm record not found");
-
-            await _context.SaveChangesAsync();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public IQueryable<AlarmRecordTracking> GetAllQueryable()
         {
-            return _context.AlarmRecordTrackings
-                .Include(a => a.Reader)
-                .Include(a => a.Visitor)
-                .Include(n => n.FloorplanMaskedArea)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.AlarmRecordTrackings
+                .Include(v => v.FloorplanMaskedArea)
+                .Include(v => v.Reader)
+                .Include(v => v.Visitor)
+                .Include(v => v.ApplicationId);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
-          public async Task<IEnumerable<AlarmRecordTracking>> GetAllExportAsync()
+
+        public async Task AddAsync(AlarmRecordTracking entity)
         {
-            return await _context.AlarmRecordTrackings
-                .Include(a => a.Visitor)
-                .Include(a => a.Reader)
-                .Include(a => a.FloorplanMaskedArea)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
+
+                entity.ApplicationId = applicationId.Value;
+            }
+            else if (entity.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must specify ApplicationId explicitly.");
+            }
+
+            await ValidateApplicationIdAsync(entity.ApplicationId);
+            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
+
+            await _context.AlarmRecordTrackings.AddAsync(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(AlarmRecordTracking entity)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(entity.ApplicationId);
+            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
+
+            _context.AlarmRecordTrackings.Update(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<AlarmRecordTracking>> GetAllExportAsync()
+        {
+            return await GetAllQueryable().ToListAsync();
+        }
+
+        // public async Task DeleteAsync(AlarmRecordTracking entity)
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+        //     if (!isSystemAdmin && entity.ApplicationId != applicationId)
+        //         throw new UnauthorizedAccessException("You don’t have permission to delete this entity.");
+
+        //     // _context.AlarmRecordTrackings.Remove(entity);
+        //     await _context.SaveChangesAsync();
+        // }
+
+        private async Task ValidateRelatedEntitiesAsync(AlarmRecordTracking entity, Guid? applicationId, bool isSystemAdmin)
+        {
+            if (isSystemAdmin) return;
+
+            if (!applicationId.HasValue)
+                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
+
+            var visitor = await _context.Visitors
+                .FirstOrDefaultAsync(v => v.Id == entity.VisitorId && v.ApplicationId == applicationId);
+
+            if (visitor == null)
+                throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
+
+            var floorplanArea = await _context.FloorplanMaskedAreas
+                .FirstOrDefaultAsync(f => f.Id == entity.FloorplanMaskedAreaId && f.ApplicationId == applicationId);
+
+            if (floorplanArea == null)
+                throw new UnauthorizedAccessException("FloorplanMaskedArea not found or not accessible in your application.");
+
+            var reader = await _context.MstBleReaders
+                .FirstOrDefaultAsync(r => r.Id == entity.ReaderId && r.ApplicationId == applicationId);
+
+            if (reader == null)
+                throw new UnauthorizedAccessException("BLE Reader not found or not accessible in your application.");
         }
     }
 }

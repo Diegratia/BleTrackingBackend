@@ -1,50 +1,69 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstFloorplanRepository
+    public class MstFloorplanRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstFloorplanRepository(BleTrackingDbContext context)
+        public MstFloorplanRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
         public async Task<MstFloorplan> GetByIdAsync(Guid id)
         {
-            return await _context.MstFloorplans
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloorplans
                 .Include(f => f.Floor)
-                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+                .Where(f => f.Id == id && f.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Floorplan not found");
         }
 
         public async Task<IEnumerable<MstFloorplan>> GetAllAsync()
         {
-            return await _context.MstFloorplans
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloorplans
                 .Include(f => f.Floor)
-                .Where(f => f.Status != 0)
-                .ToListAsync();
+                .Where(f => f.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
 
         public async Task<MstFloorplan> AddAsync(MstFloorplan floorplan)
         {
-            // Validasi FloorId
-            var floor = await _context.MstFloors
-                .FirstOrDefaultAsync(f => f.Id == floorplan.FloorId && f.Status != 0);
-            if (floor == null)
-                throw new ArgumentException($"Floor with ID {floorplan.FloorId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == floorplan.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {floorplan.ApplicationId} not found.");
+            // Role-based ApplicationId handling
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId not found in context");
 
+                floorplan.ApplicationId = applicationId.Value;
+            }
+            else if (floorplan.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System admin must provide a valid ApplicationId");
+            }
+
+            await ValidateApplicationIdAsync(floorplan.ApplicationId);
+            ValidateApplicationIdForEntity(floorplan, applicationId, isSystemAdmin);
+
+            // Validasi Floor
+            await ValidateFloorOwnershipAsync(floorplan.FloorId, floorplan.ApplicationId);
+
+    
             _context.MstFloorplans.Add(floorplan);
             await _context.SaveChangesAsync();
             return floorplan;
@@ -52,69 +71,84 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstFloorplan floorplan)
         {
-            // Validasi FloorId
-            var floor = await _context.MstFloors
-                .FirstOrDefaultAsync(f => f.Id == floorplan.FloorId && f.Status != 0);
-            if (floor == null)
-                throw new ArgumentException($"Floor with ID {floorplan.FloorId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == floorplan.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {floorplan.ApplicationId} not found.");
+            await ValidateApplicationIdAsync(floorplan.ApplicationId);
+            ValidateApplicationIdForEntity(floorplan, applicationId, isSystemAdmin);
+            await ValidateFloorOwnershipAsync(floorplan.FloorId, floorplan.ApplicationId);
 
-            // _context.MstFloorplans.Update(floorplan);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var floorplan = await _context.MstFloorplans
-                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
-            if (floorplan == null)
-                throw new KeyNotFoundException("Floorplan not found");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            floorplan.Status = 0;
+            var query = _context.MstFloorplans
+                .Where(f => f.Id == id && f.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var floorplan = await query.FirstOrDefaultAsync();
+            if (floorplan == null)
+                throw new KeyNotFoundException("Floorplan not found or access denied");
+
             await _context.SaveChangesAsync();
         }
 
-
-
         public async Task<MstFloor> GetFloorByIdAsync(Guid id)
         {
-            return await _context.MstFloors
-                .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloors
+                .Where(f => f.Id == id && f.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstFloorplan>> GetAllExportAsync()
         {
-            return await _context.MstFloorplans.Include(f => f.Floor).
-            Where(f => f.Status != 0).ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public IQueryable<MstFloorplan> GetAllQueryable()
         {
-            return _context.MstFloorplans
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloorplans
                 .Include(f => f.Floor)
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+                .Where(f => f.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
         public IQueryable<object> GetAllQueryableWithMaskedAreaCount()
         {
-            return _context.MstFloorplans
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstFloorplans
                 .Include(f => f.Floor)
-                .Where(f => f.Status != 0)
-                .Select(f => new
-                {
-                    Entity = f,
-                    MaskedAreaCount = f.FloorplanMaskedAreas.Count()
-                })
-                .AsNoTracking();
+                .Include(f => f.FloorplanMaskedAreas)
+                .Where(f => f.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(f => new
+            {
+                Entity = f,
+                MaskedAreaCount = f.FloorplanMaskedAreas.Count()
+            }).AsNoTracking();
+        }
+
+        private async Task ValidateFloorOwnershipAsync(Guid floorId, Guid appId)
+        {
+            var floor = await _context.MstFloors
+                .FirstOrDefaultAsync(f => f.Id == floorId && f.Status != 0 && f.ApplicationId == appId);
+
+            if (floor == null)
+                throw new ArgumentException($"Floor with ID {floorId} not found or not part of the application");
         }
     }
 }
-
-
-
-

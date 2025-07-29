@@ -28,10 +28,6 @@ namespace BusinessLogic.Services.Implementation
         public async Task<VisitorBlacklistAreaDto> CreateVisitorBlacklistAreaAsync(VisitorBlacklistAreaCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (!await _repository.FloorplanMaskedAreaExists(dto.FloorplanMaskedAreaId))
-                throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
-            if (!await _repository.VisitorExists(dto.VisitorId))
-                throw new ArgumentException($"Visitor with ID {dto.VisitorId} not found.");
 
             var entity = _mapper.Map<VisitorBlacklistArea>(dto);
             entity.Id = Guid.NewGuid();
@@ -60,22 +56,8 @@ namespace BusinessLogic.Services.Implementation
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
 
-            if (entity.FloorplanMaskedAreaId != dto.FloorplanMaskedAreaId)
-            {
-                if (!await _repository.FloorplanMaskedAreaExists(dto.FloorplanMaskedAreaId))
-                    throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
-                entity.FloorplanMaskedAreaId = dto.FloorplanMaskedAreaId;
-            }
-
-            if (entity.VisitorId != dto.VisitorId)
-            {
-                if (!await _repository.VisitorExists(dto.VisitorId))
-                    throw new ArgumentException($"Visitor with ID {dto.VisitorId} not found.");
-                entity.VisitorId = dto.VisitorId;
-            }
-
             _mapper.Map(dto, entity);
-            await _repository.UpdateAsync();
+            await _repository.UpdateAsync(entity);
         }
 
         public async Task DeleteVisitorBlacklistAreaAsync(Guid id)

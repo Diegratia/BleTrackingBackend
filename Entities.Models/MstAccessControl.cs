@@ -12,22 +12,19 @@ namespace Entities.Models
     {
         [Required]
         [ForeignKey("Brand")]
-        [Column("brand_id")]
+        [Column("controller_brand_id")]
         public Guid BrandId { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("type")]
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
-        [Required]
         [Column("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -39,9 +36,8 @@ namespace Entities.Models
         [Column("door_id")]
         public string DoorId { get; set; } // relasi dari table?
 
-        [Required]
         [Column("raw")]
-        public string Raw { get; set; }
+        public string? Raw { get; set; }
 
         [Required]
         [ForeignKey("Integration")]
@@ -55,7 +51,7 @@ namespace Entities.Models
 
         [Required]
         [Column("status")]
-        public int? Status { get; set; } = 1;
+        public int Status { get; set; } = 1;
 
         public virtual MstApplication Application { get; set; }
         public virtual MstBrand Brand { get; set; }

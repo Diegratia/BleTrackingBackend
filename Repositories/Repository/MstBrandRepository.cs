@@ -4,62 +4,115 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstBrandRepository
+    public class MstBrandRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstBrandRepository(BleTrackingDbContext context)
+        public MstBrandRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
         public async Task<MstBrand> GetByIdAsync(Guid id)
         {
-            return await _context.MstBrands
-                .FirstOrDefaultAsync(d => d.Id == id && d.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(d => d.Id == id && d.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstBrand>> GetAllAsync()
         {
-            return await _context.MstBrands
-            .Where(b => b.Status != 0)
-            .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(b => b.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.ToListAsync();
         }
 
-        public async Task AddAsync(MstBrand brand)
+        public async Task<MstBrand> AddAsync(MstBrand brand)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId not found in context");
+
+                brand.ApplicationId = applicationId.Value;
+            }
+            else if (brand.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System admin must provide a valid ApplicationId");
+            }
+
+            await ValidateApplicationIdAsync(brand.ApplicationId);
+            ValidateApplicationIdForEntity(brand, applicationId, isSystemAdmin);
+
             _context.MstBrands.Add(brand);
             await _context.SaveChangesAsync();
+            return brand;
         }
 
         public async Task UpdateAsync(MstBrand brand)
         {
-            // _context.MstBrands.Update(brand);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(brand.ApplicationId);
+            ValidateApplicationIdForEntity(brand, applicationId, isSystemAdmin);
+
+            // _context.MstBrands.Update(brand); // Optional
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(MstBrand brand)
+        public async Task DeleteAsync(Guid id)
         {
-            // _context.MstBrands.Update(brand); 
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(d => d.Id == id && d.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var brand = await query.FirstOrDefaultAsync();
+
+            if (brand == null)
+                throw new KeyNotFoundException("Brand not found");
+
+            brand.Status = 0;
             await _context.SaveChangesAsync();
         }
 
-            public IQueryable<MstBrand> GetAllQueryable()
+        public IQueryable<MstBrand> GetAllQueryable()
         {
-            return _context.MstBrands
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(d => d.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-          public async Task<IEnumerable<MstBrand>> GetAllExportAsync()
+        public async Task<IEnumerable<MstBrand>> GetAllExportAsync()
         {
-            return await _context.MstBrands
-                .Where(d => d.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(d => d.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.ToListAsync();
         }
     }
 }

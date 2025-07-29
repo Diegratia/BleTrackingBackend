@@ -12,14 +12,12 @@ namespace Entities.Models
     public class FloorplanDevice : BaseModelWithTime, IApplicationEntity
     {
         
-        [Required]
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [Column("type")]
-        public DeviceType Type { get; set; }
+        public DeviceType? Type { get; set; }
 
         [Required]
         [ForeignKey("Floorplan")]
@@ -63,17 +61,16 @@ namespace Entities.Models
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
+        [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        [Required]
         [Column("device_status")]
-        public DeviceStatus DeviceStatus { get; set; }
+        public DeviceStatus? DeviceStatus { get; set; }
 
         [Required]
         [Column("status")]
-        public int? Status { get; set; } = 1;
+        public int Status { get; set; } = 1;
 
         public virtual MstFloorplan Floorplan { get; set; }
         public virtual MstAccessCctv AccessCctv { get; set; }

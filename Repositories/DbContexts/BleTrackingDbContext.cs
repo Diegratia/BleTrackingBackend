@@ -710,11 +710,11 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.CheckoutBy)
                     .HasColumnName("checkout_by");
 
-                entity.Property(e => e.CheckinSiteId)
-                    .HasColumnName("checkin_site_id");
+                entity.Property(e => e.CheckinMaskedArea)
+                    .HasColumnName("checkin_masked_area");
 
-                entity.Property(e => e.CheckoutSiteId)
-                    .HasColumnName("checkout_site_id");
+                entity.Property(e => e.CheckoutMaskedArea)
+                    .HasColumnName("checkout_masked_area");
 
                 entity.Property(e => e.VisitorType)
                     .HasColumnName("visitor_type")
@@ -893,9 +893,13 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
-                 entity.HasOne(v => v.Visitor)
+                entity.HasOne(v => v.Visitor)
+                   .WithMany()
+                   .HasForeignKey(v => v.VisitorId)
+                   .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(v => v.MaskedArea)
                     .WithMany()
-                    .HasForeignKey(v => v.VisitorId)
+                    .HasForeignKey(v => v.MaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

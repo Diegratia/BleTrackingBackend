@@ -49,6 +49,9 @@ namespace BusinessLogic.Services.Implementation
             var department = _mapper.Map<MstDepartment>(createDto);
             department.Id = Guid.NewGuid();
             department.CreatedBy = username;
+            department.CreatedAt = DateTime.UtcNow;
+            department.UpdatedBy = username;
+            department.UpdatedAt = DateTime.UtcNow;
             department.Status = 1;
 
             var createdDepartment = await _repository.AddAsync(department);
@@ -64,6 +67,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, department);
             department.UpdatedBy = username;
+            department.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(department);
         }
@@ -73,6 +77,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var department = await _repository.GetByIdAsync(id);
             department.UpdatedBy = username;
+            department.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
         }
 

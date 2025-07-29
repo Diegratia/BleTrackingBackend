@@ -14,6 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Bogus.DataSets;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -50,17 +51,17 @@ namespace BusinessLogic.Services.Implementation
                 throw new ArgumentNullException(nameof(createDto));
 
             // Validasi relasi
-            var department = await _repository.GetDepartmentByIdAsync(createDto.DepartmentId);
-            if (department == null)
-                throw new ArgumentException($"Department with ID {createDto.DepartmentId} not found.");
+            // var department = await _repository.GetDepartmentByIdAsync(createDto.DepartmentId);
+            // if (department == null)
+            //     throw new ArgumentException($"Department with ID {createDto.DepartmentId} not found.");
 
-            var organization = await _repository.GetOrganizationByIdAsync(createDto.OrganizationId);
-            if (organization == null)
-                throw new ArgumentException($"Organization with ID {createDto.OrganizationId} not found.");
+            // var organization = await _repository.GetOrganizationByIdAsync(createDto.OrganizationId);
+            // if (organization == null)
+            //     throw new ArgumentException($"Organization with ID {createDto.OrganizationId} not found.");
 
-            var district = await _repository.GetDistrictByIdAsync(createDto.DistrictId);
-            if (district == null)
-                throw new ArgumentException($"District with ID {createDto.DistrictId} not found.");
+            // var district = await _repository.GetDistrictByIdAsync(createDto.DistrictId);
+            // if (district == null)
+            //     throw new ArgumentException($"District with ID {createDto.DistrictId} not found.");
 
             var member = _mapper.Map<MstMember>(createDto);
 
@@ -135,29 +136,29 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException($"Member with ID {id} not found or has been deleted.");
 
             // Validasi relasi jika berubah
-            if (member.DepartmentId != updateDto.DepartmentId)
-            {
-                var department = await _repository.GetDepartmentByIdAsync(updateDto.DepartmentId);
-                if (department == null)
-                    throw new ArgumentException($"Department with ID {updateDto.DepartmentId} not found.");
-                member.DepartmentId = updateDto.DepartmentId;
-            }
+            // if (member.DepartmentId != updateDto.DepartmentId)
+            // {
+            //     var department = await _repository.GetDepartmentByIdAsync(updateDto.DepartmentId);
+            //     if (department == null)
+            //         throw new ArgumentException($"Department with ID {updateDto.DepartmentId} not found.");
+            //     member.DepartmentId = updateDto.DepartmentId;
+            // }
 
-            if (member.OrganizationId != updateDto.OrganizationId)
-            {
-                var organization = await _repository.GetOrganizationByIdAsync(updateDto.OrganizationId);
-                if (organization == null)
-                    throw new ArgumentException($"Organization with ID {updateDto.OrganizationId} not found.");
-                member.OrganizationId = updateDto.OrganizationId;
-            }
+            // if (member.OrganizationId != updateDto.OrganizationId)
+            // {
+            //     var organization = await _repository.GetOrganizationByIdAsync(updateDto.OrganizationId);
+            //     if (organization == null)
+            //         throw new ArgumentException($"Organization with ID {updateDto.OrganizationId} not found.");
+            //     member.OrganizationId = updateDto.OrganizationId;
+            // }
 
-            if (member.DistrictId != updateDto.DistrictId)
-            {
-                var district = await _repository.GetDistrictByIdAsync(updateDto.DistrictId);
-                if (district == null)
-                    throw new ArgumentException($"District with ID {updateDto.DistrictId} not found.");
-                member.DistrictId = updateDto.DistrictId;
-            }
+            // if (member.DistrictId != updateDto.DistrictId)
+            // {
+            //     var district = await _repository.GetDistrictByIdAsync(updateDto.DistrictId);
+            //     if (district == null)
+            //         throw new ArgumentException($"District with ID {updateDto.DistrictId} not found.");
+            //     member.DistrictId = updateDto.DistrictId;
+            // }
 
             // Tangani upload gambar
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
@@ -231,7 +232,9 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var member = await _repository.GetByIdAsync(id);
             member.UpdatedBy = username;
-            await _repository.SoftDeleteAsync(id);
+            member.UpdatedAt = DateTime.UtcNow;
+            member.Status = 0;
+            await _repository.DeleteAsync(id);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -350,9 +353,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(member.FaceImage);
                             table.Cell().Element(CellStyle).Text(member.UploadFr.ToString());
                             table.Cell().Element(CellStyle).Text(member.UploadFrError);
-                            table.Cell().Element(CellStyle).Text(member.BirthDate.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.JoinDate.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.ExitDate.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(member.BirthDate?.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(member.JoinDate?.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(member.ExitDate?.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(member.HeadMember1);
                             table.Cell().Element(CellStyle).Text(member.CreatedAt.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(member.CreatedBy ?? "-");
@@ -434,9 +437,9 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 13).Value = member.FaceImage;
                 worksheet.Cell(row, 14).Value = member.UploadFr;
                 worksheet.Cell(row, 15).Value = member.UploadFrError;
-                worksheet.Cell(row, 16).Value = member.BirthDate.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 17).Value = member.JoinDate.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 18).Value = member.ExitDate.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 16).Value = member.BirthDate?.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 17).Value = member.JoinDate?.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 18).Value = member.ExitDate?.ToString("yyyy-MM-dd");
                 worksheet.Cell(row, 19).Value = member.HeadMember1;
                 worksheet.Cell(row, 20).Value = member.HeadMember2;
                 worksheet.Cell(row, 21).Value = member.StatusEmployee.ToString() ?? "-";

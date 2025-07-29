@@ -1,81 +1,104 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Entities.Models;
-using Microsoft.EntityFrameworkCore;
-using Repositories.DbContexts;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Entities.Models;
+    using Microsoft.EntityFrameworkCore;
+    using Repositories.DbContexts;
+    using Microsoft.AspNetCore.Http;
+    using System.Security.Claims;
 
 namespace Repositories.Repository
 {
-    public class MstBuildingRepository
-    {
-        private readonly BleTrackingDbContext _context;
-
-        public MstBuildingRepository(BleTrackingDbContext context)
+    public class MstBuildingRepository : BaseRepository
         {
-            _context = context;
-        }
+
+            public MstBuildingRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+                : base(context, httpContextAccessor)
+            {
+            }
 
         public async Task<MstBuilding> GetByIdAsync(Guid id)
-        {
-            return await _context.MstBuildings
-                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
-        }
+            {   
+                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+                var query = _context.MstBuildings
+                    .Where(d => d.Id == id && d.Status != 0);
+                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+                return await _context.MstBuildings
+                    .FirstOrDefaultAsync();
+            }
 
         public async Task<IEnumerable<MstBuilding>> GetAllAsync()
         {
-            return await _context.MstBuildings
-                .Where(b => b.Status != 0)
-                .ToListAsync();
+           var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
 
         public async Task<MstBuilding> AddAsync(MstBuilding building)
         {
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == building.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {building.ApplicationId} not found.");
-
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            // non system ambil dari claim
+                if (!isSystemAdmin)
+                {
+                    if (!applicationId.HasValue)
+                        throw new UnauthorizedAccessException("ApplicationId not found in context");
+                    building.ApplicationId = applicationId.Value;
+                }
+                // admin set applciation di body
+                else if (building.ApplicationId == Guid.Empty)
+                {
+                    throw new ArgumentException("System admin must provide a valid ApplicationId");
+                }
+            await ValidateApplicationIdAsync(building.ApplicationId);
+            ValidateApplicationIdForEntity(building, applicationId, isSystemAdmin);
+            
             _context.MstBuildings.Add(building);
             await _context.SaveChangesAsync();
             return building;
         }
 
-        public async Task UpdateAsync(MstBuilding building)
+         public async Task UpdateAsync(MstBuilding building)
         {
-            // Validasi ApplicationId
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == building.ApplicationId && a.ApplicationStatus != 0);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {building.ApplicationId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            await ValidateApplicationIdAsync(building.ApplicationId);
+            ValidateApplicationIdForEntity(building, applicationId, isSystemAdmin);
 
-            // _context.MstBuildings.Update(building);
+            // _context.MstDistricts.Update(district);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
-        {
-            var building = await _context.MstBuildings
-                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
-            if (building == null)
-                throw new KeyNotFoundException("Building not found");
+            {
+                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+                var query = _context.MstBuildings
+                    .Where(d => d.Id == id && d.Status != 0);
+                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            building.Status = 0;
-            await _context.SaveChangesAsync();
-        }
+                var building = await query.FirstOrDefaultAsync();
+                if (building == null)
+                    throw new KeyNotFoundException("Building not found");
+
+                building.Status = 0;
+                await _context.SaveChangesAsync();
+            }
 
         public IQueryable<MstBuilding> GetAllQueryable()
         {
-            return _context.MstBuildings
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Status != 0);
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
         public async Task<IEnumerable<MstBuilding>> GetAllExportAsync()
         {
-            return await _context.MstBuildings
-                .Where(d => d.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
     }
 }

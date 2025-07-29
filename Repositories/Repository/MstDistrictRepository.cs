@@ -188,9 +188,22 @@ namespace Repositories.Repository
         public async Task<MstDistrict> AddAsync(MstDistrict district)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+                // non system ambil dari claim
+                if (!isSystemAdmin)
+                {
+                    if (!applicationId.HasValue)
+                        throw new UnauthorizedAccessException("ApplicationId not found in context");
+                    district.ApplicationId = applicationId.Value;
+                }
+                // admin set applciation di body
+                else if (district.ApplicationId == Guid.Empty)
+                {
+                    throw new ArgumentException("System admin must provide a valid ApplicationId");
+                }
             await ValidateApplicationIdAsync(district.ApplicationId);
             ValidateApplicationIdForEntity(district, applicationId, isSystemAdmin);
-
+            
             _context.MstDistricts.Add(district);
             await _context.SaveChangesAsync();
             return district;
@@ -202,7 +215,7 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(district.ApplicationId);
             ValidateApplicationIdForEntity(district, applicationId, isSystemAdmin);
 
-            _context.MstDistricts.Update(district);
+            // _context.MstDistricts.Update(district);
             await _context.SaveChangesAsync();
         }
 

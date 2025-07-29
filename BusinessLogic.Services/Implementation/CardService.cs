@@ -95,7 +95,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             card.Id = Guid.NewGuid();
-            card.StatusCard = true;
+            card.StatusCard = 1;
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             card.UpdatedAt = DateTime.UtcNow;
@@ -159,7 +159,7 @@ namespace BusinessLogic.Services.Implementation
             var card = await _repository.GetByIdAsync(id);
             card.UpdatedAt = DateTime.UtcNow;
             card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            card.StatusCard = false;
+            card.StatusCard = 0;
             await _repository.DeleteAsync(id);
         }
 
@@ -190,7 +190,7 @@ namespace BusinessLogic.Services.Implementation
                 var card = new Card
                 {
                     Id = Guid.NewGuid(),
-                    RegisteredMaskedArea = maskedAreaId,
+                    RegisteredMaskedAreaId = maskedAreaId,
                     Name = row.Cell(2).GetValue<string>(),
                     Remarks = row.Cell(3).GetValue<string>() ?? null,
                     CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>()),
@@ -202,7 +202,7 @@ namespace BusinessLogic.Services.Implementation
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
                     UpdatedAt = DateTime.UtcNow,
-                    StatusCard = true
+                    StatusCard = 1
                 };
 
                 cards.Add(card);
@@ -223,7 +223,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
-            var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor" };
+            var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt" };
 
             var filterService = new GenericDataTableService<Card, CardDto>(
                 query,

@@ -606,10 +606,10 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.QRCode, f => f.Random.String(10))
                     .RuleFor(e => e.Dmac, f => f.Internet.Mac())
                     .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
-                    .RuleFor(e => e.RegisteredMaskedArea, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
                     .RuleFor(e => e.IsUsed, f => f.Random.Bool())
                     .RuleFor(e => e.LastUsed, f => f.Person.FullName)
-                    .RuleFor(e => e.StatusCard, f => f.Random.Bool())
+                    .RuleFor(e => e.StatusCard, f => 1)
                     .RuleFor(b => b.CreatedBy, f => "System")
                     .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(b => b.UpdatedBy, f => "System")
@@ -836,8 +836,8 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.CheckoutAt, f => f.Date.Future(1))
                     .RuleFor(b => b.CheckinBy, f => "System")
                     .RuleFor(b => b.CheckoutBy, f => "System")
-                    .RuleFor(e => e.CheckoutSiteId, f => Guid.NewGuid())
-                    .RuleFor(e => e.CheckinSiteId, f => Guid.NewGuid())
+                    .RuleFor(e => e.CheckoutMaskedArea, f => Guid.NewGuid())
+                    .RuleFor(e => e.CheckinMaskedArea, f => Guid.NewGuid())
                     .RuleFor(a => a.VisitorType, f => f.PickRandom<VisitorType>());
 
                 var cardrecords = cardrecordFaker.Generate(2);
@@ -872,8 +872,8 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.VisitorCode, f => f.Random.String(10))
                     .RuleFor(e => e.VehiclePlateNumber, f => f.Random.String(10))
                     .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.SiteId, f => Guid.NewGuid().ToString())
-                    .RuleFor(e => e.ParkingId, f => Guid.NewGuid().ToString());
+                    .RuleFor(e => e.MaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(e => e.ParkingId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid());
 
                 var trxVisitors = trxVisitorFaker.Generate(2);
                 context.TrxVisitors.AddRange(trxVisitors);

@@ -13,7 +13,7 @@ namespace Entities.Models
         [Required]
         [StringLength(255)]
         [Column("person_id")]
-        public string PersonId { get; set; }
+        public string? PersonId { get; set; }
 
         [Required]
         [ForeignKey("Organization")]
@@ -32,69 +32,68 @@ namespace Entities.Models
 
         [StringLength(255)]
         [Column("identity_id")]
-        public string IdentityId { get; set; } = "";
+        public string? IdentityId { get; set; } 
 
         [StringLength(255)]
         [Column("card_number")]
-        public string CardNumber { get; set; } = "";
+        public string? CardNumber { get; set; } 
 
         [StringLength(255)]
         [Column("ble_card_number")]
-        public string BleCardNumber { get; set; } = "";
+        public string? BleCardNumber { get; set; } 
 
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }  = "";
+        public string? Name { get; set; }  
 
         [StringLength(255)]
         [Column("phone")]
-        public string Phone { get; set; }  = "";
+        public string? Phone { get; set; }  
 
         [StringLength(255)]
         [Column("email")]
-        public string Email { get; set; }  = "";
-
+        public string? Email { get; set; }  
         [Column("gender")]
-        public Gender Gender { get; set; }
+        public Gender? Gender { get; set; }
 
         [Column("address")]
-        public string Address { get; set; }  = "";
+        public string? Address { get; set; } 
 
         [Column("face_image")]
-        public string FaceImage { get; set; }  = "";
+        public string? FaceImage { get; set; }
 
         [Column("upload_fr")]
         public int UploadFr { get; set; } = 0;
 
         [Column("upload_fr_error")]
-        public string UploadFrError { get; set; }  = "";
+        public string? UploadFrError { get; set; }
 
         [Column("birth_date")]
-        public DateOnly BirthDate { get; set; }
+        public DateOnly? BirthDate { get; set; }
 
         [Column("join_date")]
-        public DateOnly JoinDate { get; set; }
+        public DateOnly? JoinDate { get; set; }
 
         [Column("exit_date")]
-        public DateOnly ExitDate { get; set; } = DateOnly.MaxValue;
+        public DateOnly? ExitDate { get; set; } 
 
         [StringLength(255)]
         [Column("head_member1")]
-        public string HeadMember1 { get; set; } = "";
+        public string? HeadMember1 { get; set; } 
 
         [StringLength(255)]
         [Column("head_member2")]
-        public string HeadMember2 { get; set; } = "";
+        public string? HeadMember2 { get; set; }
 
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
         [Column("status_employee")]
-        public StatusEmployee StatusEmployee { get; set; }
+        public StatusEmployee? StatusEmployee { get; set; }
 
         [Column("status")]
-        public int? Status { get; set; } = 1;
+        public int Status { get; set; } = 1;
 
         public virtual MstApplication Application { get; set; }
 

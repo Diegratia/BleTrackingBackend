@@ -45,64 +45,6 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<CardRecordDto>>(cardRecord);
         }
 
-        public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var card = await _repository.GetCardByIdAsync(createDto.CardId);
-            if (card == null)
-                throw new ArgumentException($"Card with ID {createDto.CardId} not found.");
-
-            // var visitor = await _repository.GetVisitorByIdAsync(createDto.VisitorId);
-            // if (application == null)
-            //     throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
-
-            // var member = await _repository.GetMemberByIdAsync(createDto.MemberId);
-            // if (application == null)
-            //     throw new ArgumentException($"Member with ID {createDto.MemberId} not found.");
-
-            var cardRecord = _mapper.Map<CardRecord>(createDto);
-            cardRecord.Id = Guid.NewGuid();
-            cardRecord.Timestamp = DateTime.UtcNow;
-            cardRecord.CheckinBy = username ?? "";
-            cardRecord.CheckoutBy = username ?? "";
-
-            var createdcardRecord = await _repository.AddAsync(cardRecord);
-            return _mapper.Map<CardRecordDto>(createdcardRecord);
-        }
-
-        public async Task UpdateAsync(Guid id, CardRecordUpdateDto updateDto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var card = await _repository.GetCardByIdAsync(updateDto.CardId);
-            if (card == null)
-                throw new ArgumentException($"Card with ID {updateDto.CardId} not found.");
-
-            // var visitor = await _repository.GetVisitorByIdAsync(createDto.VisitorId);
-            // if (application == null)
-            //     throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
-
-            // var member = await _repository.GetMemberByIdAsync(createDto.MemberId);
-            // if (application == null)
-            //     throw new ArgumentException($"Member with ID {createDto.MemberId} not found.");
-
-            var cardRecord = await _repository.GetByIdAsync(id);
-            if (cardRecord == null)
-                throw new KeyNotFoundException("Card Record not found");
-
-            _mapper.Map(updateDto, cardRecord);
-            await _repository.UpdateAsync(cardRecord);
-        }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var cardRecord = await _repository.GetByIdAsync(id);
-            if (cardRecord == null)
-            {
-                throw new KeyNotFoundException("Card Record Not Found");
-            }
-            await _repository.DeleteAsync(id);
-        }
-
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
@@ -183,8 +125,8 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(record.CheckinBy);
                             table.Cell().Element(CellStyle).Text(record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(record.CheckoutBy);
-                            table.Cell().Element(CellStyle).Text(record.CheckoutSiteId?.ToString());
-                            table.Cell().Element(CellStyle).Text(record.CheckinSiteId?.ToString());
+                            table.Cell().Element(CellStyle).Text(record.CheckoutMaskedArea?.ToString());
+                            table.Cell().Element(CellStyle).Text(record.CheckinMaskedArea?.ToString());
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -243,8 +185,8 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 8).Value = record.CheckinBy;
                 worksheet.Cell(row, 9).Value = record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss");
                 worksheet.Cell(row, 10).Value = record.CheckoutBy;
-                worksheet.Cell(row, 11).Value = record.CheckoutSiteId?.ToString();
-                worksheet.Cell(row, 12).Value = record.CheckinSiteId?.ToString();
+                worksheet.Cell(row, 11).Value = record.CheckoutMaskedArea?.ToString();
+                worksheet.Cell(row, 12).Value = record.CheckinMaskedArea?.ToString();
                 row++;
             }
 

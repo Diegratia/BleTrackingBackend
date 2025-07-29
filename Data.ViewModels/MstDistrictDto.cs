@@ -8,7 +8,7 @@ namespace Data.ViewModels
         public string Code { get; set; }
         public string Name { get; set; }
         public string DistrictHost { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
@@ -22,14 +22,13 @@ namespace Data.ViewModels
         public string Code { get; set; }
         public string Name { get; set; }
         public string DistrictHost { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
     }
 
-    public class MstDistrictUpdateDto : BaseModelDto
+    public class MstDistrictUpdateDto 
     {
         public string Code { get; set; }
         public string Name { get; set; }
         public string DistrictHost { get; set; }
-        public Guid ApplicationId { get; set; }
     }
 }

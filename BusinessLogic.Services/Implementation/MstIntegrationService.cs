@@ -105,6 +105,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var integration = await _repository.GetByIdAsync(id);
             integration.UpdatedBy = username;
+            integration.UpdatedAt = DateTime.UtcNow;
             await _repository.SoftDeleteAsync(id);
         }
 

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -48,9 +49,13 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var district = _mapper.Map<MstDistrict>(createDto);
+
             district.Id = Guid.NewGuid();
+
             district.CreatedBy = username;
             district.UpdatedBy = username;
+            district.CreatedAt = DateTime.UtcNow;
+            district.UpdatedAt = DateTime.UtcNow;
             district.Status = 1;
 
             var createdDistrict = await _repository.AddAsync(district);
@@ -63,9 +68,9 @@ namespace BusinessLogic.Services.Implementation
             var district = await _repository.GetByIdAsync(id);
             if (district == null)
                 throw new KeyNotFoundException("District not found");
-
-            _mapper.Map(updateDto, district);
+            district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
+            _mapper.Map(updateDto, district);
 
             await _repository.UpdateAsync(district);
         }
@@ -74,6 +79,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var district = await _repository.GetByIdAsync(id);
+            district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
             await _repository.DeleteAsync(id);
         }
@@ -153,9 +159,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(district.Name);
                             table.Cell().Element(CellStyle).Text(district.DistrictHost);
                             table.Cell().Element(CellStyle).Text(district.CreatedBy);
-                            table.Cell().Element(CellStyle).Text(district.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.UpdatedBy);
-                            table.Cell().Element(CellStyle).Text(district.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss"));
+                            table.Cell().Element(CellStyle).Text(district.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.Status);
                         }
 

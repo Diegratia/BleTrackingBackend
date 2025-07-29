@@ -168,6 +168,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Floor not found");
 
             floor.UpdatedBy = username;
+            floor.UpdatedAt = DateTime.UtcNow;
             await _repository.SoftDeleteAsync(id);
         }
 
@@ -198,8 +199,6 @@ namespace BusinessLogic.Services.Implementation
                 if (string.IsNullOrWhiteSpace(name))
                     throw new ArgumentException($"Name is required at row {rowNumber}");
 
-                if (await _repository.NameExistsAsync(buildingId, name))
-                    throw new ArgumentException($"Name {name} already exists for BuildingId {buildingId} at row {rowNumber}");
 
                 // Buat entitas MstFloor
                 var floor = new MstFloor

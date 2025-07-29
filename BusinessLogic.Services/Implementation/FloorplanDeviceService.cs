@@ -66,15 +66,17 @@ namespace BusinessLogic.Services.Implementation
             if (floorplanMaskedArea == null)
                 throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
 
-            var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
+            // var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
+            // if (application == null)
+            //     throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
 
             var device = _mapper.Map<FloorplanDevice>(dto);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
             device.CreatedBy = username;
+            device.CreatedAt = DateTime.UtcNow;
             device.UpdatedBy = username;
+            device.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(device);
             return _mapper.Map<FloorplanDeviceDto>(device);
@@ -138,6 +140,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
             device.UpdatedBy = username;
+            device.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(dto, device);
 
@@ -149,6 +152,7 @@ namespace BusinessLogic.Services.Implementation
             var device = await _repository.GetByIdAsync(id);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             device.UpdatedBy = username;
+            device.UpdatedAt = DateTime.UtcNow;
 
             await _repository.SoftDeleteAsync(id);
         }

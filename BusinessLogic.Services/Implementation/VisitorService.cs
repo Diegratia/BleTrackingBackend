@@ -156,7 +156,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             _mapper.Map(updateDto, visitor);
-            await _repository.UpdateAsync();
+            await _repository.UpdateAsync(visitor);
             return _mapper.Map<VisitorDto>(visitor);
         }
 

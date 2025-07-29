@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstBuilding : BaseModelWithTimeInt, IApplicationEntity
+    public class MstBuilding : BaseModelWithTime, IApplicationEntity
     {
 
         [Required]

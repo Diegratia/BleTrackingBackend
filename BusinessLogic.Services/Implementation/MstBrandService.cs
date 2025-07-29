@@ -67,7 +67,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Brand not found");
 
             brand.Status = 0;
-            await _repository.DeleteAsync(brand);
+            await _repository.DeleteAsync(id);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

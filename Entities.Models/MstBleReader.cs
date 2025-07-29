@@ -16,15 +16,15 @@ namespace Entities.Models
 
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [StringLength(255)]
         [Column("ip")]
-        public string Ip { get; set; }
+        public string? Ip { get; set; }
 
         [StringLength(255)]
         [Column("gmac")]
-        public string Gmac { get; set; }
+        public string? Gmac { get; set; }
 
         [Required]
         [StringLength(255)]

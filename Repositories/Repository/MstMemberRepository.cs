@@ -1,103 +1,143 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
-    public class MstMemberRepository
+    public class MstMemberRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstMemberRepository(BleTrackingDbContext context)
+        public MstMemberRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<MstDepartment> GetDepartmentByIdAsync(Guid departmentId)
+        public async Task<List<MstMember>> GetAllAsync()
         {
-            return await _context.MstDepartments
-                .FirstOrDefaultAsync(d => d.Id == departmentId && d.Status != 0);
+            return await GetAllQueryable().ToListAsync();
         }
 
-        public async Task<MstOrganization> GetOrganizationByIdAsync(Guid organizationId)
+        public async Task<MstMember?> GetByIdAsync(Guid id)
         {
-            return await _context.MstOrganizations
-                .FirstOrDefaultAsync(o => o.Id == organizationId && o.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstMembers
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Include(x => x.Application)
+                .Where(x => x.Id == id && x.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
-        public async Task<MstDistrict> GetDistrictByIdAsync(Guid districtId)
+        public async Task AddAsync(MstMember member)
         {
-            return await _context.MstDistricts
-                .FirstOrDefaultAsync(d => d.Id == districtId && d.Status != 0);
-        }
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        public async Task<MstMember> GetByIdAsync(Guid id)
-        {
-            return await _context.MstMembers
-                .Include(m => m.Department)
-                .Include(m => m.District)
-                .Include(m => m.Organization)
-                .FirstOrDefaultAsync(m => m.Id == id && m.Status != 0);
-        }
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin users.");
 
-        public async Task<IEnumerable<MstMember>> GetAllAsync()
-        {
-            return await _context.MstMembers
-                .Include(m => m.Department)
-                .Include(m => m.District)
-                .Include(m => m.Organization)
-                .Where(m => m.Status != 0)
-                .ToListAsync();
-        }
+                member.ApplicationId = applicationId.Value;
+            }
+            else if (member.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must specify ApplicationId explicitly.");
+            }
 
-        public async Task<MstMember> AddAsync(MstMember member)
-        {
-            _context.MstMembers.Add(member);
+            await ValidateApplicationIdAsync(member.ApplicationId);
+            ValidateApplicationIdForEntity(member, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(member, applicationId, isSystemAdmin);
+
+            await _context.MstMembers.AddAsync(member);
             await _context.SaveChangesAsync();
-            return member;
         }
 
         public async Task UpdateAsync(MstMember member)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(member.ApplicationId);
+            ValidateApplicationIdForEntity(member, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(member, applicationId, isSystemAdmin);
+
             // _context.MstMembers.Update(member);
             await _context.SaveChangesAsync();
         }
 
-        public async Task SoftDeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
-            var member = await GetByIdAsync(id);
-            if (member == null)
-                throw new KeyNotFoundException("Member not found");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstMembers
+                .Where(d => d.Id == id && d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            var member = await query.FirstOrDefaultAsync();
 
-            member.Status = 0;
-            member.ExitDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            member.UpdatedAt = DateTime.UtcNow;
+            if (!isSystemAdmin && member.ApplicationId != applicationId)
+                throw new UnauthorizedAccessException("Cannot delete member from a different application.");
+
+            // _context.MstMembers.Update(member);
             await _context.SaveChangesAsync();
         }
 
-           public IQueryable<MstMember> GetAllQueryable()
-         {
-            return _context.MstMembers
-                .Include(f => f.Organization)
-                .Include(f => f.Department)
-                .Include(f => f.District)
-                .Where(f => f.Status != 0)
-                .AsQueryable();
-        }
-
-            public async Task<IEnumerable<MstMember>> GetAllExportAsync()
+        public IQueryable<MstMember> GetAllQueryable()
         {
-            return await _context.MstMembers
-                .Include(m => m.Department)
-                .Include(m => m.District)
-                .Include(m => m.Organization)
-                .Where(m => m.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstMembers
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Include(x => x.Application)
+                .Where(x => x.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        
+       public async Task<IEnumerable<MstMember>> GetAllExportAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstMembers
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Include(x => x.Application)
+                .Where(x => x.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
+        }
+
+        private async Task ValidateRelatedEntitiesAsync(MstMember member, Guid? applicationId, bool isSystemAdmin)
+        {
+            if (isSystemAdmin) return;
+
+            if (!applicationId.HasValue)
+                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin user.");
+
+            // Validate Department
+            var dept = await _context.MstDepartments
+                .FirstOrDefaultAsync(d => d.Id == member.DepartmentId && d.ApplicationId == applicationId);
+            if (dept == null)
+                throw new UnauthorizedAccessException("Invalid DepartmentId for this application.");
+
+            // Validate District
+            var district = await _context.MstDistricts
+                .FirstOrDefaultAsync(d => d.Id == member.DistrictId && d.ApplicationId == applicationId);
+            if (district == null)
+                throw new UnauthorizedAccessException("Invalid DistrictId for this application.");
+
+            // Validate Organization
+            var org = await _context.MstOrganizations
+                .FirstOrDefaultAsync(o => o.Id == member.OrganizationId && o.ApplicationId == applicationId);
+            if (org == null)
+                throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");
+        }
     }
 }

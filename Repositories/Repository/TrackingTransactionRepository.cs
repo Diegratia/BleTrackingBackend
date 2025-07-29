@@ -1,75 +1,122 @@
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
-    public class TrackingTransactionRepository
+    public class TrackingTransactionRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public TrackingTransactionRepository(BleTrackingDbContext context)
+        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<TrackingTransaction> GetByIdAsync(Guid id)
+        public async Task<TrackingTransaction?> GetByIdAsync(Guid id)
         {
-            return await _context.TrackingTransactions.FindAsync(id);
-        }
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        public async Task<TrackingTransaction> GetByIdWithIncludesAsync(Guid id)
-        {
-            return await _context.TrackingTransactions
+            var query = _context.TrackingTransactions
                 .Include(t => t.Reader)
                 .Include(t => t.FloorplanMaskedArea)
-                .FirstOrDefaultAsync(t => t.Id == id);
+                .Where(t => t.Id == id);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+
+        public async Task<TrackingTransaction?> GetByIdWithIncludesAsync(Guid id)
+        {
+            return await GetByIdAsync(id); // sudah include
         }
 
         public async Task<IEnumerable<TrackingTransaction>> GetAllWithIncludesAsync()
         {
-            return await _context.TrackingTransactions
-                .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea)
-                .ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
-        
+
+        public async Task<IEnumerable<TrackingTransaction>> GetAllExportAsync()
+        {
+            return await GetAllQueryable().ToListAsync();
+        }
 
         public async Task AddAsync(TrackingTransaction transaction)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin users.");
+
+                transaction.ApplicationId = applicationId.Value;
+            }
+            else if (transaction.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must provide ApplicationId.");
+            }
+
+            await ValidateApplicationIdAsync(transaction.ApplicationId);
+            ValidateApplicationIdForEntity(transaction, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(transaction, applicationId, isSystemAdmin);
+
             _context.TrackingTransactions.Add(transaction);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(TrackingTransaction transaction)
         {
-            // _context.TrackingTransactions.Update(transaction);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(transaction.ApplicationId);
+            ValidateApplicationIdForEntity(transaction, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(transaction, applicationId, isSystemAdmin);
+
+            _context.TrackingTransactions.Update(transaction);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(TrackingTransaction transaction)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin && transaction.ApplicationId != applicationId)
+                throw new UnauthorizedAccessException("You don’t have permission to delete this transaction.");
+
             _context.TrackingTransactions.Remove(transaction);
             await _context.SaveChangesAsync();
         }
 
         public IQueryable<TrackingTransaction> GetAllQueryable()
         {
-            return _context.TrackingTransactions
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.TrackingTransactions
                 .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea)
-                .AsQueryable();
+                .Include(t => t.FloorplanMaskedArea);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-            public async Task<IEnumerable<TrackingTransaction>> GetAllExportAsync()
+        private async Task ValidateRelatedEntitiesAsync(TrackingTransaction transaction, Guid? applicationId, bool isSystemAdmin)
         {
-            return await _context.TrackingTransactions
-                .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea)
-                .ToListAsync();
+            if (isSystemAdmin) return;
+
+            if (!applicationId.HasValue)
+                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
+
+            var reader = await _context.MstBleReaders
+                .FirstOrDefaultAsync(r => r.Id == transaction.ReaderId && r.ApplicationId == applicationId);
+            if (reader == null)
+                throw new UnauthorizedAccessException("Invalid ReaderId for this application.");
+
+            var area = await _context.FloorplanMaskedAreas
+                .FirstOrDefaultAsync(f => f.Id == transaction.FloorplanMaskedAreaId && f.ApplicationId == applicationId);
+            if (area == null)
+                throw new UnauthorizedAccessException("Invalid FloorplanMaskedAreaId for this application.");
         }
     }
 }
