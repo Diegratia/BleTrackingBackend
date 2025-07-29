@@ -216,9 +216,8 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(area.Floor?.Name);
                             table.Cell().Element(CellStyle).Text(area.Floorplan?.Name);
                             table.Cell().Element(CellStyle).Text(area.RestrictedStatus.ToString());
-                            table.Cell().Element(CellStyle).Text(area.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(area.CreatedBy);
-                        }
+                            table.Cell().Element(CellStyle).Text(area.CreatedAt.ToString());
+                      }
 
                         static IContainer CellStyle(IContainer container) =>
                             container

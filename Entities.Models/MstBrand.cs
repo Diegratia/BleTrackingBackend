@@ -8,26 +8,22 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstBrand : BaseModelIntGenerate
+    public class MstBrand : BaseModelIntGenerate, IApplicationEntity
     {
 
-        [Required]
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("tag")]
-        public string Tag { get; set; }
-
+        public string? Tag { get; set; }
 
         [Required]
         [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        [Required]
         [Column("status")]
         public int? Status { get; set; } = 1;
 

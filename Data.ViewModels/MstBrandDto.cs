@@ -20,7 +20,7 @@ namespace Data.ViewModels
         public string Tag { get; set; }
     }
 
-    public class MstBrandUpdateDto : BaseModelDto
+    public class MstBrandUpdateDto 
     {
         public string Name { get; set; }
         public string Tag { get; set; }

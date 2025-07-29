@@ -52,10 +52,6 @@ namespace BusinessLogic.Services.Implementation
         {
             if (createDto == null) throw new ArgumentNullException(nameof(createDto));
 
-            var visitor = await _repository.GetVisitorsAsync(createDto.VisitorId);
-            if (visitor == null)
-                throw new ArgumentException($"Visitor with ID {createDto.VisitorId} not found.");
-
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var trxvisitor = _mapper.Map<TrxVisitor>(createDto);
             trxvisitor.Id = Guid.NewGuid();
@@ -108,7 +104,7 @@ namespace BusinessLogic.Services.Implementation
             if (trxvisitor == null)
                 throw new KeyNotFoundException($"trxvisitor with ID {id} not found.");
 
-            await _repository.DeleteAsync(trxvisitor);
+            await _repository.DeleteAsync(id);
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -176,8 +172,8 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(visitor.VisitorNumber ?? "-");
                             table.Cell().Element(CellStyle).Text(visitor.VisitorCode ?? "-");
                             table.Cell().Element(CellStyle).Text(visitor.VehiclePlateNumber ?? "-");
-                            table.Cell().Element(CellStyle).Text(visitor.CheckedInAt.ToString("yyyy-MM-dd HH:mm"));
-                            table.Cell().Element(CellStyle).Text(visitor.CheckedOutAt.ToString("yyyy-MM-dd HH:mm"));
+                            table.Cell().Element(CellStyle).Text(visitor.CheckedInAt?.ToString("yyyy-MM-dd HH:mm"));
+                            table.Cell().Element(CellStyle).Text(visitor.CheckedOutAt?.ToString("yyyy-MM-dd HH:mm"));
                             table.Cell().Element(CellStyle).Text(visitor.Status.ToString() ?? "-");
                         }
 
@@ -228,9 +224,9 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = visitor.VisitorNumber ?? "-";
                 worksheet.Cell(row, 3).Value = visitor.VisitorCode ?? "-";
                 worksheet.Cell(row, 4).Value = visitor.VehiclePlateNumber ?? "-";
-                worksheet.Cell(row, 5).Value = visitor.CheckedInAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 5).Value = visitor.CheckedInAt?.ToString("yyyy-MM-dd HH:mm");
                 worksheet.Cell(row, 6).Value = visitor.CheckinBy ?? "-";
-                worksheet.Cell(row, 7).Value = visitor.CheckedOutAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 7).Value = visitor.CheckedOutAt?.ToString("yyyy-MM-dd HH:mm");
                 worksheet.Cell(row, 8).Value = visitor.CheckoutBy ?? "-";
                 worksheet.Cell(row, 9).Value = visitor.Status.ToString() ?? "-";
                 row++;

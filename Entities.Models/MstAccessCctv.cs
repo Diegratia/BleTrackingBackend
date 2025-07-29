@@ -10,12 +10,10 @@ namespace Entities.Models
 {
     public class MstAccessCctv : BaseModelWithTime, IApplicationEntity
     {
-        [Required]
         [StringLength(255)]
         [Column("name")]
         public string Name { get; set; }
 
-        [Required]
         [Column("rtsp")]
         public string Rtsp { get; set; }
 

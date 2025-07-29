@@ -20,7 +20,7 @@ namespace Entities.Models
 
         [ForeignKey(nameof(Card))]
         [Column("card_id")]
-        public Guid CardId { get; set; }
+        public Guid? CardId { get; set; }
 
         [AllowNull]
         [ForeignKey(nameof(Visitor))]
@@ -34,6 +34,7 @@ namespace Entities.Models
 
         [Column("type")]
         public CardType? Type { get; set; }
+
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }
 
@@ -44,31 +45,31 @@ namespace Entities.Models
         public DateTime? CheckoutAt { get; set; }
 
         [Column("checkin_by")]
-        public string CheckinBy { get; set; } = "";
+        public string? CheckinBy { get; set; }
 
         [Column("checkout_by")]
-        public string CheckoutBy { get; set; } = "";
+        public string? CheckoutBy { get; set; }
 
-        [Column("checkout_site_id")]
-        public Guid? CheckoutSiteId { get; set; }
+        [Column("checkout_masked_area")]
+        public Guid? CheckoutMaskedArea { get; set; }
 
-        [Column("checkin_site_id")]
-        public Guid? CheckinSiteId { get; set; }
+        [Column("checkin_masked_area")]
+        public Guid? CheckinMaskedArea { get; set; }
 
         [Column("visitor_type")]
-        public VisitorType VisitorType { get; set; }
+        public VisitorType? VisitorType { get; set; }
 
         [Required]
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        [NotMapped]
+        public bool IsActive => CheckoutAt == null; 
+
         public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual MstMember Member { get; set; }
         public virtual Card Card { get; set; }
-         
-   
-        
     }
 }

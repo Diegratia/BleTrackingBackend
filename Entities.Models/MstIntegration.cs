@@ -17,37 +17,30 @@ namespace Entities.Models
         [Column("brand_id")]
         public Guid BrandId { get; set; }
 
-        [Required]
         [Column("integration_type")]
-        public IntegrationType IntegrationType { get; set; }
+        public IntegrationType? IntegrationType { get; set; }
 
-        [Required]
         [Column("api_type_auth")]
-        public ApiTypeAuth ApiTypeAuth { get; set; }
+        public ApiTypeAuth? ApiTypeAuth { get; set; }
 
-        [Required]
         [Column("api_url")]
-        public string ApiUrl { get; set; }
+        public string? ApiUrl { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("api_auth_username")]
-        public string ApiAuthUsername { get; set; }
+        public string? ApiAuthUsername { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("api_auth_passwd")]
-        public string ApiAuthPasswd { get; set; }
+        public string? ApiAuthPasswd { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("api_key_field")]
-        public string ApiKeyField { get; set; }
+        public string? ApiKeyField { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("api_key_value")]
-        public string ApiKeyValue { get; set; }
+        public string? ApiKeyValue { get; set; }
 
         [Required]
         [ForeignKey("Application")]  

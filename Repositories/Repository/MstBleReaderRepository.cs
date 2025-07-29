@@ -1,89 +1,127 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstBleReaderRepository
+    public class MstBleReaderRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstBleReaderRepository(BleTrackingDbContext context)
+        public MstBleReaderRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<MstBrand> GetBrandByIdAsync(Guid id)
+        public async Task<MstBleReader?> GetByIdAsync(Guid id)
         {
-            return await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == id);
-        }
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        public async Task<MstBleReader> GetByIdAsync(Guid id)
-        {
-            return await _context.MstBleReaders
-                .Include(fd => fd.Brand)
-                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
+            var query = _context.MstBleReaders
+                .Include(r => r.Brand)
+                .Where(r => r.Status != 0 && r.Id == id);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstBleReader>> GetAllAsync()
         {
-            return await _context.MstBleReaders
-                .Include(fd => fd.Brand)
-                .Where(b => b.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBleReaders
+                .Include(r => r.Brand)
+                .Where(r => r.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).ToListAsync();
         }
 
-        public async Task<MstBleReader> AddAsync(MstBleReader bleReader)
+        public async Task<MstBleReader> AddAsync(MstBleReader reader)
         {
-            var brand = await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == bleReader.BrandId && b.Status != 0);
-            if (brand == null)
-                throw new ArgumentException($"Brand with ID {bleReader.BrandId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            _context.MstBleReaders.Add(bleReader);
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required");
+
+                reader.ApplicationId = applicationId.Value;
+            }
+            else if (reader.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System Admin must set ApplicationId");
+            }
+
+            await ValidateApplicationIdAsync(reader.ApplicationId);
+            ValidateApplicationIdForEntity(reader, applicationId, isSystemAdmin);
+
+            var brand = await _context.MstBrands
+                .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
+            if (brand == null)
+                throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
+
+            _context.MstBleReaders.Add(reader);
             await _context.SaveChangesAsync();
-            return bleReader;
+
+            return reader;
         }
 
-        public async Task UpdateAsync(MstBleReader bleReader)
+        public async Task UpdateAsync(MstBleReader reader)
         {
-            var brand = await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == bleReader.BrandId && b.Status != 0);
-            if (brand == null)
-                throw new ArgumentException($"Brand with ID {bleReader.BrandId} not found.");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // _context.MstBleReaders.Update(bleReader);
+            await ValidateApplicationIdAsync(reader.ApplicationId);
+            ValidateApplicationIdForEntity(reader, applicationId, isSystemAdmin);
+
+            var brand = await _context.MstBrands
+                .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
+            if (brand == null)
+                throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
+
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var bleReader = await _context.MstBleReaders
-                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
-            if (bleReader == null)
-                throw new KeyNotFoundException("BLE Reader not found");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            bleReader.Status = 0;
+            var query = _context.MstBleReaders
+                .Where(r => r.Id == id && r.Status != 0);
+
+            var reader = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+
+            if (reader == null)
+                throw new KeyNotFoundException("BLE Reader not found or unauthorized");
+
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<MstBrand?> GetBrandByIdAsync(Guid id)
+        {
+            return await _context.MstBrands
+                .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 
         public IQueryable<MstBleReader> GetAllQueryable()
         {
-            return _context.MstBleReaders
-                .Include(b => b.Brand)
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBleReaders
+                .Include(r => r.Brand)
+                .Where(r => r.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
         public async Task<IEnumerable<MstBleReader>> GetAllExportAsync()
         {
-            return await _context.MstBleReaders
-                .Include(fd => fd.Brand)
-                .Where(b => b.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBleReaders
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
         }
     }
 }

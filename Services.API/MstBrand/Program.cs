@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 
@@ -119,7 +119,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<MstBrandRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ??
+var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "5009" ??
            builder.Configuration["Ports:MstBrandService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

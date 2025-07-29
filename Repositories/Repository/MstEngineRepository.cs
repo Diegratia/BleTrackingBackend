@@ -1,36 +1,55 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstEngineRepository
+    public class MstEngineRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstEngineRepository(BleTrackingDbContext context)
+        public MstEngineRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
         public async Task<IEnumerable<MstEngine>> GetAllAsync()
         {
-            return await _context.MstEngines
-            .Where(e => e.Status != 0)
-            .ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
-        public async Task<MstEngine> GetByIdAsync(Guid id)
+        public async Task<MstEngine?> GetByIdAsync(Guid id)
         {
-            return await _context.MstEngines
-             .FirstOrDefaultAsync(d => d.Id == id && d.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstEngines
+                .Where(e => e.Id == id && e.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<MstEngine> AddAsync(MstEngine engine)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
+
+                engine.ApplicationId = applicationId.Value;
+            }
+            else if (engine.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("Admin must specify ApplicationId explicitly.");
+            }
+
+            await ValidateApplicationIdAsync(engine.ApplicationId);
+            ValidateApplicationIdForEntity(engine, applicationId, isSystemAdmin);
+
             _context.MstEngines.Add(engine);
             await _context.SaveChangesAsync();
             return engine;
@@ -38,6 +57,11 @@ namespace Repositories.Repository
 
         public async Task UpdateAsync(MstEngine engine)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(engine.ApplicationId);
+            ValidateApplicationIdForEntity(engine, applicationId, isSystemAdmin);
+
             // _context.MstEngines.Update(engine);
             await _context.SaveChangesAsync();
         }
@@ -45,25 +69,29 @@ namespace Repositories.Repository
         public async Task DeleteAsync(Guid id)
         {
             var engine = await GetByIdAsync(id);
-            if (engine != null)
-            {
-                // _context.MstEngines.Remove(engine);
-                await _context.SaveChangesAsync();
-            }
+            if (engine == null)
+                throw new KeyNotFoundException("Engine not found.");
+
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            if (!isSystemAdmin && engine.ApplicationId != applicationId)
+                throw new UnauthorizedAccessException("You don’t have permission to delete this entity.");
+
+            await _context.SaveChangesAsync();
         }
 
         public IQueryable<MstEngine> GetAllQueryable()
         {
-            return _context.MstEngines
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstEngines
+                .Where(e => e.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<MstEngine>> GetAllExportAsync()
         {
-            return await _context.MstEngines
-            .Where(f => f.Status != 0).ToListAsync();
-        } 
-        
+            return await GetAllQueryable().ToListAsync();
+        }
     }
 }

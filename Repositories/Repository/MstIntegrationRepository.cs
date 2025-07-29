@@ -1,83 +1,121 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class MstIntegrationRepository
+    public class MstIntegrationRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public MstIntegrationRepository(BleTrackingDbContext context)
+        public MstIntegrationRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<MstBrand> GetBrandByIdAsync(Guid brandId)
+        public async Task<MstBrand?> GetBrandByIdAsync(Guid brandId)
         {
-            return await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == brandId && b.Status != 0);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBrands
+                .Where(b => b.Id == brandId && b.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
-        public async Task<MstApplication> GetApplicationByIdAsync(Guid applicationId)
+        public async Task<MstApplication?> GetApplicationByIdAsync(Guid applicationId)
         {
-            return await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId && a.ApplicationStatus != 0);
+            var query = _context.MstApplications
+                .Where(a => a.Id == applicationId && a.ApplicationStatus != 0);
+
+            return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<MstIntegration> GetByIdAsync(Guid id)
+        public async Task<MstIntegration?> GetByIdAsync(Guid id)
         {
-            return await _context.MstIntegrations
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstIntegrations
                 .Include(i => i.Brand)
-                .FirstOrDefaultAsync(i => i.Id == id && i.Status != 0);
+                .Where(i => i.Id == id && i.Status != 0);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstIntegration>> GetAllAsync()
         {
-            return await _context.MstIntegrations
-                .Include(i => i.Brand)
-                .Where(i => i.Status != 0)
-                .ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<MstIntegration> AddAsync(MstIntegration integration)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId is required.");
+                integration.ApplicationId = applicationId.Value;
+            }
+            else if (integration.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must explicitly provide ApplicationId.");
+            }
+
+            await ValidateApplicationIdAsync(integration.ApplicationId);
+            ValidateApplicationIdForEntity(integration, applicationId, isSystemAdmin);
+
             _context.MstIntegrations.Add(integration);
             await _context.SaveChangesAsync();
+
             return integration;
         }
 
         public async Task UpdateAsync(MstIntegration integration)
         {
-            // _context.MstIntegrations.Update(integration);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(integration.ApplicationId);
+            ValidateApplicationIdForEntity(integration, applicationId, isSystemAdmin);
+
             await _context.SaveChangesAsync();
         }
 
         public async Task SoftDeleteAsync(Guid id)
         {
-            var integration = await GetByIdAsync(id);
-            if (integration == null)
-                throw new KeyNotFoundException("Integration not found");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            integration.Status = 0;
+            var query = _context.MstIntegrations
+                .Where(i => i.Id == id && i.Status != 0);
+
+            var integration = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            if (integration == null)
+                throw new KeyNotFoundException("Integration not found or unauthorized");
+
             await _context.SaveChangesAsync();
         }
+
         public IQueryable<MstIntegration> GetAllQueryable()
         {
-            return _context.MstIntegrations
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstIntegrations
                 .Include(f => f.Brand)
-                .Where(f => f.Status != 0)
-                .AsQueryable();
+                .Where(f => f.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
-        
-          public async Task<IEnumerable<MstIntegration>> GetAllExportAsync()
-        {
-            return await _context.MstIntegrations.Include(f => f.Brand).
-            Where(f => f.Status != 0).ToListAsync();
-        }  
-        
+
+        public async Task<IEnumerable<MstIntegration>> GetAllExportAsync()
+         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstIntegrations
+                .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
+        }
     }
 }

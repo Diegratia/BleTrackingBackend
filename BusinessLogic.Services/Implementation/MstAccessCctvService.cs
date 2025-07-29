@@ -77,6 +77,7 @@ namespace BusinessLogic.Services.Implementation
             var accessCctv = await _repository.GetByIdAsync(id);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             accessCctv.UpdatedBy = username;
+            accessCctv.UpdatedAt = DateTime.UtcNow;
             await _repository.SoftDeleteAsync(id);
         }
 

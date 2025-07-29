@@ -26,7 +26,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaUpdateDto : BaseModelDto
+    public class VisitorBlacklistAreaUpdateDto 
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }

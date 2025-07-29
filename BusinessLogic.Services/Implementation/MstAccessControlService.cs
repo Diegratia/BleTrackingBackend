@@ -75,6 +75,11 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var accessControl = await _repository.GetByIdAsync(id);
+            accessControl.UpdatedBy = username;
+            accessControl.UpdatedAt = DateTime.UtcNow;
+            accessControl.Status = 0;
             await _repository.SoftDeleteAsync(id);
         }
 

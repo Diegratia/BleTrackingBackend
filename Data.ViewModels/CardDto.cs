@@ -21,10 +21,10 @@ namespace Data.ViewModels
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; } 
         public Guid? MemberId { get; set; } 
-        public bool? StatusCard { get; set; } = true;
-        public string CreatedBy { get; set; }
+        public bool? StatusCard { get; set; }
+        public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
-        public string UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
 
@@ -42,7 +42,7 @@ namespace Data.ViewModels
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; } 
         public Guid? MemberId { get; set; } 
-        public bool? StatusCard { get; set; } = true;
+        public int? StatusCard { get; set; }
     }
 
     public class CardUpdateDto : BaseModelDto
@@ -59,7 +59,7 @@ namespace Data.ViewModels
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; } 
         public Guid? MemberId { get; set; } 
-        public bool? StatusCard { get; set; } = true;
+        public int? StatusCard { get; set; }
     }
 }
 

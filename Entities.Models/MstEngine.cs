@@ -14,36 +14,29 @@ namespace Entities.Models
         [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [Required]
         [MaxLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [MaxLength(255)]
         [Column("engine_id")]
-        public string EngineId { get; set; }
+        public string? EngineId { get; set; }
 
-        [Required]
         [Column("port")]
-        public int Port { get; set; }
+        public int? Port { get; set; }
 
-        [Required]
         [Column("status")]
-        public int? Status { get; set; } = 1;
+        public int? Status { get; set; }
 
-        [Required]
         [Column("is_live")]
-        public int? IsLive { get; set; } = 1;
+        public int? IsLive { get; set; }
 
-        [Required]
         [Column("last_live")]
-        public DateTime LastLive { get; set; }
+        public DateTime? LastLive { get; set; }
 
-        [Required]
         [MaxLength(50)]
         [Column("service_status")]
-        public ServiceStatus ServiceStatus { get; set; }
+        public ServiceStatus? ServiceStatus { get; set; }
 
         [Required]
         [ForeignKey(nameof(Application))]

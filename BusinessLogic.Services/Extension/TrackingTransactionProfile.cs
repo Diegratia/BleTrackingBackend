@@ -13,11 +13,11 @@ namespace BusinessLogic.Services.Extension
     {
         public TrackingTransactionProfile()
         {
-            CreateMap<TrackingTransactionCreateDto, TrackingTransaction>()
-                .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
+            // CreateMap<TrackingTransactionCreateDto, TrackingTransaction>()
+            //     .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
 
-            CreateMap<TrackingTransactionUpdateDto, TrackingTransaction>()
-                .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
+            // CreateMap<TrackingTransactionUpdateDto, TrackingTransaction>()
+            //     .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => Enum.Parse<AlarmStatus>(src.AlarmStatus, true)));
 
             CreateMap<TrackingTransaction, TrackingTransactionDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();

@@ -514,11 +514,15 @@ namespace BusinessLogic.Services.Interface
                 throw new UnauthorizedAccessException("Current user not found");
 
             var currentUserRole = currentUser.Group?.LevelPriority;
+            // if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
+            // {
+            //     await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated);
+            // }        
+
             if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
             {
-                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated);
+                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated, LevelPriority.Primary, LevelPriority.PrimaryAdmin);
             }
-
 
             // var confirmationCode = Guid.NewGuid().ToString();
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper(); 

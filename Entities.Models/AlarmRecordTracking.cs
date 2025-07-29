@@ -11,9 +11,8 @@ namespace Entities.Models
     public class AlarmRecordTracking : BaseModel, IApplicationEntity
     {
 
-        [Required]
         [Column("timestamp")]
-        public DateTime Timestamp { get; set; }
+        public DateTime? Timestamp { get; set; }
 
         [Required]
         [ForeignKey("Visitor")]
@@ -31,10 +30,10 @@ namespace Entities.Models
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Column("alarm_record_status")]
-        public AlarmRecordStatus Alarm { get; set; }
+        public AlarmRecordStatus? Alarm { get; set; }
 
         [Column("action")]
-        public ActionStatus Action { get; set; }
+        public ActionStatus? Action { get; set; }
 
         [Required]
         [ForeignKey("Application")]

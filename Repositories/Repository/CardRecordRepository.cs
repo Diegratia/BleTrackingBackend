@@ -1,87 +1,74 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 
 namespace Repositories.Repository
 {
-    public class CardRecordRepository
+    public class CardRecordRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
-
-        public CardRecordRepository(BleTrackingDbContext context)
+        public CardRecordRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
-        public async Task<CardRecord> GetByIdAsync(Guid id)
+        public async Task<CardRecord?> GetByIdAsync(Guid id)
         {
-            return await _context.CardRecords
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.CardRecords
+                .Include(a => a.Visitor)
+                .Include(a => a.Card)
+                .Include(a => a.Member)
+                .Include(a => a.Application)
+                .Where(b => b.Id == id);
+
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<CardRecord>> GetAllAsync()
         {
-            return await _context.CardRecords
+            return await GetAllQueryable().ToListAsync();
+        }
+
+        public IQueryable<CardRecord> GetAllQueryable()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.CardRecords
                 .Include(a => a.Visitor)
                 .Include(a => a.Card)
                 .Include(a => a.Member)
-                .ToListAsync();
+                .Include(a => a.Application);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<CardRecord> AddAsync(CardRecord cardRecord)
+        public async Task<IEnumerable<CardRecord>> GetAllExportAsync()
         {
-            _context.CardRecords.Add(cardRecord);
-            await _context.SaveChangesAsync();
-            return cardRecord;
+            return await GetAllQueryable().ToListAsync();
         }
 
-        public async Task UpdateAsync(CardRecord cardRecord)
-        {
-            // _context.MstBleReaders.Update(bleReader);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<Visitor> GetVisitorByIdAsync(Guid id)
+        public async Task<Visitor?> GetVisitorByIdAsync(Guid id)
         {
             return await _context.Visitors
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
-        public async Task<MstMember> GetMemberByIdAsync(Guid id)
+        public async Task<MstMember?> GetMemberByIdAsync(Guid id)
         {
             return await _context.MstMembers
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status != 0);
         }
 
-        public async Task<Card> GetCardByIdAsync(Guid id)
+        public async Task<Card?> GetCardByIdAsync(Guid id)
         {
             return await _context.Cards
-                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != false);
-        }
-
-        public IQueryable<CardRecord> GetAllQueryable()
-        {
-            return _context.CardRecords
-                .Include(a => a.Visitor)
-                .Include(a => a.Card)
-                .Include(a => a.Member)
-                .AsQueryable();
-        }    
-        public async Task<IEnumerable<CardRecord>> GetAllExportAsync()
-        {
-            return await _context.CardRecords
-                .Include(a => a.Visitor)
-                .Include(a => a.Card)
-                .Include(a => a.Member)
-                .ToListAsync();
+                .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != 0);
         }
     }
 }

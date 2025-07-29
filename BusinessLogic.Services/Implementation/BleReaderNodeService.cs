@@ -51,15 +51,6 @@ namespace BusinessLogic.Services.Implementation
             var validationContext = new ValidationContext(createDto);
             Validator.ValidateObject(createDto, validationContext, true);
 
-            // Validasi ReaderId
-            var reader = await _repository.GetReaderByIdAsync(createDto.ReaderId);
-            if (reader == null)
-                throw new ArgumentException($"Reader with ID {createDto.ReaderId} not found.");
-
-            // Validasi ApplicationId
-            var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             var bleReaderNode = _mapper.Map<BleReaderNode>(createDto);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
@@ -77,16 +68,6 @@ namespace BusinessLogic.Services.Implementation
             // Validasi DTO
             var validationContext = new ValidationContext(updateDto);
             Validator.ValidateObject(updateDto, validationContext, true);
-
-            // Validasi ReaderId
-            var reader = await _repository.GetReaderByIdAsync(updateDto.ReaderId);
-            if (reader == null)
-                throw new ArgumentException($"Reader with ID {updateDto.ReaderId} not found.");
-
-            // Validasi ApplicationId
-            var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
-            if (application == null)
-                throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
 
             var bleReaderNode = await _repository.GetByIdAsync(id);
             if (bleReaderNode == null)

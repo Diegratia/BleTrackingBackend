@@ -11,100 +11,88 @@ namespace Entities.Models
 {
     public class Visitor : BaseModel, IApplicationEntity
     {
-        [Required]
-        [StringLength(255)]
         [Column("person_id")]
-        public string PersonId { get; set; }
+        public string? PersonId { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("identity_id")]
-        public string IdentityId { get; set; }
+        public string? IdentityId { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("card_number")]
-        public string CardNumber { get; set; }
+        public string? CardNumber { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("ble_card_number")]
-        public string BleCardNumber { get; set; }
+        public string? BleCardNumber { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("visitor_type")]
-        public VisitorType VisitorType { get; set; }
+        public VisitorType? VisitorType { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("phone")]
-        public string Phone { get; set; }
+        public string? Phone { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
-        [Required]
         [Column("gender")]
-        public Gender Gender { get; set; }
+        public Gender? Gender { get; set; }
 
         [Column("address")]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
-        [Required]
         [ForeignKey(nameof(Organization))]
         [Column("organization_id")]
-        public Guid OrganizationId { get; set; }
+        public Guid? OrganizationId { get; set; }
 
-        [Required]
+
         [ForeignKey(nameof(District))]
         [Column("district_id")]
-        public Guid DistrictId { get; set; }
+        public Guid? DistrictId { get; set; }
 
-        [Required]
         [ForeignKey(nameof(Department))]
         [Column("department_id")]
-        public Guid DepartmentId { get; set; }
+        public Guid? DepartmentId { get; set; }
 
         [Column("is_vip")]
-        public bool IsVip { get; set; }
+        public bool? IsVip { get; set; }
 
         [Column("is_email_vervied")]
-        public bool IsEmailVerified { get; set; }
+        public bool? IsEmailVerified { get; set; }
 
         [Column("email_verification_send_at")]
-        public DateTime EmailVerficationSendAt { get; set; }
+        public DateTime? EmailVerficationSendAt { get; set; }
 
         [Column("email_verification_token")]
-        public string EmailVerificationToken { get; set; }
+        public string? EmailVerificationToken { get; set; }
 
         [Column("visitor_period_start")]
-        public DateTime VisitorPeriodStart { get; set; }
+        public DateTime? VisitorPeriodStart { get; set; }
 
         [Column("visitor_period_end")]
-        public DateTime VisitorPeriodEnd { get; set; }
+        public DateTime? VisitorPeriodEnd { get; set; }
 
         [Column("is_employee")]
-        public bool IsEmployee { get; set; }
+        public bool? IsEmployee { get; set; }
 
         [Column("status")]
         public int Status { get; set; } = 1;
 
         [Column("face_image")]
-        public string FaceImage { get; set; }
+        public string? FaceImage { get; set; }
 
         [Column("upload_fr")]
         public int UploadFr { get; set; } = 0;
 
         [Column("upload_fr_error")]
-        public string UploadFrError { get; set; }
+        public string? UploadFrError { get; set; }
 
         [Required]
         [ForeignKey("Application")]

@@ -87,7 +87,9 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
+            building.CreatedAt = DateTime.UtcNow;
             building.UpdatedBy = username;
+            building.UpdatedAt = DateTime.UtcNow;
             building.Status = 1;
 
             var createdBuilding = await _repository.AddAsync(building);
@@ -149,6 +151,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, building);
             building.UpdatedBy = username;
+            building.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(building);
             
@@ -160,6 +163,7 @@ namespace BusinessLogic.Services.Implementation
             var building = await _repository.GetByIdAsync(id);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             building.UpdatedBy = username;
+            building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
             await _repository.DeleteAsync(id);
         }

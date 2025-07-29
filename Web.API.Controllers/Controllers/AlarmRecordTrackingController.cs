@@ -169,41 +169,41 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Alarm not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [HttpDelete("{id}")]
+        // public async Task<IActionResult> Delete(Guid id)
+        // {
+        //     try
+        //     {
+        //         await _service.DeleteAsync(id);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Alarm deleted successfully",
+        //             collection = new { data = (object)null },
+        //             code = 204
+        //         });
+        //     }
+        //     catch (KeyNotFoundException)
+        //     {
+        //         return NotFound(new
+        //         {
+        //             success = false,
+        //             msg = "Alarm not found",
+        //             collection = new { data = (object)null },
+        //             code = 404
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
