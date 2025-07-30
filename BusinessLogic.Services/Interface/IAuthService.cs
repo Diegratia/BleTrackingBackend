@@ -581,7 +581,7 @@ namespace BusinessLogic.Services.Interface
 
             var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("User not found for update");
 
             var currentUserRole = currentUser.Group?.LevelPriority;
             if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
@@ -692,7 +692,7 @@ namespace BusinessLogic.Services.Interface
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim("groupId", user.GroupId.ToString()),
-                new Claim("applicationId", user.Group.ApplicationId.ToString()),
+                new Claim("ApplicationId", user.Group.ApplicationId.ToString()),
                 new Claim("groupName", user.Group.Name),
                 new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString())
             };
@@ -728,10 +728,11 @@ namespace BusinessLogic.Services.Interface
         }
 
         public async Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto)
-    {
+        {
         var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
         if (string.IsNullOrEmpty(currentUserId))
-            throw new UnauthorizedAccessException("User not authenticated");
+                throw new UnauthorizedAccessException("User not authenticated");
 
         var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
         if (currentUser == null)
@@ -742,11 +743,12 @@ namespace BusinessLogic.Services.Interface
             throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can create groups");
 
         var userGroup = _mapper.Map<UserGroup>(dto);
+        userGroup.Id = Guid.NewGuid();
         userGroup.Status = 1;
         userGroup.CreatedAt = DateTime.UtcNow;
-        userGroup.CreatedBy = currentUserId;
+        userGroup.CreatedBy = username;
         userGroup.UpdatedAt = DateTime.UtcNow;
-        userGroup.UpdatedBy = currentUserId;
+        userGroup.UpdatedBy = username;
         var createdGroup = await _userGroupRepository.AddAsync(userGroup);
         return _mapper.Map<UserGroupDto>(createdGroup);
     }

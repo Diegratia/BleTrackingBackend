@@ -60,11 +60,13 @@ namespace Repositories.Repository
             }
 
             await ValidateApplicationIdAsync(userGroup.ApplicationId);
-            userGroup.Id = Guid.NewGuid();
+            ValidateApplicationIdForEntity(userGroup, applicationId, isSystemAdmin);
+            
             _context.UserGroups.Add(userGroup);
             await _context.SaveChangesAsync();
             return userGroup;
         }
+
 
         public async Task UpdateAsync(UserGroup userGroup)
         {
