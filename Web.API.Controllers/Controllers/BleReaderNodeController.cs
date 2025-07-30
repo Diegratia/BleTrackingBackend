@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequiredSystemUser")]
+    [Authorize ("RequireSystemOrSuperAdminRole")]
     public class BleReaderNodeController : ControllerBase
     {
         private readonly IBleReaderNodeService _bleReaderNodeService;

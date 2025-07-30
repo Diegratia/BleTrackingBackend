@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     [Route("api/[controller]")]
     [ApiController]
     public class MstEngineController : ControllerBase

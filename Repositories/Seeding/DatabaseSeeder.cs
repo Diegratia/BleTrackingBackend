@@ -137,10 +137,15 @@ namespace Repositories.Seeding
                         .Where(ug => ug.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
+                        .Id)
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
                         .Id);
 
 
-                var users = userFaker.Generate(2);
+                var users = userFaker.Generate(4);
 
 
                 var superadminGroup = context.UserGroups

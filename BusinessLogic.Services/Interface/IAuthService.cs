@@ -150,7 +150,7 @@
 // //             return tokenString;
 // //         }
 
-        
+
 // //     }
 // // }
 
@@ -389,7 +389,7 @@
 //             var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
 //             return userDtos;
 //         }
-        
+
 //         public async Task<UserDto> GetUserByIdAsync(Guid id)
 //         {
 
@@ -399,6 +399,9 @@
 //         }
 //     }
 // }
+
+
+
 
 
 using AutoMapper;
@@ -416,6 +419,7 @@ using BCrypt.Net;
 using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using BusinessLogic.Services.Implementation;
+using Bogus.DataSets;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -428,8 +432,14 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<UserDto> GetUserByIdAsync(Guid id);
+        Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
+        Task DeleteUserAsync(Guid id);
+        Task <UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
+        Task <UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto);
+        Task DeleteGroupAsync(Guid id);
+        Task <IEnumerable<UserGroupDto>> GetAllGroupsAsync();
+        Task <UserGroupDto> GetGroupByIdAsync(Guid id);
     }
-
     public class AuthService : IAuthService
     {
         private readonly UserRepository _userRepository;
@@ -525,13 +535,13 @@ namespace BusinessLogic.Services.Interface
             }
 
             // var confirmationCode = Guid.NewGuid().ToString();
-            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper(); 
+            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
                 Username = dto.Username.ToLower(),
                 Email = dto.Email.ToLower(),
-                Password = null ?? "", 
+                Password = null ?? "",
                 IsCreatedPassword = 0,
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = confirmationCode,
@@ -557,6 +567,56 @@ namespace BusinessLogic.Services.Interface
                 IsEmailConfirmed = 0,
                 StatusActive = newUser.StatusActive.ToString()
             };
+        }
+
+        public async Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+                throw new UnauthorizedAccessException("User not authenticated");
+
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
+
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            var currentUserRole = currentUser.Group?.LevelPriority;
+            if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
+            {
+                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated, LevelPriority.Primary, LevelPriority.PrimaryAdmin);
+            }
+
+            user.Username = dto.Username.ToLower();
+            user.Email = dto.Email.ToLower();
+            user.GroupId = dto.GroupId;
+            if (!string.IsNullOrEmpty(dto.Password))
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                user.IsCreatedPassword = 1;
+            }
+
+            await _userRepository.UpdateAsync(user);
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task DeleteUserAsync(Guid id)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+                throw new UnauthorizedAccessException("User not authenticated");
+
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
+
+            var currentUserRole = currentUser.Group?.LevelPriority;
+            if (currentUserRole != LevelPriority.System && currentUserRole != LevelPriority.SuperAdmin && currentUserRole != LevelPriority.PrimaryAdmin)
+            throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can delete user");
+
+            await _userRepository.DeleteAsync(id);
         }
 
         public async Task ConfirmEmailAsync(ConfirmEmailDto dto)
@@ -665,6 +725,83 @@ namespace BusinessLogic.Services.Interface
         {
             var user = await _userRepository.GetByIdAsync(id);
             return user == null ? null : _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto)
+    {
+        var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+            throw new UnauthorizedAccessException("User not authenticated");
+
+        var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+        if (currentUser == null)
+            throw new UnauthorizedAccessException("Current user not found");
+
+        var currentUserRole = currentUser.Group?.LevelPriority;
+        if (currentUserRole != LevelPriority.System && currentUserRole != LevelPriority.SuperAdmin && currentUserRole != LevelPriority.PrimaryAdmin)
+            throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can create groups");
+
+        var userGroup = _mapper.Map<UserGroup>(dto);
+        userGroup.Status = 1;
+        userGroup.CreatedAt = DateTime.UtcNow;
+        userGroup.CreatedBy = currentUserId;
+        userGroup.UpdatedAt = DateTime.UtcNow;
+        userGroup.UpdatedBy = currentUserId;
+        var createdGroup = await _userGroupRepository.AddAsync(userGroup);
+        return _mapper.Map<UserGroupDto>(createdGroup);
+    }
+    
+
+
+    public async Task<UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+                throw new UnauthorizedAccessException("User not authenticated");
+
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
+
+            var currentUserRole = currentUser.Group?.LevelPriority;
+            if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
+                throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Update groups");
+
+            var userGroup = _mapper.Map<UserGroup>(dto);
+            userGroup.Id = id;
+            await _userGroupRepository.UpdateAsync(userGroup);
+            return _mapper.Map<UserGroupDto>(userGroup);
+        }
+
+    public async Task DeleteGroupAsync(Guid id)
+    {
+        var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+            throw new UnauthorizedAccessException("User not authenticated");
+
+        var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+        if (currentUser == null)
+            throw new UnauthorizedAccessException("Current user not found");
+
+        var currentUserRole = currentUser.Group?.LevelPriority;
+        if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
+            throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Delete groups");
+
+        await _userGroupRepository.DeleteAsync(id);
+    }
+
+        public async Task<IEnumerable<UserGroupDto>> GetAllGroupsAsync()
+        {
+            var groups = await _userGroupRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<UserGroupDto>>(groups);
+        }
+
+        public async Task<UserGroupDto> GetGroupByIdAsync(Guid id)
+        {
+            var group = await _userGroupRepository.GetByIdAsync(id);
+            if (group == null)
+                throw new KeyNotFoundException("User group not found");
+            return _mapper.Map<UserGroupDto>(group);
         }
     }
 }

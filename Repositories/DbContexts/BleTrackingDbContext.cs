@@ -733,11 +733,16 @@ namespace Repositories.DbContexts
                 entity.HasOne(e => e.Visitor)
                     .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
                     .HasForeignKey(e => e.VisitorId)
-                    .OnDelete(DeleteBehavior.NoAction); 
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Member)
                     .WithMany() // atau .WithMany(m => m.CardRecords)
                     .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+                    
+                entity.HasOne(e => e.Card)
+                    .WithMany() // atau .WithMany(m => m.CardRecords)
+                    .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction); 
             });
 
@@ -971,6 +976,18 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.MemberId).HasMaxLength(36);
+                entity.HasOne(m => m.Member)
+                    .WithMany()
+                    .HasForeignKey(m => m.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                 entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.HasOne(m => m.Visitor)
+                    .WithMany()
+                    .HasForeignKey(m => m.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
                 
             });

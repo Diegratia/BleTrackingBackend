@@ -13,7 +13,7 @@ namespace Web.API.Controllers.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    // [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class FloorplanDeviceController : ControllerBase
     {
         private readonly IFloorplanDeviceService _service;

@@ -13,16 +13,52 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class UserGroupController : ControllerBase
     {
-        private readonly BleTrackingDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IAuthService _service;
 
-        public UserGroupController(BleTrackingDbContext context, IMapper mapper)
+         public UserGroupController(IAuthService service)
         {
-            _context = context;
-            _mapper = mapper;
+            _service = service;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateUserGroupDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createGroup = await _service.CreateGroupAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Group created successfully",
+                    collection = new { data = createGroup },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
         }
 
         [HttpGet]
@@ -30,13 +66,12 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var groups = await _context.UserGroups.ToListAsync();
-                var groupDtos = _mapper.Map<List<UserGroupDto>>(groups);
+                var groups = await _service.GetAllGroupsAsync();
                 return Ok(new
                 {
                     success = true,
                     msg = "User groups retrieved successfully",
-                    collection = new { data = groupDtos },
+                    collection = new { data = groups },
                     code = 200
                 });
             }
@@ -57,7 +92,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var group = await _context.UserGroups.FindAsync(id);
+                var group = await _service.GetGroupByIdAsync(id);
                 if (group == null)
                 {
                     return NotFound(new
@@ -68,13 +103,107 @@ namespace Web.API.Controllers.Controllers
                         code = 404
                     });
                 }
-                var groupDto = _mapper.Map<UserGroupDto>(group);
                 return Ok(new
                 {
                     success = true,
                     msg = "User group retrieved successfully",
-                    collection = new { data = groupDto },
+                    collection = new { data = group },
                     code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserGroupDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+    
+                await _service.UpdateGroupAsync(id, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "User group updated successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                await _service.DeleteGroupAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "User group deleted successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
                 });
             }
             catch (Exception ex)
@@ -90,3 +219,20 @@ namespace Web.API.Controllers.Controllers
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

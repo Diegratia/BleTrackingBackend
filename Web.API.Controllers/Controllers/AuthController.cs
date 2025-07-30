@@ -69,7 +69,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize("RequirePrimaryOrSystemOrSuperAdminRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             if (!ModelState.IsValid)
@@ -156,7 +156,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("users")]
-        [Authorize("RequireAuthenticatedUser")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -218,6 +218,95 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+    [HttpPut("users/{id}")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+            return BadRequest(new
+            {
+                success = false,
+                msg = "Validation failed: " + string.Join(", ", errors),
+                collection = new { data = (object)null },
+                code = 400
+            });
+        }
+
+        try
+        {
+            await _authService.UpdateUserAsync(id, dto);
+            return Ok(new
+            {
+                success = true,
+                msg = "User updated successfully",
+                collection = new { data = (object)null },
+                code = 200
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                msg = ex.Message,
+                collection = new { data = (object)null },
+                code = 404
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                msg = $"Internal server error: {ex.Message}",
+                collection = new { data = (object)null },
+                code = 500
+            });
+        }
+    }
+
+    
+
+    [HttpDelete("users/{id}")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            await _authService.DeleteUserAsync(id);
+            return Ok(new
+            {
+                success = true,
+                msg = "User deleted successfully",
+                collection = new { data = (object)null },
+                code = 200
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                msg = ex.Message,
+                collection = new { data = (object)null },
+                code = 404
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                msg = $"Internal server error: {ex.Message}",
+                collection = new { data = (object)null },
+                code = 500
+            });
+        }
+    }
+
 
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
