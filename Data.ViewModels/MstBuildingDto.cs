@@ -24,7 +24,7 @@ namespace Data.ViewModels
 
     public class MstBuildingUpdateDto 
     {
-        public string Name { get; set; }
-        public IFormFile Image { get; set; }
+        public string? Name { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }

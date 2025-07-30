@@ -8,8 +8,8 @@ namespace Data.ViewModels
         public int Generate { get; set; }
         public Guid Id { get; set; }
         public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public string FloorImage { get; set; }
+        public string? Name { get; set; }
+        public string? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
@@ -27,8 +27,8 @@ namespace Data.ViewModels
     public class MstFloorCreateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public IFormFile FloorImage { get; set; }
+        public string? Name { get; set; }
+        public IFormFile? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
@@ -39,9 +39,9 @@ namespace Data.ViewModels
 
     public class MstFloorUpdateDto : BaseModelDto
     {
-        public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public IFormFile FloorImage { get; set; }
+        public Guid? BuildingId { get; set; }
+        public string? Name { get; set; }
+        public IFormFile? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
@@ -52,8 +52,8 @@ namespace Data.ViewModels
     public class MstFloorImportDto
     {
         public string BuildingId { get; set; } 
-        public string Name { get; set; }
-        public string FloorImage { get; set; } = "";
+        public string? Name { get; set; }
+        public string? FloorImage { get; set; } = "";
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }

@@ -11,22 +11,19 @@ namespace Entities.Models
     public class MstBuilding : BaseModelWithTime, IApplicationEntity
     {
 
-        [Required]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [Column("image")]
-        public string Image { get; set; } 
+        public string? Image { get; set; } 
 
         [Required]
         [Column("application_id")]
         [ForeignKey("Application")]
         public Guid ApplicationId { get; set; }
 
-        [Required]
         [Column("status")]
-        public int? Status { get; set; } = 1;
+        public int Status { get; set; } = 1;
 
         public virtual MstApplication Application { get; set; }
         public virtual ICollection<MstBuilding> Buildings { get; set; } = new List<MstBuilding>();
