@@ -67,6 +67,18 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
+                        Name = "Super Admin Initial",
+                        LevelPriority = LevelPriority.SuperAdmin,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
+                    new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
                         Name = "Primary Admin Initial",
                         LevelPriority = LevelPriority.PrimaryAdmin,
                         ApplicationId = applicationId,

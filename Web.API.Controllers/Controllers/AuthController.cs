@@ -69,7 +69,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize("RequirePrimaryAdminOrSystemRole")]
+        [Authorize("RequirePrimaryOrSystemOrSuperAdminRole")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             if (!ModelState.IsValid)
