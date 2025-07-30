@@ -44,7 +44,7 @@ namespace Repositories.Repository
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
                 .Include(b => b.Application)
-                .Where(b => b.StatusCard != 1);
+                .Where(b => b.StatusCard != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
