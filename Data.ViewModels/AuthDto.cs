@@ -54,8 +54,8 @@ namespace Data.ViewModels
     public class UserGroupDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string LevelPriority { get; set; }
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -66,15 +66,15 @@ namespace Data.ViewModels
 
     public class CreateUserGroupDto
     {
-        public string Name { get; set; }
-        public string LevelPriority { get; set; }
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
     }
 
     public class UpdateUserGroupDto
     {
-        public string Name { get; set; }
-        public string LevelPriority { get; set; }
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
     }
 
