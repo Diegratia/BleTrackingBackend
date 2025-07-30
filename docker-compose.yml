@@ -278,15 +278,15 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-card:
-    build:
-      context: .
-      dockerfile: Services.API/VisitorCard/Dockerfile
-    ports:
-      - "10023:10023"
-    volumes:
-      - ./.env:/app/.env
-    restart: always
+  # visitor-card:
+  #   build:
+  #     context: .
+  #     dockerfile: Services.API/VisitorCard/Dockerfile
+  #   ports:
+  #     - "10023:10023"
+  #   volumes:
+  #     - ./.env:/app/.env
+  #   restart: always
 
   card-record:
     build:
