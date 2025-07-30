@@ -984,7 +984,7 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
                     
-                 entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.HasOne(m => m.Visitor)
                     .WithMany()
                     .HasForeignKey(m => m.VisitorId)

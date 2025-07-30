@@ -524,6 +524,7 @@ namespace Repositories.Migrations
                     last_login_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     status_active = table.Column<int>(type: "int", nullable: false),
                     group_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     _generate = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1")
@@ -531,6 +532,12 @@ namespace Repositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_user", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_user_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_user_user_group_UserGroupId",
                         column: x => x.UserGroupId,
@@ -867,8 +874,8 @@ namespace Repositories.Migrations
                     registered_masked_area = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     is_used = table.Column<bool>(type: "bit", nullable: true),
                     last_used_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     checkin_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     status_card = table.Column<int>(type: "int", nullable: true),
@@ -1155,12 +1162,18 @@ namespace Repositories.Migrations
                     checkin_masked_area = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    CardId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_card_record", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_record_card_CardId1",
+                        column: x => x.CardId1,
+                        principalTable: "card",
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_card_record_card_card_id",
                         column: x => x.card_id,
@@ -1284,6 +1297,11 @@ namespace Repositories.Migrations
                 name: "IX_card_record_card_id",
                 table: "card_record",
                 column: "card_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_record_CardId1",
+                table: "card_record",
+                column: "CardId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_record_member_id",
@@ -1632,6 +1650,11 @@ namespace Repositories.Migrations
                 name: "IX_trx_visitor_visitor_id",
                 table: "trx_visitor",
                 column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_application_id",
+                table: "user",
+                column: "application_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_user_group_id",

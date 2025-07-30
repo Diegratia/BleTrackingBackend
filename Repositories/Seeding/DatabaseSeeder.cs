@@ -165,7 +165,8 @@ namespace Repositories.Seeding
                         EmailConfirmationAt = DateTime.UtcNow,
                         LastLoginAt = DateTime.MinValue,
                         StatusActive = StatusActive.Active,
-                        GroupId = superadminGroup.Id
+                        GroupId = superadminGroup.Id,
+                        ApplicationId = superadminGroup.ApplicationId,
                     };
                     users.Add(superadmin);
                 }
@@ -646,9 +647,23 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.Dmac, f => f.Internet.Mac())
                     .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
                     // .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
-                    .RuleFor(t => t.RegisteredMaskedAreaId, f => f.Random.Bool() 
-                        ? (Guid?)null 
+                    .RuleFor(t => t.RegisteredMaskedAreaId, f => f.Random.Bool()
+                        ? (Guid?)null
                         : context.FloorplanMaskedAreas
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
+                     .RuleFor(t => t.VisitorId, f => f.Random.Bool()
+                        ? (Guid?)null
+                        : context.Visitors
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
+                     .RuleFor(t => t.MemberId, f => f.Random.Bool() 
+                        ? (Guid?)null 
+                        : context.MstMembers
                             .Where(a => a.Status != 0)
                             .OrderBy(r => Guid.NewGuid())
                             .First()
@@ -666,7 +681,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.UpdatedBy, f => "System")
                     .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
 
-                var cards = cardFaker.Generate(2);
+                var cards = cardFaker.Generate(4);
                 context.Cards.AddRange(cards);
                 context.SaveChanges();
             }

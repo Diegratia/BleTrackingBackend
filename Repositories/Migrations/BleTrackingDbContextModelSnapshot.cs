@@ -299,6 +299,7 @@ namespace Repositories.Migrations
                         .HasColumnName("last_used_by");
 
                     b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("member_id");
 
@@ -331,6 +332,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_by");
 
                     b.Property<Guid?>("VisitorId")
+                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
 
@@ -362,6 +364,9 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("CardId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("card_id");
+
+                    b.Property<Guid?>("CardId1")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CheckinAt")
                         .HasColumnType("datetime2")
@@ -423,6 +428,8 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("CardId");
+
+                    b.HasIndex("CardId1");
 
                     b.HasIndex("MemberId");
 
@@ -2087,6 +2094,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -2150,6 +2161,8 @@ namespace Repositories.Migrations
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("GroupId");
 
@@ -2499,7 +2512,8 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.MstMember", "Member")
                         .WithMany()
-                        .HasForeignKey("MemberId");
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "RegisteredMaskedArea")
                         .WithMany()
@@ -2507,7 +2521,8 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
-                        .HasForeignKey("VisitorId");
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Application");
 
@@ -2527,8 +2542,13 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany()
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Card", null)
                         .WithMany("CardRecords")
-                        .HasForeignKey("CardId");
+                        .HasForeignKey("CardId1");
 
                     b.HasOne("Entities.Models.MstMember", "Member")
                         .WithMany()
@@ -3008,6 +3028,12 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.UserGroup", "Group")
                         .WithMany()
                         .HasForeignKey("GroupId")
@@ -3017,6 +3043,8 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.UserGroup", null)
                         .WithMany("Users")
                         .HasForeignKey("UserGroupId");
+
+                    b.Navigation("Application");
 
                     b.Navigation("Group");
                 });
