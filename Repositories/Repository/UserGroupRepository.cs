@@ -103,7 +103,7 @@ namespace Repositories.Repository
             var group = await GetByIdAsync(groupId);
             if (group == null)
                 throw new ArgumentException($"Group with ID {groupId} not found.");
-            if (!allowedPriorities.Contains(group.LevelPriority))
+            if (!allowedPriorities.Any(ap => ap == group.LevelPriority))
                 throw new UnauthorizedAccessException($"Group must have one of the allowed roles: {string.Join(", ", allowedPriorities)}.");
         }
     }
