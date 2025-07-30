@@ -742,6 +742,14 @@ namespace BusinessLogic.Services.Interface
         if (currentUserRole != LevelPriority.System && currentUserRole != LevelPriority.SuperAdmin && currentUserRole != LevelPriority.PrimaryAdmin)
             throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can create groups");
 
+        if (!Enum.TryParse<LevelPriority>(dto.LevelPriority.ToString(), out var targetPriority))
+        throw new ArgumentException("Invalid level priority");
+
+        if ((int)targetPriority < (int)currentUserRole)
+            throw new UnauthorizedAccessException("You can only assign roles equal to or lower than your own");
+
+
+
         var userGroup = _mapper.Map<UserGroup>(dto);
         userGroup.Id = Guid.NewGuid();
         userGroup.Status = 1;
@@ -768,6 +776,12 @@ namespace BusinessLogic.Services.Interface
             var currentUserRole = currentUser.Group?.LevelPriority;
             if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
                 throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Update groups");
+
+                if (!Enum.TryParse<LevelPriority>(dto.LevelPriority.ToString(), out var targetPriority))
+        throw new ArgumentException("Invalid level priority");
+
+        if ((int)targetPriority < (int)currentUserRole)
+            throw new UnauthorizedAccessException("You can only assign roles equal to or lower than your own");
 
             var userGroup = _mapper.Map<UserGroup>(dto);
             userGroup.Id = id;
