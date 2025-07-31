@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequireAll")]
+    [Authorize("RequireAll")]
     public class VisitorController : ControllerBase
     {
         private readonly IVisitorService _visitorService;
@@ -231,7 +231,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("{filter}")]
-         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -272,6 +272,50 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpGet("export/pdf")]
+         [AllowAnonymous] 
+        public async Task<IActionResult> ExportPdf()
+        {
+            try
+            {
+                var pdfBytes = await _visitorService.ExportPdfAsync();
+                return File(pdfBytes, "application/pdf", "Visitor_Report.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate PDF: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("export/excel")]
+        [AllowAnonymous] 
+        public async Task<IActionResult> ExportExcel()
+        {
+            try
+            {
+                var excelBytes = await _visitorService.ExportExcelAsync();
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Visitor_Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

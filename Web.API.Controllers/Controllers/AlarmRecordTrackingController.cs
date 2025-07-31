@@ -253,7 +253,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-             [HttpGet("export/pdf")]
+        [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -274,6 +275,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportExcel()
         {
             try
