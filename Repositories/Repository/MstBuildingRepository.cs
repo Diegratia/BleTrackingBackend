@@ -81,11 +81,11 @@ namespace Repositories.Repository
                 throw new KeyNotFoundException("Building not found");
 
             building.Status = 0;
-            foreach (var floor in building.Floors)
-            {
-                floor.Status = 0;
-            }
-            await _context.SaveChangesAsync();
+            // foreach (var floor in building.Floors)
+            // {
+            //     floor.Status = 0;
+            // }
+            // await _context.SaveChangesAsync();
         }
 
         public IQueryable<MstBuilding> GetAllQueryable()
