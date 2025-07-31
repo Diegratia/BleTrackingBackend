@@ -85,6 +85,7 @@ namespace Entities.Models
         [Column("head_member2")]
         public string? HeadMember2 { get; set; }
 
+        [Required]
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }

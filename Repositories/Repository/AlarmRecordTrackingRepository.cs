@@ -29,7 +29,7 @@ namespace Repositories.Repository
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Reader)
                 .Include(v => v.Visitor)
-                .Include(v => v.ApplicationId)
+                .Include(v => v.Application)
                 .Where(v => v.Id == id);
 
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
@@ -43,10 +43,12 @@ namespace Repositories.Repository
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Reader)
                 .Include(v => v.Visitor)
-                .Include(v => v.ApplicationId);
+                .Include(v => v.Application);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        
 
         public async Task AddAsync(AlarmRecordTracking entity)
         {
