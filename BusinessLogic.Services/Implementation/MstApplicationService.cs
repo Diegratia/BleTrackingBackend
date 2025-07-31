@@ -156,7 +156,8 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[0].Id // Super Admin
+                    GroupId = userGroups[0].Id, // Super Admin
+                    ApplicationId = application.Id
                 },
                 new User
                 {
@@ -171,7 +172,8 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[1].Id // Operator
+                    GroupId = userGroups[1].Id, // Operator
+                    ApplicationId = application.Id
                 },
                 new User
                 {
@@ -186,7 +188,8 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[2].Id // Security
+                    GroupId = userGroups[2].Id, // Security
+                    ApplicationId = application.Id
                 },
                 new User
                 {
@@ -201,7 +204,8 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[3].Id // other primary
+                    GroupId = userGroups[3].Id, // other primary
+                    ApplicationId = application.Id
                 }
             };
 
