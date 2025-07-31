@@ -17,15 +17,14 @@ namespace Repositories.Repository
             {
             }
 
-        public async Task<MstBuilding> GetByIdAsync(Guid id)
-            {   
-                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-                var query = _context.MstBuildings
-                    .Where(d => d.Id == id && d.Status != 0);
-                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-                return await _context.MstBuildings
-                    .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Building not found");
-            }
+            public async Task<MstBuilding> GetByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Id == id && d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Building not found");
+        }
             
 
         public async Task<IEnumerable<MstBuilding>> GetAllAsync()
@@ -71,19 +70,23 @@ namespace Repositories.Repository
         }
 
         public async Task DeleteAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Id == id && d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var building = await query.FirstOrDefaultAsync();
+            if (building == null)
+                throw new KeyNotFoundException("Building not found");
+
+            building.Status = 0;
+            foreach (var floor in building.Floors)
             {
-                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-                var query = _context.MstBuildings
-                    .Where(d => d.Id == id && d.Status != 0);
-                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-                var building = await query.FirstOrDefaultAsync();
-                if (building == null)
-                    throw new KeyNotFoundException("Building not found");
-
-                building.Status = 0;
-                await _context.SaveChangesAsync();
+                floor.Status = 0;
             }
+            await _context.SaveChangesAsync();
+        }
 
         public IQueryable<MstBuilding> GetAllQueryable()
         {

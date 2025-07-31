@@ -15,7 +15,7 @@ namespace Entities.Models
         public string? Name { get; set; }
 
         [Column("image")]
-        public string? Image { get; set; } 
+        public string? Image { get; set; }
 
         [Required]
         [Column("application_id")]
@@ -26,5 +26,6 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
 
         public virtual MstApplication Application { get; set; }
+        public virtual ICollection<MstFloor> Floors { get; set; } = new List<MstFloor>();
     }
 }
