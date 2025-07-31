@@ -214,7 +214,7 @@ namespace BusinessLogic.Services.Implementation
                 await _userRepository.AddRawAsync(user);
             }
 
-            await _applicationRepository.AddAsync(application);
+            // await _applicationRepository.AddAsync(application);
 
             return _mapper.Map<MstApplicationDto>(createdApplication);
         }
