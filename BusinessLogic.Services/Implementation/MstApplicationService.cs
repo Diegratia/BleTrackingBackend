@@ -157,7 +157,7 @@ namespace BusinessLogic.Services.Implementation
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
                     GroupId = userGroups[0].Id, // Super Admin
-                    ApplicationId = application.Id
+                    ApplicationId = userGroups[0].ApplicationId
                 },
                 new User
                 {
@@ -173,7 +173,7 @@ namespace BusinessLogic.Services.Implementation
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
                     GroupId = userGroups[1].Id, // Operator
-                    ApplicationId = application.Id
+                    ApplicationId = userGroups[1].ApplicationId
                 },
                 new User
                 {
@@ -189,7 +189,7 @@ namespace BusinessLogic.Services.Implementation
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
                     GroupId = userGroups[2].Id, // Security
-                    ApplicationId = application.Id
+                    ApplicationId = userGroups[2].ApplicationId
                 },
                 new User
                 {
@@ -205,13 +205,13 @@ namespace BusinessLogic.Services.Implementation
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
                     GroupId = userGroups[3].Id, // other primary
-                    ApplicationId = application.Id
+                    ApplicationId = userGroups[3].ApplicationId
                 }
             };
 
             foreach (var user in users)
             {
-                await _userRepository.AddAsync(user);
+                await _userRepository.AddRawAsync(user);
             }
 
             await _applicationRepository.AddAsync(application);
