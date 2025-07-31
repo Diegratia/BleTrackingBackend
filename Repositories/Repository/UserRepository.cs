@@ -86,6 +86,13 @@ namespace Repositories.Repository
             return user;
         }
 
+        public async Task<User> AddRawAsync(User user)
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                return user;
+            }
+
         public async Task UpdateAsync(User user)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

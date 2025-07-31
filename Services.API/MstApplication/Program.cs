@@ -140,6 +140,8 @@ builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "10007" ??
            builder.Configuration["Ports:MstApplicationService"];
