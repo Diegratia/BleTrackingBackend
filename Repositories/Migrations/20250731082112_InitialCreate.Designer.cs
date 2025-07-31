@@ -12,7 +12,7 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250730081713_InitialCreate")]
+    [Migration("20250731082112_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -415,16 +415,16 @@ namespace Repositories.Migrations
                         .HasColumnType("int")
                         .HasColumnName("type");
 
+                    b.Property<string>("VisitorActiveStatus")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
+
                     b.Property<Guid?>("VisitorId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
 
                     b.Property<Guid?>("VisitorId1")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("VisitorType")
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
 
                     b.HasKey("Id");
 
@@ -1119,9 +1119,6 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MstBuildingId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
@@ -1148,8 +1145,6 @@ namespace Repositories.Migrations
                         .IsUnique();
 
                     b.HasIndex("MstApplicationId");
-
-                    b.HasIndex("MstBuildingId");
 
                     b.ToTable("mst_building", (string)null);
                 });
@@ -2202,12 +2197,11 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<int>("LevelPriority")
+                    b.Property<int?>("LevelPriority")
                         .HasColumnType("int")
                         .HasColumnName("level_priority");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
@@ -2259,30 +2253,22 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_number");
 
-                    b.Property<Guid?>("DepartmentId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("department_id");
+                    b.Property<string>("DepartmentName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("department_name");
 
-                    b.Property<Guid?>("DistrictId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("district_id");
+                    b.Property<string>("DistrictName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("district_name");
 
                     b.Property<string>("Email")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
 
-                    b.Property<DateTime?>("EmailVerficationSendAt")
+                    b.Property<DateTime?>("EmailInvitationSendAt")
                         .HasColumnType("datetime2")
-                        .HasColumnName("email_verification_send_at");
-
-                    b.Property<string>("EmailVerificationToken")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("email_verification_token");
+                        .HasColumnName("email_invitation_send_at");
 
                     b.Property<string>("FaceImage")
                         .HasColumnType("nvarchar(max)")
@@ -2305,13 +2291,13 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
 
-                    b.Property<bool?>("IsEmailVerified")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_email_vervied");
+                    b.Property<string>("IdentityType")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("identity_type");
 
-                    b.Property<bool?>("IsEmployee")
+                    b.Property<bool?>("IsInvitationAccepted")
                         .HasColumnType("bit")
-                        .HasColumnName("is_employee");
+                        .HasColumnName("is_invitation_accepted");
 
                     b.Property<bool?>("IsVip")
                         .HasColumnType("bit")
@@ -2325,11 +2311,9 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<Guid?>("OrganizationId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("organization_id");
+                    b.Property<string>("OrganizationName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("organization_name");
 
                     b.Property<string>("PersonId")
                         .HasColumnType("nvarchar(450)")
@@ -2352,6 +2336,11 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("upload_fr_error");
 
+                    b.Property<string>("VisitorActiveStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
+
                     b.Property<DateTime?>("VisitorPeriodEnd")
                         .HasColumnType("datetime2")
                         .HasColumnName("visitor_period_end");
@@ -2360,24 +2349,13 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("visitor_period_start");
 
-                    b.Property<string>("VisitorType")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("DistrictId");
-
                     b.HasIndex("Email");
 
                     b.HasIndex("MstApplicationId");
-
-                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("PersonId");
 
@@ -2778,10 +2756,6 @@ namespace Repositories.Migrations
                         .WithMany("Buildings")
                         .HasForeignKey("MstApplicationId");
 
-                    b.HasOne("Entities.Models.MstBuilding", null)
-                        .WithMany("Buildings")
-                        .HasForeignKey("MstBuildingId");
-
                     b.Navigation("Application");
                 });
 
@@ -3071,35 +3045,11 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.MstDepartment", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.MstDistrict", "District")
-                        .WithMany()
-                        .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("Visitors")
                         .HasForeignKey("MstApplicationId");
 
-                    b.HasOne("Entities.Models.MstOrganization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.Navigation("Application");
-
-                    b.Navigation("Department");
-
-                    b.Navigation("District");
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Entities.Models.VisitorBlacklistArea", b =>
@@ -3197,11 +3147,6 @@ namespace Repositories.Migrations
                     b.Navigation("FloorplanDevices");
 
                     b.Navigation("TrackingTransactions");
-                });
-
-            modelBuilder.Entity("Entities.Models.MstBuilding", b =>
-                {
-                    b.Navigation("Buildings");
                 });
 
             modelBuilder.Entity("Entities.Models.MstDepartment", b =>

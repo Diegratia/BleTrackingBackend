@@ -24,12 +24,13 @@ namespace Repositories.Repository
                     .Where(d => d.Id == id && d.Status != 0);
                 query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
                 return await _context.MstBuildings
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Building not found");
             }
+            
 
         public async Task<IEnumerable<MstBuilding>> GetAllAsync()
         {
-           var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
                 .Where(d => d.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);

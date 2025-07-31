@@ -50,7 +50,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "VisitorName" };
-            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp","VisitorType", "Status", "VisitorType" };
+            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp","VisitorActiveStatus", "Status", "VisitorActiveStatus" };
 
             var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
                 query,
@@ -120,7 +120,7 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(record.CardId);
                             table.Cell().Element(CellStyle).Text(record.Visitor);
                             table.Cell().Element(CellStyle).Text(record.Member);
-                            table.Cell().Element(CellStyle).Text(record.VisitorType.ToString());
+                            table.Cell().Element(CellStyle).Text(record.VisitorActiveStatus.ToString());
                             table.Cell().Element(CellStyle).Text(record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(record.CheckinBy);
                             table.Cell().Element(CellStyle).Text(record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -180,7 +180,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 3).Value = record.CardId.ToString();
                 worksheet.Cell(row, 4).Value = record.Visitor.Name;
                 worksheet.Cell(row, 5).Value = record.Member.Name;
-                worksheet.Cell(row, 6).Value = record.VisitorType.ToString();
+                worksheet.Cell(row, 6).Value = record.VisitorActiveStatus.ToString();
                 worksheet.Cell(row, 7).Value = record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss");
                 worksheet.Cell(row, 8).Value = record.CheckinBy;
                 worksheet.Cell(row, 9).Value = record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss");

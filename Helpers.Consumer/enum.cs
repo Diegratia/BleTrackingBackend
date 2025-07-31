@@ -27,11 +27,18 @@ namespace Helpers.Consumer
         Annual
   }
 
-    public enum VisitorType
+    public enum VisitorActiveStatus
     {
         Active,
         Expired,
         Cancelled
+    }
+
+    public enum IdentityType
+    {
+        NIK,
+        KTP,
+        Passport
     }
 
     public enum CardType

@@ -11,57 +11,52 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
-        public string? VisitorType { get; set; }
+        public string? VisitorStatus { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public Guid? OrganizationId { get; set; }
-        public Guid? DistrictId { get; set; }
-        public Guid? DepartmentId { get; set; }
+        // public Guid? OrganizationId { get; set; }
+        // public Guid? DistrictId { get; set; }
+        // public Guid? DepartmentId { get; set; }
+
+        public string? OrganizationName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsEmailVerified { get; set; }
-        public DateTime? EmailVerficationSendAt { get; set; }
-        public string? EmailVerificationToken { get; set; }
+        public bool? IsInvitationAccepted { get; set; }
+        public DateTime? EmailInvitationSendAt { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }
-        public bool? IsEmployee { get; set; }       
+        public DateTime? VisitorPeriodEnd { get; set; }   
         public string? FaceImage { get; set; }
         public int? UploadFr { get; set; } = 0;
         public string? UploadFrError { get; set; }
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
-
-        public MstOrganizationDto? Organization { get; set; }
-        public MstDistrictDto? District { get; set; }
-        public MstDepartmentDto? Department { get; set; }
     }
 
     public class VisitorCreateDto : BaseModelDto
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
-        public string? VisitorType { get; set; }
+        public string? VisitorActiveStatus { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public Guid? OrganizationId { get; set; }
-        public Guid? DistrictId { get; set; }
-        public Guid? DepartmentId { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsEmailVerified { get; set; }
-        public DateTime? EmailVerficationSendAt { get; set; }
-        public string? EmailVerificationToken { get; set; }
-        public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }
-        public bool? IsEmployee { get; set; }        
+        public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }
         public Guid ApplicationId { get; set; }
 
@@ -71,24 +66,24 @@ namespace Data.ViewModels
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
-        public string? VisitorType { get; set; }
+        public string? VisitorStatus { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public Guid? OrganizationId { get; set; }
-        public Guid? DistrictId { get; set; }
-        public Guid? DepartmentId { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsEmailVerified { get; set; }
-        public DateTime? EmailVerficationSendAt { get; set; }
-        public string? EmailVerificationToken { get; set; }
-        public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }
-        public bool? IsEmployee { get; set; }        
+        public bool? IsInvitationAccepted { get; set; }
+        // public DateTime? EmailVerficationSendAt { get; set; }
+        // public string? EmailVerificationToken { get; set; }
+        // public DateTime? VisitorPeriodStart { get; set; }
+        // public DateTime? VisitorPeriodEnd { get; set; }   
         public IFormFile? FaceImage { get; set; }
         public Guid ApplicationId { get; set; }
     }

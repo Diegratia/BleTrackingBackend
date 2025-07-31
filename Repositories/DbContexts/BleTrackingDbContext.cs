@@ -377,9 +377,6 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -387,32 +384,25 @@ namespace Repositories.DbContexts
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorType)
-                    .HasColumnName("visitor_type")
+                entity.Property(e => e.VisitorActiveStatus)
+                    .HasColumnName("visitor_active_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
+                    );
+
+                entity.Property(e => e.IdentityType)
+                    .HasColumnName("identity_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (IdentityType)Enum.Parse(typeof(IdentityType), v, true)
                     );
 
                 entity.HasOne(v => v.Application)
                     .WithMany()
                     .HasForeignKey(v => v.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Department)
-                    .WithMany()
-                    .HasForeignKey(m => m.DepartmentId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.District)
-                    .WithMany()
-                    .HasForeignKey(v => v.DistrictId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.Organization)
-                    .WithMany()
-                    .HasForeignKey(v => v.OrganizationId)
                     .OnDelete(DeleteBehavior.NoAction);
                  entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -716,12 +706,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.CheckoutMaskedArea)
                     .HasColumnName("checkout_masked_area");
 
-                entity.Property(e => e.VisitorType)
+                entity.Property(e => e.VisitorActiveStatus)
                     .HasColumnName("visitor_type")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
                     );
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
@@ -913,9 +903,6 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
@@ -924,12 +911,12 @@ namespace Repositories.DbContexts
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorType)
+                entity.Property(e => e.VisitorActiveStatus)
                     .HasColumnName("visitor_type")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
                     );
                 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
@@ -941,21 +928,6 @@ namespace Repositories.DbContexts
                 entity.HasOne(v => v.Application)
                     .WithMany()
                     .HasForeignKey(v => v.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Department)
-                    .WithMany()
-                    .HasForeignKey(m => m.DepartmentId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.District)
-                    .WithMany()
-                    .HasForeignKey(v => v.DistrictId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.Organization)
-                    .WithMany()
-                    .HasForeignKey(v => v.OrganizationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(v => v.PersonId);

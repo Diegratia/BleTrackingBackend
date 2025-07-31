@@ -35,6 +35,16 @@ namespace Repositories.Repository
             return await query.ToListAsync();
         }
 
+        public async Task<User> GetByEmailAsync(string email)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.StatusActive != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
+        }
+
         public async Task<User> GetByUsernameAsync(string username)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

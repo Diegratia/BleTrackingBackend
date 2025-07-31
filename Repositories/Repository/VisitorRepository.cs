@@ -26,9 +26,9 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.Visitors
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
+                // .Include(x => x.Department)
+                // .Include(x => x.District)
+                // .Include(x => x.Organization)
                 .Include(v => v.Application)
                 .Where(x => x.Id == id && x.Status != 0);
 
@@ -91,9 +91,9 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.Visitors
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
+                // .Include(x => x.Department)
+                // .Include(x => x.District)
+                // .Include(x => x.Organization)
                 .Include(v => v.Application)
                 .Where(x => x.Status != 0);
 
@@ -105,9 +105,9 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.Visitors
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
+                // .Include(x => x.Department)
+                // .Include(x => x.District)
+                // .Include(x => x.Organization)
                 .Include(v => v.Application)
                 .Where(x => x.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -121,26 +121,26 @@ namespace Repositories.Repository
             if (!applicationId.HasValue)
                 throw new UnauthorizedAccessException("Missing ApplicationId for non-admin user.");
 
-            // Cek Department
-            var department = await _context.MstDepartments
-                .Where(d => d.Id == visitor.DepartmentId && d.ApplicationId == applicationId)
-                .FirstOrDefaultAsync();
-            if (department == null)
-                throw new UnauthorizedAccessException("Invalid DepartmentId for this application.");
+            // // Cek Department
+            // var department = await _context.MstDepartments
+            //     .Where(d => d.Id == visitor.DepartmentId && d.ApplicationId == applicationId)
+            //     .FirstOrDefaultAsync();
+            // if (department == null)
+            //     throw new UnauthorizedAccessException("Invalid DepartmentId for this application.");
 
-            // Cek District
-            var district = await _context.MstDistricts
-                .Where(d => d.Id == visitor.DistrictId && d.ApplicationId == applicationId)
-                .FirstOrDefaultAsync();
-            if (district == null)
-                throw new UnauthorizedAccessException("Invalid DistrictId for this application.");
+            // // Cek District
+            // var district = await _context.MstDistricts
+            //     .Where(d => d.Id == visitor.DistrictId && d.ApplicationId == applicationId)
+            //     .FirstOrDefaultAsync();
+            // if (district == null)
+            //     throw new UnauthorizedAccessException("Invalid DistrictId for this application.");
 
-            // Cek Organization
-            var organization = await _context.MstOrganizations
-                .Where(o => o.Id == visitor.OrganizationId && o.ApplicationId == applicationId)
-                .FirstOrDefaultAsync();
-            if (organization == null)
-                throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");
+            // // Cek Organization
+            // var organization = await _context.MstOrganizations
+            //     .Where(o => o.Id == visitor.OrganizationId && o.ApplicationId == applicationId)
+            //     .FirstOrDefaultAsync();
+            // if (organization == null)
+            //     throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");
         }
 
     }

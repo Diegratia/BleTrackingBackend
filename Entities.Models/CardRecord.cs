@@ -57,7 +57,7 @@ namespace Entities.Models
         public Guid? CheckinMaskedArea { get; set; }
 
         [Column("visitor_type")]
-        public VisitorType? VisitorType { get; set; }
+        public VisitorActiveStatus? VisitorActiveStatus { get; set; }
 
         [Required]
         [ForeignKey("Application")]

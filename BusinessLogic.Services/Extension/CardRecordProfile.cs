@@ -15,7 +15,7 @@ namespace BusinessLogic.Services.Extension
         {
 
             CreateMap<CardRecord, CardRecordDto>()
-                .ForMember(dest => dest.VisitorType, opt => opt.MapFrom(src => src.VisitorType.ToString()));
+                .ForMember(dest => dest.VisitorActiveStatus, opt => opt.MapFrom(src => src.VisitorActiveStatus.ToString()));
 
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstMember, MstMemberDto>();

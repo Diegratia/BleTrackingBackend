@@ -19,7 +19,7 @@ namespace Data.ViewModels
         public string? CheckoutBy { get; set; }
         public Guid? CheckoutMaskedArea { get; set; }
         public Guid? CheckinMaskedArea { get; set; }
-        public string? VisitorType { get; set; }
+        public string? VisitorActiveStatus { get; set; }
         public CardDto? Card { get; set; }
         public VisitorDto? Visitor { get; set; }
         public MstMemberDto? Member { get; set; }

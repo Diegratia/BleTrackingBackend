@@ -26,6 +26,5 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
 
         public virtual MstApplication Application { get; set; }
-        public virtual ICollection<MstBuilding> Buildings { get; set; } = new List<MstBuilding>();
     }
 }

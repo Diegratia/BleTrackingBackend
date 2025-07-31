@@ -4,6 +4,7 @@ using Entities.Models;
 using System;
 using System.Linq;
 using Helpers.Consumer;
+using Bogus.DataSets;
 
 namespace Repositories.Seeding
 {
@@ -591,34 +592,23 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.IdentityId, f => "VID" + f.Random.Number(100, 999))
                     .RuleFor(v => v.CardNumber, f => "VCARD" + f.Random.Number(1000, 9999))
                     .RuleFor(v => v.BleCardNumber, f => "VBLE" + f.Random.Number(100, 999))
-                    .RuleFor(v => v.VisitorType, f => f.PickRandom<VisitorType>())
+                    .RuleFor(v => v.VisitorActiveStatus, f => f.PickRandom<VisitorActiveStatus>())
                     .RuleFor(v => v.Name, f => f.Name.FullName())
                     .RuleFor(v => v.Phone, f => f.Phone.PhoneNumber())
                     .RuleFor(v => v.Email, f => f.Internet.Email())
                     .RuleFor(v => v.Gender, f => f.PickRandom<Gender>())
                     .RuleFor(v => v.Address, f => f.Address.FullAddress())
-                    .RuleFor(v => v.OrganizationId, f => context.MstOrganizations
-                        .Where(o => o.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.DistrictId, f => context.MstDistricts
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.DepartmentId, f => context.MstDepartments
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
+                    .RuleFor(v => v.OrganizationName, f => f.Name.FullName())
+                    .RuleFor(v => v.DistrictName, f => f.Name.FullName())
+                    .RuleFor(v => v.DepartmentName, f => f.Name.FullName())
                     .RuleFor(v => v.IsVip, f => f.Random.Bool())
-                    .RuleFor(v => v.IsEmailVerified, f => f.Random.Bool())
-                    .RuleFor(v => v.EmailVerficationSendAt, f => f.Date.Recent(1))
-                    .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
+                    .RuleFor(v => v.IsInvitationAccepted, f => f.Random.Bool())
+                    .RuleFor(v => v.EmailInvitationSendAt, f => f.Date.Recent(1))
+                    .RuleFor(e => e.IdentityType, f => f.PickRandom<IdentityType>())
+                    // .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
                     .RuleFor(v => v.VisitorPeriodStart, f => f.Date.Recent(1))
                     .RuleFor(v => v.VisitorPeriodEnd, f => f.Date.Recent(1))
-                    .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
+                    // .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
                     .RuleFor(v => v.Status, f => 1)
                     .RuleFor(v => v.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
                     .RuleFor(v => v.UploadFr, f => f.Random.Int(0, 2))
@@ -641,7 +631,7 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
                     .RuleFor(e => e.Name, f => f.Random.Word())
                     .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.CardType, f => f.PickRandom<Helpers.Consumer.CardType>())
                     .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
                     .RuleFor(e => e.QRCode, f => f.Random.String(10))
                     .RuleFor(e => e.Dmac, f => f.Internet.Mac())
@@ -929,7 +919,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.CheckoutBy, f => "System")
                     .RuleFor(e => e.CheckoutMaskedArea, f => Guid.NewGuid())
                     .RuleFor(e => e.CheckinMaskedArea, f => Guid.NewGuid())
-                    .RuleFor(a => a.VisitorType, f => f.PickRandom<VisitorType>());
+                    .RuleFor(a => a.VisitorActiveStatus, f => f.PickRandom<VisitorActiveStatus>());
 
                 var cardrecords = cardrecordFaker.Generate(2);
                 context.CardRecords.AddRange(cardrecords);

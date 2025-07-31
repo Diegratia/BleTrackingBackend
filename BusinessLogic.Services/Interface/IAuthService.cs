@@ -471,6 +471,7 @@ namespace BusinessLogic.Services.Interface
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _userRepository.GetByUsernameAsync(dto.Username.ToLower());
+            // var user = await _userRepository.GetByEmailAsync(dto.Email.ToLower());
             if (user == null || string.IsNullOrEmpty(user.Password) || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
                 throw new UnauthorizedAccessException("Invalid username or password");
             if (user.StatusActive != StatusActive.Active)
@@ -505,7 +506,7 @@ namespace BusinessLogic.Services.Interface
                 GroupId = user.GroupId,
                 ApplicationId = user.Group.ApplicationId,
                 LevelPriority = user.Group.LevelPriority.ToString(),
-                IsEmailConfirmed = user.IsEmailConfirmation = 1,
+                IsEmailConfirmed = user.IsEmailConfirmation,
                 StatusActive = user.StatusActive.ToString()
             };
         }
