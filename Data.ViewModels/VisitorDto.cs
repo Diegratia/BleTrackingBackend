@@ -60,9 +60,9 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsInvitationAccepted { get; set; }     
+        // public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
 
     }
 
@@ -83,12 +83,12 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsInvitationAccepted { get; set; }
+        // public bool? IsInvitationAccepted { get; set; }
         // public DateTime? EmailVerficationSendAt { get; set; }
         // public string? EmailVerificationToken { get; set; }
         // public DateTime? VisitorPeriodStart { get; set; }
         // public DateTime? VisitorPeriodEnd { get; set; }   
         public IFormFile? FaceImage { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
     }
 }
