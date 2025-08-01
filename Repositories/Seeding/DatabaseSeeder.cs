@@ -19,7 +19,7 @@ namespace Repositories.Seeding
             if (!context.MstApplications.Any(a => a.ApplicationStatus != 0))
             {
                 var appFaker = new Faker<MstApplication>()
-                    .RuleFor(a => a.Id, f => Guid.NewGuid())
+                    .RuleFor(a => a.Id, _ => new Guid("c926d20b-a746-4492-9924-eb7eee76305c"))
                     .RuleFor(a => a.ApplicationName, f => f.Company.CompanyName() + " App")
                     .RuleFor(a => a.OrganizationType, f => f.PickRandom<OrganizationType>())
                     .RuleFor(a => a.OrganizationAddress, f => f.Address.FullAddress())
@@ -290,12 +290,16 @@ namespace Repositories.Seeding
                         .First()
                         .Id)
                     .RuleFor(i => i.IntegrationType, f => f.PickRandom<IntegrationType>())
-                    .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
+                    // .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
+                    .RuleFor(i => i.ApiTypeAuth, f => ApiTypeAuth.ApiKey)
                     .RuleFor(i => i.ApiUrl, f => f.Internet.Url())
+                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:10000")
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
-                    .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
-                    .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
+                    // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
+                    .RuleFor(i => i.ApiKeyField, f => "X-API-KEY-TRACKING-PEOPLE")
+                    // .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
+                    .RuleFor(i => i.ApiKeyValue, f => "FujDuGTsyEXVwkKrtRgn52APwAVRGmPOiIRX8cffynDvIW35bJaGeH3NcH6HcSeK")
                     .RuleFor(i => i.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -307,7 +311,7 @@ namespace Repositories.Seeding
                     .RuleFor(i => i.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(i => i.Status, f => 1);
 
-                var integrations = intFaker.Generate(2);
+                var integrations = intFaker.Generate(1);
                 context.MstIntegrations.AddRange(integrations);
                 context.SaveChanges();
             }
@@ -487,7 +491,7 @@ namespace Repositories.Seeding
                     .RuleFor(c => c.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(c => c.Status, f => 1);
 
-                var cctvs = cctvFaker.Generate(2);
+                var cctvs = cctvFaker.Generate();
                 context.MstAccessCctvs.AddRange(cctvs);
                 context.SaveChanges();
             }

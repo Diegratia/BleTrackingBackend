@@ -78,8 +78,6 @@ namespace Repositories.Repository
             var building = await query.FirstOrDefaultAsync();
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
-
-            building.Status = 0;
             // foreach (var floor in building.Floors)
             // {
             //     floor.Status = 0;
