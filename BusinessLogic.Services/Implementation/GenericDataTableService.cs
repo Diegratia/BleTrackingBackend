@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
 
             var query = _query;
 
-            var totalRecords = await query.CountAsync();
+            // var totalRecords = await query.CountAsync();
 
             // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
@@ -256,7 +256,8 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // Total after filter
-            var filteredRecords = await query.CountAsync();
+            // var filteredRecords = await query.CountAsync();
+           
 
             // Proyeksi sementara
             IQueryable<object> projectionQuery;
@@ -275,6 +276,9 @@ namespace BusinessLogic.Services.Implementation
                 projectionQuery = query.Select(f => new { Entity = f, MaskedAreaCount = 0 });
             }
 
+            // Hitung recordsTotal dan recordsFiltered dari projectionQuery sebelum paging
+            var totalRecords = await projectionQuery.CountAsync();
+
             // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
             if (typeof(TModel) == typeof(MstFloorplan) && request.SortColumn == "MaskedAreaCount")
@@ -289,6 +293,10 @@ namespace BusinessLogic.Services.Implementation
             {
                 projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
             }
+
+            // Hitung recordsFiltered setelah sorting (untuk konsistensi)
+            var filteredRecords = await projectionQuery.CountAsync();
+
 
             // Paging
             projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
