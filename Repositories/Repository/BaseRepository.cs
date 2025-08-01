@@ -68,5 +68,25 @@ namespace Repositories.Repository
             if (!isSystemAdmin && applicationId.HasValue && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
         }
+
+
+    //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
+    //     {
+    //         return query.Where(c =>
+    //             (c.Visitor == null || c.Visitor.Status != 0) &&
+    //             (c.Visitor.Department == null || c.Visitor.Department.Status != 0) &&
+    //             (c.Visitor.Department.District == null || c.Visitor.Department.District.Status != 0));
+    //     }
+
+    // public static IQueryable<FloorplanMaskedArea> WithActiveRelations(this IQueryable<FloorplanMaskedArea> query)
+    // {
+    //     return query.Where(m =>
+    //         m.Floorplan != null &&
+    //         m.Floorplan.Status != 0 &&
+    //         m.Floorplan.Floor != null &&
+    //         m.Floorplan.Floor.Status != 0 &&
+    //         m.Floorplan.Floor.Department != null &&
+    //         m.Floorplan.Floor.Department.Status != 0);
+    // }
     }
 }

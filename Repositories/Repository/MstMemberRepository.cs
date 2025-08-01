@@ -23,16 +23,10 @@ namespace Repositories.Repository
 
         public async Task<MstMember?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstMembers
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
-                .Include(x => x.Application)
-                .Where(x => x.Id == id && x.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            
+            return await GetAllQueryable()
+            .Where(x => x.Id == id && x.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Member not found");
         }
 
         public async Task AddAsync(MstMember member)
@@ -94,24 +88,16 @@ namespace Repositories.Repository
                 .Include(x => x.Department)
                 .Include(x => x.District)
                 .Include(x => x.Organization)
-                .Include(x => x.Application)
                 .Where(x => x.Status != 0);
+
+                query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
        public async Task<IEnumerable<MstMember>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstMembers
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
-                .Include(x => x.Application)
-                .Where(x => x.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         private async Task ValidateRelatedEntitiesAsync(MstMember member, Guid? applicationId, bool isSystemAdmin)
@@ -123,18 +109,21 @@ namespace Repositories.Repository
 
             // Validate Department
             var dept = await _context.MstDepartments
+                .WithActiveRelations()
                 .FirstOrDefaultAsync(d => d.Id == member.DepartmentId && d.ApplicationId == applicationId);
             if (dept == null)
                 throw new UnauthorizedAccessException("Invalid DepartmentId for this application.");
 
             // Validate District
             var district = await _context.MstDistricts
+                .WithActiveRelations()
                 .FirstOrDefaultAsync(d => d.Id == member.DistrictId && d.ApplicationId == applicationId);
             if (district == null)
                 throw new UnauthorizedAccessException("Invalid DistrictId for this application.");
 
             // Validate Organization
             var org = await _context.MstOrganizations
+             .WithActiveRelations()
                 .FirstOrDefaultAsync(o => o.Id == member.OrganizationId && o.ApplicationId == applicationId);
             if (org == null)
                 throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");

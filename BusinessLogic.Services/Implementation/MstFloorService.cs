@@ -169,6 +169,7 @@ namespace BusinessLogic.Services.Implementation
 
             floor.UpdatedBy = username;
             floor.UpdatedAt = DateTime.UtcNow;
+            floor.Status = 0;
             await _repository.SoftDeleteAsync(id);
         }
 

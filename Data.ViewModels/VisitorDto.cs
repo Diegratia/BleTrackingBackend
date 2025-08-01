@@ -35,6 +35,10 @@ namespace Data.ViewModels
         public string? FaceImage { get; set; }
         public int? UploadFr { get; set; } = 0;
         public string? UploadFrError { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string? CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
     }

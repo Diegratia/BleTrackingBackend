@@ -108,36 +108,38 @@ namespace Repositories.DbContexts
                         .HasDefaultValue(1);
                 });
 
-            modelBuilder.Entity<MstApplication>()
-                .HasQueryFilter(m => m.ApplicationStatus != 0);
-            modelBuilder.Entity<MstIntegration>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstAccessControl>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstAccessCctv>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<FloorplanMaskedArea>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstBleReader>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstBrand>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstDepartment>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstDistrict>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstFloor>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstMember>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstOrganization>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstFloorplan>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstEngine>()
-                .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstApplication>()
+                    .HasQueryFilter(m => m.ApplicationStatus != 0);
+                modelBuilder.Entity<MstIntegration>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstAccessControl>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstAccessCctv>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<FloorplanMaskedArea>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstBleReader>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstBrand>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstDepartment>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstDistrict>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstFloor>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstMember>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstOrganization>()
+                    .HasQueryFilter(m => m.Status != 0 );
+                modelBuilder.Entity<MstFloorplan>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstEngine>()
+                    .HasQueryFilter(m => m.Status != 0); ;
             // modelBuilder.Entity<VisitorCard>()
             //     .HasQueryFilter(m => m.Status != 0);
+
+   
 
             // MstIntegration
             modelBuilder.Entity<MstIntegration>(entity =>

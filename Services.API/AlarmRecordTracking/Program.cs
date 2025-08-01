@@ -137,7 +137,7 @@ builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingServi
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 
-var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ??
+var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "10002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";

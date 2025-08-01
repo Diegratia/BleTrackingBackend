@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Entities.Models
 {
-    public class Visitor : BaseModel, IApplicationEntity
+    public class Visitor : BaseModelWithTime, IApplicationEntity
     {
         [Column("person_id")] 
         public string? PersonId { get; set; } // nrp, no pegawai, kalau ga ada isi ktp

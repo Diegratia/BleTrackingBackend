@@ -18,38 +18,15 @@ namespace Repositories.Repository
 
         public async Task<FloorplanDevice> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.FloorplanDevices
-                .Include(fd => fd.Floorplan)
-                .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Reader)
-                .Include(fd => fd.AccessControl)
-                .Include(fd => fd.Application)
-                .Include(fd => fd.FloorplanMaskedArea)
-                .Where(fd => fd.Id == id && fd.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(fd => fd.Id == id && fd.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("FloorplanDevice not found");
         }
 
         public async Task<IEnumerable<FloorplanDevice>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.FloorplanDevices
-                .Include(fd => fd.Floorplan)
-                .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Reader)
-                .Include(fd => fd.Application)
-                .Include(fd => fd.AccessControl)
-                .Include(fd => fd.FloorplanMaskedArea)
-                .Where(fd => fd.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<FloorplanDevice> AddAsync(FloorplanDevice device)
@@ -114,46 +91,36 @@ namespace Repositories.Repository
                 .Include(fd => fd.Floorplan)
                 .Include(fd => fd.AccessControl)
                 .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Application)
                 .Include(fd => fd.Reader)
                 .Where(fd => fd.Status != 0);
+
+            // query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<FloorplanDevice>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.FloorplanDevices
-                .Include(fd => fd.Floorplan)
-                .Include(fd => fd.AccessCctv)
-                .Include(fd => fd.Reader)
-                .Include(fd => fd.AccessControl)
-                .Include(fd => fd.Application)
-                .Include(fd => fd.FloorplanMaskedArea)
-                .Where(fd => fd.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
+        
         // Optional: helper fetchers if needed for validation or other purposes
         public Task<MstFloorplan> GetFloorplanByIdAsync(Guid id) =>
-            _context.MstFloorplans.FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+            _context.MstFloorplans.WithActiveRelations().FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
 
         public Task<MstAccessCctv> GetAccessCctvByIdAsync(Guid id) =>
-            _context.MstAccessCctvs.FirstOrDefaultAsync(c => c.Id == id && c.Status != 0);
+            _context.MstAccessCctvs.WithActiveRelations().FirstOrDefaultAsync(c => c.Id == id && c.Status != 0);
+
 
         public Task<MstBleReader> GetReaderByIdAsync(Guid id) =>
-            _context.MstBleReaders.FirstOrDefaultAsync(r => r.Id == id && r.Status != 0);
+            _context.MstBleReaders.WithActiveRelations().FirstOrDefaultAsync(r => r.Id == id && r.Status != 0);
 
         public Task<MstAccessControl> GetAccessControlByIdAsync(Guid id) =>
-            _context.MstAccessControls.FirstOrDefaultAsync(ac => ac.Id == id && ac.Status != 0);
+            _context.MstAccessControls.WithActiveRelations().FirstOrDefaultAsync(ac => ac.Id == id && ac.Status != 0);
 
         public Task<FloorplanMaskedArea> GetFloorplanMaskedAreaByIdAsync(Guid id) =>
-            _context.FloorplanMaskedAreas.FirstOrDefaultAsync(fma => fma.Id == id && fma.Status != 0);
+            _context.FloorplanMaskedAreas.WithActiveRelations().FirstOrDefaultAsync(fma => fma.Id == id && fma.Status != 0);
 
         public Task<MstApplication> GetApplicationByIdAsync(Guid id) =>
             _context.MstApplications.FirstOrDefaultAsync(a => a.Id == id && a.ApplicationStatus != 0);

@@ -13,25 +13,28 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using System.Security.Claims;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class VisitorService : IVisitorService
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly VisitorRepository _repository;
         private readonly IMapper _mapper;
-
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" }; //tipe gambar
         private const long MaxFileSize = 5 * 1024 * 1024; // max 5mb
 
-        public VisitorService(VisitorRepository repository, IMapper mapper)
+        public VisitorService(VisitorRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var visitor = _mapper.Map<Visitor>(createDto);
             if (createDto == null) throw new ArgumentNullException(nameof(createDto));
 
@@ -81,8 +84,30 @@ namespace BusinessLogic.Services.Implementation
                 visitor.FaceImage = "";
             }
 
+            // new User
+            // {
+            //     Id = Guid.NewGuid(),
+            //     Username = "SuperAdmin",
+            //     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
+            //     IsCreatedPassword = 1,
+            //     Email = "superadmin@example.com",
+            //     IsEmailConfirmation = 1,
+            //     EmailConfirmationCode = Guid.NewGuid().ToString(),
+            //     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
+            //     EmailConfirmationAt = DateTime.UtcNow,
+            //     LastLoginAt = DateTime.UtcNow,
+            //     StatusActive = StatusActive.Active,
+            //     GroupId = userGroups[0].Id, 
+            //     ApplicationId = userGroups[0].ApplicationId
+            // };
+
+
             visitor.Id = Guid.NewGuid();
             visitor.Status = 1;
+            visitor.CreatedBy = username;
+            visitor.CreatedAt = DateTime.UtcNow;
+            visitor.UpdatedBy = username;
+            visitor.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(visitor);
             return _mapper.Map<VisitorDto>(visitor);
@@ -102,6 +127,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
 
             var visitor = await _repository.GetByIdAsync(id);
@@ -155,6 +181,9 @@ namespace BusinessLogic.Services.Implementation
                 visitor.FaceImage = "";
             }
 
+            visitor.UpdatedBy = username;
+            visitor.UpdatedAt = DateTime.UtcNow;
+
             _mapper.Map(updateDto, visitor);
             await _repository.UpdateAsync(visitor);
             return _mapper.Map<VisitorDto>(visitor);
@@ -162,13 +191,15 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteVisitorAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var visitor = await _repository.GetByIdAsync(id);
             if (visitor == null)
             {
                 throw new KeyNotFoundException($"Visitor with ID {id} not found.");
             }
             visitor.Status = 0;
-
+            visitor.UpdatedBy = username;
+            visitor.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(visitor);
         }
 
@@ -177,7 +208,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name" }; 
-            var validSortColumns = new[] { "Name" , "Organization.Name", "District.Name", "Department.Name",  "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId" };
+            var validSortColumns = new[] { "Name" , "Organization.Name", "District.Name", "Department.Name",  "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy"};
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,

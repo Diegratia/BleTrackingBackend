@@ -16,6 +16,7 @@ namespace Repositories.Repository
         {
         }
 
+
         public async Task<List<Visitor>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();
@@ -23,16 +24,9 @@ namespace Repositories.Repository
 
         public async Task<Visitor?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.Visitors
-                // .Include(x => x.Department)
-                // .Include(x => x.District)
-                // .Include(x => x.Organization)
-                .Include(v => v.Application)
-                .Where(x => x.Id == id && x.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(x => x.Id == id && x.Status != 0)
+            .FirstOrDefaultAsync();
         }
 
        public async Task AddAsync(Visitor visitor)
@@ -94,24 +88,17 @@ namespace Repositories.Repository
                 // .Include(x => x.Department)
                 // .Include(x => x.District)
                 // .Include(x => x.Organization)
-                .Include(v => v.Application)
+                // .Include(v => v.Application)
                 .Where(x => x.Status != 0);
+
+                query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<Visitor>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.Visitors
-                // .Include(x => x.Department)
-                // .Include(x => x.District)
-                // .Include(x => x.Organization)
-                .Include(v => v.Application)
-                .Where(x => x.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         private async Task ValidateRelatedEntitiesAsync(Visitor visitor, Guid? applicationId, bool isSystemAdmin)

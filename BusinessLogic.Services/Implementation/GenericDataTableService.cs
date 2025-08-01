@@ -34,6 +34,8 @@ namespace BusinessLogic.Services.Implementation
             _enumColumns = enumColumns ?? new Dictionary<string, Type>();
         }
 
+        
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             // if (request.Length < 1)
@@ -99,11 +101,11 @@ namespace BusinessLogic.Services.Implementation
                 {
                     if (string.IsNullOrEmpty(filter.Key))
                         continue;
-                    
+
 
                     var value = filter.Value;
                     // if (value == null || value.ToString() == "empty")
-                    
+
                     // return new
                     // {
                     //     draw = request.Draw,
@@ -113,7 +115,7 @@ namespace BusinessLogic.Services.Implementation
                     // };
                     if (value == null)
                         continue;
-            
+
                     if (value is JsonElement jsonElement)
                     {
                         if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
@@ -257,7 +259,7 @@ namespace BusinessLogic.Services.Implementation
 
             // Total after filter
             // var filteredRecords = await query.CountAsync();
-           
+
 
             // Proyeksi sementara
             IQueryable<object> projectionQuery;
@@ -319,8 +321,8 @@ namespace BusinessLogic.Services.Implementation
                 dtos = dtosWithCount;
             }
 
-            
-            
+
+
             return new
             {
                 draw = request.Draw,

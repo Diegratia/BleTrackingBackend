@@ -18,26 +18,12 @@ namespace Repositories.Repository
 
         public async Task<MstFloorplan> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstFloorplans
-                .Include(f => f.Floor)
-                .Where(f => f.Id == id && f.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Floorplan not found");
+            return await GetAllQueryable().Where(fp => fp.Id == id && fp.Status != 0).FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Floorplan not found");
         }
 
         public async Task<IEnumerable<MstFloorplan>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstFloorplans
-                .Include(f => f.Floor)
-                .Where(f => f.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<MstFloorplan> AddAsync(MstFloorplan floorplan)
@@ -102,7 +88,7 @@ namespace Repositories.Repository
 
             var query = _context.MstFloors
                 .Where(f => f.Id == id && f.Status != 0);
-
+            query = query.WithActiveRelations();
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             return await query.FirstOrDefaultAsync();
@@ -120,6 +106,8 @@ namespace Repositories.Repository
             var query = _context.MstFloorplans
                 .Include(f => f.Floor)
                 .Where(f => f.Status != 0);
+            
+            query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
@@ -132,7 +120,9 @@ namespace Repositories.Repository
                 .Include(f => f.Floor)
                 .Include(f => f.FloorplanMaskedAreas)
                 .Where(f => f.Status != 0);
-
+            
+            query = query.WithActiveRelations();
+            
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             return query.Select(f => new

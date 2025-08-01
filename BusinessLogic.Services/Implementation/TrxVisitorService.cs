@@ -98,14 +98,14 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(trxvisitor);     
         }
 
-        public async Task DeleteTrxVisitorAsync(Guid id)
-        {
-            var trxvisitor = await _repository.GetByIdAsync(id);
-            if (trxvisitor == null)
-                throw new KeyNotFoundException($"trxvisitor with ID {id} not found.");
+        // public async Task DeleteTrxVisitorAsync(Guid id)
+        // {
+        //     var trxvisitor = await _repository.GetByIdAsync(id);
+        //     if (trxvisitor == null)
+        //         throw new KeyNotFoundException($"trxvisitor with ID {id} not found.");
 
-            await _repository.DeleteAsync(id);
-        }
+        //     await _repository.DeleteAsync(id);
+        // }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {

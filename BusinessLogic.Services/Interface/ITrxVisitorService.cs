@@ -12,7 +12,9 @@ namespace BusinessLogic.Services.Interface
         Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id);
         Task<IEnumerable<TrxVisitorDto>> GetAllTrxVisitorsAsync();
         Task UpdateTrxVisitorAsync(Guid id, TrxVisitorUpdateDto updateDto);
-        Task DeleteTrxVisitorAsync(Guid id);
+        // Task DeleteTrxVisitorAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
     }
 }

@@ -18,13 +18,9 @@ namespace Repositories.Repository
 
         public async Task<MstAccessCctv?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstAccessCctvs
-                .Include(a => a.Integration)
-                .Where(a => a.Id == id && a.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(a => a.Id == id && a.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Access CCTV not found");
         }
 
         public async Task<IEnumerable<MstAccessCctv>> GetAllAsync()
@@ -99,17 +95,14 @@ namespace Repositories.Repository
                 .Include(a => a.Integration)
                 .Where(a => a.Status != 0);
 
+            query = query.WithActiveRelations();    
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
          public async Task<IEnumerable<MstAccessCctv>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstAccessCctvs
-                .Include(a => a.Integration)
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
     }
 }

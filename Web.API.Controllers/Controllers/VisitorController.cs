@@ -279,7 +279,7 @@ namespace Web.API.Controllers.Controllers
         }
         
         [HttpGet("export/pdf")]
-         [AllowAnonymous] 
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
