@@ -12,7 +12,7 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250731082112_InitialCreate")]
+    [Migration("20250801063442_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -2253,6 +2253,15 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_number");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
                     b.Property<string>("DepartmentName")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("department_name");
@@ -2327,6 +2336,14 @@ namespace Repositories.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.Property<int>("UploadFr")
                         .HasColumnType("int")

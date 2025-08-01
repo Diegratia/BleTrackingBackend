@@ -1,19 +1,21 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
-using Data.ViewModels;
-using Entities.Models;
-using Repositories.Repository;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Data.ViewModels;
+using Entities.Models;
+using Microsoft.AspNetCore.Http;
+using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
-using System.Security.Claims;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -222,7 +224,7 @@ namespace BusinessLogic.Services.Implementation
 
          public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var visitorBlacklistAreas = await _repository.GetAllAsync();
 
             var document = Document.Create(container =>

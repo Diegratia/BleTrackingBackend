@@ -194,41 +194,41 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/VisitorBlacklistArea/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _trxVisitorService.DeleteTrxVisitorAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "TrxVisitor deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [HttpDelete("{id}")]
+        // public async Task<IActionResult> Delete(Guid id)
+        // {
+        //     try
+        //     {
+        //         await _trxVisitorService.DeleteTrxVisitorAsync(id);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "TrxVisitor deleted successfully",
+        //             collection = new { data = (object)null },
+        //             code = 204
+        //         });
+        //     }
+        //     catch (KeyNotFoundException ex)
+        //     {
+        //         return NotFound(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 404
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
