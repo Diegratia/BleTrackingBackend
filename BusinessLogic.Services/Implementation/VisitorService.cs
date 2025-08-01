@@ -40,8 +40,8 @@ namespace BusinessLogic.Services.Implementation
             var visitor = _mapper.Map<Visitor>(createDto);
             if (createDto == null) throw new ArgumentNullException(nameof(createDto));
 
-            if (!await _repository.ApplicationExists(createDto.ApplicationId))
-                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
+            // if (!await _repository.ApplicationExists(createDto.ApplicationId))
+            //     throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
@@ -138,8 +138,8 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException($"Visitor with ID {id} not found.");
             }
 
-            if (!await _repository.ApplicationExists(updateDto.ApplicationId))
-                throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
+            // if (!await _repository.ApplicationExists(updateDto.ApplicationId))
+            //     throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
 
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {
