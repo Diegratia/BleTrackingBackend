@@ -175,7 +175,7 @@ public class VisitorService : IVisitorService
         await _visitorRepository.AddAsync(visitor);
 
             // Send verification email
-            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
 
         var result = _mapper.Map<VisitorDto>(visitor);

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 public interface IEmailService
 {
     Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode);
-    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
+    // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
     }
 
 public class EmailService : IEmailService
@@ -56,41 +56,41 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode)
-    {
-        var smtpHost = _configuration["Email:SmtpHost"];
-        var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
-        var smtpUsername = _configuration["Email:SmtpUsername"];
-        var smtpPassword = _configuration["Email:SmtpPassword"];
-        var fromEmail = _configuration["Email:FromEmail"];
-        var fromName = _configuration["Email:FromName"];
+    // public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode)
+    // {
+    //     var smtpHost = _configuration["Email:SmtpHost"];
+    //     var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+    //     var smtpUsername = _configuration["Email:SmtpUsername"];
+    //     var smtpPassword = _configuration["Email:SmtpPassword"];
+    //     var fromEmail = _configuration["Email:FromEmail"];
+    //     var fromName = _configuration["Email:FromName"];
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = "Visitor Invitation",
-            Body = $@"Dear {name},
+    //     var message = new MailMessage
+    //     {
+    //         From = new MailAddress(fromEmail, fromName),
+    //         Subject = "Visitor Invitation",
+    //         Body = $@"Dear {name},
 
-            You have been invited as a visitor. Please confirm your invitation by clicking the link below:
+    //         You have been invited as a visitor. Please confirm your invitation by clicking the link below:
 
-            Confirmation Code: {confirmationCode}
+    //         Confirmation Code: {confirmationCode}
 
-            This link will expire in 7 days.
+    //         This link will expire in 7 days.
 
-            Thank you,
-            Your Application Team",
-            IsBodyHtml = false
-        };
-        message.To.Add(toEmail);
+    //         Thank you,
+    //         Your Application Team",
+    //         IsBodyHtml = false
+    //     };
+    //     message.To.Add(toEmail);
 
-        using var client = new SmtpClient(smtpHost, smtpPort)
-        {
-            Credentials = new NetworkCredential(smtpUsername, smtpPassword),
-            EnableSsl = true
-        };
+    //     using var client = new SmtpClient(smtpHost, smtpPort)
+    //     {
+    //         Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+    //         EnableSsl = true
+    //     };
 
-        await client.SendMailAsync(message);
-    }
+    //     await client.SendMailAsync(message);
+    // }
 }
 
 
