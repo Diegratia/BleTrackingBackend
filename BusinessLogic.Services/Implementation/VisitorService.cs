@@ -104,6 +104,7 @@ public class VisitorService : IVisitorService
         visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
         visitor.VisitorPeriodStart = DateTime.UtcNow;
         visitor.InvitationCode = confirmationCode;
+        visitor.EmailInvitationSendAt = DateTime.UtcNow;
         visitor.CreatedBy = username ?? "System";
         visitor.CreatedAt = DateTime.UtcNow;
         visitor.UpdatedBy = username ?? "System";
@@ -174,15 +175,8 @@ public class VisitorService : IVisitorService
         await _visitorRepository.AddAsync(visitor);
 
             // Send verification email
-            try
-            {
-            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
-        }
-            catch (Exception ex)
-            {
-                visitor.UploadFrError = $"Failed to send verification email: {ex.Message}";
-            }
 
         var result = _mapper.Map<VisitorDto>(visitor);
         if (result == null)

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 public interface IEmailService
 {
     Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode);
-    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationToken);
+    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
     }
 
 public class EmailService : IEmailService
@@ -56,7 +56,7 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationToken)
+    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode)
     {
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
@@ -73,7 +73,7 @@ public class EmailService : IEmailService
 
             You have been invited as a visitor. Please confirm your invitation by clicking the link below:
 
-            Confirmation Link: {invitationToken}
+            Confirmation Code: {confirmationCode}
 
             This link will expire in 7 days.
 
