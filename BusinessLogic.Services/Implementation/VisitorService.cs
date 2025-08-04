@@ -174,7 +174,7 @@ public class VisitorService : IVisitorService
 
             // Send verification email
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
-            await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+            // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
 
         var result = _mapper.Map<VisitorDto>(visitor);
         if (result == null)
@@ -196,7 +196,7 @@ public class VisitorService : IVisitorService
 
             var user = await _userRepository.GetByEmailConfirmPasswordAsync(confirmDto.Email.ToLower());
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("23 User not found");
 
             if (user.IsEmailConfirmation == 1)
                 throw new InvalidOperationException("Email already confirmed");
@@ -295,7 +295,7 @@ public class VisitorService : IVisitorService
                 visitor.FaceImage = "";
             }
 
-             if (await _userRepository.EmailExistsAsync(updateDto.Email.ToLower()))
+            if (await _userRepository.EmailExistsAsync(updateDto.Email.ToLower()))
                 throw new InvalidOperationException("Email is already registered");
 
             visitor.UpdatedBy = username;
