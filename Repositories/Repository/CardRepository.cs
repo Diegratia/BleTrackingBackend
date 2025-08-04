@@ -26,7 +26,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<Card>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync() ?? null;
         }
 
         public IQueryable<Card> GetAllQueryable()

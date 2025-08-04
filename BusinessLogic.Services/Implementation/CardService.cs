@@ -46,8 +46,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<CardDto>> GetAllAsync()
         {
-            var card = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardDto>>(card) ?? null;
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<CardDto>>(cards) ?? null;
         }
         
         //      public async Task<IEnumerable<CardDto>> GetAllAsync()

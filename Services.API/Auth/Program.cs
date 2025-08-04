@@ -155,6 +155,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+// builder.Services.AddScoped<VisitorRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
@@ -173,7 +174,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        DatabaseSeeder.Seed(context); 
+        // DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

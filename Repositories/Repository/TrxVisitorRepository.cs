@@ -42,7 +42,7 @@ namespace Repositories.Repository
                 .Include(v => v.Visitor)
                 .Include(v => v.Application)
                 .Include(v => v.MaskedArea)
-                .AsQueryable();
+                .AsQueryable();     
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }

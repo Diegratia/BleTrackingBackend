@@ -30,7 +30,7 @@ namespace Repositories.Repository
             }
 
             // Prioritas 1: Dari token Bearer (claim di JWT)
-            var applicationIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
             if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
             {
                 return (applicationIdFromToken, false);
@@ -68,7 +68,6 @@ namespace Repositories.Repository
             if (!isSystemAdmin && applicationId.HasValue && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
         }
-
 
     //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
     //     {
