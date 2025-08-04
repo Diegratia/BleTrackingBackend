@@ -94,7 +94,7 @@ namespace Repositories.Repository
                 .Include(fd => fd.Reader)
                 .Where(fd => fd.Status != 0);
 
-            // query = query.WithActiveRelations();
+            query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
