@@ -101,8 +101,6 @@ public class VisitorService : IVisitorService
         visitor.ApplicationId = applicationId;
         visitor.Status = 1;
         visitor.IsInvitationAccepted = false;
-        visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
-        visitor.VisitorPeriodStart = DateTime.UtcNow;
         visitor.InvitationCode = confirmationCode;
         visitor.EmailInvitationSendAt = DateTime.UtcNow;
         visitor.CreatedBy = username ?? "System";
@@ -185,42 +183,49 @@ public class VisitorService : IVisitorService
         return result;
     }
 
-    public async Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto)
-    {
-        if (confirmDto == null)
-            throw new ArgumentNullException(nameof(confirmDto));
-
-        if (string.IsNullOrWhiteSpace(confirmDto.Email))
-            throw new ArgumentException("Email is required", nameof(confirmDto.Email));
-
-        if (string.IsNullOrWhiteSpace(confirmDto.ConfirmationCode))
-            throw new ArgumentException("Confirmation code is required", nameof(confirmDto.ConfirmationCode));
-
-        var user = await _userRepository.GetByEmailConfirmPasswordAsync(confirmDto.Email.ToLower());
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        if (user.IsEmailConfirmation == 1)
-            throw new InvalidOperationException("Email already confirmed");
-
-        if (user.EmailConfirmationCode != confirmDto.ConfirmationCode)
-            throw new InvalidOperationException("Invalid confirmation code");
-
-        if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
-            throw new InvalidOperationException("Confirmation code expired");
-
-        user.IsEmailConfirmation = 1;
-        user.EmailConfirmationAt = DateTime.UtcNow;
-        user.StatusActive = StatusActive.Active;
-        await _userRepository.UpdateAsync(user);
-
-        var visitor = await _visitorRepository.GetByEmailAsync(confirmDto.Email.ToLower());
-        if (visitor != null)
+        public async Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto)
         {
+            if (confirmDto == null)
+                throw new ArgumentNullException(nameof(confirmDto));
+
+            if (string.IsNullOrWhiteSpace(confirmDto.Email))
+                throw new ArgumentException("Email is required", nameof(confirmDto.Email));
+
+            if (string.IsNullOrWhiteSpace(confirmDto.ConfirmationCode))
+                throw new ArgumentException("Confirmation code is required", nameof(confirmDto.ConfirmationCode));
+
+            var user = await _userRepository.GetByEmailConfirmPasswordAsync(confirmDto.Email.ToLower());
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            if (user.IsEmailConfirmation == 1)
+                throw new InvalidOperationException("Email already confirmed");
+
+            if (user.EmailConfirmationCode != confirmDto.ConfirmationCode)
+                throw new InvalidOperationException("Invalid confirmation code");
+
+            if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
+                throw new InvalidOperationException("Confirmation code expired");
+
+            user.IsEmailConfirmation = 1;
+            user.EmailConfirmationAt = DateTime.UtcNow;
+
+            user.StatusActive = StatusActive.Active;
+            await _userRepository.UpdateAsync(user);
+
+            var visitor = await _visitorRepository.GetByEmailAsync(confirmDto.Email.ToLower());
+            visitor.VisitorPeriodStart = DateTime.UtcNow;
             visitor.IsInvitationAccepted = true;
-            visitor.EmailInvitationSendAt = DateTime.UtcNow;
-            await _visitorRepository.UpdateAsync(visitor);
-        }
+            visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
+            if (visitor != null)
+            {
+                visitor.IsInvitationAccepted = true;
+                visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
+                visitor.EmailInvitationSendAt = DateTime.UtcNow;
+                visitor.VisitorPeriodStart = DateTime.UtcNow;
+                await _visitorRepository.UpdateAsync(visitor);
+            }
+         await _visitorRepository.UpdateAsync(visitor);
     }
         public async Task<VisitorDto> GetVisitorByIdAsync(Guid id)
         {

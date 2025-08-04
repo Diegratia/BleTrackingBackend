@@ -134,6 +134,12 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Visitor Email not found");
         }
 
+        //  public async Task<Visitor> GetByEmailConfirmPasswordAsyncRaw(string email)
+        // {
+        //     return await _context.Visitors
+        //     .FirstOrDefaultAsync(u => u.Email == email);
+        // }
+
 
         private async Task ValidateRelatedEntitiesAsync(Visitor visitor, Guid? applicationId, bool isSystemAdmin)
         {
