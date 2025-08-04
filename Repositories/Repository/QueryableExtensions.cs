@@ -99,9 +99,10 @@ namespace Repositories.Repository
         {
             return query.Where(fd =>
                 fd.Application != null || fd.Application.ApplicationStatus != 0 ||
-                (fd.Floorplan != null && fd.Floorplan.Status != 0) &&
-                (fd.Floorplan.Floor != null && fd.Floorplan.Floor.Status != 0) &&
-                (fd.Floorplan.Floor.Building != null && fd.Floorplan.Floor.Building.Status != 0));
+                fd.FloorplanMaskedArea != null && fd.FloorplanMaskedArea.Status != 0 &&
+                fd.Floorplan != null && fd.Floorplan.Status != 0 &&
+                fd.Floorplan.Floor != null && fd.Floorplan.Floor.Status != 0 &&
+                fd.Floorplan.Floor.Building != null && fd.Floorplan.Floor.Building.Status != 0);
         }
 
         public static IQueryable<MstBleReader> WithActiveRelations(this IQueryable<MstBleReader> query)
