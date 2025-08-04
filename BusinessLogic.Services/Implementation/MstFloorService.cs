@@ -98,7 +98,22 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstFloorDto>(floor);
         }
 
-        public async Task<MstFloorDto> UpdateAsync(Guid id, MstFloorUpdateDto updateDto)
+        //   public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var district = await _repository.GetByIdAsync(id);
+        //     if (district == null)
+        //         throw new KeyNotFoundException("District not found");
+        //     district.UpdatedAt = DateTime.UtcNow;
+        //     district.UpdatedBy = username;
+        //     _mapper.Map(updateDto, district);
+
+        //     await _repository.UpdateAsync(district);
+        // }
+        
+        
+
+        public async Task UpdateAsync(Guid id, MstFloorUpdateDto updateDto)
         {
             var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
@@ -157,7 +172,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, floor);
 
             await _repository.UpdateAsync(floor);
-            return _mapper.Map<MstFloorDto>(floor);
+
         }
 
         public async Task DeleteAsync(Guid id)
@@ -277,6 +292,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             columns.ConstantColumn(35);   // No.
                             columns.RelativeColumn(2); // Building Name
+                            columns.RelativeColumn(2); // Building Id
                             columns.RelativeColumn(2); // Floor Name
                             columns.RelativeColumn(1); // EngineFloorId
                             columns.RelativeColumn(1); // MeterPerPx
@@ -289,6 +305,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Building").SemiBold();
+                            header.Cell().Element(CellStyle).Text("BuildingId").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
                             header.Cell().Element(CellStyle).Text("EngineFloorId").SemiBold();
                             header.Cell().Element(CellStyle).Text("Meter/Px").SemiBold();
@@ -302,6 +319,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(floor.Building?.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(floor.Building?.Id ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.Name);
                             table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
                             table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
@@ -340,12 +358,13 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "No";
             worksheet.Cell(1, 2).Value = "Building";
-            worksheet.Cell(1, 3).Value = "Floor Name";
-            worksheet.Cell(1, 4).Value = "Engine Floor ID";
-            worksheet.Cell(1, 5).Value = "Meter/Px";
-            worksheet.Cell(1, 6).Value = "Created By";
-            worksheet.Cell(1, 7).Value = "Created At";
-            worksheet.Cell(1, 8).Value = "Status";
+            worksheet.Cell(1, 3).Value = "BuildingId";
+            worksheet.Cell(1, 4).Value = "Floor Name";
+            worksheet.Cell(1, 5).Value = "Engine Floor ID";
+            worksheet.Cell(1, 6).Value = "Meter/Px";
+            worksheet.Cell(1, 7).Value = "Created By";
+            worksheet.Cell(1, 8).Value = "Created At";
+            worksheet.Cell(1, 9).Value = "Status";
 
             int row = 2;
             int no = 1;
@@ -356,12 +375,13 @@ namespace BusinessLogic.Services.Implementation
 
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
-                worksheet.Cell(row, 3).Value = floor.Name;
-                worksheet.Cell(row, 4).Value = floor.EngineFloorId;
-                worksheet.Cell(row, 5).Value = floor.MeterPerPx;
-                worksheet.Cell(row, 6).Value = floor.CreatedBy;
-                worksheet.Cell(row, 7).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cell(row, 8).Value = floor.Status == 1 ? "Active" : "Inactive";
+                worksheet.Cell(row, 3).Value = floor.Building?.Name ?? "-";
+                worksheet.Cell(row, 4).Value = floor.Name;
+                worksheet.Cell(row, 5).Value = floor.EngineFloorId;
+                worksheet.Cell(row, 6).Value = floor.MeterPerPx;
+                worksheet.Cell(row, 7).Value = floor.CreatedBy;
+                worksheet.Cell(row, 8).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 9).Value = floor.Status == 1 ? "Active" : "Inactive";
                 row++;
             }
 
