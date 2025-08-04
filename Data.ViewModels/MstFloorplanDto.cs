@@ -26,7 +26,7 @@ namespace Data.ViewModels
         // public Guid ApplicationId { get; set; }
     }
 
-    public class MstFloorplanUpdateDto : BaseModelDto
+    public class MstFloorplanUpdateDto 
     {
         public string Name { get; set; }
         public Guid FloorId { get; set; }

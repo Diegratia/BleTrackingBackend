@@ -63,16 +63,24 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("UserName not found");
         }
 
-        public async Task<User> GetByEmailConfirmPasswordAsync(string email)
-        {
+        // public async Task<User> GetByEmailConfirmPasswordAsync(string email)
+        // {
 
-             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.Users
-                .Include(u => u.Group)
-                .Where(u => u.Email == email && u.IsEmailConfirmation == 0 && u.StatusActive == 0);
-                 query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync();
-        }
+        //      var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        //     var query = _context.Users
+        //         .Include(u => u.Group)
+        //         .Where(u => u.Email == email && u.IsEmailConfirmation == 0 && u.StatusActive == 0);
+        //          query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        //     return await query.FirstOrDefaultAsync();
+        // }
+
+        public async Task<User> GetByEmailConfirmPasswordAsync(string email)
+            {
+                var query = _context.Users
+                    .Include(u => u.Group)
+                    .Where(u => u.Email == email); // ⛔ tanpa filter dulu
+                return await query.FirstOrDefaultAsync(); // lihat apakah user ada
+            }
 
         public async Task<User> GetByEmailConfirmPasswordAsyncRaw(string email)
         {
@@ -130,7 +138,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var existingUser = await GetByIdAsyncRaw(user.Id);
             if (existingUser == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("22 User not found");
 
             await ValidateApplicationIdAsync(user.ApplicationId);
             ValidateApplicationIdForEntity(user, applicationId, isSystemAdmin);

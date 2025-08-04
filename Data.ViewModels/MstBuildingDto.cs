@@ -22,7 +22,7 @@ namespace Data.ViewModels
         // public Guid ApplicationId { get; set; }
     }
 
-    public class MstBuildingUpdateDto : BaseModelDto
+    public class MstBuildingUpdateDto 
     {
         public string? Name { get; set; }
         public IFormFile? Image { get; set; }

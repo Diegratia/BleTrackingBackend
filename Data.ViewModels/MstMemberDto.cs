@@ -62,7 +62,7 @@ namespace Data.ViewModels
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 
-     public class MstMemberUpdateDto : BaseModelDto
+     public class MstMemberUpdateDto 
     {
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }

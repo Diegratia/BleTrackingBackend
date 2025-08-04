@@ -35,7 +35,7 @@ namespace Data.ViewModels
         // public Guid ApplicationId { get; set; }
     }
 
-    public class MstIntegrationUpdateDto : BaseModelDto
+    public class MstIntegrationUpdateDto 
     {
         public Guid BrandId { get; set; }
         public string? IntegrationType { get; set; }

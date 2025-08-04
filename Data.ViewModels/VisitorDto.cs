@@ -69,7 +69,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorUpdateDto : BaseModelDto
+    public class VisitorUpdateDto 
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }

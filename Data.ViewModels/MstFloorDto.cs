@@ -37,7 +37,7 @@ namespace Data.ViewModels
         public long EngineFloorId { get; set; }
     }
 
-    public class MstFloorUpdateDto : BaseModelDto
+    public class MstFloorUpdateDto 
     {
         public Guid? BuildingId { get; set; }
         public string? Name { get; set; }
@@ -48,6 +48,7 @@ namespace Data.ViewModels
         public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
+        public Guid? ApplicationId { get; set; }
     }
     public class MstFloorImportDto
     {

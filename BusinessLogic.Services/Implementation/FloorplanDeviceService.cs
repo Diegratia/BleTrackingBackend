@@ -129,13 +129,13 @@ namespace BusinessLogic.Services.Implementation
                 device.FloorplanMaskedAreaId = dto.FloorplanMaskedAreaId;
             }
 
-            if (device.ApplicationId != dto.ApplicationId)
-            {
-                var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
-                if (application == null)
-                    throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
-                device.ApplicationId = dto.ApplicationId;
-            }
+            // if (device.ApplicationId != dto.ApplicationId)
+            // {
+            //     var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
+            //     if (application == null)
+            //         throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
+            //     device.ApplicationId = dto.ApplicationId;
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 

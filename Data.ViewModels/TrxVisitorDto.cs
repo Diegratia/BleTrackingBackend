@@ -57,7 +57,7 @@ namespace Data.ViewModels
         public Guid? VisitorId { get; set; }
     }
     
-      public class TrxVisitorUpdateDto : BaseModelDto
+      public class TrxVisitorUpdateDto 
     {
         public DateTime? CheckedInAt { get; set; }
         public DateTime? CheckedOutAt { get; set; }

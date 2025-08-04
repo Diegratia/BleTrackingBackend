@@ -59,6 +59,7 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(floor.ApplicationId);
             ValidateApplicationIdForEntity(floor, applicationId, isSystemAdmin);
 
+            // _context.MstFloors.Update(floor);   
             await _context.SaveChangesAsync();
         }
 

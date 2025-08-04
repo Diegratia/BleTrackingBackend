@@ -34,7 +34,7 @@ namespace Data.ViewModels
         public long Battery { get; set; }
     }
 
-    public class TrackingTransactionUpdateDto : BaseModelDto
+    public class TrackingTransactionUpdateDto
     {
         public DateTime TransTime { get; set; }
         public Guid ReaderId { get; set; }

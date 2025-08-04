@@ -319,7 +319,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(floor.Building?.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(floor.BuildingId ?? "-");
+                            table.Cell().Element(CellStyle).Text(floor.BuildingId.ToString() ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.Name);
                             table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
                             table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
@@ -375,7 +375,7 @@ namespace BusinessLogic.Services.Implementation
 
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
-                worksheet.Cell(row, 3).Value = floor.BuildingId;
+                worksheet.Cell(row, 3).Value = floor.BuildingId.ToString();
                 worksheet.Cell(row, 4).Value = floor.Name;
                 worksheet.Cell(row, 5).Value = floor.EngineFloorId;
                 worksheet.Cell(row, 6).Value = floor.MeterPerPx;

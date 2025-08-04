@@ -59,7 +59,7 @@ namespace Repositories.Repository
             return device;
         }
 
-        public async Task UpdateAsync(FloorplanDevice device)
+    public async Task UpdateAsync(FloorplanDevice device)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 

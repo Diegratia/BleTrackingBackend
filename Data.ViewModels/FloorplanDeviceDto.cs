@@ -50,7 +50,7 @@ namespace Data.ViewModels
         public string? DeviceStatus { get; set; }
     }
 
-     public class FloorplanDeviceUpdateDto : BaseModelDto
+     public class FloorplanDeviceUpdateDto 
     {
         public string? Name { get; set; }
         public string? Type { get; set; }
