@@ -66,10 +66,11 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Where(a => a.Id == id && a.Status != 0);
 
-            var area = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+              query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
+            var area = await query.FirstOrDefaultAsync();
             if (area == null)
-                throw new KeyNotFoundException("Masked area not found or unauthorized access.");
+                throw new KeyNotFoundException("Area not found");
 
             await _context.SaveChangesAsync();
         }
