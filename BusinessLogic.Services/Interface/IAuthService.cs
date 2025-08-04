@@ -705,7 +705,7 @@ namespace BusinessLogic.Services.Interface
             return new AuthResponseDto
             {
                 Token = newAccessToken,
-                RefreshToken = null ?? "", // Tidak mengganti refresh token
+                // RefreshToken = null ?? "", // Tidak mengganti refresh token
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
