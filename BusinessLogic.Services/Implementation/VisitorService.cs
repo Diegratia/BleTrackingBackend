@@ -95,12 +95,15 @@ public class VisitorService : IVisitorService
         if (visitor == null)
             throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
 
+        var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+
         visitor.Id = Guid.NewGuid();
         visitor.ApplicationId = applicationId;
         visitor.Status = 1;
         visitor.IsInvitationAccepted = false;
         visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
         visitor.VisitorPeriodStart = DateTime.UtcNow;
+        visitor.InvitationCode = confirmationCode;
         visitor.CreatedBy = username ?? "System";
         visitor.CreatedAt = DateTime.UtcNow;
         visitor.UpdatedBy = username ?? "System";
@@ -149,7 +152,7 @@ public class VisitorService : IVisitorService
         if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
             throw new InvalidOperationException("Email is already registered");
 
-        var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+        
         var newUser = new User
         {
             Id = Guid.NewGuid(),
@@ -170,15 +173,16 @@ public class VisitorService : IVisitorService
         await _userRepository.AddAsync(newUser);
         await _visitorRepository.AddAsync(visitor);
 
-        // Send verification email
-        try
-        {
+            // Send verification email
+            try
+            {
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+            await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
         }
-        catch (Exception ex)
-        {
-            visitor.UploadFrError = $"Failed to send verification email: {ex.Message}";
-        }
+            catch (Exception ex)
+            {
+                visitor.UploadFrError = $"Failed to send verification email: {ex.Message}";
+            }
 
         var result = _mapper.Map<VisitorDto>(visitor);
         if (result == null)
