@@ -277,9 +277,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -300,7 +300,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -321,5 +321,26 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmVisitorEmail([FromBody] ConfirmEmailDto confirmDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+            }
+
+            try
+            {
+                await _visitorService.ConfirmVisitorEmailAsync(confirmDto);
+                return Ok(new { success = true, msg = "Email confirmed successfully", code = 200 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+            }
+        }
     }
 }
+
+

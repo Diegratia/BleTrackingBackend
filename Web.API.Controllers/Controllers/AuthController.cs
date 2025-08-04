@@ -309,6 +309,7 @@ namespace Web.API.Controllers.Controllers
 
 
         [HttpPost("confirm-email")]
+            [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
         {
             if (!ModelState.IsValid)
@@ -356,7 +357,16 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        // [HttpGet("confirm-visitor-invitation")]
+        // [AllowAnonymous]
+        //     public async Task<IActionResult> ConfirmVisitorInvitation(string email, string token)
+        // {
+        //     await _authService.ConfirmVisitorInvitationAsync(email);
+        //     return Ok("Invitation confirmed successfully");
+        // }
+
         [HttpPost("set-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
         {
             if (!ModelState.IsValid)
