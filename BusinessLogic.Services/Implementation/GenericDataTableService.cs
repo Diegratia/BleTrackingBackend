@@ -269,8 +269,15 @@ namespace BusinessLogic.Services.Implementation
                     .Select(f => new
                     {
                         Entity = f,
-                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0),
-                        DeviceCount = f.FloorplanDevices.Count(m => m.Status != 0)
+                        MaskedAreaCount = f.FloorplanMaskedAreas.Count(m => m.Status != 0
+                        && m.Floorplan.Status != 0
+                        && m.Floorplan.Application.ApplicationStatus != 0
+                        && m.Floor.Building.Status != 0),
+                        DeviceCount = f.FloorplanDevices.Count(m => m.Status != 0
+                        && m.Floorplan.Status != 0
+                        && m.Floorplan.Application.ApplicationStatus != 0
+                        && m.FloorplanMaskedArea.Status != 0
+                        && m.Floorplan.Floor.Building.Status != 0)
                     });
             }
             else
@@ -320,9 +327,6 @@ namespace BusinessLogic.Services.Implementation
                 }).ToList();
                 dtos = dtosWithCount;
             }
-
-
-
             return new
             {
                 draw = request.Draw,
