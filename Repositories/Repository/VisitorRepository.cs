@@ -53,6 +53,30 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+         public async Task<MstDistrict> AddAsync(MstDistrict district)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+                // non system ambil dari claim
+                if (!isSystemAdmin)
+                {
+                    if (!applicationId.HasValue)
+                        throw new UnauthorizedAccessException("ApplicationId not found in context");
+                    district.ApplicationId = applicationId.Value;
+                }
+                // admin set applciation di body
+                else if (district.ApplicationId == Guid.Empty)
+                {
+                    throw new ArgumentException("System admin must provide a valid ApplicationId");
+                }
+            await ValidateApplicationIdAsync(district.ApplicationId);
+            ValidateApplicationIdForEntity(district, applicationId, isSystemAdmin);
+            
+            _context.MstDistricts.Add(district);
+            await _context.SaveChangesAsync();
+            return district;
+        }
+
         public async Task UpdateAsync(Visitor visitor)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -75,10 +99,10 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> ApplicationExists(Guid id)
-        {
-            return await _context.MstApplications.AnyAsync(f => f.Id == id);
-        }
+        // public async Task<bool> ApplicationExists(Guid id)
+        // {
+        //     return await _context.MstApplications.AnyAsync(f => f.Id == id);
+        // }
 
         public IQueryable<Visitor> GetAllQueryable()
         {
@@ -100,6 +124,16 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+
+          public async Task<Visitor> GetByEmailAsync(string email)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Visitors
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Visitor Email not found");
+        }
+
 
         private async Task ValidateRelatedEntitiesAsync(Visitor visitor, Guid? applicationId, bool isSystemAdmin)
         {

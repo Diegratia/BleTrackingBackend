@@ -19,13 +19,19 @@ namespace Data.ViewModels
         public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
-        public Guid? VisitorId { get; set; } 
-        public Guid? MemberId { get; set; } 
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+        public DateTime? CheckinAt { get; set; }
+        public DateTime? CheckoutAt { get; set; }
         public bool? StatusCard { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
+        
+        public VisitorDto? Visitor { get; set; } // Visitor
+        public FloorplanMaskedAreaDto? ResgisteredMaskedArea { get; set; } // Visitor
+        public MstMemberDto? Member { get; set; } // Visitor
     }
 
     public class CardCreateDto : BaseModelDto

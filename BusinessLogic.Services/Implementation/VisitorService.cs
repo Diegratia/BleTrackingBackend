@@ -19,111 +19,220 @@ using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class VisitorService : IVisitorService
-    {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly VisitorRepository _repository;
-        private readonly IMapper _mapper;
-        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" }; //tipe gambar
-        private const long MaxFileSize = 5 * 1024 * 1024; // max 5mb
 
-        public VisitorService(VisitorRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+public class VisitorService : IVisitorService
+{
+    private readonly IMapper _mapper;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly VisitorRepository _visitorRepository;
+    private readonly UserRepository _userRepository;
+    private readonly UserGroupRepository _userGroupRepository;
+    private readonly IEmailService _emailService;
+    private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+    private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+
+    public VisitorService(
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        VisitorRepository visitorRepository,
+        UserRepository userRepository,
+        UserGroupRepository userGroupRepository,
+        IEmailService emailService)
+    {
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _visitorRepository = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userGroupRepository = userGroupRepository ?? throw new ArgumentNullException(nameof(userGroupRepository));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    }
+
+    public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
+    {
+        if (createDto == null)
+            throw new ArgumentNullException(nameof(createDto));
+
+        if (string.IsNullOrWhiteSpace(createDto.Email))
+            throw new ArgumentException("Email is required", nameof(createDto.Email));
+
+        if (string.IsNullOrWhiteSpace(createDto.Name))
+            throw new ArgumentException("Name is required", nameof(createDto.Name));
+
+        var username = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
+        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(currentUserId))
+            throw new UnauthorizedAccessException("User not authenticated");
+
+        var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+        if (currentUser == null)
+            throw new UnauthorizedAccessException("Current user not found");
+
+        if (currentUser.Group == null || currentUser.Group.ApplicationId == Guid.Empty)
+            throw new InvalidOperationException("Current user has no valid group or application");
+
+        var applicationId = currentUser.ApplicationId;
+
+        // Cari atau buat grup dengan LevelPriority.UserCreated
+        var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId, LevelPriority.UserCreated);
+        if (userGroup == null)
         {
-            _repository = repository;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            userGroup = new UserGroup
+            {
+                Id = Guid.NewGuid(),
+                Name = "VisitorGroup",
+                LevelPriority = LevelPriority.UserCreated,
+                ApplicationId = applicationId,
+                Status = 1,
+                CreatedBy = username ?? "System",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedBy = username ?? "System",
+                UpdatedAt = DateTime.UtcNow
+            };
+            await _userGroupRepository.AddAsync(userGroup);
         }
 
-        public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
+        var visitor = _mapper.Map<Visitor>(createDto);
+        if (visitor == null)
+            throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
+
+        visitor.Id = Guid.NewGuid();
+        visitor.ApplicationId = applicationId;
+        visitor.Status = 1;
+        visitor.IsInvitationAccepted = false;
+        visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
+        visitor.VisitorPeriodStart = DateTime.UtcNow;
+        visitor.CreatedBy = username ?? "System";
+        visitor.CreatedAt = DateTime.UtcNow;
+        visitor.UpdatedBy = username ?? "System";
+        visitor.UpdatedAt = DateTime.UtcNow;
+
+        if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var visitor = _mapper.Map<Visitor>(createDto);
-            if (createDto == null) throw new ArgumentNullException(nameof(createDto));
-
-            // if (!await _repository.ApplicationExists(createDto.ApplicationId))
-            //     throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
-
-            if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+            try
             {
-                try
+                if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (createDto.FaceImage.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 5 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                Directory.CreateDirectory(uploadDir);
+
+                var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    // extensi file yang diterima
-                    if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
-                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                    // Validasi ukuran file
-                    if (createDto.FaceImage.Length > MaxFileSize)
-                        throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                    // folder penyimpanan di lokal server
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                    Directory.CreateDirectory(uploadDir); // akan membuat directory jika belum ada
-
-                    // buat nama file unik
-                    var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
-                    var filePath = Path.Combine(uploadDir, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.FaceImage.CopyToAsync(stream);
-                    }
-
-                    visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
-                    visitor.UploadFr = 1; // Sukses
-                    visitor.UploadFrError = "Upload successful";
+                    await createDto.FaceImage.CopyToAsync(stream);
                 }
-                catch (Exception ex)
-                {
-                    visitor.UploadFr = 2;
-                    visitor.UploadFrError = ex.Message;
-                    visitor.FaceImage = "";
-                }
+
+                visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+                visitor.UploadFr = 1;
+                visitor.UploadFrError = "Upload successful";
             }
-            else
+            catch (Exception ex)
             {
-                visitor.UploadFr = 0;
-                visitor.UploadFrError = "No file uploaded";
+                visitor.UploadFr = 2;
+                visitor.UploadFrError = ex.Message;
                 visitor.FaceImage = "";
             }
-
-            // new User
-            // {
-            //     Id = Guid.NewGuid(),
-            //     Username = "SuperAdmin",
-            //     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
-            //     IsCreatedPassword = 1,
-            //     Email = "superadmin@example.com",
-            //     IsEmailConfirmation = 1,
-            //     EmailConfirmationCode = Guid.NewGuid().ToString(),
-            //     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
-            //     EmailConfirmationAt = DateTime.UtcNow,
-            //     LastLoginAt = DateTime.UtcNow,
-            //     StatusActive = StatusActive.Active,
-            //     GroupId = userGroups[0].Id, 
-            //     ApplicationId = userGroups[0].ApplicationId
-            // };
-
-
-            visitor.Id = Guid.NewGuid();
-            visitor.Status = 1;
-            visitor.CreatedBy = username;
-            visitor.CreatedAt = DateTime.UtcNow;
-            visitor.UpdatedBy = username;
-            visitor.UpdatedAt = DateTime.UtcNow;
-
-            await _repository.AddAsync(visitor);
-            return _mapper.Map<VisitorDto>(visitor);
+        }
+        else
+        {
+            visitor.UploadFr = 0;
+            visitor.UploadFrError = "No file uploaded";
+            visitor.FaceImage = "";
         }
 
+        // Create User account
+        if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
+            throw new InvalidOperationException("Email is already registered");
+
+        var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+        var newUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = createDto.Email.ToLower(),
+            Email = createDto.Email.ToLower(),
+            Password = null ?? string.Empty,
+            IsCreatedPassword = 0,
+            IsEmailConfirmation = 0,
+            EmailConfirmationCode = confirmationCode,
+            EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+            EmailConfirmationAt = DateTime.UtcNow,
+            LastLoginAt = DateTime.MinValue,
+            StatusActive = StatusActive.NonActive,
+            ApplicationId = applicationId,
+            GroupId = userGroup.Id
+        };
+
+        await _userRepository.AddAsync(newUser);
+        await _visitorRepository.AddAsync(visitor);
+
+        // Send verification email
+        try
+        {
+            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+        }
+        catch (Exception ex)
+        {
+            visitor.UploadFrError = $"Failed to send verification email: {ex.Message}";
+        }
+
+        var result = _mapper.Map<VisitorDto>(visitor);
+        if (result == null)
+            throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+
+        return result;
+    }
+
+    public async Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto)
+    {
+        if (confirmDto == null)
+            throw new ArgumentNullException(nameof(confirmDto));
+
+        if (string.IsNullOrWhiteSpace(confirmDto.Email))
+            throw new ArgumentException("Email is required", nameof(confirmDto.Email));
+
+        if (string.IsNullOrWhiteSpace(confirmDto.ConfirmationCode))
+            throw new ArgumentException("Confirmation code is required", nameof(confirmDto.ConfirmationCode));
+
+        var user = await _userRepository.GetByEmailConfirmPasswordAsync(confirmDto.Email.ToLower());
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        if (user.IsEmailConfirmation == 1)
+            throw new InvalidOperationException("Email already confirmed");
+
+        if (user.EmailConfirmationCode != confirmDto.ConfirmationCode)
+            throw new InvalidOperationException("Invalid confirmation code");
+
+        if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
+            throw new InvalidOperationException("Confirmation code expired");
+
+        user.IsEmailConfirmation = 1;
+        user.EmailConfirmationAt = DateTime.UtcNow;
+        user.StatusActive = StatusActive.Active;
+        await _userRepository.UpdateAsync(user);
+
+        var visitor = await _visitorRepository.GetByEmailAsync(confirmDto.Email.ToLower());
+        if (visitor != null)
+        {
+            visitor.IsInvitationAccepted = true;
+            visitor.EmailInvitationSendAt = DateTime.UtcNow;
+            await _visitorRepository.UpdateAsync(visitor);
+        }
+    }
         public async Task<VisitorDto> GetVisitorByIdAsync(Guid id)
         {
-            var visitor = await _repository.GetByIdAsync(id);
+            var visitor = await _visitorRepository.GetByIdAsync(id);
             return _mapper.Map<VisitorDto>(visitor);
         }
 
         public async Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync()
         {
-            var visitors = await _repository.GetAllAsync();
+            var visitors = await _visitorRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<VisitorDto>>(visitors);
         }
 
@@ -132,7 +241,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
 
-            var visitor = await _repository.GetByIdAsync(id);
+            var visitor = await _visitorRepository.GetByIdAsync(id);
             if (visitor == null)
             {
                 throw new KeyNotFoundException($"Visitor with ID {id} not found.");
@@ -183,18 +292,21 @@ namespace BusinessLogic.Services.Implementation
                 visitor.FaceImage = "";
             }
 
+             if (await _userRepository.EmailExistsAsync(updateDto.Email.ToLower()))
+                throw new InvalidOperationException("Email is already registered");
+
             visitor.UpdatedBy = username;
             visitor.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, visitor);
-            await _repository.UpdateAsync(visitor);
+            await _visitorRepository.UpdateAsync(visitor);
             return _mapper.Map<VisitorDto>(visitor);
         }
 
         public async Task DeleteVisitorAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var visitor = await _repository.GetByIdAsync(id);
+            var visitor = await _visitorRepository.GetByIdAsync(id);
             if (visitor == null)
             {
                 throw new KeyNotFoundException($"Visitor with ID {id} not found.");
@@ -202,15 +314,15 @@ namespace BusinessLogic.Services.Implementation
             visitor.Status = 0;
             visitor.UpdatedBy = username;
             visitor.UpdatedAt = DateTime.UtcNow;
-            await _repository.DeleteAsync(visitor);
+            await _visitorRepository.DeleteAsync(visitor);
         }
 
-          public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _visitorRepository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name" }; 
-            var validSortColumns = new[] { "Name" , "Organization.Name", "District.Name", "Department.Name",  "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy"};
+            var searchableColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name" };
+            var validSortColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,
@@ -222,10 +334,10 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
-         public async Task<byte[]> ExportPdfAsync()
+        public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var visitorBlacklistAreas = await _repository.GetAllAsync();
+            var visitorBlacklistAreas = await _visitorRepository.GetAllAsync();
 
             var document = Document.Create(container =>
             {
@@ -305,7 +417,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportExcelAsync()
         {
-            var visitors = await _repository.GetAllAsync();
+            var visitors = await _visitorRepository.GetAllAsync();
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Visitors");
@@ -345,6 +457,185 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-        }
     }
+}
+
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// using AutoMapper;
+// using Microsoft.AspNetCore.Http;
+// using System;
+// using System.IO;
+// using System.Threading.Tasks;
+// using Entities.Models;
+// using Data.ViewModels;
+// using Repositories.Repository;
+// using System.Collections.Generic;
+
+// namespace BusinessLogic.Services.Implementation
+// {
+//     public interface IVisitorService
+//     {
+//         Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
+//     }
+
+//     public class VisitorService : IVisitorService
+//     {
+//         private readonly IMapper _mapper;
+//         private readonly IHttpContextAccessor _httpContextAccessor;
+//         private readonly VisitorRepository _visitorRepository;
+//         private readonly UserRepository _userRepository;
+//         private readonly UserGroupRepository _userGroupRepository;
+//         private readonly IEmailService _emailService;
+//         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+//         private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+
+//         public VisitorService(
+//             IMapper mapper,
+//             IHttpContextAccessor httpContextAccessor,
+//             VisitorRepository visitorRepository,
+//             UserRepository userRepository,
+//             UserGroupRepository userGroupRepository,
+//             IEmailService emailService)
+//         {
+//             _mapper = mapper;
+//             _httpContextAccessor = httpContextAccessor;
+//             _visitorRepository = visitorRepository;
+//             _userRepository = userRepository;
+//             _userGroupRepository = userGroupRepository;
+//             _emailService = emailService;
+//         }
+
+//         public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
+//         {
+//             if (createDto == null)
+//                 throw new ArgumentNullException(nameof(createDto));
+
+//             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+//             var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+//             if (string.IsNullOrEmpty(currentUserId))
+//                 throw new UnauthorizedAccessException("User not authenticated");
+
+//             var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+//             if (currentUser == null)
+//                 throw new UnauthorizedAccessException("Current user not found");
+
+//             var applicationId = currentUser.Group.ApplicationId;
+//             var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId, LevelPriority.UserCreated);
+//             if (userGroup == null)
+//                 throw new KeyNotFoundException("User group with UserCreated role not found for this application");
+
+//             var visitor = _mapper.Map<Visitor>(createDto);
+//             visitor.Id = Guid.NewGuid();
+//             visitor.ApplicationId = applicationId;
+//             visitor.Status = 1;
+//             visitor.IsInvitationAccepted = false;
+//             visitor.CreatedBy = username;
+//             visitor.CreatedAt = DateTime.UtcNow;
+//             visitor.UpdatedBy = username;
+//             visitor.UpdatedAt = DateTime.UtcNow;
+
+//             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+//             {
+//                 try
+//                 {
+//                     if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+//                         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+//                     if (createDto.FaceImage.Length > MaxFileSize)
+//                         throw new ArgumentException("File size exceeds 5 MB limit.");
+
+//                     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+//                     Directory.CreateDirectory(uploadDir);
+
+//                     var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+//                     var filePath = Path.Combine(uploadDir, fileName);
+
+//                     using (var stream = new FileStream(filePath, FileMode.Create))
+//                     {
+//                         await createDto.FaceImage.CopyToAsync(stream);
+//                     }
+
+//                     visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+//                     visitor.UploadFr = 1;
+//                     visitor.UploadFrError = "Upload successful";
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     visitor.UploadFr = 2;
+//                     visitor.UploadFrError = ex.Message;
+//                     visitor.FaceImage = "";
+//                 }
+//             }
+//             else
+//             {
+//                 visitor.UploadFr = 0;
+//                 visitor.UploadFrError = "No file uploaded";
+//                 visitor.FaceImage = "";
+//             }
+
+//             // Create User account
+//             if (await _userRepository.EmailExistsAsync(createDto.Email))
+//                 throw new InvalidOperationException("Email is already registered");
+
+//             var invitationToken = Guid.NewGuid().ToString("N");
+//             var newUser = new User
+//             {
+//                 Id = Guid.NewGuid(),
+//                 Username = createDto.Email.ToLower(), // Use email as username
+//                 Email = createDto.Email.ToLower(),
+//                 Password = null,
+//                 IsCreatedPassword = 0,
+//                 IsEmailConfirmation = 0,
+//                 EmailConfirmationCode = invitationToken, // Reuse for invitation token
+//                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+//                 EmailConfirmationAt = DateTime.UtcNow,
+//                 LastLoginAt = DateTime.MinValue,
+//                 StatusActive = StatusActive.NonActive,
+//                 GroupId = userGroup.Id
+//             };
+
+//             await _userRepository.AddAsync(newUser);
+//             await _visitorRepository.AddAsync(visitor);
+
+//             // Send invitation email
+//             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name, invitationToken);
+
+//             return _mapper.Map<VisitorDto>(visitor);
+//         }
+//     }
+// }

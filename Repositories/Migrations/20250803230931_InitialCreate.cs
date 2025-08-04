@@ -266,6 +266,7 @@ namespace Repositories.Migrations
                     department_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     is_vip = table.Column<bool>(type: "bit", nullable: true),
                     is_invitation_accepted = table.Column<bool>(type: "bit", nullable: true),
+                    invitation_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     email_invitation_send_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     visitor_period_start = table.Column<DateTime>(type: "datetime2", nullable: true),
                     visitor_period_end = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -1060,7 +1061,8 @@ namespace Repositories.Migrations
                     masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     parking_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false)
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1074,6 +1076,11 @@ namespace Repositories.Migrations
                         name: "FK_trx_visitor_mst_application_application_id",
                         column: x => x.application_id,
                         principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_trx_visitor_visitor_VisitorId1",
+                        column: x => x.VisitorId1,
+                        principalTable: "visitor",
                         principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_trx_visitor_visitor_visitor_id",
@@ -1627,6 +1634,11 @@ namespace Repositories.Migrations
                 name: "IX_trx_visitor_visitor_id",
                 table: "trx_visitor",
                 column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_VisitorId1",
+                table: "trx_visitor",
+                column: "VisitorId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_user_application_id",

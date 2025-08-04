@@ -47,18 +47,40 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<CardDto>> GetAllAsync()
         {
             var card = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardDto>>(card);
+            return _mapper.Map<IEnumerable<CardDto>>(card) ?? null;
         }
+        
+        //      public async Task<IEnumerable<CardDto>> GetAllAsync()
+        // {
+        //     var cards = await _repository.GetAllAsync();
+        //     var mappedCards = new List<CardDto>();
+
+        //     foreach (var card in cards)
+        //     {
+        //                     try
+        //                     {
+        //                         var dto = _mapper.Map<CardDto>(card);
+        //                         mappedCards.Add(dto);
+        //                     }
+        //                     catch (Exception ex)
+        //                     {
+                    
+        //         }
+        //     }
+
+        //     return mappedCards;
+        // }
+
 
         public async Task<CardDto> CreateAsync(CardCreateDto createDto)
         {
-        
+
             var existingCard = await _repository.GetAllQueryable()
             .FirstOrDefaultAsync(b => b.QRCode == createDto.QRCode ||
                                 b.CardNumber == createDto.CardNumber ||
                                 b.Dmac == createDto.Dmac);
-        
-        if (existingCard != null)
+
+            if (existingCard != null)
             {
                 if (existingCard.QRCode == createDto.QRCode)
                 {
@@ -97,9 +119,9 @@ namespace BusinessLogic.Services.Implementation
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
             card.CreatedAt = DateTime.UtcNow;
-            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var createdCard = await _repository.AddAsync(card);
             return _mapper.Map<CardDto>(createdCard);
@@ -158,7 +180,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var card = await _repository.GetByIdAsync(id);
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
         }

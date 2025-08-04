@@ -14,7 +14,9 @@ namespace BusinessLogic.Services.Extension
         {
             CreateMap<VisitorCreateDto, Visitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.ToLower()))
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) 
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
                 .ForMember(dest => dest.UploadFrError, opt => opt.Ignore());

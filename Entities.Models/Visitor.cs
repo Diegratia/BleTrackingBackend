@@ -11,12 +11,12 @@ namespace Entities.Models
 {
     public class Visitor : BaseModelWithTime, IApplicationEntity
     {
-        [Column("person_id")] 
+        [Column("person_id")]
         public string? PersonId { get; set; } // nrp, no pegawai, kalau ga ada isi ktp
 
         [StringLength(255)]
         [Column("identity_id")]
-        public string? IdentityId { get; set; }
+        public string? IdentityId { get; set; } //ktp sim nik
 
         [Column("identity_type")]
         public IdentityType? IdentityType { get; set; }
@@ -78,6 +78,9 @@ namespace Entities.Models
         [Column("is_invitation_accepted")]
         public bool? IsInvitationAccepted { get; set; }
 
+        [Column("invitation_code")]
+        public string? InvitationCode { get; set; }
+
         [Column("email_invitation_send_at")]
         public DateTime? EmailInvitationSendAt { get; set; }
 
@@ -113,5 +116,6 @@ namespace Entities.Models
         public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
         public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public virtual ICollection<TrxVisitor> TrxVisitors { get; set; } = new List<TrxVisitor>();
     }
 }

@@ -212,6 +212,8 @@ namespace BusinessLogic.Services.Implementation
             foreach (var user in users)
             {
                 await _userRepository.AddRawAsync(user);
+                // await _userRepository.AddAsync(user);
+
             }
 
             // await _applicationRepository.AddAsync(application);

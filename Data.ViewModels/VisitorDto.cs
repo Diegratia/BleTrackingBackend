@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
-{    public class VisitorDto : BaseModelDto
+{
+    public class VisitorDto : BaseModelDto
     {
         public long Generate { get; set; }
         public Guid Id { get; set; }
@@ -20,6 +21,7 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
+        public string? InvitationCode { get; set; }
         // public Guid? OrganizationId { get; set; }
         // public Guid? DistrictId { get; set; }
         // public Guid? DepartmentId { get; set; }
@@ -31,7 +33,7 @@ namespace Data.ViewModels
         public bool? IsInvitationAccepted { get; set; }
         public DateTime? EmailInvitationSendAt { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }   
+        public DateTime? VisitorPeriodEnd { get; set; }
         public string? FaceImage { get; set; }
         public int? UploadFr { get; set; } = 0;
         public string? UploadFrError { get; set; }
@@ -50,7 +52,7 @@ namespace Data.ViewModels
         public string? IdentityType { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
-        public string? VisitorActiveStatus { get; set; }
+        // public string? VisitorActiveStatus { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
@@ -62,6 +64,7 @@ namespace Data.ViewModels
         public bool? IsVip { get; set; }
         // public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }
+
         // public Guid ApplicationId { get; set; }
 
     }
@@ -83,6 +86,8 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
+        public string? VisitorActiveStatus { get; set; }
+
         // public bool? IsInvitationAccepted { get; set; }
         // public DateTime? EmailVerficationSendAt { get; set; }
         // public string? EmailVerificationToken { get; set; }
@@ -90,5 +95,11 @@ namespace Data.ViewModels
         // public DateTime? VisitorPeriodEnd { get; set; }   
         public IFormFile? FaceImage { get; set; }
         // public Guid ApplicationId { get; set; }
+    }
+    
+      public class ConfirmVisitorEmailDto
+    {
+        public string Email { get; set; }
+        public string ConfirmationCode { get; set; }
     }
 }

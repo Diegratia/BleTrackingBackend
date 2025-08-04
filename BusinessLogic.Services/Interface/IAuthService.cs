@@ -404,6 +404,12 @@
 
 
 
+
+
+
+
+
+
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -423,28 +429,30 @@ using Bogus.DataSets;
 
 namespace BusinessLogic.Services.Interface
 {
-    public interface IAuthService
-    {
-        Task<AuthResponseDto> LoginAsync(LoginDto dto);
-        Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
-        Task ConfirmEmailAsync(ConfirmEmailDto dto);
-        Task SetPasswordAsync(SetPasswordDto dto);
-        Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
-        Task<IEnumerable<UserDto>> GetAllUsersAsync();
-        Task<UserDto> GetUserByIdAsync(Guid id);
-        Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
-        Task DeleteUserAsync(Guid id);
-        Task <UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
-        Task <UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto);
-        Task DeleteGroupAsync(Guid id);
-        Task <IEnumerable<UserGroupDto>> GetAllGroupsAsync();
-        Task <UserGroupDto> GetGroupByIdAsync(Guid id);
+        public interface IAuthService
+        {
+            Task<AuthResponseDto> LoginAsync(LoginDto dto);
+            Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
+            Task ConfirmEmailAsync(ConfirmEmailDto dto);
+            Task SetPasswordAsync(SetPasswordDto dto);
+            Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
+            Task<IEnumerable<UserDto>> GetAllUsersAsync();
+            Task<UserDto> GetUserByIdAsync(Guid id);
+            Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
+            Task DeleteUserAsync(Guid id);
+            Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
+            Task<UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto);
+            Task DeleteGroupAsync(Guid id);
+            Task<IEnumerable<UserGroupDto>> GetAllGroupsAsync();
+            Task<UserGroupDto> GetGroupByIdAsync(Guid id);
+            // Task ConfirmVisitorInvitationAsync(string email); 
     }
     public class AuthService : IAuthService
     {
         private readonly UserRepository _userRepository;
         private readonly UserGroupRepository _userGroupRepository;
         private readonly RefreshTokenRepository _refreshTokenRepository;
+        // private readonly VisitorRepository _visitorRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -454,6 +462,7 @@ namespace BusinessLogic.Services.Interface
             UserRepository userRepository,
             UserGroupRepository userGroupRepository,
             RefreshTokenRepository refreshTokenRepository,
+            // VisitorRepository visitorRepository,
             IMapper mapper,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
@@ -462,6 +471,7 @@ namespace BusinessLogic.Services.Interface
             _userRepository = userRepository;
             _userGroupRepository = userGroupRepository;
             _refreshTokenRepository = refreshTokenRepository;
+            // _visitorRepository = visitorRepository;
             _mapper = mapper;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
@@ -515,7 +525,7 @@ namespace BusinessLogic.Services.Interface
         {
             if (await _userRepository.EmailExistsAsync(dto.Email.ToLower()))
                 throw new Exception("Email is already registered");
-
+            
             var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(currentUserId))
                 throw new UnauthorizedAccessException("User not authenticated");
@@ -550,6 +560,7 @@ namespace BusinessLogic.Services.Interface
                 EmailConfirmationAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.MinValue,
                 StatusActive = StatusActive.NonActive,
+                ApplicationId = (await _userGroupRepository.GetByIdAsync(dto.GroupId)).ApplicationId,
                 GroupId = dto.GroupId
             };
 
@@ -569,6 +580,8 @@ namespace BusinessLogic.Services.Interface
                 StatusActive = newUser.StatusActive.ToString()
             };
         }
+
+        
 
         public async Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto)
         {
@@ -622,9 +635,9 @@ namespace BusinessLogic.Services.Interface
 
         public async Task ConfirmEmailAsync(ConfirmEmailDto dto)
         {
-            var user = await _userRepository.GetByEmailConfirmPasswordAsync(dto.Email.ToLower());
+            var user = await _userRepository.GetByEmailConfirmPasswordAsyncRaw(dto.Email.ToLower());
             if (user == null)
-                throw new Exception("User not found");
+                throw new Exception("23 User not found");
             if (user.IsEmailConfirmation == 1)
                 throw new Exception("Email already confirmed");
             if (user.EmailConfirmationCode != dto.ConfirmationCode)
@@ -655,6 +668,27 @@ namespace BusinessLogic.Services.Interface
             user.StatusActive = StatusActive.Active;
             await _userRepository.UpdateAsync(user);
         }
+
+        // public async Task ConfirmVisitorInvitationAsync(string email)
+        // {
+        //     var visitor = await _visitorRepository.GetByEmailAsync(email.ToLower());
+        //     if (visitor == null)
+        //         throw new KeyNotFoundException("Visitor not found");
+        //     if (visitor.IsInvitationAccepted == true)
+        //         throw new InvalidOperationException("Invitation already accepted");
+
+        //     visitor.IsInvitationAccepted = true;
+        //     visitor.EmailInvitationSendAt = DateTime.UtcNow;
+        //     await _visitorRepository.UpdateAsync(visitor);
+
+        //     var user = await _userRepository.GetByEmailAsync(email.ToLower());
+        //     if (user != null)
+        //     {
+        //         user.IsEmailConfirmation = 1;
+        //         user.StatusActive = StatusActive.Active;
+        //         await _userRepository.UpdateAsync(user);
+        //     }
+        // }
 
         public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
         {

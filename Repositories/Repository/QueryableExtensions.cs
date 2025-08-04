@@ -11,6 +11,11 @@ namespace Repositories.Repository
             || (b.Application != null || b.Application.ApplicationStatus != 0));
         }
 
+        public static IQueryable<AlarmRecordTracking> WithActiveRelations(this IQueryable<AlarmRecordTracking> query)
+        {
+            return query.Where(b => (b.Application != null || b.Application.ApplicationStatus != 0));
+        }
+
         public static IQueryable<MstDistrict> WithActiveRelations(this IQueryable<MstDistrict> query)
         {
             return query.Where(d => d.Status != 0
@@ -106,6 +111,12 @@ namespace Repositories.Repository
         }
 
            public static IQueryable<Visitor> WithActiveRelations(this IQueryable<Visitor> query)
+        {
+            return query.Where(fd =>
+            (fd.Application != null || fd.Application.ApplicationStatus != 0));
+        }
+
+          public static IQueryable<TrxVisitor> WithActiveRelations(this IQueryable<TrxVisitor> query)
         {
             return query.Where(fd =>
             (fd.Application != null || fd.Application.ApplicationStatus != 0));

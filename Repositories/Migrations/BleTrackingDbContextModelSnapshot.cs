@@ -2067,6 +2067,9 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
 
+                    b.Property<Guid?>("VisitorId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("VisitorNumber")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("visitor_number");
@@ -2078,6 +2081,8 @@ namespace Repositories.Migrations
                     b.HasIndex("MaskedAreaId");
 
                     b.HasIndex("VisitorId");
+
+                    b.HasIndex("VisitorId1");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
@@ -2300,6 +2305,10 @@ namespace Repositories.Migrations
                     b.Property<string>("IdentityType")
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_type");
+
+                    b.Property<string>("InvitationCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("invitation_code");
 
                     b.Property<bool?>("IsInvitationAccepted")
                         .HasColumnType("bit")
@@ -3010,6 +3019,10 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.Visitor", null)
+                        .WithMany("TrxVisitors")
+                        .HasForeignKey("VisitorId1");
+
                     b.Navigation("Application");
 
                     b.Navigation("MaskedArea");
@@ -3209,6 +3222,8 @@ namespace Repositories.Migrations
                     b.Navigation("BlacklistAreas");
 
                     b.Navigation("CardRecords");
+
+                    b.Navigation("TrxVisitors");
                 });
 #pragma warning restore 612, 618
         }

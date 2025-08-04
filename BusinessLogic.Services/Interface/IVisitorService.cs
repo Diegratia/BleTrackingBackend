@@ -13,8 +13,9 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync();
         Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto);
         Task DeleteVisitorAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+        Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto);
     }
 }
