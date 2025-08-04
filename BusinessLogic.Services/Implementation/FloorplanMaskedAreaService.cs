@@ -86,6 +86,8 @@ namespace BusinessLogic.Services.Implementation
             var area = await _repository.GetByIdAsync(id);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+            area.Status = 0;
             await _repository.SoftDeleteAsync(id);
         }
 
