@@ -72,16 +72,16 @@ namespace Repositories.Repository
         {
             return query.Where(f =>
                 f.Application != null || f.Application.ApplicationStatus != 0 ||
-                f.Department != null || f.Department.Status != 0 &&
-                f.District != null || f.District.Status != 0 &&
+                f.Department != null || f.Department.Status != 0 ||
+                f.District != null || f.District.Status != 0 ||
                 f.Organization != null || f.Organization.Status != 0);
         }
 
         public static IQueryable<MstFloorplan> WithActiveRelations(this IQueryable<MstFloorplan> query)
         {
             return query.Where(fp =>
-                fp.Status != 0 && fp.Application != null || fp.Application.ApplicationStatus != 0 ||
-                (fp.Floor != null || fp.Floor.Status != 0) &&
+                fp.Status != 0 || fp.Application != null || fp.Application.ApplicationStatus != 0 ||
+                (fp.Floor != null || fp.Floor.Status != 0) ||
                 (fp.Floor.Building != null || fp.Floor.Building.Status != 0));
         }
 
@@ -89,9 +89,9 @@ namespace Repositories.Repository
         {
             return query.Where(fpm =>
                 (fpm.Application != null || fpm.Application.ApplicationStatus != 0) ||
-                fpm.Status != 0  &&
-                (fpm.Floorplan != null && fpm.Floorplan.Status != 0) &&
-                (fpm.Floorplan.Floor != null && fpm.Floorplan.Floor.Status != 0) &&
+                fpm.Status != 0  ||
+                (fpm.Floorplan != null && fpm.Floorplan.Status != 0) ||
+                (fpm.Floorplan.Floor != null && fpm.Floorplan.Floor.Status != 0) ||
                 (fpm.Floorplan.Floor.Building != null && fpm.Floorplan.Floor.Building.Status != 0));
         }
 
@@ -99,9 +99,9 @@ namespace Repositories.Repository
         {
             return query.Where(fd =>
                 fd.Application != null || fd.Application.ApplicationStatus != 0 ||
-                fd.FloorplanMaskedArea != null && fd.FloorplanMaskedArea.Status != 0 &&
-                fd.Floorplan != null && fd.Floorplan.Status != 0 &&
-                fd.Floorplan.Floor != null && fd.Floorplan.Floor.Status != 0 &&
+                fd.FloorplanMaskedArea != null && fd.FloorplanMaskedArea.Status != 0 ||
+                fd.Floorplan != null && fd.Floorplan.Status != 0 ||
+                fd.Floorplan.Floor != null && fd.Floorplan.Floor.Status != 0 ||
                 fd.Floorplan.Floor.Building != null && fd.Floorplan.Floor.Building.Status != 0);
         }
 
