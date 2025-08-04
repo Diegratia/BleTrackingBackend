@@ -332,6 +332,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
+                
                 await _visitorService.ConfirmVisitorEmailAsync(confirmDto);
                 return Ok(new { success = true, msg = "Email confirmed successfully", code = 200 });
             }

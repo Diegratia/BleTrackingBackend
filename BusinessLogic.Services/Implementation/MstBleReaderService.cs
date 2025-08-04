@@ -85,6 +85,15 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var bleReader = await _repository.GetByIdAsync(id);
+            if (bleReader == null)
+                throw new KeyNotFoundException("BLE Reader not found");
+
+            bleReader.UpdatedBy = username ?? "";
+            bleReader.UpdatedAt = DateTime.UtcNow;
+            bleReader.Status = 0;
+
             await _repository.DeleteAsync(id);
         }
 

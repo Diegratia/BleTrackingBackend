@@ -136,15 +136,17 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
+            
 
             try
             {
-                var updatedFloor = await _mstFloorService.UpdateAsync(id, mstFloorDto);
+
+             await _mstFloorService.UpdateAsync(id, mstFloorDto);
                 return Ok(new
                 {
                     success = true,
                     msg = "Floor updated successfully",
-                    collection = new { data = updatedFloor },
+                    collection = new { data = (object)null },
                     code = 200
                 });
             }
