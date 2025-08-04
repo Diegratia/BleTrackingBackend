@@ -196,7 +196,7 @@ public class VisitorService : IVisitorService
 
             var user = await _userRepository.GetByEmailConfirmPasswordAsync(confirmDto.Email.ToLower());
             if (user == null)
-                throw new KeyNotFoundException("23 User not found");
+                throw new KeyNotFoundException("User not found");
 
             if (user.IsEmailConfirmation == 1)
                 throw new InvalidOperationException("Email already confirmed");
@@ -209,24 +209,31 @@ public class VisitorService : IVisitorService
 
             user.IsEmailConfirmation = 1;
             user.EmailConfirmationAt = DateTime.UtcNow;
-
             user.StatusActive = StatusActive.Active;
-            await _userRepository.UpdateAsync(user);
+
+            // update user status konfirmasi
+            await _userRepository.UpdateConfirmAsync(user);
 
             var visitor = await _visitorRepository.GetByEmailAsync(confirmDto.Email.ToLower());
             visitor.VisitorPeriodStart = DateTime.UtcNow;
             visitor.IsInvitationAccepted = true;
             visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
+
+            // jika visitor sudah ada
             if (visitor != null)
             {
                 visitor.IsInvitationAccepted = true;
                 visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
                 visitor.EmailInvitationSendAt = DateTime.UtcNow;
                 visitor.VisitorPeriodStart = DateTime.UtcNow;
+                
+                user.IsEmailConfirmation = 1;
+                user.EmailConfirmationAt = DateTime.UtcNow;
+                user.StatusActive = StatusActive.Active;
+
                 await _visitorRepository.UpdateAsync(visitor);
             }
-         await _visitorRepository.UpdateAsync(visitor);
-    }
+        }
         public async Task<VisitorDto> GetVisitorByIdAsync(Guid id)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);

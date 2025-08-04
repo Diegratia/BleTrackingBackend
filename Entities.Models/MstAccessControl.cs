@@ -5,15 +5,16 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models 
 {
     public class MstAccessControl : BaseModelWithTime, IApplicationEntity
     {
-        [Required]
+        [AllowNull]
         [ForeignKey("Brand")]
         [Column("controller_brand_id")]
-        public Guid BrandId { get; set; }
+        public Guid? BrandId { get; set; }
 
         [StringLength(255)]
         [Column("name")]
@@ -26,10 +27,9 @@ namespace Entities.Models
         [Column("description")]
         public string? Description { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("channel")]
-        public string Channel { get; set; }
+        public string? Channel { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -39,10 +39,9 @@ namespace Entities.Models
         [Column("raw")]
         public string? Raw { get; set; }
 
-        [Required]
         [ForeignKey("Integration")]
         [Column("integration_id")]
-        public Guid IntegrationId { get; set; }
+        public Guid? IntegrationId { get; set; }
 
         [Required]
         [ForeignKey("Application")]

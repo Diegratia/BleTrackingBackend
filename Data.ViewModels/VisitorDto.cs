@@ -13,6 +13,7 @@ namespace Data.ViewModels
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
         public string? IdentityType { get; set; }
+        // public string? VisitorActiveStatus { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
         public string? VisitorStatus { get; set; }

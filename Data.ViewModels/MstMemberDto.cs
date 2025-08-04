@@ -80,7 +80,6 @@ namespace Data.ViewModels
         public DateOnly? BirthDate { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
-        public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 }

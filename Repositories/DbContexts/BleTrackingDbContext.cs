@@ -914,7 +914,7 @@ namespace Repositories.DbContexts
                     );
 
                 entity.Property(e => e.VisitorActiveStatus)
-                    .HasColumnName("visitor_type")
+                    .HasColumnName("visitor_active_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),

@@ -37,7 +37,7 @@ namespace Data.ViewModels
 
     }
 
-       public class BleReaderNodeUpdateDto: BaseModelDto
+       public class BleReaderNodeUpdateDto
     {
         public Guid ReaderId { get; set; }
         // public int StartPos { get; set; }
@@ -46,7 +46,6 @@ namespace Data.ViewModels
         public string EndPos { get; set; }     
         public float DistancePx { get; set; }
         public float Distance { get; set; }
-        public Guid ApplicationId { get; set; }
 
     }
 

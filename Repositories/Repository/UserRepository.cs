@@ -15,6 +15,7 @@ namespace Repositories.Repository
         {
         }
 
+        // dengan filter aplikasi
         public async Task<User> GetByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -25,12 +26,22 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
         }
 
+        //tanpa filter applikasi
            public async Task<User> GetByIdAsyncRaw(Guid id)
         {
             var query = _context.Users
                 .Include(u => u.Group)
                 .Where(u => u.Id == id && u.StatusActive != 0);
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
+        }
+
+        // dipakai untuk update field pada konfirmasi visitor
+            public async Task<User> GetByIdAsyncConfirm(Guid id)
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Id == id && u.StatusActive == 0);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Confirm Failed, User not found");
         }
 
         public async Task<List<User>> GetAllAsync()
@@ -138,7 +149,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var existingUser = await GetByIdAsyncRaw(user.Id);
             if (existingUser == null)
-                throw new KeyNotFoundException("22 User not found");
+                throw new KeyNotFoundException("User not found");
 
             await ValidateApplicationIdAsync(user.ApplicationId);
             ValidateApplicationIdForEntity(user, applicationId, isSystemAdmin);
@@ -146,6 +157,21 @@ namespace Repositories.Repository
             _context.Entry(existingUser).CurrentValues.SetValues(user);
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateConfirmAsync(User user)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var existingUser = await GetByIdAsyncConfirm(user.Id);
+            if (existingUser == null)
+                throw new KeyNotFoundException("User not found");
+
+            await ValidateApplicationIdAsync(user.ApplicationId);
+            ValidateApplicationIdForEntity(user, applicationId, isSystemAdmin);
+
+            _context.Entry(existingUser).CurrentValues.SetValues(user);
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task DeleteAsync(Guid id)
         {
