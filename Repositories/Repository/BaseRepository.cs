@@ -12,10 +12,10 @@ namespace Repositories.Repository
 {
     public abstract class BaseRepository
     {
-        protected readonly BleTrackingDbDevContext _context;
+        protected readonly BleTrackingDbContext _context;
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
-        protected BaseRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        protected BaseRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;

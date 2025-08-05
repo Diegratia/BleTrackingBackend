@@ -10,8 +10,8 @@ using Repositories.DbContexts;
 
 namespace Repositories.Migrations
 {
-    [DbContext(typeof(BleTrackingDbDevContext))]
-    partial class BleTrackingDbDevContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(BleTrackingDbContext))]
+    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

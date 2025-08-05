@@ -9,9 +9,9 @@ namespace Repositories.Repository
 {
     public class MstApplicationRepository
     {
-        private readonly BleTrackingDbDevContext _context;
+        private readonly BleTrackingDbContext _context;
 
-        public MstApplicationRepository(BleTrackingDbDevContext context)
+        public MstApplicationRepository(BleTrackingDbContext context)
         {
             _context = context;
         }

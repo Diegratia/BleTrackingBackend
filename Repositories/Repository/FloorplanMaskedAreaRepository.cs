@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class FloorplanMaskedAreaRepository : BaseRepository
     {
-        public FloorplanMaskedAreaRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        public FloorplanMaskedAreaRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

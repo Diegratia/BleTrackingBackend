@@ -60,9 +60,19 @@ namespace Data.ViewModels
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
     }
+    
+     public class DenyReasonDto
+    {
+        public string? DenyReason { get; set; }
+    }
+
+    public class BlockReasonDto
+    {
+        public string? BlockReason { get; set; }
+    }
 
     public class TrxVisitorUpdateDateDto
     {
-        
-     }
+
+    }
 }

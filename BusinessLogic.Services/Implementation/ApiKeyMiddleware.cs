@@ -58,7 +58,7 @@ public class ApiKeyMiddleware
         }
 
         using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbDevContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
         var integration = await dbContext.MstIntegrations
             .FirstOrDefaultAsync(i => i.ApiKeyField == KeyField && i.ApiKeyValue == KeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
 

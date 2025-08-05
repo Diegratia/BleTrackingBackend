@@ -11,7 +11,7 @@ using Repositories.DbContexts;
 
 namespace Repositories.Migrations
 {
-    [DbContext(typeof(BleTrackingDbDevContext))]
+    [DbContext(typeof(BleTrackingDbContext))]
     [Migration("20250805064417_InitialCreate")]
     partial class InitialCreate
     {

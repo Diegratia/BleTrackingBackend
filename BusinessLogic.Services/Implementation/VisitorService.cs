@@ -168,20 +168,31 @@ public class VisitorService : IVisitorService
                 GroupId = userGroup.Id
             };
 
-            var newTrx = new TrxVisitor
-                {
-                    VisitorId = visitor.Id,
-                    CheckedInAt = DateTime.UtcNow,
-                    Status = VisitorStatus.Preregist,
-                    InvitationCode = confirmationCode,
-                    IsInvitationAccepted = false,
-                    VisitorGroupCode = visitor.TrxVisitors.Count + 1,
-                    VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
-                    VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-                    InvitationCreatedAt = DateTime.UtcNow
-                };
+            var newTrx = _mapper.Map<TrxVisitor>(createDto);
+                newTrx.VisitorId = visitor.Id;
+                newTrx.CheckedInAt = DateTime.UtcNow;
+                newTrx.Status = VisitorStatus.Preregist;
+                newTrx.InvitationCode = confirmationCode;
+                newTrx.IsInvitationAccepted = false;
+                newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
+                newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
+                newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+                newTrx.InvitationCreatedAt = DateTime.UtcNow;
 
-                await _userRepository.AddAsync(newUser);
+            // var newTrx = new TrxVisitor
+            //     {
+            //         VisitorId = visitor.Id,
+            //         CheckedInAt = DateTime.UtcNow,
+            //         Status = VisitorStatus.Preregist,
+            //         InvitationCode = confirmationCode,
+            //         IsInvitationAccepted = false,
+            //         VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+            //         VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+            //         VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+            //         InvitationCreatedAt = DateTime.UtcNow
+            //     };
+
+            await _userRepository.AddAsync(newUser);
                 await _visitorRepository.AddAsync(visitor);
                 await _trxVisitorRepository.AddAsync(newTrx);
 
@@ -438,88 +449,6 @@ public class VisitorService : IVisitorService
             await _trxVisitorRepository.AddAsync(newTrx);
         }
 
-            public async Task CheckinVisitorAsync(Guid visitorId)
-        {
-            var visitor = await _visitorRepository.GetByIdAsync(visitorId);
-            var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
-
-            if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
-                throw new InvalidOperationException("Visitor already checked in");
-
-            var newTrx = new TrxVisitor
-            {
-                VisitorId = visitorId,
-                CheckedInAt = DateTime.UtcNow,
-                Status = VisitorStatus.Precheckin,
-                VisitorActiveStatus = VisitorActiveStatus.Active,
-                VisitorGroupCode = visitor.TrxVisitors.Count + 1,
-                VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
-                VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-                UpdatedAt = DateTime.UtcNow,
-                UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value
-            };
-
-            await _trxVisitorRepository.AddAsync(newTrx);
-        }
-
-        public async Task CheckoutVisitorAsync(Guid visitorId)
-        {
-            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.CheckedOutAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Checkout;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
-            await _trxVisitorRepository.UpdateAsync(trx);
-        }
-
-            public async Task DeniedVisitorAsync(Guid visitorId, DenyReasonDto denyReasonDto)
-        {
-            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.DenyAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Denied;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
-            _mapper.Map(denyReasonDto, trx);
-            await _trxVisitorRepository.UpdateAsync(trx);
-
-        }
-
-        public async Task BlockVisitorAsync(Guid visitorId, BlockReasonDto blockVisitorDto)
-        {
-            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.BlockAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Block;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
-            _mapper.Map(blockVisitorDto, trx);
-            await _trxVisitorRepository.UpdateAsync(trx);
-        }
-
-        public async Task UnblockVisitorAsync(Guid visitorId)
-        {
-            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.UnblockAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Checkin;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
-            await _trxVisitorRepository.UpdateAsync(trx);
-        }
 
         public async Task<VisitorDto> GetVisitorByIdAsync(Guid id)
         {

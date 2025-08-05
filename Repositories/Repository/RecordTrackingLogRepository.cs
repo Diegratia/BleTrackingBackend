@@ -9,9 +9,9 @@
 // {
 //     public class RecordTrackingLogRepository
 //     {
-//         private readonly BleTrackingDbDevContext _context;
+//         private readonly BleTrackingDbContext _context;
 
-//         public RecordTrackingLogRepository(BleTrackingDbDevContext context)
+//         public RecordTrackingLogRepository(BleTrackingDbContext context)
 //         {
 //             _context = context;
 //         }

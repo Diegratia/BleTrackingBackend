@@ -18,10 +18,5 @@ namespace BusinessLogic.Services.Interface
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto);
-        Task CheckinVisitorAsync(Guid visitorId);
-        Task CheckoutVisitorAsync(Guid visitorId);
-        Task DeniedVisitorAsync(Guid visitorId, DenyReasonDto denyReasonDto);
-        Task BlockVisitorAsync(Guid visitorId, BlockReasonDto blockVisitorDto);
-        Task UnblockVisitorAsync(Guid visitorId);
     }
 }

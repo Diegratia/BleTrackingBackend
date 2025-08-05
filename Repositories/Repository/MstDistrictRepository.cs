@@ -11,10 +11,10 @@
 // {
 //     public class MstDistrictRepository
 //     {
-//         private readonly BleTrackingDbDevContext _context;
+//         private readonly BleTrackingDbContext _context;
 //         private readonly IHttpContextAccessor _httpContextAccessor;
 
-//         public MstDistrictRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+//         public MstDistrictRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
 //         {
 //             _context = context;
 //             _httpContextAccessor = httpContextAccessor;
@@ -150,7 +150,7 @@ namespace Repositories.Repository
 {
     public class MstDistrictRepository : BaseRepository
     {
-        public MstDistrictRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        public MstDistrictRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
@@ -273,10 +273,10 @@ namespace Repositories.Repository
 // {
 //     public class FloorplanDeviceRepository
 //     {
-//         private readonly BleTrackingDbDevContext _context;
+//         private readonly BleTrackingDbContext _context;
 //         private readonly IHttpContextAccessor _httpContextAccessor;
 
-//         public FloorplanDeviceRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+//         public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
 //         {
 //             _context = context;
 //             _httpContextAccessor = httpContextAccessor;

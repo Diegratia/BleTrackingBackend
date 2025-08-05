@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class MstMemberRepository : BaseRepository
     {
-        public MstMemberRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        public MstMemberRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

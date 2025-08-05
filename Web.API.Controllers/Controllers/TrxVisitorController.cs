@@ -277,9 +277,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -300,7 +300,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -321,5 +321,150 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        
+         [HttpPost("{id}/checkin")]
+        public async Task<IActionResult> Checkin(Guid id)
+        {
+            try
+            {
+                await _trxVisitorService.CheckinVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked in successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // POST: api/Visitor/{id}/checkout
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            try
+            {
+                await _trxVisitorService.CheckoutVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{id}/denied")]
+        public async Task<IActionResult> Denied(Guid id, DenyReasonDto denyReasonDto)
+        {
+            try
+            {
+                await _trxVisitorService.DeniedVisitorAsync(id, denyReasonDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor denied successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+            
+             [HttpPost("{id}/blocked")]
+            public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
+            {
+                try
+                {
+                    await _trxVisitorService.BlockVisitorAsync(id, blockReason);
+                    return Ok(new
+                    {
+                        success = true,
+                        msg = "Visitor blocked successfully",
+                        collection = new { data = (object)null },
+                        code = 200
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        msg = ex.Message,
+                        collection = new { data = (object)null },
+                        code = 400
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        msg = $"Internal server error: {ex.Message}",
+                        collection = new { data = (object)null },
+                        code = 500
+                    });
+                }
+            }
     }
 }

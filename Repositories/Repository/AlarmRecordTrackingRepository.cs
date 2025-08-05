@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class AlarmRecordTrackingRepository : BaseRepository
     {
-        public AlarmRecordTrackingRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        public AlarmRecordTrackingRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

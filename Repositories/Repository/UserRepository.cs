@@ -10,7 +10,7 @@ namespace Repositories.Repository
 {
     public class UserRepository : BaseRepository
     {
-        public UserRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+        public UserRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
@@ -208,9 +208,9 @@ namespace Repositories.Repository
 // {
 //     public class UserRepository
 //     {
-//         private readonly BleTrackingDbDevContext _context;
+//         private readonly BleTrackingDbContext _context;
 
-//         public UserRepository(BleTrackingDbDevContext context)
+//         public UserRepository(BleTrackingDbContext context)
 //         {
 //             _context = context;
 //         }

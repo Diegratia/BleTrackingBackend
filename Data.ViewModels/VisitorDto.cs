@@ -103,15 +103,6 @@ namespace Data.ViewModels
         public string ConfirmationCode { get; set; }
     }
 
-    public class DenyReasonDto
-    {
-        public string? DenyReason { get; set; }
-    }
-
-    public class BlockReasonDto
-    {
-        public string? BlockReason { get; set; }
-    }
 
     public class VisitorWithTrxCreateDto 
     {

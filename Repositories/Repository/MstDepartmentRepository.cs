@@ -12,7 +12,7 @@
         public class MstDepartmentRepository : BaseRepository
         {
 
-            public MstDepartmentRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
+            public MstDepartmentRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
                 : base(context, httpContextAccessor)
             {
             }
