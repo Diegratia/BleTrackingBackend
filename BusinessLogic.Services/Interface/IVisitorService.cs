@@ -10,7 +10,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
         // Task<VisitorDto> CreateVisitorWithTrxAsync(VisitorWithTrxCreateDto createDto);
-        Task SendInvitationVisitorAsync(Guid id);
+        Task<TrxVisitorDto> SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto);
         Task<VisitorDto> GetVisitorByIdAsync(Guid id);
         Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync();
         Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto);

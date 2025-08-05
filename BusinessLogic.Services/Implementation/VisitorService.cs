@@ -423,8 +423,7 @@ public class VisitorService : IVisitorService
                 await _visitorRepository.UpdateAsync(visitor);
             }
         }
-
-        public async Task SendInvitationVisitorAsync(Guid id)
+        public async Task<TrxVisitorDto> SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);
             // var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
@@ -432,21 +431,21 @@ public class VisitorService : IVisitorService
             // if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
             //     throw new InvalidOperationException("Visitor already checked in");
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-            var newTrx = new TrxVisitor
-            {
-                VisitorId = visitor.Id,
-                CheckedInAt = DateTime.UtcNow,
-                Status = VisitorStatus.Preregist,
-                TrxStatus = 1,
-                VisitorGroupCode = visitor.TrxVisitors.Count + 1,
-                VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
-                VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-                InvitationCreatedAt = DateTime.UtcNow,
-                InvitationCode = confirmationCode
-            };
+            var newTrx = _mapper.Map<TrxVisitor>(CreateInvitationDto);
+
+            newTrx.VisitorId = visitor.Id;
+            newTrx.Status = VisitorStatus.Preregist;
+            newTrx.IsInvitationAccepted = false;
+            newTrx.TrxStatus = 1;
+            newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
+            newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
+            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.InvitationCreatedAt = DateTime.UtcNow;
+            newTrx.InvitationCode = confirmationCode;
 
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _trxVisitorRepository.AddAsync(newTrx);
+            return _mapper.Map<TrxVisitorDto>(newTrx);
         }
 
 

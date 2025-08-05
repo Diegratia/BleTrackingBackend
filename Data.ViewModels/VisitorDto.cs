@@ -104,7 +104,7 @@ namespace Data.ViewModels
     }
 
 
-    public class VisitorWithTrxCreateDto 
+    public class VisitorWithTrxCreateDto
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
@@ -132,4 +132,14 @@ namespace Data.ViewModels
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
     }
+    
+        public class CreateInvitationDto 
+        {
+            public string? VehiclePlateNumber { get; set; }
+            public string? Remarks { get; set; }
+            public DateTime? VisitorPeriodStart { get; set; }
+            public DateTime? VisitorPeriodEnd { get; set; }
+            public Guid? MaskedAreaId { get; set; }
+            public Guid? ParkingId { get; set; }
+        }
 }
