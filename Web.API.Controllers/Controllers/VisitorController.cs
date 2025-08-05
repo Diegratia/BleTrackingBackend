@@ -343,7 +343,7 @@
         }
 
         [HttpPost("{id}/send-invitation")]
-        public async Task<IActionResult> SendInvitationVisitorAsync(Guid visitorId)
+        public async Task<IActionResult> SendInvitationVisitorAsync(Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -353,7 +353,7 @@
             try
             {
 
-                await _visitorService.SendInvitationVisitorAsync(visitorId);
+                await _visitorService.SendInvitationVisitorAsync(id);
                 return Ok(new { success = true, msg = "Invitation Send successfully", code = 200 });
             }
             catch (Exception ex)
