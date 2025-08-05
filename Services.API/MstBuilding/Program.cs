@@ -133,7 +133,7 @@ builder.Services.AddAutoMapper(typeof(MstBuildingProfile));
 builder.Services.AddScoped<IMstBuildingService, MstBuildingService>();
 builder.Services.AddScoped<MstBuildingRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "10010" ??
+var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "5010" ??
            builder.Configuration["Ports:MstBuildingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

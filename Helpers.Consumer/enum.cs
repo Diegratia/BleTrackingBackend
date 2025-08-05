@@ -89,6 +89,7 @@ namespace Helpers.Consumer
         Checkout,
         Denied,
         Block,
+        Unblock,
         Precheckin,
         Preregist
     }

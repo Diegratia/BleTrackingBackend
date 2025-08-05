@@ -196,12 +196,12 @@ namespace BusinessLogic.Services.Implementation
             using var stream = file.OpenReadStream();
             using var workbook = new XLWorkbook(stream);
             var worksheet = workbook.Worksheets.Worksheet(1);
-            var rows = worksheet.RowsUsed().Skip(1); // Lewati header
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
 
-            int rowNumber = 2; // Mulai dari baris 2 (setelah header)
+            int rowNumber = 2; // start dari baris ke 2
             foreach (var row in rows)
             {
-                // Validasi BuildingId
+                // validasi
                 var buildingIdStr = row.Cell(1).GetValue<string>();
                 if (!Guid.TryParse(buildingIdStr, out var buildingId))
                     throw new ArgumentException($"Invalid BuildingId format at row {rowNumber}");
@@ -210,19 +210,12 @@ namespace BusinessLogic.Services.Implementation
                 if (building == null)
                     throw new ArgumentException($"BuildingId {buildingId} not found at row {rowNumber}");
 
-                // Validasi Name
-                var name = row.Cell(2).GetValue<string>();
-                if (string.IsNullOrWhiteSpace(name))
-                    throw new ArgumentException($"Name is required at row {rowNumber}");
-
-
-                // Buat entitas MstFloor
                 var floor = new MstFloor
                 {
                     Id = Guid.NewGuid(),
                     BuildingId = buildingId,
-                    Name = name,
-                    FloorImage = row.Cell(3).GetValue<string>() ?? "", // Path gambar, jika ada
+                    Name = row.Cell(2).GetValue<string>(),
+                    FloorImage = row.Cell(3).GetValue<string>() ?? "", 
                     PixelX = row.Cell(4).GetValue<long>(),
                     PixelY = row.Cell(5).GetValue<long>(),
                     FloorX = row.Cell(6).GetValue<long>(),
@@ -240,7 +233,6 @@ namespace BusinessLogic.Services.Implementation
                 rowNumber++;
             }
 
-            // Simpan ke database
             foreach (var floor in floors)
             {
                 await _repository.AddAsync(floor);

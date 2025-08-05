@@ -38,9 +38,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var trxvisitors = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
-        }
-
-        
+        }    
 
         public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
         {
@@ -74,25 +72,29 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
-            if (updateDto.Status == "Checkout")
-            {
-                trxvisitor.CheckoutBy = username;
-                trxvisitor.CheckedOutAt = DateTime.UtcNow;
-            }
-            else if (updateDto.Status == "Deny")
-            {
-                trxvisitor.DenyBy = username;
-                trxvisitor.DenyAt = DateTime.UtcNow;
-            }
-            else if (updateDto.Status == "Block")
-            {
-                trxvisitor.BlockBy = username;
-                trxvisitor.BlockAt = DateTime.UtcNow;
-            }
-            else if (updateDto.Status == "Unblock")
-            {
-                trxvisitor.UnblockAt = DateTime.UtcNow;
-            }
+            // if (updateDto.Status == "Checkout")
+            // {
+            //     trxvisitor.CheckoutBy = username;
+            //     trxvisitor.CheckedOutAt = DateTime.UtcNow;
+            // }
+            // else if (updateDto.Status == "Deny")
+            // {
+            //     trxvisitor.DenyBy = username;
+            //     trxvisitor.DenyAt = DateTime.UtcNow;
+            // }
+            // else if (updateDto.Status == "Block")
+            // {
+            //     trxvisitor.BlockBy = username;
+            //     trxvisitor.BlockAt = DateTime.UtcNow;
+            // }
+            // else if (updateDto.Status == "Unblock")
+            // {
+            //     trxvisitor.UnblockAt = DateTime.UtcNow;
+            // }
+
+            trxvisitor.UpdatedBy = username;
+            trxvisitor.UpdatedAt = DateTime.UtcNow;
+
 
             _mapper.Map(updateDto, trxvisitor);
             await _repository.UpdateAsync(trxvisitor);     

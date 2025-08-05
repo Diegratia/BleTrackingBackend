@@ -159,7 +159,7 @@ builder.Services.AddScoped<RefreshTokenRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
-var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "10001" ??
+var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "5001" ??
            builder.Configuration["Ports:AuthService"] ;
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";

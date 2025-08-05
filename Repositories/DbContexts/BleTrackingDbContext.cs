@@ -181,7 +181,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstAccessCctv>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.IntegrationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.IntegrationId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
 
                 entity.HasOne(m => m.Integration)
@@ -204,7 +204,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.IntegrationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.IntegrationId).HasMaxLength(36);
 
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -386,14 +386,6 @@ namespace Repositories.DbContexts
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorActiveStatus)
-                    .HasColumnName("visitor_active_status")
-                    .HasColumnType("nvarchar(255)")
-                    .HasConversion(
-                        v => v.ToString().ToLower(),
-                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
-                    );
-
                 entity.Property(e => e.IdentityType)
                     .HasColumnName("identity_type")
                     .HasColumnType("nvarchar(255)")
@@ -401,12 +393,7 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (IdentityType)Enum.Parse(typeof(IdentityType), v, true)
                     );
-
-                entity.HasOne(v => v.Application)
-                    .WithMany()
-                    .HasForeignKey(v => v.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
@@ -879,11 +866,18 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Status)
-                    .HasColumnName("visitor_type")
+                    .HasColumnName("visitor_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (VisitorStatus)Enum.Parse(typeof(VisitorStatus), v, true)
+                    );
+                entity.Property(e => e.VisitorActiveStatus)
+                    .HasColumnName("visitor_active_status")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
                     );
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -913,13 +907,7 @@ namespace Repositories.DbContexts
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorActiveStatus)
-                    .HasColumnName("visitor_active_status")
-                    .HasColumnType("nvarchar(255)")
-                    .HasConversion(
-                        v => v.ToString().ToLower(),
-                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
-                    );
+       
                 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)

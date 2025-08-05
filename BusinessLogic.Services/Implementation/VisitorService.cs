@@ -26,6 +26,7 @@ public class VisitorService : IVisitorService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly VisitorRepository _visitorRepository;
     private readonly UserRepository _userRepository;
+    private readonly TrxVisitorRepository _trxVisitorRepository;
     private readonly UserGroupRepository _userGroupRepository;
     private readonly IEmailService _emailService;
     private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
@@ -37,6 +38,7 @@ public class VisitorService : IVisitorService
         VisitorRepository visitorRepository,
         UserRepository userRepository,
         UserGroupRepository userGroupRepository,
+        TrxVisitorRepository trxVisitorRepository,
         IEmailService emailService)
     {
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -44,144 +46,303 @@ public class VisitorService : IVisitorService
         _visitorRepository = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _userGroupRepository = userGroupRepository ?? throw new ArgumentNullException(nameof(userGroupRepository));
+        _trxVisitorRepository = trxVisitorRepository ?? throw new ArgumentNullException(nameof(trxVisitorRepository));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     }
 
-    public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
-    {
-        if (createDto == null)
-            throw new ArgumentNullException(nameof(createDto));
-
-        if (string.IsNullOrWhiteSpace(createDto.Email))
-            throw new ArgumentException("Email is required", nameof(createDto.Email));
-
-        if (string.IsNullOrWhiteSpace(createDto.Name))
-            throw new ArgumentException("Name is required", nameof(createDto.Name));
-
-        var username = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
-        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrWhiteSpace(currentUserId))
-            throw new UnauthorizedAccessException("User not authenticated");
-
-        var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
-        if (currentUser == null)
-            throw new UnauthorizedAccessException("Current user not found");
-
-        if (currentUser.Group == null || currentUser.Group.ApplicationId == Guid.Empty)
-            throw new InvalidOperationException("Current user has no valid group or application");
-
-        var applicationId = currentUser.ApplicationId;
-
-        // Cari atau buat grup dengan LevelPriority.UserCreated
-        var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId, LevelPriority.UserCreated);
-        if (userGroup == null)
+        public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
         {
-            userGroup = new UserGroup
+            if (createDto == null)
+                throw new ArgumentNullException(nameof(createDto));
+
+            if (string.IsNullOrWhiteSpace(createDto.Email))
+                throw new ArgumentException("Email is required", nameof(createDto.Email));
+
+            if (string.IsNullOrWhiteSpace(createDto.Name))
+                throw new ArgumentException("Name is required", nameof(createDto.Name));
+
+            var username = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
+            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                throw new UnauthorizedAccessException("User not authenticated");
+
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
+
+            if (currentUser.Group == null || currentUser.Group.ApplicationId == Guid.Empty)
+                throw new InvalidOperationException("Current user has no valid group or application");
+
+            var applicationId = currentUser.ApplicationId;
+
+            // Cari atau buat grup dengan LevelPriority.UserCreated
+            var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId, LevelPriority.UserCreated);
+            if (userGroup == null)
             {
-                Id = Guid.NewGuid(),
-                Name = "VisitorGroup",
-                LevelPriority = LevelPriority.UserCreated,
-                ApplicationId = applicationId,
-                Status = 1,
-                CreatedBy = username ?? "System",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedBy = username ?? "System",
-                UpdatedAt = DateTime.UtcNow
-            };
-            await _userGroupRepository.AddAsync(userGroup);
-        }
-
-        var visitor = _mapper.Map<Visitor>(createDto);
-        if (visitor == null)
-            throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
-
-        var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-
-        visitor.Id = Guid.NewGuid();
-        visitor.ApplicationId = applicationId;
-        visitor.Status = 1;
-        visitor.IsInvitationAccepted = false;
-        visitor.InvitationCode = confirmationCode;
-        visitor.EmailInvitationSendAt = DateTime.UtcNow;
-        visitor.CreatedBy = username ?? "System";
-        visitor.CreatedAt = DateTime.UtcNow;
-        visitor.UpdatedBy = username ?? "System";
-        visitor.UpdatedAt = DateTime.UtcNow;
-
-        if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
-        {
-            try
-            {
-                if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                if (createDto.FaceImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                Directory.CreateDirectory(uploadDir);
-
-                var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
-                var filePath = Path.Combine(uploadDir, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                userGroup = new UserGroup
                 {
-                    await createDto.FaceImage.CopyToAsync(stream);
-                }
-
-                visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
-                visitor.UploadFr = 1;
-                visitor.UploadFrError = "Upload successful";
+                    Id = Guid.NewGuid(),
+                    Name = "VisitorGroup",
+                    LevelPriority = LevelPriority.UserCreated,
+                    ApplicationId = applicationId,
+                    Status = 1,
+                    CreatedBy = username ?? "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username ?? "System",
+                    UpdatedAt = DateTime.UtcNow
+                };
+                await _userGroupRepository.AddAsync(userGroup);
             }
-            catch (Exception ex)
+
+            var visitor = _mapper.Map<Visitor>(createDto);
+            if (visitor == null)
+                throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
+
+            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+
+            visitor.Id = Guid.NewGuid();
+            visitor.ApplicationId = applicationId;
+            visitor.Status = 1;
+            visitor.CreatedBy = username ?? "System";
+            visitor.CreatedAt = DateTime.UtcNow;
+            visitor.UpdatedBy = username ?? "System";
+            visitor.UpdatedAt = DateTime.UtcNow;
+
+            if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
-                visitor.UploadFr = 2;
-                visitor.UploadFrError = ex.Message;
+                try
+                {
+                    if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                    if (createDto.FaceImage.Length > MaxFileSize)
+                        throw new ArgumentException("File size exceeds 5 MB limit.");
+
+                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    Directory.CreateDirectory(uploadDir);
+
+                    var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+                    var filePath = Path.Combine(uploadDir, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createDto.FaceImage.CopyToAsync(stream);
+                    }
+
+                    visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+                    visitor.UploadFr = 1;
+                    visitor.UploadFrError = "Upload successful";
+                }
+                catch (Exception ex)
+                {
+                    visitor.UploadFr = 2;
+                    visitor.UploadFrError = ex.Message;
+                    visitor.FaceImage = "";
+                }
+            }
+            else
+            {
+                visitor.UploadFr = 0;
+                visitor.UploadFrError = "No file uploaded";
                 visitor.FaceImage = "";
             }
+
+            // Create User account
+            if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
+                throw new InvalidOperationException("Email is already registered");
+
+            var newUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = createDto.Email.ToLower(),
+                Email = createDto.Email.ToLower(),
+                Password = null ?? string.Empty,
+                IsCreatedPassword = 0,
+                IsEmailConfirmation = 0,
+                EmailConfirmationCode = confirmationCode,
+                EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+                EmailConfirmationAt = DateTime.UtcNow,
+                LastLoginAt = DateTime.MinValue,
+                StatusActive = StatusActive.NonActive,
+                ApplicationId = applicationId,
+                GroupId = userGroup.Id
+            };
+
+            var newTrx = new TrxVisitor
+                {
+                    VisitorId = visitor.Id,
+
+                    CheckedInAt = DateTime.UtcNow,
+                    Status = VisitorStatus.Preregist,
+                    InvitationCode = confirmationCode,
+                    IsInvitationAccepted = false,
+                    VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+                    VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+                    VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+                    InvitationCreatedAt = DateTime.UtcNow
+                };
+
+                await _userRepository.AddAsync(newUser);
+                await _visitorRepository.AddAsync(visitor);
+                await _trxVisitorRepository.AddAsync(newTrx);
+
+                // Send verification email
+                await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+                // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+
+            var result = _mapper.Map<VisitorDto>(visitor);
+            if (result == null)
+                throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+
+            return result;
         }
-        else
-        {
-            visitor.UploadFr = 0;
-            visitor.UploadFrError = "No file uploaded";
-            visitor.FaceImage = "";
-        }
+    
+    //  public async Task<VisitorDto> CreateVisitorWithTrxAsync(VisitorWithTrxCreateDto createDto)
+    // {
+    //     if (createDto == null)
+    //         throw new ArgumentNullException(nameof(createDto));
 
-        // Create User account
-        if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
-            throw new InvalidOperationException("Email is already registered");
+    //     if (string.IsNullOrWhiteSpace(createDto.Email))
+    //         throw new ArgumentException("Email is required", nameof(createDto.Email));
 
-        
-        var newUser = new User
-        {
-            Id = Guid.NewGuid(),
-            Username = createDto.Email.ToLower(),
-            Email = createDto.Email.ToLower(),
-            Password = null ?? string.Empty,
-            IsCreatedPassword = 0,
-            IsEmailConfirmation = 0,
-            EmailConfirmationCode = confirmationCode,
-            EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
-            EmailConfirmationAt = DateTime.UtcNow,
-            LastLoginAt = DateTime.MinValue,
-            StatusActive = StatusActive.NonActive,
-            ApplicationId = applicationId,
-            GroupId = userGroup.Id
-        };
+    //     if (string.IsNullOrWhiteSpace(createDto.Name))
+    //         throw new ArgumentException("Name is required", nameof(createDto.Name));
 
-        await _userRepository.AddAsync(newUser);
-        await _visitorRepository.AddAsync(visitor);
+    //     var username = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
+    //     var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //     if (string.IsNullOrWhiteSpace(currentUserId))
+    //         throw new UnauthorizedAccessException("User not authenticated");
 
-            // Send verification email
-            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
-            // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+    //     var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+    //     if (currentUser == null)
+    //         throw new UnauthorizedAccessException("Current user not found");
 
-        var result = _mapper.Map<VisitorDto>(visitor);
-        if (result == null)
-            throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+    //     if (currentUser.Group == null || currentUser.Group.ApplicationId == Guid.Empty)
+    //         throw new InvalidOperationException("Current user has no valid group or application");
 
-        return result;
-    }
+    //     var applicationId = currentUser.ApplicationId;
+
+    //     // Cari atau buat grup dengan LevelPriority.UserCreated
+    //     var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId, LevelPriority.UserCreated);
+    //     if (userGroup == null)
+    //     {
+    //         userGroup = new UserGroup
+    //         {
+    //             Id = Guid.NewGuid(),
+    //             Name = "VisitorGroup",
+    //             LevelPriority = LevelPriority.UserCreated,
+    //             ApplicationId = applicationId,
+    //             Status = 1,
+    //             CreatedBy = username ?? "System",
+    //             CreatedAt = DateTime.UtcNow,
+    //             UpdatedBy = username ?? "System",
+    //             UpdatedAt = DateTime.UtcNow
+    //         };
+    //         await _userGroupRepository.AddAsync(userGroup);
+    //     }
+
+    //     var visitor = _mapper.Map<Visitor>(createDto);
+    //     if (visitor == null)
+    //         throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
+
+    //     var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+
+    //     visitor.Id = Guid.NewGuid();
+    //     visitor.ApplicationId = applicationId;
+    //     visitor.Status = 1;
+    //     visitor.CreatedBy = username ?? "System";
+    //     visitor.CreatedAt = DateTime.UtcNow;
+    //     visitor.UpdatedBy = username ?? "System";
+    //     visitor.UpdatedAt = DateTime.UtcNow;
+
+    //     if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+    //     {
+    //         try
+    //         {
+    //             if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+    //                 throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+    //             if (createDto.FaceImage.Length > MaxFileSize)
+    //                 throw new ArgumentException("File size exceeds 5 MB limit.");
+
+    //             var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+    //             Directory.CreateDirectory(uploadDir);
+
+    //             var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+    //             var filePath = Path.Combine(uploadDir, fileName);
+
+    //             using (var stream = new FileStream(filePath, FileMode.Create))
+    //             {
+    //                 await createDto.FaceImage.CopyToAsync(stream);
+    //             }
+
+    //             visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+    //             visitor.UploadFr = 1;
+    //             visitor.UploadFrError = "Upload successful";
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             visitor.UploadFr = 2;
+    //             visitor.UploadFrError = ex.Message;
+    //             visitor.FaceImage = "";
+    //         }
+    //     }
+    //     else
+    //     {
+    //         visitor.UploadFr = 0;
+    //         visitor.UploadFrError = "No file uploaded";
+    //         visitor.FaceImage = "";
+    //     }
+
+    //     // Create User account
+    //     if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
+    //         throw new InvalidOperationException("Email is already registered");
+
+    //     var newUser = new User
+    //     {
+    //         Id = Guid.NewGuid(),
+    //         Username = createDto.Email.ToLower(),
+    //         Email = createDto.Email.ToLower(),
+    //         Password = null ?? string.Empty,
+    //         IsCreatedPassword = 0,
+    //         IsEmailConfirmation = 0,
+    //         EmailConfirmationCode = confirmationCode,
+    //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+    //         EmailConfirmationAt = DateTime.UtcNow,
+    //         LastLoginAt = DateTime.MinValue,
+    //         StatusActive = StatusActive.NonActive,
+    //         ApplicationId = applicationId,
+    //         GroupId = userGroup.Id
+    //     };
+
+    //     var newTrx = new TrxVisitor
+    //         {
+    //             VisitorId = visitor.Id,
+
+    //             CheckedInAt = DateTime.UtcNow,
+    //             Status = VisitorStatus.Preregist,
+    //             InvitationCode = confirmationCode,
+    //             IsInvitationAccepted = false,
+    //             VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+    //             VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+    //             VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+    //             InvitationCreatedAt = DateTime.UtcNow
+    //         };
+
+    //         await _userRepository.AddAsync(newUser);
+    //         await _visitorRepository.AddAsync(visitor);
+    //         await _trxVisitorRepository.AddAsync(newTrx);
+
+    //         // Send verification email
+    //         await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+    //         // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+
+    //     var result = _mapper.Map<VisitorDto>(visitor);
+    //     if (result == null)
+    //         throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+
+    //     return result;
+    // }
 
         public async Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto)
         {
@@ -215,18 +376,36 @@ public class VisitorService : IVisitorService
             await _userRepository.UpdateConfirmAsync(user);
 
             var visitor = await _visitorRepository.GetByEmailAsync(confirmDto.Email.ToLower());
-            visitor.VisitorPeriodStart = DateTime.UtcNow;
-            visitor.IsInvitationAccepted = true;
-            visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
+            var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitor.Id);
 
+            latestTrx.IsInvitationAccepted = true;
+
+            // visitor.TrxVisitors = visitor.TrxVisitors ?? new List<TrxVisitor>();
+            // var trxVisitor = visitor.TrxVisitors.FirstOrDefault(t => t.Status == null);
+            // if (trxVisitor == null)
+            // {
+            //     trxVisitor = new TrxVisitor
+            //     {
+            //         Status = VisitorStatus.Checkin,
+            //         InvitationCreatedAt = DateTime.UtcNow,
+            //         VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+            //         VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+            //         VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid().ToString().Substring(0, 6)}",
+            //         CheckedInAt = DateTime.UtcNow,
+            //         VisitorId = visitor.Id
+            //     };
+            //     // visitor.TrxVisitors.Add(trxVisitor);
+            //     await _trxVisitorRepository.AddAsync(trxVisitor);
+            // }
+            // else
+            // {
+            //     Console.WriteLine("Visitor already checked in");
+            // }
             // jika visitor sudah ada
             if (visitor != null)
             {
-                visitor.IsInvitationAccepted = true;
-                visitor.VisitorActiveStatus = VisitorActiveStatus.Active;
-                visitor.EmailInvitationSendAt = DateTime.UtcNow;
-                visitor.VisitorPeriodStart = DateTime.UtcNow;
-                
+                latestTrx.IsInvitationAccepted = true;
+                latestTrx.Status = VisitorStatus.Precheckin;
                 user.IsEmailConfirmation = 1;
                 user.EmailConfirmationAt = DateTime.UtcNow;
                 user.StatusActive = StatusActive.Active;
@@ -234,6 +413,115 @@ public class VisitorService : IVisitorService
                 await _visitorRepository.UpdateAsync(visitor);
             }
         }
+
+        public async Task SendInvitationVisitorAsync(Guid visitorId)
+        {
+            var visitor = await _visitorRepository.GetByIdAsync(visitorId);
+            var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+
+            if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
+                throw new InvalidOperationException("Visitor already checked in");
+
+            var newTrx = new TrxVisitor
+            {
+                VisitorId = visitorId,
+                CheckedInAt = DateTime.UtcNow,
+                Status = VisitorStatus.Preregist,
+                VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+                VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+                VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+                InvitationCreatedAt = DateTime.UtcNow
+            };
+
+            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+
+            await _trxVisitorRepository.AddAsync(newTrx);
+        }
+
+            public async Task CheckinVisitorAsync(Guid visitorId)
+        {
+            var visitor = await _visitorRepository.GetByIdAsync(visitorId);
+            var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+
+            if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
+                throw new InvalidOperationException("Visitor already checked in");
+
+            var newTrx = new TrxVisitor
+            {
+                VisitorId = visitorId,
+                CheckedInAt = DateTime.UtcNow,
+                Status = VisitorStatus.Precheckin,
+                VisitorActiveStatus = VisitorActiveStatus.Active,
+                VisitorGroupCode = visitor.TrxVisitors.Count + 1,
+                VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
+                VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value
+            };
+
+            await _trxVisitorRepository.AddAsync(newTrx);
+        }
+
+        public async Task CheckoutVisitorAsync(Guid visitorId)
+        {
+            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+            if (trx == null)
+                throw new InvalidOperationException("No active session found");
+
+            trx.CheckedOutAt = DateTime.UtcNow;
+            trx.Status = VisitorStatus.Checkout;
+            trx.UpdatedAt = DateTime.UtcNow;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            await _trxVisitorRepository.UpdateAsync(trx);
+        }
+
+            public async Task DeniedVisitorAsync(Guid visitorId, DenyReasonDto denyReasonDto)
+        {
+            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+            if (trx == null)
+                throw new InvalidOperationException("No active session found");
+
+            trx.DenyAt = DateTime.UtcNow;
+            trx.Status = VisitorStatus.Denied;
+            trx.UpdatedAt = DateTime.UtcNow;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            _mapper.Map(denyReasonDto, trx);
+            await _trxVisitorRepository.UpdateAsync(trx);
+
+        }
+
+        public async Task BlockVisitorAsync(Guid visitorId, BlockReasonDto blockVisitorDto)
+        {
+            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+            if (trx == null)
+                throw new InvalidOperationException("No active session found");
+
+            trx.BlockAt = DateTime.UtcNow;
+            trx.Status = VisitorStatus.Block;
+            trx.UpdatedAt = DateTime.UtcNow;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            _mapper.Map(blockVisitorDto, trx);
+            await _trxVisitorRepository.UpdateAsync(trx);
+        }
+
+        public async Task UnblockVisitorAsync(Guid visitorId)
+        {
+            var trx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+            if (trx == null)
+                throw new InvalidOperationException("No active session found");
+
+            trx.UnblockAt = DateTime.UtcNow;
+            trx.Status = VisitorStatus.Checkin;
+            trx.UpdatedAt = DateTime.UtcNow;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            await _trxVisitorRepository.UpdateAsync(trx);
+        }
+
         public async Task<VisitorDto> GetVisitorByIdAsync(Guid id)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);

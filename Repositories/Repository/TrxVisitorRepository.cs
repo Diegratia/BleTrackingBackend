@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
 
 namespace Repositories.Repository
 {
@@ -18,15 +19,9 @@ namespace Repositories.Repository
 
         public async Task<TrxVisitor?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.TrxVisitors
-                .Include(v => v.Visitor)
-                .Include(v => v.Application)
-                .Include(v => v.MaskedArea)
-                .Where(v => v.Id == id);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<TrxVisitor>> GetAllAsync()
@@ -39,13 +34,13 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TrxVisitors
-                .Include(v => v.Visitor)
+                .Where(v => v.TrxStatus != 0)
                 .Include(v => v.Application)
-                .Include(v => v.MaskedArea)
-                .AsQueryable();     
+                .Include(v => v.Visitor)
+                .Include(v => v.MaskedArea);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        }
+        } 
 
         public async Task<TrxVisitor> AddAsync(TrxVisitor trxVisitor)
         {
@@ -117,6 +112,14 @@ namespace Repositories.Repository
                 if (visitor == null)
                     throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
             }
+        }
+        
+        public async Task<TrxVisitor?> GetLatestUnfinishedByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.VisitorId == visitorId && t.Status != null && t.CheckedOutAt == null)
+                .OrderByDescending(t => t.CheckedInAt)
+                .FirstOrDefaultAsync();
         }
     }
 }

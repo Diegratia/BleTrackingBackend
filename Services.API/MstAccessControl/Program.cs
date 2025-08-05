@@ -137,7 +137,7 @@ builder.Services.AddScoped<IMstAccessControlService, MstAccessControlService>();
 
 builder.Services.AddScoped<MstAccessControlRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_ACCESS_CONTROL_PORT") ?? "10006" ??
+var port = Environment.GetEnvironmentVariable("MST_ACCESS_CONTROL_PORT") ?? "5006" ??
            builder.Configuration["Ports:MstAccessControlService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

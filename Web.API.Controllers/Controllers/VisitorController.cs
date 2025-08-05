@@ -1,14 +1,14 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Mvc;
+    using Data.ViewModels;
+    using BusinessLogic.Services.Implementation;
+    using BusinessLogic.Services.Interface;
+    using System.Linq;
+    using Microsoft.AspNetCore.Authorization;
 
-namespace Web.API.Controllers.Controllers
-{
+    namespace Web.API.Controllers.Controllers
+    {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize("RequireAll")]
@@ -332,7 +332,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                
+
                 await _visitorService.ConfirmVisitorEmailAsync(confirmDto);
                 return Ok(new { success = true, msg = "Email confirmed successfully", code = 200 });
             }
@@ -341,7 +341,152 @@ namespace Web.API.Controllers.Controllers
                 return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
             }
         }
+
+        [HttpPost("{id}/checkin")]
+        public async Task<IActionResult> Checkin(Guid id)
+        {
+            try
+            {
+                await _visitorService.CheckinVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked in successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // POST: api/Visitor/{id}/checkout
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            try
+            {
+                await _visitorService.CheckoutVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{id}/denied")]
+        public async Task<IActionResult> Denied(Guid id, DenyReasonDto denyReasonDto)
+        {
+            try
+            {
+                await _visitorService.DeniedVisitorAsync(id, denyReasonDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor denied successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+            
+             [HttpPost("{id}/blocked")]
+            public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
+            {
+                try
+                {
+                    await _visitorService.BlockVisitorAsync(id, blockReason);
+                    return Ok(new
+                    {
+                        success = true,
+                        msg = "Visitor blocked successfully",
+                        collection = new { data = (object)null },
+                        code = 200
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        msg = ex.Message,
+                        collection = new { data = (object)null },
+                        code = 400
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        msg = $"Internal server error: {ex.Message}",
+                        collection = new { data = (object)null },
+                        code = 500
+                    });
+                }
+            }
+        }
     }
-}
 
 

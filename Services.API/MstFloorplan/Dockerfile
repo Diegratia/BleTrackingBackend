@@ -14,5 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstFloorplan/out ./
 
-EXPOSE 10014
+EXPOSE 5014
 ENTRYPOINT ["dotnet", "MstFloorplan.dll"]

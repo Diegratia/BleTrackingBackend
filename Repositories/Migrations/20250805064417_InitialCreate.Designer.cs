@@ -12,7 +12,7 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250803230931_InitialCreate")]
+    [Migration("20250805064417_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -708,7 +708,7 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<Guid>("IntegrationId")
+                    b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
@@ -766,12 +766,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
-                    b.Property<Guid>("BrandId")
+                    b.Property<Guid?>("BrandId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("controller_brand_id");
 
                     b.Property<string>("Channel")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("channel");
@@ -802,7 +801,7 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<Guid>("IntegrationId")
+                    b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
@@ -2012,6 +2011,15 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("checkout_by");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
                     b.Property<DateTime?>("DenyAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("deny_at");
@@ -2026,10 +2034,25 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<string>("InvitationCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("invitation_code");
+
                     b.Property<DateTime?>("InvitationCreatedAt")
                         .IsRequired()
                         .HasColumnType("datetime2")
                         .HasColumnName("invitation_created_at");
+
+                    b.Property<bool?>("IsInvitationAccepted")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_invitation_accepted");
 
                     b.Property<Guid?>("MaskedAreaId")
                         .HasColumnType("uniqueidentifier")
@@ -2046,15 +2069,31 @@ namespace Repositories.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
+                        .HasColumnName("visitor_status");
+
+                    b.Property<int>("TrxStatus")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UnblockAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("unblock_at");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.Property<string>("VehiclePlateNumber")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("vehicle_plate_number");
+
+                    b.Property<string>("VisitorActiveStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_active_status");
 
                     b.Property<string>("VisitorCode")
                         .HasColumnType("nvarchar(max)")
@@ -2077,15 +2116,33 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("visitor_number");
 
+                    b.Property<DateTime?>("VisitorPeriodEnd")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("visitor_period_end");
+
+                    b.Property<DateTime?>("VisitorPeriodStart")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("visitor_period_start");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("MaskedAreaId");
 
+                    b.HasIndex("Status");
+
                     b.HasIndex("VisitorId");
 
                     b.HasIndex("VisitorId1");
+
+                    b.HasIndex("VisitorPeriodStart");
+
+                    b.HasIndex("VisitorId", "Status");
+
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
+                        .IsUnique()
+                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
@@ -2280,10 +2337,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
 
-                    b.Property<DateTime?>("EmailInvitationSendAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("email_invitation_send_at");
-
                     b.Property<string>("FaceImage")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("face_image");
@@ -2308,14 +2361,6 @@ namespace Repositories.Migrations
                     b.Property<string>("IdentityType")
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_type");
-
-                    b.Property<string>("InvitationCode")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("invitation_code");
-
-                    b.Property<bool?>("IsInvitationAccepted")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_invitation_accepted");
 
                     b.Property<bool?>("IsVip")
                         .HasColumnType("bit")
@@ -2362,18 +2407,17 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("upload_fr_error");
 
-                    b.Property<string>("VisitorActiveStatus")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
+                    b.Property<string>("VisitorCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_code");
 
-                    b.Property<DateTime?>("VisitorPeriodEnd")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("visitor_period_end");
+                    b.Property<long?>("VisitorGroupCode")
+                        .HasColumnType("bigint")
+                        .HasColumnName("visitor_group_code");
 
-                    b.Property<DateTime?>("VisitorPeriodStart")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("visitor_period_start");
+                    b.Property<string>("VisitorNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_number");
 
                     b.HasKey("Id");
 
@@ -2697,8 +2741,7 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()
                         .HasForeignKey("IntegrationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("AccessCctvs")
@@ -2719,15 +2762,12 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.MstBrand", "Brand")
                         .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BrandId");
 
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()
                         .HasForeignKey("IntegrationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("AccessControls")

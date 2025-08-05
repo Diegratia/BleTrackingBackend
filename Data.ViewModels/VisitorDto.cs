@@ -16,25 +16,18 @@ namespace Data.ViewModels
         // public string? VisitorActiveStatus { get; set; }
         public string? CardNumber { get; set; }
         public string? BleCardNumber { get; set; }
-        public string? VisitorStatus { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public string? InvitationCode { get; set; }
-        // public Guid? OrganizationId { get; set; }
-        // public Guid? DistrictId { get; set; }
-        // public Guid? DepartmentId { get; set; }
-
+        public long? VisitorGroupCode { get; set; }
+        public string? VisitorNumber { get; set; }
+        public string? VisitorCode { get; set; }
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
-        public bool? IsInvitationAccepted { get; set; }
-        public DateTime? EmailInvitationSendAt { get; set; }
-        public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }
         public string? FaceImage { get; set; }
         public int? UploadFr { get; set; } = 0;
         public string? UploadFrError { get; set; }
@@ -46,7 +39,7 @@ namespace Data.ViewModels
         public string Status { get; set; }
     }
 
-    public class VisitorCreateDto : BaseModelDto
+    public class VisitorCreateDto : TrxVisitorCreateDto
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
@@ -59,6 +52,9 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
+        public long? VisitorGroupCode { get; set; }
+        public string? VisitorNumber { get; set; }
+        public string? VisitorCode { get; set; }
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
@@ -66,11 +62,11 @@ namespace Data.ViewModels
         // public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }
 
-        // public Guid ApplicationId { get; set; }
+        public Guid ApplicationId { get; set; }
 
     }
 
-    public class VisitorUpdateDto 
+    public class VisitorUpdateDto
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
@@ -83,6 +79,9 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
+        public long? VisitorGroupCode { get; set; }
+        public string? VisitorNumber { get; set; }
+        public string? VisitorCode { get; set; }
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
@@ -97,10 +96,49 @@ namespace Data.ViewModels
         public IFormFile? FaceImage { get; set; }
         // public Guid ApplicationId { get; set; }
     }
-    
-      public class ConfirmVisitorEmailDto
+
+    public class ConfirmVisitorEmailDto
     {
         public string Email { get; set; }
         public string ConfirmationCode { get; set; }
+    }
+
+    public class DenyReasonDto
+    {
+        public string? DenyReason { get; set; }
+    }
+
+    public class BlockReasonDto
+    {
+        public string? BlockReason { get; set; }
+    }
+
+    public class VisitorWithTrxCreateDto 
+    {
+        public string? PersonId { get; set; }
+        public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
+        public string? CardNumber { get; set; }
+        public string? BleCardNumber { get; set; }
+        public string? Name { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? Gender { get; set; }
+        public string? Address { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
+        public long? VisitorGroupCode { get; set; }
+        public string? VisitorNumber { get; set; }
+        public string? VisitorCode { get; set; }
+        public bool? IsVip { get; set; }
+        public IFormFile? FaceImage { get; set; }
+        public string? VehiclePlateNumber { get; set; }
+        public string? Remarks { get; set; }
+        public DateTime? VisitorPeriodStart { get; set; }
+        public DateTime? VisitorPeriodEnd { get; set; }
+        public Guid? MaskedAreaId { get; set; }
+        public Guid? ParkingId { get; set; }
+        public Guid? VisitorId { get; set; }
     }
 }

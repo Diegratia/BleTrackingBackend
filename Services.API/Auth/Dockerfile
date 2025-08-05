@@ -12,6 +12,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/Auth/out ./
 
-EXPOSE 10001
+EXPOSE 5001
 
 ENTRYPOINT ["dotnet", "Auth.dll"]

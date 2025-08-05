@@ -136,6 +136,8 @@ builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 builder.Services.AddScoped<VisitorRepository>();
 
+builder.Services.AddScoped<TrxVisitorRepository>();
+
 // builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<UserRepository>();

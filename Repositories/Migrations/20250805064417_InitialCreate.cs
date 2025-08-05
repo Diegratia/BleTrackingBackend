@@ -255,7 +255,6 @@ namespace Repositories.Migrations
                     identity_type = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     ble_card_number = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    visitor_type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     phone = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -264,12 +263,10 @@ namespace Repositories.Migrations
                     organization_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     district_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     department_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    visitor_group_code = table.Column<long>(type: "bigint", nullable: true),
+                    visitor_number = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    visitor_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     is_vip = table.Column<bool>(type: "bit", nullable: true),
-                    is_invitation_accepted = table.Column<bool>(type: "bit", nullable: true),
-                    invitation_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    email_invitation_send_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    visitor_period_start = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    visitor_period_end = table.Column<DateTime>(type: "datetime2", nullable: true),
                     status = table.Column<int>(type: "int", nullable: false),
                     face_image = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     upload_fr = table.Column<int>(type: "int", nullable: false),
@@ -574,7 +571,7 @@ namespace Repositories.Migrations
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     rtsp = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    integration_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    integration_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -610,14 +607,14 @@ namespace Repositories.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    controller_brand_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    controller_brand_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    channel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    channel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     door_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     raw = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    integration_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    integration_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -645,8 +642,7 @@ namespace Repositories.Migrations
                         name: "FK_mst_access_control_mst_brand_controller_brand_id",
                         column: x => x.controller_brand_id,
                         principalTable: "mst_brand",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_mst_access_control_mst_integration_integration_id",
                         column: x => x.integration_id,
@@ -1051,18 +1047,30 @@ namespace Repositories.Migrations
                     deny_reason = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     block_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     block_reason = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    visitor_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    visitor_active_status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     invitation_created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     visitor_group_code = table.Column<long>(type: "bigint", nullable: true),
                     visitor_number = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     visitor_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     vehicle_plate_number = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    visitor_period_start = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    visitor_period_end = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    is_invitation_accepted = table.Column<bool>(type: "bit", nullable: true),
+                    invitation_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     parking_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    TrxStatus = table.Column<int>(type: "int", nullable: false),
+                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    _generate = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1634,6 +1642,28 @@ namespace Repositories.Migrations
                 name: "IX_trx_visitor_visitor_id",
                 table: "trx_visitor",
                 column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_visitor_id_visitor_period_start_visitor_period_end",
+                table: "trx_visitor",
+                columns: new[] { "visitor_id", "visitor_period_start", "visitor_period_end" },
+                unique: true,
+                filter: "[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_visitor_id_visitor_status",
+                table: "trx_visitor",
+                columns: new[] { "visitor_id", "visitor_status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_visitor_period_start",
+                table: "trx_visitor",
+                column: "visitor_period_start");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_visitor_status",
+                table: "trx_visitor",
+                column: "visitor_status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_trx_visitor_VisitorId1",

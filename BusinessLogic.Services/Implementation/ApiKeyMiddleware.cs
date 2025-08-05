@@ -28,7 +28,7 @@ public class ApiKeyMiddleware
      public async Task InvokeAsync(HttpContext context)
     {
         var KeyField = "X-API-KEY-TRACKING-PEOPLE";
-        var apiUrl = "http://192.168.1.116:10000";
+        var apiUrl = "http://192.168.1.116:5000";
 
         if (context.Request.Path.Value.Contains("/export", StringComparison.OrdinalIgnoreCase))
         {

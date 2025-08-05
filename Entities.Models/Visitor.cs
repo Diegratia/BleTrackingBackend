@@ -30,10 +30,6 @@ namespace Entities.Models
         public string? BleCardNumber { get; set; }
 
         [StringLength(255)]
-        [Column("visitor_status")]
-        public VisitorActiveStatus? VisitorActiveStatus { get; set; }
-
-        [StringLength(255)]
         [Column("name")]
         public string? Name { get; set; }
 
@@ -51,18 +47,6 @@ namespace Entities.Models
         [Column("address")]
         public string? Address { get; set; }
 
-        // [ForeignKey(nameof(Organization))]
-        // [Column("organization_id")]
-        // public Guid? OrganizationId { get; set; }
-
-        // [ForeignKey(nameof(District))]
-        // [Column("district_id")]
-        // public Guid? DistrictId { get; set; }
-
-        // [ForeignKey(nameof(Department))]
-        // [Column("department_id")]
-        // public Guid? DepartmentId { get; set; }
-
         [Column("organization_name")]
         public string? OrganizationName { get; set; }
 
@@ -72,26 +56,17 @@ namespace Entities.Models
         [Column("department_name")]
         public string? DepartmentName { get; set; }
 
+        [Column("visitor_group_code")]
+        public long? VisitorGroupCode { get; set; }
+
+        [Column("visitor_number")]
+        public string? VisitorNumber { get; set; }
+
+        [Column("visitor_code")]
+        public string? VisitorCode { get; set; }
+
         [Column("is_vip")]
         public bool? IsVip { get; set; }
-
-        [Column("is_invitation_accepted")]
-        public bool? IsInvitationAccepted { get; set; }
-
-        [Column("invitation_code")]
-        public string? InvitationCode { get; set; }
-
-        [Column("email_invitation_send_at")]
-        public DateTime? EmailInvitationSendAt { get; set; }
-
-        // [Column("email_verification_token")]
-        // public string? EmailVerificationToken { get; set; }
-
-        [Column("visitor_period_start")]
-        public DateTime? VisitorPeriodStart { get; set; }
-
-        [Column("visitor_period_end")]
-        public DateTime? VisitorPeriodEnd { get; set; }
 
         [Column("status")]
         public int Status { get; set; } = 1;

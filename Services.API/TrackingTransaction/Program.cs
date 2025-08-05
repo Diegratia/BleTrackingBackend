@@ -144,7 +144,7 @@ builder.Services.AddScoped<TrackingTransactionRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("TRACKING_TRANSACTION_PORT") ?? "10018" ??
+var port = Environment.GetEnvironmentVariable("TRACKING_TRANSACTION_PORT") ?? "5018" ??
            builder.Configuration["Ports:TrackingTransactionService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

@@ -15,7 +15,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/TrackingTransaction/out ./
 
-EXPOSE 10018
+EXPOSE 5018
 ENTRYPOINT ["dotnet", "TrackingTransaction.dll"] 
 
 
