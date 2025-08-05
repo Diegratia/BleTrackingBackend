@@ -424,27 +424,27 @@ public class VisitorService : IVisitorService
             }
         }
 
-        public async Task SendInvitationVisitorAsync(Guid visitorId)
+        public async Task SendInvitationVisitorAsync(Guid id)
         {
-            var visitor = await _visitorRepository.GetByIdAsync(visitorId);
+            var visitor = await _visitorRepository.GetByIdAsync(id);
             // var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
 
             // if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
             //     throw new InvalidOperationException("Visitor already checked in");
-
+            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             var newTrx = new TrxVisitor
             {
-                VisitorId = visitorId,
+                VisitorId = visitor.Id,
                 CheckedInAt = DateTime.UtcNow,
                 Status = VisitorStatus.Preregist,
                 TrxStatus = 1,
                 VisitorGroupCode = visitor.TrxVisitors.Count + 1,
                 VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
                 VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-                InvitationCreatedAt = DateTime.UtcNow
+                InvitationCreatedAt = DateTime.UtcNow,
+                InvitationCode = confirmationCode
             };
 
-            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _trxVisitorRepository.AddAsync(newTrx);
         }
