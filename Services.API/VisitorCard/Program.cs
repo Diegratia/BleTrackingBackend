@@ -137,7 +137,7 @@ builder.Services.AddScoped<IVisitorCardService, VisitorCardService>();
 builder.Services.AddScoped<VisitorCardRepository>();
 
 var port = Environment.GetEnvironmentVariable("VISITOR_CARD_PORT") ??
-           builder.Configuration["Ports:VisitorCardService"] ?? "5023";
+           builder.Configuration["Ports:VisitorCardService"] ?? "10023";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

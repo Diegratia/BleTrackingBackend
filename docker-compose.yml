@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Services.API/Auth/Dockerfile
     ports:
-      - "5001:5001"
+      - "10001:10001"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Services.API/FloorplanDevice/Dockerfile
     ports:
-      - "5003:5003"
+      - "10003:10003"
     # depends_on:
     #   - mst-floorplan
     #   - mst-accesscctv
@@ -31,7 +31,7 @@ services:
       context: .
       dockerfile: Services.API/FloorplanMaskedArea/Dockerfile
     ports:
-      - "5004:5004"
+      - "10004:10004"
     # depends_on:
     #   - mst-floor
     #   - mst-floorplan
@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: Services.API/MstFloor/Dockerfile
     ports:
-      - "5013:5013"
+      - "10013:10013"
     volumes:
       - ./Uploads/FloorImages:/app/Uploads/FloorImages
       - ./.env:/app/.env
@@ -55,7 +55,7 @@ services:
       context: .
       dockerfile: Services.API/MstFloorplan/Dockerfile
     ports:
-      - "5014:5014"
+      - "10014:10014"
     # depends_on:
     #   - mst-floor
     volumes:
@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: Services.API/MstIntegration/Dockerfile
     ports:
-      - "5015:5015"
+      - "10015:10015"
     # depends_on:
     #   - mst-brand
     #   - mst-application
@@ -80,7 +80,7 @@ services:
       context: .
       dockerfile: Services.API/MstAccessControl/Dockerfile
     ports:
-      - "5006:5006"
+      - "10006:10006"
     # depends_on:
     #   - mst-brand
     #   - mst-integration
@@ -94,7 +94,7 @@ services:
       context: .
       dockerfile: Services.API/MstAccessCctv/Dockerfile
     ports:
-      - "5005:5005"
+      - "10005:10005"
     # depends_on:
     #   - mst-integration
     #   - mst-application
@@ -107,7 +107,7 @@ services:
       context: .
       dockerfile: Services.API/MstBleReader/Dockerfile
     ports:
-      - "5008:5008"
+      - "10008:10008"
     # depends_on:
     #   - mst-brand
     volumes:
@@ -119,7 +119,7 @@ services:
       context: .
       dockerfile: Services.API/MstBrand/Dockerfile
     ports:
-      - "5009:5009"
+      - "10009:10009"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -129,7 +129,7 @@ services:
       context: .
       dockerfile: Services.API/MstApplication/Dockerfile
     ports:
-      - "5007:5007"
+      - "10007:10007"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -139,7 +139,7 @@ services:
       context: .
       dockerfile: Services.API/Visitor/Dockerfile
     ports:
-      - "5019:5019"
+      - "10019:10019"
     # depends_on:
     #   - mst-application
     volumes:
@@ -151,7 +151,7 @@ services:
       context: .
       dockerfile: Services.API/AlarmRecordTracking/Dockerfile
     ports:
-      - "5002:5002"
+      - "10002:10002"
     # depends_on:
     #   - visitor
     #   - mst-blereader
@@ -166,7 +166,7 @@ services:
       context: .
       dockerfile: Services.API/MstBuilding/Dockerfile
     ports:
-      - "5010:5010"
+      - "10010:10010"
     # depends_on:
     #   - mst-application
     volumes:
@@ -178,7 +178,7 @@ services:
       context: .
       dockerfile: Services.API/MstDepartment/Dockerfile
     ports:
-      - "5011:5011"
+      - "10011:10011"
     # depends_on:
     #   - mst-application
     volumes:
@@ -190,7 +190,7 @@ services:
       context: .
       dockerfile: Services.API/MstDistrict/Dockerfile
     ports:
-      - "5012:5012"
+      - "10012:10012"
     # depends_on:
     #   - mst-application
     volumes:
@@ -202,7 +202,7 @@ services:
       context: .
       dockerfile: Services.API/MstMember/Dockerfile
     ports:
-      - "5016:5016"
+      - "10016:10016"
     # depends_on:
     #   - mst-application
     #   - mst-organization
@@ -218,7 +218,7 @@ services:
       context: .
       dockerfile: Services.API/MstOrganization/Dockerfile
     ports:
-      - "5017:5017"
+      - "10017:10017"
     # depends_on:
     #   - mst-application
     volumes:
@@ -230,7 +230,7 @@ services:
       context: .
       dockerfile: Services.API/TrackingTransaction/Dockerfile
     ports:
-      - "5018:5018"
+      - "10018:10018"
     # depends_on:
     #   - mst-blereader
     #   - floorplan-masked-area
@@ -243,7 +243,7 @@ services:
       context: .
       dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
     ports:
-      - "5020:5020"
+      - "10020:10020"
     # depends_on:
     #   - floorplan-masked-area
     #   - visitor
@@ -257,7 +257,7 @@ services:
       context: .
       dockerfile: Services.API/BleReaderNode/Dockerfile
     ports:
-      - "5021:5021"
+      - "10021:10021"
     # depends_on:
     #   - mst-blereader
     #   - mst-application
@@ -270,7 +270,7 @@ services:
       context: .
       dockerfile: Services.API/MstEngine/Dockerfile
     ports:
-      - "5022:5022"
+      - "10022:10022"
     # depends_on:
     #   - mst-blereader
     #   - mst-application
@@ -283,7 +283,7 @@ services:
   #     context: .
   #     dockerfile: Services.API/VisitorCard/Dockerfile
   #   ports:
-  #     - "5023:5023"
+  #     - "10023:10023"
   #   volumes:
   #     - ./.env:/app/.env
   #   restart: always
@@ -293,7 +293,7 @@ services:
       context: .
       dockerfile: Services.API/CardRecord/Dockerfile
     ports:
-      - "5024:5024"
+      - "10024:10024"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -303,7 +303,7 @@ services:
       context: .
       dockerfile: Services.API/TrxVisitor/Dockerfile
     ports:
-      - "5025:5025"
+      - "10025:10025"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -312,7 +312,7 @@ services:
       context: .
       dockerfile: Services.API/Card/Dockerfile
     ports:
-      - "5026:5026"
+      - "10026:10026"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -322,7 +322,7 @@ services:
       context: .
       dockerfile: Dockerfile.nginx
     ports:
-      - "5000:5000"
+      - "10000:10000"
     # depends_on:
     #   - auth
     #   - floorplan-device

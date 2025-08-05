@@ -143,7 +143,7 @@ builder.Services.AddScoped<MstMemberRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_MEMBER_PORT") ?? "5016" ??
+var port = Environment.GetEnvironmentVariable("MST_MEMBER_PORT") ?? "10016" ??
            builder.Configuration["Ports:MstMemberService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

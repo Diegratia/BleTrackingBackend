@@ -14,5 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/Visitor/out ./
 
-EXPOSE 5019
+EXPOSE 10019
 ENTRYPOINT ["dotnet", "Visitor.dll"] 

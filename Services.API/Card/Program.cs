@@ -137,7 +137,7 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<CardRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
-           builder.Configuration["Ports:CardService"] ?? "5026";
+           builder.Configuration["Ports:CardService"] ?? "10026";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

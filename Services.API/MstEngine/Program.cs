@@ -138,7 +138,7 @@ builder.Services.AddScoped<MstEngineRepository>();
 
 
 var port = Environment.GetEnvironmentVariable("MST_ENGINE_PORT") ??
-           builder.Configuration["Ports:MstEnginePort"] ?? "5022";
+           builder.Configuration["Ports:MstEnginePort"] ?? "10022";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

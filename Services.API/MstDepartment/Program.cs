@@ -136,7 +136,7 @@ builder.Services.AddScoped<IMstDepartmentService, MstDepartmentService>();
 builder.Services.AddScoped<MstDepartmentRepository>();
 
 
-var port = Environment.GetEnvironmentVariable("MST_DEPARTMENT_PORT") ?? "5011" ??
+var port = Environment.GetEnvironmentVariable("MST_DEPARTMENT_PORT") ?? "10011" ??
            builder.Configuration["Ports:MstDepartmentService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
