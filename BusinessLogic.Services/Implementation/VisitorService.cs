@@ -170,7 +170,6 @@ public class VisitorService : IVisitorService
 
             var newTrx = _mapper.Map<TrxVisitor>(createDto);
                 newTrx.VisitorId = visitor.Id;
-                newTrx.CheckedInAt = DateTime.UtcNow;
                 newTrx.Status = VisitorStatus.Preregist;
                 newTrx.InvitationCode = confirmationCode;
                 newTrx.IsInvitationAccepted = false;
@@ -178,6 +177,7 @@ public class VisitorService : IVisitorService
                 newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
                 newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
                 newTrx.InvitationCreatedAt = DateTime.UtcNow;
+                newTrx.TrxStatus = 1;
 
             // var newTrx = new TrxVisitor
             //     {
@@ -437,6 +437,7 @@ public class VisitorService : IVisitorService
                 VisitorId = visitorId,
                 CheckedInAt = DateTime.UtcNow,
                 Status = VisitorStatus.Preregist,
+                TrxStatus = 1,
                 VisitorGroupCode = visitor.TrxVisitors.Count + 1,
                 VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}",
                 VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),

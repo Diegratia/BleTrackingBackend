@@ -139,6 +139,7 @@ namespace BusinessLogic.Services.Implementation
 
             trx.CheckedOutAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Checkout;
+            trx.TrxStatus = 0;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -189,6 +190,8 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(trx);
         }
+
+        
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {

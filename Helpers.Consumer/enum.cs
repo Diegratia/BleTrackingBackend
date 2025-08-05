@@ -66,7 +66,7 @@ namespace Helpers.Consumer
     {
         Male,
         Female,
-        Other
+        RatherNotSay
     }
 
     public enum StatusEmployee

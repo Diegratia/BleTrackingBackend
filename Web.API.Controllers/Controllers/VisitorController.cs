@@ -342,6 +342,26 @@
             }
         }
 
+        [HttpPost("{id}/send-invitation")]
+        public async Task<IActionResult> SendInvitationVisitorAsync(Guid visitorId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+            }
+
+            try
+            {
+
+                await _visitorService.SendInvitationVisitorAsync(visitorId);
+                return Ok(new { success = true, msg = "Invitation Send successfully", code = 200 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+            }
+        }
+
         }
     }
 

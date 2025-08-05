@@ -44,7 +44,6 @@ namespace Data.ViewModels
         public DateTime? VisitorPeriodEnd { get; set; }
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
-        public Guid? VisitorId { get; set; }
     }
 
     public class TrxVisitorUpdateDto
@@ -58,7 +57,6 @@ namespace Data.ViewModels
         public DateTime? VisitorPeriodEnd { get; set; }
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
-        public Guid? VisitorId { get; set; }
     }
     
      public class DenyReasonDto
