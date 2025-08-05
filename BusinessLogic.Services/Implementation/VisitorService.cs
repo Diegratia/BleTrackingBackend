@@ -427,10 +427,10 @@ public class VisitorService : IVisitorService
         public async Task SendInvitationVisitorAsync(Guid visitorId)
         {
             var visitor = await _visitorRepository.GetByIdAsync(visitorId);
-            var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
+            // var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
 
-            if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
-                throw new InvalidOperationException("Visitor already checked in");
+            // if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
+            //     throw new InvalidOperationException("Visitor already checked in");
 
             var newTrx = new TrxVisitor
             {
@@ -446,7 +446,6 @@ public class VisitorService : IVisitorService
 
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
-
             await _trxVisitorRepository.AddAsync(newTrx);
         }
 
