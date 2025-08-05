@@ -171,7 +171,6 @@ public class VisitorService : IVisitorService
             var newTrx = new TrxVisitor
                 {
                     VisitorId = visitor.Id,
-
                     CheckedInAt = DateTime.UtcNow,
                     Status = VisitorStatus.Preregist,
                     InvitationCode = confirmationCode,
@@ -619,8 +618,8 @@ public class VisitorService : IVisitorService
         {
             var query = _visitorRepository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name" };
-            var validSortColumns = new[] { "Name", "Organization.Name", "District.Name", "Department.Name", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy" };
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,
