@@ -423,7 +423,7 @@ public class VisitorService : IVisitorService
                 await _visitorRepository.UpdateAsync(visitor);
             }
         }
-        public async Task<TrxVisitorDto> SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto)
+        public async Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);
             // var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
@@ -445,7 +445,6 @@ public class VisitorService : IVisitorService
 
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _trxVisitorRepository.AddAsync(newTrx);
-            return _mapper.Map<TrxVisitorDto>(newTrx);
         }
 
 
