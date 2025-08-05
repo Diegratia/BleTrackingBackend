@@ -5,9 +5,9 @@ using Helpers.Consumer;
 
 namespace Repositories.DbContexts
 {
-    public class BleTrackingDbContext : DbContext
+    public class BleTrackingDbDevContext : DbContext
     {
-        public BleTrackingDbContext(DbContextOptions<BleTrackingDbContext> dbContextOptions) 
+        public BleTrackingDbDevContext(DbContextOptions<BleTrackingDbDevContext> dbContextOptions) 
             : base(dbContextOptions) { }
 
         public DbSet<MstAccessCctv> MstAccessCctvs { get; set; }

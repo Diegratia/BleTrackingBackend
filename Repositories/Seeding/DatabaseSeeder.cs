@@ -10,7 +10,7 @@ namespace Repositories.Seeding
 {
     public static class DatabaseSeeder
     {
-        public static void Seed(BleTrackingDbContext context)
+        public static void Seed(BleTrackingDbDevContext context)
         {
 
    

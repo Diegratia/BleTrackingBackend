@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class BleReaderNodeRepository : BaseRepository
     {
-        public BleReaderNodeRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public BleReaderNodeRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

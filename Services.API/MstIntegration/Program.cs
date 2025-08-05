@@ -41,9 +41,9 @@ builder.Configuration
 
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+builder.Services.AddDbContext<BleTrackingDbDevContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbDevConnection") ??
+                         "Server=192.168.1.116,1433;Database=BleTrackingDbDev;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -149,7 +149,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbDevContext>();
     try
     {
         // context.Database.Migrate(); 

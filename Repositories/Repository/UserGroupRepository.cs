@@ -9,7 +9,7 @@ namespace Repositories.Repository
 {
     public class UserGroupRepository : BaseRepository
     {
-        public UserGroupRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public UserGroupRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
@@ -139,7 +139,7 @@ namespace Repositories.Repository
 // {
 //     public class UserGroupRepository : BaseRepository
 //     {
-//         public UserGroupRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+//         public UserGroupRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
 //             : base(context, httpContextAccessor)
 //         {
 //         }
@@ -222,9 +222,9 @@ namespace Repositories.Repository
 // {
 //     public class UserGroupRepository
 //     {
-//         private readonly BleTrackingDbContext _context;
+//         private readonly BleTrackingDbDevContext _context;
 
-//         public UserGroupRepository(BleTrackingDbContext context)
+//         public UserGroupRepository(BleTrackingDbDevContext context)
 //         {
 //             _context = context;
 //         }

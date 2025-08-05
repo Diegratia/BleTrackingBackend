@@ -12,7 +12,7 @@ namespace Repositories.Repository
 {
     public class TrxVisitorRepository : BaseRepository
     {
-        public TrxVisitorRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public TrxVisitorRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

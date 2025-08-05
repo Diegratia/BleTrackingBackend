@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class VisitorBlacklistAreaRepository : BaseRepository
     {
-        public VisitorBlacklistAreaRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public VisitorBlacklistAreaRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

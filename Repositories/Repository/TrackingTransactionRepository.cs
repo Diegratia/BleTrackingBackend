@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class TrackingTransactionRepository : BaseRepository
     {
-        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public TrackingTransactionRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

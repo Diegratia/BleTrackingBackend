@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class VisitorRepository : BaseRepository
     {
-        public VisitorRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public VisitorRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }

@@ -8,9 +8,9 @@ namespace Repositories.Repository
 {
     public class RefreshTokenRepository
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly BleTrackingDbDevContext _context;
 
-        public RefreshTokenRepository(BleTrackingDbContext context)
+        public RefreshTokenRepository(BleTrackingDbDevContext context)
         {
             _context = context;
         }

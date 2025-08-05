@@ -11,7 +11,7 @@ namespace Repositories.Repository
 {
     public class CardRecordRepository : BaseRepository
     {
-        public CardRecordRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public CardRecordRepository(BleTrackingDbDevContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
