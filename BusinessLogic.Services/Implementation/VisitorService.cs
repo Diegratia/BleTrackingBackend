@@ -455,7 +455,9 @@ public class VisitorService : IVisitorService
                 VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
                 InvitationCreatedAt = DateTime.UtcNow,
                 InvitationCode = confirmationCode,
-                InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3)
+                InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3),
+                MaskedAreaId = dto.MaskedAreaId,
+                PurposePerson = dto.PurposePerson
             };
 
             var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}";
