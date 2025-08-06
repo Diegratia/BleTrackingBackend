@@ -40,7 +40,7 @@ namespace Repositories.Repository
                 .Include(v => v.MaskedArea);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        } 
+        }
 
         public async Task<TrxVisitor> AddAsync(TrxVisitor trxVisitor)
         {
@@ -113,13 +113,18 @@ namespace Repositories.Repository
                     throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
             }
         }
-        
+
         public async Task<TrxVisitor?> GetLatestUnfinishedByVisitorIdAsync(Guid visitorId)
         {
             return await _context.TrxVisitors
                 .Where(t => t.VisitorId == visitorId && t.Status != null && t.CheckedOutAt == null)
                 .OrderByDescending(t => t.CheckedInAt)
                 .FirstOrDefaultAsync();
+        }
+        
+        public async Task<int> CountByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors.CountAsync(x => x.VisitorId == visitorId);
         }
     }
 }

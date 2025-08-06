@@ -317,7 +317,7 @@ public class VisitorService : IVisitorService
             return _mapper.Map<VisitorDto>(visitor);
         }
 
-
+        // konfirmasi email visitor
         public async Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto)
         {
             if (confirmDto == null)
@@ -388,6 +388,7 @@ public class VisitorService : IVisitorService
             }
         }
 
+        // send invitation ke visitor yang sudah terdaftar
         public async Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto createInvitationDto)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);
@@ -412,18 +413,18 @@ public class VisitorService : IVisitorService
             await _trxVisitorRepository.AddAsync(newTrx);
         }
 
+        // send invitation ke visitor yang blm ada
         public async Task SendInvitationByEmailAsync(SendEmailInvitationDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Email))
                 throw new ArgumentException("Email is required");
 
-            // Cek apakah visitor sudah ada berdasarkan email
+            // cek visitor base on email
             var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
             Visitor visitor;
 
             if (existingVisitor == null)
             {
-                // Buat visitor baru dengan data minimal
                 visitor = new Visitor
                 {
                     Id = Guid.NewGuid(),
@@ -442,43 +443,23 @@ public class VisitorService : IVisitorService
                 visitor = existingVisitor;
             }
 
+            var trxCount = await _trxVisitorRepository
+            .CountByVisitorIdAsync(visitor.Id);
+
             // Buat undangan baru
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-            // var newTrx = new TrxVisitor
-            // {
-            //     VisitorId = visitor.Id,
-            //     Status = VisitorStatus.Preregist,
-            //     IsInvitationAccepted = false,
-            //     TrxStatus = 1,
-            //     VisitorGroupCode = visitor.TrxVisitors?.Count + 1 ?? 1,
-            //     VisitorNumber = $"VIS{visitor.TrxVisitors?.Count + 1 ?? 1}",
-            //     VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-            //     InvitationCreatedAt = DateTime.UtcNow,
-            //     InvitationCode = confirmationCode,
-            //     InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3),
-            //     MaskedAreaId = dto.MaskedAreaId,
-            //     PurposePerson = dto.PurposePerson,
-            //     VisitorPeriodStart = dto.VisitorPeriodStart,
-            //     VisitorPeriodEnd = dto.VisitorPeriodEnd,
-            //     VehiclePlateNumber = dto.VehiclePlateNumber,
-            // };
 
             var newTrx = _mapper.Map<TrxVisitor>(dto);
             newTrx.VisitorId = visitor.Id;
             newTrx.Status = VisitorStatus.Preregist;
             newTrx.IsInvitationAccepted = false;
             newTrx.TrxStatus = 1;
-            newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
-            newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
+            newTrx.VisitorGroupCode = trxCount + 1;
+            newTrx.VisitorNumber = $"VIS{trxCount + 1}";
             newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
             newTrx.InvitationCreatedAt = DateTime.UtcNow;
             newTrx.InvitationCode = confirmationCode;
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
-            // newTrx.MaskedAreaId = dto.MaskedAreaId;
-            // newTrx.PurposePerson = dto.PurposePerson;
-            // newTrx.VisitorPeriodStart = dto.VisitorPeriodStart;
-            // newTrx.VisitorPeriodEnd = dto.VisitorPeriodEnd;
-            // newTrx.VehiclePlateNumber = dto.VehiclePlateNumber;
 
             var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}";
 
