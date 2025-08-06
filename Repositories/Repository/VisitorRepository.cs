@@ -64,6 +64,12 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsyncRaw(Visitor visitor)
+        {
+            // await ValidateRelatedEntitiesAsync(visitor, applicationId, isSystemAdmin);
+            await _context.SaveChangesAsync();
+        }
+
 
   
 

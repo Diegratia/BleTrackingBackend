@@ -526,8 +526,8 @@ public class VisitorService : IVisitorService
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = "VisitorForm";
 
-            await _visitorRepository.UpdateAsync(visitor);
-            await _trxVisitorRepository.UpdateAsync(trx);
+            await _visitorRepository.UpdateAsyncRaw(visitor);
+            await _trxVisitorRepository.UpdateAsyncRaw(trx);
 
             return _mapper.Map<VisitorDto>(visitor);
         }

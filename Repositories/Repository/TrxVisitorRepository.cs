@@ -78,6 +78,12 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsyncRaw(TrxVisitor trxVisitor)
+        {
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
