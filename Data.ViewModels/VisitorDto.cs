@@ -52,9 +52,6 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public long? VisitorGroupCode { get; set; }
-        public string? VisitorNumber { get; set; }
-        public string? VisitorCode { get; set; }
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
@@ -132,14 +129,45 @@ namespace Data.ViewModels
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
     }
-    
-        public class CreateInvitationDto 
-        {
-            public string? VehiclePlateNumber { get; set; }
-            public string? Remarks { get; set; }
-            public DateTime? VisitorPeriodStart { get; set; }
-            public DateTime? VisitorPeriodEnd { get; set; }
-            public Guid? MaskedAreaId { get; set; }
-            public Guid? ParkingId { get; set; }
-        }
+
+    public class CreateInvitationDto
+    {
+        public string? VehiclePlateNumber { get; set; }
+        public string? Remarks { get; set; }
+        public DateTime? VisitorPeriodStart { get; set; }
+        public DateTime? VisitorPeriodEnd { get; set; }
+        public Guid? MaskedAreaId { get; set; }
+        public Guid? ParkingId { get; set; }
+    }
+
+    public class SendEmailInvitationDto
+    {
+        public string Email { get; set; }
+        public string? Name { get; set; }
+    }
+
+
+    public class VisitorInvitationDto : TrxVisitorInvitationDto
+    {
+        public string? PersonId { get; set; }
+        public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
+        public string? CardNumber { get; set; }
+        public string? BleCardNumber { get; set; }
+        // public string? VisitorActiveStatus { get; set; }
+        public string? Name { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? Gender { get; set; }
+        public string? Address { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
+        public bool? IsVip { get; set; }
+        // public bool? IsInvitationAccepted { get; set; }     
+        public IFormFile? FaceImage { get; set; }
+
+        public Guid ApplicationId { get; set; }
+        public string? InvitationCode { get; set; } // <- ini penting untuk akses
+    }
 }

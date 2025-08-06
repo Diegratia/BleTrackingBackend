@@ -19,5 +19,6 @@ namespace BusinessLogic.Services.Interface
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto);
+        Task<VisitorDto> FillInvitationFormAsync(VisitorInvitationDto dto);
     }
 }

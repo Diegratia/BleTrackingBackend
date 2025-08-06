@@ -48,9 +48,6 @@ namespace Data.ViewModels
 
     public class TrxVisitorUpdateDto
     {
-        public long? VisitorGroupCode { get; set; }
-        public string? VisitorNumber { get; set; }
-        public string? VisitorCode { get; set; }
         public string? VehiclePlateNumber { get; set; }
         public string? Remarks { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
@@ -69,8 +66,10 @@ namespace Data.ViewModels
         public string? BlockReason { get; set; }
     }
 
-    public class TrxVisitorUpdateDateDto
+     public class TrxVisitorInvitationDto : BaseModelDto
     {
-
+        public string? VehiclePlateNumber { get; set; }
+        public DateTime? VisitorPeriodStart { get; set; }
+        public DateTime? VisitorPeriodEnd { get; set; }
     }
 }

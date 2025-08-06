@@ -7,8 +7,8 @@
     using System.Linq;
     using Microsoft.AspNetCore.Authorization;
 
-    namespace Web.API.Controllers.Controllers
-    {
+namespace Web.API.Controllers.Controllers
+{
     [Route("api/[controller]")]
     [ApiController]
     [Authorize("RequireAll")]
@@ -343,26 +343,39 @@
         }
 
         [HttpPost("{id}/send-invitation")]
-            public async Task<IActionResult> SendInvitationVisitorAsync( Guid id, [FromBody] CreateInvitationDto CreateInvitationDto)
+        public async Task<IActionResult> SendInvitationVisitorAsync(Guid id, [FromBody] CreateInvitationDto CreateInvitationDto)
+        {
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
-                }
-
-                try
-                {
-
-                    await _visitorService.SendInvitationVisitorAsync(id, CreateInvitationDto);
-                    return Ok(new { success = true, msg = "Invitation Send successfully", code = 200 });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
-                }
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
             }
 
+            try
+            {
+
+                await _visitorService.SendInvitationVisitorAsync(id, CreateInvitationDto);
+                return Ok(new { success = true, msg = "Invitation Send successfully", code = 200 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+            }
+        }
+
+        [HttpPost("fill-invitation-form")]
+        [AllowAnonymous]
+        public async Task<IActionResult> FillInvitationForm([FromForm] VisitorInvitationDto dto)
+        {
+            var result = await _visitorService.FillInvitationFormAsync(dto);
+            return StatusCode(201, new
+            {
+                success = true,
+                msg = "Invitation form filled successfully",
+                collection = new { data = result },
+                code = 201
+            });
         }
     }
+}
 
 
