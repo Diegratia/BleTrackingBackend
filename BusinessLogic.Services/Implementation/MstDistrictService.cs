@@ -62,6 +62,26 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstDistrictDto>(createdDistrict);
         }
 
+        public async Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var result = new List<MstDistrictDto>();
+            foreach (var dto in dtos)
+            {
+                var district = _mapper.Map<MstDistrict>(dto);
+                district.Id = Guid.NewGuid();
+
+                district.CreatedBy = username;
+                district.UpdatedBy = username;
+                district.CreatedAt = DateTime.UtcNow;
+                district.UpdatedAt = DateTime.UtcNow;
+                district.Status = 1;
+                await _repository.AddAsync(district);
+                result.Add( _mapper.Map<MstDistrictDto>(district));
+            }
+            return result;
+        }
+
         public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
