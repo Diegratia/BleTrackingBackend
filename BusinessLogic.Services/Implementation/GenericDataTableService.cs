@@ -143,36 +143,62 @@ namespace BusinessLogic.Services.Implementation
                                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
+                        // else if (_enumColumns.ContainsKey(filter.Key))
+                        // {
+                        //     var enumType = _enumColumns[filter.Key];
+                        //     if (jsonElement.ValueKind == JsonValueKind.Array)
+                        //     {
+                        //         var enumValues = jsonElement.EnumerateArray()
+                        //             .Select(e => Enum.TryParse(enumType, e.GetString(), true, out var enumValue) ? enumValue : null)
+                        //             .Where(e => e != null)
+                        //             .ToArray();
+                        //         if (enumValues.Any())
+                        //         {
+                        //             query = query.Where($"@0.Contains({filter.Key})", enumValues);
+                        //         }
+                        //     }
                         else if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
                             if (jsonElement.ValueKind == JsonValueKind.Array)
                             {
                                 var enumValues = jsonElement.EnumerateArray()
-                                    .Select(e => Enum.TryParse(enumType, e.GetString(), true, out var enumValue) ? enumValue : null)
-                                    .Where(e => e != null)
+                                    .Select(e =>
+                                    {
+                                        if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
+                                        {
+                                            return Enum.IsDefined(enumType, intVal) ? Enum.ToObject(enumType, intVal) : null;
+                                        }
+                                        else if (e.ValueKind == JsonValueKind.String && Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
+                                        {
+                                            return enumObj;
+                                        }
+                                        return null;
+                                    })
+                                    .Where(v => v != null)
                                     .ToArray();
+
                                 if (enumValues.Any())
                                 {
                                     query = query.Where($"@0.Contains({filter.Key})", enumValues);
                                 }
                             }
                             else if (jsonElement.ValueKind == JsonValueKind.String)
+                        {
+                            var stringValue = jsonElement.GetString();
+                            if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
                             {
-                                var stringValue = jsonElement.GetString();
-                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
-                                {
-                                    query = query.Where($"{filter.Key} == @0", enumValue);
-                                }
-                                else
-                                {
-                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
-                                }
+                                query = query.Where($"{filter.Key} == @0", enumValue);
                             }
                             else
                             {
-                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
+                                throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
                             }
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
+                        }
                         }
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
