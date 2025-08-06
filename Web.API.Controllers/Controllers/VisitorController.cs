@@ -401,6 +401,8 @@ namespace Web.API.Controllers.Controllers
             }
             try
             {
+                dto.InvitationCode = code;
+                dto.ApplicationId = applicationId;
                 var result = await _visitorService.FillInvitationFormAsync(dto);
                 return StatusCode(201, new
                 {

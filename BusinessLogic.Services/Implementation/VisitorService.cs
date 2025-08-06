@@ -462,7 +462,7 @@ public class VisitorService : IVisitorService
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
             
 
-            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?InvitationCode={confirmationCode}&ApplicationId={applicationIdClaim}";
+            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
