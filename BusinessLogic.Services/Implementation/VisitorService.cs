@@ -444,21 +444,41 @@ public class VisitorService : IVisitorService
 
             // Buat undangan baru
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-            var newTrx = new TrxVisitor
-            {
-                VisitorId = visitor.Id,
-                Status = VisitorStatus.Preregist,
-                IsInvitationAccepted = false,
-                TrxStatus = 1,
-                VisitorGroupCode = visitor.TrxVisitors?.Count + 1 ?? 1,
-                VisitorNumber = $"VIS{visitor.TrxVisitors?.Count + 1 ?? 1}",
-                VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
-                InvitationCreatedAt = DateTime.UtcNow,
-                InvitationCode = confirmationCode,
-                InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3),
-                MaskedAreaId = dto.MaskedAreaId,
-                PurposePerson = dto.PurposePerson
-            };
+            // var newTrx = new TrxVisitor
+            // {
+            //     VisitorId = visitor.Id,
+            //     Status = VisitorStatus.Preregist,
+            //     IsInvitationAccepted = false,
+            //     TrxStatus = 1,
+            //     VisitorGroupCode = visitor.TrxVisitors?.Count + 1 ?? 1,
+            //     VisitorNumber = $"VIS{visitor.TrxVisitors?.Count + 1 ?? 1}",
+            //     VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6),
+            //     InvitationCreatedAt = DateTime.UtcNow,
+            //     InvitationCode = confirmationCode,
+            //     InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3),
+            //     MaskedAreaId = dto.MaskedAreaId,
+            //     PurposePerson = dto.PurposePerson,
+            //     VisitorPeriodStart = dto.VisitorPeriodStart,
+            //     VisitorPeriodEnd = dto.VisitorPeriodEnd,
+            //     VehiclePlateNumber = dto.VehiclePlateNumber,
+            // };
+
+            var newTrx = _mapper.Map<TrxVisitor>(dto);
+            newTrx.VisitorId = visitor.Id;
+            newTrx.Status = VisitorStatus.Preregist;
+            newTrx.IsInvitationAccepted = false;
+            newTrx.TrxStatus = 1;
+            newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
+            newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
+            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.InvitationCreatedAt = DateTime.UtcNow;
+            newTrx.InvitationCode = confirmationCode;
+            newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
+            // newTrx.MaskedAreaId = dto.MaskedAreaId;
+            // newTrx.PurposePerson = dto.PurposePerson;
+            // newTrx.VisitorPeriodStart = dto.VisitorPeriodStart;
+            // newTrx.VisitorPeriodEnd = dto.VisitorPeriodEnd;
+            // newTrx.VehiclePlateNumber = dto.VehiclePlateNumber;
 
             var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}";
 

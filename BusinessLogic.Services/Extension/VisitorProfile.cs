@@ -32,6 +32,9 @@ namespace BusinessLogic.Services.Extension
             CreateMap<TrxVisitor, TrxVisitorDto>();
             CreateMap<VisitorUpdateDto, Visitor>();
             CreateMap<TrxVisitorUpdateDto, TrxVisitor>();
+            CreateMap<SendEmailInvitationDto, TrxVisitor>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.VisitorId, opt => opt.Ignore());
             CreateMap<VisitorInvitationDto, TrxVisitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.VisitorId, opt => opt.Ignore());
