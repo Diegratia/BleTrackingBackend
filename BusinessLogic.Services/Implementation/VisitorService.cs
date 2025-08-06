@@ -571,6 +571,13 @@ public class VisitorService : IVisitorService
         {
             var query = _visitorRepository.GetAllQueryable();
 
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) }
+            };
+
             var searchableColumns = new[] { "Name" };
             var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy" };
 
@@ -578,7 +585,8 @@ public class VisitorService : IVisitorService
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
 
             return await filterService.FilterAsync(request);

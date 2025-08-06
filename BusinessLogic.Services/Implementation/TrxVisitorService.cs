@@ -197,14 +197,22 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
+              var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) }
+            };
+
             var searchableColumns = new[] { "Visitor.Name", "Member.Name", "MaskedArea.Name", "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }
