@@ -386,16 +386,96 @@ namespace Web.API.Controllers.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> FillInvitationForm([FromForm] VisitorInvitationDto dto)
         {
-            var result = await _visitorService.FillInvitationFormAsync(dto);
-            return StatusCode(201, new
+
+            if (!ModelState.IsValid)
             {
-                success = true,
-                msg = "Invitation form filled successfully",
-                collection = new { data = result },
-                code = 201
-            });
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            try
+            {
+                var result = await _visitorService.FillInvitationFormAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Invitation form filled successfully",
+                    collection = new { data = result },
+                    code = 201
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+             catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }   
         }
     }
 }
 
 
+
+
+ if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _visitorService.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitors filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }

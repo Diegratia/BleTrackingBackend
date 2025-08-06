@@ -40,6 +40,11 @@ public class ApiKeyMiddleware
             await _next(context); 
             return;
         }
+            if (context.Request.Path.Value.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context); 
+            return;
+        }
         // Periksa header X-API-KEY-TRACKING-PEOPLE untuk semua endpoint
         if (!context.Request.Headers.TryGetValue(KeyField, out var apiKeyValues))
         {

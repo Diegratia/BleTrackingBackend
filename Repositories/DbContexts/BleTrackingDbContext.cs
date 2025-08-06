@@ -865,6 +865,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PurposePerson).HasMaxLength(36);
                 entity.Property(e => e.Status)
                     .HasColumnName("visitor_status")
                     .HasColumnType("nvarchar(255)")
@@ -905,7 +906,6 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
