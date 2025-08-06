@@ -418,6 +418,8 @@ public class VisitorService : IVisitorService
             if (string.IsNullOrWhiteSpace(dto.Email))
                 throw new ArgumentException("Email is required");
 
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
             // cek visitor base on email
             var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
             Visitor visitor;
@@ -432,8 +434,8 @@ public class VisitorService : IVisitorService
                     Status = 1,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    CreatedBy = "Invitation",
-                    UpdatedBy = "Invitation"
+                    CreatedBy = username ?? "Invitation",
+                    UpdatedBy = username ?? "Invitation"
                 };
                 await _visitorRepository.AddAsync(visitor);
             }
@@ -458,11 +460,15 @@ public class VisitorService : IVisitorService
             newTrx.VisitorNumber = $"VIS{trxCount + 1}";
             newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
             newTrx.InvitationCreatedAt = DateTime.UtcNow;
+            newTrx.UpdatedAt = DateTime.UtcNow;
+            newTrx.CreatedAt = DateTime.UtcNow;
+            newTrx.UpdatedBy = username ?? "Invitation";
+            newTrx.CreatedBy = username ?? "Invitation";
             newTrx.InvitationCode = confirmationCode;
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
             
 
-            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}";
+            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
