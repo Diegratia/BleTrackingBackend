@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Data.ViewModels
 {
@@ -168,8 +169,9 @@ namespace Data.ViewModels
         public bool? IsVip { get; set; }
         // public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }
-
+        [FromQuery]
         public Guid ApplicationId { get; set; }
+        [FromQuery]
         public string? InvitationCode { get; set; } // <- ini penting untuk akses
     }
 }

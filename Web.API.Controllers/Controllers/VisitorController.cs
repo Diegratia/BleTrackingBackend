@@ -382,9 +382,10 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+
         [HttpPost("fill-invitation-form")]
         [AllowAnonymous]
-        public async Task<IActionResult> FillInvitationForm([FromForm] VisitorInvitationDto dto)
+        public async Task<IActionResult> FillInvitationForm([FromQuery] string code, [FromQuery] Guid applicationId, [FromForm] VisitorInvitationDto dto)
         {
 
             if (!ModelState.IsValid)

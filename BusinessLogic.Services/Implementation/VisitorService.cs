@@ -448,7 +448,7 @@ public class VisitorService : IVisitorService
             // Buat undangan baru
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
-            
+
             var newTrx = _mapper.Map<TrxVisitor>(dto);
             newTrx.VisitorId = visitor.Id;
             newTrx.Status = VisitorStatus.Preregist;
@@ -462,7 +462,7 @@ public class VisitorService : IVisitorService
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
             
 
-            var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}";
+            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?InvitationCode={confirmationCode}&ApplicationId={applicationIdClaim}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
