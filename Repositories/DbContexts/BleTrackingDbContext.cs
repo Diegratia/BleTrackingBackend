@@ -888,6 +888,10 @@ namespace Repositories.DbContexts
                    .WithMany()
                    .HasForeignKey(v => v.VisitorId)
                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.Member)
+                    .WithMany()
+                    .HasForeignKey(m => m.PurposePerson)
+                    .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(v => v.MaskedArea)
                     .WithMany()
                     .HasForeignKey(v => v.MaskedAreaId)

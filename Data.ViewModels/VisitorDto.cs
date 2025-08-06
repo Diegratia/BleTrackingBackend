@@ -140,10 +140,12 @@ namespace Data.ViewModels
         public Guid? ParkingId { get; set; }
     }
 
-    public class SendEmailInvitationDto
+    public class SendEmailInvitationDto : TrxVisitorInvitationDto
     {
         public string Email { get; set; }
         public string? Name { get; set; }
+        public Guid? MaskedAreaId { get; set;}
+
     }
 
 

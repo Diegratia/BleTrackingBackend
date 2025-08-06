@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Entities.Models
 {
-  
-    [Index(nameof(VisitorId))]
-    [Index(nameof(Status))]
-    [Index(nameof(VisitorId), nameof(Status))]
-    [Index(nameof(VisitorPeriodStart))]
-    [Index(nameof(VisitorId), nameof(VisitorPeriodStart), nameof(VisitorPeriodEnd), IsUnique = true)]
-    public class TrxVisitor : BaseModelWithTime, IApplicationEntity
+
+  [Index(nameof(VisitorId))]
+  [Index(nameof(Status))]
+  [Index(nameof(VisitorId), nameof(Status))]
+  [Index(nameof(VisitorPeriodStart))]
+  [Index(nameof(VisitorId), nameof(VisitorPeriodStart), nameof(VisitorPeriodEnd), IsUnique = true)]
+  public class TrxVisitor : BaseModelWithTime, IApplicationEntity
   {
     [Column("checked_in_at")]
     public DateTime? CheckedInAt { get; set; }
@@ -94,7 +94,7 @@ namespace Entities.Models
 
     [Column("invitation_code")]
     public string? InvitationCode { get; set; }
-    
+
     [Column("invitation_token_expired_at")]
     public DateTime? InvitationTokenExpiredAt { get; set; }
 
@@ -109,6 +109,10 @@ namespace Entities.Models
     [ForeignKey(nameof(Visitor))]
     public Guid? VisitorId { get; set; }
 
+    [Column("member_id")]
+    [ForeignKey(nameof(Member))]
+    public Guid? PurposePerson { get; set; }
+
     [Required]
     [ForeignKey("ApplicationId")]
     [Column("application_id")]
@@ -118,6 +122,7 @@ namespace Entities.Models
     public FloorplanMaskedArea? MaskedArea { get; set; }
     public MstApplication Application { get; set; }
     public virtual Visitor? Visitor { get; set; }
+    public virtual MstMember? Member { get; set; }
 
   }
 }

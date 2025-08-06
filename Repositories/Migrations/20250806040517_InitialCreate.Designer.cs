@@ -12,7 +12,7 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250805064417_InitialCreate")]
+    [Migration("20250806040517_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -2050,6 +2050,10 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("invitation_created_at");
 
+                    b.Property<DateTime?>("InvitationTokenExpiredAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("invitation_token_expired_at");
+
                     b.Property<bool?>("IsInvitationAccepted")
                         .HasColumnType("bit")
                         .HasColumnName("is_invitation_accepted");
@@ -2061,6 +2065,10 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("ParkingId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("parking_id");
+
+                    b.Property<Guid?>("PurposePerson")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)")
@@ -2129,6 +2137,8 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("MaskedAreaId");
+
+                    b.HasIndex("PurposePerson");
 
                     b.HasIndex("Status");
 
@@ -3056,6 +3066,11 @@ namespace Repositories.Migrations
                         .HasForeignKey("MaskedAreaId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("PurposePerson")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
                         .HasForeignKey("VisitorId")
@@ -3069,6 +3084,8 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("MaskedArea");
+
+                    b.Navigation("Member");
 
                     b.Navigation("Visitor");
                 });

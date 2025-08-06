@@ -66,10 +66,11 @@ namespace Data.ViewModels
         public string? BlockReason { get; set; }
     }
 
-     public class TrxVisitorInvitationDto : BaseModelDto
+    public class TrxVisitorInvitationDto : BaseModelDto
     {
         public string? VehiclePlateNumber { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
         public DateTime? VisitorPeriodEnd { get; set; }
+        public Guid? PurposePerson { get; set; }
     }
 }

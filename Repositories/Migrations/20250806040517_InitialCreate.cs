@@ -1059,9 +1059,11 @@ namespace Repositories.Migrations
                     visitor_period_end = table.Column<DateTime>(type: "datetime2", nullable: true),
                     is_invitation_accepted = table.Column<bool>(type: "bit", nullable: true),
                     invitation_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    invitation_token_expired_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     parking_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     TrxStatus = table.Column<int>(type: "int", nullable: false),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1084,6 +1086,11 @@ namespace Repositories.Migrations
                         name: "FK_trx_visitor_mst_application_application_id",
                         column: x => x.application_id,
                         principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_trx_visitor_mst_member_member_id",
+                        column: x => x.member_id,
+                        principalTable: "mst_member",
                         principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_trx_visitor_visitor_VisitorId1",
@@ -1637,6 +1644,11 @@ namespace Repositories.Migrations
                 name: "IX_trx_visitor_masked_area_id",
                 table: "trx_visitor",
                 column: "masked_area_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_trx_visitor_member_id",
+                table: "trx_visitor",
+                column: "member_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_trx_visitor_visitor_id",
