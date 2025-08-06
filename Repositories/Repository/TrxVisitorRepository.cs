@@ -121,10 +121,22 @@ namespace Repositories.Repository
                 .OrderByDescending(t => t.CheckedInAt)
                 .FirstOrDefaultAsync();
         }
-        
+
         public async Task<int> CountByVisitorIdAsync(Guid visitorId)
         {
             return await _context.TrxVisitors.CountAsync(x => x.VisitorId == visitorId);
+        }
+        
+
+        public async Task<TrxVisitor?> GetByInvitationCodeAsync(string invitationCode)
+        {
+            var trx = await _context.TrxVisitors
+                .Include(t => t.Visitor)
+                .FirstOrDefaultAsync(t =>
+                    t.InvitationCode == invitationCode &&
+                    t.InvitationTokenExpiredAt > DateTime.UtcNow);
+
+            return trx;
         }
     }
 }

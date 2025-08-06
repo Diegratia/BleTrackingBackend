@@ -129,9 +129,7 @@ public class VisitorService : IVisitorService
             visitor.CreatedAt = DateTime.UtcNow;
             visitor.UpdatedBy = username ?? "System";
             visitor.UpdatedAt = DateTime.UtcNow;
-
-
-
+            
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
                 try
@@ -413,7 +411,7 @@ public class VisitorService : IVisitorService
             await _trxVisitorRepository.AddAsync(newTrx);
         }
 
-        // send invitation ke visitor yang blm ada
+        // send invitation ke visitor yang blm terdaftar, klu dah ada cuma send doang + insert ke trx visitor
         public async Task SendInvitationByEmailAsync(SendEmailInvitationDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Email))
@@ -467,30 +465,26 @@ public class VisitorService : IVisitorService
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
         }
 
-
+        // fill invitation form
         public async Task<VisitorDto> FillInvitationFormAsync(VisitorInvitationDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.InvitationCode))
                 throw new ArgumentException("Invitation code is required.");
 
             var trx = await _trxVisitorRepository
-                .GetAllQueryable()
-                .Include(t => t.Visitor)
-                .FirstOrDefaultAsync(t =>
-                    t.InvitationCode == dto.InvitationCode &&
-                    t.InvitationTokenExpiredAt > DateTime.UtcNow);
+                .GetByInvitationCodeAsync(dto.InvitationCode);
 
             if (trx == null)
                 throw new KeyNotFoundException("Invitation not found or expired.");
 
             var visitor = trx.Visitor ?? throw new InvalidOperationException("Visitor not found.");
 
-            // Update Visitor data
+            // update visitor
             _mapper.Map(dto, visitor);
             visitor.UpdatedAt = DateTime.UtcNow;
             visitor.UpdatedBy = "VisitorForm";
 
-            // Upload face image
+            // upload faceimage
             if (dto.FaceImage != null && dto.FaceImage.Length > 0)
             {
                 try
@@ -526,7 +520,7 @@ public class VisitorService : IVisitorService
                 }
             }
 
-            // Update TrxVisitor data
+            // upload trxvisitor
             _mapper.Map(dto, trx);
             trx.IsInvitationAccepted = true;
             trx.UpdatedAt = DateTime.UtcNow;
