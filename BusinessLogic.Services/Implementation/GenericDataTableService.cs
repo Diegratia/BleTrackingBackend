@@ -43,9 +43,9 @@ namespace BusinessLogic.Services.Implementation
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
-                request.SortColumn = _validSortColumns.First();
+                request.SortColumn = "UpdatedAt" ?? _validSortColumns.First();
             if (string.IsNullOrEmpty(request.SortDir) || !new[] { "asc", "desc" }.Contains(request.SortDir.ToLower()))
-                request.SortDir = "asc";
+                request.SortDir = "desc";
 
             var query = _query;
 

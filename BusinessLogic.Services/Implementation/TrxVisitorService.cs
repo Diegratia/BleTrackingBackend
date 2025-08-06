@@ -197,8 +197,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
-            var validSortColumns = new[] { "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "SiteId", "ParkingId" };
+            var searchableColumns = new[] { "Visitor.Name", "Member.Name", "MaskedArea.Name", "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,
