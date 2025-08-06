@@ -50,6 +50,7 @@ public class VisitorService : IVisitorService
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     }
 
+        // create visitor, trx visitor dan user
         public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
         {
             if (createDto == null)
@@ -60,12 +61,12 @@ public class VisitorService : IVisitorService
 
             if (string.IsNullOrWhiteSpace(createDto.Name))
                 throw new ArgumentException("Name is required", nameof(createDto.Name));
-            
+
             var existingVisitor = await _visitorRepository.GetAllQueryable()
                 .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
                                     b.IdentityId == createDto.IdentityId ||
                                     b.PersonId == createDto.PersonId);
-                                
+
             if (existingVisitor != null)
             {
                 if (existingVisitor.Email == createDto.Email)
@@ -93,7 +94,7 @@ public class VisitorService : IVisitorService
 
             if (currentUser.Group == null || currentUser.Group.ApplicationId == Guid.Empty)
                 throw new InvalidOperationException("Current user has no valid group or application");
-            
+
             var applicationId = currentUser.ApplicationId;
 
             // Cari atau buat grup dengan LevelPriority.UserCreated
@@ -129,7 +130,7 @@ public class VisitorService : IVisitorService
             visitor.UpdatedBy = username ?? "System";
             visitor.UpdatedAt = DateTime.UtcNow;
 
-           
+
 
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
@@ -192,15 +193,15 @@ public class VisitorService : IVisitorService
             };
 
             var newTrx = _mapper.Map<TrxVisitor>(createDto);
-                newTrx.VisitorId = visitor.Id;
-                newTrx.Status = VisitorStatus.Preregist;
-                newTrx.InvitationCode = confirmationCode;
-                newTrx.IsInvitationAccepted = false;
-                newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
-                newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
-                newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
-                newTrx.InvitationCreatedAt = DateTime.UtcNow;
-                newTrx.TrxStatus = 1;
+            newTrx.VisitorId = visitor.Id;
+            newTrx.Status = VisitorStatus.Preregist;
+            newTrx.InvitationCode = confirmationCode;
+            newTrx.IsInvitationAccepted = false;
+            newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
+            newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
+            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.InvitationCreatedAt = DateTime.UtcNow;
+            newTrx.TrxStatus = 1;
 
             // var newTrx = new TrxVisitor
             //     {
@@ -216,12 +217,12 @@ public class VisitorService : IVisitorService
             //     };
 
             await _userRepository.AddAsync(newUser);
-                await _visitorRepository.AddAsync(visitor);
-                await _trxVisitorRepository.AddAsync(newTrx);
+            await _visitorRepository.AddAsync(visitor);
+            await _trxVisitorRepository.AddAsync(newTrx);
 
-                // Send verification email
-                await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
-                // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+            // Send verification email
+            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+            // await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
 
             var result = _mapper.Map<VisitorDto>(visitor);
             if (result == null)
