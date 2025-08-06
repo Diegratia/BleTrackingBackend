@@ -468,7 +468,8 @@ public class VisitorService : IVisitorService
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
             
 
-            var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            // var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
@@ -575,11 +576,12 @@ public class VisitorService : IVisitorService
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
-                { "VisitorActiveStatus", typeof(VisitorActiveStatus) }
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
             };
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy" };
+            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy", "IdentityType" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,

@@ -201,11 +201,12 @@ namespace BusinessLogic.Services.Implementation
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
-                { "VisitorActiveStatus", typeof(VisitorActiveStatus) }
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
             };
 
             var searchableColumns = new[] { "Visitor.Name", "Member.Name", "MaskedArea.Name", "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,
