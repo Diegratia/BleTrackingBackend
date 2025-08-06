@@ -16,6 +16,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
+using DocumentFormat.OpenXml.ExtendedProperties;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -459,7 +460,7 @@ public class VisitorService : IVisitorService
             newTrx.InvitationCode = confirmationCode;
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
 
-            var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}";
+            var invitationUrl = $"http://192.168.1.116:10000/fill-invitation-form?code={confirmationCode}?applicationId={newTrx.ApplicationId}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl);
