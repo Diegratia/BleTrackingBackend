@@ -110,7 +110,7 @@ namespace Repositories.Repository
             var query = _context.Visitors
                 .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Visitor Email not found");
+            return await query.FirstOrDefaultAsync();
         }
 
         //  public async Task<Visitor> GetByEmailConfirmPasswordAsyncRaw(string email)
