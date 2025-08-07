@@ -22,9 +22,6 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
-        public long? VisitorGroupCode { get; set; }
-        public string? VisitorNumber { get; set; }
-        public string? VisitorCode { get; set; }
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
@@ -145,8 +142,7 @@ namespace Data.ViewModels
     {
         public string Email { get; set; }
         public string? Name { get; set; }
-        public Guid? MaskedAreaId { get; set;}
-
+        public Guid? MaskedAreaId { get; set; }
     }
 
 
@@ -173,5 +169,14 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
         [FromQuery]
         public string? InvitationCode { get; set; } // <- ini penting untuk akses
+    }
+
+    public class MemberInvitationDto
+    {
+        [FromQuery]
+        public Guid ApplicationId { get; set; }
+        [FromQuery]
+        public string? InvitationCode { get; set; }
+
     }
 }

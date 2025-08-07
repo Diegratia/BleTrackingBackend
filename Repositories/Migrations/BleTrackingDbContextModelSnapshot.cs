@@ -1971,6 +1971,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<string>("Agenda")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("agenda");
+
                     b.Property<Guid>("ApplicationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2055,6 +2059,10 @@ namespace Repositories.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("is_invitation_accepted");
 
+                    b.Property<int?>("IsMember")
+                        .HasColumnType("int")
+                        .HasColumnName("is_member");
+
                     b.Property<Guid?>("MaskedAreaId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("masked_area_id");
@@ -2110,7 +2118,6 @@ namespace Repositories.Migrations
                         .HasColumnName("visitor_group_code");
 
                     b.Property<Guid?>("VisitorId")
-                        .IsRequired()
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
@@ -3071,8 +3078,7 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
                         .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.Visitor", null)
                         .WithMany("TrxVisitors")

@@ -100,6 +100,15 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync();
         }
 
+                public async Task<MstMember> GetByEmailAsync(string email)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstMembers
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync();
+        }
+
         private async Task ValidateRelatedEntitiesAsync(MstMember member, Guid? applicationId, bool isSystemAdmin)
         {
             if (isSystemAdmin) return;

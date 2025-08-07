@@ -17,6 +17,15 @@ public interface IEmailService
     string? visitorPeriodEnd
     // string? memberName
     );
+    Task SendMemberInvitationEmailAsync(
+    string toEmail,
+    string name,
+    string invitationCode,
+    string invitationUrl,
+    string? visitorPeriodStart,
+    string? visitorPeriodEnd
+    // string? memberName
+    );
     Task SendVisitorNotificationEmailAsync();
     Task SendMemberNotificationEmailAsync();
     // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
@@ -114,6 +123,59 @@ public class EmailService : IEmailService
 
         await client.SendMailAsync(message);
     }
+
+
+            public async Task SendMemberInvitationEmailAsync(
+            string toEmail,
+            string name,
+            string invitationCode,
+            string invitationUrl,
+            string visitorPeriodStart,
+            string visitorPeriodEnd)
+        {
+            var smtpHost = _configuration["Email:SmtpHost"];
+            var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+            var smtpUsername = _configuration["Email:SmtpUsername"];
+            var smtpPassword = _configuration["Email:SmtpPassword"];
+            var fromEmail = _configuration["Email:FromEmail"];
+            var fromName = _configuration["Email:FromName"];
+
+            var message = new MailMessage
+            {
+                From = new MailAddress(fromEmail, fromName),
+                Subject = "Meeting Invitation",
+                Body = $@"
+        Dear {name},
+
+        You have been invited to attend a meeting.
+
+        Scheduled Time : {visitorPeriodStart} - {visitorPeriodEnd}
+        Invited By     : 
+
+        Please confirm your invitation and check the meeting details by clicking the link below:
+
+        {invitationUrl}
+
+        Invitation Code: {invitationCode}
+
+        This link will expire in 3 days.
+
+        Thank you,
+        Your Application Team",
+                IsBodyHtml = false
+            };
+
+            message.To.Add(toEmail);
+
+            using var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+                EnableSsl = true
+            };
+
+            await client.SendMailAsync(message);
+        }
+
 
     public async Task SendVisitorNotificationEmailAsync()
     {

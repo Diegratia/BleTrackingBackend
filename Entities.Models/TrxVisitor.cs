@@ -118,6 +118,12 @@ namespace Entities.Models
     [Column("application_id")]
     public Guid ApplicationId { get; set; }
     public int TrxStatus { get; set; }
+    
+    [Column("is_member")]
+    public int? IsMember { get; set; }
+  
+    [Column("agenda")]
+    public string? Agenda { get; set; }
 
     public FloorplanMaskedArea? MaskedArea { get; set; }
     public MstApplication Application { get; set; }

@@ -32,6 +32,8 @@ namespace Data.ViewModels
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
+        public int? IsMember { get; set; }
+        public string? Agenda { get; set; }
         public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         public VisitorDto? Visitor { get; set; }
         public MstMemberDto? Member { get; set; }
@@ -41,6 +43,7 @@ namespace Data.ViewModels
     {
         public string? VehiclePlateNumber { get; set; }
         public string? Remarks { get; set; }
+        public string? Agenda { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
         public DateTime? VisitorPeriodEnd { get; set; }
         public Guid? MaskedAreaId { get; set; }
@@ -51,6 +54,7 @@ namespace Data.ViewModels
     {
         public string? VehiclePlateNumber { get; set; }
         public string? Remarks { get; set; }
+        public string? Agenda { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
         public DateTime? VisitorPeriodEnd { get; set; }
         public Guid? MaskedAreaId { get; set; }
@@ -70,8 +74,7 @@ namespace Data.ViewModels
     public class TrxVisitorInvitationDto : BaseModelDto
     {
         public string? VehiclePlateNumber { get; set; }
-        public DateTime? VisitorPeriodStart { get; set; }
-        public DateTime? VisitorPeriodEnd { get; set; }
+        public string? Agenda { get; set; }
         public Guid? PurposePerson { get; set; }
     }
 }

@@ -138,7 +138,6 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
-
             try
             {
                 var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);

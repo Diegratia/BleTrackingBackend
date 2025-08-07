@@ -864,7 +864,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<TrxVisitor>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.Property(e => e.PurposePerson).HasMaxLength(36);
                 entity.Property(e => e.Status)
                     .HasColumnName("visitor_status")

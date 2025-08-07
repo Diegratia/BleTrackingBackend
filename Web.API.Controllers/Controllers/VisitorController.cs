@@ -459,6 +459,57 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpPost("accept-invitation")]
+        [AllowAnonymous]
+        public async Task<IActionResult> AcceptInvitationFormAsync([FromQuery] string code, [FromQuery] Guid applicationId, [FromForm] MemberInvitationDto dto)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            try
+            {
+                dto.InvitationCode = code;
+                dto.ApplicationId = applicationId;
+                var result = await _visitorService.AcceptInvitationFormAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Invitation Accepted successfully",
+                    collection = new { data = result },
+                    code = 201
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
              catch (Exception ex)
             {
                 return StatusCode(500, new

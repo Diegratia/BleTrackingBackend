@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class changeVisitorStrucutre : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -258,7 +258,7 @@ namespace Repositories.Migrations
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     phone = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    gender = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    gender = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     organization_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     district_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1062,10 +1062,12 @@ namespace Repositories.Migrations
                     invitation_token_expired_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     parking_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     TrxStatus = table.Column<int>(type: "int", nullable: false),
+                    is_member = table.Column<int>(type: "int", nullable: true),
+                    agenda = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     _generate = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
