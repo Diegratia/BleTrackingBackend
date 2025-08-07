@@ -490,12 +490,13 @@ public class VisitorService : IVisitorService
             // var memberName = member?.Name ?? "-";
             var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
             var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+            var invitationAgenda = newTrx.Agenda;
 
             // if (newTrx.IsMember == 1)
             // {
             //     await _emailService.SendMemberInvitationEmailAsync(visitor.Email, visitor.Name ?? "Member", confirmationCode, memberInvitationUrl, visitorPeriodStart, visitorPeriodEnd);
             // }
-            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd);
+            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd, invitationAgenda);
         }
         
         public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
