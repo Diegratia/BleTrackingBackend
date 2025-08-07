@@ -8,7 +8,14 @@ using Microsoft.Extensions.Configuration;
 public interface IEmailService
 {
     Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode);
-    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string memberName, DateTime? visitorPeriodStart, DateTime? visitorPeriodEnd);
+    Task SendVisitorInvitationEmailAsync(
+    string toEmail,
+    string name,
+    string invitationCode,
+    string invitationUrl,
+    string memberName,
+    DateTime? visitorPeriodStart,
+    DateTime? visitorPeriodEnd);
     Task SendVisitorNotificationEmailAsync();
     Task SendMemberNotificationEmailAsync();
     // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);

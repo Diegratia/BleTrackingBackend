@@ -27,6 +27,7 @@ public class VisitorService : IVisitorService
     private readonly IMapper _mapper;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly VisitorRepository _visitorRepository;
+    private readonly MstMemberRepository _mstmemberRepository;
     private readonly UserRepository _userRepository;
     private readonly TrxVisitorRepository _trxVisitorRepository;
     private readonly UserGroupRepository _userGroupRepository;
@@ -472,7 +473,9 @@ public class VisitorService : IVisitorService
             var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
-            var memberName = newTrx.Member.Name;
+            var memberId = newTrx.PurposePerson ?? Guid.Empty;
+            var member = await _mstmemberRepository.GetByIdAsync(memberId);
+            var memberName = member?.Name ?? "-";
             var visitorPeriodStart = newTrx.VisitorPeriodStart;
             var visitorPeriodEnd = newTrx.VisitorPeriodEnd;
 

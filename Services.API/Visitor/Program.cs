@@ -135,6 +135,7 @@ builder.Services.AddAutoMapper(typeof(VisitorProfile));
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 builder.Services.AddScoped<VisitorRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
 
 builder.Services.AddScoped<TrxVisitorRepository>();
 
