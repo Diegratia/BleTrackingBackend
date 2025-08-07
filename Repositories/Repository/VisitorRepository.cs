@@ -126,6 +126,13 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
+                  public async Task<Visitor> GetByEmailAsyncRaw(string email)
+        {
+            var query = _context.Visitors
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
+            return await query.FirstOrDefaultAsync();
+        }
+
         //  public async Task<Visitor> GetByEmailConfirmPasswordAsyncRaw(string email)
         // {
         //     return await _context.Visitors

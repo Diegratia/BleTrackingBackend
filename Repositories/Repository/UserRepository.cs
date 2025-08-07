@@ -72,6 +72,14 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("2 .User not found");
         }
 
+              public async Task<User> GetByEmailAsyncRaw(string email)
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.StatusActive != 0);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("2 .User not found");
+        }
+
         public async Task<User> GetByUsernameAsync(string username)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

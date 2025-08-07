@@ -106,6 +106,13 @@ namespace Repositories.Repository
             var query = _context.MstMembers
                 .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Member not found");
+        }
+
+        public async Task<MstMember> GetByEmailAsyncRaw(string email)
+        {
+            var query = _context.MstMembers
+                .Where(u => u.Email.ToLower() == email.ToLower() && u.Status != 0);
             return await query.FirstOrDefaultAsync();
         }
 
