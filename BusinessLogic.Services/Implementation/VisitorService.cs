@@ -467,7 +467,7 @@ public class VisitorService : IVisitorService
             newTrx.TrxStatus = 1;
             newTrx.VisitorGroupCode = trxCount + 1;
             newTrx.VisitorNumber = $"VIS{trxCount + 1}";
-            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.VisitorCode = $"V{DateTime.UtcNow.ToString("yyMMddHHmmss")}{Guid.NewGuid():N}".Substring(0, 6);
             newTrx.InvitationCreatedAt = DateTime.UtcNow;
             newTrx.UpdatedAt = DateTime.UtcNow;
             newTrx.CreatedAt = DateTime.UtcNow;
@@ -498,7 +498,7 @@ public class VisitorService : IVisitorService
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd);
         }
         
-          public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+        public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
         {
             if (dtoList == null || !dtoList.Any())
                 throw new ArgumentException("Invitation list cannot be empty");
@@ -562,7 +562,7 @@ public class VisitorService : IVisitorService
                     newTrx.TrxStatus = 1;
                     newTrx.VisitorGroupCode = baseGroupCode;
                     newTrx.VisitorNumber = $"VIS{baseGroupCode}";
-                    newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+                    newTrx.VisitorCode = $"V{DateTime.UtcNow.ToString("yyMMddHHmmss")}{Guid.NewGuid():N}".Substring(0, 6);
                     newTrx.InvitationCreatedAt = DateTime.UtcNow;
                     newTrx.UpdatedAt = DateTime.UtcNow;
                     newTrx.CreatedAt = DateTime.UtcNow;
@@ -592,7 +592,7 @@ public class VisitorService : IVisitorService
                 {
                     // Optional: log per item error
                     Console.WriteLine($"Invitation failed for {dto.Email}: {ex.Message}");
-                    // Bisa juga simpan ke list untuk laporan error batch
+                    
                 }
             }
         }
