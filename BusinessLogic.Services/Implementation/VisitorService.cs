@@ -498,7 +498,7 @@ public class VisitorService : IVisitorService
             await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd);
         }
         
-          public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+        public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
         {
             if (dtoList == null || !dtoList.Any())
                 throw new ArgumentException("Invitation list cannot be empty");
@@ -576,6 +576,7 @@ public class VisitorService : IVisitorService
                     // Kirim email
                     var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
                     var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+                    var invitationAgenda = newTrx.Agenda;
 
                     var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
@@ -585,7 +586,8 @@ public class VisitorService : IVisitorService
                         confirmationCode,
                         invitationUrl,
                         visitorPeriodStart,
-                        visitorPeriodEnd
+                        visitorPeriodEnd,
+                        invitationAgenda
                     );
                 }
                 catch (Exception ex)
