@@ -14,8 +14,8 @@ public interface IEmailService
     string invitationCode,
     string invitationUrl,
     string? visitorPeriodStart,
-    string? visitorPeriodEnd
-    // string? memberName
+    string? visitorPeriodEnd,
+    string? invitationAgenda
     );
     Task SendMemberInvitationEmailAsync(
     string toEmail,
@@ -78,7 +78,7 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string visitorPeriodStart, string visitorPeriodEnd)
+    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string visitorPeriodStart, string visitorPeriodEnd, string invitationAgenda)
     {
         
         var smtpHost = _configuration["Email:SmtpHost"];
@@ -99,6 +99,8 @@ public class EmailService : IEmailService
     You have been invited as a visitor.
 
     Visit Period : {visitorPeriodStart} - {visitorPeriodEnd}
+
+    Agenda : {invitationAgenda}
 
     Please confirm your invitation and complete your data by clicking the link below:
 
