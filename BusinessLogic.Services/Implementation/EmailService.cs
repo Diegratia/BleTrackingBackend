@@ -13,9 +13,10 @@ public interface IEmailService
     string name,
     string invitationCode,
     string invitationUrl,
-    string memberName,
-    DateTime? visitorPeriodStart,
-    DateTime? visitorPeriodEnd);
+    string? visitorPeriodStart,
+    string? visitorPeriodEnd
+    // string? memberName
+    );
     Task SendVisitorNotificationEmailAsync();
     Task SendMemberNotificationEmailAsync();
     // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
@@ -68,15 +69,17 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string memberName, DateTime? visitPeriodStart, DateTime? visitPeriodEnd)
+    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string visitorPeriodStart, string visitorPeriodEnd)
     {
+        
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
         var smtpUsername = _configuration["Email:SmtpUsername"];
         var smtpPassword = _configuration["Email:SmtpPassword"];
         var fromEmail = _configuration["Email:FromEmail"];
         var fromName = _configuration["Email:FromName"];
-
+        
+        
         var message = new MailMessage
         {
             From = new MailAddress(fromEmail, fromName),
@@ -86,7 +89,7 @@ public class EmailService : IEmailService
 
     You have been invited as a visitor.
 
-    Visit Period: {visitPeriodStart} - {visitPeriodEnd}
+    Visit Period : {visitorPeriodStart} - {visitorPeriodEnd}
 
     Please confirm your invitation and complete your data by clicking the link below:
 
@@ -97,7 +100,7 @@ public class EmailService : IEmailService
     This link will expire in 3 days.
 
     Thank you,
-    {memberName}",
+    Your Application Team",
             IsBodyHtml = false
         };
 

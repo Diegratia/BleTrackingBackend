@@ -37,7 +37,8 @@ namespace Repositories.Repository
                 .Where(v => v.TrxStatus != 0)
                 .Include(v => v.Application)
                 .Include(v => v.Visitor)
-                .Include(v => v.MaskedArea);
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
@@ -132,7 +133,7 @@ namespace Repositories.Repository
         {
             return await _context.TrxVisitors.CountAsync(x => x.VisitorId == visitorId);
         }
-        
+
 
         public async Task<TrxVisitor?> GetByInvitationCodeAsync(string invitationCode)
         {
@@ -144,5 +145,6 @@ namespace Repositories.Repository
 
             return trx;
         }
+
     }
 }

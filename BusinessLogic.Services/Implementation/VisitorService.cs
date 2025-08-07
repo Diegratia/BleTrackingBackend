@@ -473,13 +473,16 @@ public class VisitorService : IVisitorService
             var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
-            var memberId = newTrx.PurposePerson ?? Guid.Empty;
-            var member = await _mstmemberRepository.GetByIdAsync(memberId);
-            var memberName = member?.Name ?? "-";
-            var visitorPeriodStart = newTrx.VisitorPeriodStart;
-            var visitorPeriodEnd = newTrx.VisitorPeriodEnd;
+            // var memberId = newTrx.PurposePerson ?? Guid.Empty;
+            // var member = await _mstmemberRepository.GetByIdAsync(memberId);
+            // var memberName = member?.Name ?? "-";
+            // var member = await _mstmemberRepository.GetByIdAsync(newTrx.PurposePerson.GetValueOrDefault());
+            // var memberName = member?.Name ?? "-";
 
-            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, memberName, visitorPeriodStart, visitorPeriodEnd);
+            var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+            var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+
+            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd);
         }
 
         // fill invitation form

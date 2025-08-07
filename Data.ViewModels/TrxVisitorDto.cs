@@ -34,6 +34,7 @@ namespace Data.ViewModels
         public Guid? VisitorId { get; set; }
         public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
     }
 
     public class TrxVisitorCreateDto : BaseModelDto
