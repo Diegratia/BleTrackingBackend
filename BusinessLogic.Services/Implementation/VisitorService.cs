@@ -393,6 +393,7 @@ public class VisitorService : IVisitorService
         public async Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto createInvitationDto)
         {
             var visitor = await _visitorRepository.GetByIdAsync(id);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             // var latestTrx = await _trxVisitorRepository.GetLatestUnfinishedByVisitorIdAsync(visitorId);
 
             // if (latestTrx != null && latestTrx.Status == VisitorStatus.Checkin)
@@ -409,6 +410,10 @@ public class VisitorService : IVisitorService
             newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
             newTrx.InvitationCreatedAt = DateTime.UtcNow;
             newTrx.InvitationCode = confirmationCode;
+            newTrx.UpdatedAt = DateTime.UtcNow;
+            newTrx.UpdatedBy = username ?? "Invitation";
+            newTrx.CreatedAt = DateTime.UtcNow;
+            newTrx.CreatedBy = username ?? "Invitation";
 
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
             await _trxVisitorRepository.AddAsync(newTrx);
@@ -420,7 +425,6 @@ public class VisitorService : IVisitorService
             if (string.IsNullOrWhiteSpace(dto.Email))
                 throw new ArgumentException("Email is required");
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
                 // cek visitor base on email
                 var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
             Visitor visitor;
@@ -501,6 +505,16 @@ public class VisitorService : IVisitorService
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+            // Gunakan visitor pertama (dengan email unik pertama) untuk hitung group code
+            var firstVisitorEmail = dtoList.FirstOrDefault()?.Email?.ToLower();
+
+            if (string.IsNullOrWhiteSpace(firstVisitorEmail))
+                throw new ArgumentException("At least one valid email is required");
+
+            var firstVisitor = await _visitorRepository.GetByEmailAsync(firstVisitorEmail)
+                ?? new Visitor { Id = Guid.NewGuid(), Email = firstVisitorEmail };
+
+            var baseGroupCode = await _trxVisitorRepository.CountByVisitorIdAsync(firstVisitor.Id) + 1;
 
             foreach (var dto in dtoList)
             {
@@ -546,9 +560,9 @@ public class VisitorService : IVisitorService
                     newTrx.Status = VisitorStatus.Preregist;
                     newTrx.IsInvitationAccepted = false;
                     newTrx.TrxStatus = 1;
-                    newTrx.VisitorGroupCode = trxCount + 1;
-                    newTrx.VisitorNumber = $"VIS{trxCount + 1}";
-                    newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}"[..6];
+                    newTrx.VisitorGroupCode = baseGroupCode;
+                    newTrx.VisitorNumber = $"VIS{baseGroupCode}";
+                    newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
                     newTrx.InvitationCreatedAt = DateTime.UtcNow;
                     newTrx.UpdatedAt = DateTime.UtcNow;
                     newTrx.CreatedAt = DateTime.UtcNow;
