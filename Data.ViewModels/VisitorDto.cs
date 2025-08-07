@@ -146,7 +146,7 @@ namespace Data.ViewModels
     }
 
 
-    public class VisitorInvitationDto : TrxVisitorInvitationDto
+    public class VisitorInvitationDto : TrxVisitorInvitationDtoNoDate
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }

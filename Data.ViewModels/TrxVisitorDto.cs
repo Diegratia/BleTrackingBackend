@@ -60,8 +60,8 @@ namespace Data.ViewModels
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
     }
-    
-     public class DenyReasonDto
+
+    public class DenyReasonDto
     {
         public string? DenyReason { get; set; }
     }
@@ -72,6 +72,15 @@ namespace Data.ViewModels
     }
 
     public class TrxVisitorInvitationDto : BaseModelDto
+    {
+        public string? VehiclePlateNumber { get; set; }
+        public string? Agenda { get; set; }
+        public Guid? PurposePerson { get; set; }
+        public DateTime? VisitorPeriodStart { get; set; }
+        public DateTime? VisitorPeriodEnd { get; set; }
+    }
+    
+       public class TrxVisitorInvitationDtoNoDate : BaseModelDto
     {
         public string? VehiclePlateNumber { get; set; }
         public string? Agenda { get; set; }
