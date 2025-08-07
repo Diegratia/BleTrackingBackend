@@ -141,7 +141,7 @@ builder.Services.AddScoped<TrxVisitorRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("TRX_VISITOR_PORT") ??
+var port = Environment.GetEnvironmentVariable("TRX_VISITOR_PORT") ?? "10025" ??
            builder.Configuration["Ports:TrxVisitorService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

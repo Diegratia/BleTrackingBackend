@@ -70,13 +70,50 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // GET: api/Visitor/{id}
+        // GET: api/Visitor/public/{id}
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
             {
                 var visitor = await _visitorService.GetVisitorByIdAsync(id);
+                if (visitor == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Visitor blacklist area not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor retrieved successfully",
+                    collection = new { data = visitor },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+          [HttpGet("public/{id}")]
+        public async Task<IActionResult> GetByIdWhitelist(Guid id)
+        {
+            try
+            {
+                var visitor = await _visitorService.GetVisitorByIdPublicAsync(id);
                 if (visitor == null)
                 {
                     return NotFound(new

@@ -34,9 +34,17 @@ namespace Repositories.Repository
                 .Where(u => u.Id == id && u.StatusActive != 0);
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
         }
+        
+              public async Task<User> GetByIdAsyncRegister(Guid id)
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Id == id && u.StatusActive != 0);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
+        }
 
         // dipakai untuk update field pada konfirmasi visitor
-            public async Task<User> GetByIdAsyncConfirm(Guid id)
+        public async Task<User> GetByIdAsyncConfirm(Guid id)
         {
             var query = _context.Users
                 .Include(u => u.Group)

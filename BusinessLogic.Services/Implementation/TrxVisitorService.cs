@@ -16,6 +16,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -39,6 +40,12 @@ namespace BusinessLogic.Services.Implementation
             var trxvisitors = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
         }    
+
+        public async Task<IEnumerable<TrxVisitorDtoz>> GetAllTrxVisitorsAsyncMinimal()
+        {
+            return await _repository.GetAllQueryableMinimal().ToListAsync();
+        }
+
 
         public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
         {

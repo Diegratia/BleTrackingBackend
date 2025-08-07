@@ -134,6 +134,32 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpGet("minimal")]
+        public async Task<IActionResult> GetAllMinimal()
+        {
+            try
+            {
+                var visitors = await _trxVisitorService.GetAllTrxVisitorsAsyncMinimal();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "TrxVisitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // PUT: api/VisitorBlacklistArea/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] TrxVisitorUpdateDto trxVisitorDto)

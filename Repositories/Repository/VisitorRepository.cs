@@ -29,6 +29,13 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+        public async Task<Visitor?> GetByIdPublicAsync(Guid id)
+        {
+            return await _context.Visitors
+            .Where(x => x.Id == id && x.Status != 0)
+            .FirstOrDefaultAsync();
+        }
+
        public async Task AddAsync(Visitor visitor)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

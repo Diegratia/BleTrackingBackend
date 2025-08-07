@@ -647,7 +647,7 @@ namespace BusinessLogic.Services.Interface
 
             user.IsEmailConfirmation = 1;
             user.EmailConfirmationAt = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateConfirmAsync(user);
         }
 
         public async Task SetPasswordAsync(SetPasswordDto dto)
@@ -666,7 +666,7 @@ namespace BusinessLogic.Services.Interface
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             user.IsCreatedPassword = 1;
             user.StatusActive = StatusActive.Active;
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateConfirmAsync(user);
         }
 
         // public async Task ConfirmVisitorInvitationAsync(string email)

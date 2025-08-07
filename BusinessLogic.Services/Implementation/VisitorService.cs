@@ -558,6 +558,12 @@ public class VisitorService : IVisitorService
             return _mapper.Map<VisitorDto>(visitor);
         }
 
+            public async Task<VisitorDto> GetVisitorByIdPublicAsync(Guid id)
+        {
+            var visitor = await _visitorRepository.GetByIdPublicAsync(id);
+            return _mapper.Map<VisitorDto>(visitor);
+        }
+
         public async Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync()
         {
             var visitors = await _visitorRepository.GetAllAsync();

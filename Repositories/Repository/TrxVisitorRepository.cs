@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Data.ViewModels;
 
 namespace Repositories.Repository
 {
@@ -42,6 +43,36 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        public IQueryable<TrxVisitorDtoz> GetAllQueryableMinimal()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.TrxVisitors
+                .Where(v => v.TrxStatus != 0)
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member)
+                .AsQueryable();
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(v => new TrxVisitorDtoz
+            {
+                Id = v.Id,
+                CheckedInAt = v.CheckedInAt,
+                Member = v.Member == null ? null : new MstMemberDtoz
+                {
+                    Id = v.Member.Id,
+                    Name = v.Member.Name
+                },
+                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDtoz
+                {
+                    Id = v.MaskedArea.Id,
+                    Name = v.MaskedArea.Name
+                }
+            });
+        }
+
 
         public async Task<TrxVisitor> AddAsync(TrxVisitor trxVisitor)
         {
