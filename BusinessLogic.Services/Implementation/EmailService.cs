@@ -2,12 +2,15 @@ using System;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using AutoMapper.Execution;
 using Microsoft.Extensions.Configuration;
 
 public interface IEmailService
 {
     Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode);
-    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl);
+    Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string memberName, DateTime? visitorPeriodStart, DateTime? visitorPeriodEnd);
+    Task SendVisitorNotificationEmailAsync();
+    Task SendMemberNotificationEmailAsync();
     // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
 
 }
@@ -58,7 +61,7 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl)
+    public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string invitationCode, string invitationUrl, string memberName, DateTime? visitPeriodStart, DateTime? visitPeriodEnd)
     {
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
@@ -76,6 +79,8 @@ public class EmailService : IEmailService
 
     You have been invited as a visitor.
 
+    Visit Period: {visitPeriodStart} - {visitPeriodEnd}
+
     Please confirm your invitation and complete your data by clicking the link below:
 
     {invitationUrl}
@@ -85,7 +90,7 @@ public class EmailService : IEmailService
     This link will expire in 3 days.
 
     Thank you,
-    Your Application Team",
+    {memberName}",
             IsBodyHtml = false
         };
 
@@ -98,6 +103,15 @@ public class EmailService : IEmailService
         };
 
         await client.SendMailAsync(message);
+    }
+
+    public async Task SendVisitorNotificationEmailAsync()
+    {
+        throw new NotImplementedException();
+    }
+    public async Task SendMemberNotificationEmailAsync()
+    {
+        throw new NotImplementedException();
     }
 
 
