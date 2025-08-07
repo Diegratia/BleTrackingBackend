@@ -70,8 +70,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // GET: api/Visitor/public/{id}
-        [AllowAnonymous]
+        // GET: api/Visitor/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -108,7 +107,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-          [HttpGet("public/{id}")]
+        [AllowAnonymous]
+        [HttpGet("public/{id}")]
         public async Task<IActionResult> GetByIdWhitelist(Guid id)
         {
             try
