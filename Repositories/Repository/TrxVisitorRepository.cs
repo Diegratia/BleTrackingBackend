@@ -42,7 +42,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TrxVisitors
-                .Where(v => v.TrxStatus != 0)
                 .Include(v => v.Application)
                 .Include(v => v.Visitor)
                 .Include(v => v.MaskedArea)
@@ -57,7 +56,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TrxVisitors
-                .Where(v => v.TrxStatus != 0)
                 .Include(v => v.MaskedArea)
                 .Include(v => v.Member)
                 .AsQueryable();
