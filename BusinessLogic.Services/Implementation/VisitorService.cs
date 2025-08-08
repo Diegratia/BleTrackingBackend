@@ -197,7 +197,7 @@ public class VisitorService : IVisitorService
             newTrx.VisitorId = visitor.Id;
             newTrx.Status = VisitorStatus.Preregist;
             newTrx.InvitationCode = confirmationCode;
-            newTrx.IsInvitationAccepted = false;
+            // newTrx.IsInvitationAccepted = false;
             newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
             newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
             newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
@@ -403,7 +403,7 @@ public class VisitorService : IVisitorService
 
             newTrx.VisitorId = visitor.Id;
             newTrx.Status = VisitorStatus.Preregist;
-            newTrx.IsInvitationAccepted = false;
+            // newTrx.IsInvitationAccepted = false;
             newTrx.TrxStatus = 1;
             newTrx.VisitorGroupCode = visitor.TrxVisitors.Count + 1;
             newTrx.VisitorNumber = $"VIS{visitor.TrxVisitors.Count + 1}";
@@ -473,7 +473,7 @@ public class VisitorService : IVisitorService
             var newTrx = _mapper.Map<TrxVisitor>(dto);
             newTrx.VisitorId = visitor.Id;
             newTrx.Status = VisitorStatus.Preregist;
-            newTrx.IsInvitationAccepted = false;
+            // newTrx.IsInvitationAccepted = false;
             newTrx.TrxStatus = 1;
             newTrx.VisitorGroupCode = trxCount + 1;
             newTrx.VisitorNumber = $"VIS{trxCount + 1}";
@@ -501,12 +501,30 @@ public class VisitorService : IVisitorService
             var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
             var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
             var invitationAgenda = newTrx.Agenda;
+            
+            var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
+            var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+            var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+            var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+            var memberName = savedTrx?.Member?.Name ?? "-";
 
             // if (newTrx.IsMember == 1)
             // {
             //     await _emailService.SendMemberInvitationEmailAsync(visitor.Email, visitor.Name ?? "Member", confirmationCode, memberInvitationUrl, visitorPeriodStart, visitorPeriodEnd);
             // }
-            await _emailService.SendVisitorInvitationEmailAsync(visitor.Email, visitor.Name ?? "Guest", confirmationCode, invitationUrl, visitorPeriodStart, visitorPeriodEnd, invitationAgenda);
+            await _emailService.SendVisitorInvitationEmailAsync(
+                     visitor.Email,
+                     visitor.Name ?? "Guest",
+                     confirmationCode,
+                     invitationUrl,
+                     visitorPeriodStart,
+                     visitorPeriodEnd,
+                     invitationAgenda,
+                     maskedAreaName,
+                     memberName,
+                     floorName,
+                     buildingName
+                 );
         }
         
             public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
@@ -566,7 +584,7 @@ public class VisitorService : IVisitorService
                     {
                         Id = Guid.NewGuid(),
                         Email = email,
-                        Name = dto.Name ?? "Guest",
+                        Name = dto.Name,
                         Status = 1,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
@@ -585,7 +603,7 @@ public class VisitorService : IVisitorService
                 var newTrx = _mapper.Map<TrxVisitor>(dto);
                 newTrx.VisitorId = visitor.Id;
                 newTrx.Status = VisitorStatus.Preregist;
-                newTrx.IsInvitationAccepted = false;
+                // newTrx.IsInvitationAccepted = false;
                 newTrx.TrxStatus = 1;
                 newTrx.VisitorGroupCode = baseGroupCode;
                 newTrx.VisitorNumber = $"VIS{baseGroupCode}";
@@ -603,6 +621,14 @@ public class VisitorService : IVisitorService
                 var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
                 var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
                 var invitationAgenda = newTrx.Agenda;
+                
+                var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
+                var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+
+                var memberName = savedTrx?.Member?.Name ?? "";
+                var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+                var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+
 
                 var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
@@ -613,7 +639,11 @@ public class VisitorService : IVisitorService
                     invitationUrl,
                     visitorPeriodStart,
                     visitorPeriodEnd,
-                    invitationAgenda
+                    invitationAgenda,
+                    maskedAreaName,
+                    memberName,
+                    floorName,
+                    buildingName
                 );
             }
         }
@@ -756,8 +786,6 @@ public class VisitorService : IVisitorService
             await _trxVisitorRepository.UpdateAsync(trxVisitor);
         }
 
-
-
         public async Task<VisitorDto> AcceptInvitationFormAsync(MemberInvitationDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.InvitationCode))
@@ -779,6 +807,43 @@ public class VisitorService : IVisitorService
             return _mapper.Map<VisitorDto>(visitor);
         }
 
+            public async Task<VisitorDto> DeclineInvitationFormAsync(MemberInvitationDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.InvitationCode))
+                throw new ArgumentException("Invitation code is required.");
+
+            var trx = await _trxVisitorRepository
+                .GetByInvitationCodeAsync(dto.InvitationCode);
+
+            if (trx == null)
+                throw new KeyNotFoundException("Invitation not found or expired.");
+            var visitor = trx.Visitor ?? throw new InvalidOperationException("Visitor not found.");
+            _mapper.Map(dto, trx);
+            trx.IsInvitationAccepted = false;
+            trx.UpdatedAt = DateTime.UtcNow;
+            trx.UpdatedBy = "VisitorForm";
+
+            await _trxVisitorRepository.UpdateAsyncRaw(trx);
+
+            return _mapper.Map<VisitorDto>(visitor);
+        }
+
+        public async Task DeclineInvitationAsync(Guid trxVisitorId)
+        {
+            var trxVisitor = await _trxVisitorRepository.GetByIdAsync(trxVisitorId);
+            if (trxVisitor == null)
+                throw new KeyNotFoundException("Invitation not found");
+
+            if (trxVisitor.IsInvitationAccepted == false)
+                throw new InvalidOperationException("Invitation already Declined");
+
+            trxVisitor.IsInvitationAccepted = false;
+            // trxVisitor.InvitationAcceptedAt = DateTime.UtcNow;
+            trxVisitor.Status = VisitorStatus.Preregist; 
+
+            await _trxVisitorRepository.UpdateAsync(trxVisitor);
+        }
+
         // fill invitation form
         public async Task<VisitorDto> FillInvitationFormAsync(VisitorInvitationDto dto)
         {
@@ -790,6 +855,9 @@ public class VisitorService : IVisitorService
 
             if (trx == null)
                 throw new KeyNotFoundException("Invitation not found or expired.");
+
+            if (trx.IsInvitationAccepted == true)
+                throw new InvalidOperationException("Invitation already accepted.");
 
             var visitor = trx.Visitor ?? throw new InvalidOperationException("Visitor not found.");
 
@@ -837,6 +905,7 @@ public class VisitorService : IVisitorService
             // upload trxvisitor
             _mapper.Map(dto, trx);
             trx.IsInvitationAccepted = true;
+            trx.Status = VisitorStatus.Precheckin;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = "VisitorForm";
 

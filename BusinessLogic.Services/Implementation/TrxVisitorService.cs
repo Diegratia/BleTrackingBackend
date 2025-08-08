@@ -165,7 +165,6 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(denyReasonDto, trx);
             await _repository.UpdateAsync(trx);
-
         }
 
         public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
@@ -193,14 +192,15 @@ namespace BusinessLogic.Services.Implementation
             trx.Status = VisitorStatus.Checkin;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
+            
             await _repository.UpdateAsync(trx);
         }
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
-              var enumColumns = new Dictionary<string, Type>
+            var enumColumns = new Dictionary<string, Type>
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
