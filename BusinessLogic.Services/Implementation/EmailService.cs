@@ -157,7 +157,6 @@ public class EmailService : IEmailService
 <head>
     <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
     <meta name=""viewport"" content=""width=320, initial-scale=1"" />
-    <title>Visitor Invitation - %agenda%</title>
 </head>
 <body style=""font-family: arial"">
     <table style=""width: 100%; border-collapse: collapse;"">
