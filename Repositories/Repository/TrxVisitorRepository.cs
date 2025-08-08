@@ -41,6 +41,7 @@ namespace Repositories.Repository
                 .Include(v => v.MaskedArea)
                 .Include(v => v.Member);
 
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
@@ -195,11 +196,28 @@ namespace Repositories.Repository
                     t.VisitorPeriodEnd != null &&
                     start <= t.VisitorPeriodEnd &&
                     end >= t.VisitorPeriodStart
-//                     .AnyAsync(t =>
-//     start == t.VisitorPeriodStart && end == t.VisitorPeriodEnd
-// );
+                //                     .AnyAsync(t =>
+                //     start == t.VisitorPeriodStart && end == t.VisitorPeriodEnd
+                // );
 
                 );
         }
+
+        public async Task<string?> GetFloorNameByTrxIdAsync(Guid trxId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.Id == trxId)
+                .Select(t => t.MaskedArea.Floor.Name)
+                .FirstOrDefaultAsync();
+        }
+            
+        public async Task<string?> GetBuildingNameByTrxIdAsync(Guid trxId)
+            {
+                return await _context.TrxVisitors
+                    .Where(t => t.Id == trxId )
+                    .Select(t => t.MaskedArea.Floor.Building.Name)
+                    .FirstOrDefaultAsync();
+            }
+
     }
 }
