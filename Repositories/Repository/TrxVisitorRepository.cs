@@ -177,5 +177,16 @@ namespace Repositories.Repository
             return trx;
         }
 
+        public async Task<bool> ExistsOverlappingTrxAsync(Guid visitorId, DateTime start, DateTime end)
+{
+    return await _context.TrxVisitors
+        .Where(t => t.VisitorId == visitorId && t.TrxStatus != 0 && t.CheckedOutAt == null && t.Status != VisitorStatus.Checkout || t.VisitorId == visitorId && t.Status == VisitorStatus.Denied && t.TrxStatus != 0 && t.CheckedOutAt == null)
+        .AnyAsync(t =>
+            t.VisitorPeriodStart != null && t.VisitorPeriodEnd != null &&
+            start <= t.VisitorPeriodEnd && end >= t.VisitorPeriodStart
+        );
+}
+
+
     }
 }

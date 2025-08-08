@@ -424,9 +424,12 @@ public class VisitorService : IVisitorService
         {
             if (string.IsNullOrWhiteSpace(dto.Email))
                 throw new ArgumentException("Email is required");
+            if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
+                throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
                 // cek visitor base on email
                 var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
+                
             Visitor visitor;
 
             if (existingVisitor == null)
@@ -448,6 +451,13 @@ public class VisitorService : IVisitorService
             {
                 visitor = existingVisitor;
             }
+             bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
+                        existingVisitor.Id,
+                        dto.VisitorPeriodStart.Value,
+                        dto.VisitorPeriodEnd.Value
+                    );
+                    if (exists)
+                        throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
 
             var trxCount = await _trxVisitorRepository
             .CountByVisitorIdAsync(visitor.Id);
@@ -519,15 +529,33 @@ public class VisitorService : IVisitorService
 
             foreach (var dto in dtoList)
             {
+                if (string.IsNullOrWhiteSpace(dto.Email))
+                    throw new ArgumentException("Email is required");
+
+                if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
+                    throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
+                var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
+                if (existingVisitor != null)
+                {
+                    // cek apakah sudah ada trx dengan periode yang sama
+                    bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
+                        existingVisitor.Id,
+                        dto.VisitorPeriodStart.Value,
+                        dto.VisitorPeriodEnd.Value
+                    );
+
+                    if (exists)
+                        throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
+                }
+
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(dto.Email))
-                        continue; // Skip invalid item
+                    // if (string.IsNullOrWhiteSpace(dto.Email))
+                    //     continue; // Skip invalid item
 
                     var email = dto.Email.ToLower();
-
                     // Cek visitor
-                    var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
+                    // var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
                     Visitor visitor;
 
                     if (existingVisitor == null)

@@ -19,7 +19,6 @@ using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
 
 
-
 namespace BusinessLogic.Services.Implementation
 {
     public class TrxVisitorService : ITrxVisitorService
