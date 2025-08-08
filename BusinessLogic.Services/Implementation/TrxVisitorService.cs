@@ -196,9 +196,6 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(trx);
         }
-
-        
-
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
