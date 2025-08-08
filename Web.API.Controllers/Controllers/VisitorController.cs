@@ -119,7 +119,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "Visitor blacklist area not found",
+                        msg = "Visitor not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -143,6 +143,43 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [AllowAnonymous]
+        [HttpPost("public/{id}/decline-invitation")]
+        public async Task<IActionResult> DeclineInvitationAsync(Guid id)
+        {
+            try
+            {
+                await _visitorService.DeclineInvitationAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor declined in successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
 
         // GET: api/Visitor
         [HttpGet]

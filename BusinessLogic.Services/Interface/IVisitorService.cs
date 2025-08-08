@@ -24,5 +24,6 @@ namespace BusinessLogic.Services.Interface
         Task<VisitorDto> AcceptInvitationFormAsync(MemberInvitationDto dto);
         Task SendInvitationByEmailAsync(SendEmailInvitationDto dto);
         Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dto);
+        Task DeclineInvitationAsync(Guid id);
     }
 }

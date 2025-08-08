@@ -121,7 +121,7 @@ namespace BusinessLogic.Services.Implementation
         //     await _repository.DeleteAsync(id);
         // }
 
-           public async Task CheckinVisitorAsync(Guid trxVisitorId)
+            public async Task CheckinVisitorAsync(Guid trxVisitorId)
         {
             var trx = await _repository.GetByIdAsync(trxVisitorId);
             // var latestTrx = await _repository.GetLatestUnfinishedByVisitorIdAsync(visitorId);

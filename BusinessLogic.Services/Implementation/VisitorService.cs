@@ -828,21 +828,31 @@ public class VisitorService : IVisitorService
             return _mapper.Map<VisitorDto>(visitor);
         }
 
-        public async Task DeclineInvitationAsync(Guid trxVisitorId)
+        public async Task DeclineInvitationAsync(Guid id)
         {
-            var trxVisitor = await _trxVisitorRepository.GetByIdAsync(trxVisitorId);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var trxVisitor = await _trxVisitorRepository.GetByPublicIdAsync(id);
             if (trxVisitor == null)
                 throw new KeyNotFoundException("Invitation not found");
 
-            if (trxVisitor.IsInvitationAccepted == false)
-                throw new InvalidOperationException("Invitation already Declined");
+            // Tidak boleh decline jika sudah accepted
+            if (trxVisitor.IsInvitationAccepted == true)
+                throw new InvalidOperationException("Invitation has already been accepted and cannot be declined.");
+
+            // Jika sudah pernah decline, hentikan
+            if (trxVisitor.IsInvitationAccepted == false && trxVisitor.VisitorActiveStatus == VisitorActiveStatus.Cancelled)
+                throw new InvalidOperationException("Invitation already declined.");
 
             trxVisitor.IsInvitationAccepted = false;
-            // trxVisitor.InvitationAcceptedAt = DateTime.UtcNow;
-            trxVisitor.Status = VisitorStatus.Preregist; 
+            trxVisitor.VisitorActiveStatus = VisitorActiveStatus.Cancelled; // sesuai enum kamu
+            trxVisitor.Status = VisitorStatus.Denied; // atau Cancelled, pilih satu yang konsisten di sistemmu
+            // trxVisitor.InvitationDeclinedAt = DateTime.UtcNow; // tambahkan kolom ini jika ada
+            trxVisitor.UpdatedAt = DateTime.UtcNow;
+            trxVisitor.UpdatedBy = username;
 
-            await _trxVisitorRepository.UpdateAsync(trxVisitor);
+            await _trxVisitorRepository.UpdateAsyncRaw(trxVisitor);
         }
+
 
         // fill invitation form
         public async Task<VisitorDto> FillInvitationFormAsync(VisitorInvitationDto dto)
@@ -855,6 +865,12 @@ public class VisitorService : IVisitorService
 
             if (trx == null)
                 throw new KeyNotFoundException("Invitation not found or expired.");
+
+            if (trx.InvitationTokenExpiredAt < DateTime.UtcNow)
+            {
+                trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
+                    throw new InvalidOperationException("Confirmation code expired");
+            }
 
             if (trx.IsInvitationAccepted == true)
                 throw new InvalidOperationException("Invitation already accepted.");
