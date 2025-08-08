@@ -22,5 +22,6 @@ namespace BusinessLogic.Services.Interface
         Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto);
         Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto);
         Task UnblockVisitorAsync(Guid trxVisitorId);
+        Task<TrxVisitorDto> GetTrxVisitorByPublicIdAsync(Guid id);
     }
 }

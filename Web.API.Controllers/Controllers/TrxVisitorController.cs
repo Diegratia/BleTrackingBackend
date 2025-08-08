@@ -107,6 +107,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpGet("public/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetByPublicId(Guid id)
+        {
+            try
+            {
+                var trxVisitor = await _trxVisitorService.GetTrxVisitorByPublicIdAsync(id);
+                if (trxVisitor == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "TrxVisitor blacklist area not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "TrxVisitor retrieved successfully",
+                    collection = new { data = trxVisitor },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // GET: api/TrxVisitor
         [HttpGet]
         public async Task<IActionResult> GetAll()

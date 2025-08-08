@@ -52,6 +52,12 @@ namespace BusinessLogic.Services.Implementation
             return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
         }
 
+            public async Task<TrxVisitorDto> GetTrxVisitorByPublicIdAsync(Guid id)
+        {
+            var trxvisitor = await _repository.GetByPublicIdAsync(id);
+            return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
+        }
+
         public async Task<TrxVisitorDto> CreateTrxVisitorAsync(TrxVisitorCreateDto createDto)
         {
             if (createDto == null) throw new ArgumentNullException(nameof(createDto));
@@ -192,7 +198,7 @@ namespace BusinessLogic.Services.Implementation
             trx.Status = VisitorStatus.Checkin;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            
+
             await _repository.UpdateAsync(trx);
         }
 
