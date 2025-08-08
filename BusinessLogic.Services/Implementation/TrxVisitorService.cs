@@ -151,6 +151,7 @@ namespace BusinessLogic.Services.Implementation
 
             trx.CheckedOutAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Checkout;
+            trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
             trx.TrxStatus = 0;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;

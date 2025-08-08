@@ -168,24 +168,24 @@ public class EmailService : IEmailService
                     <table width=""100%"" style=""border-collapse: collapse"">
                         <tr>
                             <td colspan=""4"" style=""padding: 6px"">
-                                <div>Halo %kepada%,</div>
-                                <div style=""margin-bottom: 5px"">Anda diundang untuk menghadiri kunjungan dengan detail berikut:</div>
+                                <div>Hello %to_mail%,</div>
+                                <div style=""margin-bottom: 5px"">You are invited to attend the visit with the following details:</div>
                             </td>
                         </tr>
                         <tr>
-                            <td style=""padding: 6px"">Tanggal</td>
+                            <td style=""padding: 6px"">date</td>
                             <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%tanggal%</td>
+                            <td colspan=""2"" style=""padding: 6px"">%date%</td>
                         </tr>
                         <tr>
-                            <td style=""padding: 6px"">Waktu</td>
+                            <td style=""padding: 6px"">time</td>
                             <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%waktu%</td>
+                            <td colspan=""2"" style=""padding: 6px"">%time%</td>
                         </tr>
                         <tr>
-                            <td style=""padding: 6px"">Lokasi</td>
+                            <td style=""padding: 6px"">location</td>
                             <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%lokasi%</td>
+                            <td colspan=""2"" style=""padding: 6px"">%location%</td>
                         </tr>
                         <tr>
                             <td style=""padding: 6px"">Host/Organizaer</td>
@@ -199,19 +199,19 @@ public class EmailService : IEmailService
                         </tr>
                         <tr>
                             <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Silakan klik link berikut untuk mengonfirmasi dan melengkapi data:</div>
+                                <div>Please click the following link to confirm and complete the data:</div>
                                 <div><a href=""%link%"" target=""_blank"">%link%</a></div>
                             </td>
                         </tr>
                         <tr>
                             <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Kode Undangan:</div>
-                                <div style=""background-color: #9a9a9a; color: #fff; padding: 10px; width: max-content; font-size: 20px"">%kode%</div>
+                                <div>Invitation Code:</div>
+                                <div style=""background-color: #9a9a9a; color: #fff; padding: 10px; width: max-content; font-size: 20px"">%code%</div>
                             </td>
                         </tr>
                         <tr>
                             <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Hormat kami,</div>
+                                <div>Best regards,</div>
                                 <div>%member%</div>
                             </td>
                         </tr>
@@ -234,14 +234,14 @@ public class EmailService : IEmailService
 
     // Replace placeholder sesuai parameter
     var bodyHtml = template
-        .Replace("%kepada%", name)
+        .Replace("%to_mail%", name)
         .Replace("%agenda%", invitationAgenda)
-        .Replace("%tanggal%", visitorPeriodStart + " - " + visitorPeriodEnd)
-        .Replace("%waktu%", visitorPeriodStart + " - " + visitorPeriodEnd) // Bisa dipisah jam kalau perlu
-        .Replace("%lokasi%", $"{floorName} - {maskedAreaName} - {buildingName}")
+        .Replace("%date%", visitorPeriodStart + " - " + visitorPeriodEnd)
+        .Replace("%time%", visitorPeriodStart + " - " + visitorPeriodEnd) // Bisa dipisah jam kalau perlu
+        .Replace("%location%", $"{floorName} - {maskedAreaName} - {buildingName}")
         .Replace("%link%", invitationUrl)
         .Replace("%host%", memberName)
-        .Replace("%kode%", invitationCode)
+        .Replace("%code%", invitationCode)
         .Replace("%member%", memberName);
 
     var message = new MailMessage
