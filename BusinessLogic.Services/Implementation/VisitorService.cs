@@ -453,8 +453,8 @@ public class VisitorService : IVisitorService
             }
              bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
                         existingVisitor.Id,
-                        dto.VisitorPeriodStart.Value,
-                        dto.VisitorPeriodEnd.Value
+                            dto.VisitorPeriodStart.Value,
+                            dto.VisitorPeriodEnd.Value
                     );
                     if (exists)
                         throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
@@ -739,6 +739,22 @@ public class VisitorService : IVisitorService
         //         );
         //     }
         // }
+
+        public async Task AcceptInvitationAsync(Guid trxVisitorId)
+        {
+            var trxVisitor = await _trxVisitorRepository.GetByIdAsync(trxVisitorId);
+            if (trxVisitor == null)
+                throw new KeyNotFoundException("Invitation not found");
+
+            if (trxVisitor.IsInvitationAccepted == true)
+                throw new InvalidOperationException("Invitation already accepted");
+
+            trxVisitor.IsInvitationAccepted = true;
+            // trxVisitor.InvitationAcceptedAt = DateTime.UtcNow;
+            trxVisitor.Status = VisitorStatus.Preregist; 
+
+            await _trxVisitorRepository.UpdateAsync(trxVisitor);
+        }
 
 
 

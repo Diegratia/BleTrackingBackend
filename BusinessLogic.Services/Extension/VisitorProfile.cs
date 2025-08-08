@@ -40,10 +40,12 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.VisitorId, opt => opt.Ignore());
             CreateMap<VisitorInvitationDto, TrxVisitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.VisitorId, opt => opt.Ignore());
+                .ForMember(dest => dest.VisitorId, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<VisitorInvitationDto, Visitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.FaceImage, opt => opt.Ignore()); // karena ini file, tidak bisa di-map langsung
+                .ForMember(dest => dest.FaceImage, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));// karena ini file, tidak bisa di-map langsung
         }
         
     }
