@@ -180,6 +180,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("public/{id}/accept-invitation")]
+        public async Task<IActionResult> AcceptInvitationAsync(Guid id)
+        {
+            try
+            {
+                await _visitorService.AcceptInvitationAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor accepted in successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
 
         // GET: api/Visitor
         [HttpGet]

@@ -15,6 +15,8 @@ public interface IEmailService
     string invitationUrl,
     string? visitorPeriodStart,
     string? visitorPeriodEnd,
+    string? visitorPeriodStartTime,
+    string? visitorPeriodEndTime,
     string? invitationAgenda,
     string? maskedAreaName,
     string? memberName,
@@ -25,10 +27,16 @@ public interface IEmailService
     string toEmail,
     string name,
     string invitationCode,
-    string invitationUrl,
-    string? visitorPeriodStart,
-    string? visitorPeriodEnd
-    // string? memberName
+    string memberInvitationUrl,
+    string? invitationAgendaMember,
+    string? startMemberDate,
+    string? endMemberDate,
+    string? startMemberTime,
+    string? endMemberTime,
+    string? maskedAreaMemberName,
+    string? PurposePersonName,
+    string? floorNameMember,
+    string? buildingNameMember
     );
     Task SendVisitorNotificationEmailAsync();
     Task SendMemberNotificationEmailAsync();
@@ -137,8 +145,10 @@ public class EmailService : IEmailService
     string name,
     string invitationCode,
     string invitationUrl,
-    string visitorPeriodStart,
-    string visitorPeriodEnd,
+    string visitorPeriodStartDate,
+    string visitorPeriodEndDate,
+    string visitorPeriodStartTime,
+    string visitorPeriodEndTime,
     string invitationAgenda,
     string maskedAreaName,
     string memberName,
@@ -235,8 +245,8 @@ public class EmailService : IEmailService
     var bodyHtml = template
         .Replace("%to_mail%", name)
         .Replace("%agenda%", invitationAgenda)
-        .Replace("%date%", visitorPeriodStart + " - " + visitorPeriodEnd)
-        .Replace("%time%", visitorPeriodStart + " - " + visitorPeriodEnd) // Bisa dipisah jam kalau perlu
+        .Replace("%date%", visitorPeriodStartDate + " - " + visitorPeriodEndDate)
+        .Replace("%time%", visitorPeriodStartTime + " - " + visitorPeriodEndTime) // Bisa dipisah jam kalau perlu
         .Replace("%location%", $"{floorName} - {maskedAreaName} - {buildingName}")
         .Replace("%link%", invitationUrl)
         .Replace("%host%", memberName)
@@ -265,56 +275,142 @@ public class EmailService : IEmailService
 
 
 
-            public async Task SendMemberInvitationEmailAsync(
-string toEmail,
-string name,
-string invitationCode,
-string invitationUrl,
-string visitorPeriodStart,
-string visitorPeriodEnd)
+    public async Task SendMemberInvitationEmailAsync(
+    string toEmail,
+    string name,
+    string invitationCode,
+    string memberInvitationUrl,
+    string? invitationAgendaMember,
+    string? startMemberDate,
+    string? endMemberDate,
+    string? startMemberTime,
+    string? endMemberTime,
+    string? maskedAreaMemberName,
+    string? PurposePersonName,
+    string? floorNameMember,
+    string? buildingNameMember
+   )
+
+    
+{
+    var smtpHost = _configuration["Email:SmtpHost"];
+    var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+    var smtpUsername = _configuration["Email:SmtpUsername"];
+    var smtpPassword = _configuration["Email:SmtpPassword"];
+    var fromEmail = _configuration["Email:FromEmail"];
+    var fromName = _configuration["Email:FromName"];
+
+    var template = @"
+<html lang=""en"">
+<head>
+    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
+    <meta name=""viewport"" content=""width=320, initial-scale=1"" />
+</head>
+<body style=""font-family: arial"">
+    <table style=""width: 100%; border-collapse: collapse;"">
+        <tr>
+            <td width=""20%"">&nbsp;</td>
+            <td width=""60%"">
+                <div style=""background-color: #f4f4f4; padding: 0px 20px;"">
+                    <table width=""100%"" style=""border-collapse: collapse"">
+                        <tr>
+                            <td colspan=""4"" style=""padding: 6px"">
+                                <div>Hello %to_mail%,</div>
+                                <div style=""margin-bottom: 5px"">
+                                    You are invited to attend a meeting with the following details:
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=""padding: 6px"">Date</td>
+                            <td style=""text-align: center"">:</td>
+                            <td colspan=""2"" style=""padding: 6px"">%date%</td>
+                        </tr>
+                        <tr>
+                            <td style=""padding: 6px"">Time</td>
+                            <td style=""text-align: center"">:</td>
+                            <td colspan=""2"" style=""padding: 6px"">%time%</td>
+                        </tr>
+                        <tr>
+                            <td style=""padding: 6px"">Location</td>
+                            <td style=""text-align: center"">:</td>
+                            <td colspan=""2"" style=""padding: 6px"">%location%</td>
+                        </tr>
+                        <tr>
+                            <td style=""padding: 6px"">Host/Organizer</td>
+                            <td style=""text-align: center"">:</td>
+                            <td colspan=""2"" style=""padding: 6px"">%host%</td>
+                        </tr>
+                        <tr>
+                            <td style=""padding: 6px"">Agenda</td>
+                            <td style=""text-align: center"">:</td>
+                            <td colspan=""2"" style=""padding: 6px"">%agenda%</td>
+                        </tr>
+                        <tr>
+                            <td colspan=""4"" style=""padding-top: 10px;"">
+                                <div>Please click the following link to confirm and view the meeting details:</div>
+                                <div><a href=""%link%"" target=""_blank"">%link%</a></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan=""4"" style=""padding-top: 10px;"">
+                                <div>Invitation Code:</div>
+                                <div style=""background-color: #9a9a9a; color: #fff; padding: 10px; width: max-content; font-size: 20px"">%code%</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan=""4"" style=""padding-top: 10px;"">
+                                <div>Best regards,</div>
+                                <div>%host%</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan=""4"" style=""padding: 20px 0px;"">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan=""4"" style=""background-color: #9a9a9a; text-align: center; padding: 20px;"">
+                                Support By <a href=""https://bio-experience.com"" target=""_blank"">Bio Experience</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td width=""20%"">&nbsp;</td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    var bodyHtml = template
+        .Replace("%to_mail%", name)
+        .Replace("%agenda%", invitationAgendaMember)
+        .Replace("%date%", startMemberDate + " - " + endMemberDate)
+        .Replace("%time%", startMemberTime + " - " + endMemberTime) // bisa dipecah jika punya jam
+        .Replace("%location%", $"{floorNameMember} - { maskedAreaMemberName} - { buildingNameMember} ")
+        .Replace("%link%", memberInvitationUrl)
+        .Replace("%host%", PurposePersonName)
+        .Replace("%code%", invitationCode)
+        .Replace("%member%", PurposePersonName);
+
+    var message = new MailMessage
     {
-        var smtpHost = _configuration["Email:SmtpHost"];
-        var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
-        var smtpUsername = _configuration["Email:SmtpUsername"];
-        var smtpPassword = _configuration["Email:SmtpPassword"];
-        var fromEmail = _configuration["Email:FromEmail"];
-        var fromName = _configuration["Email:FromName"];
+        From = new MailAddress(fromEmail, fromName),
+        Subject = $"Meeting Invitation - {invitationAgendaMember}",
+        Body = bodyHtml,
+        IsBodyHtml = true
+    };
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = "Meeting Invitation",
-            Body = $@"
-        Dear {name},
+    message.To.Add(toEmail);
 
-        You have been invited to attend a meeting.
+    using var client = new SmtpClient(smtpHost, smtpPort)
+    {
+        Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+        EnableSsl = true
+    };
 
-        Scheduled Time : {visitorPeriodStart} - {visitorPeriodEnd}
-        Invited By     : 
+    await client.SendMailAsync(message);
+}
 
-        Please confirm your invitation and check the meeting details by clicking the link below:
-
-        {invitationUrl}
-
-        Invitation Code: {invitationCode}
-
-        This link will expire in 3 days.
-
-        Thank you,
-        Your Application Team",
-            IsBodyHtml = false
-        };
-
-        message.To.Add(toEmail);
-
-        using var client = new SmtpClient(smtpHost, smtpPort)
-        {
-            Credentials = new NetworkCredential(smtpUsername, smtpPassword),
-            EnableSsl = true
-        };
-
-        await client.SendMailAsync(message);
-    }
 
 
     public async Task SendVisitorNotificationEmailAsync()
