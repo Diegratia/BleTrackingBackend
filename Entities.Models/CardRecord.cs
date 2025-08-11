@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models
 {
-    public class CardRecord : IApplicationEntity
+    public class CardRecord : BaseModelWithTime, IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -58,6 +58,9 @@ namespace Entities.Models
 
         [Column("visitor_type")]
         public VisitorActiveStatus? VisitorActiveStatus { get; set; }
+
+        [Column("status")]
+        public int Status { get; set; }
 
         [Required]
         [ForeignKey("Application")]

@@ -44,13 +44,30 @@ namespace BusinessLogic.Services.Implementation
             var cardRecord = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<CardRecordDto>>(cardRecord);
         }
+        
+        public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var cardRecord = _mapper.Map<CardRecord>(createDto);
+
+            cardRecord.Id = Guid.NewGuid();
+
+            cardRecord.CreatedBy = username;
+            cardRecord.UpdatedBy = username;
+            cardRecord.CreatedAt = DateTime.UtcNow;
+            cardRecord.UpdatedAt = DateTime.UtcNow;
+            cardRecord.Status = 1;
+
+            var createdCardRecord = await _repository.AddAsync(cardRecord);
+            return _mapper.Map<CardRecordDto>(createdCardRecord);
+        }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "VisitorName" };
-            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp","VisitorActiveStatus", "Status", "VisitorActiveStatus" };
+            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp", "VisitorActiveStatus", "Status", "VisitorActiveStatus" };
 
             var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
                 query,

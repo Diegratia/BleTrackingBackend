@@ -35,6 +35,30 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync();
         }
 
+         public async Task<CardRecord> AddAsync(CardRecord cardRecord)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+                // non system ambil dari claim
+                if (!isSystemAdmin)
+                {
+                    if (!applicationId.HasValue)
+                        throw new UnauthorizedAccessException("ApplicationId not found in context");
+                    cardRecord.ApplicationId = applicationId.Value;
+                }
+                // admin set applciation di body
+                else if (cardRecord.ApplicationId == Guid.Empty)
+                {
+                    throw new ArgumentException("System admin must provide a valid ApplicationId");
+                }
+            await ValidateApplicationIdAsync(cardRecord.ApplicationId);
+            ValidateApplicationIdForEntity(cardRecord, applicationId, isSystemAdmin);
+            
+            _context.CardRecords.Add(cardRecord);
+            await _context.SaveChangesAsync();
+            return cardRecord;
+        }
+
         public IQueryable<CardRecord> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

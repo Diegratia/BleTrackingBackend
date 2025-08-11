@@ -44,11 +44,8 @@ namespace Data.ViewModels
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
         public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
-        public bool? IsUsed { get; set; }
-        public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; } 
         public Guid? MemberId { get; set; } 
-        public int? StatusCard { get; set; }
     }
 
     public class CardUpdateDto : BaseModelDto
