@@ -34,5 +34,8 @@
 		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
+  <ItemGroup>
+  <Content Include="..\Helpers.Consumer\EmailTemplate\*.html" CopyToPublishDirectory="Always" />
+</ItemGroup>
 
 </Project>
