@@ -10,6 +10,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<CardRecordDto> GetByIdAsync(Guid id);
         Task<IEnumerable<CardRecordDto>> GetAllAsync();
+        Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync(); 

@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Entities.Models;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -70,6 +71,44 @@ namespace Web.API.Controllers.Controllers
                     msg = " Card Record retrieved successfully",
                     collection = new { data = cardRecord },
                     code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CardRecordCreateDto createDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createdCardRecord = await _cardRecordService.CreateAsync(createDto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Card Record created successfully",
+                    collection = new { data = createdCardRecord },
+                    code = 201
                 });
             }
             catch (Exception ex)
