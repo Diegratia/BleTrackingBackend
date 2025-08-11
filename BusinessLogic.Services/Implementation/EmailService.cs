@@ -61,14 +61,22 @@ public class EmailService : IEmailService
 
     private async Task<string> LoadEmailTemplateAsync(string fileName)
     {
-        var templatePath = Path.Combine(
-            _env.ContentRootPath, "..", ".." ,  // Root program.cs
-            "Helpers.Consumer", 
-            "EmailTemplate", 
-            fileName
-        );
+        // docker 
+        var templatePath = Path.Combine(_env.ContentRootPath, "EmailTemplate", fileName);
+
+        if (!File.Exists(templatePath))
+        {
+            // local
+            templatePath = Path.Combine(_env.ContentRootPath, "Helpers.Consumer", "EmailTemplate", fileName);
+        }
+
+        if (!File.Exists(templatePath))
+            throw new FileNotFoundException($"Email template {fileName} not found at {templatePath}");
+
 
         templatePath = Path.GetFullPath(templatePath);
+
+        
 
         if (!File.Exists(templatePath))
             throw new FileNotFoundException($"Email template {fileName} not found.", templatePath);
