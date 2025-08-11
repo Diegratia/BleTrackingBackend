@@ -1391,7 +1391,7 @@ public class VisitorService : IVisitorService
             };
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "VisitorActiveStatus", "CardNumber", "Status", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy", "IdentityType" };
+            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "CardNumber", "Status", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy", "IdentityType" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,
