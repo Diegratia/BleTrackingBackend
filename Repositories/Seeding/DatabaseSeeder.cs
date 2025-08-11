@@ -89,6 +89,18 @@ namespace Repositories.Seeding
                         UpdatedAt = DateTime.UtcNow,
                         Status = 1
                     },
+                        new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Secondary Initial",
+                        LevelPriority = LevelPriority.Secondary,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
                        new UserGroup
                     {
                         Id = Guid.NewGuid(),
@@ -149,17 +161,40 @@ namespace Repositories.Seeding
                 var users = userFaker.Generate(4);
 
 
-                var superadminGroup = context.UserGroups
+                var systemadminGroup = context.UserGroups
                     .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.System && ug.Status != 0);
-                if (superadminGroup != null)
+                if (systemadminGroup != null)
                 {
-                    var superadmin = new User
+                    var systemadmin = new User
                     {
                         Id = Guid.NewGuid(),
                         Username = "systemadmin",
                         Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                         IsCreatedPassword = 1,
                         Email = "systemadmin@test.com",
+                        IsEmailConfirmation = 1,
+                        EmailConfirmationCode = "ABC123",
+                        EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
+                        EmailConfirmationAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.MinValue,
+                        StatusActive = StatusActive.Active,
+                        GroupId = systemadminGroup.Id,
+                        ApplicationId = systemadminGroup.ApplicationId,
+                    };
+                    users.Add(systemadmin);
+                }
+
+                var superadminGroup = context.UserGroups
+                    .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.SuperAdmin && ug.Status != 0);
+                if (superadminGroup != null)
+                {
+                    var superadmin = new User
+                    {
+                        Id = new Guid("b53f464b-68b4-4831-ab9a-8f3e56d9fa33"),
+                        Username = "superadmin",
+                        Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
+                        IsCreatedPassword = 1,
+                        Email = "superadmin@test.com",
                         IsEmailConfirmation = 1,
                         EmailConfirmationCode = "ABC123",
                         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),

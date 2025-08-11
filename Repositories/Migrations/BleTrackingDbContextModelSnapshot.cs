@@ -2067,6 +2067,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("masked_area_id");
 
+                    b.Property<string>("MemberIdentity")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("member_identity");
+
                     b.Property<Guid?>("ParkingId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("parking_id");
@@ -2074,7 +2078,7 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("PurposePerson")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("member_id");
+                        .HasColumnName("purpose_person_id");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)")

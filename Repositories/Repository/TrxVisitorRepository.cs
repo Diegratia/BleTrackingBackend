@@ -153,8 +153,6 @@ namespace Repositories.Repository
                 var visitor = await _context.Visitors
                     .FirstOrDefaultAsync(v => v.Id == trxVisitor.VisitorId && v.ApplicationId == applicationId);
 
-                if (visitor == null)
-                    throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
             }
         }
 

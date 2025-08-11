@@ -109,9 +109,12 @@ namespace Entities.Models
     [ForeignKey(nameof(Visitor))]
     public Guid? VisitorId { get; set; }
 
-    [Column("member_id")]
+    [Column("purpose_person_id")]
     [ForeignKey(nameof(Member))]
     public Guid? PurposePerson { get; set; }
+
+    [Column("member_identity")]
+    public string? MemberIdentity { get; set; }
 
     [Required]
     [ForeignKey("ApplicationId")]

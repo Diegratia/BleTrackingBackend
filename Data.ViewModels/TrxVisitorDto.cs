@@ -32,6 +32,7 @@ namespace Data.ViewModels
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
+        public string? MemberIdentity { get; set; }
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
         public FloorplanMaskedAreaDto? Maskedarea { get; set; }

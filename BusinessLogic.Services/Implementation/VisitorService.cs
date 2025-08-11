@@ -35,22 +35,24 @@ public class VisitorService : IVisitorService
     private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
 
-    public VisitorService(
-        IMapper mapper,
-        IHttpContextAccessor httpContextAccessor,
-        VisitorRepository visitorRepository,
-        UserRepository userRepository,
-        UserGroupRepository userGroupRepository,
-        TrxVisitorRepository trxVisitorRepository,
-        IEmailService emailService)
-    {
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        _visitorRepository = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _userGroupRepository = userGroupRepository ?? throw new ArgumentNullException(nameof(userGroupRepository));
-        _trxVisitorRepository = trxVisitorRepository ?? throw new ArgumentNullException(nameof(trxVisitorRepository));
-        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+        public VisitorService(
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            VisitorRepository visitorRepository,
+            UserRepository userRepository,
+            UserGroupRepository userGroupRepository,
+            TrxVisitorRepository trxVisitorRepository,
+            MstMemberRepository mstmemberRepository,
+            IEmailService emailService)
+        {
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _visitorRepository = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _userGroupRepository = userGroupRepository ?? throw new ArgumentNullException(nameof(userGroupRepository));
+            _trxVisitorRepository = trxVisitorRepository ?? throw new ArgumentNullException(nameof(trxVisitorRepository));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _mstmemberRepository = mstmemberRepository ?? throw new ArgumentNullException(nameof(mstmemberRepository));
     }
 
         // create visitor, trx visitor dan user
@@ -526,131 +528,277 @@ public class VisitorService : IVisitorService
                      buildingName
                  );
         }
-        
-            public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
-        {
-            if (dtoList == null || !dtoList.Any())
-                throw new ArgumentException("Invitation list cannot be empty");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+        //         public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+        // {
+        //     if (dtoList == null || !dtoList.Any())
+        //         throw new ArgumentException("Invitation list cannot be empty");
 
-            var firstVisitorEmail = dtoList.FirstOrDefault()?.Email?.ToLower();
-            if (string.IsNullOrWhiteSpace(firstVisitorEmail))
-                throw new ArgumentException("At least one valid email is required");
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+        //     var loggedInUserEmail = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
 
-            var firstVisitor = await _visitorRepository.GetByEmailAsync(firstVisitorEmail)
-                ?? new Visitor { Id = Guid.NewGuid(), Email = firstVisitorEmail };
+        //     // Cek apakah user login adalah member
+        //     var loggedInMember = !string.IsNullOrWhiteSpace(loggedInUserEmail)
+        //         ? await _mstmemberRepository.GetByEmailAsyncRaw(loggedInUserEmail)
+        //         : null;
 
-            var baseGroupCode = await _trxVisitorRepository.CountByVisitorIdAsync(firstVisitor.Id) + 1;
+        //     var firstVisitorEmail = dtoList.FirstOrDefault()?.Email?.ToLower();
+        //     if (string.IsNullOrWhiteSpace(firstVisitorEmail))
+        //         throw new ArgumentException("At least one valid email is required");
 
-            // Validasi semua data sebelum eksekusi
-            foreach (var dto in dtoList)
-            {
-                if (string.IsNullOrWhiteSpace(dto.Email))
-                    throw new ArgumentException("Email is required");
+        //     var firstVisitor = await _visitorRepository.GetByEmailAsync(firstVisitorEmail)
+        //         ?? new Visitor { Id = Guid.NewGuid(), Email = firstVisitorEmail };
 
-                if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
-                    throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
+        //     var baseGroupCode = await _trxVisitorRepository.CountByVisitorIdAsync(firstVisitor.Id) + 1;
 
-                if (dto.VisitorPeriodStart > dto.VisitorPeriodEnd)
-                    throw new ArgumentException($"Invalid period for {dto.Email}");
+        //     // Validasi semua data sebelum eksekusi
+        //     foreach (var dto in dtoList)
+        //     {
+        //         if (string.IsNullOrWhiteSpace(dto.Email))
+        //             throw new ArgumentException("Email is required");
 
-                var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
-                if (existingVisitor != null)
-                {
-                    bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
-                        existingVisitor.Id,
-                        dto.VisitorPeriodStart.Value,
-                        dto.VisitorPeriodEnd.Value
-                    );
+        //         if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
+        //             throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
 
-                    if (exists)
-                        throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
-                }
-            }
+        //         if (dto.VisitorPeriodStart > dto.VisitorPeriodEnd)
+        //             throw new ArgumentException($"Invalid period for {dto.Email}");
 
-            // Kalau lolos semua → proses insert & kirim email
-            foreach (var dto in dtoList)
-            {
-                var email = dto.Email.ToLower();
+        //         var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
+        //         if (existingVisitor != null)
+        //         {
+        //             bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
+        //                 existingVisitor.Id,
+        //                 dto.VisitorPeriodStart.Value,
+        //                 dto.VisitorPeriodEnd.Value
+        //             );
 
-                var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
-                Visitor visitor;
+        //             if (exists)
+        //                 throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
+        //         }
+        //     }
 
-                if (existingVisitor == null)
-                {
-                    visitor = new Visitor
-                    {
-                        Id = Guid.NewGuid(),
-                        Email = email,
-                        Name = dto.Name,
-                        Status = 1,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        CreatedBy = username ?? "Invitation",
-                        UpdatedBy = username ?? "Invitation"
-                    };
-                    await _visitorRepository.AddAsync(visitor);
-                }
-                else
-                {
-                    visitor = existingVisitor;
-                }
+        //     // Proses insert & kirim email
+        //     foreach (var dto in dtoList)
+        //     {
+        //         var email = dto.Email.ToLower();
 
-                var confirmationCode = Guid.NewGuid().ToString("N")[..6].ToUpper();
+        //         var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
+        //         Visitor visitor;
 
-                var newTrx = _mapper.Map<TrxVisitor>(dto);
-                newTrx.VisitorId = visitor.Id;
-                newTrx.Status = VisitorStatus.Preregist;
-                // newTrx.IsInvitationAccepted = false;
-                newTrx.TrxStatus = 1;
-                newTrx.VisitorGroupCode = baseGroupCode;
-                newTrx.VisitorNumber = $"VIS{baseGroupCode}";
-                newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
-                newTrx.InvitationCreatedAt = DateTime.UtcNow;
-                newTrx.UpdatedAt = DateTime.UtcNow;
-                newTrx.CreatedAt = DateTime.UtcNow;
-                newTrx.UpdatedBy = username ?? "Invitation";
-                newTrx.CreatedBy = username ?? "Invitation";
-                newTrx.InvitationCode = confirmationCode;
-                newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
+        //         if (existingVisitor == null)
+        //         {
+        //             visitor = new Visitor
+        //             {
+        //                 Id = Guid.NewGuid(),
+        //                 Email = email,
+        //                 Name = dto.Name,
+        //                 Status = 1,
+        //                 CreatedAt = DateTime.UtcNow,
+        //                 UpdatedAt = DateTime.UtcNow,
+        //                 CreatedBy = username ?? "Invitation",
+        //                 UpdatedBy = username ?? "Invitation"
+        //             };
+        //             await _visitorRepository.AddAsync(visitor);
+        //         }
+        //         else
+        //         {
+        //             visitor = existingVisitor;
+        //         }
 
-                await _trxVisitorRepository.AddAsync(newTrx);
+        //         var confirmationCode = Guid.NewGuid().ToString("N")[..6].ToUpper();
 
-                var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
-                var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
-                var invitationAgenda = newTrx.Agenda;
-                
-                var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
-                var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+        //         var newTrx = _mapper.Map<TrxVisitor>(dto);
+        //         newTrx.VisitorId = visitor.Id;
+        //         newTrx.Status = VisitorStatus.Preregist;
+        //         newTrx.TrxStatus = 1;
+        //         newTrx.VisitorGroupCode = baseGroupCode;
+        //         newTrx.VisitorNumber = $"VIS{baseGroupCode}";
+        //         newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+        //         newTrx.InvitationCreatedAt = DateTime.UtcNow;
+        //         newTrx.UpdatedAt = DateTime.UtcNow;
+        //         newTrx.CreatedAt = DateTime.UtcNow;
+        //         newTrx.UpdatedBy = username ?? "Invitation";
+        //         newTrx.CreatedBy = username ?? "Invitation";
+        //         newTrx.InvitationCode = confirmationCode;
+        //         newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
 
-                var memberName = savedTrx?.Member?.Name ?? "";
-                var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
-                var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+        //                 // Tentukan PurposePerson
+        //                 if (loggedInMember != null)
+        //                 {
+        //                     // Member login → cek apakah yang diundang member
+        //                     var invitedMember = await _mstmemberRepository.GetByEmailAsyncRaw(email);
+        //                     newTrx.PurposePerson = loggedInMember.Id;
+        //                     newTrx.MemberIdentity = invitedMember?.IdentityId;
+        //                     newTrx.IsMember = 1;
+        //         }
+        //                 else
+        //                 {
+        //                     // Operator login → wajib isi PurposePerson
+        //                     if (!dto.PurposePerson.HasValue)
+        //                         throw new ArgumentException($"PurposePerson (member host) is required for {dto.Email}");
+
+        //                     newTrx.PurposePerson = dto.PurposePerson.Value;
+        //                 }
+
+        //         await _trxVisitorRepository.AddAsync(newTrx);
+
+        //         // Data untuk email
+        //         var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+        //         var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+        //         var invitationAgenda = newTrx.Agenda;
+
+        //         var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
+        //         var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+        //         var memberName = savedTrx?.Member?.Name ?? "";
+        //         var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+        //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+
+        //         var invitationUrl =
+        //             $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+
+        //         await _emailService.SendVisitorInvitationEmailAsync(
+        //             visitor.Email,
+        //             visitor.Name ?? "Guest",
+        //             confirmationCode,
+        //             invitationUrl,
+        //             visitorPeriodStart,
+        //             visitorPeriodEnd,
+        //             invitationAgenda,
+        //             maskedAreaName,
+        //             memberName,
+        //             floorName,
+        //             buildingName
+        //         );
+        //     }
+        // }
 
 
-                var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
-                await _emailService.SendVisitorInvitationEmailAsync(
-                    visitor.Email,
-                    visitor.Name ?? "Guest",
-                    confirmationCode,
-                    invitationUrl,
-                    visitorPeriodStart,
-                    visitorPeriodEnd,
-                    invitationAgenda,
-                    maskedAreaName,
-                    memberName,
-                    floorName,
-                    buildingName
-                );
-            }
-        }
+        //     public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+        // {
+        //     if (dtoList == null || !dtoList.Any())
+        //         throw new ArgumentException("Invitation list cannot be empty");
+
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+
+        //     var firstVisitorEmail = dtoList.FirstOrDefault()?.Email?.ToLower();
+        //     if (string.IsNullOrWhiteSpace(firstVisitorEmail))
+        //         throw new ArgumentException("At least one valid email is required");
+
+        //     var firstVisitor = await _visitorRepository.GetByEmailAsync(firstVisitorEmail)
+        //         ?? new Visitor { Id = Guid.NewGuid(), Email = firstVisitorEmail };
+
+        //     var baseGroupCode = await _trxVisitorRepository.CountByVisitorIdAsync(firstVisitor.Id) + 1;
+
+        //     // Validasi semua data sebelum eksekusi
+        //     foreach (var dto in dtoList)
+        //     {
+        //         if (string.IsNullOrWhiteSpace(dto.Email))
+        //             throw new ArgumentException("Email is required");
+
+        //         if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
+        //             throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
+
+        //         if (dto.VisitorPeriodStart > dto.VisitorPeriodEnd)
+        //             throw new ArgumentException($"Invalid period for {dto.Email}");
+
+        //         var existingVisitor = await _visitorRepository.GetByEmailAsync(dto.Email.ToLower());
+        //         if (existingVisitor != null)
+        //         {
+        //             bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
+        //                 existingVisitor.Id,
+        //                 dto.VisitorPeriodStart.Value,
+        //                 dto.VisitorPeriodEnd.Value
+        //             );
+
+        //             if (exists)
+        //                 throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
+        //         }
+        //     }
+
+        //     // Kalau lolos semua → proses insert & kirim email
+        //     foreach (var dto in dtoList)
+        //     {
+        //         var email = dto.Email.ToLower();
+
+        //         var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
+        //         Visitor visitor;
+
+        //         if (existingVisitor == null)
+        //         {
+        //             visitor = new Visitor
+        //             {
+        //                 Id = Guid.NewGuid(),
+        //                 Email = email,
+        //                 Name = dto.Name,
+        //                 Status = 1,
+        //                 CreatedAt = DateTime.UtcNow,
+        //                 UpdatedAt = DateTime.UtcNow,
+        //                 CreatedBy = username ?? "Invitation",
+        //                 UpdatedBy = username ?? "Invitation"
+        //             };
+        //             await _visitorRepository.AddAsync(visitor);
+        //         }
+        //         else
+        //         {
+        //             visitor = existingVisitor;
+        //         }
+
+        //         var confirmationCode = Guid.NewGuid().ToString("N")[..6].ToUpper();
+
+        //         var newTrx = _mapper.Map<TrxVisitor>(dto);
+        //         newTrx.VisitorId = visitor.Id;
+        //         newTrx.Status = VisitorStatus.Preregist;
+        //         // newTrx.IsInvitationAccepted = false;
+        //         newTrx.TrxStatus = 1;
+        //         newTrx.VisitorGroupCode = baseGroupCode;
+        //         newTrx.VisitorNumber = $"VIS{baseGroupCode}";
+        //         newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+        //         newTrx.InvitationCreatedAt = DateTime.UtcNow;
+        //         newTrx.UpdatedAt = DateTime.UtcNow;
+        //         newTrx.CreatedAt = DateTime.UtcNow;
+        //         newTrx.UpdatedBy = username ?? "Invitation";
+        //         newTrx.CreatedBy = username ?? "Invitation";
+        //         newTrx.InvitationCode = confirmationCode;
+        //         newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
+
+        //         await _trxVisitorRepository.AddAsync(newTrx);
+
+        //         var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+        //         var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+        //         var invitationAgenda = newTrx.Agenda;
+
+        //         var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
+        //         var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+
+        //         var memberName = savedTrx?.Member?.Name ?? "";
+        //         var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+        //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
 
-        
-    //   public async Task SendInvitationByEmailAsync(SendEmailInvitationDto dto)
+        //         var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+
+        //         await _emailService.SendVisitorInvitationEmailAsync(
+        //             visitor.Email,
+        //             visitor.Name ?? "Guest",
+        //             confirmationCode,
+        //             invitationUrl,
+        //             visitorPeriodStart,
+        //             visitorPeriodEnd,
+        //             invitationAgenda,
+        //             maskedAreaName,
+        //             memberName,
+        //             floorName,
+        //             buildingName
+        //         );
+        //     }
+        // }
+
+
+
+        //   public async Task SendInvitationByEmailAsync(SendEmailInvitationDto dto)
         // {
         //     if (string.IsNullOrWhiteSpace(dto.Email))
         //         throw new ArgumentException("Email is required");
@@ -770,6 +918,203 @@ public class VisitorService : IVisitorService
         //     }
         // }
 
+
+    public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+    {
+        if (dtoList == null || !dtoList.Any())
+            throw new ArgumentException("Invitation list cannot be empty");
+
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+        var loggedInUserEmail = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
+
+        // Login sebagai member? (cocokkan via email)
+        var loggedInMember = !string.IsNullOrWhiteSpace(loggedInUserEmail)
+            ? await _mstmemberRepository.GetByEmailAsyncRaw(loggedInUserEmail)
+            : null;
+
+        // group code basis (tetap pakai visitor pertama; kalau semua undangan ke member, nilai ini tetap konsisten)
+        var firstVisitorEmail = dtoList.First().Email?.ToLower();
+        if (string.IsNullOrWhiteSpace(firstVisitorEmail))
+            throw new ArgumentException("At least one valid email is required");
+
+        var firstVisitor = await _visitorRepository.GetByEmailAsync(firstVisitorEmail)
+            ?? new Visitor { Id = Guid.NewGuid(), Email = firstVisitorEmail };
+
+        var baseGroupCode = await _trxVisitorRepository.CountByVisitorIdAsync(firstVisitor.Id) + 1;
+
+        // VALIDASI awal (hanya untuk undangan ke VISITOR; undangan ke MEMBER dilewati pengecekan overlap visitor)
+        foreach (var dto in dtoList)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                throw new ArgumentException("Email is required");
+
+            if (dto.VisitorPeriodStart == null || dto.VisitorPeriodEnd == null)
+                throw new ArgumentException($"Visitor period must be filled for {dto.Email}");
+
+            if (dto.VisitorPeriodStart > dto.VisitorPeriodEnd)
+                throw new ArgumentException($"Invalid period for {dto.Email}");
+
+            var inviteeEmail = dto.Email.ToLower();
+
+            // kalau invitee adalah visitor (bukan member), barulah cek overlap trx visitor
+            var inviteeAsMember = await _mstmemberRepository.GetByEmailAsyncRaw(inviteeEmail);
+            if (inviteeAsMember == null)
+            {
+                var existingVisitor = await _visitorRepository.GetByEmailAsync(inviteeEmail);
+                if (existingVisitor != null)
+                {
+                    bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
+                        existingVisitor.Id,
+                        dto.VisitorPeriodStart.Value,
+                        dto.VisitorPeriodEnd.Value
+                    );
+                    if (exists)
+                        throw new InvalidOperationException($"Invitation already exists for {dto.Email} in that period");
+                }
+            }
+            else
+            {
+                // invitee adalah MEMBER → tidak perlu cek overlap visitor
+            }
+        }
+
+        // EKSEKUSI
+        foreach (var dto in dtoList)
+        {
+            var email = dto.Email.ToLower();
+            var confirmationCode = Guid.NewGuid().ToString("N")[..6].ToUpper();
+
+            // Cek apakah email yang diundang adalah MEMBER
+            var invitedMember = await _mstmemberRepository.GetByEmailAsyncRaw(email);
+
+            // Buat entity TrxVisitor dari dto
+            var newTrx = _mapper.Map<TrxVisitor>(dto);
+            newTrx.Status = VisitorStatus.Preregist;
+            newTrx.TrxStatus = 1;
+            newTrx.VisitorGroupCode = baseGroupCode;
+            newTrx.VisitorNumber = $"VIS{baseGroupCode}";
+            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.InvitationCreatedAt = DateTime.UtcNow;
+            newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
+            newTrx.CreatedAt = DateTime.UtcNow;
+            newTrx.UpdatedAt = DateTime.UtcNow;
+            newTrx.CreatedBy = username ?? "Invitation";
+            newTrx.UpdatedBy = username ?? "Invitation";
+            newTrx.InvitationCode = confirmationCode;
+
+            // =========================
+            // CASE A: MEMBER → undang MEMBER
+            // =========================
+            if (loggedInMember != null && invitedMember != null)
+            {
+                // TIDAK membuat Visitor
+                // Set host & target member
+                newTrx.PurposePerson = loggedInMember.Id;         // host = member yang login
+                // newTrx.MemberIdentity = invitedMember.Id;               // pastikan field ada; sesuaikan nama jika berbeda
+                newTrx.MemberIdentity = invitedMember.IdentityId; // jika ada
+                newTrx.IsMember = 1;
+                newTrx.VisitorId = null;                          // penting: jangan set visitor
+
+                await _trxVisitorRepository.AddAsync(newTrx);
+
+                // Email ke MEMBER (pakai template member)
+                var startText = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+                var endText   = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+                var memberInvitationUrl =
+                    $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
+
+                await _emailService.SendMemberInvitationEmailAsync(
+                    invitedMember.Email,
+                    invitedMember.Name ?? "Member",
+                    confirmationCode,
+                    memberInvitationUrl,
+                    startText,
+                    endText
+                );
+
+                continue; // lanjut ke item berikutnya
+            }
+
+            // =========================
+            // CASE B: MEMBER → undang VISITOR
+            // CASE C: OPERATOR → undang VISITOR
+            // =========================
+
+            // (1) Pastikan VISITOR ada/terbentuk
+            var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
+            Visitor visitor;
+            if (existingVisitor == null)
+            {
+                visitor = new Visitor
+                {
+                    Id = Guid.NewGuid(),
+                    Email = email,
+                    Name = dto.Name ?? "Guest",
+                    Status = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    CreatedBy = username ?? "Invitation",
+                    UpdatedBy = username ?? "Invitation"
+                };
+                await _visitorRepository.AddAsync(visitor);
+            }
+            else
+            {
+                visitor = existingVisitor;
+            }
+
+            newTrx.VisitorId = visitor.Id; // link ke visitor
+
+            // (2) PurposePerson
+            if (loggedInMember != null)
+            {
+                // member login → host = member login
+                newTrx.PurposePerson = loggedInMember.Id;
+                newTrx.IsMember = 0;
+            }
+            else
+            {
+                // operator login → wajib pilih host member
+                if (!dto.PurposePerson.HasValue)
+                    throw new ArgumentException($"PurposePerson (member host) is required for {dto.Email}");
+                newTrx.PurposePerson = dto.PurposePerson.Value;
+                newTrx.IsMember = 0;
+            }
+
+            await _trxVisitorRepository.AddAsync(newTrx);
+
+            // (3) Email ke VISITOR (pakai template visitor)
+            var visitorPeriodStart = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+            var visitorPeriodEnd   = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
+            var invitationAgenda   = newTrx.Agenda;
+
+            var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
+            var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
+            var memberName     = savedTrx?.Member?.Name ?? (loggedInMember?.Name ?? ""); // fallback nama host
+            var floorName      = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+            var buildingName   = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+
+            var invitationUrl =
+                $"http://192.168.1.173:3000/visitor-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+
+            await _emailService.SendVisitorInvitationEmailAsync(
+                visitor.Email,
+                visitor.Name ?? "Guest",
+                confirmationCode,
+                invitationUrl,
+                visitorPeriodStart,
+                visitorPeriodEnd,
+                invitationAgenda,
+                maskedAreaName,
+                memberName,
+                floorName,
+                buildingName
+            );
+        }
+    }
+
+
         public async Task AcceptInvitationAsync(Guid trxVisitorId)
         {
             var trxVisitor = await _trxVisitorRepository.GetByIdAsync(trxVisitorId);
@@ -781,7 +1126,7 @@ public class VisitorService : IVisitorService
 
             trxVisitor.IsInvitationAccepted = true;
             // trxVisitor.InvitationAcceptedAt = DateTime.UtcNow;
-            trxVisitor.Status = VisitorStatus.Preregist; 
+            trxVisitor.Status = VisitorStatus.Preregist;
 
             await _trxVisitorRepository.UpdateAsync(trxVisitor);
         }
@@ -859,6 +1204,20 @@ public class VisitorService : IVisitorService
         {
             if (string.IsNullOrWhiteSpace(dto.InvitationCode))
                 throw new ArgumentException("Invitation code is required.");
+            
+            if (string.IsNullOrWhiteSpace(dto.IdentityId))
+                throw new ArgumentException("IdentityId is required.");
+            
+            if (string.IsNullOrWhiteSpace(dto.PersonId))
+                throw new ArgumentException("PersonId is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.IdentityType))
+                throw new ArgumentException("IdentityType is required.");
+
+            var existingVisitor = await _visitorRepository.GetAllQueryable()
+                .FirstOrDefaultAsync(b => b.Email == dto.Email ||
+                                    b.IdentityId == dto.IdentityId ||
+                                    b.PersonId == dto.PersonId);
 
             var trx = await _trxVisitorRepository
                 .GetByInvitationCodeAsync(dto.InvitationCode);

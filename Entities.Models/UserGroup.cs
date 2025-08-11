@@ -14,6 +14,7 @@ namespace Entities.Models
         SuperAdmin,
         PrimaryAdmin,
         Primary,
+        Secondary,
         UserCreated
     }
 

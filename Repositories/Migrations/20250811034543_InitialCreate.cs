@@ -1063,7 +1063,8 @@ namespace Repositories.Migrations
                     masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     parking_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
-                    member_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    purpose_person_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    member_identity = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     TrxStatus = table.Column<int>(type: "int", nullable: false),
                     is_member = table.Column<int>(type: "int", nullable: true),
@@ -1090,8 +1091,8 @@ namespace Repositories.Migrations
                         principalTable: "mst_application",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "FK_trx_visitor_mst_member_member_id",
-                        column: x => x.member_id,
+                        name: "FK_trx_visitor_mst_member_purpose_person_id",
+                        column: x => x.purpose_person_id,
                         principalTable: "mst_member",
                         principalColumn: "id");
                     table.ForeignKey(
@@ -1648,9 +1649,9 @@ namespace Repositories.Migrations
                 column: "masked_area_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_trx_visitor_member_id",
+                name: "IX_trx_visitor_purpose_person_id",
                 table: "trx_visitor",
-                column: "member_id");
+                column: "purpose_person_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_trx_visitor_visitor_id",
