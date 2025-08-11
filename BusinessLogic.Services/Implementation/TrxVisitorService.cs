@@ -200,7 +200,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new InvalidOperationException("No active session found");
 
             trx.UnblockAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Checkin;
+            trx.Status = VisitorStatus.Unblock;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 

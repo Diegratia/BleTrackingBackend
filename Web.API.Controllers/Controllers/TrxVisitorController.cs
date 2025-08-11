@@ -384,8 +384,8 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
-         [HttpPost("{id}/checkin")]
+
+        [HttpPost("{id}/checkin")]
         public async Task<IActionResult> Checkin(Guid id)
         {
             try
@@ -493,17 +493,53 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        [HttpPost("{id}/blocked")]
+        public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
+        {
+            try
+            {
+                await _trxVisitorService.BlockVisitorAsync(id, blockReason);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor blocked successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
             
-             [HttpPost("{id}/blocked")]
-            public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
+            [HttpPost("{id}/unblocked")]
+            public async Task<IActionResult> Unblocked(Guid id)
             {
                 try
                 {
-                    await _trxVisitorService.BlockVisitorAsync(id, blockReason);
+                    await _trxVisitorService.UnblockVisitorAsync(id);
                     return Ok(new
                     {
                         success = true,
-                        msg = "Visitor blocked successfully",
+                        msg = "Visitor Unblocked successfully",
                         collection = new { data = (object)null },
                         code = 200
                     });
