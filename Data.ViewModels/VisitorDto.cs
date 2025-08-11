@@ -142,6 +142,7 @@ namespace Data.ViewModels
     {
         public string Email { get; set; }
         public string? Name { get; set; }
+        public bool? IsVip { get; set; }
         public Guid? MaskedAreaId { get; set; }
     }
 

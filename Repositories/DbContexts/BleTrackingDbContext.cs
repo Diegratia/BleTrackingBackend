@@ -949,6 +949,12 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.RegisteredMaskedAreaId).HasMaxLength(36);
+                entity.HasOne(m => m.RegisteredMaskedArea)
+                    .WithMany()
+                    .HasForeignKey(m => m.RegisteredMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
                     
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.HasOne(m => m.Visitor)

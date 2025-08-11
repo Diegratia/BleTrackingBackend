@@ -168,6 +168,7 @@ namespace BusinessLogic.Services.Implementation
 
             trx.DenyAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Denied;
+            trx.VisitorActiveStatus = VisitorActiveStatus.Cancelled;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.DenyBy = username;
             trx.UpdatedBy = username;

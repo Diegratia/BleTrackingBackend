@@ -16,7 +16,7 @@ namespace Data.ViewModels
         public string? QRCode { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
-        public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
+        public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; }
@@ -30,7 +30,7 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
         
         public VisitorDto? Visitor { get; set; } // Visitor
-        public FloorplanMaskedAreaDto? ResgisteredMaskedArea { get; set; } // Visitor
+        public FloorplanMaskedAreaDto? RegisteredMaskedArea { get; set; } // Visitor
         public MstMemberDto? Member { get; set; } // Visitor
     }
 
