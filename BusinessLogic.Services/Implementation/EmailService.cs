@@ -4,6 +4,9 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using AutoMapper.Execution;
 using Microsoft.Extensions.Configuration;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 
 public interface IEmailService
 {
@@ -48,10 +51,29 @@ public class EmailService : IEmailService
 {
 
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _env;
 
-    public EmailService(IConfiguration configuration)
+    public EmailService(IConfiguration configuration, IWebHostEnvironment env)
     {
         _configuration = configuration;
+        _env = env;
+    }
+
+    private async Task<string> LoadEmailTemplateAsync(string fileName)
+    {
+        var templatePath = Path.Combine(
+            _env.ContentRootPath, "..", ".." ,  // Root program.cs
+            "Helpers.Consumer", 
+            "EmailTemplate", 
+            fileName
+        );
+
+        templatePath = Path.GetFullPath(templatePath);
+
+        if (!File.Exists(templatePath))
+            throw new FileNotFoundException($"Email template {fileName} not found.", templatePath);
+
+        return await File.ReadAllTextAsync(templatePath);
     }
 
     public async Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode)
@@ -162,91 +184,14 @@ public class EmailService : IEmailService
     var fromEmail = _configuration["Email:FromEmail"];
     var fromName = _configuration["Email:FromName"];
 
-    var template = @"
-<html lang=""en"">
-<head>
-    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
-    <meta name=""viewport"" content=""width=320, initial-scale=1"" />
-</head>
-<body style=""font-family: arial"">
-    <table style=""width: 100%; border-collapse: collapse;"">
-        <tr>
-            <td width=""20%"">&nbsp;</td>
-            <td width=""60%"">
-                <div style=""background-color: #f4f4f4; padding: 0px 20px;"">
-                    <table width=""100%"" style=""border-collapse: collapse"">
-                        <tr>
-                            <td colspan=""4"" style=""padding: 6px"">
-                                <div>Hello %to_mail%,</div>
-                                <div style=""margin-bottom: 5px"">You are invited to attend the visit with the following details:</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style=""padding: 6px"">date</td>
-                            <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%date%</td>
-                        </tr>
-                        <tr>
-                            <td style=""padding: 6px"">time</td>
-                            <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%time%</td>
-                        </tr>
-                        <tr>
-                            <td style=""padding: 6px"">location</td>
-                            <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%location%</td>
-                        </tr>
-                        <tr>
-                            <td style=""padding: 6px"">Host/Organizaer</td>
-                            <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%host%</td>
-                        </tr>
-                        <tr>
-                            <td style=""padding: 6px"">Agenda</td>
-                            <td style=""text-align: center"">:</td>
-                            <td colspan=""2"" style=""padding: 6px"">%agenda%</td>
-                        </tr>
-                        <tr>
-                            <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Please click the following link to confirm and complete the data:</div>
-                                <div><a href=""%link%"" target=""_blank"">%link%</a></div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Invitation Code:</div>
-                                <div style=""background-color: #9a9a9a; color: #fff; padding: 10px; width: max-content; font-size: 20px"">%code%</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan=""4"" style=""padding-top: 10px;"">
-                                <div>Best regards,</div>
-                                <div>%member%</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan=""4"" style=""padding: 20px 0px;"">&nbsp;</td>
-                        </tr>
-                        <tr>
-                            <td colspan=""4"" style=""background-color: #9a9a9a; text-align: center; padding: 20px;"">
-                                Support By <a href=""https://bio-experience.com"" target=""_blank"">Bio Experience</a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </td>
-            <td width=""20%"">&nbsp;</td>
-        </tr>
-    </table>
-</body>
-</html>";
+    var template = await LoadEmailTemplateAsync("SendVisitorInvitationEmailAsync.html");
 
     // Replace placeholder sesuai parameter
-    var bodyHtml = template
+        var bodyHtml = template
         .Replace("%to_mail%", name)
         .Replace("%agenda%", invitationAgenda)
         .Replace("%date%", visitorPeriodStartDate + " - " + visitorPeriodEndDate)
-        .Replace("%time%", visitorPeriodStartTime + " - " + visitorPeriodEndTime) // Bisa dipisah jam kalau perlu
+        .Replace("%time%", visitorPeriodStartTime + " - " + visitorPeriodEndTime) 
         .Replace("%location%", $"{floorName} - {maskedAreaName} - {buildingName}")
         .Replace("%link%", invitationUrl)
         .Replace("%host%", memberName)
