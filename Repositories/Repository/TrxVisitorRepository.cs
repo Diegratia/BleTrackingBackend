@@ -51,6 +51,27 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
+        public async Task<TrxVisitor?> GetAllActiveTrxAsync(Guid visitorId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var activeTrx = await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId && t.CheckedOutAt == null && t.TrxStatus == 1)
+                .OrderByDescending(t => t.CheckedInAt)
+                .FirstOrDefaultAsync();
+
+            return activeTrx;
+        }
+
+        public async Task<TrxVisitor?> GetAllActiveCOTrxAsync(Guid visitorId)
+        {
+            return await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId 
+                            && t.CheckedOutAt == null     // WAJIB: masih aktif
+                            && t.TrxStatus == 1)          // konsisten dengan GetAllActiveTrxAsync
+                .OrderByDescending(t => t.CheckedInAt)    // ambil yang paling baru di-checkin
+                .FirstOrDefaultAsync();
+        }
         public IQueryable<TrxVisitorDtoz> GetAllQueryableMinimal()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

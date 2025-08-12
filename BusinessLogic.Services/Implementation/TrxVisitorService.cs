@@ -133,11 +133,12 @@ namespace BusinessLogic.Services.Implementation
                 throw new InvalidOperationException("Already checked in");
 
                 trx.CheckedInAt = DateTime.UtcNow;
+                trx.CheckinBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
                 trx.Status = VisitorStatus.Checkin;
                 trx.VisitorActiveStatus = VisitorActiveStatus.Active;
-                trx.VisitorGroupCode = trx.VisitorGroupCode + 1;
-                trx.VisitorNumber = $"VIS{trx.VisitorGroupCode}";
-                trx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+                // trx.VisitorGroupCode = trx.VisitorGroupCode + 1;
+                // trx.VisitorNumber = $"VIS{trx.VisitorGroupCode}";
+                // trx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
                 trx.UpdatedAt = DateTime.UtcNow;
                 trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;          
 
@@ -165,6 +166,7 @@ namespace BusinessLogic.Services.Implementation
             trx.TrxStatus = 0;
             trx.UpdatedAt = DateTime.UtcNow;
             trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            trx.CheckoutBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
             await _repository.UpdateAsync(trx);
         }
