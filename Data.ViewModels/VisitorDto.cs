@@ -53,6 +53,9 @@ namespace Data.ViewModels
         public string? OrganizationName { get; set; }
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
+        public long? VisitorGroupCode { get; set; }
+        public string? VisitorNumber { get; set; }
+        public string? VisitorCode { get; set; }
         public bool? IsVip { get; set; }
         // public bool? IsInvitationAccepted { get; set; }     
         public IFormFile? FaceImage { get; set; }

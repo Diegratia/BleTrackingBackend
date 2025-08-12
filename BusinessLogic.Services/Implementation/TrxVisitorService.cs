@@ -24,6 +24,7 @@ namespace BusinessLogic.Services.Implementation
     public class TrxVisitorService : ITrxVisitorService
     {
         private readonly TrxVisitorRepository _repository;
+        private readonly VisitorRepository _visitorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -148,7 +149,16 @@ namespace BusinessLogic.Services.Implementation
             var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
+            if (trx.Status == VisitorStatus.Checkout)
+                throw new InvalidOperationException("Visitor already checked out");
 
+            var visitor = await _visitorRepository.GetByIdAsync( trx.VisitorId!.Value);
+            if (visitor == null)
+                throw new KeyNotFoundException("Visitor not found");
+
+            visitor.VisitorGroupCode = null;
+            visitor.VisitorNumber = null;
+            visitor.VisitorCode = null;
             trx.CheckedOutAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Checkout;
             trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
@@ -166,6 +176,9 @@ namespace BusinessLogic.Services.Implementation
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
+            trx.VisitorGroupCode = null;
+            trx.VisitorNumber = null;
+            trx.VisitorCode = null;
             trx.DenyAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Denied;
             trx.VisitorActiveStatus = VisitorActiveStatus.Cancelled;

@@ -921,7 +921,13 @@ public class VisitorService : IVisitorService
         //         );
         //     }
         // }
-
+        private string GenerateRandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
 
     public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
     {
@@ -998,7 +1004,9 @@ public class VisitorService : IVisitorService
             newTrx.TrxStatus = 1;
             newTrx.VisitorGroupCode = baseGroupCode;
             newTrx.VisitorNumber = $"VIS{baseGroupCode}";
-            newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+            newTrx.VisitorCode = GenerateRandomString(9);
+
+
             newTrx.InvitationCreatedAt = DateTime.UtcNow;
             newTrx.InvitationTokenExpiredAt = DateTime.UtcNow.AddDays(3);
             newTrx.CreatedAt = DateTime.UtcNow;
@@ -1066,25 +1074,31 @@ public class VisitorService : IVisitorService
             // (1) Pastikan VISITOR ada/terbentuk
             var existingVisitor = await _visitorRepository.GetByEmailAsync(email);
             Visitor visitor;
-            if (existingVisitor == null)
-            {
-                visitor = new Visitor
+                if (existingVisitor == null)
                 {
-                    Id = Guid.NewGuid(),
-                    Email = email,
-                    Name = dto.Name ?? "Guest",
-                    Status = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    CreatedBy = username ?? "Invitation",
-                    UpdatedBy = username ?? "Invitation"
-                };
-                await _visitorRepository.AddAsync(visitor);
-            }
-            else
-            {
-                visitor = existingVisitor;
-            }
+                    visitor = new Visitor
+                    {
+                        Id = Guid.NewGuid(),
+                        Email = email,
+                        Name = dto.Name ?? "Guest",
+                        Status = 1,
+                        VisitorGroupCode = baseGroupCode,
+                        VisitorNumber = $"VIS{baseGroupCode}",
+                        VisitorCode = newTrx.VisitorCode,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = username ?? "Invitation",
+                        UpdatedBy = username ?? "Invitation"
+                    };
+                    await _visitorRepository.AddAsync(visitor);
+                }
+                else
+                {
+                    visitor = existingVisitor;
+                    existingVisitor.VisitorGroupCode = baseGroupCode;
+                    existingVisitor.VisitorNumber = $"VIS{baseGroupCode}";
+                    existingVisitor.VisitorCode = newTrx.VisitorCode;
+                }
 
             newTrx.VisitorId = visitor.Id; // link ke visitor
 
@@ -1105,9 +1119,10 @@ public class VisitorService : IVisitorService
             }
 
             await _trxVisitorRepository.AddAsync(newTrx);
+            await _visitorRepository.UpdateAsyncRaw(visitor);
 
             // (3) Email ke VISITOR (pakai template visitor)
-            var visitorPeriodStartDate = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
+                var visitorPeriodStartDate = newTrx.VisitorPeriodStart?.ToString("yyyy-MM-dd") ?? "Unknown";
             var visitorPeriodEndDate   = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
             var visitorPeriodStartTime = newTrx.VisitorPeriodStart?.ToString("HH:mm:ss") ?? "Unknown";
             var visitorPeriodEndTime   = newTrx.VisitorPeriodEnd?.ToString("HH:mm:ss") ?? "Unknown";

@@ -56,14 +56,14 @@ namespace Entities.Models
         [Column("department_name")]
         public string? DepartmentName { get; set; }
 
-        // [Column("visitor_group_code")]
-        // public long? VisitorGroupCode { get; set; }
+        [Column("visitor_group_code")]
+        public long? VisitorGroupCode { get; set; }
 
-        // [Column("visitor_number")]
-        // public string? VisitorNumber { get; set; }
+        [Column("visitor_number")]
+        public string? VisitorNumber { get; set; }
 
-        // [Column("visitor_code")]
-        // public string? VisitorCode { get; set; }
+        [Column("visitor_code")]
+        public string? VisitorCode { get; set; }
 
         [Column("is_vip")]
         public bool? IsVip { get; set; }

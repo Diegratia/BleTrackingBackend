@@ -41,7 +41,7 @@ namespace Data.ViewModels
         public string? CardNumber { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
-        public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
+        public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public Guid? VisitorId { get; set; } 
         public Guid? MemberId { get; set; } 
     }
@@ -55,7 +55,7 @@ namespace Data.ViewModels
         public string? QRCode { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
-        public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
+        public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; } 

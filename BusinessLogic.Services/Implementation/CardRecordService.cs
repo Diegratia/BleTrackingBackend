@@ -97,8 +97,15 @@ namespace BusinessLogic.Services.Implementation
             {
                 cardRecord.CheckinMaskedArea = null;
             }
+
+
             // card.CheckinAt = visitor.TrxVisitors.FirstOrDefault()?.CheckedInAt;
-                cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
+            // var latestTrx = await _db.TrxVisitors
+            //     .Where(t => t.VisitorId == visitorId)
+            //     .OrderByDescending(t => t.CheckedInAt)
+            //     .Select(t => new { t.VisitorActiveStatus, t.CheckedInAt })
+            //     .FirstOrDefaultAsync();
+            cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
             // fallback jika null
             // Console.WriteLine("disini broo", visitor.TrxVisitors.FirstOrDefault()?.VisitorActiveStatus);
             cardRecord.Name = visitor.Name;
