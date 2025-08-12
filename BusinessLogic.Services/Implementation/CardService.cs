@@ -117,12 +117,14 @@ namespace BusinessLogic.Services.Implementation
 
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
+          
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.UpdatedAt = DateTime.UtcNow;
             card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var createdCard = await _repository.AddAsync(card);
+            card.QRCode = createdCard.CardNumber;
             return _mapper.Map<CardDto>(createdCard);
         }
         
