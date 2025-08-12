@@ -95,9 +95,14 @@ namespace BusinessLogic.Services.Implementation
             else
             {
                 cardRecord.CheckinMaskedArea = null;
-            }     
+            }
             // card.CheckinAt = visitor.TrxVisitors.FirstOrDefault()?.CheckedInAt;
-            // cardRecord.VisitorActiveStatus = visitor.TrxVisitors.FirstOrDefault()?.VisitorActiveStatus;
+                // cardRecord.VisitorActiveStatus =
+                // visitor.TrxVisitors?
+                // .OrderByDescending(t => t.CheckedInAt)
+                // .FirstOrDefault()?
+                // .VisitorActiveStatus;
+            // fallback jika null
             // Console.WriteLine("disini broo", visitor.TrxVisitors.FirstOrDefault()?.VisitorActiveStatus);
             cardRecord.Name = visitor.Name;
             card.CheckinAt = DateTime.UtcNow;
@@ -113,12 +118,12 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var cardRecord = await _repository.GetByIdAsync(id);
-            if (cardRecord == null)
-                throw new InvalidOperationException("No active session found");
-
             var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value); 
             var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
-
+            if (cardRecord == null)
+                throw new InvalidOperationException("No active session found");
+            if (card.IsUsed == false )
+                throw new InvalidOperationException("Card already checkout.");
             cardRecord.CheckoutAt = DateTime.UtcNow;
             cardRecord.CheckoutBy = username;
             cardRecord.CheckoutMaskedArea = card.RegisteredMaskedAreaId;
@@ -128,10 +133,10 @@ namespace BusinessLogic.Services.Implementation
 
             card.CheckinAt = null;
             card.IsUsed = false;
+            card.VisitorId = null;
             card.LastUsed = visitor.Name; 
             visitor.BleCardNumber = null;
             visitor.CardNumber = null;
- 
 
             await _repository.UpdateAsync(cardRecord);
         }
