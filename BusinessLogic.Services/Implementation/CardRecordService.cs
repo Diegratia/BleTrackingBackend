@@ -18,6 +18,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -97,11 +98,7 @@ namespace BusinessLogic.Services.Implementation
                 cardRecord.CheckinMaskedArea = null;
             }
             // card.CheckinAt = visitor.TrxVisitors.FirstOrDefault()?.CheckedInAt;
-                // cardRecord.VisitorActiveStatus =
-                // visitor.TrxVisitors?
-                // .OrderByDescending(t => t.CheckedInAt)
-                // .FirstOrDefault()?
-                // .VisitorActiveStatus;
+                cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
             // fallback jika null
             // Console.WriteLine("disini broo", visitor.TrxVisitors.FirstOrDefault()?.VisitorActiveStatus);
             cardRecord.Name = visitor.Name;
@@ -130,6 +127,7 @@ namespace BusinessLogic.Services.Implementation
             // cardRecord.Status = 0;
             cardRecord.UpdatedAt = DateTime.UtcNow;
             cardRecord.UpdatedBy = username;
+            cardRecord.VisitorActiveStatus = VisitorActiveStatus.Expired;
 
             card.CheckinAt = null;
             card.IsUsed = false;
@@ -137,6 +135,7 @@ namespace BusinessLogic.Services.Implementation
             card.LastUsed = visitor.Name; 
             visitor.BleCardNumber = null;
             visitor.CardNumber = null;
+            
 
             await _repository.UpdateAsync(cardRecord);
         }
