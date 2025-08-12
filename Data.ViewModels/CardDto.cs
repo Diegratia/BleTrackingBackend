@@ -13,7 +13,6 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
-        public string? QRCode { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
@@ -40,7 +39,6 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? CardType { get; set; }
         public string? CardNumber { get; set; }
-        public string? QRCode { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
         public Guid? RegisteredMaskedArea { get; set; } // isikan  null jika bisa digunakan disemua site.
