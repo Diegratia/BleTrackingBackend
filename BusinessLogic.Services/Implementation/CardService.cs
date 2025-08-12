@@ -75,17 +75,13 @@ namespace BusinessLogic.Services.Implementation
         public async Task<CardDto> CreateAsync(CardCreateDto createDto)
         {
             var existingCard = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b => b.QRCode == createDto.QRCode ||
+            .FirstOrDefaultAsync(b =>
                                 b.CardNumber == createDto.CardNumber ||
                                 b.Dmac == createDto.Dmac);
 
             if (existingCard != null)
             {
-                if (existingCard.QRCode == createDto.QRCode)
-                {
-                    throw new ArgumentException($"Card with QRCode {createDto.QRCode} already exists.");
-                }
-                else if (existingCard.CardNumber == createDto.CardNumber)
+                if (existingCard.CardNumber == createDto.CardNumber)
                 {
                     throw new ArgumentException($"Card with Number {createDto.CardNumber} already exists.");
                 }
@@ -137,17 +133,13 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Card not found");
 
               var existingCard = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b => b.QRCode == updateDto.QRCode ||
+            .FirstOrDefaultAsync(b =>  
                                 b.CardNumber == updateDto.CardNumber ||
                                 b.Dmac == updateDto.Dmac);
         
         if (existingCard != null)
             {
-                if (existingCard.QRCode == updateDto.QRCode)
-                {
-                    throw new ArgumentException($"Card with QRCode {updateDto.QRCode} already exists.");
-                }
-                else if (existingCard.CardNumber == updateDto.CardNumber)
+                if (existingCard.CardNumber == updateDto.CardNumber)
                 {
                     throw new ArgumentException($"Card with Number {updateDto.CardNumber} already exists.");
                 }
