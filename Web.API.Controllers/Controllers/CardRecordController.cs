@@ -85,6 +85,42 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            try
+            {
+                await _cardRecordService.CheckoutCard(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CardRecordCreateDto createDto)
         {

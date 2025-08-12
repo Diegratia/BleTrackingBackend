@@ -47,14 +47,14 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(accessCctv.ApplicationId);
             ValidateApplicationIdForEntity(accessCctv, applicationId, isSystemAdmin);
 
-        var integration = await _context.MstIntegrations
-        .FirstOrDefaultAsync(i => i.Id == accessCctv.IntegrationId && i.Status != 0);
+        // var integration = await _context.MstIntegrations
+        // .FirstOrDefaultAsync(i => i.Id == accessCctv.IntegrationId && i.Status != 0);
 
-            if (integration == null)
-                throw new KeyNotFoundException("Referenced integration not found.");
+        //     if (integration == null)
+        //         throw new KeyNotFoundException("Referenced integration not found.");
                 
-            if (!isSystemAdmin && integration.ApplicationId != applicationId)
-                throw new UnauthorizedAccessException("Integration does not belong to the same Application.");
+        //     if (!isSystemAdmin && integration.ApplicationId != applicationId)
+        //         throw new UnauthorizedAccessException("Integration does not belong to the same Application.");
 
             _context.MstAccessCctvs.Add(accessCctv);
             await _context.SaveChangesAsync();

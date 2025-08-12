@@ -74,7 +74,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<CardDto> CreateAsync(CardCreateDto createDto)
         {
-
             var existingCard = await _repository.GetAllQueryable()
             .FirstOrDefaultAsync(b => b.QRCode == createDto.QRCode ||
                                 b.CardNumber == createDto.CardNumber ||

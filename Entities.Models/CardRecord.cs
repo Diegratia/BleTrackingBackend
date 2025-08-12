@@ -32,8 +32,8 @@ namespace Entities.Models
         [Column("member_id")]
         public Guid? MemberId { get; set; }
 
-        [Column("type")]
-        public CardType? Type { get; set; }
+        // [Column("type")]
+        // public CardType? Type { get; set; }
 
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }

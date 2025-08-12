@@ -132,9 +132,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(CardRecordProfile));
 // Registrasi Services
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
+// builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRecordRepository>();
+builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<VisitorRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_RECORD_PORT") ??
            builder.Configuration["Ports:CardRecordService"] ?? "10024";

@@ -6,6 +6,8 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
+using Data.ViewModels;
 
 namespace Repositories.Repository
 {
@@ -29,6 +31,31 @@ namespace Repositories.Repository
 
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
+
+        //  public IQueryable<CardRecordDtoz> GetAllQueryableMinimal()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+        //     var query = _context.CardRecords
+        //         .Include(a => a.Visitor)
+        //         .Include(a => a.Card)
+        //         .Include(a => a.Member)
+        //         .Where(b => b.Status != 0)
+        //         .AsQueryable();
+
+        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+        //     return query.Select(v => new CardRecordDtoz
+        //     {
+        //         Id = v.Id,
+        //         VisitorName = v.Name,
+        //         Visitor = v.Visitor == null ? null : new VisitorDtoz
+        //         {
+        //             Id = v.Visitor.Id,
+        //             Name = v.Visitor.Name
+        //         },
+        //     });
+        // }
 
         public async Task<IEnumerable<CardRecord>> GetAllAsync()
         {
@@ -58,6 +85,17 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
             return cardRecord;
         }
+
+            public async Task UpdateAsync(CardRecord cardRecord)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(cardRecord.ApplicationId);
+            ValidateApplicationIdForEntity(cardRecord, applicationId, isSystemAdmin);
+
+            await _context.SaveChangesAsync();
+        }
+
 
         public IQueryable<CardRecord> GetAllQueryable()
         {

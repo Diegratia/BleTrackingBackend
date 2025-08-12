@@ -220,7 +220,7 @@ namespace BusinessLogic.Services.Implementation
                 { "IdentityType", typeof(IdentityType) }
             };
 
-            var searchableColumns = new[] { "Visitor.Name", "Member.Name", "MaskedArea.Name", "VisitorNumber", "VisitorCode", "VehiclePlateNumber" };
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
             var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(

@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
 
 namespace Repositories.Repository
 {
@@ -28,6 +29,8 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync() ?? null;
         }
+        
+       
 
         public IQueryable<Card> GetAllQueryable()
         {
@@ -40,7 +43,7 @@ namespace Repositories.Repository
                 .Include(b => b.Application)
                 .Where(b => b.StatusCard != 0);
 
-                query = query.WithActiveRelations();
+            query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
@@ -106,6 +109,13 @@ namespace Repositories.Repository
         public async Task<IEnumerable<Card>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();
+        }
+
+            public async Task<Card?> GetBleCardNumberAsync(string cardNumber)
+        {
+            return await GetAllQueryable()
+            .Where(x => x.StatusCard != 0 && x.CardNumber == cardNumber)
+            .FirstOrDefaultAsync();
         }
 
         private async Task ValidateRelatedEntitiesAsync(Card card, Guid? applicationId, bool isSystemAdmin)
