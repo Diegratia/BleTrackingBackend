@@ -67,7 +67,7 @@ public class EmailService : IEmailService
         if (!File.Exists(templatePath))
         {
             // local
-            templatePath = Path.Combine(_env.ContentRootPath, "Helpers.Consumer", "EmailTemplate", fileName);
+            templatePath = Path.Combine(_env.ContentRootPath, "..", "..", "Helpers.Consumer", "EmailTemplate", fileName);
         }
 
         if (!File.Exists(templatePath))

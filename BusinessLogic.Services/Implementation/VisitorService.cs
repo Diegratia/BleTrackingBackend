@@ -1081,6 +1081,7 @@ public class VisitorService : IVisitorService
                         Id = Guid.NewGuid(),
                         Email = email,
                         Name = dto.Name ?? "Guest",
+                        IsVip = dto.IsVip,
                         Status = 1,
                         VisitorGroupCode = baseGroupCode,
                         VisitorNumber = $"VIS{baseGroupCode}",
