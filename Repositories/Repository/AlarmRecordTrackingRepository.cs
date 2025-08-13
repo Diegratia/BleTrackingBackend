@@ -5,6 +5,7 @@ using Repositories.DbContexts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Repositories.Repository
@@ -28,20 +29,61 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
-        public IQueryable<AlarmRecordTracking> GetAllQueryable()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        // public IQueryable<AlarmRecordTracking> GetAllQueryable()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.AlarmRecordTrackings
-                .Include(v => v.FloorplanMaskedArea)
-                .Include(v => v.Reader)
-                .Include(v => v.Visitor)
-                .Where(v => v.Id != null);
+        //     var query = _context.AlarmRecordTrackings
+        //         .Include(v => v.FloorplanMaskedArea)
+        //         .Include(v => v.Reader)
+        //         .Include(v => v.Visitor)
+        //         .Where(v => v.Id != null);
 
-                query = query.WithActiveRelations();
+        //         query = query.WithActiveRelations();
 
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        }
+        //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        // }
+
+         public IQueryable<AlarmRecordTracking> GetAllQueryable()
+            {
+                var userEmail = GetUserEmail();
+                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+                var isSuperAdmin = IsSuperAdmin();
+                var isPrimaryAdmin = IsPrimaryAdmin();
+                var isPrimary = IsPrimary();
+
+                var query = _context.AlarmRecordTrackings
+                    .Include(v => v.Application)
+                    .Include(v => v.Visitor)
+                    .Include(v => v.Reader)
+                    .Include(v => v.FloorplanMaskedArea)
+                    .AsQueryable();
+
+                if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
+                {
+                    var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+                    if (String.Equals(userRole, LevelPriority.Secondary.ToString(), StringComparison.OrdinalIgnoreCase))
+                    // {
+                    //     query = query.Where(t =>
+                    //         _context.MstMembers.Any(m => m.Email == userEmail &&
+                    //             (t.PurposePerson == m.Id || (t.MemberIdentity == m.IdentityId && t.IsMember == 1))));
+                    // }
+                    {
+                        query = query.Where(t => true); // No access for other roles
+                    }
+                    else if (String.Equals(userRole, LevelPriority.UserCreated.ToString(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            query = query.Where(t =>
+                                _context.Visitors.Any(v => v.Email == userEmail && t.VisitorId == v.Id));
+                        }
+                        else
+                        {
+                            query = query.Where(t => false); // No access for other roles
+                        }
+                }
+
+                return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            }
 
         
 

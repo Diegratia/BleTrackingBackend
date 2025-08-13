@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+
     public class MstFloorController : ControllerBase
     {
         private readonly IMstFloorService _mstFloorService;
@@ -22,6 +22,7 @@ namespace Web.API.Controllers.Controllers
             _mstFloorService = mstFloorService;
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -48,6 +49,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -84,6 +86,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstFloorCreateDto mstFloorDto)
         {
@@ -122,6 +125,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
         {
@@ -136,12 +140,12 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
-            
+
 
             try
             {
 
-             await _mstFloorService.UpdateAsync(id, mstFloorDto);
+                await _mstFloorService.UpdateAsync(id, mstFloorDto);
                 return Ok(new
                 {
                     success = true,
@@ -172,6 +176,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -208,6 +213,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -266,6 +272,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -315,7 +322,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -336,7 +343,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
