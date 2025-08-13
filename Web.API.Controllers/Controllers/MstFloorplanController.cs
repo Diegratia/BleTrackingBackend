@@ -23,8 +23,8 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstFloorplan
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -51,8 +51,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -89,8 +89,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstFloorplan
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] MstFloorplanCreateDto dto)
         {
@@ -129,8 +129,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorplanUpdateDto dto)
         {
@@ -179,8 +179,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // DELETE: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

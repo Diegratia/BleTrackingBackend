@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
     public class FloorplanMaskedAreaController : ControllerBase
     {
         private readonly IFloorplanMaskedAreaService _service;
@@ -21,9 +21,8 @@ namespace Web.API.Controllers.Controllers
         {
             _service = FloorplanMaskedAreaService;
         }
-
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/FloorplanMaskedArea
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -50,7 +49,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/FloorplanMaskedArea/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -275,7 +273,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
