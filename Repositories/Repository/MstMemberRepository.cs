@@ -116,6 +116,12 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
+        // public async Task<MstMember> GetByEmailAsyncRaw(string email)
+        // {
+        //     return await _context.MstMembers
+        //         .FirstOrDefaultAsync(m => m.Email == email);
+        // }
+
         private async Task ValidateRelatedEntitiesAsync(MstMember member, Guid? applicationId, bool isSystemAdmin)
         {
             if (isSystemAdmin) return;

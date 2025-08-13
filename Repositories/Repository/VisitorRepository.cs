@@ -5,6 +5,7 @@ using Repositories.DbContexts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Repositories.Repository
@@ -111,6 +112,45 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        //   public IQueryable<Visitor> GetAllQueryable()
+        // {
+        //     var userEmail = GetUserEmail();
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        //     var isSuperAdmin = IsSuperAdmin();
+
+        //     var query = _context.Visitors.AsQueryable();
+
+        //     if (!isSystemAdmin && !isSuperAdmin)
+        //     {
+        //         if (!string.IsNullOrWhiteSpace(userEmail))
+        //         {
+        //             var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+        //             if (userRole == LevelPriority.Secondary.ToString())
+        //             {
+        //                 query = query.Where(v =>
+        //                     _context.TrxVisitors.Any(t =>
+        //                         _context.MstMembers.Any(m => m.Email == userEmail && t.PurposePerson == m.Id) &&
+        //                         t.VisitorId == v.Id));
+        //             }
+        //             else if (userRole == LevelPriority.UserCreated.ToString())
+        //             {
+        //                 query = query.Where(v => v.Email == userEmail);
+        //             }
+        //             else
+        //             {
+        //                 query = query.Where(v => false); // No access for other roles
+        //             }
+        //         }
+        //         else
+        //         {
+        //             query = query.Where(v => false); // No access if email is missing
+        //         }
+        //     }
+
+        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        //     return query;
+        // }
 
         public async Task<IEnumerable<Visitor>> GetAllExportAsync()
         {
