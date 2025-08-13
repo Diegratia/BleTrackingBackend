@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Repositories.Repository
 {
@@ -69,6 +70,11 @@ namespace Repositories.Repository
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
         }
 
+         public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
+        }
+
         //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
         //     {
         //         return query.Where(c =>
@@ -87,7 +93,8 @@ namespace Repositories.Repository
         //         m.Floorplan.Floor.Department != null &&
         //         m.Floorplan.Floor.Department.Status != 0);
         // }
-    
-    
+
+
     }
 }
+

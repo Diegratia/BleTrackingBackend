@@ -38,6 +38,10 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
+            if (request.Length == 0)
+            {
+                request.Length = await _query.CountAsync();
+            }
             // if (request.Length < 1)
             //     throw new ArgumentException("Length must be greater than or equal to 1.");
             if (request.Start < 0)
@@ -340,8 +344,15 @@ namespace BusinessLogic.Services.Implementation
             var filteredRecords = await projectionQuery.CountAsync();
 
 
-            // Paging
+           // Paging
+            // if (request.Length > 0)
+            // {
+            //     projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
+            // }
+
+            
             projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
+            
 
             // Execute query
             var data = await projectionQuery.ToListAsync();

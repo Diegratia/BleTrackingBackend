@@ -929,7 +929,7 @@ public class VisitorService : IVisitorService
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-    public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
+        public async Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dtoList)
     {
         if (dtoList == null || !dtoList.Any())
             throw new ArgumentException("Invitation list cannot be empty");
