@@ -1276,8 +1276,13 @@ public class VisitorService : IVisitorService
                         var savedTrxMember = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
                         var maskedAreaMemberName = savedTrxMember?.MaskedArea?.Name ?? "";
                         var purposePersonName = savedTrxMember?.Member?.Name ?? (loggedInMember?.Name ?? "");
+                        var purposePersonEmail = savedTrxMember?.Member?.Email ?? (loggedInMember?.Email ?? "");
                         var floorNameMember = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
                         var buildingNameMember = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
+
+                        var dateTextMember = startMemberDate + " - " + endMemberDate;
+                        var timeTextMember = startMemberTime + " - " + endMemberTime;
+                        var locationMember = buildingNameMember + " - " + floorNameMember + " - " + maskedAreaMemberName;
 
                         var memberInvitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
 
@@ -1295,6 +1300,19 @@ public class VisitorService : IVisitorService
                             purposePersonName,
                             floorNameMember,
                             buildingNameMember
+                        );
+
+                        await _emailService.SendMemberNotificationEmailAsync(
+                            purposePersonEmail,
+                            purposePersonName,
+                            invitedMember.Name,
+                            invitationAgendaMember,
+                            dateTextMember,
+                            timeTextMember,
+                            locationMember,
+                            purposePersonName,
+                            confirmationCode,
+                            memberInvitationUrl
                         );
 
                         continue;
@@ -1343,13 +1361,20 @@ public class VisitorService : IVisitorService
                     var visitorPeriodEndDate = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
                     var visitorPeriodStartTime = newTrx.VisitorPeriodStart?.ToString("HH:mm:ss") ?? "Unknown";
                     var visitorPeriodEndTime = newTrx.VisitorPeriodEnd?.ToString("HH:mm:ss") ?? "Unknown";
-                    var invitationAgenda = newTrx.Agenda;
 
+                    var dateText = visitorPeriodStartDate + " - " + visitorPeriodEndDate;
+                    var timeText = visitorPeriodStartTime + " - " + visitorPeriodEndTime;
+
+                    var invitationAgenda = newTrx.Agenda;
+                    // date bisa gabung jadi text datetime jugabisa jadi text, terus building floor dan masked area bisa jadi text juga
                     var savedTrx = await _trxVisitorRepository.GetByIdAsync(newTrx.Id);
                     var maskedAreaName = savedTrx?.MaskedArea?.Name ?? "";
                     var memberName = savedTrx?.Member?.Name ?? (loggedInMember?.Name ?? "");
+                    var memberEmail = savedTrx?.Member?.Email ?? (loggedInMember?.Email ?? "");
                     var floorName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
                     var buildingName = await _trxVisitorRepository.GetFloorNameByTrxIdAsync(newTrx.Id) ?? "";
+
+                    var location = buildingName + " - " + floorName + " - " + maskedAreaName;
 
                     var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
@@ -1367,6 +1392,19 @@ public class VisitorService : IVisitorService
                         memberName,
                         floorName,
                         buildingName
+                    );
+
+                    await _emailService.SendMemberNotificationEmailAsync(
+                        memberEmail,
+                        memberName,
+                        visitor.Name,
+                        invitationAgenda,
+                        dateText,
+                        timeText,
+                        location,
+                        memberName,
+                        confirmationCode,
+                        invitationUrl
                     );
                 }
                 catch

@@ -144,14 +144,14 @@ namespace BusinessLogic.Services.Implementation
                         foreach (var trackingtransaction in trackingTransactions)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.TransTime.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.TransTime?.ToString("yyyy-MM-dd") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.Reader.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CardId);
                             table.Cell().Element(CellStyle).Text(trackingtransaction.FloorplanMaskedArea.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateX.ToString(""));
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateY.ToString(""));
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxX.ToString(""));
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxX.ToString(""));
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateX?.ToString("") ?? "");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateY?.ToString("") ?? "");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxX?.ToString("") ?? "");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxY?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.AlarmStatus);
                             table.Cell().Element(CellStyle).Text(trackingtransaction.Battery);
                         }
@@ -203,7 +203,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = trackingtransaction.TransTime;
                 worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name?? "-";
-                worksheet.Cell(row, 4).Value = trackingtransaction.CardId;
+                worksheet.Cell(row, 4).Value = trackingtransaction.Card.Dmac ?? "-";
                 worksheet.Cell(row, 5).Value = trackingtransaction.CoordinateX;
                 worksheet.Cell(row, 6).Value = trackingtransaction.CoordinateY;
                 worksheet.Cell(row, 7).Value = trackingtransaction.CoordinatePxX;

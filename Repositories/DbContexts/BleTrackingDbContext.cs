@@ -456,11 +456,11 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<TrackingTransaction>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ReaderId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
+                entity.Property(e => e.CardId).HasMaxLength(36);
                 entity.Property(e => e.AlarmStatus)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v == AlarmStatus.NonActive ? "non-active" : v.ToString().ToLower(),
                         v => v == "non-active" ? AlarmStatus.NonActive : (AlarmStatus)Enum.Parse(typeof(AlarmStatus), v, true)
@@ -479,6 +479,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(t => t.FloorplanMaskedArea)
                     .WithMany()
                     .HasForeignKey(t => t.FloorplanMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.HasOne(t => t.Card)
+                    .WithMany()
+                    .HasForeignKey(t => t.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

@@ -722,7 +722,11 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(t => t.CardId, f => f.Random.Long(1000, 9999))
+                    .RuleFor(t => t.CardId, f => context.Cards
+                        .Where(a => a.StatusCard != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(t => t.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
                         .Where(a => a.Status != 0)
                         .OrderBy(r => Guid.NewGuid())

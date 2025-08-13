@@ -96,6 +96,7 @@ namespace Repositories.Repository
 
             var query = _context.TrackingTransactions
                 .Include(t => t.Reader)
+                .Include(t => t.Card)
                 .Include(t => t.FloorplanMaskedArea);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
