@@ -36,8 +36,7 @@ namespace Repositories.Repository
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Reader)
                 .Include(v => v.Visitor)
-
-                .Where(v => v.Id == null);
+                .Where(v => v.Id != null);
 
                 query = query.WithActiveRelations();
 
