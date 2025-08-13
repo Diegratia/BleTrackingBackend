@@ -19,6 +19,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<TrxVisitor, TrxVisitorDto>();
             CreateMap<BlockReasonDto, TrxVisitor>();
             CreateMap<DenyReasonDto, TrxVisitor>();
+            CreateMap<TrxVisitorCheckinDto, TrxVisitor>();
             CreateMap<Visitor, VisitorDto>();
         }
         

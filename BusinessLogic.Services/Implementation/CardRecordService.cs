@@ -25,21 +25,18 @@ namespace BusinessLogic.Services.Implementation
     public class CardRecordService : ICardRecordService
     {
         private readonly CardRecordRepository _repository;
-        private readonly ITrxVisitorService _trxVisitorService;
         private readonly CardRepository _cardRepository;
         private readonly VisitorRepository _visitorRepository;
-        private readonly TrxVisitorRepository _trxVisitorRepository;
+        // private readonly TrxVisitorRepository _trxVisitorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardRecordService(ITrxVisitorService trxVisitorService, CardRecordRepository repository, CardRepository cardRepository, VisitorRepository visitorRepository, TrxVisitorRepository trxVisitorRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardRecordService( CardRecordRepository repository, CardRepository cardRepository, VisitorRepository visitorRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _cardRepository = cardRepository;
             _visitorRepository = visitorRepository;
             _mapper = mapper;
-            _trxVisitorService = trxVisitorService;
-            _trxVisitorRepository = trxVisitorRepository;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -70,9 +67,14 @@ namespace BusinessLogic.Services.Implementation
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
 
             var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value);
-            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
+            if (card == null)
+                throw new InvalidOperationException("Card not found.");
 
-            if (card.IsUsed == true && card.VisitorId != visitor.Id)
+            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
+            if (visitor == null)
+                throw new InvalidOperationException("Visitor not found.");
+
+            if (card.IsUsed == true)
                 throw new InvalidOperationException("Card already checked in by another visitor.");
 
             card.IsUsed = true;
@@ -87,35 +89,18 @@ namespace BusinessLogic.Services.Implementation
             cardRecord.CheckinAt = card.CheckinAt;
             cardRecord.CheckinMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
 
-            // Ambil trx aktif
-            // var activeTrx = await _trxVisitorRepository.GetAllQueryable()
-            //     .Where(t => t.VisitorId == visitor.Id && t.CheckedOutAt == null && t.TrxStatus == 1)
-            //     .OrderByDescending(t => t.CheckedInAt)
-            //     .FirstOrDefaultAsync();
+            await _cardRepository.UpdateAsync(card);
+            await _visitorRepository.UpdateAsync(visitor);
+            var createdCardRecord = await _repository.AddAsync(cardRecord);
 
-            var activeTrx = await _trxVisitorRepository.GetAllActiveTrxAsync(visitor.Id);
-
-            if (activeTrx == null)
-                throw new InvalidOperationException("Active TrxVisitor not found for this visitor.");
-
-                await _cardRepository.UpdateAsync(card);
-                await _visitorRepository.UpdateAsync(visitor);
-                var createdCardRecord = await _repository.AddAsync(cardRecord);
-
-                await _trxVisitorService.CheckinVisitorAsync(activeTrx.Id);
-
-                return _mapper.Map<CardRecordDto>(createdCardRecord);
+            return _mapper.Map<CardRecordDto>(createdCardRecord);
         }
 
 
             public async Task CheckoutCard(Guid id)
         {
-            // >> Rekomendasi: bungkus dalam UoW.ExecuteInTransactionAsync agar atomik
-            // return await _uow.ExecuteInTransactionAsync(async () => { ... });
-
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            // 1) Ambil & validasi awal dgn urutan benar
             var cardRecord = await _repository.GetByIdAsync(id);
             if (cardRecord is null)
                 throw new InvalidOperationException("Card record not found.");
@@ -126,46 +111,29 @@ namespace BusinessLogic.Services.Implementation
             var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value)
                         ?? throw new InvalidOperationException("Visitor not found.");
 
-            // 2) Guard kondisi
             if (card.IsUsed == false)
                 throw new InvalidOperationException("Card already checked out.");
 
-            // 3) Ambil trx aktif (sebelum mutasi)
-            var activeTrx = await _trxVisitorRepository.GetAllActiveCOTrxAsync(visitor.Id);
-            if (activeTrx == null)
-                throw new InvalidOperationException("Active TrxVisitor not found for this visitor.");
-
-            // 4) Mutasi state
             var now = DateTime.UtcNow;
 
-            cardRecord.CheckoutAt        = now;
-            cardRecord.CheckoutBy        = username;
-            cardRecord.CheckoutMaskedArea= (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
-            cardRecord.UpdatedAt         = now;
-            cardRecord.UpdatedBy         = username;
+            cardRecord.CheckoutAt = now;
+            cardRecord.CheckoutBy = username;
+            cardRecord.CheckoutMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
+            cardRecord.UpdatedAt = now;
+            cardRecord.UpdatedBy = username;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Expired;
-            // cardRecord.Status = 0; // kalau memang harus diubah
 
             card.CheckinAt = null;
-            card.IsUsed    = false;
-
-            // PASTIKAN kolom visitor_id nullable di DB kalau kamu ingin set null
+            card.IsUsed = false;
             card.VisitorId = null;
-
-            card.LastUsed  = visitor.Name;
+            card.LastUsed = visitor.Name;
 
             visitor.BleCardNumber = null;
-            visitor.CardNumber    = null;
+            visitor.CardNumber = null;
 
-            // 5) Persist — update semuanya
             await _cardRepository.UpdateAsync(card);
             await _visitorRepository.UpdateAsync(visitor);
             await _repository.UpdateAsync(cardRecord);
-
-            // 6) Update transaksi visitor (checkout)
-            await _trxVisitorService.CheckoutVisitorAsync(activeTrx.Id);
-
-            // Jika pakai UoW di atas, cukup return 0; dan commit dilakukan oleh UoW
         }
 
         

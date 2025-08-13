@@ -385,12 +385,12 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpPost("{id}/checkin")]
-        public async Task<IActionResult> Checkin(Guid id)
+     [HttpPost("checkin")]
+        public async Task<IActionResult> Checkin([FromBody] TrxVisitorCheckinDto request)
         {
             try
             {
-                await _trxVisitorService.CheckinVisitorAsync(id);
+                await _trxVisitorService.CheckinVisitorAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -420,6 +420,7 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+    
 
         // POST: api/Visitor/{id}/checkout
         [HttpPost("{id}/checkout")]

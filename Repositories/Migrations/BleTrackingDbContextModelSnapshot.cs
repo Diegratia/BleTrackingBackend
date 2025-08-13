@@ -429,10 +429,6 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
-                    b.Property<int?>("Type")
-                        .HasColumnType("int")
-                        .HasColumnName("type");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
@@ -2492,6 +2488,15 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
                     b.Property<Guid>("FloorplanMaskedAreaId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2506,6 +2511,14 @@ namespace Repositories.Migrations
                         .HasColumnName("_generate");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.Property<Guid>("VisitorId")
                         .HasMaxLength(36)

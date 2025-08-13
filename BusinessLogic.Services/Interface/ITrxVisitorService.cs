@@ -17,7 +17,9 @@ namespace BusinessLogic.Services.Interface
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
-        Task CheckinVisitorAsync(Guid trxVisitorId);
+        // Task CheckinVisitorAsync(Guid trxVisitorId);
+        // Task CheckinVisitorAsync(Guid trxVisitorId, Guid cardId);
+        Task CheckinVisitorAsync(TrxVisitorCheckinDto dto);
         Task CheckoutVisitorAsync(Guid trxVisitorId);
         Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto);
         Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto);

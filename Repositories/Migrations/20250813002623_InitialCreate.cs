@@ -850,7 +850,7 @@ namespace Repositories.Migrations
                     qr_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     dmac = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     is_multi_masked_area = table.Column<bool>(type: "bit", nullable: true),
-                    registered_masked_area = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    registered_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     is_used = table.Column<bool>(type: "bit", nullable: true),
                     last_used_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
@@ -870,8 +870,8 @@ namespace Repositories.Migrations
                 {
                     table.PrimaryKey("PK_card", x => x.id);
                     table.ForeignKey(
-                        name: "FK_card_floorplan_masked_area_registered_masked_area",
-                        column: x => x.registered_masked_area,
+                        name: "FK_card_floorplan_masked_area_registered_masked_area_id",
+                        column: x => x.registered_masked_area_id,
                         principalTable: "floorplan_masked_area",
                         principalColumn: "id");
                     table.ForeignKey(
@@ -1118,7 +1118,11 @@ namespace Repositories.Migrations
                     FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1159,7 +1163,6 @@ namespace Repositories.Migrations
                     card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    type = table.Column<int>(type: "int", nullable: true),
                     timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     checkin_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -1168,10 +1171,17 @@ namespace Repositories.Migrations
                     checkout_masked_area = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     checkin_masked_area = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     visitor_type = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    status = table.Column<int>(type: "int", nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     CardId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    _generate = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1286,9 +1296,9 @@ namespace Repositories.Migrations
                 column: "member_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_card_registered_masked_area",
+                name: "IX_card_registered_masked_area_id",
                 table: "card",
-                column: "registered_masked_area");
+                column: "registered_masked_area_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_visitor_id",

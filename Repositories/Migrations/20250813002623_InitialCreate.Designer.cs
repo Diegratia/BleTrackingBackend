@@ -12,7 +12,7 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250811034543_InitialCreate")]
+    [Migration("20250813002623_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -315,8 +315,9 @@ namespace Repositories.Migrations
                         .HasColumnName("qr_code");
 
                     b.Property<Guid?>("RegisteredMaskedAreaId")
+                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("registered_masked_area");
+                        .HasColumnName("registered_masked_area_id");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)")
@@ -395,6 +396,22 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("checkout_masked_area");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
                     b.Property<Guid?>("MemberId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("member_id");
@@ -407,13 +424,21 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
-                    b.Property<int?>("Type")
-                        .HasColumnType("int")
-                        .HasColumnName("type");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.Property<string>("VisitorActiveStatus")
                         .HasColumnType("nvarchar(255)")
@@ -2466,6 +2491,15 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
                     b.Property<Guid>("FloorplanMaskedAreaId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2480,6 +2514,14 @@ namespace Repositories.Migrations
                         .HasColumnName("_generate");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.Property<Guid>("VisitorId")
                         .HasMaxLength(36)
@@ -2589,7 +2631,8 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "RegisteredMaskedArea")
                         .WithMany()
-                        .HasForeignKey("RegisteredMaskedAreaId");
+                        .HasForeignKey("RegisteredMaskedAreaId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()

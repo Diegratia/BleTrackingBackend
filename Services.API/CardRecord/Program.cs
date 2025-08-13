@@ -132,12 +132,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(CardRecordProfile));
 // Registrasi Services
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
-builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
+// builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 // builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRecordRepository>();
-builder.Services.AddScoped<TrxVisitorRepository>();
+// builder.Services.AddScoped<TrxVisitorRepository>();
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<VisitorRepository>();
 

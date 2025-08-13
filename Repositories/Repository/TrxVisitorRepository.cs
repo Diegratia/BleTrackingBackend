@@ -62,12 +62,12 @@ namespace Repositories.Repository
 
             return activeTrx;
         }
-
+        
         public async Task<TrxVisitor?> GetAllActiveCOTrxAsync(Guid visitorId)
         {
             return await GetAllQueryable()
                 .Where(t => t.VisitorId == visitorId 
-                            && t.CheckedOutAt == null     // WAJIB: masih aktif
+                            && t.CheckedOutAt == null     
                             && t.TrxStatus == 1)          // konsisten dengan GetAllActiveTrxAsync
                 .OrderByDescending(t => t.CheckedInAt)    // ambil yang paling baru di-checkin
                 .FirstOrDefaultAsync();
