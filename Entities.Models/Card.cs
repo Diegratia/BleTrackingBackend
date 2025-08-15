@@ -2,9 +2,12 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore;
 
 namespace Entities.Models
 {
+    [Index(nameof(Dmac))]
+    [Index(nameof(CardNumber))]
     public class Card : BaseModelWithTime, IApplicationEntity
     {
         [Column("name")]
