@@ -53,7 +53,8 @@ namespace Repositories.Repository
                 var isPrimary = IsPrimary();
 
                 var query = _context.AlarmRecordTrackings
-                    .Include(v => v.Application)
+                    .IgnoreQueryFilters()    
+                    // .Include(v => v.Application)
                     .Include(v => v.Visitor)
                     .Include(v => v.Reader)
                     .Include(v => v.FloorplanMaskedArea)
@@ -81,6 +82,7 @@ namespace Repositories.Repository
                             query = query.Where(t => false); // No access for other roles
                         }
                 }
+                //  query = query.WithActiveRelations();
 
                 return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             }

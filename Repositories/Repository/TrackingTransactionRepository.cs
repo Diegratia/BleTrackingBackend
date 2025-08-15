@@ -95,6 +95,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TrackingTransactions
+                .IgnoreQueryFilters()  
                 .Include(t => t.Reader)
                 .Include(t => t.Card)
                 .Include(t => t.FloorplanMaskedArea);

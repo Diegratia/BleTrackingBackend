@@ -116,6 +116,10 @@ namespace Repositories.DbContexts
                     .HasQueryFilter(m => m.Status != 0);
                 modelBuilder.Entity<MstAccessCctv>()
                     .HasQueryFilter(m => m.Status != 0);
+    //            modelBuilder.Entity<AlarmRecordTracking>()
+    // .HasQueryFilter(m => m.FloorplanMaskedAreaId != null   // pakai FK, bukan nav
+    //               && m.ReaderId != null                    // kalau ada FK-nya
+    //               && m.VisitorId != null);
                 modelBuilder.Entity<FloorplanMaskedArea>()
                     .HasQueryFilter(m => m.Status != 0);
                 modelBuilder.Entity<MstBleReader>()
@@ -491,9 +495,9 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<AlarmRecordTracking>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.ReaderId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.Alarm)
