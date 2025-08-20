@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
     public class FloorplanMaskedAreaController : ControllerBase
     {
         private readonly IFloorplanMaskedAreaService _service;
@@ -21,8 +21,8 @@ namespace Web.API.Controllers.Controllers
         {
             _service = FloorplanMaskedAreaService;
         }
-
         // GET: api/FloorplanMaskedArea
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -86,6 +86,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/FloorplanMaskedArea
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] FloorplanMaskedAreaCreateDto FloorplanMaskedAreaDto)
@@ -125,6 +126,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/FloorplanMaskedArea/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto FloorplanMaskedAreaDto)
@@ -174,6 +176,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // DELETE: api/FloorplanMaskedArea/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
@@ -211,6 +214,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {

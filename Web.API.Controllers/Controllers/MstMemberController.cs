@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    
     public class MstMemberController : ControllerBase
     {
         private readonly IMstMemberService _mstMemberService;
@@ -21,6 +21,7 @@ namespace Web.API.Controllers.Controllers
             _mstMemberService = mstMemberService;
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -48,6 +49,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -85,6 +87,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstMemberCreateDto mstMemberDto)
@@ -124,6 +127,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/MstMember/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto mstMemberDto)
@@ -173,8 +177,9 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/MstMember/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
+        // DELETE: api/MstMember/{id}
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -209,6 +214,8 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {

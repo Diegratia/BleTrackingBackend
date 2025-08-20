@@ -41,8 +41,20 @@ public interface IEmailService
     string? floorNameMember,
     string? buildingNameMember
     );
-    Task SendVisitorNotificationEmailAsync();
-    Task SendMemberNotificationEmailAsync();
+
+    Task SendMemberNotificationEmailAsync(
+        string toEmail,         // email member (host)
+        string hostName,        // nama member (host)
+        string visitorName,     // nama visitor yang diundang
+        string? invitationAgenda,
+        string dateText,
+        string timeText,
+        string location,
+        string memberName,
+        string? confirmationCode,
+        string invitationUrl);
+    
+                
     // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
 
 }
@@ -291,10 +303,64 @@ public class EmailService : IEmailService
     {
         throw new NotImplementedException();
     }
-    public async Task SendMemberNotificationEmailAsync()
+    public async Task SendMemberNotificationEmailAsync(
+        string toEmail,         // email member (host)
+        string hostName,        // nama member (host)
+        string visitorName,     // nama visitor yang diundang
+        string? invitationAgenda,
+        string dateText,
+        string timeText,
+        string location,
+        string memberName,
+        string? confirmationCode,
+        string? invitationUrl
+    )
     {
-        throw new NotImplementedException();
+
+        var smtpHost = _configuration["Email:SmtpHost"];
+        var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+        var smtpUsername = _configuration["Email:SmtpUsername"];
+        var smtpPassword = _configuration["Email:SmtpPassword"];
+        var fromEmail = _configuration["Email:FromEmail"];
+        var fromName = _configuration["Email:FromName"];
+
+        var template = await LoadEmailTemplateAsync("MemberNotification.html");
+
+        var bodyHtml = template
+       .Replace("%to_mail%", hostName)
+       .Replace("%agenda%", invitationAgenda)
+       .Replace("%date%", dateText)
+       .Replace("%time%", timeText)
+       .Replace("%location%", $"{location}")
+    //    .Replace("%link%", memberInvitationUrl)
+       .Replace("%host%", memberName)
+       .Replace("%code%", confirmationCode)
+       .Replace("%member%", memberName)
+       .Replace("%title%", "Your invitation has been sent")
+       .Replace("%message%", $"Your invitation for <b>{visitorName}</b> has been created successfully.")
+       .Replace("%cta_text%", invitationUrl);
+
+
+
+       var message = new MailMessage
+    {
+        From = new MailAddress(fromEmail, fromName),
+        Subject = $"Meeting Invitation - Your invitation for {visitorName} has been created successfully",
+        Body = bodyHtml,
+        IsBodyHtml = true
+    };
+
+    message.To.Add(toEmail);
+
+    using var client = new SmtpClient(smtpHost, smtpPort)
+    {
+        Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+        EnableSsl = true
+    };
+
+    await client.SendMailAsync(message);
     }
+
 
 
     // public async Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode)

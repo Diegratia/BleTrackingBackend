@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddCardonTransaction : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -983,55 +983,6 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tracking_transaction",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    trans_time = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    card_id = table.Column<long>(type: "bigint", nullable: false),
-                    floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    coordinate_x = table.Column<float>(type: "real", nullable: false),
-                    coordinate_y = table.Column<float>(type: "real", nullable: false),
-                    coordinate_px_x = table.Column<float>(type: "real", nullable: false),
-                    coordinate_px_y = table.Column<float>(type: "real", nullable: false),
-                    alarm_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    battery = table.Column<long>(type: "bigint", nullable: false),
-                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    MstBleReaderId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_tracking_transaction", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_tracking_transaction_floorplan_masked_area_FloorplanMaskedAreaId1",
-                        column: x => x.FloorplanMaskedAreaId1,
-                        principalTable: "floorplan_masked_area",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_tracking_transaction_floorplan_masked_area_floorplan_masked_area_id",
-                        column: x => x.floorplan_masked_area_id,
-                        principalTable: "floorplan_masked_area",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_tracking_transaction_mst_application_application_id",
-                        column: x => x.application_id,
-                        principalTable: "mst_application",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_tracking_transaction_mst_ble_reader_MstBleReaderId",
-                        column: x => x.MstBleReaderId,
-                        principalTable: "mst_ble_reader",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_tracking_transaction_mst_ble_reader_reader_id",
-                        column: x => x.reader_id,
-                        principalTable: "mst_ble_reader",
-                        principalColumn: "id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "trx_visitor",
                 columns: table => new
                 {
@@ -1220,6 +1171,60 @@ namespace Repositories.Migrations
                         name: "FK_card_record_visitor_visitor_id",
                         column: x => x.visitor_id,
                         principalTable: "visitor",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tracking_transaction",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    trans_time = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    card_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    coordinate_x = table.Column<float>(type: "real", nullable: true),
+                    coordinate_y = table.Column<float>(type: "real", nullable: true),
+                    coordinate_px_x = table.Column<float>(type: "real", nullable: true),
+                    coordinate_px_y = table.Column<float>(type: "real", nullable: true),
+                    alarm_status = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    battery = table.Column<long>(type: "bigint", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    MstBleReaderId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tracking_transaction", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_card_card_id",
+                        column: x => x.card_id,
+                        principalTable: "card",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_floorplan_masked_area_FloorplanMaskedAreaId1",
+                        column: x => x.FloorplanMaskedAreaId1,
+                        principalTable: "floorplan_masked_area",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_floorplan_masked_area_floorplan_masked_area_id",
+                        column: x => x.floorplan_masked_area_id,
+                        principalTable: "floorplan_masked_area",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_mst_ble_reader_MstBleReaderId",
+                        column: x => x.MstBleReaderId,
+                        principalTable: "mst_ble_reader",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_tracking_transaction_mst_ble_reader_reader_id",
+                        column: x => x.reader_id,
+                        principalTable: "mst_ble_reader",
                         principalColumn: "id");
                 });
 
@@ -1629,6 +1634,11 @@ namespace Repositories.Migrations
                 column: "application_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_tracking_transaction_card_id",
+                table: "tracking_transaction",
+                column: "card_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_tracking_transaction_floorplan_masked_area_id",
                 table: "tracking_transaction",
                 column: "floorplan_masked_area_id");
@@ -1792,9 +1802,6 @@ namespace Repositories.Migrations
                 name: "visitor_blacklist_area");
 
             migrationBuilder.DropTable(
-                name: "card");
-
-            migrationBuilder.DropTable(
                 name: "mst_access_cctv");
 
             migrationBuilder.DropTable(
@@ -1804,7 +1811,16 @@ namespace Repositories.Migrations
                 name: "user");
 
             migrationBuilder.DropTable(
+                name: "card");
+
+            migrationBuilder.DropTable(
                 name: "mst_ble_reader");
+
+            migrationBuilder.DropTable(
+                name: "mst_integration");
+
+            migrationBuilder.DropTable(
+                name: "user_group");
 
             migrationBuilder.DropTable(
                 name: "floorplan_masked_area");
@@ -1816,10 +1832,7 @@ namespace Repositories.Migrations
                 name: "visitor");
 
             migrationBuilder.DropTable(
-                name: "mst_integration");
-
-            migrationBuilder.DropTable(
-                name: "user_group");
+                name: "mst_brand");
 
             migrationBuilder.DropTable(
                 name: "mst_floorplan");
@@ -1832,9 +1845,6 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "mst_organization");
-
-            migrationBuilder.DropTable(
-                name: "mst_brand");
 
             migrationBuilder.DropTable(
                 name: "mst_floor");

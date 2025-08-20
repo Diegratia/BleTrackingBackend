@@ -13,7 +13,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+  
     public class MstFloorplanController : ControllerBase
     {
         private readonly IMstFloorplanService _service;
@@ -24,6 +24,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstFloorplan
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -51,6 +52,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -88,6 +90,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/MstFloorplan
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] MstFloorplanCreateDto dto)
         {
@@ -127,6 +130,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // PUT: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorplanUpdateDto dto)
         {
@@ -176,6 +180,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/MstFloorplan/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -212,6 +217,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -260,6 +266,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {

@@ -11,6 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize("RequireAllAndUserCreated")]
     [Authorize("RequireAll")]
     public class TrxVisitorController : ControllerBase
     {
@@ -22,6 +23,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/TrxVisitor
+        [Authorize("RequireAll")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] TrxVisitorCreateDto createDto)
         {
@@ -71,6 +73,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/TrxVisitor/{id}
+        [Authorize("RequireAll")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -146,6 +149,7 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/TrxVisitor
         [HttpGet]
+        [Authorize("RequireAllAndUserCreated")]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -172,6 +176,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("minimal")]
+        [Authorize("RequireAllAndUserCreated")]
         public async Task<IActionResult> GetAllMinimal()
         {
             try
@@ -199,6 +204,7 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/VisitorBlacklistArea/{id}
         [HttpPut("{id}")]
+        [Authorize("RequireAll")]
         public async Task<IActionResult> Update(Guid id, [FromForm] TrxVisitorUpdateDto trxVisitorDto)
         {
             if (!ModelState.IsValid)
@@ -292,7 +298,7 @@ namespace Web.API.Controllers.Controllers
         //         });
         //     }
         // }
-
+        [Authorize("RequireAllAndUserCreated")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -385,7 +391,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-     [HttpPost("checkin")]
+        [Authorize("RequireAll")]
+        [HttpPost("checkin")]
         public async Task<IActionResult> Checkin([FromBody] TrxVisitorCheckinDto request)
         {
             try
@@ -420,9 +427,10 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-    
+
 
         // POST: api/Visitor/{id}/checkout
+        [Authorize("RequireAll")]
         [HttpPost("{id}/checkout")]
         public async Task<IActionResult> Checkout(Guid id)
         {
@@ -459,6 +467,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequireAll")]
         [HttpPost("{id}/denied")]
         public async Task<IActionResult> Denied(Guid id, DenyReasonDto denyReasonDto)
         {
@@ -495,6 +504,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequireAll")]
         [HttpPost("{id}/blocked")]
         public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
         {
@@ -531,6 +541,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
             
+            [Authorize("RequireAll")]
             [HttpPost("{id}/unblocked")]
             public async Task<IActionResult> Unblocked(Guid id)
             {

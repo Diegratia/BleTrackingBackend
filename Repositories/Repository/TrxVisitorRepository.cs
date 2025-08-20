@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
 using Data.ViewModels;
+using System.Security.Claims;
 
 namespace Repositories.Repository
 {
@@ -37,19 +38,57 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync();
         }
 
-        public IQueryable<TrxVisitor> GetAllQueryable()
+        // public IQueryable<TrxVisitor> GetAllQueryable()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+        //     var query = _context.TrxVisitors
+        //         .Include(v => v.Application)
+        //         .Include(v => v.Visitor)
+        //         .Include(v => v.MaskedArea)
+        //         .Include(v => v.Member);
+
+
+        //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        // }
+
+         public IQueryable<TrxVisitor> GetAllQueryable()
+    {
+        var userEmail = GetUserEmail();
+        var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        var isSuperAdmin = IsSuperAdmin();
+        var isPrimaryAdmin = IsPrimaryAdmin();
+        var isPrimary = IsPrimary();
+
+        var query = _context.TrxVisitors
+            .Include(v => v.Application)
+            .Include(v => v.Visitor)
+            .Include(v => v.MaskedArea)
+            .Include(v => v.Member)
+            .AsQueryable();
+
+        if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.TrxVisitors
-                .Include(v => v.Application)
-                .Include(v => v.Visitor)
-                .Include(v => v.MaskedArea)
-                .Include(v => v.Member);
-
-
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+            if (String.Equals(userRole, LevelPriority.Secondary.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(t =>
+                    _context.MstMembers.Any(m => m.Email == userEmail &&
+                        (t.PurposePerson == m.Id || (t.MemberIdentity == m.IdentityId && t.IsMember == 1))));
+            }
+            else if (String.Equals(userRole, LevelPriority.UserCreated.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(t =>
+                    _context.Visitors.Any(v => v.Email == userEmail && t.VisitorId == v.Id));
+            }
+            else
+            {
+                query = query.Where(t => false); // No access for other roles
+            }
         }
+
+        return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+    }
 
         public async Task<TrxVisitor?> GetAllActiveTrxAsync(Guid visitorId)
         {

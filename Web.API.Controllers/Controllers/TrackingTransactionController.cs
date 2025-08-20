@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [Authorize ("RequireAllAndUserCreated")]
     public class TrackingTransactionController : ControllerBase
     {
         private readonly ITrackingTransactionService _trackingTransactionService;

@@ -25,9 +25,9 @@ namespace Data.ViewModels
         public string? InvestigatedBy { get; set; }
         public string? InvestigatedResult { get; set; }
 
-        public VisitorDto Visitor { get; set; }
-        public MstBleReaderDto Reader { get; set; }
-        public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
+        public VisitorDto? Visitor { get; set; }
+        public MstBleReaderDto? Reader { get; set; }
+        public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }
     }
 
     public class AlarmRecordTrackingCreateDto : BaseModelDto

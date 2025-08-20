@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequireAll")]
+    
     public class VisitorController : ControllerBase
     {
         private readonly IVisitorService _visitorService;
@@ -71,6 +71,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/Visitor/{id}
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -219,6 +220,7 @@ namespace Web.API.Controllers.Controllers
 
 
         // GET: api/Visitor
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -246,6 +248,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // PUT: api/VisitorBlacklistArea/{id}
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] VisitorUpdateDto visitorDto)
         {
@@ -305,6 +308,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/VisitorBlacklistArea/{id}
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -341,6 +345,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -433,6 +438,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmVisitorEmail([FromBody] ConfirmEmailDto confirmDto)
         {
@@ -453,6 +459,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{id}/send-invitation")]
         public async Task<IActionResult> SendInvitationVisitorAsync(Guid id, [FromBody] CreateInvitationDto CreateInvitationDto)
         {
@@ -473,6 +480,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("send-invitation")]
         public async Task<IActionResult> SendInvitationByEmailAsync([FromBody] SendEmailInvitationDto dto)
         {
@@ -493,8 +501,9 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-         [HttpPost("batch/send-invitation")]
-        public async Task<IActionResult> SendBatchInvitationByEmailAsync([FromBody]List<SendEmailInvitationDto> dto)
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [HttpPost("batch/send-invitation")]
+        public async Task<IActionResult> SendBatchInvitationByEmailAsync([FromBody] List<SendEmailInvitationDto> dto)
         {
             if (!ModelState.IsValid)
             {
@@ -564,7 +573,7 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpPost("accept-invitation")]
         [AllowAnonymous]
         public async Task<IActionResult> AcceptInvitationFormAsync([FromQuery] string code, [FromQuery] Guid applicationId, [FromForm] MemberInvitationDto dto)
@@ -604,7 +613,7 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
-             catch (Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, new
                 {
@@ -613,7 +622,7 @@ namespace Web.API.Controllers.Controllers
                     collection = new { data = (object)null },
                     code = 500
                 });
-            }   
+            }
         }
     }
 }

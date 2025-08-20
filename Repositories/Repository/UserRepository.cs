@@ -72,7 +72,7 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("2 .User not found");
         }
 
-              public async Task<User> GetByEmailAsyncRaw(string email)
+            public async Task<User> GetByEmailAsyncRaw(string email)
         {
             var query = _context.Users
                 .Include(u => u.Group)

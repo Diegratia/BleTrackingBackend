@@ -70,10 +70,45 @@ namespace Repositories.Repository
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
         }
 
-         public async Task<IDbContextTransaction> BeginTransactionAsync()
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
             return await _context.Database.BeginTransactionAsync();
         }
+
+
+           protected string GetUserEmail()
+        {
+            var email = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrWhiteSpace(email))
+                throw new UnauthorizedAccessException("User email claim is missing.");
+            return email;
+        }
+
+
+        protected bool IsSuperAdmin()
+        {
+            return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.SuperAdmin.ToString()) ?? false;
+        }
+        
+            protected bool IsPrimary()
+        {
+            return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.Primary.ToString()) ?? false;
+        }
+
+            protected bool IsPrimaryAdmin()
+        {
+            return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
+        }
+        
+        // public enum LevelPriority
+        // {
+        //     System,
+        //     SuperAdmin,
+        //     PrimaryAdmin,
+        //     Primary,
+        //     Secondary,
+        //     UserCreated
+        // }
 
         //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
         //     {

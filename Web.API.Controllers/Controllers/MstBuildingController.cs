@@ -12,7 +12,6 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class MstBuildingController : ControllerBase
     {
         private readonly IMstBuildingService _service;
@@ -23,6 +22,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstBuilding
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -50,6 +50,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstBuilding/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -87,6 +88,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/MstBuilding
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstBuildingCreateDto dto)
         {
@@ -126,6 +128,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // PUT: api/MstBuilding/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto mstBuildingDto)
         {
@@ -175,6 +178,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/MstBuilding/{id}
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -211,6 +215,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
          [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -270,6 +275,8 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("{filter}")]
+        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)

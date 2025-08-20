@@ -1920,7 +1920,6 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("AlarmStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("alarm_status");
 
@@ -1929,31 +1928,32 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
-                    b.Property<long>("Battery")
+                    b.Property<long?>("Battery")
                         .HasColumnType("bigint")
                         .HasColumnName("battery");
 
-                    b.Property<long>("CardId")
-                        .HasColumnType("bigint")
+                    b.Property<Guid?>("CardId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("card_id");
 
-                    b.Property<float>("CoordinatePxX")
+                    b.Property<float?>("CoordinatePxX")
                         .HasColumnType("real")
                         .HasColumnName("coordinate_px_x");
 
-                    b.Property<float>("CoordinatePxY")
+                    b.Property<float?>("CoordinatePxY")
                         .HasColumnType("real")
                         .HasColumnName("coordinate_px_y");
 
-                    b.Property<float>("CoordinateX")
+                    b.Property<float?>("CoordinateX")
                         .HasColumnType("real")
                         .HasColumnName("coordinate_x");
 
-                    b.Property<float>("CoordinateY")
+                    b.Property<float?>("CoordinateY")
                         .HasColumnType("real")
                         .HasColumnName("coordinate_y");
 
-                    b.Property<Guid>("FloorplanMaskedAreaId")
+                    b.Property<Guid?>("FloorplanMaskedAreaId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floorplan_masked_area_id");
@@ -1964,18 +1964,20 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("MstBleReaderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ReaderId")
+                    b.Property<Guid?>("ReaderId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("reader_id");
 
-                    b.Property<DateTime>("TransTime")
+                    b.Property<DateTime?>("TransTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("trans_time");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
+
+                    b.HasIndex("CardId");
 
                     b.HasIndex("FloorplanMaskedAreaId");
 
@@ -3077,11 +3079,15 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany()
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
                         .WithMany()
                         .HasForeignKey("FloorplanMaskedAreaId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.FloorplanMaskedArea", null)
                         .WithMany("TrackingTransactions")
@@ -3094,10 +3100,11 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstBleReader", "Reader")
                         .WithMany()
                         .HasForeignKey("ReaderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Application");
+
+                    b.Navigation("Card");
 
                     b.Navigation("FloorplanMaskedArea");
 
