@@ -69,20 +69,29 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-     options.AddPolicy("RequireAll", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
@@ -130,7 +139,7 @@ builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaServi
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
-var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "5004" ??
+var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "10004" ??
            builder.Configuration["Ports:FloorplanMaskedAreaService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

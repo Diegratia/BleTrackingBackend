@@ -28,7 +28,7 @@ namespace Data.ViewModels
         public string EngineReaderId { get; set; }
     }
 
-    public class MstBleReaderUpdateDto : BaseModelDto
+    public class MstBleReaderUpdateDto 
     {
         public Guid BrandId { get; set; }
         public string Name { get; set; }

@@ -36,7 +36,7 @@ namespace Data.ViewModels
         // public long PositionPxY { get; set; }
     }
 
-     public class FloorplanMaskedAreaUpdateDto : BaseModelDto
+     public class FloorplanMaskedAreaUpdateDto 
     {
         public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }

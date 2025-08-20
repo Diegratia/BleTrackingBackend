@@ -6,6 +6,8 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
+using Data.ViewModels;
 
 namespace Repositories.Repository
 {
@@ -18,15 +20,16 @@ namespace Repositories.Repository
 
         public async Task<TrxVisitor?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            return await GetAllQueryable()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
+        }
 
-            var query = _context.TrxVisitors
-                .Include(v => v.Visitor)
-                .Include(v => v.Application)
-                .Include(v => v.MaskedArea)
-                .Where(v => v.Id == id);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        public async Task<TrxVisitor?> GetByPublicIdAsync(Guid id)
+        {
+            return await _context.TrxVisitors
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<TrxVisitor>> GetAllAsync()
@@ -39,13 +42,64 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TrxVisitors
-                .Include(v => v.Visitor)
                 .Include(v => v.Application)
+                .Include(v => v.Visitor)
                 .Include(v => v.MaskedArea)
-                .AsQueryable();
+                .Include(v => v.Member);
+
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        public async Task<TrxVisitor?> GetAllActiveTrxAsync(Guid visitorId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var activeTrx = await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId && t.CheckedOutAt == null && t.TrxStatus == 1)
+                .OrderByDescending(t => t.CheckedInAt)
+                .FirstOrDefaultAsync();
+
+            return activeTrx;
+        }
+        
+        public async Task<TrxVisitor?> GetAllActiveCOTrxAsync(Guid visitorId)
+        {
+            return await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId 
+                            && t.CheckedOutAt == null     
+                            && t.TrxStatus == 1)          // konsisten dengan GetAllActiveTrxAsync
+                .OrderByDescending(t => t.CheckedInAt)    // ambil yang paling baru di-checkin
+                .FirstOrDefaultAsync();
+        }
+        public IQueryable<TrxVisitorDtoz> GetAllQueryableMinimal()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.TrxVisitors
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member)
+                .AsQueryable();
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(v => new TrxVisitorDtoz
+            {
+                Id = v.Id,
+                CheckedInAt = v.CheckedInAt,
+                Member = v.Member == null ? null : new MstMemberDtoz
+                {
+                    Id = v.Member.Id,
+                    Name = v.Member.Name
+                },
+                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDtoz
+                {
+                    Id = v.MaskedArea.Id,
+                    Name = v.MaskedArea.Name
+                }
+            });
+        }
+
 
         public async Task<TrxVisitor> AddAsync(TrxVisitor trxVisitor)
         {
@@ -83,6 +137,12 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsyncRaw(TrxVisitor trxVisitor)
+        {
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -114,9 +174,74 @@ namespace Repositories.Repository
                 var visitor = await _context.Visitors
                     .FirstOrDefaultAsync(v => v.Id == trxVisitor.VisitorId && v.ApplicationId == applicationId);
 
-                if (visitor == null)
-                    throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
             }
         }
+
+        public async Task<TrxVisitor?> GetLatestUnfinishedByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.VisitorId == visitorId && t.Status != null && t.CheckedOutAt == null)
+                .OrderByDescending(t => t.CheckedInAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<int> CountByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors.CountAsync(x => x.VisitorId == visitorId);
+        }
+
+
+        public async Task<TrxVisitor?> GetByInvitationCodeAsync(string invitationCode)
+        {
+            var trx = await _context.TrxVisitors
+                .Include(t => t.Visitor)
+                .FirstOrDefaultAsync(t =>
+                    t.InvitationCode == invitationCode &&
+                    t.InvitationTokenExpiredAt > DateTime.UtcNow);
+
+            return trx;
+        }
+
+        public async Task<bool> ExistsOverlappingTrxAsync(Guid visitorId, DateTime start, DateTime end)
+        {
+            return await _context.TrxVisitors
+                .Where(t =>
+                    t.VisitorId == visitorId &&
+                    t.TrxStatus != 0 &&
+                    t.CheckedOutAt == null &&
+                    t.IsInvitationAccepted == true &&
+                    (
+                        t.Status != VisitorStatus.Checkout ||
+                        t.Status != VisitorStatus.Denied
+                    )
+                )
+                .AnyAsync(t =>
+                    t.VisitorPeriodStart != null &&
+                    t.VisitorPeriodEnd != null &&
+                    start <= t.VisitorPeriodEnd &&
+                    end >= t.VisitorPeriodStart
+                //                     .AnyAsync(t =>
+                //     start == t.VisitorPeriodStart && end == t.VisitorPeriodEnd
+                // );
+
+                );
+        }
+
+        public async Task<string?> GetFloorNameByTrxIdAsync(Guid trxId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.Id == trxId)
+                .Select(t => t.MaskedArea.Floor.Name)
+                .FirstOrDefaultAsync();
+        }
+            
+        public async Task<string?> GetBuildingNameByTrxIdAsync(Guid trxId)
+            {
+                return await _context.TrxVisitors
+                    .Where(t => t.Id == trxId )
+                    .Select(t => t.MaskedArea.Floor.Building.Name)
+                    .FirstOrDefaultAsync();
+            }
+
     }
 }

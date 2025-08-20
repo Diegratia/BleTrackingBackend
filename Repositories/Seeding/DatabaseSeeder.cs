@@ -4,6 +4,7 @@ using Entities.Models;
 using System;
 using System.Linq;
 using Helpers.Consumer;
+using Bogus.DataSets;
 
 namespace Repositories.Seeding
 {
@@ -12,25 +13,13 @@ namespace Repositories.Seeding
         public static void Seed(BleTrackingDbContext context)
         {
 
-            // 1. MstBrand
-            if (!context.MstBrands.Any(b => b.Status != 0))
-            {
-                var brandFaker = new Faker<MstBrand>()
-                    .RuleFor(b => b.Id, f => Guid.NewGuid())
-                    .RuleFor(b => b.Name, f => f.Company.CompanyName())
-                    .RuleFor(b => b.Tag, f => f.Commerce.Product())
-                    .RuleFor(b => b.Status, f => 1);
-
-                var brands = brandFaker.Generate(3);
-                context.MstBrands.AddRange(brands);
-                context.SaveChanges();
-            }
+   
 
             // 2. MstApplication
             if (!context.MstApplications.Any(a => a.ApplicationStatus != 0))
             {
                 var appFaker = new Faker<MstApplication>()
-                    .RuleFor(a => a.Id, f => Guid.NewGuid())
+                    .RuleFor(a => a.Id, _ => new Guid("c926d20b-a746-4492-9924-eb7eee76305c"))
                     .RuleFor(a => a.ApplicationName, f => f.Company.CompanyName() + " App")
                     .RuleFor(a => a.OrganizationType, f => f.PickRandom<OrganizationType>())
                     .RuleFor(a => a.OrganizationAddress, f => f.Address.FullAddress())
@@ -48,7 +37,7 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.LicenseType, f => f.PickRandom<LicenseType>())
                     .RuleFor(a => a.ApplicationStatus, f => 1);
 
-                var applications = appFaker.Generate(2);
+                var applications = appFaker.Generate(1);
                 context.MstApplications.AddRange(applications);
                 context.SaveChanges();
             }
@@ -79,8 +68,32 @@ namespace Repositories.Seeding
                     new UserGroup
                     {
                         Id = Guid.NewGuid(),
+                        Name = "Super Admin Initial",
+                        LevelPriority = LevelPriority.SuperAdmin,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
+                    new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
                         Name = "Primary Admin Initial",
                         LevelPriority = LevelPriority.PrimaryAdmin,
+                        ApplicationId = applicationId,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    },
+                        new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Secondary Initial",
+                        LevelPriority = LevelPriority.Secondary,
                         ApplicationId = applicationId,
                         CreatedBy = "System",
                         CreatedAt = DateTime.UtcNow,
@@ -137,17 +150,22 @@ namespace Repositories.Seeding
                         .Where(ug => ug.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
+                        .Id)
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
                         .Id);
 
 
-                var users = userFaker.Generate(2);
+                var users = userFaker.Generate(4);
 
 
-                var superadminGroup = context.UserGroups
+                var systemadminGroup = context.UserGroups
                     .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.System && ug.Status != 0);
-                if (superadminGroup != null)
+                if (systemadminGroup != null)
                 {
-                    var superadmin = new User
+                    var systemadmin = new User
                     {
                         Id = Guid.NewGuid(),
                         Username = "systemadmin",
@@ -160,12 +178,55 @@ namespace Repositories.Seeding
                         EmailConfirmationAt = DateTime.UtcNow,
                         LastLoginAt = DateTime.MinValue,
                         StatusActive = StatusActive.Active,
-                        GroupId = superadminGroup.Id
+                        GroupId = systemadminGroup.Id,
+                        ApplicationId = systemadminGroup.ApplicationId,
+                    };
+                    users.Add(systemadmin);
+                }
+
+                var superadminGroup = context.UserGroups
+                    .FirstOrDefault(ug => ug.LevelPriority == LevelPriority.SuperAdmin && ug.Status != 0);
+                if (superadminGroup != null)
+                {
+                    var superadmin = new User
+                    {
+                        Id = new Guid("b53f464b-68b4-4831-ab9a-8f3e56d9fa33"),
+                        Username = "superadmin",
+                        Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
+                        IsCreatedPassword = 1,
+                        Email = "superadmin@test.com",
+                        IsEmailConfirmation = 1,
+                        EmailConfirmationCode = "ABC123",
+                        EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
+                        EmailConfirmationAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.MinValue,
+                        StatusActive = StatusActive.Active,
+                        GroupId = superadminGroup.Id,
+                        ApplicationId = superadminGroup.ApplicationId,
                     };
                     users.Add(superadmin);
                 }
 
                 context.Users.AddRange(users);
+                context.SaveChanges();
+            }
+
+                     // 1. MstBrand
+            if (!context.MstBrands.Any(b => b.Status != 0))
+            {
+                var brandFaker = new Faker<MstBrand>()
+                    .RuleFor(b => b.Id, f => Guid.NewGuid())
+                    .RuleFor(b => b.Name, f => f.Company.CompanyName())
+                    .RuleFor(b => b.Tag, f => f.Commerce.Product())
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(b => b.Status, f => 1);
+
+                var brands = brandFaker.Generate(3);
+                context.MstBrands.AddRange(brands);
                 context.SaveChanges();
             }
 
@@ -210,6 +271,11 @@ namespace Repositories.Seeding
                     .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
                     .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
                     .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(f => f.CreatedBy, f => "System")
                     .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(f => f.UpdatedBy, f => "System")
@@ -232,7 +298,7 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
-                    .RuleFor(f => f.ApplicationId, f => context.MstApplications
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
@@ -259,12 +325,16 @@ namespace Repositories.Seeding
                         .First()
                         .Id)
                     .RuleFor(i => i.IntegrationType, f => f.PickRandom<IntegrationType>())
-                    .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
+                    // .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
+                    .RuleFor(i => i.ApiTypeAuth, f => ApiTypeAuth.ApiKey)
                     .RuleFor(i => i.ApiUrl, f => f.Internet.Url())
+                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:10000")
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
-                    .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
-                    .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
+                    // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
+                    .RuleFor(i => i.ApiKeyField, f => "X-API-KEY-TRACKING-PEOPLE")
+                    // .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
+                    .RuleFor(i => i.ApiKeyValue, f => "FujDuGTsyEXVwkKrtRgn52APwAVRGmPOiIRX8cffynDvIW35bJaGeH3NcH6HcSeK")
                     .RuleFor(i => i.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -276,7 +346,7 @@ namespace Repositories.Seeding
                     .RuleFor(i => i.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(i => i.Status, f => 1);
 
-                var integrations = intFaker.Generate(2);
+                var integrations = intFaker.Generate(1);
                 context.MstIntegrations.AddRange(integrations);
                 context.SaveChanges();
             }
@@ -372,6 +442,11 @@ namespace Repositories.Seeding
                     // .RuleFor(r => r.LocationPxX, f => f.Random.Long(0, 1920))
                     // .RuleFor(r => r.LocationPxY, f => f.Random.Long(0, 1080))
                     .RuleFor(r => r.EngineReaderId, f => "RDR" + f.Random.Number(1000, 9999))
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(r => r.CreatedBy, f => "System")
                     .RuleFor(r => r.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(r => r.UpdatedBy, f => "System")
@@ -409,6 +484,11 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.ColorArea, f => f.Internet.Color())
                     .RuleFor(a => a.RestrictedStatus, f => f.PickRandom<RestrictedStatus>())
                     .RuleFor(a => a.EngineAreaId, f => "ENG" + f.Random.Number(100, 999))
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     // .RuleFor(a => a.WideArea, f => f.Random.Long(50, 200))
                     // .RuleFor(a => a.PositionPxX, f => f.Random.Long(0, 1920))
                     // .RuleFor(a => a.PositionPxY, f => f.Random.Long(0, 1080))
@@ -446,7 +526,7 @@ namespace Repositories.Seeding
                     .RuleFor(c => c.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(c => c.Status, f => 1);
 
-                var cctvs = cctvFaker.Generate(2);
+                var cctvs = cctvFaker.Generate();
                 context.MstAccessCctvs.AddRange(cctvs);
                 context.SaveChanges();
             }
@@ -551,34 +631,18 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.IdentityId, f => "VID" + f.Random.Number(100, 999))
                     .RuleFor(v => v.CardNumber, f => "VCARD" + f.Random.Number(1000, 9999))
                     .RuleFor(v => v.BleCardNumber, f => "VBLE" + f.Random.Number(100, 999))
-                    .RuleFor(v => v.VisitorType, f => f.PickRandom<VisitorType>())
                     .RuleFor(v => v.Name, f => f.Name.FullName())
                     .RuleFor(v => v.Phone, f => f.Phone.PhoneNumber())
                     .RuleFor(v => v.Email, f => f.Internet.Email())
                     .RuleFor(v => v.Gender, f => f.PickRandom<Gender>())
                     .RuleFor(v => v.Address, f => f.Address.FullAddress())
-                    .RuleFor(v => v.OrganizationId, f => context.MstOrganizations
-                        .Where(o => o.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.DistrictId, f => context.MstDistricts
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.DepartmentId, f => context.MstDepartments
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
+                    .RuleFor(v => v.OrganizationName, f => f.Name.FullName())
+                    .RuleFor(v => v.DistrictName, f => f.Name.FullName())
+                    .RuleFor(v => v.DepartmentName, f => f.Name.FullName())
                     .RuleFor(v => v.IsVip, f => f.Random.Bool())
-                    .RuleFor(v => v.IsEmailVerified, f => f.Random.Bool())
-                    .RuleFor(v => v.EmailVerficationSendAt, f => f.Date.Recent(1))
-                    .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
-                    .RuleFor(v => v.VisitorPeriodStart, f => f.Date.Recent(1))
-                    .RuleFor(v => v.VisitorPeriodEnd, f => f.Date.Recent(1))
-                    .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
+                    .RuleFor(e => e.IdentityType, f => f.PickRandom<IdentityType>())
+                    // .RuleFor(v => v.EmailVerificationToken, f => f.Random.AlphaNumeric(10))
+                    // .RuleFor(v => v.IsEmployee, f => f.Random.Bool())
                     .RuleFor(v => v.Status, f => 1)
                     .RuleFor(v => v.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
                     .RuleFor(v => v.UploadFr, f => f.Random.Int(0, 2))
@@ -601,21 +665,47 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
                     .RuleFor(e => e.Name, f => f.Random.Word())
                     .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.CardType, f => f.PickRandom<CardType>())
+                    .RuleFor(e => e.CardType, f => f.PickRandom<Helpers.Consumer.CardType>())
                     .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
                     .RuleFor(e => e.QRCode, f => f.Random.String(10))
                     .RuleFor(e => e.Dmac, f => f.Internet.Mac())
                     .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
-                    .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    // .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    .RuleFor(t => t.RegisteredMaskedAreaId, f => f.Random.Bool()
+                        ? (Guid?)null
+                        : context.FloorplanMaskedAreas
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
+                     .RuleFor(t => t.VisitorId, f => f.Random.Bool()
+                        ? (Guid?)null
+                        : context.Visitors
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
+                     .RuleFor(t => t.MemberId, f => f.Random.Bool() 
+                        ? (Guid?)null 
+                        : context.MstMembers
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
                     .RuleFor(e => e.IsUsed, f => f.Random.Bool())
                     .RuleFor(e => e.LastUsed, f => f.Person.FullName)
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(e => e.StatusCard, f => 1)
                     .RuleFor(b => b.CreatedBy, f => "System")
                     .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
                     .RuleFor(b => b.UpdatedBy, f => "System")
                     .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
 
-                var cards = cardFaker.Generate(2);
+                var cards = cardFaker.Generate(4);
                 context.Cards.AddRange(cards);
                 context.SaveChanges();
             }
@@ -638,6 +728,11 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(t => t.CoordinateX, f => f.Random.Float(0, 100))
                     .RuleFor(t => t.CoordinateY, f => f.Random.Float(0, 100))
                     .RuleFor(t => t.CoordinatePxX, f => f.Random.Float(0, 1920))
@@ -657,6 +752,11 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.Id, f => Guid.NewGuid())
                     .RuleFor(v => v.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
                         .Where(a => a.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(a => a.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
                         .Id)
@@ -711,7 +811,7 @@ namespace Repositories.Seeding
                     .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
                     .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
 
-                var alarms = alarmFaker.Generate(1);
+                var alarms = alarmFaker.Generate(50);
                 context.AlarmRecordTrackings.AddRange(alarms);
                 context.SaveChanges();
             }
@@ -808,6 +908,11 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.Status, f => 1)
                     .RuleFor(e => e.IsLive, f => 1)
                     .RuleFor(e => e.LastLive, f => f.Date.Recent())
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(e => e.ServiceStatus, f => f.PickRandom<ServiceStatus>());
 
                 var engines = engineFaker.Generate(3);
@@ -831,6 +936,16 @@ namespace Repositories.Seeding
                         .OrderBy(r => Guid.NewGuid())
                         .Select(v => v.Id)
                         .FirstOrDefault())
+                    .RuleFor(e => e.CardId, f => context.Cards
+                        .Where(v => v.StatusCard != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .Select(v => v.Id)
+                        .FirstOrDefault())
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(v => v.Timestamp, f => f.Date.Recent(1))
                     .RuleFor(v => v.CheckinAt, f => f.Date.Recent(1))
                     .RuleFor(v => v.CheckoutAt, f => f.Date.Future(1))
@@ -838,7 +953,7 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.CheckoutBy, f => "System")
                     .RuleFor(e => e.CheckoutMaskedArea, f => Guid.NewGuid())
                     .RuleFor(e => e.CheckinMaskedArea, f => Guid.NewGuid())
-                    .RuleFor(a => a.VisitorType, f => f.PickRandom<VisitorType>());
+                    .RuleFor(a => a.VisitorActiveStatus, f => f.PickRandom<VisitorActiveStatus>());
 
                 var cardrecords = cardrecordFaker.Generate(2);
                 context.CardRecords.AddRange(cardrecords);
@@ -859,7 +974,11 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.CheckoutBy, f => "System")
                     .RuleFor(b => b.DenyBy, f => "System")
                     .RuleFor(b => b.DenyReason, f => f.PickRandom(new[] { "No reason", "Card is not valid", "Card is expired", "Card is blocked", "Card is denied" }))
-
+                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
                     .RuleFor(e => e.VisitorId, f => context.Visitors
                         .Where(v => v.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -872,7 +991,14 @@ namespace Repositories.Seeding
                     .RuleFor(e => e.VisitorCode, f => f.Random.String(10))
                     .RuleFor(e => e.VehiclePlateNumber, f => f.Random.String(10))
                     .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.MaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                    // .RuleFor(e => e.MaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+                       .RuleFor(t => t.MaskedAreaId, f => f.Random.Bool() 
+                        ? (Guid?)null 
+                        : context.FloorplanMaskedAreas
+                            .Where(a => a.Status != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id)
                     .RuleFor(e => e.ParkingId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid());
 
                 var trxVisitors = trxVisitorFaker.Generate(2);

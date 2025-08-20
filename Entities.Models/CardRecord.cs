@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models
 {
-    public class CardRecord : IApplicationEntity
+    public class CardRecord : BaseModelWithTime, IApplicationEntity
     {
         [Key]
         [Column("id")]
@@ -32,8 +32,8 @@ namespace Entities.Models
         [Column("member_id")]
         public Guid? MemberId { get; set; }
 
-        [Column("type")]
-        public CardType? Type { get; set; }
+        // [Column("type")]
+        // public CardType? Type { get; set; }
 
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }
@@ -57,7 +57,10 @@ namespace Entities.Models
         public Guid? CheckinMaskedArea { get; set; }
 
         [Column("visitor_type")]
-        public VisitorType? VisitorType { get; set; }
+        public VisitorActiveStatus? VisitorActiveStatus { get; set; }
+
+        [Column("status")]
+        public int Status { get; set; }
 
         [Required]
         [ForeignKey("Application")]

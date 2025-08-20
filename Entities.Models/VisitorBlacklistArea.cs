@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class VisitorBlacklistArea : BaseModel, IApplicationEntity
+    public class VisitorBlacklistArea : BaseModelWithTime, IApplicationEntity
     {
         [Required]
         [ForeignKey("FloorplanMaskedArea")]

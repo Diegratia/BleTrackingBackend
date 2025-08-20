@@ -8,8 +8,8 @@ namespace Data.ViewModels
         public int Generate { get; set; }
         public Guid Id { get; set; }
         public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public string FloorImage { get; set; }
+        public string? Name { get; set; }
+        public string? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
@@ -27,8 +27,8 @@ namespace Data.ViewModels
     public class MstFloorCreateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public IFormFile FloorImage { get; set; }
+        public string? Name { get; set; }
+        public IFormFile? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
@@ -37,23 +37,24 @@ namespace Data.ViewModels
         public long EngineFloorId { get; set; }
     }
 
-    public class MstFloorUpdateDto : BaseModelDto
+    public class MstFloorUpdateDto 
     {
-        public Guid BuildingId { get; set; }
-        public string Name { get; set; }
-        public IFormFile FloorImage { get; set; }
+        public Guid? BuildingId { get; set; }
+        public string? Name { get; set; }
+        public IFormFile? FloorImage { get; set; }
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }
         public float FloorY { get; set; }
         public float MeterPerPx { get; set; }
         public long EngineFloorId { get; set; }
+        public Guid? ApplicationId { get; set; }
     }
     public class MstFloorImportDto
     {
         public string BuildingId { get; set; } 
-        public string Name { get; set; }
-        public string FloorImage { get; set; } = "";
+        public string? Name { get; set; }
+        public string? FloorImage { get; set; } = "";
         public float PixelX { get; set; }
         public float PixelY { get; set; }
         public float FloorX { get; set; }

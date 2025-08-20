@@ -13,7 +13,7 @@ namespace Data.ViewModels
         public string? ApiAuthPasswd { get; set; }
         public string? ApiKeyField { get; set; }
         public string? ApiKeyValue { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }
@@ -32,10 +32,10 @@ namespace Data.ViewModels
         public string? ApiAuthPasswd { get; set; }
         public string? ApiKeyField { get; set; }
         public string? ApiKeyValue { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
     }
 
-    public class MstIntegrationUpdateDto : BaseModelDto
+    public class MstIntegrationUpdateDto 
     {
         public Guid BrandId { get; set; }
         public string? IntegrationType { get; set; }
@@ -45,6 +45,6 @@ namespace Data.ViewModels
         public string? ApiAuthPasswd { get; set; }
         public string? ApiKeyField { get; set; }
         public string? ApiKeyValue { get; set; }
-        public Guid ApplicationId { get; set; }
+        // public Guid ApplicationId { get; set; }
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize ("RequiredSystemUser")]
+    [Authorize ("RequireSystemOrSuperAdminRole")]
     [Route("api/[controller]")]
     [ApiController]
     public class MstApplicationController : ControllerBase
@@ -256,9 +256,10 @@ namespace Web.API.Controllers.Controllers
                     code = 500
                 });
             }
-        }   
+        }
 
         [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -279,13 +280,14 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportExcel()
         {
             try
             {
                 var excelBytes = await _mstApplicationService.ExportExcelAsync();
-                return File(excelBytes, 
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "MstApplication_Report.xlsx");
             }
             catch (Exception ex)

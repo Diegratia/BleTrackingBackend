@@ -157,11 +157,10 @@ namespace Repositories.Repository
 
         public async Task<MstDistrict> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstDistricts
-                .Where(d => d.Id == id && d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("District not found");
+
+            return await GetAllQueryable()
+            .Where(d => d.Id == id && d.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("District not found");
         }
 
         public async Task<MstFloorplan> GetFloorplanByIdAsync(Guid floorplanId)
@@ -172,17 +171,9 @@ namespace Repositories.Repository
 
             var query = _context.MstFloorplans
                 .Where(f => f.Id == floorplanId && f.Status != 0);
+            query = query.WithActiveRelations();
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             return await query.FirstOrDefaultAsync();
-        }
-
-        public async Task<IEnumerable<MstDistrict>> GetAllAsync()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstDistricts
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
         }
 
         public async Task<MstDistrict> AddAsync(MstDistrict district)
@@ -234,21 +225,27 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+          public async Task<IEnumerable<MstDistrict>> GetAllAsync()
+        {
+            return await GetAllQueryable()
+                .ToListAsync();
+        }
+
         public IQueryable<MstDistrict> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstDistricts
                 .Where(d => d.Status != 0);
+
+            query = query.WithActiveRelations();
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<MstDistrict>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstDistricts
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable()
+                .ToListAsync();
         }
     }
 }

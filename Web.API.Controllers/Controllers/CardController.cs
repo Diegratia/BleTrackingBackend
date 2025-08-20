@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class CardController : ControllerBase
     {
         private readonly ICardService _service;
@@ -255,8 +255,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -277,6 +278,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportExcel()
         {
             try

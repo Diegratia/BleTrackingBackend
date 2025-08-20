@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Repositories.Repository
 {
@@ -30,7 +31,7 @@ namespace Repositories.Repository
             }
 
             // Prioritas 1: Dari token Bearer (claim di JWT)
-            var applicationIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
             if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
             {
                 return (applicationIdFromToken, false);
@@ -68,5 +69,32 @@ namespace Repositories.Repository
             if (!isSystemAdmin && applicationId.HasValue && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
         }
+
+         public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
+        }
+
+        //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
+        //     {
+        //         return query.Where(c =>
+        //             (c.Visitor == null || c.Visitor.Status != 0) &&
+        //             (c.Visitor.Department == null || c.Visitor.Department.Status != 0) &&
+        //             (c.Visitor.Department.District == null || c.Visitor.Department.District.Status != 0));
+        //     }
+
+        // public static IQueryable<FloorplanMaskedArea> WithActiveRelations(this IQueryable<FloorplanMaskedArea> query)
+        // {
+        //     return query.Where(m =>
+        //         m.Floorplan != null &&
+        //         m.Floorplan.Status != 0 &&
+        //         m.Floorplan.Floor != null &&
+        //         m.Floorplan.Floor.Status != 0 &&
+        //         m.Floorplan.Floor.Department != null &&
+        //         m.Floorplan.Floor.Department.Status != 0);
+        // }
+
+
     }
 }
+

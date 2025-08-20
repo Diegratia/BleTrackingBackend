@@ -12,8 +12,8 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250722110404_CardRecord")]
-    partial class CardRecord
+    [Migration("20250813002623_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,22 +49,20 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<string>("CancelBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("cancel_by");
 
-                    b.Property<DateTime>("CancelTimestamp")
+                    b.Property<DateTime?>("CancelTimestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("cancel_timestamp");
 
                     b.Property<string>("DoneBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("done_by");
 
-                    b.Property<DateTime>("DoneTimestamp")
+                    b.Property<DateTime?>("DoneTimestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("done_timestamp");
 
@@ -84,33 +82,33 @@ namespace Repositories.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("IdleBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("idle_by");
 
-                    b.Property<DateTime>("IdleTimestamp")
+                    b.Property<DateTime?>("IdleTimestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("idle_timestamp");
 
                     b.Property<string>("InvestigatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("investigated_by");
 
-                    b.Property<DateTime>("InvestigatedDoneAt")
+                    b.Property<DateTime?>("InvestigatedDoneAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("investigated_done_at");
 
                     b.Property<string>("InvestigatedResult")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("investigated_result");
 
-                    b.Property<DateTime>("InvestigatedTimestamp")
+                    b.Property<DateTime?>("InvestigatedTimestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("investigated_timestamp");
+
+                    b.Property<Guid?>("MstApplicationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("MstBleReaderId")
                         .HasColumnType("uniqueidentifier");
@@ -120,7 +118,7 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ble_reader_id");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTime?>("Timestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
@@ -133,22 +131,19 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("WaitingBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("waiting_by");
 
-                    b.Property<DateTime>("WaitingTimestamp")
+                    b.Property<DateTime?>("WaitingTimestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("waiting_timestamp");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationId")
-                        .IsUnique();
+                    b.HasIndex("ApplicationId");
 
-                    b.HasIndex("FloorplanMaskedAreaId")
-                        .IsUnique();
+                    b.HasIndex("FloorplanMaskedAreaId");
 
                     b.HasIndex("FloorplanMaskedAreaId1");
 
@@ -156,13 +151,13 @@ namespace Repositories.Migrations
                         .IsUnique()
                         .HasDatabaseName("alarm_record_tracking__generate_unique");
 
+                    b.HasIndex("MstApplicationId");
+
                     b.HasIndex("MstBleReaderId");
 
-                    b.HasIndex("ReaderId")
-                        .IsUnique();
+                    b.HasIndex("ReaderId");
 
-                    b.HasIndex("VisitorId")
-                        .IsUnique();
+                    b.HasIndex("VisitorId");
 
                     b.HasIndex("VisitorId1");
 
@@ -193,19 +188,16 @@ namespace Repositories.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<float>("Distance")
-                        .HasMaxLength(255)
                         .HasColumnType("real")
                         .HasColumnName("distance");
 
                     b.Property<float>("DistancePx")
-                        .HasMaxLength(255)
                         .HasColumnType("real")
                         .HasColumnName("distance_px");
 
                     b.Property<string>("EndPos")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("end_pos");
 
                     b.Property<long>("Generate")
@@ -223,8 +215,7 @@ namespace Repositories.Migrations
 
                     b.Property<string>("StartPos")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("start_pos");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -257,20 +248,155 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
-                    b.Property<string>("CardBarcode")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("card_barcode");
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
 
                     b.Property<string>("CardNumber")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("card_number");
 
                     b.Property<string>("CardType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("type");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTime?>("CheckinAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkin_at");
+
+                    b.Property<DateTime?>("CheckoutAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkout_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Dmac")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("dmac");
+
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<bool?>("IsMultiMaskedArea")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_multi_masked_area");
+
+                    b.Property<bool?>("IsUsed")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_used");
+
+                    b.Property<string>("LastUsed")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("last_used_by");
+
+                    b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("QRCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("qr_code");
+
+                    b.Property<Guid?>("RegisteredMaskedAreaId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("registered_masked_area_id");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int?>("StatusCard")
+                        .HasColumnType("int")
+                        .HasColumnName("status_card");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid?>("VisitorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("RegisteredMaskedAreaId");
+
+                    b.HasIndex("VisitorId");
+
+                    b.ToTable("card", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<Guid?>("CardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_id");
+
+                    b.Property<Guid?>("CardId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CheckinAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkin_at");
+
+                    b.Property<string>("CheckinBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("checkin_by");
+
+                    b.Property<Guid?>("CheckinMaskedArea")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("checkin_masked_area");
+
+                    b.Property<DateTime?>("CheckoutAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("checkout_at");
+
+                    b.Property<string>("CheckoutBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("checkout_by");
+
+                    b.Property<Guid?>("CheckoutMaskedArea")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("checkout_masked_area");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
@@ -286,80 +412,6 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<bool?>("IsMultiSite")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_multi_site");
-
-                    b.Property<bool?>("IsUsed")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_used");
-
-                    b.Property<string>("LastUsed")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("last_used_by");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("name");
-
-                    b.Property<Guid?>("RegisteredSite")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("registered_site");
-
-                    b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("remarks");
-
-                    b.Property<bool?>("StatusCard")
-                        .HasColumnType("bit")
-                        .HasColumnName("status_card");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("card", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.CardRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime?>("CheckinAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("checkin_at");
-
-                    b.Property<string>("CheckinBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("checkin_by");
-
-                    b.Property<Guid?>("CheckinSiteId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("checkin_site_id");
-
-                    b.Property<DateTime?>("CheckoutAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("checkout_at");
-
-                    b.Property<string>("CheckoutBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("checkout_by");
-
-                    b.Property<Guid?>("CheckoutSiteId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("checkout_site_id");
-
                     b.Property<Guid?>("MemberId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("member_id");
@@ -372,20 +424,25 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
-                    b.Property<int?>("Type")
-                        .HasColumnType("int")
-                        .HasColumnName("type");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
 
-                    b.Property<Guid>("VisitorCardId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("visitor_card_id");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
-                    b.Property<Guid?>("VisitorCardId1")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("VisitorActiveStatus")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_type");
 
                     b.Property<Guid?>("VisitorId")
                         .HasColumnType("uniqueidentifier")
@@ -394,20 +451,17 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("VisitorId1")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("VisitorType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("CardId1");
 
                     b.HasIndex("MemberId");
 
                     b.HasIndex("MstMemberId");
-
-                    b.HasIndex("VisitorCardId");
-
-                    b.HasIndex("VisitorCardId1");
 
                     b.HasIndex("VisitorId");
 
@@ -444,13 +498,11 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("DeviceStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("device_status");
 
@@ -487,7 +539,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
@@ -513,13 +564,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ble_reader_id");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
 
                     b.Property<string>("Type")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("type");
 
@@ -528,9 +577,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -571,13 +618,17 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<string>("AreaShape")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("area_shape");
 
                     b.Property<string>("ColorArea")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("color_area");
@@ -587,7 +638,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -607,18 +657,17 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floorplan_id");
 
-                    b.Property<int>("Generate")
+                    b.Property<long>("Generate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("_generate");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<Guid?>("MstFloorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
@@ -628,8 +677,7 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("restricted_status");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
@@ -640,12 +688,12 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorId");
 
@@ -674,7 +722,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -686,7 +733,7 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<Guid>("IntegrationId")
+                    b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
@@ -717,9 +764,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -746,28 +791,25 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<Guid?>("BrandId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("controller_brand_id");
+
                     b.Property<string>("Channel")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("channel");
-
-                    b.Property<Guid>("ControllerBrandId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("controller_brand_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
@@ -784,7 +826,7 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
-                    b.Property<Guid>("IntegrationId")
+                    b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
@@ -793,25 +835,21 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
                     b.Property<string>("Raw")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("raw");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
                         .HasColumnName("status");
 
                     b.Property<string>("Type")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("type");
@@ -821,7 +859,6 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
@@ -829,7 +866,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("ControllerBrandId");
+                    b.HasIndex("BrandId");
 
                     b.HasIndex("IntegrationId");
 
@@ -959,6 +996,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<Guid>("BrandId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -969,7 +1011,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -980,27 +1021,24 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("engine_reader_id");
 
-                    b.Property<int>("Generate")
+                    b.Property<long>("Generate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("_generate");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("Gmac")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("gmac");
 
                     b.Property<string>("Ip")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ip");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
@@ -1017,12 +1055,12 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("BrandId");
 
@@ -1037,6 +1075,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<int>("Generate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -1045,23 +1087,22 @@ namespace Repositories.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
                     b.Property<int?>("Status")
-                        .IsRequired()
                         .HasColumnType("int")
                         .HasColumnName("status");
 
                     b.Property<string>("Tag")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("tag");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.ToTable("mst_brand", (string)null);
                 });
@@ -1084,7 +1125,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1097,23 +1137,17 @@ namespace Repositories.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("Image")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("image");
 
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MstBuildingId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
@@ -1124,9 +1158,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -1137,8 +1169,6 @@ namespace Repositories.Migrations
                         .IsUnique();
 
                     b.HasIndex("MstApplicationId");
-
-                    b.HasIndex("MstBuildingId");
 
                     b.ToTable("mst_building", (string)null);
                 });
@@ -1157,7 +1187,6 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<string>("Code")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("code");
@@ -1167,13 +1196,11 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("DepartmentHost")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("department_host");
@@ -1189,13 +1216,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
@@ -1206,9 +1231,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -1244,7 +1267,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1271,8 +1293,7 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
@@ -1283,9 +1304,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -1305,6 +1324,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<string>("EngineId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1318,17 +1342,17 @@ namespace Repositories.Migrations
                         .HasDefaultValue(1)
                         .HasColumnName("is_live");
 
-                    b.Property<DateTime>("LastLive")
+                    b.Property<DateTime?>("LastLive")
+                        .IsRequired()
                         .HasColumnType("datetime2")
                         .HasColumnName("last_live");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<int>("Port")
+                    b.Property<int?>("Port")
                         .HasColumnType("int")
                         .HasColumnName("port");
 
@@ -1347,6 +1371,8 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationId");
+
                     b.ToTable("mst_engine", (string)null);
                 });
 
@@ -1358,6 +1384,11 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<Guid>("BuildingId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -1368,7 +1399,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1393,7 +1423,7 @@ namespace Repositories.Migrations
                     b.Property<int>("Generate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("generate");
+                        .HasColumnName("_generate");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
 
@@ -1426,12 +1456,12 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("BuildingId");
 
@@ -1456,7 +1486,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1480,7 +1509,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
@@ -1497,9 +1525,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -1527,25 +1553,21 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("ApiAuthPasswd")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("api_auth_passwd");
 
                     b.Property<string>("ApiAuthUsername")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("api_auth_username");
 
                     b.Property<string>("ApiKeyField")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("api_key_field");
 
                     b.Property<string>("ApiKeyValue")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("api_key_value");
@@ -1556,7 +1578,6 @@ namespace Repositories.Migrations
                         .HasColumnName("api_type_auth");
 
                     b.Property<string>("ApiUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("api_url");
 
@@ -1575,7 +1596,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1604,7 +1624,6 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
@@ -1626,7 +1645,6 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("address");
 
@@ -1635,18 +1653,16 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
-                    b.Property<DateOnly>("BirthDate")
+                    b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
 
                     b.Property<string>("BleCardNumber")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ble_card_number");
 
                     b.Property<string>("CardNumber")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_number");
@@ -1656,7 +1672,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1672,22 +1687,19 @@ namespace Repositories.Migrations
                         .HasColumnName("district_id");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
 
-                    b.Property<DateOnly>("ExitDate")
+                    b.Property<DateOnly?>("ExitDate")
                         .HasColumnType("date")
                         .HasColumnName("exit_date");
 
                     b.Property<string>("FaceImage")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("face_image");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("gender");
 
@@ -1699,24 +1711,21 @@ namespace Repositories.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("HeadMember1")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("head_member1");
 
                     b.Property<string>("HeadMember2")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("head_member2");
 
                     b.Property<string>("IdentityId")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
 
-                    b.Property<DateOnly>("JoinDate")
+                    b.Property<DateOnly?>("JoinDate")
                         .HasColumnType("date")
                         .HasColumnName("join_date");
 
@@ -1733,7 +1742,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
@@ -1750,20 +1758,17 @@ namespace Repositories.Migrations
                         .HasColumnName("person_id");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("phone");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
                         .HasColumnName("status");
 
                     b.Property<string>("StatusEmployee")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("status_employee");
 
@@ -1772,9 +1777,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.Property<int>("UploadFr")
@@ -1782,7 +1785,6 @@ namespace Repositories.Migrations
                         .HasColumnName("upload_fr");
 
                     b.Property<string>("UploadFrError")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("upload_fr_error");
 
@@ -1825,7 +1827,6 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<string>("Code")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("code");
@@ -1835,7 +1836,6 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
@@ -1851,19 +1851,16 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
                     b.Property<string>("OrganizationHost")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("organization_host");
 
-                    b.Property<int?>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1)
@@ -1874,9 +1871,7 @@ namespace Repositories.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -1932,6 +1927,11 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("alarm_status");
 
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
                     b.Property<long>("Battery")
                         .HasColumnType("bigint")
                         .HasColumnName("battery");
@@ -1978,6 +1978,8 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationId");
+
                     b.HasIndex("FloorplanMaskedAreaId");
 
                     b.HasIndex("FloorplanMaskedAreaId1");
@@ -1997,113 +1999,197 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
-                    b.Property<DateTime>("BlockAt")
+                    b.Property<string>("Agenda")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("agenda");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime?>("BlockAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("block_at");
 
                     b.Property<string>("BlockBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("block_by");
 
                     b.Property<string>("BlockReason")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("block_reason");
 
-                    b.Property<DateTime>("CheckedInAt")
+                    b.Property<DateTime?>("CheckedInAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("checked_in_at");
 
-                    b.Property<DateTime>("CheckedOutAt")
+                    b.Property<DateTime?>("CheckedOutAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("checked_out_at");
 
                     b.Property<string>("CheckinBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("checkin_by");
 
                     b.Property<string>("CheckoutBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("checkout_by");
 
-                    b.Property<DateTime>("DenyAt")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DenyAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("deny_at");
 
                     b.Property<string>("DenyBy")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_by");
 
                     b.Property<string>("DenyReason")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
-                    b.Property<DateTime>("InvitationCreatedAt")
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<string>("InvitationCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("invitation_code");
+
+                    b.Property<DateTime?>("InvitationCreatedAt")
+                        .IsRequired()
                         .HasColumnType("datetime2")
                         .HasColumnName("invitation_created_at");
 
-                    b.Property<string>("ParkingId")
-                        .IsRequired()
+                    b.Property<DateTime?>("InvitationTokenExpiredAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("invitation_token_expired_at");
+
+                    b.Property<bool?>("IsInvitationAccepted")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_invitation_accepted");
+
+                    b.Property<int?>("IsMember")
+                        .HasColumnType("int")
+                        .HasColumnName("is_member");
+
+                    b.Property<Guid?>("MaskedAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("masked_area_id");
+
+                    b.Property<string>("MemberIdentity")
                         .HasColumnType("nvarchar(max)")
+                        .HasColumnName("member_identity");
+
+                    b.Property<Guid?>("ParkingId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("parking_id");
 
+                    b.Property<Guid?>("PurposePerson")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("purpose_person_id");
+
                     b.Property<string>("Remarks")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("remarks");
-
-                    b.Property<string>("SiteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("site_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
+                        .HasColumnName("visitor_status");
 
-                    b.Property<DateTime>("UnblockAt")
+                    b.Property<int>("TrxStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UnblockAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("unblock_at");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.Property<string>("VehiclePlateNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("vehicle_plate_number");
 
+                    b.Property<string>("VisitorActiveStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("visitor_active_status");
+
                     b.Property<string>("VisitorCode")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("visitor_code");
 
-                    b.Property<long>("VisitorGroupCode")
+                    b.Property<long?>("VisitorGroupCode")
                         .HasColumnType("bigint")
                         .HasColumnName("visitor_group_code");
 
-                    b.Property<Guid>("VisitorId")
+                    b.Property<Guid?>("VisitorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
 
+                    b.Property<Guid?>("VisitorId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("VisitorNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("visitor_number");
 
+                    b.Property<DateTime?>("VisitorPeriodEnd")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("visitor_period_end");
+
+                    b.Property<DateTime?>("VisitorPeriodStart")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("visitor_period_start");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("MaskedAreaId");
+
+                    b.HasIndex("PurposePerson");
+
+                    b.HasIndex("Status");
+
                     b.HasIndex("VisitorId");
+
+                    b.HasIndex("VisitorId1");
+
+                    b.HasIndex("VisitorPeriodStart");
+
+                    b.HasIndex("VisitorId", "Status");
+
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
+                        .IsUnique()
+                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
@@ -2114,6 +2200,10 @@ namespace Repositories.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -2179,6 +2269,8 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationId");
+
                     b.HasIndex("GroupId");
 
                     b.HasIndex("UserGroupId");
@@ -2207,12 +2299,18 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<int>("LevelPriority")
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<int?>("LevelPriority")
                         .HasColumnType("int")
                         .HasColumnName("level_priority");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
@@ -2246,7 +2344,6 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("address");
 
@@ -2256,49 +2353,42 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<string>("BleCardNumber")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ble_card_number");
 
                     b.Property<string>("CardNumber")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("card_number");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("department_id");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
 
-                    b.Property<Guid>("DistrictId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("district_id");
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DepartmentName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("department_name");
+
+                    b.Property<string>("DistrictName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("district_name");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
 
-                    b.Property<DateTime>("EmailVerficationSendAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("email_verification_send_at");
-
-                    b.Property<string>("EmailVerificationToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("email_verification_token");
-
                     b.Property<string>("FaceImage")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("face_image");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("gender");
 
@@ -2310,20 +2400,15 @@ namespace Repositories.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("IdentityId")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
 
-                    b.Property<bool>("IsEmailVerified")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_email_vervied");
+                    b.Property<string>("IdentityType")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("identity_type");
 
-                    b.Property<bool>("IsEmployee")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_employee");
-
-                    b.Property<bool>("IsVip")
+                    b.Property<bool?>("IsVip")
                         .HasColumnType("bit")
                         .HasColumnName("is_vip");
 
@@ -2331,24 +2416,19 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("OrganizationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("organization_id");
+                    b.Property<string>("OrganizationName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("organization_name");
 
                     b.Property<string>("PersonId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("person_id");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("phone");
@@ -2357,42 +2437,41 @@ namespace Repositories.Migrations
                         .HasColumnType("int")
                         .HasColumnName("status");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.Property<int>("UploadFr")
                         .HasColumnType("int")
                         .HasColumnName("upload_fr");
 
                     b.Property<string>("UploadFrError")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("upload_fr_error");
 
-                    b.Property<DateTime>("VisitorPeriodEnd")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("visitor_period_end");
+                    b.Property<string>("VisitorCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_code");
 
-                    b.Property<DateTime>("VisitorPeriodStart")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("visitor_period_start");
+                    b.Property<long?>("VisitorGroupCode")
+                        .HasColumnType("bigint")
+                        .HasColumnName("visitor_group_code");
 
-                    b.Property<string>("VisitorType")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("visitor_type");
+                    b.Property<string>("VisitorNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("visitor_number");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("DistrictId");
-
                     b.HasIndex("Email");
 
                     b.HasIndex("MstApplicationId");
-
-                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("PersonId");
 
@@ -2406,6 +2485,20 @@ namespace Repositories.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
 
                     b.Property<Guid>("FloorplanMaskedAreaId")
                         .HasMaxLength(36)
@@ -2422,6 +2515,14 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.Property<Guid>("VisitorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2431,6 +2532,8 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorplanMaskedAreaId");
 
@@ -2443,120 +2546,17 @@ namespace Repositories.Migrations
                     b.ToTable("visitor_blacklist_area", (string)null);
                 });
 
-            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("ApplicationId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("application_id");
-
-                    b.Property<Guid>("CardId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("card_id");
-
-                    b.Property<string>("CardType")
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("card_type");
-
-                    b.Property<int?>("CheckinStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("checkin_status");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("created_by");
-
-                    b.Property<int?>("EnableStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("enable_status");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
-
-                    b.Property<int?>("IsVisitor")
-                        .HasColumnType("int")
-                        .HasColumnName("is_visitor");
-
-                    b.Property<string>("Mac")
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("mac");
-
-                    b.Property<Guid?>("MemberId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("member_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Number")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("number");
-
-                    b.Property<string>("QRCode")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("qr_code");
-
-                    b.Property<Guid?>("SiteId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("site_id");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("status");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid?>("VisitorId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("visitor_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("CardId");
-
-                    b.HasIndex("MemberId");
-
-                    b.HasIndex("VisitorId");
-
-                    b.ToTable("visitor_card", (string)null);
-                });
-
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
-                        .WithOne("AlarmRecordTracking")
-                        .HasForeignKey("Entities.Models.AlarmRecordTracking", "ApplicationId")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
-                        .WithOne("AlarmRecordTracking")
-                        .HasForeignKey("Entities.Models.AlarmRecordTracking", "FloorplanMaskedAreaId")
+                        .WithMany()
+                        .HasForeignKey("FloorplanMaskedAreaId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -2564,19 +2564,23 @@ namespace Repositories.Migrations
                         .WithMany("AlarmRecordTrackings")
                         .HasForeignKey("FloorplanMaskedAreaId1");
 
+                    b.HasOne("Entities.Models.MstApplication", null)
+                        .WithMany("AlarmRecordTrackings")
+                        .HasForeignKey("MstApplicationId");
+
                     b.HasOne("Entities.Models.MstBleReader", null)
                         .WithMany("AlarmRecordTrackings")
                         .HasForeignKey("MstBleReaderId");
 
                     b.HasOne("Entities.Models.MstBleReader", "Reader")
-                        .WithOne("AlarmRecordTracking")
-                        .HasForeignKey("Entities.Models.AlarmRecordTracking", "ReaderId")
+                        .WithMany()
+                        .HasForeignKey("ReaderId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
-                        .WithOne("AlarmRecordTracking")
-                        .HasForeignKey("Entities.Models.AlarmRecordTracking", "VisitorId")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -2612,8 +2616,55 @@ namespace Repositories.Migrations
                     b.Navigation("Reader");
                 });
 
+            modelBuilder.Entity("Entities.Models.Card", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.FloorplanMaskedArea", "RegisteredMaskedArea")
+                        .WithMany()
+                        .HasForeignKey("RegisteredMaskedAreaId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("RegisteredMaskedArea");
+
+                    b.Navigation("Visitor");
+                });
+
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany()
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Card", null)
+                        .WithMany("CardRecords")
+                        .HasForeignKey("CardId1");
+
                     b.HasOne("Entities.Models.MstMember", "Member")
                         .WithMany()
                         .HasForeignKey("MemberId")
@@ -2622,16 +2673,6 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstMember", null)
                         .WithMany("CardRecords")
                         .HasForeignKey("MstMemberId");
-
-                    b.HasOne("Entities.Models.VisitorCard", "VisitorCard")
-                        .WithMany()
-                        .HasForeignKey("VisitorCardId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.VisitorCard", null)
-                        .WithMany("CardRecords")
-                        .HasForeignKey("VisitorCardId1");
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
@@ -2642,11 +2683,13 @@ namespace Repositories.Migrations
                         .WithMany("CardRecords")
                         .HasForeignKey("VisitorId1");
 
+                    b.Navigation("Application");
+
+                    b.Navigation("Card");
+
                     b.Navigation("Member");
 
                     b.Navigation("Visitor");
-
-                    b.Navigation("VisitorCard");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanDevice", b =>
@@ -2722,6 +2765,12 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.FloorplanMaskedArea", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.MstFloor", "Floor")
                         .WithMany()
                         .HasForeignKey("FloorId")
@@ -2737,6 +2786,8 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstFloor", null)
                         .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("MstFloorId");
+
+                    b.Navigation("Application");
 
                     b.Navigation("Floor");
 
@@ -2754,8 +2805,7 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()
                         .HasForeignKey("IntegrationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("AccessCctvs")
@@ -2776,15 +2826,12 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.MstBrand", "Brand")
                         .WithMany()
-                        .HasForeignKey("ControllerBrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BrandId");
 
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()
                         .HasForeignKey("IntegrationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("AccessControls")
@@ -2799,13 +2846,32 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.MstBleReader", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.MstBrand", "Brand")
                         .WithMany()
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.Navigation("Application");
+
                     b.Navigation("Brand");
+                });
+
+            modelBuilder.Entity("Entities.Models.MstBrand", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("Entities.Models.MstBuilding", b =>
@@ -2819,10 +2885,6 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("Buildings")
                         .HasForeignKey("MstApplicationId");
-
-                    b.HasOne("Entities.Models.MstBuilding", null)
-                        .WithMany("Buildings")
-                        .HasForeignKey("MstBuildingId");
 
                     b.Navigation("Application");
                 });
@@ -2857,13 +2919,32 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
                 });
 
+            modelBuilder.Entity("Entities.Models.MstEngine", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+                });
+
             modelBuilder.Entity("Entities.Models.MstFloor", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.MstBuilding", "Building")
                         .WithMany()
                         .HasForeignKey("BuildingId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Application");
 
                     b.Navigation("Building");
                 });
@@ -2993,6 +3074,12 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
                         .WithMany()
                         .HasForeignKey("FloorplanMaskedAreaId")
@@ -3013,6 +3100,8 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.Navigation("Application");
+
                     b.Navigation("FloorplanMaskedArea");
 
                     b.Navigation("Reader");
@@ -3020,17 +3109,48 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.TrxVisitor", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.FloorplanMaskedArea", "MaskedArea")
+                        .WithMany()
+                        .HasForeignKey("MaskedAreaId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("PurposePerson")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
                         .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", null)
+                        .WithMany("TrxVisitors")
+                        .HasForeignKey("VisitorId1");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("MaskedArea");
+
+                    b.Navigation("Member");
 
                     b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.UserGroup", "Group")
                         .WithMany()
                         .HasForeignKey("GroupId")
@@ -3040,6 +3160,8 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.UserGroup", null)
                         .WithMany("Users")
                         .HasForeignKey("UserGroupId");
+
+                    b.Navigation("Application");
 
                     b.Navigation("Group");
                 });
@@ -3063,39 +3185,21 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.MstDepartment", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.MstDistrict", "District")
-                        .WithMany()
-                        .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("Visitors")
                         .HasForeignKey("MstApplicationId");
 
-                    b.HasOne("Entities.Models.MstOrganization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.Navigation("Application");
-
-                    b.Navigation("Department");
-
-                    b.Navigation("District");
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Entities.Models.VisitorBlacklistArea", b =>
                 {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
                         .WithMany()
                         .HasForeignKey("FloorplanMaskedAreaId")
@@ -3116,49 +3220,20 @@ namespace Repositories.Migrations
                         .WithMany("BlacklistAreas")
                         .HasForeignKey("VisitorId1");
 
+                    b.Navigation("Application");
+
                     b.Navigation("FloorplanMaskedArea");
 
                     b.Navigation("Visitor");
                 });
 
-            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
+            modelBuilder.Entity("Entities.Models.Card", b =>
                 {
-                    b.HasOne("Entities.Models.MstApplication", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.Card", "Card")
-                        .WithMany()
-                        .HasForeignKey("CardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.MstMember", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("Entities.Models.Visitor", "Visitor")
-                        .WithMany()
-                        .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Application");
-
-                    b.Navigation("Card");
-
-                    b.Navigation("Member");
-
-                    b.Navigation("Visitor");
+                    b.Navigation("CardRecords");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanMaskedArea", b =>
                 {
-                    b.Navigation("AlarmRecordTracking")
-                        .IsRequired();
-
                     b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("BlacklistAreas");
@@ -3184,8 +3259,7 @@ namespace Repositories.Migrations
 
                     b.Navigation("AccessControls");
 
-                    b.Navigation("AlarmRecordTracking")
-                        .IsRequired();
+                    b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("Buildings");
 
@@ -3208,19 +3282,11 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.MstBleReader", b =>
                 {
-                    b.Navigation("AlarmRecordTracking")
-                        .IsRequired();
-
                     b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("FloorplanDevices");
 
                     b.Navigation("TrackingTransactions");
-                });
-
-            modelBuilder.Entity("Entities.Models.MstBuilding", b =>
-                {
-                    b.Navigation("Buildings");
                 });
 
             modelBuilder.Entity("Entities.Models.MstDepartment", b =>
@@ -3264,19 +3330,13 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.Visitor", b =>
                 {
-                    b.Navigation("AlarmRecordTracking")
-                        .IsRequired();
-
                     b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("BlacklistAreas");
 
                     b.Navigation("CardRecords");
-                });
 
-            modelBuilder.Entity("Entities.Models.VisitorCard", b =>
-                {
-                    b.Navigation("CardRecords");
+                    b.Navigation("TrxVisitors");
                 });
 #pragma warning restore 612, 618
         }

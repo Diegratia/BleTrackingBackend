@@ -108,36 +108,38 @@ namespace Repositories.DbContexts
                         .HasDefaultValue(1);
                 });
 
-            modelBuilder.Entity<MstApplication>()
-                .HasQueryFilter(m => m.ApplicationStatus != 0);
-            modelBuilder.Entity<MstIntegration>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstAccessControl>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstAccessCctv>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<FloorplanMaskedArea>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstBleReader>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstBrand>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstDepartment>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstDistrict>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstFloor>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstMember>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstOrganization>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstFloorplan>()
-                .HasQueryFilter(m => m.Status != 0);
-            modelBuilder.Entity<MstEngine>()
-                .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstApplication>()
+                    .HasQueryFilter(m => m.ApplicationStatus != 0);
+                modelBuilder.Entity<MstIntegration>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstAccessControl>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstAccessCctv>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<FloorplanMaskedArea>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstBleReader>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstBrand>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstDepartment>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstDistrict>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstFloor>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstMember>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstOrganization>()
+                    .HasQueryFilter(m => m.Status != 0 );
+                modelBuilder.Entity<MstFloorplan>()
+                    .HasQueryFilter(m => m.Status != 0);
+                modelBuilder.Entity<MstEngine>()
+                    .HasQueryFilter(m => m.Status != 0); ;
             // modelBuilder.Entity<VisitorCard>()
             //     .HasQueryFilter(m => m.Status != 0);
+
+   
 
             // MstIntegration
             modelBuilder.Entity<MstIntegration>(entity =>
@@ -179,7 +181,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstAccessCctv>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.IntegrationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.IntegrationId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
 
                 entity.HasOne(m => m.Integration)
@@ -202,7 +204,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.IntegrationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.IntegrationId).HasMaxLength(36);
 
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -377,9 +379,6 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -387,34 +386,14 @@ namespace Repositories.DbContexts
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorType)
-                    .HasColumnName("visitor_type")
+                entity.Property(e => e.IdentityType)
+                    .HasColumnName("identity_type")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                        v => (IdentityType)Enum.Parse(typeof(IdentityType), v, true)
                     );
-
-                entity.HasOne(v => v.Application)
-                    .WithMany()
-                    .HasForeignKey(v => v.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Department)
-                    .WithMany()
-                    .HasForeignKey(m => m.DepartmentId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.District)
-                    .WithMany()
-                    .HasForeignKey(v => v.DistrictId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.Organization)
-                    .WithMany()
-                    .HasForeignKey(v => v.OrganizationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
@@ -716,12 +695,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.CheckoutMaskedArea)
                     .HasColumnName("checkout_masked_area");
 
-                entity.Property(e => e.VisitorType)
+                entity.Property(e => e.VisitorActiveStatus)
                     .HasColumnName("visitor_type")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
                     );
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
@@ -733,11 +712,16 @@ namespace Repositories.DbContexts
                 entity.HasOne(e => e.Visitor)
                     .WithMany() // atau .WithMany(v => v.CardRecords) kalau ada
                     .HasForeignKey(e => e.VisitorId)
-                    .OnDelete(DeleteBehavior.NoAction); 
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Member)
                     .WithMany() // atau .WithMany(m => m.CardRecords)
                     .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+                    
+                entity.HasOne(e => e.Card)
+                    .WithMany() // atau .WithMany(m => m.CardRecords)
+                    .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction); 
             });
 
@@ -880,13 +864,21 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<TrxVisitor>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.VisitorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.PurposePerson).HasMaxLength(36);
                 entity.Property(e => e.Status)
-                    .HasColumnName("visitor_type")
+                    .HasColumnName("visitor_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (VisitorStatus)Enum.Parse(typeof(VisitorStatus), v, true)
+                    );
+                entity.Property(e => e.VisitorActiveStatus)
+                    .HasColumnName("visitor_active_status")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
                     );
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -897,6 +889,10 @@ namespace Repositories.DbContexts
                    .WithMany()
                    .HasForeignKey(v => v.VisitorId)
                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.Member)
+                    .WithMany()
+                    .HasForeignKey(m => m.PurposePerson)
+                    .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(v => v.MaskedArea)
                     .WithMany()
                     .HasForeignKey(v => v.MaskedAreaId)
@@ -908,24 +904,14 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
 
-                entity.Property(e => e.VisitorType)
-                    .HasColumnName("visitor_type")
-                    .HasColumnType("nvarchar(255)")
-                    .HasConversion(
-                        v => v.ToString().ToLower(),
-                        v => (VisitorType)Enum.Parse(typeof(VisitorType), v, true)
-                    );
+       
                 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -936,21 +922,6 @@ namespace Repositories.DbContexts
                 entity.HasOne(v => v.Application)
                     .WithMany()
                     .HasForeignKey(v => v.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Department)
-                    .WithMany()
-                    .HasForeignKey(m => m.DepartmentId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.District)
-                    .WithMany()
-                    .HasForeignKey(v => v.DistrictId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.Organization)
-                    .WithMany()
-                    .HasForeignKey(v => v.OrganizationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(v => v.PersonId);
@@ -971,6 +942,24 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.MemberId).HasMaxLength(36);
+                entity.HasOne(m => m.Member)
+                    .WithMany()
+                    .HasForeignKey(m => m.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.RegisteredMaskedAreaId).HasMaxLength(36);
+                entity.HasOne(m => m.RegisteredMaskedArea)
+                    .WithMany()
+                    .HasForeignKey(m => m.RegisteredMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.HasOne(m => m.Visitor)
+                    .WithMany()
+                    .HasForeignKey(m => m.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
                 
             });

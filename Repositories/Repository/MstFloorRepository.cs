@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
+using Repositories.Repository;
 
 namespace Repositories.Repository
 {
@@ -18,24 +19,12 @@ namespace Repositories.Repository
 
         public async Task<MstFloor?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstFloors
-                .Include(f => f.Building)
-                .Where(f => f.Id == id && f.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable().Where(f => f.Id == id && f.Status != 0).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstFloors
-                .Include(f => f.Building)
-                .Where(f => f.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<MstFloor> AddAsync(MstFloor floor)
@@ -70,6 +59,7 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(floor.ApplicationId);
             ValidateApplicationIdForEntity(floor, applicationId, isSystemAdmin);
 
+            // _context.MstFloors.Update(floor);   
             await _context.SaveChangesAsync();
         }
 
@@ -96,6 +86,8 @@ namespace Repositories.Repository
                 .Include(f => f.Building)
                 .Where(f => f.Status != 0);
 
+            query = query.WithActiveRelations();
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
@@ -105,17 +97,13 @@ namespace Repositories.Repository
 
             var query = _context.MstBuildings
                 .Where(b => b.Id == id && b.Status != 0);
-
+                query = query.WithActiveRelations();
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstFloors
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
     }
 }

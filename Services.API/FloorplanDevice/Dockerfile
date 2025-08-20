@@ -15,6 +15,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/FloorplanDevice/out ./
 
-EXPOSE 5003
+EXPOSE 10003
 
 ENTRYPOINT ["dotnet", "FloorplanDevice.dll"]

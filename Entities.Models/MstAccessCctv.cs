@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Entities.Models
 {
@@ -17,10 +18,10 @@ namespace Entities.Models
         [Column("rtsp")]
         public string Rtsp { get; set; }
 
-        [Required]
+        [AllowNull]
         [ForeignKey("Integration")]
         [Column("integration_id")]
-        public Guid IntegrationId { get; set; }
+        public Guid? IntegrationId { get; set; }
 
         [Required]
         [ForeignKey("Application")]

@@ -18,26 +18,12 @@ namespace Repositories.Repository
 
         public async Task<FloorplanMaskedArea?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.FloorplanMaskedAreas
-                .Include(a => a.Floor)
-                .Include(a => a.Floorplan)
-                .Where(a => a.Id == id && a.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable().Where(a => a.Id == id && a.Status != 0).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<FloorplanMaskedArea>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.FloorplanMaskedAreas
-                .Include(a => a.Floor)
-                .Include(a => a.Floorplan)
-                .Where(a => a.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<FloorplanMaskedArea> AddAsync(FloorplanMaskedArea area)
@@ -80,10 +66,11 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Where(a => a.Id == id && a.Status != 0);
 
-            var area = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+              query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
+            var area = await query.FirstOrDefaultAsync();
             if (area == null)
-                throw new KeyNotFoundException("Masked area not found or unauthorized access.");
+                throw new KeyNotFoundException("Area not found");
 
             await _context.SaveChangesAsync();
         }
@@ -97,27 +84,28 @@ namespace Repositories.Repository
                 .Include(a => a.Floorplan)
                 .Where(a => a.Status != 0);
 
+            query = query.WithActiveRelations();
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public async Task<IEnumerable<FloorplanMaskedArea>> GetAllExportAsync()
         {
-             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.FloorplanMaskedAreas
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<MstFloor?> GetFloorByIdAsync(Guid floorId)
         {
             return await _context.MstFloors
+                .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorId && f.Status != 0);
+                
         }
 
         public async Task<MstFloorplan?> GetFloorplanByIdAsync(Guid floorplanId)
         {
             return await _context.MstFloorplans
+                .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
         }
     }

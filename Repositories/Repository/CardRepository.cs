@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
 
 namespace Repositories.Repository
 {
@@ -18,22 +19,18 @@ namespace Repositories.Repository
 
         public async Task<Card?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.Cards
-                .Include(b => b.RegisteredMaskedArea)
-                .Include(b => b.Member)
-                .Include(b => b.Visitor)
-                .Include(b => b.Application)
-                .Where(b => b.Id == id && b.StatusCard != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(b => b.Id == id && b.StatusCard != 0)
+            .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Card>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync() ?? null;
         }
+        
+       
 
         public IQueryable<Card> GetAllQueryable()
         {
@@ -44,7 +41,9 @@ namespace Repositories.Repository
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
                 .Include(b => b.Application)
-                .Where(b => b.StatusCard != 1);
+                .Where(b => b.StatusCard != 0);
+
+            query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
@@ -103,12 +102,20 @@ namespace Repositories.Repository
         public async Task<FloorplanMaskedArea?> GetMaskedAreaByIdAsync(Guid id)
         {
             return await _context.FloorplanMaskedAreas
+                .WithActiveRelations()
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 
         public async Task<IEnumerable<Card>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();
+        }
+
+            public async Task<Card?> GetBleCardNumberAsync(string cardNumber)
+        {
+            return await GetAllQueryable()
+            .Where(x => x.StatusCard != 0 && x.CardNumber == cardNumber)
+            .FirstOrDefaultAsync();
         }
 
         private async Task ValidateRelatedEntitiesAsync(Card card, Guid? applicationId, bool isSystemAdmin)
@@ -121,6 +128,7 @@ namespace Repositories.Repository
             if (card.MemberId.HasValue)
             {
                 var member = await _context.MstMembers
+                    .WithActiveRelations()
                     .FirstOrDefaultAsync(m => m.Id == card.MemberId && m.ApplicationId == applicationId);
 
                 if (member == null)
@@ -130,6 +138,7 @@ namespace Repositories.Repository
             if (card.VisitorId.HasValue)
             {
                 var visitor = await _context.Visitors
+                    .WithActiveRelations()
                     .FirstOrDefaultAsync(v => v.Id == card.VisitorId && v.ApplicationId == applicationId);
 
                 if (visitor == null)

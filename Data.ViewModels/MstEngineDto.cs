@@ -25,7 +25,7 @@ namespace Data.ViewModels
         public ServiceStatus? ServiceStatus { get; set; }
     }
 
-    public class MstEngineUpdateDto : BaseModelDto
+    public class MstEngineUpdateDto 
     {
         public string? Name { get; set; }
     }

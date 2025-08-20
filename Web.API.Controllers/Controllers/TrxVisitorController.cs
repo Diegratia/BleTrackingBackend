@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequireAll")]
+    [Authorize("RequireAll")]
     public class TrxVisitorController : ControllerBase
     {
         private readonly ITrxVisitorService _trxVisitorService;
@@ -107,6 +107,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpGet("public/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetByPublicId(Guid id)
+        {
+            try
+            {
+                var trxVisitor = await _trxVisitorService.GetTrxVisitorByPublicIdAsync(id);
+                if (trxVisitor == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "TrxVisitor blacklist area not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "TrxVisitor retrieved successfully",
+                    collection = new { data = trxVisitor },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // GET: api/TrxVisitor
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -114,6 +151,32 @@ namespace Web.API.Controllers.Controllers
             try
             {
                 var visitors = await _trxVisitorService.GetAllTrxVisitorsAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "TrxVisitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("minimal")]
+        public async Task<IActionResult> GetAllMinimal()
+        {
+            try
+            {
+                var visitors = await _trxVisitorService.GetAllTrxVisitorsAsyncMinimal();
                 return Ok(new
                 {
                     success = true,
@@ -194,44 +257,44 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/VisitorBlacklistArea/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _trxVisitorService.DeleteTrxVisitorAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "TrxVisitor deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [HttpDelete("{id}")]
+        // public async Task<IActionResult> Delete(Guid id)
+        // {
+        //     try
+        //     {
+        //         await _trxVisitorService.DeleteTrxVisitorAsync(id);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "TrxVisitor deleted successfully",
+        //             collection = new { data = (object)null },
+        //             code = 204
+        //         });
+        //     }
+        //     catch (KeyNotFoundException ex)
+        //     {
+        //         return NotFound(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 404
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpPost("{filter}")]
-         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -277,5 +340,231 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        [HttpGet("export/pdf")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExportPdf()
+        {
+            try
+            {
+                var pdfBytes = await _trxVisitorService.ExportPdfAsync();
+                return File(pdfBytes, "application/pdf", "Trx_Visitor_Report.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate PDF: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("export/excel")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExportExcel()
+        {
+            try
+            {
+                var excelBytes = await _trxVisitorService.ExportExcelAsync();
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Trx_Visitor_Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+     [HttpPost("checkin")]
+        public async Task<IActionResult> Checkin([FromBody] TrxVisitorCheckinDto request)
+        {
+            try
+            {
+                await _trxVisitorService.CheckinVisitorAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked in successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+    
+
+        // POST: api/Visitor/{id}/checkout
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            try
+            {
+                await _trxVisitorService.CheckoutVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{id}/denied")]
+        public async Task<IActionResult> Denied(Guid id, DenyReasonDto denyReasonDto)
+        {
+            try
+            {
+                await _trxVisitorService.DeniedVisitorAsync(id, denyReasonDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor denied successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("{id}/blocked")]
+        public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
+        {
+            try
+            {
+                await _trxVisitorService.BlockVisitorAsync(id, blockReason);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor blocked successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+            
+            [HttpPost("{id}/unblocked")]
+            public async Task<IActionResult> Unblocked(Guid id)
+            {
+                try
+                {
+                    await _trxVisitorService.UnblockVisitorAsync(id);
+                    return Ok(new
+                    {
+                        success = true,
+                        msg = "Visitor Unblocked successfully",
+                        collection = new { data = (object)null },
+                        code = 200
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        msg = ex.Message,
+                        collection = new { data = (object)null },
+                        code = 400
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        msg = $"Internal server error: {ex.Message}",
+                        collection = new { data = (object)null },
+                        code = 500
+                    });
+                }
+            }
     }
 }

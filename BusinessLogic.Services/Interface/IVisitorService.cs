@@ -9,10 +9,22 @@ namespace BusinessLogic.Services.Interface
     public interface IVisitorService
     {
         Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
+        // Task<VisitorDto> CreateVisitorWithTrxAsync(VisitorWithTrxCreateDto createDto);
+        Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto);
         Task<VisitorDto> GetVisitorByIdAsync(Guid id);
+        Task<VisitorDto> GetVisitorByIdPublicAsync(Guid id);
         Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync();
         Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto);
         Task DeleteVisitorAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<byte[]> ExportPdfAsync();
+        Task<byte[]> ExportExcelAsync();
+        Task ConfirmVisitorEmailAsync(ConfirmEmailDto confirmDto);
+        Task<VisitorDto> FillInvitationFormAsync(VisitorInvitationDto dto);
+        Task<VisitorDto> AcceptInvitationFormAsync(MemberInvitationDto dto);
+        Task SendInvitationByEmailAsync(SendEmailInvitationDto dto);
+        Task SendBatchInvitationByEmailAsync(List<SendEmailInvitationDto> dto);
+        Task DeclineInvitationAsync(Guid id);
+        Task AcceptInvitationAsync(Guid id);
     }
 }

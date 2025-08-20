@@ -179,7 +179,7 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 

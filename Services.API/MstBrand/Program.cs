@@ -70,17 +70,31 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-        options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-    options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-        options.AddPolicy("RequireUserCreatedRole", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+    });
+    options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
 
@@ -119,7 +133,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<MstBrandRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "5009" ??
+var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "10009" ??
            builder.Configuration["Ports:MstBrandService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

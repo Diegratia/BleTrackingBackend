@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemRole")]
+    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class MstAccessControlController : ControllerBase
     {
         private readonly IMstAccessControlService _mstAccessControlService;
@@ -259,6 +259,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -279,13 +280,14 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportExcel()
         {
             try
             {
                 var excelBytes = await _mstAccessControlService.ExportExcelAsync();
-                return File(excelBytes, 
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "MstAccessControl_Report.xlsx");
             }
             catch (Exception ex)

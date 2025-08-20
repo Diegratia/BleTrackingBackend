@@ -88,20 +88,29 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-     options.AddPolicy("RequireAll", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
@@ -146,11 +155,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+// builder.Services.AddScoped<VisitorRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
-var port = Environment.GetEnvironmentVariable("AUTH_PORT") ??
-           builder.Configuration["Ports:AuthService"] ?? "5001";
+var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "10001" ??
+           builder.Configuration["Ports:AuthService"] ;
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
@@ -164,7 +174,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

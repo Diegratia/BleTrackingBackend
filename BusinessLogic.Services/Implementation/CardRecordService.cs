@@ -17,18 +17,25 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Bogus.DataSets;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class CardRecordService : ICardRecordService
     {
         private readonly CardRecordRepository _repository;
+        private readonly CardRepository _cardRepository;
+        private readonly VisitorRepository _visitorRepository;
+        // private readonly TrxVisitorRepository _trxVisitorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardRecordService(CardRecordRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardRecordService( CardRecordRepository repository, CardRepository cardRepository, VisitorRepository visitorRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _cardRepository = cardRepository;
+            _visitorRepository = visitorRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -45,12 +52,153 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<CardRecordDto>>(cardRecord);
         }
 
+      public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var cardRecord = _mapper.Map<CardRecord>(createDto);
+
+            cardRecord.Id = Guid.NewGuid();
+            cardRecord.CreatedBy = username;
+            cardRecord.UpdatedBy = username;
+            cardRecord.CreatedAt = DateTime.UtcNow;
+            cardRecord.UpdatedAt = DateTime.UtcNow;
+            cardRecord.Status = 1;
+            cardRecord.CheckinBy = username;
+            cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
+
+            var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value);
+            if (card == null)
+                throw new InvalidOperationException("Card not found.");
+
+            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
+            if (visitor == null)
+                throw new InvalidOperationException("Visitor not found.");
+
+            if (card.IsUsed == true)
+                throw new InvalidOperationException("Card already checked in by another visitor.");
+
+            card.IsUsed = true;
+            card.LastUsed = visitor.Name;
+            card.VisitorId = visitor.Id;
+            card.CheckinAt = DateTime.UtcNow;
+
+            visitor.BleCardNumber = card.Dmac;
+            visitor.CardNumber = card.CardNumber;
+
+            cardRecord.Name = visitor.Name;
+            cardRecord.CheckinAt = card.CheckinAt;
+            cardRecord.CheckinMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
+
+            await _cardRepository.UpdateAsync(card);
+            await _visitorRepository.UpdateAsync(visitor);
+            var createdCardRecord = await _repository.AddAsync(cardRecord);
+
+            return _mapper.Map<CardRecordDto>(createdCardRecord);
+        }
+
+
+            public async Task CheckoutCard(Guid id)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var cardRecord = await _repository.GetByIdAsync(id);
+            if (cardRecord is null)
+                throw new InvalidOperationException("Card record not found.");
+
+            var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value)
+                    ?? throw new InvalidOperationException("Card not found.");
+
+            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value)
+                        ?? throw new InvalidOperationException("Visitor not found.");
+
+            if (card.IsUsed == false)
+                throw new InvalidOperationException("Card already checked out.");
+
+            var now = DateTime.UtcNow;
+
+            cardRecord.CheckoutAt = now;
+            cardRecord.CheckoutBy = username;
+            cardRecord.CheckoutMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
+            cardRecord.UpdatedAt = now;
+            cardRecord.UpdatedBy = username;
+            cardRecord.VisitorActiveStatus = VisitorActiveStatus.Expired;
+
+            card.CheckinAt = null;
+            card.IsUsed = false;
+            card.VisitorId = null;
+            card.LastUsed = visitor.Name;
+
+            visitor.BleCardNumber = null;
+            visitor.CardNumber = null;
+
+            await _cardRepository.UpdateAsync(card);
+            await _visitorRepository.UpdateAsync(visitor);
+            await _repository.UpdateAsync(cardRecord);
+        }
+
+        
+        // public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
+        // {
+        //     return await _uow.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+        //         // Map & inisialisasi
+        //         var cardRecord = _mapper.Map<CardRecord>(createDto);
+        //         cardRecord.Id = Guid.NewGuid();
+        //         cardRecord.CreatedBy = username;
+        //         cardRecord.UpdatedBy = username;
+        //         cardRecord.CreatedAt = DateTime.UtcNow;
+        //         cardRecord.UpdatedAt = DateTime.UtcNow;
+        //         cardRecord.Status = 1;
+
+        //         // --- VALIDASI lebih dulu ---
+        //         if (cardRecord.CardId == Guid.Empty) throw new ArgumentException("CardId wajib diisi");
+        //         if (cardRecord.VisitorId == Guid.Empty) throw new ArgumentException("VisitorId wajib diisi");
+
+        //         var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value);
+        //         if (card is null) throw new InvalidOperationException("Card tidak ditemukan");
+
+        //         var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
+        //         if (visitor is null) throw new InvalidOperationException("Visitor tidak ditemukan");
+
+        //         // (opsional) aturan bisnis tambahan
+        //         if (card.IsUsed == true && card.VisitorId != visitor.Id)
+        //             throw new InvalidOperationException("Card sudah dipakai visitor lain");
+
+        //         // --- Mutasi state di memori (belum save) ---
+        //         await _cardRecordRepository.AddAsync(cardRecord, saveNow: false);
+
+        //         card.IsUsed = true;
+        //         card.LastUsed = visitor.Name;
+        //         visitor.BleCardNumber = card.Dmac;
+        //         visitor.CardNumber = card.CardNumber;
+        //         card.VisitorId = visitor.Id;
+
+        //         cardRecord.CheckinMaskedArea = (card.IsMultiMaskedArea == false)
+        //             ? card.RegisteredMaskedAreaId
+        //             : null;
+
+        //         cardRecord.VisitorActiveStatus = visitor.TrxVisitors.FirstOrDefault()?.VisitorActiveStatus;
+        //         card.CheckinAt = DateTime.UtcNow;
+
+        //         _cardRepository.UpdateAsync(card, saveNow: false);
+        //         _visitorRepository.UpdateAsync(visitor, saveNow: false);
+
+        //         // Save + Commit dilakukan di UnitOfWork
+        //         var dto = _mapper.Map<CardRecordDto>(cardRecord);
+        //         return dto;
+        //     });
+        // }
+
+
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "VisitorName" };
-            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp","VisitorType", "Status", "VisitorType" };
+            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp", "VisitorActiveStatus", "Status", "VisitorActiveStatus" };
 
             var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
                 query,
@@ -120,7 +268,7 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(record.CardId);
                             table.Cell().Element(CellStyle).Text(record.Visitor);
                             table.Cell().Element(CellStyle).Text(record.Member);
-                            table.Cell().Element(CellStyle).Text(record.VisitorType.ToString());
+                            table.Cell().Element(CellStyle).Text(record.VisitorActiveStatus.ToString());
                             table.Cell().Element(CellStyle).Text(record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(record.CheckinBy);
                             table.Cell().Element(CellStyle).Text(record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -180,7 +328,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 3).Value = record.CardId.ToString();
                 worksheet.Cell(row, 4).Value = record.Visitor.Name;
                 worksheet.Cell(row, 5).Value = record.Member.Name;
-                worksheet.Cell(row, 6).Value = record.VisitorType.ToString();
+                worksheet.Cell(row, 6).Value = record.VisitorActiveStatus.ToString();
                 worksheet.Cell(row, 7).Value = record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss");
                 worksheet.Cell(row, 8).Value = record.CheckinBy;
                 worksheet.Cell(row, 9).Value = record.CheckoutAt?.ToString("yyyy-MM-dd HH:mm:ss");

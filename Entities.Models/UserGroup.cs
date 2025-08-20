@@ -11,8 +11,10 @@ namespace Entities.Models
     public enum LevelPriority
     {
         System,
+        SuperAdmin,
         PrimaryAdmin,
         Primary,
+        Secondary,
         UserCreated
     }
 
@@ -22,13 +24,11 @@ namespace Entities.Models
         [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [Required]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [Column("level_priority")]
-        public LevelPriority LevelPriority { get; set; }
+        public LevelPriority? LevelPriority { get; set; }
 
         [Required]
         [Column("application_id")]

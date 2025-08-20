@@ -30,7 +30,7 @@ namespace Entities.Models
 
         [AllowNull]
         [ForeignKey(nameof(RegisteredMaskedArea))]
-        [Column("registered_masked_area")]
+        [Column("registered_masked_area_id")]
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua area.
 
         [Column("is_used")]

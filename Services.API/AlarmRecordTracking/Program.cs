@@ -70,20 +70,29 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-     options.AddPolicy("RequireAll", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
@@ -128,7 +137,7 @@ builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingServi
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 
-var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ??
+var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "10002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";

@@ -11,7 +11,7 @@ namespace Data.ViewModels
         public string? Channel { get; set; }
         public string DoorId { get; set; }
         public string? Raw { get; set; }
-        public Guid IntegrationId { get; set; }
+        public Guid? IntegrationId { get; set; }
         // public Guid ApplicationId { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -19,7 +19,7 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
         public MstBrandDto Brand { get; set; }
-        public MstIntegrationDto Integration { get; set; }
+        public MstIntegrationDto? Integration { get; set; }
     }
 
     public class MstAccessControlCreateDto : BaseModelDto
@@ -31,7 +31,7 @@ namespace Data.ViewModels
         public string? Channel { get; set; }
         public string DoorId { get; set; }
         public string? Raw { get; set; }
-        public Guid IntegrationId { get; set; }
+        public Guid? IntegrationId { get; set; }
         // public Guid ApplicationId { get; set; }
     }
 
@@ -44,7 +44,6 @@ namespace Data.ViewModels
         public string? Channel { get; set; }
         public string DoorId { get; set; }
         public string? Raw { get; set; }
-        public Guid IntegrationId { get; set; }
-        public Guid ApplicationId { get; set; }
+        public Guid? IntegrationId { get; set; }
     }
 }

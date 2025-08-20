@@ -46,25 +46,42 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<CardDto>> GetAllAsync()
         {
-            var card = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardDto>>(card);
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<CardDto>>(cards);
         }
+        
+        //      public async Task<IEnumerable<CardDto>> GetAllAsync()
+        // {
+        //     var cards = await _repository.GetAllAsync();
+        //     var mappedCards = new List<CardDto>();
+
+        //     foreach (var card in cards)
+        //     {
+        //                     try
+        //                     {
+        //                         var dto = _mapper.Map<CardDto>(card);
+        //                         mappedCards.Add(dto);
+        //                     }
+        //                     catch (Exception ex)
+        //                     {
+                    
+        //         }
+        //     }
+
+        //     return mappedCards;
+        // }
+
 
         public async Task<CardDto> CreateAsync(CardCreateDto createDto)
         {
-        
             var existingCard = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b => b.QRCode == createDto.QRCode ||
+            .FirstOrDefaultAsync(b =>
                                 b.CardNumber == createDto.CardNumber ||
                                 b.Dmac == createDto.Dmac);
-        
-        if (existingCard != null)
+
+            if (existingCard != null)
             {
-                if (existingCard.QRCode == createDto.QRCode)
-                {
-                    throw new ArgumentException($"Card with QRCode {createDto.QRCode} already exists.");
-                }
-                else if (existingCard.CardNumber == createDto.CardNumber)
+                if (existingCard.CardNumber == createDto.CardNumber)
                 {
                     throw new ArgumentException($"Card with Number {createDto.CardNumber} already exists.");
                 }
@@ -96,12 +113,14 @@ namespace BusinessLogic.Services.Implementation
 
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
+          
             card.CreatedAt = DateTime.UtcNow;
-            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var createdCard = await _repository.AddAsync(card);
+            card.QRCode = createdCard.CardNumber;
             return _mapper.Map<CardDto>(createdCard);
         }
         
@@ -114,17 +133,13 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Card not found");
 
               var existingCard = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b => b.QRCode == updateDto.QRCode ||
+            .FirstOrDefaultAsync(b =>  
                                 b.CardNumber == updateDto.CardNumber ||
                                 b.Dmac == updateDto.Dmac);
         
         if (existingCard != null)
             {
-                if (existingCard.QRCode == updateDto.QRCode)
-                {
-                    throw new ArgumentException($"Card with QRCode {updateDto.QRCode} already exists.");
-                }
-                else if (existingCard.CardNumber == updateDto.CardNumber)
+                if (existingCard.CardNumber == updateDto.CardNumber)
                 {
                     throw new ArgumentException($"Card with Number {updateDto.CardNumber} already exists.");
                 }
@@ -158,7 +173,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var card = await _repository.GetByIdAsync(id);
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
         }
@@ -223,7 +238,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
-            var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt" };
+            var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt", "IsUsed", "RegisteredMaskedAreaId", "IsMultiMaskedArea" };
 
             var filterService = new GenericDataTableService<Card, CardDto>(
                 query,

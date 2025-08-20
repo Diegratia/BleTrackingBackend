@@ -84,13 +84,13 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // Validasi ApplicationId jika berubah
-            if (integration.ApplicationId != updateDto.ApplicationId)
-            {
-                var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
-                if (application == null)
-                    throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
-                integration.ApplicationId = updateDto.ApplicationId;
-            }
+            // if (integration.ApplicationId != updateDto.ApplicationId)
+            // {
+            //     var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
+            //     if (application == null)
+            //         throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
+            //     integration.ApplicationId = updateDto.ApplicationId;
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             integration.UpdatedBy = username;

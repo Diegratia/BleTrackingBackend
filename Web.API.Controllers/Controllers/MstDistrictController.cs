@@ -124,6 +124,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("batch")]
+        public async Task<IActionResult> Create([FromBody] List<MstDistrictCreateDto> mstDistrictDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            try
+            {
+                var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "District created successfully",
+                    collection = new { data = createdDistrict },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // PUT: api/MstDistrict/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstDistrictUpdateDto mstDistrictDto)
@@ -259,6 +296,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -279,13 +317,14 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportExcel()
         {
             try
             {
                 var excelBytes = await _mstDistrictService.ExportExcelAsync();
-                return File(excelBytes, 
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "MstDistrict_Report.xlsx");
             }
             catch (Exception ex)

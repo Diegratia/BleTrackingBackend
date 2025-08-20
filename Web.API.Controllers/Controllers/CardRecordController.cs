@@ -6,12 +6,13 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Entities.Models;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequiredSystemUser")]
+    [Authorize ("RequireSystemOrSuperAdminRole")]
     public class CardRecordController : ControllerBase
     {
         private readonly ICardRecordService _cardRecordService;
@@ -84,6 +85,80 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            try
+            {
+                await _cardRecordService.CheckoutCard(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CardRecordCreateDto createDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createdCardRecord = await _cardRecordService.CreateAsync(createDto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Card Record created successfully",
+                    collection = new { data = createdCardRecord },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -131,8 +206,9 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpGet("export/pdf")]
+        [AllowAnonymous] 
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -153,7 +229,8 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        public async Task<IActionResult> ExportExcel()
+        [AllowAnonymous] 
+                public async Task<IActionResult> ExportExcel()
         {
             try
             {

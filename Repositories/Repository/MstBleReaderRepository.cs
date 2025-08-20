@@ -18,24 +18,14 @@ namespace Repositories.Repository
 
         public async Task<MstBleReader?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstBleReaders
-                .Include(r => r.Brand)
-                .Where(r => r.Status != 0 && r.Id == id);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(r => r.Status != 0 && r.Id == id)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("BLE Reader not found");
         }
 
         public async Task<IEnumerable<MstBleReader>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstBleReaders
-                .Include(r => r.Brand)
-                .Where(r => r.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<MstBleReader> AddAsync(MstBleReader reader)
@@ -111,6 +101,8 @@ namespace Repositories.Repository
             var query = _context.MstBleReaders
                 .Include(r => r.Brand)
                 .Where(r => r.Status != 0);
+
+            query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }

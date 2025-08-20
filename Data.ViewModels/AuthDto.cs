@@ -6,6 +6,7 @@ namespace Data.ViewModels
     public class LoginDto
     {
         public string Username { get; set; }
+        // public string Email { get; set; }
         public string Password { get; set; }
     }
 
@@ -18,7 +19,7 @@ namespace Data.ViewModels
         public string Email { get; set; }
         public Guid GroupId { get; set; }
         public Guid ApplicationId { get; set; }
-        public string LevelPriority { get; set; } 
+        public string LevelPriority { get; set; }
         public int IsEmailConfirmed { get; set; }
         public string StatusActive { get; set; }
     }
@@ -54,14 +55,28 @@ namespace Data.ViewModels
     public class UserGroupDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string LevelPriority { get; set; }
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
+    }
+
+    public class CreateUserGroupDto
+    {
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
+        public Guid ApplicationId { get; set; }
+    }
+
+    public class UpdateUserGroupDto
+    {
+        public string? Name { get; set; }
+        public string? LevelPriority { get; set; }
+        public Guid ApplicationId { get; set; }
     }
 
     public class UserDto
@@ -77,6 +92,15 @@ namespace Data.ViewModels
         public DateTime LastLoginAt { get; set; }
         public int? StatusActive { get; set; }
     }
+
+    public class UpdateUserDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string Email { get; set; }
+        public Guid GroupId { get; set; }
+    }
+    
 }
 
 

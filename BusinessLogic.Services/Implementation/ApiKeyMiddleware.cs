@@ -14,21 +14,42 @@ public static class ApiKeyMiddlewareExtensions
         }
     }
 
-    public class ApiKeyMiddleware
-    {
-        private readonly RequestDelegate _next;
-        private readonly IServiceProvider _serviceProvider;
+public class ApiKeyMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly IServiceProvider _serviceProvider;
 
-        public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
-        {
-            _next = next;
-            _serviceProvider = serviceProvider;
-        }
+    public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
+    {
+        _next = next;
+        _serviceProvider = serviceProvider;
+    }
 
      public async Task InvokeAsync(HttpContext context)
     {
         var KeyField = "X-API-KEY-TRACKING-PEOPLE";
-        var apiUrl = "http://192.168.1.116:5000";
+        var apiUrl = "http://192.168.1.116:10000";
+
+        if (context.Request.Path.Value.Contains("/export", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context); 
+            return;
+        }
+        if (context.Request.Path.Value.Contains("/refresh", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context); 
+            return;
+        }
+          if (context.Request.Path.Value.Contains("/public", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context); 
+            return;
+        }
+            if (context.Request.Path.Value.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context);
+            return;
+        }
         // Periksa header X-API-KEY-TRACKING-PEOPLE untuk semua endpoint
         if (!context.Request.Headers.TryGetValue(KeyField, out var apiKeyValues))
         {
@@ -37,7 +58,7 @@ public static class ApiKeyMiddlewareExtensions
             return;
         }
         Console.Write(apiKeyValues);
-      
+
         var KeyValue = apiKeyValues.ToString(); 
         if (string.IsNullOrEmpty(KeyValue))
         {
@@ -49,7 +70,7 @@ public static class ApiKeyMiddlewareExtensions
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
         var integration = await dbContext.MstIntegrations
-            .FirstOrDefaultAsync(i => i.ApiKeyField == KeyField && i.ApiKeyValue == KeyValue && i.Status != 0 && i.ApiUrl == apiUrl && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
+            .FirstOrDefaultAsync(i => i.ApiKeyField == KeyField && i.ApiKeyValue == KeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
 
         if (integration == null)
         {
@@ -62,6 +83,8 @@ public static class ApiKeyMiddlewareExtensions
 
         await _next(context);
     }
+
+
     }
 
 

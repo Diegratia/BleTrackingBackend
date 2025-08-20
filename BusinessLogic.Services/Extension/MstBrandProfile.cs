@@ -12,14 +12,15 @@ namespace BusinessLogic.Services.Extension
     {
         public MstBrandProfile()
         {
-            CreateMap<MstBrand, MstBrandDto>() 
+            CreateMap<MstBrand, MstBrandDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<MstBrandCreateDto, MstBrand>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore());
             CreateMap<MstBrandUpdateDto, MstBrand>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Generate, opt => opt.Ignore());
+                .ForMember(dest => dest.Generate, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
                  
         }
     }

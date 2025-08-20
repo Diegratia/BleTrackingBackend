@@ -70,20 +70,29 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-     options.AddPolicy("RequireAll", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
@@ -129,7 +138,7 @@ builder.Services.AddScoped<IMstAccessCctvService, MstAccessCctvService>();
 
 builder.Services.AddScoped<MstAccessCctvRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_ACCESS_CCTV_PORT") ?? "5005" ??
+var port = Environment.GetEnvironmentVariable("MST_ACCESS_CCTV_PORT") ?? "10005" ??
            builder.Configuration["Ports:MstAccessCctvService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

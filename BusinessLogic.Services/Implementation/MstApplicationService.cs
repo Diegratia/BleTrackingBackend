@@ -90,7 +90,19 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Admin",
+                    Name = "Super Admin Group",
+                    LevelPriority = LevelPriority.SuperAdmin,
+                    ApplicationId = application.Id,
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                },
+                new UserGroup
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Operator Admin Group",
                     LevelPriority = LevelPriority.PrimaryAdmin,
                     ApplicationId = application.Id,
                     CreatedBy = username,
@@ -102,19 +114,7 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Operator Admin",
-                    LevelPriority = LevelPriority.PrimaryAdmin,
-                    ApplicationId = application.Id,
-                     CreatedBy = username,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = username,
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = 1
-                },
-                new UserGroup
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Operator Security",
+                    Name = "Operator Security Group",
                     LevelPriority = LevelPriority.Primary,
                     ApplicationId = application.Id,
                     CreatedBy = username,
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Other Primary",
+                    Name = "Other Primary Group",
                     LevelPriority = LevelPriority.Primary,
                     ApplicationId = application.Id,
                     CreatedBy = username,
@@ -146,22 +146,23 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Admin User",
+                    Username = "SuperAdmin",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
-                    Email = "admin@example.com",
+                    Email = "superadmin@example.com",
                     IsEmailConfirmation = 1,
                     EmailConfirmationCode = Guid.NewGuid().ToString(),
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[0].Id // Admin
+                    GroupId = userGroups[0].Id, // Super Admin
+                    ApplicationId = userGroups[0].ApplicationId
                 },
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Operator User",
+                    Username = "Operator Primary Admin",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "operator@example.com",
@@ -171,12 +172,13 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[1].Id // Operator
+                    GroupId = userGroups[1].Id, // Operator
+                    ApplicationId = userGroups[1].ApplicationId
                 },
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Security User",
+                    Username = "Security Primary",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "securityuser@example.com",
@@ -186,7 +188,8 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[2].Id // Security
+                    GroupId = userGroups[2].Id, // Security
+                    ApplicationId = userGroups[2].ApplicationId
                 },
                 new User
                 {
@@ -201,13 +204,16 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     StatusActive = StatusActive.Active,
-                    GroupId = userGroups[3].Id // other primary
+                    GroupId = userGroups[3].Id, // other primary
+                    ApplicationId = userGroups[3].ApplicationId
                 }
             };
 
             foreach (var user in users)
             {
-                await _userRepository.AddAsync(user);
+                await _userRepository.AddRawAsync(user);
+                // await _userRepository.AddAsync(user);
+
             }
 
             // await _applicationRepository.AddAsync(application);

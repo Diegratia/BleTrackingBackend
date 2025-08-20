@@ -70,20 +70,29 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("System"));
     options.AddPolicy("RequirePrimaryRole", policy =>
         policy.RequireRole("Primary"));
-    options.AddPolicy("RequirePrimaryOrSystemRole", policy =>
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
     });
-     options.AddPolicy("RequirePrimaryAdminOrSystemRole", policy =>
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
     });
-     options.AddPolicy("RequireAll", policy =>
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
     {
         policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+    options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary"));
     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
@@ -126,12 +135,12 @@ builder.Services.AddAutoMapper(typeof(MstBleReaderProfile));
 builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 builder.Services.AddScoped<MstBleReaderRepository>();
 
-// builder.Services.AddHttpClient("5009", client =>
+// builder.Services.AddHttpClient("10009", client =>
 // {
-//     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:MstBrandService"] ?? "http://localhost:5009");
+//     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:MstBrandService"] ?? "http://localhost:10009");
 // }).AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>();
 
-var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ?? "5008" ??
+var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ?? "10008" ??
            builder.Configuration["Ports:MstBleReaderService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

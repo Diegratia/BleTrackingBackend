@@ -27,11 +27,18 @@ namespace Helpers.Consumer
         Annual
   }
 
-    public enum VisitorType
+    public enum VisitorActiveStatus
     {
         Active,
         Expired,
         Cancelled
+    }
+
+    public enum IdentityType
+    {
+        NIK,
+        KTP,
+        Passport
     }
 
     public enum CardType
@@ -60,6 +67,7 @@ namespace Helpers.Consumer
         Male,
         Female,
         Other
+        // RatherNotSay
     }
 
     public enum StatusEmployee
@@ -82,6 +90,7 @@ namespace Helpers.Consumer
         Checkout,
         Denied,
         Block,
+        Unblock,
         Precheckin,
         Preregist
     }

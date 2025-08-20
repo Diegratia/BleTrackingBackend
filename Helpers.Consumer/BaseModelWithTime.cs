@@ -31,5 +31,6 @@ namespace Helpers.Consumer
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+
     } 
 }

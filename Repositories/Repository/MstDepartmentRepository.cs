@@ -19,23 +19,16 @@
 
             public async Task<MstDepartment> GetByIdAsync(Guid id)
             {   
-                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-                var query = _context.MstDepartments
-                    .Where(d => d.Id == id && d.Status != 0);
-                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-                return await _context.MstDepartments
-                    .FirstOrDefaultAsync();
+                return await GetAllQueryable()
+                .Where(d => d.Id == id && d.Status != 0)
+                .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Department not found");
             }
             
 
 
           public async Task<IEnumerable<MstDepartment>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstDepartments
-                .Where(d => d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
             public async Task<MstDepartment> AddAsync(MstDepartment department)
@@ -97,11 +90,7 @@
             
             public async Task<IEnumerable<MstDepartment>> GetAllExportAsync()
             {
-                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-                var query = _context.MstDepartments
-                    .Where(d => d.Status != 0);
-                query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-                return await query.ToListAsync();
+                return await GetAllQueryable().ToListAsync();
             }
         }
     }

@@ -18,26 +18,16 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<MstOrganization>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstOrganizations
-                .Where(o => o.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await GetAllQueryable()
+            .ToListAsync();
         }
 
         public async Task<MstOrganization> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.MstOrganizations
-                .Where(o => o.Id == id && o.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(o => o.Id == id && o.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Organization not found");
         }
 
         public async Task<MstOrganization> AddAsync(MstOrganization organization)
@@ -100,20 +90,15 @@ namespace Repositories.Repository
             var query = _context.MstOrganizations
                 .Where(o => o.Status != 0);
 
+            query = query.WithActiveRelations();
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
 
         public async Task<IEnumerable<MstOrganization>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstOrganizations
-                .Where(o => o.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
     }
 }

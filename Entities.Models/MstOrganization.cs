@@ -11,29 +11,25 @@ namespace Entities.Models
     public class MstOrganization : BaseModelWithTimeInt, IApplicationEntity
     {
 
-        [Required]
         [StringLength(255)]
         [Column("code")]
-        public string Code { get; set; }
-
-        [Required]
+        public string? Code { get; set; }
+    
         [StringLength(255)]
         [Column("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("organization_host")]
-        public string OrganizationHost { get; set; }
+        public string? OrganizationHost { get; set; }
 
         [Required]
         [ForeignKey("ApplicationId")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        [Required]
         [Column("status")]
-        public int? Status { get; set; }
+        public int Status { get; set; }
 
         public virtual MstApplication Application { get; set; }
 

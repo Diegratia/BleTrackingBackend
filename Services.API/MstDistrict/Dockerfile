@@ -15,5 +15,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstDistrict/out ./
 
-EXPOSE 5012
+EXPOSE 10012
 ENTRYPOINT ["dotnet", "MstDistrict.dll"] 

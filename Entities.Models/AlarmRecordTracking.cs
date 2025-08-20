@@ -10,7 +10,7 @@ namespace Entities.Models
 {
     public class AlarmRecordTracking : BaseModel, IApplicationEntity
     {
-
+        
         [Column("timestamp")]
         public DateTime? Timestamp { get; set; }
 
@@ -84,7 +84,6 @@ namespace Entities.Models
         public virtual MstApplication Application { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual MstBleReader Reader { get; set; }
-        public virtual FloorplanMaskedArea FloorplanMaskedArea{ get; set; }
-
+        public virtual FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
     }
 }

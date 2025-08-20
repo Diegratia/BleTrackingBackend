@@ -23,16 +23,9 @@ namespace Repositories.Repository
 
         public async Task<AlarmRecordTracking?> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.AlarmRecordTrackings
-                .Include(v => v.FloorplanMaskedArea)
-                .Include(v => v.Reader)
-                .Include(v => v.Visitor)
-                .Include(v => v.ApplicationId)
-                .Where(v => v.Id == id);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(v => v.Id == id)
+            .FirstOrDefaultAsync();
         }
 
         public IQueryable<AlarmRecordTracking> GetAllQueryable()
@@ -43,10 +36,14 @@ namespace Repositories.Repository
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Reader)
                 .Include(v => v.Visitor)
-                .Include(v => v.ApplicationId);
+                .Where(v => v.Id != null);
+
+                query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        
 
         public async Task AddAsync(AlarmRecordTracking entity)
         {

@@ -33,9 +33,9 @@ namespace Data.ViewModels
         public string UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
-        public MstOrganizationDto Organization { get; set;}
-        public MstDepartmentDto Department { get; set; }
-        public MstDistrictDto District { get; set; }
+        public MstOrganizationDto? Organization { get; set;}
+        public MstDepartmentDto? Department { get; set; }
+        public MstDistrictDto? District { get; set; }
     }
 
      public class MstMemberCreateDto : BaseModelDto
@@ -62,7 +62,7 @@ namespace Data.ViewModels
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 
-     public class MstMemberUpdateDto : BaseModelDto
+     public class MstMemberUpdateDto 
     {
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }
@@ -76,11 +76,10 @@ namespace Data.ViewModels
         public string? Email { get; set; }
         public string? Gender { get; set; } // Enum sebagai string
         public string? Address { get; set; }
-        public IFormFile FaceImage { get; set; }
-        public DateOnly BirthDate { get; set; }
-        public string HeadMember1 { get; set; }
-        public string HeadMember2 { get; set; }
-        public Guid ApplicationId { get; set; }
-        public string StatusEmployee { get; set; } // Enum sebagai string
+        public IFormFile? FaceImage { get; set; }
+        public DateOnly? BirthDate { get; set; }
+        public string? HeadMember1 { get; set; }
+        public string? HeadMember2 { get; set; }
+        public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 }

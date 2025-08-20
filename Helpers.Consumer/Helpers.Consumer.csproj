@@ -28,6 +28,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="EmailTemplate\*.html" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+  </ItemGroup>
   
   <!-- <ItemGroup>
   	<ProjectReference Include="..\Repositories\Repositories.csproj" />
