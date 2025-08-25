@@ -362,9 +362,10 @@ namespace Web.API.Controllers.Controllers
         }
 
         //OPEN
-        
-         // GET: api/MstBleReader/{id}
+
+        // GET: api/MstBleReader/{id}
         [HttpGet("open/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
             try
@@ -402,6 +403,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstBleReader
         [HttpPost("open")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenCreate([FromBody] MstBleReaderCreateDto mstBleReaderDto)
         {
             if (!ModelState.IsValid)
@@ -441,6 +443,7 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/MstBleReader/{id}
         [HttpPut("open/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] MstBleReaderUpdateDto mstBleReaderDto)
         {
             if (!ModelState.IsValid)
@@ -490,6 +493,7 @@ namespace Web.API.Controllers.Controllers
 
         // DELETE: api/MstBleReader/{id}
         [HttpDelete("open/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenDelete(Guid id)
         {
             try
@@ -526,6 +530,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("open/{filter}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
