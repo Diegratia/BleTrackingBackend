@@ -372,7 +372,7 @@ namespace Web.API.Controllers.Controllers
         //OPEN
         
             [AllowAnonymous]
-        [HttpGet("open{id}")]
+        [HttpGet("open/{id}")]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
             try
