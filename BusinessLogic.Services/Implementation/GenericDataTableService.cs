@@ -55,6 +55,10 @@ namespace BusinessLogic.Services.Implementation
 
             // var totalRecords = await query.CountAsync();
 
+            // Calculate total records before filtering
+        var totalRecords = await query.CountAsync();
+        // Console.WriteLine($"Total records before filtering: {totalRecords}");
+
             // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
@@ -323,7 +327,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // Hitung recordsTotal dan recordsFiltered dari projectionQuery sebelum paging
-            var totalRecords = await projectionQuery.CountAsync();
+            // var totalRecords = await projectionQuery.CountAsync();
 
             // Sorting
             var sortDirection = request.SortDir.ToLower() == "asc" ? "ascending" : "descending";
@@ -339,9 +343,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
             }
-
-            // Hitung recordsFiltered setelah sorting (untuk konsistensi)
-            var filteredRecords = await projectionQuery.CountAsync();
+            
 
 
            // Paging
@@ -352,7 +354,7 @@ namespace BusinessLogic.Services.Implementation
 
             
             projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
-            
+            var filteredRecords = await projectionQuery.CountAsync();
 
             // Execute query
             var data = await projectionQuery.ToListAsync();
@@ -381,3 +383,4 @@ namespace BusinessLogic.Services.Implementation
         }
     }
 }
+

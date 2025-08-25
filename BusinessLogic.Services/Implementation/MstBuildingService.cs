@@ -84,7 +84,7 @@ namespace BusinessLogic.Services.Implementation
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
             }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
             building.CreatedAt = DateTime.UtcNow;
@@ -98,7 +98,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
@@ -161,7 +161,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var building = await _repository.GetByIdAsync(id);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             building.UpdatedBy = username;
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;

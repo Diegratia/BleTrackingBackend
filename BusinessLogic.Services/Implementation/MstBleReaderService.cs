@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBleReaderDto> CreateAsync(MstBleReaderCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var bleReader = _mapper.Map<MstBleReader>(createDto);
             bleReader.Id = Guid.NewGuid();
@@ -74,7 +74,7 @@ namespace BusinessLogic.Services.Implementation
             if (bleReader == null)
                 throw new KeyNotFoundException("BLE Reader not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             _mapper.Map(updateDto, bleReader);
             bleReader.UpdatedBy = username ?? "";

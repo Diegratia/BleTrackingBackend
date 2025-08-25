@@ -10,6 +10,12 @@ namespace Data.ViewModels
         public string Password { get; set; }
     }
 
+        public class LoginVisitorDto
+    {
+        public string EmailConfirmationCode { get; set; }
+        // public string Email { get; set; }
+    }
+
     public class AuthResponseDto
     {
         public string Token { get; set; }

@@ -27,10 +27,10 @@ namespace Repositories.Repository
             var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
             if (isSystemAdmin == true)
             {
-                return (null, true); // System admin tidak perlu filter ApplicationId
+                return (null, true); // system ga perlu filter applicationId
             }
 
-            // Prioritas 1: Dari token Bearer (claim di JWT)
+            // cek di token
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
             if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
             {
@@ -38,11 +38,18 @@ namespace Repositories.Repository
             }
 
             // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
-            // var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
-            // if (integration?.ApplicationId != null)
+            var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+            if (integration?.ApplicationId != null)
+            {
+                return (integration.ApplicationId, false);
+            }
+
+            // var referer = _httpContextAccessor.HttpContext.Request.Headers["Referer"].FirstOrDefault();
+            // if (referer != null && !referer.StartsWith("https://domain-test.com"))
             // {
-            //     return (integration.ApplicationId, false);
+            //     // Return error atau tidak mengizinkan akses
             // }
+
 
             return (null, false);
         }
@@ -76,7 +83,7 @@ namespace Repositories.Repository
         }
 
 
-           protected string GetUserEmail()
+        protected string GetUserEmail()
         {
             var email = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
             if (string.IsNullOrWhiteSpace(email))
@@ -89,16 +96,35 @@ namespace Repositories.Repository
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.SuperAdmin.ToString()) ?? false;
         }
-        
-            protected bool IsPrimary()
+
+        protected bool IsPrimary()
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.Primary.ToString()) ?? false;
         }
 
-            protected bool IsPrimaryAdmin()
+        protected bool IsPrimaryAdmin()
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
         }
+        
+//         var apiKey = _httpContextAccessor.HttpContext.Request.Headers["X-API-KEY"].FirstOrDefault();
+// var domain = _httpContextAccessor.HttpContext.Request.Headers["Referer"].FirstOrDefault();
+
+// var validDomain = GetValidDomainFromApiKey(apiKey);
+
+// if (validDomain != null && !domain.StartsWith(validDomain))
+// {
+//     // Return error atau tidak mengizinkan akses
+// }
+
+// // ...
+
+// private string GetValidDomainFromApiKey(string apiKey)
+// {
+//     // Query tabel untuk mendapatkan domain yang diizinkan untuk API key
+//     var domain = _dbContext.ApiKeys.Where(x => x.ApiKey == apiKey).Select(x => x.Domain).FirstOrDefault();
+//     return domain;
+// }
         
         // public enum LevelPriority
         // {

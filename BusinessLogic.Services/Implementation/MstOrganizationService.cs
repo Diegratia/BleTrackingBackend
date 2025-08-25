@@ -46,7 +46,7 @@ namespace BusinessLogic.Services.Implementation
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var organization = _mapper.Map<MstOrganization>(dto);
             organization.Id = Guid.NewGuid();
             organization.Status = 1;
@@ -67,7 +67,7 @@ namespace BusinessLogic.Services.Implementation
             if (organization == null || organization.Status == 0)
                 throw new KeyNotFoundException($"Organization with ID {id} not found or has been deleted.");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             organization.UpdatedBy = username;
             organization.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(dto, organization);
@@ -77,7 +77,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteOrganizationAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var organization = await _repository.GetByIdAsync(id);
             if (organization == null || organization.Status == 0)
                 throw new KeyNotFoundException($"Organization with ID {id} not found or already deleted.");

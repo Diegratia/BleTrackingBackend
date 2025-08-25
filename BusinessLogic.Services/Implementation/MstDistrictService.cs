@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = _mapper.Map<MstDistrict>(createDto);
 
             district.Id = Guid.NewGuid();
@@ -64,7 +64,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var result = new List<MstDistrictDto>();
             foreach (var dto in dtos)
             {
@@ -84,7 +84,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = await _repository.GetByIdAsync(id);
             if (district == null)
                 throw new KeyNotFoundException("District not found");
@@ -97,7 +97,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = await _repository.GetByIdAsync(id);
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;

@@ -429,22 +429,25 @@ using Bogus.DataSets;
 
 namespace BusinessLogic.Services.Interface
 {
-        public interface IAuthService
-        {
-            Task<AuthResponseDto> LoginAsync(LoginDto dto);
-            Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
-            Task ConfirmEmailAsync(ConfirmEmailDto dto);
-            Task SetPasswordAsync(SetPasswordDto dto);
-            Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
-            Task<IEnumerable<UserDto>> GetAllUsersAsync();
-            Task<UserDto> GetUserByIdAsync(Guid id);
-            Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
-            Task DeleteUserAsync(Guid id);
-            Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
-            Task<UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto);
-            Task DeleteGroupAsync(Guid id);
-            Task<IEnumerable<UserGroupDto>> GetAllGroupsAsync();
-            Task<UserGroupDto> GetGroupByIdAsync(Guid id);
+    public interface IAuthService
+    {
+        Task<AuthResponseDto> LoginAsync(LoginDto dto);
+        Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
+        Task ConfirmEmailAsync(ConfirmEmailDto dto);
+        Task SetPasswordAsync(SetPasswordDto dto);
+        Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<UserDto> GetUserByIdAsync(Guid id);
+        Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
+        Task DeleteUserAsync(Guid id);
+        Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
+        Task<UserGroupDto> UpdateGroupAsync(Guid id, UpdateUserGroupDto dto);
+        Task DeleteGroupAsync(Guid id);
+        Task<IEnumerable<UserGroupDto>> GetAllGroupsAsync();
+        Task<UserGroupDto> GetGroupByIdAsync(Guid id);
+        Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto);
+
+        
             // Task ConfirmVisitorInvitationAsync(string email); 
     }
     public class AuthService : IAuthService
@@ -520,12 +523,54 @@ namespace BusinessLogic.Services.Interface
                 StatusActive = user.StatusActive.ToString()
             };
         }
+        
+        public async Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto)
+        {
+            var user = await _userRepository.GetByConfirmationCodeAsync(dto.EmailConfirmationCode.ToLower());
+            if (user == null)
+                throw new UnauthorizedAccessException("Invalid Confirmation Code");
+            if (user.Group.LevelPriority != LevelPriority.UserCreated && user.Group.LevelPriority != LevelPriority.Secondary)
+                throw new UnauthorizedAccessException("Only Usercreated or secondary can login");
+            if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
+                throw new Exception("Invitation code expired");
+                
+            user.LastLoginAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            var accessToken = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken();
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Token = refreshToken,
+                ExpiryDate = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshTokenExpiryInDays")),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
+
+            return new AuthResponseDto
+            {
+                Token = accessToken,
+                RefreshToken = refreshToken,
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                GroupId = user.GroupId,
+                ApplicationId = user.Group.ApplicationId,
+                LevelPriority = user.Group.LevelPriority.ToString(),
+                IsEmailConfirmed = user.IsEmailConfirmation,
+                StatusActive = user.StatusActive.ToString()
+            };
+        }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
             if (await _userRepository.EmailExistsAsync(dto.Email.ToLower()))
                 throw new Exception("Email is already registered");
-            
+
             var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(currentUserId))
                 throw new UnauthorizedAccessException("User not authenticated");

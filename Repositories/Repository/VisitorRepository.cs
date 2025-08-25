@@ -37,6 +37,17 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+                public async Task<Visitor?> GetByIdPublicDuplicateAsync(string email, string identityId, string personId, Guid id)
+        {
+            return await _context.Visitors
+            .Where(x => x.Id == id && x.Status != 0)
+               .FirstOrDefaultAsync(b =>
+                        (!string.IsNullOrWhiteSpace(email) && b.Email == email) ||
+                        (!string.IsNullOrWhiteSpace(identityId) && b.IdentityId == identityId) ||
+                        (!string.IsNullOrWhiteSpace(personId) && b.PersonId == personId)
+                    );
+        }
+
        public async Task AddAsync(Visitor visitor)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

@@ -71,7 +71,7 @@ namespace BusinessLogic.Services.Implementation
             //     throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
 
             var device = _mapper.Map<FloorplanDevice>(dto);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             device.CreatedBy = username;
             device.CreatedAt = DateTime.UtcNow;
@@ -137,7 +137,7 @@ namespace BusinessLogic.Services.Implementation
             //     device.ApplicationId = dto.ApplicationId;
             // }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
@@ -150,7 +150,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var device = await _repository.GetByIdAsync(id);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 

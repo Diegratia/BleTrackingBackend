@@ -45,7 +45,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstDepartmentDto> CreateAsync(MstDepartmentCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = _mapper.Map<MstDepartment>(createDto);
             department.Id = Guid.NewGuid();
             department.CreatedBy = username;
@@ -60,7 +60,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstDepartmentUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = await _repository.GetByIdAsync(id);
             if (department == null)
                 throw new KeyNotFoundException("Department not found");
@@ -74,7 +74,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = await _repository.GetByIdAsync(id);
             department.UpdatedBy = username;
             department.UpdatedAt = DateTime.UtcNow;

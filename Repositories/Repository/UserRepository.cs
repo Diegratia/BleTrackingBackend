@@ -89,6 +89,16 @@ namespace Repositories.Repository
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("UserName not found");
         }
+        
+        public async Task<User> GetByConfirmationCodeAsync(string EmailConfirmationCode)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.EmailConfirmationCode.ToLower() == EmailConfirmationCode.ToLower() && u.StatusActive != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Email Confirmation Code not found");
+        }
 
         // public async Task<User> GetByEmailConfirmPasswordAsync(string email)
         // {
@@ -102,12 +112,12 @@ namespace Repositories.Repository
         // }
 
         public async Task<User> GetByEmailConfirmPasswordAsync(string email)
-            {
-                var query = _context.Users
-                    .Include(u => u.Group)
-                    .Where(u => u.Email == email); // ⛔ tanpa filter dulu
-                return await query.FirstOrDefaultAsync(); // lihat apakah user ada
-            }
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Email == email); // ⛔ tanpa filter dulu
+            return await query.FirstOrDefaultAsync(); // lihat apakah user ada
+        }
 
         public async Task<User> GetByEmailConfirmPasswordAsyncRaw(string email)
         {
@@ -142,6 +152,13 @@ namespace Repositories.Repository
             return await query.AnyAsync();
         }
 
+               public async Task<bool> EmailExistsAsyncNotActiveRaw(string email)
+        {
+            var query = _context.Users
+                .Where(u => u.Email == email && u.StatusActive == 0);
+            return await query.AnyAsync();
+        }
+
         public async Task<User> AddAsync(User user)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -169,6 +186,16 @@ namespace Repositories.Repository
 
             await ValidateApplicationIdAsync(user.ApplicationId);
             ValidateApplicationIdForEntity(user, applicationId, isSystemAdmin);
+
+            _context.Entry(existingUser).CurrentValues.SetValues(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateRawAsync(User user)
+        {
+            var existingUser = await GetByIdAsyncRaw(user.Id);
+            if (existingUser == null)
+                throw new KeyNotFoundException("User not found");
 
             _context.Entry(existingUser).CurrentValues.SetValues(user);
             await _context.SaveChangesAsync();

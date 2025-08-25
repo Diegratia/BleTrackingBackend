@@ -89,9 +89,9 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.Id = Guid.NewGuid();
             floor.Status = 1;
-            floor.CreatedBy = username;
+            floor.CreatedBy = username ?? "Annonymous";
             floor.CreatedAt = DateTime.UtcNow;
-            floor.UpdatedBy = username;
+            floor.UpdatedBy = username ?? "Annonymous";
             floor.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(floor);

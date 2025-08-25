@@ -58,11 +58,14 @@ namespace BusinessLogic.Services.Implementation
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var application = _mapper.Map<MstApplication>(dto);
-            // application.Id = Guid.NewGuid();
+           
+            var genetateApplicationId = Guid.NewGuid();
+            application.Id = genetateApplicationId;
+         
             application.ApplicationStatus = 1;
 
             var createdApplication = await _applicationRepository.AddAsync(application);
-
+            
             // var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(
             //     createdApplication.Id, LevelPriority.Primary);
 
@@ -92,7 +95,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = "Super Admin Group",
                     LevelPriority = LevelPriority.SuperAdmin,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -104,7 +107,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = "Operator Admin Group",
                     LevelPriority = LevelPriority.PrimaryAdmin,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -116,7 +119,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = "Operator Security Group",
                     LevelPriority = LevelPriority.Primary,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -128,7 +131,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = "Other Primary Group",
                     LevelPriority = LevelPriority.Primary,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -139,7 +142,7 @@ namespace BusinessLogic.Services.Implementation
 
             foreach (var group in userGroups)
             {
-                await _userGroupRepository.AddAsync(group);
+                await _userGroupRepository.AddAsyncRaw(group);
             }
             var users = new List<User>
             {

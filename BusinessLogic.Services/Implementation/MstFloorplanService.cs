@@ -49,7 +49,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstFloorplanDto> CreateAsync(MstFloorplanCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
             floorplan.Id = Guid.NewGuid();
             floorplan.Status = 1;
@@ -64,7 +64,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstFloorplanUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
@@ -78,7 +78,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");

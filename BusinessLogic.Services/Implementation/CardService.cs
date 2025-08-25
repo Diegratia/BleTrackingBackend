@@ -163,7 +163,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
 
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
@@ -173,7 +173,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var card = await _repository.GetByIdAsync(id);
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
         }

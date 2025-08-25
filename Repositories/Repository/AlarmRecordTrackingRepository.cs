@@ -46,7 +46,7 @@ namespace Repositories.Repository
 
          public IQueryable<AlarmRecordTracking> GetAllQueryable()
             {
-                var userEmail = GetUserEmail();
+                var userEmail = GetUserEmail() ;
                 var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
                 var isSuperAdmin = IsSuperAdmin();
                 var isPrimaryAdmin = IsPrimaryAdmin();
