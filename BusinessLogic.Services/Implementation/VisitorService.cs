@@ -113,10 +113,6 @@ public class VisitorService : IVisitorService
         if (applicationId == Guid.Empty)
             throw new InvalidOperationException("Invalid ApplicationId");
 
-        // Validate ApplicationId
-        // var application = await _userRepository.GetApplicationByIdAsync(applicationId.Value);
-        // if (application == null)
-        //     throw new ArgumentException($"Application with ID {applicationId} not found.");
 
         // Find or create UserGroup with LevelPriority.UserCreated
         var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId.Value, LevelPriority.UserCreated);
