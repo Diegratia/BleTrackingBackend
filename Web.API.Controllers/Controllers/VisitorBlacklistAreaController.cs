@@ -428,7 +428,7 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [HttpPost]
+        [HttpPost("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenCreate([FromBody] VisitorBlacklistAreaCreateDto dto)
         {
