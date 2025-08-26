@@ -90,6 +90,21 @@ namespace Repositories.Repository
         return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
     }
 
+     public IQueryable<TrxVisitor> GetAllQueryableRaw()
+    {
+        var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+
+        var query = _context.TrxVisitors
+            .Include(v => v.Application)
+            .Include(v => v.Visitor)
+            .Include(v => v.MaskedArea)
+            .Include(v => v.Member)
+            .AsQueryable();
+
+        return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+    }
+
         public async Task<TrxVisitor?> GetAllActiveTrxAsync(Guid visitorId)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
