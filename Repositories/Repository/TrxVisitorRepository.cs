@@ -101,9 +101,8 @@ namespace Repositories.Repository
     {
         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-
         var query = _context.TrxVisitors
-            .Include(v => v.Application)
+            // .Include(v => v.Application)
             .Include(v => v.Visitor)
             .Include(v => v.MaskedArea)
             .Include(v => v.Member)

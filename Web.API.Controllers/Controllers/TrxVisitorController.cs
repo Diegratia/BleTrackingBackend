@@ -598,7 +598,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _trxVisitorService.FilterAsync(request);
+                var result = await _trxVisitorService.FilterRawAsync(request);
                 return Ok(new
                 {
                     success = true,
