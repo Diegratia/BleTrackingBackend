@@ -376,7 +376,7 @@ namespace BusinessLogic.Services.Implementation
 
             public async Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
@@ -397,7 +397,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
@@ -421,7 +421,7 @@ namespace BusinessLogic.Services.Implementation
             trx.UnblockAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Unblock;
             trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             await _repository.UpdateAsync(trx);
         }
