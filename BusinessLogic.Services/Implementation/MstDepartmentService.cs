@@ -43,6 +43,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
 
+        //     public async Task<IEnumerable<MstDepartmentDto>> MixGetAllAsync()
+        // {
+        //     var departments = await _repository.MixGetAllAsync();
+        //     return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
+        // }
+
         public async Task<MstDepartmentDto> CreateAsync(MstDepartmentCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -82,6 +88,22 @@ namespace BusinessLogic.Services.Implementation
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryable();
+
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "Name", "DepartmentHost", "CreatedAt", "UpdatedAt", "Status" };
+
+            var filterService = new GenericDataTableService<MstDepartment, MstDepartmentDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+
+         public async Task<object> MixFilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 

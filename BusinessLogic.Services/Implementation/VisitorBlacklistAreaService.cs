@@ -13,6 +13,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Helpers.Consumer.DtoHelpers;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -103,6 +104,23 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+
+        // public async Task<object> MinimalFilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryableMinimal();
+
+        //     var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
+        //     var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
+
+        //     var filterService = new GenericDataTableService<VisitorBlacklistArea, VisitorBlacklistAreaDtoMinimal>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
+
 
           public async Task<byte[]> ExportPdfAsync()
         {

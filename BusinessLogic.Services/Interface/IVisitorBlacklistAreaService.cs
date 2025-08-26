@@ -14,5 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task UpdateVisitorBlacklistAreaAsync(Guid id, VisitorBlacklistAreaUpdateDto updatedto);
         Task DeleteVisitorBlacklistAreaAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 
+        // Task<object> MinimalFilterAsync(DataTablesRequest request); 
     }
 }

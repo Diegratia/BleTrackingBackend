@@ -1,4 +1,6 @@
+using Data.ViewModels;
 using Entities.Models;
+using Helpers.Consumer.DtoHelpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
@@ -43,6 +45,33 @@ namespace Repositories.Repository
                 .Where(v => v.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+         public IQueryable<VisitorBlacklistAreaDtoMinimal> GetAllQueryableMinimal()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.VisitorBlacklistAreas
+                .Include(v => v.FloorplanMaskedArea)
+                .Include(v => v.Visitor)
+                .AsQueryable();
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(v => new VisitorBlacklistAreaDtoMinimal
+            {
+                Id = v.Id,
+                FloorplanMaskedArea = v.FloorplanMaskedArea == null ? null : new FloorplanMaskedAreaDtoMinimal
+                {
+                    Id = v.FloorplanMaskedArea.Id,
+                    Name = v.FloorplanMaskedArea.Name
+                },
+                Visitor = v.Visitor == null ? null : new VisitorDtoMinimal
+                {
+                    Id = v.Visitor.Id,
+                    Name = v.Visitor.Name 
+                }
+            });
         }
 
         public async Task AddAsync(VisitorBlacklistArea entity)
