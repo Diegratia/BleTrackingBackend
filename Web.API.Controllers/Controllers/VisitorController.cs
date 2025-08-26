@@ -694,7 +694,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpPost("open")]
+        [HttpPost("open/create")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenCreate([FromForm] VisitorCreateDto visitorDto)
         {
