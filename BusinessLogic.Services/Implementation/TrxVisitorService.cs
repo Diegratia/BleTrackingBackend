@@ -230,6 +230,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
 
             if (trx == null)
                 throw new Exception("No active session found");
@@ -377,7 +378,8 @@ namespace BusinessLogic.Services.Implementation
             public async Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
@@ -398,7 +400,8 @@ namespace BusinessLogic.Services.Implementation
         public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
@@ -414,7 +417,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UnblockVisitorAsync(Guid trxVisitorId)
         {
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
