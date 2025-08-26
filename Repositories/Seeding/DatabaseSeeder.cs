@@ -767,7 +767,8 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.VisitorId, f => context.Visitors
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id);
+                        .Id)
+                    .RuleFor(v => v.Status, f => 1);
 
                 var blacklists = blacklistFaker.Generate(2);
                 context.VisitorBlacklistAreas.AddRange(blacklists);

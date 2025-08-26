@@ -28,7 +28,7 @@ namespace Repositories.Repository
             var query = _context.VisitorBlacklistAreas
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Visitor)
-                .Where(v => v.Id == id);
+                .Where(v => v.Id == id && v.Status != 0);
 
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
@@ -39,7 +39,8 @@ namespace Repositories.Repository
 
             var query = _context.VisitorBlacklistAreas
                 .Include(v => v.FloorplanMaskedArea)
-                .Include(v => v.Visitor);
+                .Include(v => v.Visitor)
+                .Where(v => v.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }

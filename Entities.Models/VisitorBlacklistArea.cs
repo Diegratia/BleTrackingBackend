@@ -25,6 +25,10 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        [Required]
+        [Column("status")]
+        public int Status { get; set; }
+
         public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
         public virtual MstApplication Application { get; set;}
         public virtual Visitor Visitor { get; set; }

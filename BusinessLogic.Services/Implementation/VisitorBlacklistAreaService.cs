@@ -11,17 +11,21 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class VisitorBlacklistAreaService : IVisitorBlacklistAreaService
     {
         private readonly VisitorBlacklistAreaRepository _repository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public VisitorBlacklistAreaService(VisitorBlacklistAreaRepository repository, IMapper mapper)
+        public VisitorBlacklistAreaService(VisitorBlacklistAreaRepository repository, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _repository = repository;
+            _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
 
@@ -29,8 +33,15 @@ namespace BusinessLogic.Services.Implementation
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
+           var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
             var entity = _mapper.Map<VisitorBlacklistArea>(dto);
             entity.Id = Guid.NewGuid();
+            entity.Status = 1;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.CreatedBy = username;
+            entity.CreatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(entity);
             return _mapper.Map<VisitorBlacklistAreaDto>(entity);
@@ -51,10 +62,14 @@ namespace BusinessLogic.Services.Implementation
         public async Task UpdateVisitorBlacklistAreaAsync(Guid id, VisitorBlacklistAreaUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
+             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+            
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(dto, entity);
             await _repository.UpdateAsync(entity);
@@ -65,6 +80,10 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             await _repository.DeleteAsync(entity);
         }
