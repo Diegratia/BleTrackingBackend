@@ -366,6 +366,31 @@ namespace Web.API.Controllers.Controllers
         }
 
         //OPEN
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var areas = await _service.GetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Areas retrieved successfully",
+                    collection = new { data = areas },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [AllowAnonymous]
         // POST: api/FloorplanMaskedArea
@@ -406,7 +431,8 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-          [HttpPost("open/{filter}")]
+        [HttpPost("open/{filter}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
@@ -440,6 +466,159 @@ namespace Web.API.Controllers.Controllers
                     msg = ex.Message,
                     collection = new { data = (object)null },
                     code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var areas = await _service.GetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Areas retrieved successfully",
+                    collection = new { data = areas },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // GET: api/FloorplanMaskedArea/{id}
+        [HttpGet("open/{id}")]
+        public async Task<IActionResult> OpenGetById(Guid id)
+        {
+            try
+            {
+                var area = await _service.GetByIdAsync(id);
+                if (area == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Area not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Area retrieved successfully",
+                    collection = new { data = area },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+
+        [AllowAnonymous]
+        // PUT: api/FloorplanMaskedArea/{id}
+        [HttpPut("open/{id}")]
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto FloorplanMaskedAreaDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _service.UpdateAsync(id, FloorplanMaskedAreaDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Area updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Area not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        // DELETE: api/FloorplanMaskedArea/{id}
+        [HttpDelete("open/{id}")]
+        public async Task<IActionResult> OpenDelete(Guid id)
+        {
+            try
+            {
+                await _service.DeleteAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Area deleted successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Area not found",
+                    collection = new { data = (object)null },
+                    code = 404
                 });
             }
             catch (Exception ex)

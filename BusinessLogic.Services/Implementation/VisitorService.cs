@@ -1187,6 +1187,12 @@ public class VisitorService : IVisitorService
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
             var loggedInUserEmail = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
+
+            //  var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+            // if (integration?.ApplicationId != null)
+            // {
+            //     return (integration.ApplicationId, false);
+            // }
             
 
             // Login as member?
