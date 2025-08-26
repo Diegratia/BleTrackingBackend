@@ -22,53 +22,55 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/Visitor
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] VisitorCreateDto visitorDto)
-        {
-            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost]
+        // public async Task<IActionResult> Create([FromForm] VisitorCreateDto visitorDto)
+        // {
+        //     if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var createdVisitor = await _visitorService.CreateVisitorAsync(visitorDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Visitor created successfully",
-                    collection = new { data = createdVisitor },
-                    code = 201
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var createdVisitor = await _visitorService.CreateVisitorAsync(visitorDto);
+        //         return StatusCode(201, new
+        //         {
+        //             success = true,
+        //             msg = "Visitor created successfully",
+        //             collection = new { data = createdVisitor },
+        //             code = 201
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
+
+        
 
         // GET: api/Visitor/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
@@ -696,7 +698,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpPost("open/create")]
         [AllowAnonymous]
-        public async Task<IActionResult> OpenCreate([FromForm] VisitorCreateDto visitorDto)
+        public async Task<IActionResult> OpenCreate([FromForm] OpenVisitorCreateDto visitorDto)
         {
             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {

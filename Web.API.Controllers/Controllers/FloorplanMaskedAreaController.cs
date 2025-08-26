@@ -481,32 +481,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [HttpGet("open")]
-        public async Task<IActionResult> OpenGetAll()
-        {
-            try
-            {
-                var areas = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Areas retrieved successfully",
-                    collection = new { data = areas },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
         // GET: api/FloorplanMaskedArea/{id}
         [HttpGet("open/{id}")]
         public async Task<IActionResult> OpenGetById(Guid id)
