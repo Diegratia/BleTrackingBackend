@@ -31,7 +31,7 @@ public static class ApiKeyMiddlewareExtensions
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var KeyField = "X-API-KEY-TRACKING-PEOPLE";
+            var KeyField = "X-BIOPEOPLETRACKING-API-KEY";
 
             // Skip middleware for specific endpoints
             if (context.Request.Path.Value.Contains("/export", StringComparison.OrdinalIgnoreCase) ||
@@ -43,7 +43,7 @@ public static class ApiKeyMiddlewareExtensions
                 return;
             }
 
-            // Check for X-API-KEY-TRACKING-PEOPLE header
+            // Check for X-BIOPEOPLETRACKING-API-KEY header
             if (!context.Request.Headers.TryGetValue(KeyField, out var apiKeyValues))
             {
                 context.Response.StatusCode = 401;

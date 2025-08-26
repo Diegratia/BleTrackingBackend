@@ -1,0 +1,236 @@
+services:
+  auth:
+    image: dev1pci2025/bletrackingbackend-auth:latest
+    ports:
+      - "10001:10001"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  floorplan-device:
+    image: dev1pci2025/bletrackingbackend-floorplan-device:latest
+    ports:
+      - "10003:10003"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  floorplan-masked-area:
+    image: dev1pci2025/bletrackingbackend-floorplan-masked-area:latest
+    ports:
+      - "10004:10004"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-floor:
+    image: dev1pci2025/bletrackingbackend-mst-floor:latest
+    ports:
+      - "10013:10013"
+    volumes:
+      - ./Uploads/FloorImages:/app/Uploads/FloorImages
+      - ./.env:/app/.env
+    restart: always
+
+  mst-floorplan:
+    image: dev1pci2025/bletrackingbackend-mst-floorplan:latest
+    ports:
+      - "10014:10014"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-integration:
+    image: dev1pci2025/bletrackingbackend-mst-integration:latest
+    ports:
+      - "10015:10015"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-accesscontrol:
+    image: dev1pci2025/bletrackingbackend-mst-accesscontrol:latest
+    ports:
+      - "10006:10006"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-accesscctv:
+    image: dev1pci2025/bletrackingbackend-mst-accesscctv:latest
+    ports:
+      - "10005:10005"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-blereader:
+    image: dev1pci2025/bletrackingbackend-mst-blereader:latest
+    ports:
+      - "10008:10008"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-brand:
+    image: dev1pci2025/bletrackingbackend-mst-brand:latest
+    ports:
+      - "10009:10009"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-application:
+    image: dev1pci2025/bletrackingbackend-mst-application:latest
+    ports:
+      - "10007:10007"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  visitor:
+    image: dev1pci2025/bletrackingbackend-visitor:latest
+    ports:
+      - "10019:10019"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  alarm-record-tracking:
+    image: dev1pci2025/bletrackingbackend-alarm-record-tracking:latest
+    ports:
+      - "10002:10002"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-building:
+    image: dev1pci2025/bletrackingbackend-mst-building:latest
+    ports:
+      - "10010:10010"
+    # depends_on:
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-department:
+    image: dev1pci2025/bletrackingbackend-mst-department:latest
+    ports:
+      - "10011:10011"
+    # depends_on:
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-district:
+    image: dev1pci2025/bletrackingbackend-mst-district:latest
+    ports:
+      - "10012:10012"
+    # depends_on:
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-member:
+    image: dev1pci2025/bletrackingbackend-mst-member:latest
+    ports:
+      - "10016:10016"
+    # depends_on:
+    #   - mst-application
+    #   - mst-organization
+    #   - mst-department
+    #   - mst-district
+    volumes:
+      - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
+      - ./.env:/app/.env
+    restart: always
+
+  mst-organization:
+    image: dev1pci2025/bletrackingbackend-mst-organization:latest
+    ports:
+      - "10017:10017"
+    # depends_on:
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  tracking-transaction:
+    image: dev1pci2025/bletrackingbackend-tracking-transaction:latest
+    ports:
+      - "10018:10018"
+    # depends_on:
+    #   - mst-blereader
+    #   - floorplan-masked-area
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  visitor-blacklist-area:
+    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
+    ports:
+      - "10020:10020"
+    # depends_on:
+    #   - floorplan-masked-area
+    #   - visitor
+    volumes:
+      - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
+      - ./.env:/app/.env
+    restart: always
+
+  ble-reader-node:
+    image: dev1pci2025/bletrackingbackend-ble-reader-node:latest
+    ports:
+      - "10021:10021"
+    # depends_on:
+    #   - mst-blereader
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  mst-engine:
+    image: dev1pci2025/bletrackingbackend-mst-engine:latest
+    ports:
+      - "10022:10022"
+    # depends_on:
+    #   - mst-blereader
+    #   - mst-application
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  card-record:
+    image: dev1pci2025/bletrackingbackend-card-record:latest
+    ports:
+      - "10024:10024"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  trx-visitor:
+    image: dev1pci2025/bletrackingbackend-trx-visitor:latest
+    ports:
+      - "10025:10025"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  card:
+    image: dev1pci2025/bletrackingbackend-card:latest
+    ports:
+      - "10026:10026"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  nginx:
+    image: dev1pci2025/bletrackingbackend-nginx:latest
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./.env:/app/.env
+    restart: always

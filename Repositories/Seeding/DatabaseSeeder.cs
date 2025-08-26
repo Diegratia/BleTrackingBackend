@@ -332,7 +332,7 @@ namespace Repositories.Seeding
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
                     // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
-                    .RuleFor(i => i.ApiKeyField, f => "X-API-KEY-TRACKING-PEOPLE")
+                    .RuleFor(i => i.ApiKeyField, f => "X-BIOPEOPLETRACKING-API-KEY")
                     // .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
                     .RuleFor(i => i.ApiKeyValue, f => "FujDuGTsyEXVwkKrtRgn52APwAVRGmPOiIRX8cffynDvIW35bJaGeH3NcH6HcSeK")
                     .RuleFor(i => i.ApplicationId, f => context.MstApplications

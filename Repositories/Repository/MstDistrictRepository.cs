@@ -35,7 +35,7 @@
 //                 return (applicationIdFromToken, false);
 //             }
 
-//             // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
+//             // Prioritas 2: Dari MstIntegration (X-BIOPEOPLETRACKING-API-KEY)
 //             // var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
 //             // if (integration?.ApplicationId != null)
 //             // {
@@ -297,7 +297,7 @@ namespace Repositories.Repository
 //                 return (applicationIdFromToken, false);
 //             }
 
-//             // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
+//             // Prioritas 2: Dari MstIntegration (X-BIOPEOPLETRACKING-API-KEY)
 //             var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
 //             if (integration?.ApplicationId != null)
 //             {
