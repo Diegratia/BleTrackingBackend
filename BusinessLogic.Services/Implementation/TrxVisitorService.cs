@@ -229,7 +229,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task CheckoutVisitorAsync(Guid trxVisitorId)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
 
             if (trx == null)
                 throw new Exception("No active session found");
@@ -429,6 +429,31 @@ namespace BusinessLogic.Services.Implementation
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
+            };
+
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+
+            var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns,
+                enumColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+
+          public async Task<object> FilterRawAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryableRaw();
 
             var enumColumns = new Dictionary<string, Type>
             {

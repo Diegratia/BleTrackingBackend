@@ -15,6 +15,7 @@ namespace BusinessLogic.Services.Interface
         Task UpdateTrxVisitorAsync(Guid id, TrxVisitorUpdateDto updateDto);
         // Task DeleteTrxVisitorAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterRawAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         // Task CheckinVisitorAsync(Guid trxVisitorId);

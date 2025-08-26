@@ -26,6 +26,13 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+                public async Task<TrxVisitor?> OpenGetByIdAsync(Guid id)
+        {
+            return await GetAllQueryableRaw()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<TrxVisitor?> GetByPublicIdAsync(Guid id)
         {
             return await _context.TrxVisitors
