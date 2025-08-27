@@ -14,6 +14,8 @@ namespace BusinessLogic.Services.Extension
         {
             CreateMap<MstFloor, MstFloorDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+            CreateMap<MstFloor, OpenMstFloorDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<MstFloorCreateDto, MstFloor>()
                  .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())

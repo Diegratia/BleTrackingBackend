@@ -1,4 +1,5 @@
 
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
@@ -22,6 +23,28 @@ namespace Data.ViewModels
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
         public MstBuildingDto Building { get; set; }
+    }
+
+    public class OpenMstFloorDto : BaseModelDto
+    {
+        public int Generate { get; set; }
+        [JsonPropertyName("floor_id")]
+        public Guid Id { get; set; }
+        public Guid BuildingId { get; set; }
+        public string? Name { get; set; }
+        public string? FloorImage { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
+        public float MeterPerPx { get; set; }
+        public long EngineFloorId { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string UpdatedBy { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public int? Status { get; set; }
+        // public MstBuildingDto Building { get; set; }
     }
 
     public class MstFloorCreateDto : BaseModelDto
