@@ -304,6 +304,34 @@ namespace Web.API.Controllers.Controllers
 
         //Open
 
+        // GET: api/MstDepartment
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var departments = await _mstDepartmentService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Departments retrieved successfully",
+                    collection = new { data = departments },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpGet("open/{id}")]
           [AllowAnonymous]
         public async Task<IActionResult> OpenGetById(Guid id)

@@ -43,6 +43,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
 
+            public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
+        {
+            var departments = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstDepartmentDto>>(departments);
+        }
+
         //     public async Task<IEnumerable<MstDepartmentDto>> MixGetAllAsync()
         // {
         //     var departments = await _repository.MixGetAllAsync();

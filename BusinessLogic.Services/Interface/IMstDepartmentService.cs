@@ -10,6 +10,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<MstDepartmentDto> GetByIdAsync(Guid id);
         Task<IEnumerable<MstDepartmentDto>> GetAllAsync();
+         Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync();
         Task<MstDepartmentDto> CreateAsync(MstDepartmentCreateDto createDto);
         Task UpdateAsync(Guid id, MstDepartmentUpdateDto updateDto);
         Task DeleteAsync(Guid id);
