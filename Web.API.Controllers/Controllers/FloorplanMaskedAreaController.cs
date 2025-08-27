@@ -366,12 +366,14 @@ namespace Web.API.Controllers.Controllers
         }
 
         //OPEN
+
         [HttpGet("open")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
             try
             {
-                var areas = await _service.GetAllAsync();
+                var areas = await _service.OpenGetAllAsync();
                 return Ok(new
                 {
                     success = true,

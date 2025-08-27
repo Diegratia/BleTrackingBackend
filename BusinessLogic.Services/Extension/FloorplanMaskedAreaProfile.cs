@@ -14,6 +14,8 @@ namespace BusinessLogic.Services.Extension
         {
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+            CreateMap<FloorplanMaskedArea, OpenFloorplanMaskedAreaDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<FloorplanMaskedAreaCreateDto, FloorplanMaskedArea>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())

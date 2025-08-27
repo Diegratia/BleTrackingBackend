@@ -43,6 +43,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(areas);
         }
 
+                public async Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync()
+        {
+            var areas = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenFloorplanMaskedAreaDto>>(areas);
+        }
+
         public async Task<FloorplanMaskedAreaDto> CreateAsync(FloorplanMaskedAreaCreateDto createDto)
         {
             var floor = await _repository.GetFloorByIdAsync(createDto.FloorId);
