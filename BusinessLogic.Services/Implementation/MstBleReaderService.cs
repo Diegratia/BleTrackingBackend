@@ -50,6 +50,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
         }
 
+                public async Task<IEnumerable<OpenMstBleReaderDto>> OpenGetAllAsync()
+        {
+            var bleReaders = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstBleReaderDto>>(bleReaders);
+        }
+
         public async Task<MstBleReaderDto> CreateAsync(MstBleReaderCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";

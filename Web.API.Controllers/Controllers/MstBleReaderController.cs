@@ -363,6 +363,33 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
+        [HttpGet("open")]
+         [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var bleReaders = await _service.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "BLE Readers retrieved successfully",
+                    collection = new { data = bleReaders },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // GET: api/MstBleReader/{id}
         [HttpGet("open/{id}")]
         [AllowAnonymous]

@@ -30,6 +30,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<MstBrand, MstBrandDto>();
+            CreateMap<MstBrand, OpenMstBrandDto>();
         }
     }
 }
