@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Azure.Core.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace Data.ViewModels
@@ -17,6 +20,25 @@ namespace Data.ViewModels
         public int MaskedAreaCount { get; set; }
         public int DeviceCount { get; set; }
         public MstFloorDto Floor { get; set; }
+    }
+
+       public class OpenMstFloorplanDto : BaseModelDto
+    {
+        public long Generate { get; set; }
+
+         [JsonPropertyName("floorplan_id")]
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public Guid FloorId { get; set; }
+        // public Guid ApplicationId { get; set; }
+        public string? CreatedBy { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public int Status { get; set; }
+        public int MaskedAreaCount { get; set; }
+        public int DeviceCount { get; set; }
+        // public MstFloorDto Floor { get; set; }
     }
 
     public class MstFloorplanCreateDto : BaseModelDto

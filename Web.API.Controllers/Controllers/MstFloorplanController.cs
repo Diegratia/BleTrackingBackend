@@ -370,6 +370,34 @@ namespace Web.API.Controllers.Controllers
         }
 
         //OPEN
+
+          // GET: api/MstFloorplan
+        [AllowAnonymous]
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var floorplans = await _service.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplans retrieved successfully",
+                    collection = new { data = floorplans },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
         
             [AllowAnonymous]
         [HttpGet("open/{id}")]

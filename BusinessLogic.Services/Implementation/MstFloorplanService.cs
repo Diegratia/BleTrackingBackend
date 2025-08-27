@@ -47,6 +47,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
         }
 
+                public async Task<IEnumerable<OpenMstFloorplanDto>> OpenGetAllAsync()
+        {
+            var floorplans = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstFloorplanDto>>(floorplans);
+        }
+
         public async Task<MstFloorplanDto> CreateAsync(MstFloorplanCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
