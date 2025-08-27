@@ -22,6 +22,8 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<MstOrganization, MstOrganizationDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+            CreateMap<MstOrganization, OpenMstOrganizationDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
             CreateMap<MstOrganizationUpdateDto, MstOrganization>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
