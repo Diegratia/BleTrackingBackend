@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
 using Helpers.Consumer;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,9 @@ using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-    
+using  Data.ViewModels.Dto.Helpers.MinimalDto;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
+
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -460,6 +463,31 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+        
+           public async Task<object> MinimalFilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryableMinimal();
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
+            };
+
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+
+              var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns,
+                enumColumns);
+
+            return await filterService.FilterAsync(request);
+        }
 
           public async Task<object> FilterRawAsync(DataTablesRequest request)
         {
@@ -474,7 +502,7 @@ namespace BusinessLogic.Services.Implementation
             };
 
             var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,

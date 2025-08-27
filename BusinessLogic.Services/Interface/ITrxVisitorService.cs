@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -16,6 +17,7 @@ namespace BusinessLogic.Services.Interface
         Task UpdateTrxVisitorAsync(Guid id, TrxVisitorUpdateDto updateDto);
         // Task DeleteTrxVisitorAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> MinimalFilterAsync(DataTablesRequest request);
         Task<object> FilterRawAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();

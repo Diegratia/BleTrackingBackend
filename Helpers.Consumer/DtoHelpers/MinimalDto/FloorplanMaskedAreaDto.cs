@@ -1,17 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Data.ViewModels
+namespace Data.ViewModels.Dto.Helpers.MinimalDto
 {
-    public class FloorplanMaskedAreaDtoz : BaseModelDto
+    public class FloorplanMaskedAreaDto : BaseModelDto
     {
         public int Generate { get; set; }
         public Guid Id { get; set; }
-        public Guid FloorplanId { get; set;}
-        public Guid FloorId { get; set; }
+        // public Guid FloorplanId { get; set;}
+        // public Guid FloorId { get; set; }
         public string Name { get; set; }
         // public string AreaShape { get; set; }
         // public string ColorArea { get; set; }
-        public string RestrictedStatus { get; set; }
+        // public string RestrictedStatus { get; set; }
         // public string EngineAreaId { get; set; }
         // public string CreatedBy { get; set; }
         // public DateTime CreatedAt { get; set; }

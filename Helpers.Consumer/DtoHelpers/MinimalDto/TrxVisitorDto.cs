@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Numerics;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Data.ViewModels
+namespace Data.ViewModels.Dto.Helpers.MinimalDto
 {
     public class TrxVisitorDtoz : BaseModelDto
     {
@@ -32,8 +35,8 @@ namespace Data.ViewModels
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }
         public Guid? VisitorId { get; set; }
-        public FloorplanMaskedAreaDtoz? Maskedarea { get; set; }
-        public VisitorDtoz? Visitor { get; set; }
-        public MstMemberDtoz? Member { get; set; }
+        public FloorplanMaskedAreaDto? Maskedarea { get; set; }
+        public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
     }
 }

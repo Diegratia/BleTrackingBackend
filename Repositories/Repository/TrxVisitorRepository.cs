@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
-using Data.ViewModels;
 using System.Security.Claims;
+// using Data.ViewModels.MinimalDto;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace Repositories.Repository
 {
@@ -144,6 +145,8 @@ namespace Repositories.Repository
             var query = _context.TrxVisitors
                 .Include(v => v.MaskedArea)
                 .Include(v => v.Member)
+                .Include(v => v.Visitor)
+                .Include(v => v.Application)
                 .AsQueryable();
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -152,15 +155,27 @@ namespace Repositories.Repository
             {
                 Id = v.Id,
                 CheckedInAt = v.CheckedInAt,
-                Member = v.Member == null ? null : new MstMemberDtoz
+                CheckedOutAt = v.CheckedOutAt,
+                TrxStatus = v.TrxStatus,
+                VisitorId = v.VisitorId,
+                ApplicationId = v.ApplicationId,
+                Member = v.Member == null ? null : new MstMemberDto
                 {
                     Id = v.Member.Id,
-                    Name = v.Member.Name
+                    Name = v.Member.Name,
+                    ApplicationId = v.ApplicationId,
                 },
-                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDtoz
+                Visitor = v.Visitor == null ? null : new VisitorDto
+                {
+                    Id = v.Visitor.Id,
+                    Name = v.Visitor.Name,
+                    ApplicationId = v.ApplicationId,
+                },
+                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDto
                 {
                     Id = v.MaskedArea.Id,
-                    Name = v.MaskedArea.Name
+                    Name = v.MaskedArea.Name,
+                    ApplicationId = v.ApplicationId,
                 }
             });
         }

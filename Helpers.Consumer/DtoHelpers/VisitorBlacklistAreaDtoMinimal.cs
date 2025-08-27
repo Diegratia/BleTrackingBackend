@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Data.ViewModels;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Helpers.Consumer.DtoHelpers
+namespace Helpers.Consumer.DtoHelpers.MinimalDto
 {
     public class VisitorBlacklistAreaDtoMinimal : BaseModelDto
     {
