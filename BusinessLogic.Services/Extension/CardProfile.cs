@@ -38,13 +38,14 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.StatusCard, opt => opt.Ignore());
 
             CreateMap<Card, CardDto>();
+             CreateMap<Card, OpenCardDto>();
                 // .ForMember(dest => dest.CardType, opt => opt.MapFrom(src => src.CardType != null ? src.CardType.ToString() : null));
-                // .ForMember(dest => dest.VisitorId, opt => opt.Ignore())
-                // .ForMember(dest => dest.CheckinAt, opt => opt.Ignore())
-                // .ForMember(dest => dest.CheckoutAt, opt => opt.Ignore())
-                // .ForMember(dest => dest.Visitor, opt => opt.Ignore())
-                // .ForMember(dest => dest.Member, opt => opt.Ignore())
-                // .ForMember(dest => dest.RegisteredMaskedArea, opt => opt.Ignore()); 
+            // .ForMember(dest => dest.VisitorId, opt => opt.Ignore())
+            // .ForMember(dest => dest.CheckinAt, opt => opt.Ignore())
+            // .ForMember(dest => dest.CheckoutAt, opt => opt.Ignore())
+            // .ForMember(dest => dest.Visitor, opt => opt.Ignore())
+            // .ForMember(dest => dest.Member, opt => opt.Ignore())
+            // .ForMember(dest => dest.RegisteredMaskedArea, opt => opt.Ignore()); 
         }
     }
 }

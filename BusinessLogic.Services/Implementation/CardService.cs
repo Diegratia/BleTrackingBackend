@@ -50,6 +50,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<CardDto>>(cards);
         }
         
+                public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
+        {
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenCardDto>>(cards);
+        }
+        
         //      public async Task<IEnumerable<CardDto>> GetAllAsync()
         // {
         //     var cards = await _repository.GetAllAsync();
@@ -64,7 +70,7 @@ namespace BusinessLogic.Services.Implementation
         //                     }
         //                     catch (Exception ex)
         //                     {
-                    
+
         //         }
         //     }
 
@@ -113,7 +119,7 @@ namespace BusinessLogic.Services.Implementation
 
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
-          
+
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.UpdatedAt = DateTime.UtcNow;
