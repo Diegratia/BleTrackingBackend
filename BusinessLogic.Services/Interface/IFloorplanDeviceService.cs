@@ -12,6 +12,7 @@ namespace BusinessLogic.Services.Interface
         Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto);
         Task<FloorplanDeviceDto> GetByIdAsync(Guid id);
         Task<IEnumerable<FloorplanDeviceDto>> GetAllAsync();
+        Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync();
         Task UpdateAsync(Guid Id, FloorplanDeviceUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file);

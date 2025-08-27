@@ -43,6 +43,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
         }
 
+             public async Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync()
+        {
+            var devices = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenFloorplanDeviceDto>>(devices);
+        }
+
         public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
         {
             // Validasi semua foreign key
