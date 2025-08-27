@@ -59,16 +59,22 @@ namespace BusinessLogic.Services.Implementation
             var entities = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
         }
+        
+                public async Task<IEnumerable<OpenVisitorBlacklistAreaDto>> OpenGetAllVisitorBlacklistAreasAsync()
+        {
+            var entities = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenVisitorBlacklistAreaDto>>(entities);
+        }
 
         public async Task UpdateVisitorBlacklistAreaAsync(Guid id, VisitorBlacklistAreaUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
-             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
-            
+
             entity.UpdatedBy = username;
             entity.UpdatedAt = DateTime.UtcNow;
 

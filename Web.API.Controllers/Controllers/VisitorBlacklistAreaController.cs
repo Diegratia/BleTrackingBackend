@@ -328,6 +328,33 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
+        [HttpGet("open")]
+         [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var blacklistAreas = await _visitorBlacklistAreaService.OpenGetAllVisitorBlacklistAreasAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor blacklist areas retrieved successfully",
+                    collection = new { data = blacklistAreas },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // PUT: api/VisitorBlacklistArea/{id}
         [HttpPut("open/{id}")]
         [AllowAnonymous]
