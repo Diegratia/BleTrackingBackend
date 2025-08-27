@@ -45,6 +45,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
         }
 
+         public async Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync()
+        {
+            var districts = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstDistrictDto>>(districts);
+        }
+
         public async Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";

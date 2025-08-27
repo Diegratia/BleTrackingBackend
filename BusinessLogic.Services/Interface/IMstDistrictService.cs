@@ -10,6 +10,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<MstDistrictDto> GetByIdAsync(Guid id);
         Task<IEnumerable<MstDistrictDto>> GetAllAsync();
+        Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync();
         Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto);
         Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos);
         Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto);

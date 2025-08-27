@@ -341,6 +341,33 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var districts = await _mstDistrictService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Districts retrieved successfully",
+                    collection = new { data = districts },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // GET: api/MstDistrict/{id}
         [HttpGet("open/{id}")]
         [AllowAnonymous]
@@ -380,7 +407,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/MstDistrict
-        [HttpPost]
+        [HttpPost("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenCreate([FromBody] MstDistrictCreateDto mstDistrictDto)
         {
