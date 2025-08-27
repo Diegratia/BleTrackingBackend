@@ -54,7 +54,13 @@ namespace BusinessLogic.Services.Implementation
         {
             var trxvisitors = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
-        }    
+        }  
+
+              public async Task<IEnumerable<OpenTrxVisitorDto>> OpenGetAllTrxVisitorsAsync()
+        {
+            var trxvisitors = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenTrxVisitorDto>>(trxvisitors);
+        }     
 
         public async Task<IEnumerable<TrxVisitorDtoz>> GetAllTrxVisitorsAsyncMinimal()
         {

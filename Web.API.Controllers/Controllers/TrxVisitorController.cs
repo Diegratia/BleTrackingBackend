@@ -579,6 +579,34 @@ namespace Web.API.Controllers.Controllers
         }
 
         //OPEN
+
+          // GET: api/TrxVisitor
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var visitors = await _trxVisitorService.OpenGetAllTrxVisitorsAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "TrxVisitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
             
         [AllowAnonymous]
         [HttpPost("open/{filter}")]
