@@ -40,6 +40,12 @@ namespace BusinessLogic.Services.Implementation
             var brands = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstBrandDto>>(brands);
         }
+        public async Task<IEnumerable<OpenMstBrandDto>> OpenGetAllAsync()
+
+        {
+            var brands = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstBrandDto>>(brands);
+        }
 
         public async Task<MstBrandDto> CreateAsync(MstBrandCreateDto createDto)
         {

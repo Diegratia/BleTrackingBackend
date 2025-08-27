@@ -302,7 +302,34 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-//OPEN
+        //OPEN
+
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var brands = await _mstBrandService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Brands retrieved successfully",
+                    collection = new { data = brands },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
         [AllowAnonymous]
         [HttpPost("open")]
         

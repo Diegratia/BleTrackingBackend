@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 namespace Data.ViewModels
 
@@ -8,6 +9,16 @@ namespace Data.ViewModels
     public class MstBrandDto: BaseModelDto
     {
         public int Generate { get; set; }
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? Tag { get; set; }
+        public int? Status { get; set; }
+    }
+
+    public class OpenMstBrandDto: BaseModelDto
+    {
+        public int Generate { get; set; }
+        [JsonPropertyName("brand_id")]
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Tag { get; set; }
