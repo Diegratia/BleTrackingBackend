@@ -304,6 +304,33 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
+        [HttpGet("open")]
+         [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var accessControls = await _mstAccessControlService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Access Controls retrieved successfully",
+                    collection = new { data = accessControls },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpPost("open/{filter}")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
