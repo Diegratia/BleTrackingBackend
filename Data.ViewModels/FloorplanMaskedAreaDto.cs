@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Data.ViewModels
 {
@@ -25,6 +26,8 @@ namespace Data.ViewModels
      public class OpenFloorplanMaskedAreaDto : BaseModelDto
     {
         public int Generate { get; set; }
+
+        [JsonPropertyName("floorplan_masked_area_id")]
         public Guid Id { get; set; }
         public Guid FloorplanId { get; set;}
         public Guid FloorId { get; set; }
