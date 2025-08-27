@@ -9,6 +9,7 @@ namespace BusinessLogic.Services.Interface
     public interface IMstMemberService
     {
         Task<IEnumerable<MstMemberDto>> GetAllMembersAsync();
+        Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync();
         Task<MstMemberDto> GetMemberByIdAsync(Guid id);
         Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto);
         Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);

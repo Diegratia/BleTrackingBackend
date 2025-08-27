@@ -39,6 +39,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstMemberDto>>(members);
         }
 
+             public async Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync()
+        {
+            var members = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstMemberDto>>(members);
+        }
+
         public async Task<MstMemberDto> GetMemberByIdAsync(Guid id)
         {
             var member = await _repository.GetByIdAsync(id);
