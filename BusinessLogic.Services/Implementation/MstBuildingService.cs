@@ -51,6 +51,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
         }
 
+            public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
+        {
+            var buildings = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstBuildingDto>>(buildings);
+        }
+
         public async Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto createDto)
         {
             var building = _mapper.Map<MstBuilding>(createDto);

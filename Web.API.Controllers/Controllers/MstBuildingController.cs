@@ -368,7 +368,35 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        //OPEN
+        //Open
+        
+         // GET: api/MstBuilding
+        [AllowAnonymous]
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var buildings = await _service.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Buildings retrieved successfully",
+                    collection = new { data = buildings },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [HttpPost("open/{filter}")]
         [AllowAnonymous]
