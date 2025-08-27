@@ -41,6 +41,11 @@ namespace BusinessLogic.Services.Implementation
             var accessCctvs = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstAccessCctvDto>>(accessCctvs);
         }
+        public async Task<IEnumerable<OpenMstAccessCctvDto>> OpenGetAllAsync()
+        {
+            var accessCctvs = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstAccessCctvDto>>(accessCctvs);
+        }
 
         public async Task<MstAccessCctvDto> CreateAsync(MstAccessCctvCreateDto createDto)
         {

@@ -14,6 +14,8 @@ namespace BusinessLogic.Services.Extension
         {
             CreateMap<MstAccessCctv, MstAccessCctvDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+            CreateMap<MstAccessCctv, OpenMstAccessCctvDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<MstAccessCctvCreateDto, MstAccessCctv>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())

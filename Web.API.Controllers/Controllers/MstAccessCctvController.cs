@@ -304,6 +304,33 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var accessCctvs = await _mstAccessCctvService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Access CCTVs retrieved successfully",
+                    collection = new { data = accessCctvs },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpPost("open/{filter}")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
