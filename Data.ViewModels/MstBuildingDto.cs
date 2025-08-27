@@ -19,7 +19,7 @@ namespace Data.ViewModels
         public class OpenMstBuildingDto : BaseModelDto
     {
         [JsonPropertyName("building_id")]
-        public Guid BuildingId { get; set; }
+        public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Image { get; set; }
         public Guid ApplicationId { get; set; }
