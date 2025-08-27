@@ -2318,6 +2318,12 @@ public class VisitorService : IVisitorService
             return _mapper.Map<IEnumerable<VisitorDto>>(visitors);
         }
 
+                public async Task<IEnumerable<OpenVisitorDto>> OpenGetAllVisitorsAsync()
+        {
+            var visitors = await _visitorRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenVisitorDto>>(visitors);
+        }
+
         public async Task DeleteVisitorAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;

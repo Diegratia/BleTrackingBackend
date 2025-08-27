@@ -35,6 +35,7 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
                 .ForMember(dest => dest.UploadFrError, opt => opt.Ignore());
             CreateMap<Visitor, VisitorDto>();
+            CreateMap<Visitor, OpenVisitorDto>();
             CreateMap<TrxVisitorCreateDto, TrxVisitor>();
             CreateMap<CreateInvitationDto, TrxVisitor>();
             

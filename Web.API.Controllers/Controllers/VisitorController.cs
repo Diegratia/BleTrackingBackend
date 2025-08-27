@@ -248,6 +248,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        
+
         // PUT: api/VisitorBlacklistArea/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
@@ -625,7 +627,34 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        //OPEN
+        //
+        
+        [AllowAnonymous]
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var visitors = await _visitorService.OpenGetAllVisitorsAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
         [AllowAnonymous]
         [HttpPost("open/{filter}")]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
