@@ -73,7 +73,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
 
-        public CardDto Card { get; set; }
+        // public CardDto Card { get; set; }
     }
 
     public class VisitorCreateDto : TrxVisitorCreateDto
