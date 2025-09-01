@@ -76,7 +76,7 @@ namespace Data.ViewModels
         public Guid? MemberId { get; set; }
     }
 
-    public class CardUpdateDto : BaseModelDto
+    public class CardUpdateDto 
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }

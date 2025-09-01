@@ -134,11 +134,11 @@ namespace BusinessLogic.Services.Implementation
         public async Task UpdateAsync(Guid id, CardUpdateDto updateDto)
         {
             var card = await _repository.GetByIdAsync(id);
-            var updatecard = _mapper.Map<Card>(updateDto);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 
-              var existingCard = await _repository.GetAllQueryable()
+            var existingCard = await _repository.GetAllQueryable()
+            .Where(b => b.Id != id)
             .FirstOrDefaultAsync(b =>  
                                 b.CardNumber == updateDto.CardNumber ||
                                 b.Dmac == updateDto.Dmac);
@@ -155,17 +155,17 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            if (updatecard.VisitorId != null && updatecard.MemberId == null)
+            if (updateDto.VisitorId != null && updateDto.MemberId == null)
             {
-                updatecard.IsUsed = true;
+                updateDto.IsUsed = true;
             }
-            else if (updatecard.VisitorId == null && updatecard.MemberId != null)
+            else if (updateDto.VisitorId == null && updateDto.MemberId != null)
             {
-                updatecard.IsUsed = true;
+                updateDto.IsUsed = true;
             }
             else
             {
-                updatecard.IsUsed = false;
+                updateDto.IsUsed = false;
             }
 
             card.UpdatedAt = DateTime.UtcNow;
