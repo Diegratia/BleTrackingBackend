@@ -24,6 +24,10 @@ namespace Entities.Models
         [Column("ble_reader_id")]
         public Guid ReaderId { get; set; }
 
+        [ForeignKey("AlarmTriggers")]
+        [Column("alarm_triggers_id")]
+        public Guid AlarmTriggersId { get; set; }
+
         [Required]
         [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
@@ -85,5 +89,6 @@ namespace Entities.Models
         public virtual Visitor Visitor { get; set; }
         public virtual MstBleReader Reader { get; set; }
         public virtual FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
+        public virtual AlarmTriggers AlarmTriggers{ get; set; } 
     }
 }

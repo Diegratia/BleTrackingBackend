@@ -12,8 +12,8 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250813131718_AddCardonTransaction")]
-    partial class AddCardonTransaction
+    [Migration("20250901063338_AlarmTriggersTable")]
+    partial class AlarmTriggersTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,6 +42,11 @@ namespace Repositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("alarm_record_status");
+
+                    b.Property<Guid>("AlarmTriggersId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("alarm_triggers_id");
 
                     b.Property<Guid>("ApplicationId")
                         .HasMaxLength(36)
@@ -141,6 +146,8 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AlarmTriggersId");
+
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorplanMaskedAreaId");
@@ -162,6 +169,85 @@ namespace Repositories.Migrations
                     b.HasIndex("VisitorId1");
 
                     b.ToTable("alarm_record_tracking", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.AlarmTriggers", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Alarm")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("alarm_record_status");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("BeaconId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("beacon_id");
+
+                    b.Property<float?>("FirstDistance")
+                        .HasColumnType("real")
+                        .HasColumnName("first_distance");
+
+                    b.Property<string>("FirstGatewayId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("first_gateway_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool?>("IsInRestrictedArea")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_in_restricted_area");
+
+                    b.Property<float?>("PosX")
+                        .HasColumnType("real")
+                        .HasColumnName("pos_x");
+
+                    b.Property<float?>("PosY")
+                        .HasColumnType("real")
+                        .HasColumnName("pos_y");
+
+                    b.Property<float?>("SecondDistance")
+                        .HasColumnType("real")
+                        .HasColumnName("second_distance");
+
+                    b.Property<string>("SecondGatewayId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("second_gateway_id");
+
+                    b.Property<DateTime?>("TriggerTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("trigger_time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("AlarmTriggers");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
@@ -254,7 +340,7 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<string>("CardNumber")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("card_number");
 
                     b.Property<string>("CardType")
@@ -279,7 +365,7 @@ namespace Repositories.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<string>("Dmac")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("dmac");
 
                     b.Property<long>("Generate")
@@ -343,6 +429,10 @@ namespace Repositories.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
+
+                    b.HasIndex("CardNumber");
+
+                    b.HasIndex("Dmac");
 
                     b.HasIndex("MemberId");
 
@@ -2517,6 +2607,12 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("status");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
@@ -2550,6 +2646,12 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
                 {
+                    b.HasOne("Entities.Models.AlarmTriggers", "AlarmTriggers")
+                        .WithMany()
+                        .HasForeignKey("AlarmTriggersId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Entities.Models.MstApplication", "Application")
                         .WithMany()
                         .HasForeignKey("ApplicationId")
@@ -2590,6 +2692,8 @@ namespace Repositories.Migrations
                         .WithMany("AlarmRecordTrackings")
                         .HasForeignKey("VisitorId1");
 
+                    b.Navigation("AlarmTriggers");
+
                     b.Navigation("Application");
 
                     b.Navigation("FloorplanMaskedArea");
@@ -2597,6 +2701,24 @@ namespace Repositories.Migrations
                     b.Navigation("Reader");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("Entities.Models.AlarmTriggers", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floorplan");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>

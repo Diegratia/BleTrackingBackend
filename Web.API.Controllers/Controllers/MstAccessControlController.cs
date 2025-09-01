@@ -305,7 +305,7 @@ namespace Web.API.Controllers.Controllers
         //OPEN
 
         [HttpGet("open")]
-         [AllowAnonymous]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
             try

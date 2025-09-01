@@ -247,7 +247,6 @@ services:
       - ./.env:/app/.env
     restart: always
 
-
   card-record:
     build:
       context: .
@@ -273,6 +272,16 @@ services:
       dockerfile: Services.API/Card/Dockerfile
     ports:
       - "10026:10026"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  alarm-triggers:
+    build:
+      context: .
+      dockerfile: Services.API/AlarmTriggers/Dockerfile
+    ports:
+      - "10027:10027"
     volumes:
       - ./.env:/app/.env
     restart: always

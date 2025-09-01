@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCardonTransaction : Migration
+    public partial class AlarmTriggersTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -715,6 +715,41 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AlarmTriggers",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    beacon_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    pos_x = table.Column<float>(type: "real", nullable: true),
+                    pos_y = table.Column<float>(type: "real", nullable: true),
+                    is_in_restricted_area = table.Column<bool>(type: "bit", nullable: true),
+                    first_gateway_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    second_gateway_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    first_distance = table.Column<float>(type: "real", nullable: true),
+                    second_distance = table.Column<float>(type: "real", nullable: true),
+                    trigger_time = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    action = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AlarmTriggers", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_AlarmTriggers_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_AlarmTriggers_mst_floorplan_floorplan_id",
+                        column: x => x.floorplan_id,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "floorplan_masked_area",
                 columns: table => new
                 {
@@ -770,6 +805,7 @@ namespace Repositories.Migrations
                     timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    alarm_triggers_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
                     action = table.Column<string>(type: "nvarchar(255)", nullable: false),
@@ -796,6 +832,11 @@ namespace Repositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_alarm_record_tracking", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_alarm_record_tracking_AlarmTriggers_alarm_triggers_id",
+                        column: x => x.alarm_triggers_id,
+                        principalTable: "AlarmTriggers",
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_alarm_record_tracking_floorplan_masked_area_FloorplanMaskedAreaId1",
                         column: x => x.FloorplanMaskedAreaId1,
@@ -846,9 +887,9 @@ namespace Repositories.Migrations
                     name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     type = table.Column<string>(type: "nvarchar(255)", nullable: true),
-                    card_number = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    card_number = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     qr_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    dmac = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    dmac = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     is_multi_masked_area = table.Column<bool>(type: "bit", nullable: true),
                     registered_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     is_used = table.Column<bool>(type: "bit", nullable: true),
@@ -1066,6 +1107,7 @@ namespace Repositories.Migrations
                     floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     _generate = table.Column<long>(type: "bigint", nullable: false)
@@ -1235,6 +1277,11 @@ namespace Repositories.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_alarm_record_tracking_alarm_triggers_id",
+                table: "alarm_record_tracking",
+                column: "alarm_triggers_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_alarm_record_tracking_application_id",
                 table: "alarm_record_tracking",
                 column: "application_id");
@@ -1275,6 +1322,16 @@ namespace Repositories.Migrations
                 column: "VisitorId1");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AlarmTriggers_application_id",
+                table: "AlarmTriggers",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlarmTriggers_floorplan_id",
+                table: "AlarmTriggers",
+                column: "floorplan_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ble_reader_node__generate",
                 table: "ble_reader_node",
                 column: "_generate",
@@ -1294,6 +1351,16 @@ namespace Repositories.Migrations
                 name: "IX_card_application_id",
                 table: "card",
                 column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_card_number",
+                table: "card",
+                column: "card_number");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_dmac",
+                table: "card",
+                column: "dmac");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_member_id",
@@ -1800,6 +1867,9 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "visitor_blacklist_area");
+
+            migrationBuilder.DropTable(
+                name: "AlarmTriggers");
 
             migrationBuilder.DropTable(
                 name: "mst_access_cctv");

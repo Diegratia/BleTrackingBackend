@@ -776,50 +776,50 @@ namespace Repositories.Seeding
             }
 
             // 18. AlarmRecordTracking
-            if (!context.AlarmRecordTrackings.Any())
-            {
-                var alarmFaker = new Faker<AlarmRecordTracking>()
-                    .RuleFor(a => a.Id, f => Guid.NewGuid())
-                    .RuleFor(a => a.Timestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.VisitorId, f => context.Visitors
-                        .Where(r => r.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.ReaderId, f => context.MstBleReaders
-                        .Where(r => r.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
-                        .Where(a => a.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.Alarm, f => f.PickRandom<AlarmRecordStatus>())
-                    .RuleFor(a => a.Action, f => f.PickRandom<ActionStatus>())
-                    .RuleFor(a => a.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.IdleBy, f => f.Name.FullName())
-                    .RuleFor(a => a.DoneBy, f => f.Name.FullName())
-                    .RuleFor(a => a.CancelBy, f => f.Name.FullName())
-                    .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
-                    .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
-                    .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
-                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
+            // if (!context.AlarmRecordTrackings.Any())
+            // {
+            //     var alarmFaker = new Faker<AlarmRecordTracking>()
+            //         .RuleFor(a => a.Id, f => Guid.NewGuid())
+            //         .RuleFor(a => a.Timestamp, f => f.Date.Recent(1))
+            //         .RuleFor(a => a.VisitorId, f => context.Visitors
+            //             .Where(r => r.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.ReaderId, f => context.MstBleReaders
+            //             .Where(r => r.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
+            //             .Where(a => a.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.Alarm, f => f.PickRandom<AlarmRecordStatus>())
+            //         .RuleFor(a => a.Action, f => f.PickRandom<ActionStatus>())
+            //         .RuleFor(a => a.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.IdleBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.DoneBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.CancelBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
+            //         .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
 
-                var alarms = alarmFaker.Generate(50);
-                context.AlarmRecordTrackings.AddRange(alarms);
-                context.SaveChanges();
-            }
+            //     var alarms = alarmFaker.Generate(50);
+            //     context.AlarmRecordTrackings.AddRange(alarms);
+            //     context.SaveChanges();
+            // }
 
             // 19. FloorplanDevice
             if (!context.FloorplanDevices.Any(d => d.Status != 0))

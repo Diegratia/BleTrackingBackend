@@ -96,7 +96,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.MstAccessControls
-                // .Include(a => a.Brand)
+                .Include(a => a.Brand)
                 .Include(a => a.Integration)
                 .Include(a => a.Application)
                 .Where(a => a.Status != 0);

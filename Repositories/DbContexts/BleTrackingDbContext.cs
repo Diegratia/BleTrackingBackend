@@ -34,6 +34,7 @@ namespace Repositories.DbContexts
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         public DbSet<Card> Cards{ get; set; }
+        public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -429,6 +430,9 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(v => v.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(m => m.Status)
+                    .HasDefaultValue(1);
                 
                 
             });
@@ -498,6 +502,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
+                entity.Property(e => e.AlarmTriggersId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.Alarm)
@@ -533,6 +538,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(a => a.FloorplanMaskedArea)
                    .WithMany()
                     .HasForeignKey(a => a.FloorplanMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(a => a.AlarmTriggers)
+                   .WithMany()
+                    .HasForeignKey(a => a.AlarmTriggersId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 // Relasi one-to-many dengan MstApplication
@@ -663,6 +673,41 @@ namespace Repositories.DbContexts
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
                 
                     );
+            });
+
+                modelBuilder.Entity<AlarmTriggers>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                   entity.Property(e => e.Alarm)
+                    .HasColumnName("alarm_record_status")
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
+                    );
+
+                entity.Property(e => e.Action)
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)
+                    );
+
+                // Relasi one-to-many dengan Visitor
+                entity.HasOne(a => a.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(a => a.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<CardRecord>(entity =>
