@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using BusinessLogic.Services.Interface;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Data.ViewModels;
+using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Interface;
+using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -20,7 +21,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-         [HttpGet]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -32,6 +33,54 @@ namespace Web.API.Controllers.Controllers
                     msg = "Alarm Triggers retrieved successfully",
                     collection = new { data = alarms },
                     code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] AlarmTriggersUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _service.UpdateAsync(id, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Trigger updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Card not found",
+                    collection = new { data = (object)null },
+                    code = 404
                 });
             }
             catch (Exception ex)

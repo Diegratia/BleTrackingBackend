@@ -9,5 +9,6 @@ namespace BusinessLogic.Services.Interface
     public interface IAlarmTriggersService
     {
         Task<IEnumerable<AlarmTriggersDto>> GetAllAsync();
+        Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto);
     }
 }

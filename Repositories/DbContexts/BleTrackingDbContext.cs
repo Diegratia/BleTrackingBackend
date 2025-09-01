@@ -677,6 +677,8 @@ namespace Repositories.DbContexts
 
                 modelBuilder.Entity<AlarmTriggers>(entity =>
             {
+                entity.ToTable("AlarmTriggers");
+                // entity.ToTable("alarm_triggers");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();

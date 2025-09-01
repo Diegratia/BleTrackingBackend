@@ -137,7 +137,7 @@ builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_TRIGGERS_PORT") ??
-           builder.Configuration["Ports:AlarmTriggersService"] ?? "10026";
+           builder.Configuration["Ports:AlarmTriggersService"] ?? "10027";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
