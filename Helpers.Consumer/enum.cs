@@ -107,15 +107,16 @@ namespace Helpers.Consumer
         Help,
         WrongZone,
         Expired,
-        Lost
+        Lost,
+        Blacklist
     }
 
     public enum ActionStatus
     {
         Idle,
         Done,
-        Cancel,
-        Need,
+        NoAction,
+        // Need,
         Waiting,
         Investigated,
         DoneInvestigated,
