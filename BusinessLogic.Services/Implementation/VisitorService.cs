@@ -2049,7 +2049,7 @@ public class VisitorService : IVisitorService
                     LastLoginAt = DateTime.MinValue,
                     StatusActive = StatusActive.NonActive,
                     ApplicationId = applicationId,
-                    GroupId = new Guid("04B30090-4196-41F9-8F04-E25B5B9BE666"),
+                    GroupId = new Guid("EA1A8B73-DCDB-4CC2-9F00-FB7A52CF7634"),
                 };
 
                 // simpan user (boleh pakai AddAsyncRaw jika AddAsync terkena tenant guard)
@@ -2063,7 +2063,7 @@ public class VisitorService : IVisitorService
                 user.EmailConfirmationCode = userConfirmationCode;
                 await _userRepository.UpdateRawAsync(user);
             }
-              
+            
 
             // 4) Update VISITOR — hanya set field yang ada nilainya agar tidak menimpa jadi null
 
