@@ -90,6 +90,7 @@ namespace Repositories.Repository
         }
 
 
+
   
 
         public async Task DeleteAsync(Visitor visitor)
@@ -122,6 +123,21 @@ namespace Repositories.Repository
                 query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+            public IQueryable<Visitor> GetAllQueryableRaw()
+        {
+
+            var query = _context.Visitors
+                // .Include(x => x.Department)
+                // .Include(x => x.District)
+                // .Include(x => x.Organization)
+                // .Include(v => v.Application)
+                .Where(x => x.Status != 0);
+
+                query = query.WithActiveRelations();
+
+            return query;
         }
 
         //   public IQueryable<Visitor> GetAllQueryable()
