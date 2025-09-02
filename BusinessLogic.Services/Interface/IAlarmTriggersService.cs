@@ -10,5 +10,6 @@ namespace BusinessLogic.Services.Interface
     {
         Task<IEnumerable<AlarmTriggersDto>> GetAllAsync();
         Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto);
+         Task<object> FilterAsync(DataTablesRequest request) ;
     }
 }

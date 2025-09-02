@@ -1,12 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Data.ViewModels;
+using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -28,8 +30,8 @@ namespace BusinessLogic.Services.Implementation
             var alarmTriggers = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<AlarmTriggersDto>>(alarmTriggers);
         }
-        
-         public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
+
+        public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
@@ -43,6 +45,22 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(dto, alarmTriggers);
 
             await _repository.UpdateAsync(alarmTriggers);
+        }
+        
+            public async Task<object> FilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryable();
+
+            var searchableColumns = new[] { "Floorplan.Name", "Beacon.Id" }; 
+            var validSortColumns = new[] {  "Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive"};
+
+            var filterService = new GenericDataTableService<AlarmTriggers, AlarmTriggersDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+              
+            return await filterService.FilterAsync(request);
         }
         
     }
