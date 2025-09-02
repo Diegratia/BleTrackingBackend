@@ -58,7 +58,7 @@ namespace Repositories.Repository
                     .Include(v => v.Visitor)
                     .Include(v => v.Reader)
                     .Include(v => v.FloorplanMaskedArea)
-                    .Include(v => v.AlarmTriggers)
+                    // .Include(v => v.AlarmTriggers)
                     .AsQueryable();
 
                 if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
