@@ -2019,23 +2019,23 @@ public class VisitorService : IVisitorService
                 if (user == null)
                 {
                 // Ambil/buat group UserCreated (pakai raw agar tidak kena tenant filter)
-                // var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsyncRaw(applicationId, LevelPriority.UserCreated);
-                // if (userGroup == null)
-                // {
-                //     userGroup = new UserGroup
-                //     {
-                //         Id = Guid.NewGuid(),
-                //         Name = "VisitorGroup",
-                //         LevelPriority = LevelPriority.UserCreated,
-                //         ApplicationId = applicationId,
-                //         Status = 1,
-                //         CreatedBy = usernameAudit,
-                //         CreatedAt = DateTime.UtcNow,
-                //         UpdatedBy = usernameAudit,
-                //         UpdatedAt = DateTime.UtcNow
-                //     };
-                //     await _userGroupRepository.AddAsyncRaw(userGroup);
-                // }
+                var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsyncRaw(applicationId, LevelPriority.UserCreated);
+                if (userGroup == null)
+                {
+                    userGroup = new UserGroup
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "VisitorGroup",
+                        LevelPriority = LevelPriority.UserCreated,
+                        ApplicationId = applicationId,
+                        Status = 1,
+                        CreatedBy = usernameAudit,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = usernameAudit,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _userGroupRepository.AddAsyncRaw(userGroup);
+                }
 
                 var newUser = new User
                 {
@@ -2051,7 +2051,7 @@ public class VisitorService : IVisitorService
                     LastLoginAt = DateTime.MinValue,
                     StatusActive = StatusActive.NonActive,
                     ApplicationId = applicationId,
-                    GroupId = new Guid("EA1A8B73-DCDB-4CC2-9F00-FB7A52CF7634"),
+                    GroupId = userGroup.Id,
                 };
 
                 // simpan user (boleh pakai AddAsyncRaw jika AddAsync terkena tenant guard)
@@ -2069,18 +2069,10 @@ public class VisitorService : IVisitorService
 
             // 4) Update VISITOR — hanya set field yang ada nilainya agar tidak menimpa jadi null
 
-            // if (faceImagePath != null) visitor.FaceImage = faceImagePath;
-            // if (uploadFr.HasValue) visitor.UploadFr = uploadFr.Value;
-            // if (uploadFrError != null) visitor.UploadFrError = uploadFrError;
             using var transaction = await _trxVisitorRepository.BeginTransactionAsync();
             try
             { 
                 _mapper.Map(dto, visitor);
-                //         visitor.FaceImage = faceImagePath;
-                //         visitor.UploadFr = uploadFr;
-                //         visitor.UploadFrError = uploadFrError;
-                //         visitor.UpdatedAt = DateTime.UtcNow;
-                //         visitor.UpdatedBy = "VisitorForm";
 
                 visitor.UpdatedAt = DateTime.UtcNow;
                 visitor.UpdatedBy = "VisitorForm";
