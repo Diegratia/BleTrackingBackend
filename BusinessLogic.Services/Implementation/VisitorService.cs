@@ -480,6 +480,7 @@ public class VisitorService : IVisitorService
                 throw new KeyNotFoundException($"Visitor with ID {id} not found.");
 
             var existingVisitor = await _visitorRepository.GetAllQueryable()
+               .Where(v => v.Id != id)
                .FirstOrDefaultAsync(b => b.Email == updateDto.Email ||
                                    b.IdentityId == updateDto.IdentityId ||
                                    b.PersonId == updateDto.PersonId);
