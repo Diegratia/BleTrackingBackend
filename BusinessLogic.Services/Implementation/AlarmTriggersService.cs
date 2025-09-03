@@ -39,6 +39,17 @@ namespace BusinessLogic.Services.Implementation
             if (alarmTriggers == null || alarmTriggers.IsActive == false)
                 throw new KeyNotFoundException($"alarmTriggers with ID {id} not found or has been deleted.");
 
+                 if (alarmTriggers.IsActive == false)
+                    throw new KeyNotFoundException($"alarmTriggers with beaconId {id} has been deleted.");
+                if (dto.ActionStatus == "investigated" || dto.ActionStatus == "postponeinvestigated" || dto.ActionStatus == "waiting")
+                {
+                    alarmTriggers.IsActive = true;
+                }
+                else
+                {
+                    alarmTriggers.IsActive = false;
+                }
+
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             // alarmTriggers.UpdatedBy = username;
             // alarmTriggers.UpdatedAt = DateTime.UtcNow;
