@@ -47,19 +47,48 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(alarmTriggers);
         }
         
+        public async Task UpdateAlarmStatusAsync(string beaconId, AlarmTriggersUpdateDto dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            var alarmTriggers = await _repository.GetByDmacAsync(beaconId);
+            if (alarmTriggers == null)
+                throw new KeyNotFoundException($"alarmTriggers with beaconId {beaconId} not found.");
+
+            foreach (var alarmTrigger in alarmTriggers)
+            {
+                if (alarmTrigger.IsActive == false)
+                    throw new KeyNotFoundException($"alarmTriggers with beaconId {beaconId} has been deleted.");
+                if (dto.ActionStatus == "investigated" || dto.ActionStatus == "postponeinvestigated" || dto.ActionStatus == "waiting")
+                {
+                    alarmTrigger.IsActive = true;
+                }
+                else
+                {
+                    alarmTrigger.IsActive = false;
+                }
+                // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+                // alarmTrigger.UpdatedBy = username;
+                // alarmTrigger.UpdatedAt = DateTime.UtcNow;
+                _mapper.Map(dto, alarmTrigger);
+
+            }
+            await _repository.UpdateBatchAsync(alarmTriggers);
+        }
+        
             public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Floorplan.Name", "Beacon.Id" }; 
-            var validSortColumns = new[] {  "Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive"};
+            var searchableColumns = new[] { "Floorplan.Name", "Beacon.Id" };
+            var validSortColumns = new[] { "Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive" };
 
             var filterService = new GenericDataTableService<AlarmTriggers, AlarmTriggersDto>(
                 query,
                 _mapper,
                 searchableColumns,
                 validSortColumns);
-              
+
             return await filterService.FilterAsync(request);
         }
         

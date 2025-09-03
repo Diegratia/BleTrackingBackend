@@ -31,6 +31,22 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+        //     public async Task<AlarmTriggers?> GetByDmacAsync(string beaconId)
+        // {
+
+        //     return await GetAllQueryable()
+        //     .Where(b => b.BeaconId == beaconId && b.IsActive != false)
+        //     .FirstOrDefaultAsync();
+        // }
+
+            public async Task<IEnumerable<AlarmTriggers>> GetByDmacAsync(string beaconId)
+        {
+
+            return await GetAllQueryable()
+            .Where(b => b.BeaconId == beaconId && b.IsActive != false)
+            .ToListAsync();
+        }
+
             public async Task UpdateAsync(AlarmTriggers alarmTriggers)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -41,12 +57,25 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
         
+            public async Task UpdateBatchAsync(IEnumerable<AlarmTriggers> alarmTriggers)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            foreach (var alarmTrigger in alarmTriggers)
+            {
+                await ValidateApplicationIdAsync(alarmTrigger.ApplicationId);
+                ValidateApplicationIdForEntity(alarmTrigger, applicationId, isSystemAdmin);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        
             public IQueryable<AlarmTriggers> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.AlarmTriggers;
-                // .Include(b => b.FloorplanId);
+            // .Include(b => b.FloorplanId);
 
             // query = query.WithActiveRelations();
 
