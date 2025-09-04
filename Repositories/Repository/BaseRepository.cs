@@ -37,19 +37,20 @@ namespace Repositories.Repository
                 return (applicationIdFromToken, false);
             }
 
-            // Prioritas 2: Dari MstIntegration (X-BIOPEOPLETRACKING-API-KEY)
+            // // Prioritas 2: Dari MstIntegration (X-BIOPEOPLETRACKING-API-KEY)
+            // var integrationFromHeader = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+            // if (integrationFromHeader?.ApplicationId != null)
+            // {
+            //     return (integrationFromHeader.ApplicationId, false);
+            // }
+
+
+            // Priority 3: Check MstIntegration from ApiKeyMiddleware (set via header or query parameter)
             var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
             if (integration?.ApplicationId != null)
             {
                 return (integration.ApplicationId, false);
             }
-
-            // var referer = _httpContextAccessor.HttpContext.Request.Headers["Referer"].FirstOrDefault();
-            // if (referer != null && !referer.StartsWith("https://domain-test.com"))
-            // {
-            //     // Return error atau tidak mengizinkan akses
-            // }
-
 
             return (null, false);
         }
