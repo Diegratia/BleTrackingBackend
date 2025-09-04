@@ -60,6 +60,7 @@ namespace BusinessLogic.Services.Implementation
         
         public async Task UpdateAlarmStatusAsync(string beaconId, AlarmTriggersUpdateDto dto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var alarmTriggers = await _repository.GetByDmacAsync(beaconId);
@@ -70,17 +71,35 @@ namespace BusinessLogic.Services.Implementation
             {
                 if (alarmTrigger.IsActive == false)
                     throw new KeyNotFoundException($"alarmTriggers with beaconId {beaconId} has been deleted.");
-                if (dto.ActionStatus == "investigated" || dto.ActionStatus == "postponeinvestigated" || dto.ActionStatus == "waiting")
+                if (dto.ActionStatus == "postponeinvestigated")
                 {
                     alarmTrigger.IsActive = true;
                 }
-                else
+                else if (dto.ActionStatus == "investigated")
+                {
+                    alarmTrigger.IsActive = true;
+                    alarmTrigger.InvestigatedBy = username;
+                    alarmTrigger.InvestigatedTimestamp = DateTime.UtcNow;
+                }
+                else if (dto.ActionStatus == "noaction")
                 {
                     alarmTrigger.IsActive = false;
+                    alarmTrigger.CancelBy = username;
+                    alarmTrigger.CancelTimestamp = DateTime.UtcNow;
                 }
-                // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-                // alarmTrigger.UpdatedBy = username;
-                // alarmTrigger.UpdatedAt = DateTime.UtcNow;
+                else if (dto.ActionStatus == "waiting")
+                {
+                    alarmTrigger.IsActive = false;
+                    alarmTrigger.WaitingBy = username;
+                    alarmTrigger.WaitingTimestamp = DateTime.UtcNow;
+                }
+                   else if (dto.ActionStatus == "done")
+                {
+                    alarmTrigger.IsActive = false;
+                    alarmTrigger.DoneBy = username;
+                    alarmTrigger.DoneTimestamp = DateTime.UtcNow;
+                }
+         
                 _mapper.Map(dto, alarmTrigger);
 
             }
