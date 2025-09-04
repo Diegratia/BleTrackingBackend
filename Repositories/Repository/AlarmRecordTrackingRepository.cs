@@ -46,19 +46,21 @@ namespace Repositories.Repository
 
          public IQueryable<AlarmRecordTracking> GetAllQueryable()
             {
-                var userEmail = GetUserEmail() ;
+                var userEmail = GetUserEmail();
                 var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
                 var isSuperAdmin = IsSuperAdmin();
                 var isPrimaryAdmin = IsPrimaryAdmin();
                 var isPrimary = IsPrimary();
 
                 var query = _context.AlarmRecordTrackings
-                    .IgnoreQueryFilters()    
-                    // .Include(v => v.Application)
+                      .IgnoreQueryFilters()
+                    .Include(v => v.Application)
                     .Include(v => v.Visitor)
                     .Include(v => v.Reader)
                     .Include(v => v.FloorplanMaskedArea)
-                    // .Include(v => v.AlarmTriggers)
+                    .Include(v => v.AlarmTriggers)
+                    // .Where(v => v.Id != null)
+                   
                     .AsQueryable();
 
                 if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)

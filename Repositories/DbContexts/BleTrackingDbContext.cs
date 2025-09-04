@@ -508,7 +508,6 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Alarm)
                     .HasColumnName("alarm_record_status")
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
@@ -516,7 +515,6 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.Action)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)

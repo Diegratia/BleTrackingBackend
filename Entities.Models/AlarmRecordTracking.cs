@@ -14,24 +14,21 @@ namespace Entities.Models
         [Column("timestamp")]
         public DateTime? Timestamp { get; set; }
 
-        [Required]
         [ForeignKey("Visitor")]
         [Column("visitor_id")]
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
 
-        [Required]
         [ForeignKey("Reader")]
         [Column("ble_reader_id")]
-        public Guid ReaderId { get; set; }
+        public Guid? ReaderId { get; set; }
 
         [ForeignKey("AlarmTriggers")]
         [Column("alarm_triggers_id")]
-        public Guid AlarmTriggersId { get; set; }
+        public Guid? AlarmTriggersId { get; set; }
 
-        [Required]
         [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
-        public Guid FloorplanMaskedAreaId { get; set; }
+        public Guid? FloorplanMaskedAreaId { get; set; }
 
         [Column("alarm_record_status")]
         public AlarmRecordStatus? Alarm { get; set; }
