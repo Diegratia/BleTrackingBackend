@@ -282,7 +282,14 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
                             columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+
                         });
 
                         // Table header
@@ -291,9 +298,14 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
                             header.Cell().Element(CellStyle).Text("Card Number").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Card Barcode").SemiBold();
                             header.Cell().Element(CellStyle).Text("Card Type").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Is Member").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Dmac").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Is Multi Masked Area").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Registered Masked Area").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Is Used").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Last Used").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Status").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Card Type").SemiBold();
                         });
 
                         // Table body
@@ -302,10 +314,15 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(card.Name);
-                            table.Cell().Element(CellStyle).Text(card.CardNumber);
-                            table.Cell().Element(CellStyle).Text(card.QRCode);
                             table.Cell().Element(CellStyle).Text(card.CardType.ToString());
+                            table.Cell().Element(CellStyle).Text(card.CardNumber);
+                            table.Cell().Element(CellStyle).Text(card.Dmac);
+                            table.Cell().Element(CellStyle).Text(card.IsMultiMaskedArea == true ? "Yes" : "No");
+                            table.Cell().Element(CellStyle).Text(card.RegisteredMaskedAreaId.ToString());
                             table.Cell().Element(CellStyle).Text(card.IsUsed == true ? "Yes" : "No");
+                            table.Cell().Element(CellStyle).Text(card.LastUsed);
+                            table.Cell().Element(CellStyle).Text(card.StatusCard.ToString());
+                            table.Cell().Element(CellStyle).Text(card.CardType.ToString());
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -339,10 +356,18 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "Card Number";
-            worksheet.Cell(1, 4).Value = "Card Barcode";
-            worksheet.Cell(1, 5).Value = "Card Type";
-            worksheet.Cell(1, 6).Value = "Is Member";
+            worksheet.Cell(1, 3).Value = "Card Type";
+            worksheet.Cell(1, 4).Value = "Card Number";
+            worksheet.Cell(1, 5).Value = "Dmac";
+            worksheet.Cell(1, 6).Value = "Is Multi Masked Area";
+            worksheet.Cell(1, 7).Value = "Registered Masked Area";
+            worksheet.Cell(1, 8).Value = "Is Used";
+            worksheet.Cell(1, 9).Value = "Last Used";
+            worksheet.Cell(1, 10).Value = "Status";
+            worksheet.Cell(1, 11).Value = "Card Type";
+            worksheet.Cell(1, 12).Value = "MaskedAreaId";
+            worksheet.Cell(1, 13).Value = "VisitorId";
+            worksheet.Cell(1, 14).Value = "MemberId";
 
             int row = 2;
             int no = 1;
@@ -351,10 +376,18 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = card.Name;
-                worksheet.Cell(row, 3).Value = card.CardNumber;
-                worksheet.Cell(row, 4).Value = card.QRCode;
-                worksheet.Cell(row, 5).Value = card.CardType.ToString();
-                worksheet.Cell(row, 6).Value = card.IsUsed == true ? "Yes" : "No";
+                worksheet.Cell(row, 3).Value = card.CardType.ToString();
+                worksheet.Cell(row, 4).Value = card.CardNumber;
+                worksheet.Cell(row, 5).Value = card.Dmac;
+                worksheet.Cell(row, 6).Value = card.IsMultiMaskedArea == true ? "Yes" : "No";
+                worksheet.Cell(row, 7).Value = card.RegisteredMaskedAreaId.ToString();
+                worksheet.Cell(row, 8).Value = card.IsUsed == true ? "Yes" : "No";
+                worksheet.Cell(row, 9).Value = card.LastUsed;
+                worksheet.Cell(row, 10).Value = card.StatusCard.ToString();
+                worksheet.Cell(row, 11).Value = card.CardType.ToString();
+                worksheet.Cell(row, 12).Value = card.RegisteredMaskedAreaId.ToString();
+                worksheet.Cell(row, 13).Value = card.VisitorId.ToString();
+                worksheet.Cell(row, 14).Value = card.MemberId.ToString();
                 row++;
             }
 
