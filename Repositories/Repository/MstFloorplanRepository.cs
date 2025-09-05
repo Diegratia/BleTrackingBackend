@@ -131,6 +131,13 @@ namespace Repositories.Repository
                 MaskedAreaCount = f.FloorplanMaskedAreas.Count()
             }).AsNoTracking();
         }
+
+               public async Task<List<MstFloorplan>> GetByFloorIdAsync(Guid floorId)
+    {
+        return await _context.MstFloorplans
+            .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+            .ToListAsync();
+    }
         
 
         private async Task ValidateFloorOwnershipAsync(Guid floorId, Guid appId)

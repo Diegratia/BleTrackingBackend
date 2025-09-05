@@ -66,7 +66,7 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Where(a => a.Id == id && a.Status != 0);
 
-              query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var area = await query.FirstOrDefaultAsync();
             if (area == null)
@@ -99,7 +99,6 @@ namespace Repositories.Repository
             return await _context.MstFloors
                 .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorId && f.Status != 0);
-                
         }
 
         public async Task<MstFloorplan?> GetFloorplanByIdAsync(Guid floorplanId)
@@ -108,5 +107,12 @@ namespace Repositories.Repository
                 .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
         }
+        
+        public async Task<List<FloorplanMaskedArea>> GetByFloorIdAsync(Guid floorId)
+    {
+        return await _context.FloorplanMaskedAreas
+            .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+            .ToListAsync();
+    }
     }
 }
