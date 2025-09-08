@@ -68,6 +68,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.MstFloors
+                .Include(f => f.Building)
                 .Where(f => f.Id == id && f.Status != 0);
 
             var floor = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
@@ -99,6 +100,13 @@ namespace Repositories.Repository
                 .Where(b => b.Id == id && b.Status != 0);
                 query = query.WithActiveRelations();
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+
+             public async Task<List<MstFloor>> GetByBuildingIdAsync(Guid buildingId)
+        {
+              return await _context.MstFloors
+            .Where(a => a.BuildingId == buildingId && a.Status != 0)
+            .ToListAsync();
         }
 
         public async Task<IEnumerable<MstFloor>> GetAllExportAsync()

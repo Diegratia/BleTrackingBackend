@@ -141,8 +141,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(MstFloorProfile));
 builder.Services.AddScoped<IMstFloorService, MstFloorService>();
+builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 
 builder.Services.AddScoped<MstFloorRepository>();
+builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 
 

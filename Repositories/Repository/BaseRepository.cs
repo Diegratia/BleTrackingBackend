@@ -83,6 +83,39 @@ namespace Repositories.Repository
             return await _context.Database.BeginTransactionAsync();
         }
 
+        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        {
+            IDbContextTransaction transaction = null;
+            if (_context.Database.CurrentTransaction == null)
+            {
+                transaction = await _context.Database.BeginTransactionAsync();
+            }
+
+            try
+            {
+                await action();
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
+        }
+
 
         protected string GetUserEmail()
         {
