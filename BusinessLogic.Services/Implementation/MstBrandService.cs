@@ -56,6 +56,15 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBrandDto>(brand);
         }
 
+        public async Task<MstBrandDto> CreateInternalAsync(MstBrandCreateDto createDto)
+        {
+            var brand = _mapper.Map<MstBrand>(createDto);
+            brand.Status = 1;
+
+            await _repository.RawAddAsync(brand);
+            return _mapper.Map<MstBrandDto>(brand);
+        }
+
         public async Task UpdateAsync(Guid id, MstBrandUpdateDto updateDto)
         {
             var brand = await _repository.GetByIdAsync(id);

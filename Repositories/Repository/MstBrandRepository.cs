@@ -64,6 +64,13 @@ namespace Repositories.Repository
             return brand;
         }
 
+        public async Task<MstBrand> RawAddAsync(MstBrand brand)
+        {
+            _context.MstBrands.Add(brand);
+            await _context.SaveChangesAsync();
+            return brand;
+        }
+
         public async Task UpdateAsync(MstBrand brand)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

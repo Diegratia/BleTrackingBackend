@@ -68,6 +68,31 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstIntegrationDto>(integration);
         }
 
+        public async Task<MstIntegrationDto> CreateRawAsync(MstIntegrationCreateDto createDto)
+        {
+            // Validasi BrandId
+            var brand = await _repository.GetBrandByIdAsync(createDto.BrandId);
+            if (brand == null)
+                throw new ArgumentException($"Brand with ID {createDto.BrandId} not found.");
+
+            // Validasi ApplicationId
+            var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
+            if (application == null)
+                throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var integration = _mapper.Map<MstIntegration>(createDto);
+            integration.Id = Guid.NewGuid();
+            integration.Status = 1;
+            integration.CreatedBy = username;
+            integration.CreatedAt = DateTime.UtcNow;
+            integration.UpdatedBy = username;
+            integration.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.AddAsync(integration);
+            return _mapper.Map<MstIntegrationDto>(integration);
+        }
+
         public async Task UpdateAsync(Guid id, MstIntegrationUpdateDto updateDto)
         {
             var integration = await _repository.GetByIdAsync(id);

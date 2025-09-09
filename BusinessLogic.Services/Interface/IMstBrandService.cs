@@ -12,6 +12,7 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<MstBrandDto>> GetAllAsync();
         Task<IEnumerable<OpenMstBrandDto>> OpenGetAllAsync();
         Task<MstBrandDto> CreateAsync(MstBrandCreateDto createDto);
+        Task<MstBrandDto> CreateInternalAsync(MstBrandCreateDto createDto);
         Task UpdateAsync(Guid id, MstBrandUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 

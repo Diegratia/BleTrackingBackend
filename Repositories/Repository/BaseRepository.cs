@@ -36,16 +36,11 @@ namespace Repositories.Repository
             {
                 return (applicationIdFromToken, false);
             }
-
-            // // Prioritas 2: Dari MstIntegration (X-BIOPEOPLETRACKING-API-KEY)
             // var integrationFromHeader = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
             // if (integrationFromHeader?.ApplicationId != null)
             // {
             //     return (integrationFromHeader.ApplicationId, false);
             // }
-
-
-            // Priority 3: Check MstIntegration from ApiKeyMiddleware (set via header or query parameter)
             var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
             if (integration?.ApplicationId != null)
             {

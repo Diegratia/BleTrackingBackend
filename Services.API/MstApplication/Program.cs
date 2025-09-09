@@ -132,13 +132,18 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstApplicationProfile));
 // Registrasi Services
 builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
+builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
+builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 
 builder.Services.AddScoped<MstApplicationRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<MstBrandRepository>();
+builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
