@@ -24,13 +24,22 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorplanRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
+        private readonly IFloorplanMaskedAreaService _maskedAreaService;
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
+            FloorplanDeviceRepository floorplanDeviceRepository,
+            FloorplanMaskedAreaRepository maskedAreaRepository,
+            IFloorplanMaskedAreaService maskedAreaService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _floorplanDeviceRepository = floorplanDeviceRepository;
+            _maskedAreaRepository = maskedAreaRepository;
+            _maskedAreaService = maskedAreaService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -82,17 +91,74 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(floorplan);
         }
 
-        public async Task DeleteAsync(Guid id)
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floorplan = await _repository.GetByIdAsync(id);
+        //     if (floorplan == null)
+        //         throw new KeyNotFoundException("Floorplan not found");
+
+        //     floorplan.UpdatedBy = username;
+        //     floorplan.UpdatedAt = DateTime.UtcNow;
+        //     floorplan.Status = 0;
+        //     await _repository.DeleteAsync(id);
+        // }
+
+        //    public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floorplan = await _repository.GetByIdAsync(id);
+        //     if (floorplan == null)
+        //         throw new KeyNotFoundException("Floorplan not found");
+
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         // Soft delete parent
+        //         floorplan.UpdatedBy = username;
+        //         floorplan.UpdatedAt = DateTime.UtcNow;
+        //         floorplan.Status = 0;
+        //         await _repository.DeleteAsync(id);
+
+        //         // Soft delete child entities via their repositories
+        //         var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+        //         foreach (var maskedArea in maskedAreas)
+        //         {
+        //             maskedArea.UpdatedBy = username;
+        //             maskedArea.UpdatedAt = DateTime.UtcNow;
+        //             maskedArea.Status = 0;
+        //             await _maskedAreaRepository.SoftDeleteAsync(maskedArea.Id);
+        //         }
+
+        //         var floorplandevices = await _floorplanDeviceRepository.GetByFloorplanIdAsync(id);
+        //         foreach (var floorplandevice in floorplandevices)
+        //         {
+        //             floorplandevice.UpdatedBy = username;
+        //             floorplandevice.UpdatedAt = DateTime.UtcNow;
+        //             floorplandevice.Status = 0;
+        //             await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
+        //         }
+        //     });
+        // }
+
+           public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-            floorplan.UpdatedBy = username;
-            floorplan.UpdatedAt = DateTime.UtcNow;
-            floorplan.Status = 0;
-            await _repository.DeleteAsync(id);
+                await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+                foreach (var maskedArea in maskedAreas)
+                {
+                    await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+                }
+                floorplan.UpdatedBy = username;
+                floorplan.UpdatedAt = DateTime.UtcNow;
+                floorplan.Status = 0;
+                await _repository.DeleteAsync(id);
+            });
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

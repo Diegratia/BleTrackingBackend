@@ -266,7 +266,6 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _floorplanService.DeleteAsync(floorplan.Id);
             }
-            // Soft delete parent
             floor.UpdatedBy = username;
             floor.UpdatedAt = DateTime.UtcNow;
             floor.Status = 0;

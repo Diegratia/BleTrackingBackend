@@ -27,16 +27,26 @@ namespace BusinessLogic.Services.Implementation
     public class MstBuildingService : IMstBuildingService
     {
         private readonly MstBuildingRepository _repository;
+        private readonly IMstFloorService _floorService;
+        private readonly MstFloorRepository _floorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
 
-        public MstBuildingService(MstBuildingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstBuildingService(
+            MstBuildingRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            IMstFloorService floorService,
+            MstFloorRepository floorRepository
+            )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _floorService = floorService;
+            _floorRepository = floorRepository;
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -164,15 +174,37 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBuildingDto>(building);
         }
 
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var building = await _repository.GetByIdAsync(id);
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     building.UpdatedBy = username;
+        //     building.UpdatedAt = DateTime.UtcNow;
+        //     building.Status = 0;
+        //     await _repository.DeleteAsync(id);
+        // }
+
         public async Task DeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        var building = await _repository.GetByIdAsync(id);
+        if (building == null)
+            throw new KeyNotFoundException("building not found");
+
+        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            var building = await _repository.GetByIdAsync(id);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floors = await _floorRepository.GetByBuildingIdAsync(id);
+            foreach (var floor in floors)
+            {
+                await _floorService.DeleteAsync(floor.Id);
+            }
             building.UpdatedBy = username;
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
             await _repository.DeleteAsync(id);
-        }
+        });
+    }
+        
 
          public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {

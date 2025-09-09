@@ -21,14 +21,23 @@ namespace BusinessLogic.Services.Implementation
     public class FloorplanMaskedAreaService : IFloorplanMaskedAreaService
     {
         private readonly FloorplanMaskedAreaRepository _repository;
+        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FloorplanMaskedAreaService(FloorplanMaskedAreaRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+
+
+        public FloorplanMaskedAreaService(
+            FloorplanMaskedAreaRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            FloorplanDeviceRepository floorplanDeviceRepository
+            )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _floorplanDeviceRepository = floorplanDeviceRepository;
         }
 
         public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
@@ -96,6 +105,34 @@ namespace BusinessLogic.Services.Implementation
             area.Status = 0;
             await _repository.SoftDeleteAsync(id);
         }
+        
+
+        public async Task SoftDeleteAsync(Guid id)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var area = await _repository.GetByIdAsync(id);
+            if (area == null)
+                throw new KeyNotFoundException("area not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                // Soft delete parent
+                area.UpdatedBy = username;
+                area.UpdatedAt = DateTime.UtcNow;
+                area.Status = 0;
+                await _repository.SoftDeleteAsync(id);
+
+                // Soft delete child entities via their repositories
+                var floorplandevices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+                foreach (var floorplandevice in floorplandevices)
+                {
+                    floorplandevice.UpdatedBy = username;
+                    floorplandevice.UpdatedAt = DateTime.UtcNow;
+                    floorplandevice.Status = 0;
+                    await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
+                }
+            });
+        }
 
         public async Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file)
         {
@@ -108,7 +145,7 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 

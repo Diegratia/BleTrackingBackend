@@ -136,7 +136,14 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(MstBuildingProfile));
 builder.Services.AddScoped<IMstBuildingService, MstBuildingService>();
+builder.Services.AddScoped<IMstFloorService, MstFloorService>();
+builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<MstBuildingRepository>();
+builder.Services.AddScoped<MstFloorRepository>();
+builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "10010" ??
            builder.Configuration["Ports:MstBuildingService"];

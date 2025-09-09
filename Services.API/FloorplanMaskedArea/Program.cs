@@ -143,6 +143,7 @@ builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaServi
 
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "10004" ??
            builder.Configuration["Ports:FloorplanMaskedAreaService"];

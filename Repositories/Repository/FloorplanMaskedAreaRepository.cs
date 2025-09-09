@@ -107,11 +107,18 @@ namespace Repositories.Repository
                 .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
         }
-        
+
         public async Task<List<FloorplanMaskedArea>> GetByFloorIdAsync(Guid floorId)
+        {
+            return await _context.FloorplanMaskedAreas
+                .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+                .ToListAsync();
+        }
+    
+            public async Task<List<FloorplanMaskedArea>> GetByFloorplanIdAsync(Guid floorplanId)
     {
         return await _context.FloorplanMaskedAreas
-            .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+            .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
             .ToListAsync();
     }
     }

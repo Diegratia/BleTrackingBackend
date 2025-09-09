@@ -71,14 +71,19 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task SoftDeleteAsync(Guid id)
+         public async Task SoftDeleteAsync(Guid id)
         {
-            var device = await GetByIdAsync(id);
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.FloorplanDevices
+                .Where(a => a.Id == id && a.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var device = await query.FirstOrDefaultAsync();
             if (device == null)
                 throw new KeyNotFoundException("FloorplanDevice not found");
 
-            device.Status = 0;
-            device.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
 
@@ -103,6 +108,21 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+
+        public async Task<List<FloorplanDevice>> GetByFloorplanIdAsync(Guid floorplanId)
+    {
+        return await _context.FloorplanDevices
+            .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+            .ToListAsync();
+    }
+
+            public async Task<List<FloorplanDevice>> GetByAreaIdAsync(Guid areaId)
+    {
+        return await _context.FloorplanDevices
+            .Where(ma => ma.FloorplanMaskedAreaId == areaId && ma.Status != 0)
+            .ToListAsync();
+    }
+
 
         
         // Optional: helper fetchers if needed for validation or other purposes

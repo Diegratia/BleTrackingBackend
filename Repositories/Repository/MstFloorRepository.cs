@@ -109,6 +109,7 @@ namespace Repositories.Repository
             .ToListAsync();
         }
 
+
         public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();

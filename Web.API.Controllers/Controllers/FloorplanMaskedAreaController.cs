@@ -183,7 +183,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _service.DeleteAsync(id);
+                await _service.SoftDeleteAsync(id);
                 return Ok(new
                 {
                     success = true,
