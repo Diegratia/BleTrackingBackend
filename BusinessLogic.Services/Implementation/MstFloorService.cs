@@ -29,7 +29,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorRepository _repository;
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
-        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
         private readonly MstFloorplanRepository _floorplanRepository;
@@ -80,7 +80,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (createDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
                 Directory.CreateDirectory(uploadDir);
@@ -143,7 +143,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (updateDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
                 Directory.CreateDirectory(uploadDir);
