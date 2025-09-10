@@ -5,7 +5,7 @@ namespace Data.ViewModels
 {
     public class VisitorBlacklistAreaDto : BaseModelDto
     {
-        public long Generate { get; set; } 
+        public long Generate { get; set; }
 
         public Guid Id { get; set; }
 
@@ -17,10 +17,10 @@ namespace Data.ViewModels
         public VisitorDto Visitor { get; set; }
 
     }
-    
-      public class OpenVisitorBlacklistAreaDto : BaseModelDto
+
+    public class OpenVisitorBlacklistAreaDto : BaseModelDto
     {
-        public long Generate { get; set; } 
+        public long Generate { get; set; }
 
         [JsonPropertyName("visitor_blacklist_area_id")]
         public Guid Id { get; set; }
@@ -43,12 +43,18 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaUpdateDto 
+    public class VisitorBlacklistAreaUpdateDto
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }
 
         public Guid VisitorId { get; set; }
 
+    }
+    
+    public class VisitorBlacklistAreaRequestDto : BaseModelDto
+    {
+        public Guid VisitorId { get; set; }
+        public List<VisitorBlacklistAreaCreateDto> VisitorBlacklistAreas { get; set; }
     }
 }

@@ -69,6 +69,90 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [HttpPost("collection")]
+        public async Task<IActionResult> CreateCollection([FromBody] VisitorBlacklistAreaRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createdBlacklistArea = await _visitorBlacklistAreaService.CreatesVisitorBlacklistAreaAsync(request);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Visitor blacklist area created successfully",
+                    collection = new { data = createdBlacklistArea },
+                    code = 201
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("batch")]
+        public async Task<IActionResult> Create([FromBody] List<VisitorBlacklistAreaCreateDto> dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            try
+            {
+                var createdBlacklist = await _visitorBlacklistAreaService.CreateBatchVisitorBlacklistAreaAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "District created successfully",
+                    collection = new { data = createdBlacklist },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         // GET: api/VisitorBlacklistArea/{id}
         [HttpGet("{id}")]

@@ -9,6 +9,8 @@ namespace BusinessLogic.Services.Interface
     public interface IVisitorBlacklistAreaService
     {
         Task<VisitorBlacklistAreaDto> CreateVisitorBlacklistAreaAsync(VisitorBlacklistAreaCreateDto createDto);
+        Task<IEnumerable<VisitorBlacklistAreaDto>> CreatesVisitorBlacklistAreaAsync(VisitorBlacklistAreaRequestDto request) ;
+        Task<List<VisitorBlacklistAreaDto>> CreateBatchVisitorBlacklistAreaAsync(List<VisitorBlacklistAreaCreateDto> dtos);
         Task<VisitorBlacklistAreaDto> GetVisitorBlacklistAreaByIdAsync(Guid id);
         Task<IEnumerable<OpenVisitorBlacklistAreaDto>> OpenGetAllVisitorBlacklistAreasAsync();
         Task<IEnumerable<VisitorBlacklistAreaDto>> GetAllVisitorBlacklistAreasAsync();

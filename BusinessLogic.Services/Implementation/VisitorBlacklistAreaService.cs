@@ -47,6 +47,50 @@ namespace BusinessLogic.Services.Implementation
             await _repository.AddAsync(entity);
             return _mapper.Map<VisitorBlacklistAreaDto>(entity);
         }
+        
+        public async Task<IEnumerable<VisitorBlacklistAreaDto>> CreatesVisitorBlacklistAreaAsync(VisitorBlacklistAreaRequestDto request)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var entities = new List<VisitorBlacklistArea>();
+            foreach (var area in request.VisitorBlacklistAreas)
+            {
+                var entity = _mapper.Map<VisitorBlacklistArea>(area);
+                entity.Id = Guid.NewGuid();
+                entity.Status = 1;
+                entity.UpdatedBy = username;
+                entity.UpdatedAt = DateTime.UtcNow;
+                entity.CreatedBy = username;
+                entity.CreatedAt = DateTime.UtcNow;
+                entity.VisitorId = request.VisitorId;
+                entities.Add(entity);
+            }
+
+            await _repository.AddRangeAsync(entities);
+            return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
+        }
+
+
+        public async Task<List<VisitorBlacklistAreaDto>> CreateBatchVisitorBlacklistAreaAsync(List<VisitorBlacklistAreaCreateDto> dtos)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var result = new List<VisitorBlacklistAreaDto>();
+            foreach (var dto in dtos)
+            {
+                var blacklistArea = _mapper.Map<VisitorBlacklistArea>(dto);
+                blacklistArea.Id = Guid.NewGuid();
+                blacklistArea.CreatedBy = username;
+                blacklistArea.UpdatedBy = username;
+                blacklistArea.CreatedAt = DateTime.UtcNow;
+                blacklistArea.UpdatedAt = DateTime.UtcNow;
+                blacklistArea.Status = 1;
+                await _repository.AddAsync(blacklistArea);
+                result.Add(_mapper.Map<VisitorBlacklistAreaDto>(blacklistArea));
+            }
+            return result;
+        }
 
         public async Task<VisitorBlacklistAreaDto> GetVisitorBlacklistAreaByIdAsync(Guid id)
         {

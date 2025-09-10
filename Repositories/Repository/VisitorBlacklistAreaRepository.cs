@@ -74,6 +74,34 @@ namespace Repositories.Repository
         //     });
         // }
 
+        public async Task AddRangeAsync(IEnumerable<VisitorBlacklistArea> entities)
+        {
+             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+
+            foreach (var entity in entities)
+            {
+         
+                if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
+
+                entity.ApplicationId = applicationId.Value;
+            }
+            else if (entity.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("SystemAdmin Must specify ApplicationId explicitly.");
+            }
+                await ValidateApplicationIdAsync(entity.ApplicationId);
+                ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
+                await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
+            }
+
+            await _context.VisitorBlacklistAreas.AddRangeAsync(entities);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AddAsync(VisitorBlacklistArea entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
