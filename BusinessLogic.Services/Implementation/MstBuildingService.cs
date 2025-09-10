@@ -32,7 +32,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
-        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 1 MB
 
         public MstBuildingService(
             MstBuildingRepository repository,
