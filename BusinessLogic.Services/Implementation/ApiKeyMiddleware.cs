@@ -52,6 +52,8 @@ public static class ApiKeyMiddlewareExtensions
                 apiKeyValue = queryApiKey.ToString();
             }
 
+            Console.WriteLine($"Api Key : {apiKeyValue}");
+
             if (string.IsNullOrEmpty(apiKeyValue))
             {
                 context.Response.StatusCode = 401;
