@@ -32,7 +32,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
-        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 1 MB
+        private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
 
         public MstBuildingService(
             MstBuildingRepository repository,
@@ -76,7 +76,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (createDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 5 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
@@ -125,7 +125,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (updateDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 5 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
