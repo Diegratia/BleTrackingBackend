@@ -35,7 +35,8 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.LastUsed, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.StatusCard, opt => opt.Ignore());
+                .ForMember(dest => dest.StatusCard, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Card, CardDto>();
              CreateMap<Card, OpenCardDto>();

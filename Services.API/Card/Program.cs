@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 try
 {
@@ -40,6 +42,14 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
+
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<CardCreateDtoValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<CardUpdateDtoValidator>();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
