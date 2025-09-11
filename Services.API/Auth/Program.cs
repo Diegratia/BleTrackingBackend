@@ -10,6 +10,8 @@ using BusinessLogic.Services.Extension;
 using Repositories.Repository;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 try
 {
@@ -41,6 +43,14 @@ builder.Configuration
 
 // Konfigurasi Controllers
 builder.Services.AddControllers();
+
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBrandCreateDtoValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBrandUpdateDtoValidator>();
 
 // Konfigurasi DbContext
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>

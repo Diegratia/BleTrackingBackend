@@ -486,11 +486,20 @@ namespace BusinessLogic.Services.Interface
             var user = await _userRepository.GetByUsernameAsync(dto.Username.ToLower());
             // var user = await _userRepository.GetByEmailAsync(dto.Email.ToLower());
             if (user == null || string.IsNullOrEmpty(user.Password) || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+            {
+                Console.WriteLine("Invalid username or password");
                 throw new UnauthorizedAccessException("Invalid username or password");
+            }
             if (user.StatusActive != StatusActive.Active)
+            {
+                Console.WriteLine("Account is not active");
                 throw new UnauthorizedAccessException("Account is not active");
+            }
             if (user.IsEmailConfirmation == 0)
+            {
+                Console.WriteLine("Email not confirmed");
                 throw new UnauthorizedAccessException("Email not confirmed");
+            }
 
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);

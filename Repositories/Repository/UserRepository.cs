@@ -87,7 +87,7 @@ namespace Repositories.Repository
                 .Include(u => u.Group)
                 .Where(u => u.Username.ToLower() == username.ToLower() && u.StatusActive != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("UserName not found");
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Username not found");
         }
         
         public async Task<User> GetByConfirmationCodeAsync(string EmailConfirmationCode)
