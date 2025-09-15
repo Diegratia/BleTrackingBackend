@@ -116,9 +116,21 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<bool> DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return false;
+              foreach (var block in entity.TimeBlocks)
+                {
+                    block.Status = 0;
+                    block.TimeGroupId = entity.Id;
+                    block.CreatedBy = username;
+                    block.UpdatedBy = username;
+                    block.CreatedAt = DateTime.UtcNow;
+                    block.UpdatedAt = DateTime.UtcNow;
+                }
             entity.Status = 0;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
             return true;
         }
@@ -128,7 +140,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "Tag", "Status" };
+            var validSortColumns = new[] { "UpdatedAt", "Status", "Name" };
 
             var filterService = new GenericDataTableService<TimeGroup, TimeGroupDto>(
                 query,
