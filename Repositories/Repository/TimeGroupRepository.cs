@@ -99,6 +99,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TimeGroups
+                .Include(d => d.TimeBlocks)
                 .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
