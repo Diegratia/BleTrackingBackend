@@ -289,7 +289,7 @@ services:
   card-access:
     build:
       context: .
-      dockerfile: Services.API/AlarmTriggers/Dockerfile
+      dockerfile: Services.API/CardAccess/Dockerfile
     ports:
       - "10028:10028"
     volumes:

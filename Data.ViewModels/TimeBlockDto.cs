@@ -7,7 +7,8 @@ namespace Data.ViewModels
 {
     public class TimeBlockDto : BaseModelDto
     {
-            public string? DayOfWeek { get; set; }  // pakai string
+        public Guid Id { get; set;}
+        public string? DayOfWeek { get; set; }  // pakai string
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }
         public Guid? TimeGroupId { get; set; }
@@ -15,14 +16,15 @@ namespace Data.ViewModels
 
     public class TimeBlockCreateDto : BaseModelDto
     {
-            public string? DayOfWeek { get; set; }  // pakai string
+        public string? DayOfWeek { get; set; }  // pakai string
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }
     }
 
     public class TimeBlockUpdateDto 
     {
-            public string? DayOfWeek { get; set; }  // pakai string
+        public Guid Id { get; set; }
+        public string? DayOfWeek { get; set; }  // pakai string
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }
     }

@@ -67,6 +67,10 @@ namespace BusinessLogic.Services.Implementation
                     block.ApplicationId = Guid.Parse(applicationIdClaim.Value);
                     block.Status = 1;
                     block.TimeGroupId = entity.Id;
+                    block.CreatedBy = username;
+                    block.UpdatedBy = username;
+                    block.CreatedAt = DateTime.UtcNow;
+                    block.UpdatedAt = DateTime.UtcNow;
                 }
             }
             entity.Status = 1;
@@ -75,15 +79,40 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<TimeGroupDto>(result);
         }
 
-        public async Task<TimeGroupDto> UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+         public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) throw new KeyNotFoundException("TimeGroup not found");
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            _mapper.Map(dto, entity);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+                throw new KeyNotFoundException();
+
+            // map property scalar saja (jangan map koleksi TimeBlocks)
+            entity.Name = dto.Name;
+            entity.Description = dto.Description;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            // update existing blocks
+            foreach (var blockDto in dto.TimeBlocks.Where(x => x.Id != Guid.Empty))
+            {
+                var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id);
+                if (existing != null)
+                {
+                    existing.DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
+                        ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
+                        : null;
+                    existing.StartTime = blockDto.StartTime;
+                    existing.EndTime = blockDto.EndTime;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.UpdatedBy = username;
+                }
+            }
+
             await _repository.UpdateAsync(entity);
-            return _mapper.Map<TimeGroupDto>(entity);
         }
+
+
 
         public async Task<bool> DeleteAsync(Guid id)
         {

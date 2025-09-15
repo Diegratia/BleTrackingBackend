@@ -22,6 +22,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TimeGroups
+                .Include(x => x.TimeBlocks)
                 .Where(d => d.Id == id && d.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -73,7 +74,7 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(entity.ApplicationId);
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
-            // _context.MstBrands.Update(brand); // Optional
+            // _context.TimeGroups.Update(entity); // Optional
             await _context.SaveChangesAsync();
         }
 

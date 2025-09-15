@@ -11,7 +11,7 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<TimeGroupDto>> GetAllsAsync();
         Task<TimeGroupDto?> GetByIdAsync(Guid id);
         Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto);
-        Task<TimeGroupDto> UpdateAsync(Guid id, TimeGroupUpdateDto dto);
+        Task UpdateAsync(Guid id, TimeGroupUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
     }

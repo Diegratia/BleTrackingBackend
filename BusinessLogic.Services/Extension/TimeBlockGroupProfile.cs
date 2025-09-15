@@ -15,7 +15,10 @@ namespace BusinessLogic.Services.Extension
             // TimeGroup
             CreateMap<TimeGroup, TimeGroupDto>();
             CreateMap<TimeGroupCreateDto, TimeGroup>();
-            CreateMap<TimeGroupUpdateDto, TimeGroup>();
+            CreateMap<TimeGroupUpdateDto, TimeGroup>()
+                // .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Generate, opt => opt.Ignore())
+            ;
 
             // TimeBlock
 CreateMap<TimeBlock, TimeBlockDto>()
@@ -29,6 +32,8 @@ CreateMap<TimeBlockCreateDto, TimeBlock>()
             : (DayOfWeek?)null));
 
 CreateMap<TimeBlockUpdateDto, TimeBlock>()
+        // .ForMember(dest => dest.Id, opt => opt.Ignore())
+        .ForMember(dest => dest.Generate, opt => opt.Ignore())
     .ForMember(dest => dest.DayOfWeek,
         opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.DayOfWeek)
             ? Enum.Parse<DayOfWeek>(src.DayOfWeek, true)

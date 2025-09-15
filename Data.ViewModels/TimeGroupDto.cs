@@ -23,7 +23,6 @@ namespace Data.ViewModels
     public class TimeGroupUpdateDto
     {
         public string? Name { get; set; }
-
         public string? Description { get; set; }
         public List<TimeBlockUpdateDto> TimeBlocks { get; set; } = new();
     }
