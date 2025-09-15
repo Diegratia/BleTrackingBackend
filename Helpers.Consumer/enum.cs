@@ -25,7 +25,7 @@ namespace Helpers.Consumer
     {
         Perpetual,
         Annual
-  }
+    }
 
     public enum VisitorActiveStatus
     {
@@ -116,7 +116,6 @@ namespace Helpers.Consumer
         Idle,
         Done,
         NoAction,
-        // Need,
         Waiting,
         Investigated,
         DoneInvestigated,
@@ -140,7 +139,7 @@ namespace Helpers.Consumer
         Monitor,
         Alarm
     }
-    
+
     public enum ServiceStatus
     {
         Start,

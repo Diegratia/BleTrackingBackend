@@ -2045,6 +2045,134 @@ namespace Repositories.Migrations
                     b.ToTable("refresh_token", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.TimeBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<int?>("DayOfWeek")
+                        .HasColumnType("int")
+                        .HasColumnName("day_of_week");
+
+                    b.Property<TimeSpan?>("EndTime")
+                        .HasColumnType("time")
+                        .HasColumnName("end_time");
+
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<TimeSpan?>("StartTime")
+                        .HasColumnType("time")
+                        .HasColumnName("start_time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("TimeGroupId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("time_group_id");
+
+                    b.Property<Guid?>("TimeGroupId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("TimeGroupId");
+
+                    b.HasIndex("TimeGroupId1");
+
+                    b.ToTable("time_block", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<long>("Generate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("_generate");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("time_group", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3233,6 +3361,39 @@ namespace Repositories.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Entities.Models.TimeBlock", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
+                        .WithMany()
+                        .HasForeignKey("TimeGroupId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.TimeGroup", null)
+                        .WithMany("TimeBlocks")
+                        .HasForeignKey("TimeGroupId1");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("TimeGroup");
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+                });
+
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
@@ -3487,6 +3648,11 @@ namespace Repositories.Migrations
             modelBuilder.Entity("Entities.Models.MstOrganization", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.Navigation("TimeBlocks");
                 });
 
             modelBuilder.Entity("Entities.Models.UserGroup", b =>

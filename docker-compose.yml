@@ -286,6 +286,25 @@ services:
       - ./.env:/app/.env
     restart: always
 
+  card-access:
+    build:
+      context: .
+      dockerfile: Services.API/AlarmTriggers/Dockerfile
+    ports:
+      - "10028:10028"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  license-checker:
+    build:
+      context: .
+      dockerfile: Services.API/LicenseChecker/Dockerfile
+    volumes:
+      - ./license.txt:/app/license.txt
+    stdin_open: true # biar bisa input dari keyboard
+    tty: true
+    restart: "no"
+
   nginx:
     build:
       context: .

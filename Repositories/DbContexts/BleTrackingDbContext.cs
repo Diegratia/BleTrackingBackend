@@ -36,6 +36,14 @@ namespace Repositories.DbContexts
         public DbSet<Card> Cards{ get; set; }
         public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
         
+        // CardAccessService
+        // public DbSet<CardAccessMaskedArea> CardAccessMaskedArea { get; set; }
+        // public DbSet<CardGroup> CardGroup{ get; set; }
+        // public DbSet<CardAccess> CardAccess{ get; set; }
+        // public DbSet<CardGroupCardAccess> CardGroupCardAccess{ get; set; }
+        public DbSet<TimeBlock> TimeBlocks{ get; set; }
+        public DbSet<TimeGroup> TimeGroups{ get; set; }
+        
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
         public DbSet<User> Users { get; set; }
@@ -775,6 +783,38 @@ namespace Repositories.DbContexts
                     .WithMany() // atau .WithMany(m => m.CardRecords)
                     .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction); 
+            });
+
+            modelBuilder.Entity<TimeGroup>(entity =>
+            {
+                entity.ToTable("time_group");
+
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+                modelBuilder.Entity<TimeBlock>(entity =>
+            {
+                entity.ToTable("time_block");
+
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
+                entity.HasOne(m => m.TimeGroup)
+                    .WithMany()
+                    .HasForeignKey(m => m.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             //  modelBuilder.Entity<MstTrackingLog>(entity =>

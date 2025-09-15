@@ -69,5 +69,6 @@ namespace Entities.Models
         public virtual ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
         public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public virtual ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        // public ICollection<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea>();
     }
 }

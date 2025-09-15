@@ -211,7 +211,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-                     // 1. MstBrand
+            // 1. MstBrand
             if (!context.MstBrands.Any(b => b.Status != 0))
             {
                 var brandFaker = new Faker<MstBrand>()
@@ -226,6 +226,21 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.Status, f => 1);
 
                 var brands = brandFaker.Generate(3);
+
+                  var brand = new MstBrand
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Bio - Initial",
+                    Tag = "People Tracking Tag",
+                    ApplicationId = context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id,
+                    Status = 1
+                };
+                brands.Add(brand);
+
                 context.MstBrands.AddRange(brands);
                 context.SaveChanges();
             }
@@ -248,7 +263,27 @@ namespace Repositories.Seeding
                     .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(b => b.Status, f => 1);
 
-                var buildings = buildingFaker.Generate(2);
+                var buildings = buildingFaker.Generate(1);
+
+                // Custom seeding
+                var building = new MstBuilding
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Gedung Tracking People",
+                    Image = "https://example.com/buildings/custom.jpg",
+                    ApplicationId = context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                buildings.Add(building);
+
                 context.MstBuildings.AddRange(buildings);
                 context.SaveChanges();
             }
@@ -282,7 +317,7 @@ namespace Repositories.Seeding
                     .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
                     .RuleFor(f => f.Status, f => 1);
 
-                var floors = floorFaker.Generate(2);
+                var floors = floorFaker.Generate(1);
                 context.MstFloors.AddRange(floors);
                 context.SaveChanges();
             }
