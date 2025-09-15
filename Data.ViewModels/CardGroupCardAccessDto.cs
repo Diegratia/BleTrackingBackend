@@ -1,22 +1,20 @@
-// using System;
-// using System.Collections.Generic;
-// using System.Linq;
-// using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Helpers.Consumer;
 
-// namespace Data.ViewModels
-// {
-//     public class CardGroupCardAccessCreateDto
-//     {
-//         public Guid CardGroupId { get; set; }
-//         public Guid CardAccessId { get; set; }
-//         public Guid ApplicationId { get; set; }
-//     }
+namespace Data.ViewModels
+{
+    public class CardGroupCardAccessCreateDto : BaseModelDto
+    {
+        public Guid CardGroupId { get; set; }
+        public Guid CardAccessId { get; set; }
+    }
 
-//     public class CardGroupCardAccessDto
-//     {
-//         public Guid CardGroupId { get; set; }
-//         public Guid CardAccessId { get; set; }
-//         public Guid ApplicationId { get; set; }
-//     }
-
-// }
+    public class CardGroupCardAccessDto : BaseModelDto
+    {
+        public Guid CardGroupId { get; set; }
+        public Guid CardAccessId { get; set; }
+    }
+}

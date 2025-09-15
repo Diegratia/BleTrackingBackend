@@ -22,7 +22,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TimeGroups
-                .Include(x => x.TimeBlocks)
+                .Include(d => d.TimeBlocks)
                 .Where(d => d.Id == id && d.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -83,14 +83,15 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TimeGroups
+                .Include(x => x.TimeBlocks)
                 .Where(d => d.Id == id && d.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var entity = await query.FirstOrDefaultAsync();
-
             if (entity == null)
                 throw new KeyNotFoundException("TimeGroup not found");
+                
             await _context.SaveChangesAsync();
         }
 

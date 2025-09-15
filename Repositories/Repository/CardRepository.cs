@@ -40,6 +40,7 @@ namespace Repositories.Repository
                 .Include(b => b.RegisteredMaskedArea)
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
+                .Include(b => b.CardGroup)  
                 .Include(b => b.Application)
                 .Where(b => b.StatusCard != 0);
 

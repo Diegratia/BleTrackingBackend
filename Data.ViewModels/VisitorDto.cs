@@ -240,6 +240,15 @@ namespace Data.ViewModels
         public string? InvitationCode { get; set; } // <- ini penting untuk akses
     }
 
+     public class VisitorMinimalDto : BaseModelDto
+    {
+        public Guid Id { get; set; }
+        public string? PersonId { get; set; }
+        public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
+        public string? Name { get; set; }
+    }
+
     public class MemberInvitationDto
     {
         [FromQuery]

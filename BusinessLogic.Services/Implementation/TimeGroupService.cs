@@ -114,11 +114,12 @@ namespace BusinessLogic.Services.Implementation
 
 
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return false;
+            if (entity == null) 
+                throw new KeyNotFoundException("TimeGroup not found");
               foreach (var block in entity.TimeBlocks)
                 {
                     block.Status = 0;
@@ -132,7 +133,6 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedBy = username;
             entity.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
-            return true;
         }
         
          public async Task<object> FilterAsync(DataTablesRequest request)

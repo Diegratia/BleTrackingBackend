@@ -60,17 +60,21 @@ namespace Entities.Models
 
         [Column("status_card")]
         public int? StatusCard { get; set; }
-
+        
         [Required]
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-        // isikan  null jika bisa digunakan disemua area.
+
+        [ForeignKey(nameof(CardGroup))]
+        [Column("card_group_id")]
+        public Guid? CardGroupId { get; set; }
 
         public virtual MstApplication Application { get; set; }
         public virtual MstMember Member { get; set; }
         public virtual Visitor Visitor { get; set; }
         public virtual FloorplanMaskedArea RegisteredMaskedArea { get; set; }
+        public CardGroup CardGroup { get; set; }
         public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }

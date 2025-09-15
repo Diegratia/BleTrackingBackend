@@ -37,10 +37,10 @@ namespace Repositories.DbContexts
         public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
         
         // CardAccessService
-        // public DbSet<CardAccessMaskedArea> CardAccessMaskedArea { get; set; }
-        // public DbSet<CardGroup> CardGroup{ get; set; }
-        // public DbSet<CardAccess> CardAccess{ get; set; }
-        // public DbSet<CardGroupCardAccess> CardGroupCardAccess{ get; set; }
+        public DbSet<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; }
+        public DbSet<CardGroup> CardGroups{ get; set; }
+        public DbSet<CardAccess> CardAccesses{ get; set; }
+        public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
         public DbSet<TimeBlock> TimeBlocks{ get; set; }
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         
@@ -1002,9 +1002,6 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
-
-       
-                
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -1018,6 +1015,84 @@ namespace Repositories.DbContexts
 
                 entity.HasIndex(v => v.PersonId);
                 entity.HasIndex(v => v.Email);
+            });
+
+            // CardGroup
+            modelBuilder.Entity<CardGroup>(entity =>
+            {
+                entity.ToTable("card_groups");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.ApplicationId).IsRequired();
+
+                entity.HasOne(e => e.Application)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.CardGroupCardAccesses)
+                    .WithOne(e => e.CardGroup)
+                    .HasForeignKey(e => e.CardGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // CardAccess
+            modelBuilder.Entity<CardAccess>(entity =>
+            {
+                entity.ToTable("card_accesses");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.ApplicationId).IsRequired();
+
+                entity.HasOne(e => e.Application)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.CardAccessMaskedAreas)
+                    .WithOne(e => e.CardAccess)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // CardAccessMaskedArea (pivot CardAccess <-> FloorplanMaskedArea)
+            modelBuilder.Entity<CardAccessMaskedArea>(entity =>
+            {
+                entity.ToTable("card_access_masked_areas");
+
+                entity.HasKey(e => new { e.CardAccessId, e.MaskedAreaId });
+
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany(e => e.CardAccessMaskedAreas)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.MaskedArea)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // CardGroupCardAccess (pivot CardGroup <-> CardAccess)
+            modelBuilder.Entity<CardGroupCardAccess>(entity =>
+            {
+                entity.ToTable("card_group_card_accesses");
+
+                entity.HasKey(e => new { e.CardGroupId, e.CardAccessId });
+
+                entity.HasOne(e => e.CardGroup)
+                    .WithMany(e => e.CardGroupCardAccesses)
+                    .HasForeignKey(e => e.CardGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany()
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // Card
@@ -1046,6 +1121,12 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.RegisteredMaskedArea)
                     .WithMany()
                     .HasForeignKey(m => m.RegisteredMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.CardGroupId).HasMaxLength(36);
+                entity.HasOne(m => m.CardGroup)
+                    .WithMany(g => g.Cards)
+                    .HasForeignKey(m => m.CardGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
                     
                 entity.Property(e => e.VisitorId).HasMaxLength(36);

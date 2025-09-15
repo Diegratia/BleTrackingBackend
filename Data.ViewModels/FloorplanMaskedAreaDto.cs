@@ -23,13 +23,20 @@ namespace Data.ViewModels
         public MstFloorplanDto Floorplan { get; set; }
     }
     
+
+    public class FloorplanMaskedAreaMinimalDto : BaseModelDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+    
      public class OpenFloorplanMaskedAreaDto : BaseModelDto
     {
         public int Generate { get; set; }
 
         [JsonPropertyName("floorplan_masked_area_id")]
         public Guid Id { get; set; }
-        public Guid FloorplanId { get; set;}
+        public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
         public string Name { get; set; }
         public string AreaShape { get; set; }

@@ -25,5 +25,6 @@ namespace Entities.Models
 
         public virtual MstApplication Application { get; set; }
         public virtual ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
+        
     }
 }

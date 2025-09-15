@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Interface
         Task<TimeGroupDto?> GetByIdAsync(Guid id);
         Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto);
         Task UpdateAsync(Guid id, TimeGroupUpdateDto dto);
-        Task<bool> DeleteAsync(Guid id);
+        Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
     }
 
