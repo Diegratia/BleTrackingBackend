@@ -53,10 +53,9 @@ namespace Data.ViewModels
         public DateTime? CheckinAt { get; set; }
         public DateTime? CheckoutAt { get; set; }
         public bool? StatusCard { get; set; }
-
-        public VisitorMinimalDto? Visitor { get; set; } // Visitor
-        public FloorplanMaskedAreaMinimalDto? RegisteredMaskedArea { get; set; } // Visitor
-        public MstMemberDto? Member { get; set; } // Visitor
+        // public VisitorMinimalDto? Visitor { get; set; } // Visitor
+        // public FloorplanMaskedAreaMinimalDto? RegisteredMaskedArea { get; set; } // Visitor
+        // public MstMemberDto? Member { get; set; } // Visitor
     }
     
      public class OpenCardDto : BaseModelDto

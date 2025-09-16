@@ -26,10 +26,10 @@ namespace BusinessLogic.Services.Extension
             // ========================
             // CardAccess
             // ========================
-           CreateMap<CardAccess, CardAccessDto>()
-            .ForMember(dest => dest.MaskedAreaIds, opt => opt.MapFrom(src =>
-                 src.CardAccessMaskedAreas.Select(cama => cama.MaskedAreaId)));
-
+       CreateMap<CardAccess, CardAccessDto>()
+    .ForMember(dest => dest.MaskedAreaIds,
+               opt => opt.MapFrom(src => 
+                   src.CardAccessMaskedAreas.Select(ca => ca.MaskedAreaId).ToList()));
 
       CreateMap<CardAccessCreateDto, CardAccess>()
           .ForMember(dest => dest.CardAccessMaskedAreas, 

@@ -34,9 +34,9 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.CardAccesses
-                .Include(ca => ca.CardAccessMaskedAreas)
-                    .ThenInclude(cam => cam.MaskedArea)
-                .Where(ca => ca.Status != 0);
+            .Include(ca => ca.CardAccessMaskedAreas)
+                .ThenInclude(cam => cam.MaskedArea)
+            .Where(ca => ca.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }

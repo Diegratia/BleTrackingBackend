@@ -17,13 +17,15 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly CardGroupRepository _repository;
         private readonly CardRepository _cardRepository;
+        private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardGroupService(CardGroupRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, CardRepository cardRepository)
+        public CardGroupService(CardGroupRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, CardRepository cardRepository, CardAccessRepository cardAccessRepository)
         {
             _repository = repository;
             _cardRepository = cardRepository;
+            _cardAccessRepository = cardAccessRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -44,7 +46,7 @@ namespace BusinessLogic.Services.Implementation
             if (applicationIdClaim != null)
                 entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
 
-            if (dto.CardIds.Any())
+           if (dto.CardIds.Any())
             {
                 var cards = await _cardRepository.GetAllQueryable()
                                 .Where(c => dto.CardIds.Contains(c.Id))
@@ -59,9 +61,25 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            var result = await _repository.AddAsync(entity);
-            return _mapper.Map<CardGroupDto>(result);
+            if (dto.CardAccessIds.Any())
+            {
+                var accesses = await _cardAccessRepository.GetAllQueryable()
+                                .Where(c => dto.CardAccessIds.Contains(c.Id))
+                                .ToListAsync();
+
+                foreach (var access in accesses)
+                {
+                    access.UpdatedAt = DateTime.UtcNow;
+                    access.UpdatedBy = username;
+                    access.ApplicationId = entity.ApplicationId;
+                }
+            }
+
+                var result = await _repository.AddAsync(entity);
+                return _mapper.Map<CardGroupDto>(result);  
         }
+
+
 
         public async Task UpdateAsync(Guid id, CardGroupUpdateDto dto)
         {

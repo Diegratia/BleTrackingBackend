@@ -35,7 +35,8 @@ namespace BusinessLogic.Services.Implementation
 
             var entity = _mapper.Map<CardAccess>(dto);
             entity.Id = Guid.NewGuid();
-            int increment = _repository.GetAllQueryable().Max(m => (int?)m.AccessNumber) ?? 0 + 1;
+            int? currentMax = _repository.GetAllQueryable().Max(m => m.AccessNumber);
+            int increment = currentMax.HasValue ? currentMax.Value + 1 : 1;
             entity.AccessNumber = increment;
             entity.CreatedBy = username;
             entity.CreatedAt = DateTime.UtcNow;
@@ -70,8 +71,9 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-            var result = await _repository.AddAsync(entity);
-            return _mapper.Map<CardAccessDto>(result);
+                var dtoResult = _mapper.Map<CardAccessDto>(entity);
+                dtoResult.MaskedAreaIds = entity.CardAccessMaskedAreas.Select(x => x.MaskedAreaId).ToList();
+                return dtoResult;
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -121,11 +123,30 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(entity);
         }
 
+        // public async Task<IEnumerable<CardAccessDto>> GetAllAsync()
+        // {
+        //     var list = await _repository.GetAllAsync();
+
+        //     return _mapper.Map<IEnumerable<CardAccessDto>>(list);
+
+        // }
+        
         public async Task<IEnumerable<CardAccessDto>> GetAllAsync()
         {
-            var list = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardAccessDto>>(list);
+            var entities = await _repository.GetAllAsync();
+            var dtos = _mapper.Map<List<CardAccessDto>>(entities);
+
+            foreach (var dto in dtos)
+            {
+                var entity = entities.First(e => e.Id == dto.Id);
+                dto.MaskedAreaIds = entity.CardAccessMaskedAreas
+                    .Select(x => (Guid?)x.MaskedAreaId)
+                    .ToList();
+            }
+
+            return dtos;
         }
+
 
         public async Task<CardAccessDto?> GetByIdAsync(Guid id)
         {

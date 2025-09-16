@@ -19,6 +19,7 @@ namespace Entities.Models
         public Guid FloorId { get; set; }
 
         [Required]
+        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -26,7 +27,7 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        public MstApplication Application { get; set; }
+        public  MstApplication Application { get; set; }
         public MstFloor Floor { get; set; }
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
         public ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
