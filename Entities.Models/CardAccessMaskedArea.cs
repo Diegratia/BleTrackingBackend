@@ -11,12 +11,12 @@ namespace Entities.Models
   public class CardAccessMaskedArea : IApplicationEntity
   {
     [Column("card_access_id")]
-    public Guid? CardAccessId { get; set; }
-    public CardAccess? CardAccess { get; set; }
+    public Guid CardAccessId { get; set; }
+    public CardAccess CardAccess { get; set; }
 
     [Column("masked_area_id")]
-    public Guid? MaskedAreaId { get; set; }
-    public FloorplanMaskedArea? MaskedArea { get; set; }
+    public Guid MaskedAreaId { get; set; }
+    public FloorplanMaskedArea MaskedArea { get; set; } 
 
     [ForeignKey("Application")]
     [Column("application_id")]

@@ -72,7 +72,10 @@ namespace BusinessLogic.Services.Implementation
 
 
                 var dtoResult = _mapper.Map<CardAccessDto>(entity);
-                dtoResult.MaskedAreaIds = entity.CardAccessMaskedAreas.Select(x => x.MaskedAreaId).ToList();
+                dtoResult.MaskedAreaIds = entity.CardAccessMaskedAreas?
+                .Select(x => (Guid?)x.MaskedAreaId)
+                .ToList();
+
                 return dtoResult;
         }
 

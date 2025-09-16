@@ -12,12 +12,12 @@ namespace Entities.Models
     public class CardGroupCardAccess : IApplicationEntity
     {
         [Column("card_group_id")]
-        public Guid? CardGroupId { get; set; }
-        public CardGroup? CardGroup { get; set; }
+        public Guid CardGroupId { get; set; }
+        public CardGroup CardGroup { get; set; }
 
         [Column("card_access_id")]
-        public Guid? CardAccessId { get; set; }
-        public CardAccess? CardAccess { get; set; }
+        public Guid CardAccessId { get; set; }
+        public CardAccess CardAccess { get; set; }
 
         [Required]
         [Column("status")]

@@ -86,7 +86,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var cardGroup = await _context.Cards.FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != 1);
+            var cardGroup = await _context.CardGroups.FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
             if (cardGroup == null)
                 throw new KeyNotFoundException("CardGroup not found");
 
