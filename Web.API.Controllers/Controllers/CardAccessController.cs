@@ -49,41 +49,41 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstBleReader/{id}
-        // [HttpGet("{id}")]
-        // public async Task<IActionResult> GetById(Guid id)
-        // {
-        //     try
-        //     {
-        //         var cardRecord = await _cardGroupService.GetByIdAsync(id);
-        //         if (cardRecord == null)
-        //         {
-        //             return NotFound(new
-        //             {
-        //                 success = false,
-        //                 msg = "CardGroup Record not found",
-        //                 collection = new { data = (object)null },
-        //                 code = 404
-        //             });
-        //         }
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = " Card Group retrieved successfully",
-        //             collection = new { data = cardRecord },
-        //             code = 200
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var cardRecord = await _cardAccessService.GetByIdAsync(id);
+                if (cardRecord == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Card Access not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = " Card Access retrieved successfully",
+                    collection = new { data = cardRecord },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CardAccessCreateDto dto)

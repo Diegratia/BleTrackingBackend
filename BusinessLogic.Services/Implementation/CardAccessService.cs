@@ -76,6 +76,7 @@ namespace BusinessLogic.Services.Implementation
                 .Select(x => (Guid?)x.MaskedAreaId)
                 .ToList();
 
+                await _repository.AddAsync(entity);
                 return dtoResult;
         }
 
