@@ -43,6 +43,6 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
             
-        public virtual MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
     }
 }

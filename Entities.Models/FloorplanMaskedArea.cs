@@ -12,12 +12,10 @@ namespace Entities.Models
     {
 
         [Required]
-        [ForeignKey("Floorplan")]
         [Column("floorplan_id")]
         public Guid FloorplanId { get; set; }
 
         [Required]
-        [ForeignKey("Floor")]
         [Column("floor_id")]
         public Guid FloorId { get; set; }
 
@@ -58,17 +56,16 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstFloor Floor { get; set; }
-        public virtual MstFloorplan Floorplan { get; set; }
-        public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
-        public virtual ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
-        public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
-        public virtual ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        public MstApplication Application { get; set; }
+        public MstFloor Floor { get; set; }
+        public MstFloorplan Floorplan { get; set; }
+        public ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
+        public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
+        public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
+        public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
         public ICollection<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea>();
     }
 }

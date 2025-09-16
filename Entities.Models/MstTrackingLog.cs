@@ -65,9 +65,9 @@ namespace Entities.Models
         [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
         public Guid? FloorplanMaskedAreaId { get; set; }
-        public virtual MstFloorplan? Floorplan { get; set; }
-        public virtual MstFloor? Floor { get; set; }
-        public virtual FloorplanMaskedArea? FloorplanMaskedArea { get; set; }
-        public virtual FloorplanDevice? FloorplanDevice { get; set; }
+        public MstFloorplan? Floorplan { get; set; }
+        public MstFloor? Floor { get; set; }
+        public FloorplanMaskedArea? FloorplanMaskedArea { get; set; }
+        public FloorplanDevice? FloorplanDevice { get; set; }
     }
 }

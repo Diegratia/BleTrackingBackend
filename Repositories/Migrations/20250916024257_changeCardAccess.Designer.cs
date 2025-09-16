@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250916024257_changeCardAccess")]
+    partial class changeCardAccess
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -492,6 +495,7 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<int?>("AccessNumber")
+                        .IsRequired()
                         .HasColumnType("int")
                         .HasColumnName("access_number");
 
@@ -924,14 +928,10 @@ namespace Repositories.Migrations
                         .HasColumnName("floor_id");
 
                     b.Property<Guid>("FloorplanId")
-                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floorplan_id");
 
                     b.Property<Guid?>("MstFloorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("MstFloorplanId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -967,8 +967,6 @@ namespace Repositories.Migrations
                     b.HasIndex("FloorplanId");
 
                     b.HasIndex("MstFloorId");
-
-                    b.HasIndex("MstFloorplanId");
 
                     b.ToTable("floorplan_masked_area", (string)null);
                 });
@@ -1054,7 +1052,6 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<Guid?>("BrandId")
-                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("controller_brand_id");
 
@@ -1366,7 +1363,8 @@ namespace Repositories.Migrations
 
                     b.Property<Guid>("ApplicationId")
                         .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -3209,18 +3207,14 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
-                        .WithMany()
+                        .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("FloorplanId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Entities.Models.MstFloor", null)
                         .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("MstFloorId");
-
-                    b.HasOne("Entities.Models.MstFloorplan", null)
-                        .WithMany("FloorplanMaskedAreas")
-                        .HasForeignKey("MstFloorplanId");
 
                     b.Navigation("Application");
 
@@ -3261,8 +3255,7 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.MstBrand", "Brand")
                         .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("BrandId");
 
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()

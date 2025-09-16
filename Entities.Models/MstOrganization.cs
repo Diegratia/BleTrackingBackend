@@ -24,15 +24,14 @@ namespace Entities.Models
         public string? OrganizationHost { get; set; }
 
         [Required]
-        [ForeignKey("ApplicationId")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
         [Column("status")]
         public int Status { get; set; }
 
-        public virtual MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
 
-        public virtual ICollection<MstMember> Members { get; set; } = new List<MstMember>();
+        public ICollection<MstMember> Members { get; set; } = new List<MstMember>();
     }
 }

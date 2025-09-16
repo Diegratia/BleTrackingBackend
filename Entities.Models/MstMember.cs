@@ -16,17 +16,14 @@ namespace Entities.Models
         public string? PersonId { get; set; }
 
         [Required]
-        [ForeignKey("Organization")]
         [Column("organization_id")]
         public Guid OrganizationId { get; set; }
 
         [Required]
-        [ForeignKey("Department")]
         [Column("department_id")]
         public Guid DepartmentId { get; set; }
 
         [Required]
-        [ForeignKey("District")]
         [Column("district_id")]
         public Guid DistrictId { get; set; }
 
@@ -86,7 +83,6 @@ namespace Entities.Models
         public string? HeadMember2 { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -96,14 +92,14 @@ namespace Entities.Models
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        public virtual MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
 
-        public virtual MstOrganization Organization { get; set; }
+        public MstOrganization Organization { get; set; }
 
-        public virtual MstDepartment Department { get; set; }
+        public MstDepartment Department { get; set; }
 
-        public virtual MstDistrict District { get; set; }
+        public MstDistrict District { get; set; }
 
-        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }

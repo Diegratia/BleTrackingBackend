@@ -54,10 +54,10 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public virtual MstApplication Application{ get; set; }
-        public virtual MstBuilding Building { get; set; }
-        public virtual ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
-        public virtual ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();
+        public MstApplication Application{ get; set; }
+        public MstBuilding Building { get; set; }
+        public ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
+        public ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();
        
     }
 }

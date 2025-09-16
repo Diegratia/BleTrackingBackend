@@ -12,14 +12,13 @@
     {
         [Column("name")]
         public string? Name { get; set; }
-        [Required]
+        
         [Column("access_number")]
-        public string? AccessNumber { get; set; }
+        public int? AccessNumber { get; set; }
 
         [Column("remarks")]
         public string? Remarks { get; set; }
 
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 

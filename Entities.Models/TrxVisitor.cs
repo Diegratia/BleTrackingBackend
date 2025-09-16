@@ -130,8 +130,8 @@ namespace Entities.Models
 
     public FloorplanMaskedArea? MaskedArea { get; set; }
     public MstApplication Application { get; set; }
-    public virtual Visitor? Visitor { get; set; }
-    public virtual MstMember? Member { get; set; }
+    public Visitor? Visitor { get; set; }
+    public MstMember? Member { get; set; }
 
   }
 }

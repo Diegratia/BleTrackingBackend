@@ -21,7 +21,7 @@ public class RefreshToken
         public DateTime CreatedAt { get; set; }
 
         [Column("User")]
-        public virtual User User { get; set; }
+        public User User { get; set; }
 
     }
 }

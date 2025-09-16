@@ -218,6 +218,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.IntegrationId).HasMaxLength(36);
+                entity.Property(e => e.BrandId).HasMaxLength(36);
 
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -227,6 +228,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Integration)
                     .WithMany()
                     .HasForeignKey(m => m.IntegrationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Brand)
+                    .WithMany()
+                    .HasForeignKey(m => m.BrandId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(m => m.Status)
@@ -363,6 +369,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorplanId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.RestrictedStatus)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
@@ -374,6 +381,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Floor)
                     .WithMany()
                     .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(m => m.Status)
@@ -1072,7 +1084,7 @@ namespace Repositories.DbContexts
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.MaskedArea)
-                    .WithMany()
+                    .WithMany(ma => ma.CardAccessMaskedAreas)
                     .HasForeignKey(e => e.MaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

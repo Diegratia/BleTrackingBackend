@@ -70,12 +70,12 @@ namespace Entities.Models
         [Column("card_group_id")]
         public Guid? CardGroupId { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstMember Member { get; set; }
-        public virtual Visitor Visitor { get; set; }
-        public virtual FloorplanMaskedArea RegisteredMaskedArea { get; set; }
+        public MstApplication Application { get; set; }
+        public MstMember Member { get; set; }
+        public Visitor Visitor { get; set; }
+        public FloorplanMaskedArea RegisteredMaskedArea { get; set; }
         public CardGroup CardGroup { get; set; }
-        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }
 

@@ -29,6 +29,6 @@
 //         [Column("floorplan_timestamp")]
 //         public DateTime FloorplanTimestamp { get; set; }
 
-//         public virtual MstFloorplan Floorplan { get; set; }
+//         public MstFloorplan Floorplan { get; set; }
 //     }
 // }

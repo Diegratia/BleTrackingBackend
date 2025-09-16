@@ -14,19 +14,15 @@ namespace Entities.Models
         [Column("timestamp")]
         public DateTime? Timestamp { get; set; }
 
-        [ForeignKey("Visitor")]
         [Column("visitor_id")]
         public Guid? VisitorId { get; set; }
 
-        [ForeignKey("Reader")]
         [Column("ble_reader_id")]
         public Guid? ReaderId { get; set; }
 
-        [ForeignKey("AlarmTriggers")]
         [Column("alarm_triggers_id")]
         public Guid? AlarmTriggersId { get; set; }
 
-        [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
         public Guid? FloorplanMaskedAreaId { get; set; }
 
@@ -37,7 +33,6 @@ namespace Entities.Models
         public ActionStatus? Action { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -82,10 +77,10 @@ namespace Entities.Models
         [Column("investigated_result")]
         public string? InvestigatedResult { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual Visitor Visitor { get; set; }
-        public virtual MstBleReader Reader { get; set; }
-        public virtual FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
-        public virtual AlarmTriggers AlarmTriggers{ get; set; } 
+        public MstApplication Application { get; set; }
+        public Visitor Visitor { get; set; }
+        public MstBleReader Reader { get; set; }
+        public FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
+        public AlarmTriggers AlarmTriggers{ get; set; } 
     }
 }

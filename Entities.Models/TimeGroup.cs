@@ -23,8 +23,8 @@ namespace Entities.Models
 
         // Navigation property
 
-        public virtual MstApplication Application { get; set; }
-        public virtual ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
+        public MstApplication Application { get; set; }
+        public ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
         
     }
 }

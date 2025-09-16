@@ -81,16 +81,15 @@ namespace Entities.Models
         public string? UploadFrError { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-        // public virtual MstOrganization Organization { get; set; }
-        // public virtual MstDepartment Department { get; set; }
-        // public virtual MstDistrict District { get; set; }
-        public virtual MstApplication Application { get; set; }
-        public virtual ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
-        public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
-        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
-        public virtual ICollection<TrxVisitor> TrxVisitors { get; set; } = new List<TrxVisitor>();
+        // public MstOrganization Organization { get; set; }
+        // public MstDepartment Department { get; set; }
+        // public MstDistrict District { get; set; }
+        public MstApplication Application { get; set; }
+        public ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
+        public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
+        public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<TrxVisitor> TrxVisitors { get; set; } = new List<TrxVisitor>();
     }
 }

@@ -54,8 +54,8 @@ namespace Entities.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-         public virtual MstApplication Application { get; set; }
-         public virtual MstBleReader Reader { get; set; }
+         public MstApplication Application { get; set; }
+         public MstBleReader Reader { get; set; }
         
     }
 }

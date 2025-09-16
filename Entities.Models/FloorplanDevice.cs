@@ -20,22 +20,18 @@ namespace Entities.Models
         public DeviceType? Type { get; set; }
 
         [Required]
-        [ForeignKey("Floorplan")]
         [Column("floorplan_id")]
         public Guid FloorplanId { get; set; }
 
         [Required]
-        [ForeignKey("AccessCctv")]
         [Column("access_cctv_id")]
         public Guid AccessCctvId { get; set; }
 
         [Required]
-        [ForeignKey("Reader")]
         [Column("ble_reader_id")]
         public Guid ReaderId { get; set; }
 
         [Required]
-        [ForeignKey("AccessControl")]
         [Column("access_control_id")]
         public Guid AccessControlId { get; set; }
 
@@ -56,12 +52,10 @@ namespace Entities.Models
         public float PosPxY { get; set; }
 
         [Required]
-        [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Required]
-        [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -72,11 +66,11 @@ namespace Entities.Models
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        public virtual MstFloorplan Floorplan { get; set; }
-        public virtual MstAccessCctv AccessCctv { get; set; }
-        public virtual MstBleReader Reader { get; set; }
-        public virtual MstAccessControl AccessControl { get; set; }
-        public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
-        public virtual MstApplication Application { get; set; }
+        public MstFloorplan Floorplan { get; set; }
+        public MstAccessCctv AccessCctv { get; set; }
+        public MstBleReader Reader { get; set; }
+        public MstAccessControl AccessControl { get; set; }
+        public FloorplanMaskedArea FloorplanMaskedArea { get; set; }
+        public MstApplication Application { get; set; }
     }
 }

@@ -27,7 +27,6 @@ namespace Entities.Models
             public string DistrictHost { get; set; }
 
             [Required]
-            [ForeignKey(nameof(Application))]
             [Column("application_id")]
             public Guid ApplicationId { get; set; }
 
@@ -36,8 +35,8 @@ namespace Entities.Models
             public int Status { get; set; } = 1;
 
         
-            public virtual MstApplication Application { get; set; }
+            public MstApplication Application { get; set; }
 
-            public virtual ICollection<MstMember> Members { get; set; } = new List<MstMember>();
+            public ICollection<MstMember> Members { get; set; } = new List<MstMember>();
         }
     }

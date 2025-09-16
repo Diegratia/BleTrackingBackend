@@ -131,10 +131,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(TimeBlockGroupProfile));
 builder.Services.AddAutoMapper(typeof(CardGroupProfile));
-// Registrasi Services
+builder.Services.AddAutoMapper(typeof(CardAccessProfile));
+// Registrasi Services\
 // builder.Services.AddScoped<ITimeBlockService, TimeBlockService>();
 builder.Services.AddScoped<ITimeGroupService, TimeGroupService>();
 builder.Services.AddScoped<ICardGroupService, CardGroupService>();
+builder.Services.AddScoped<ICardAccessService, CardAccessService>();
 builder.Services.AddScoped<ICardService, CardService>();
 // builder.Services.AddScoped<ICardService, CardService>();
 
@@ -143,6 +145,8 @@ builder.Services.AddScoped<TimeGroupRepository>();
 builder.Services.AddScoped<TimeBlockRepository>();
 builder.Services.AddScoped<CardGroupRepository>();
 builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<CardAccessRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_ACCESS_PORT") ??
            builder.Configuration["Ports:CardRecordService"] ?? "10028";

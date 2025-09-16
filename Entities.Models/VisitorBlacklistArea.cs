@@ -11,17 +11,14 @@ namespace Entities.Models
     public class VisitorBlacklistArea : BaseModelWithTime, IApplicationEntity
     {
         [Required]
-        [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
         [Required]
-        [ForeignKey("Visitor")]
         [Column("visitor_id")]
         public Guid VisitorId { get; set; }
 
         [Required]
-        [ForeignKey("ApplicationId")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -29,8 +26,8 @@ namespace Entities.Models
         [Column("status")]
         public int Status { get; set; }
 
-        public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
-        public virtual MstApplication Application { get; set;}
-        public virtual Visitor Visitor { get; set; }
+        public FloorplanMaskedArea FloorplanMaskedArea { get; set; }
+        public MstApplication Application { get; set;}
+        public Visitor Visitor { get; set; }
     }
 }

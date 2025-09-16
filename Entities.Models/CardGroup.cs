@@ -24,7 +24,7 @@ namespace Entities.Models
     [Column("status")]
     public int Status { get; set; } = 1;
 
-    public virtual MstApplication Application { get; set; }
+    public MstApplication Application { get; set; }
     public ICollection<Card> Cards { get; set; } = new List<Card>();
     public ICollection<CardGroupCardAccess?> CardGroupCardAccesses { get; set; } = new List<CardGroupCardAccess?>();
   }

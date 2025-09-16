@@ -18,14 +18,13 @@ namespace Entities.Models
         public string? Image { get; set; }
 
         [Required]
-        [Column("application_id")]
         [ForeignKey("Application")]
         public Guid ApplicationId { get; set; }
 
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        public virtual MstApplication Application { get; set; }
-        // public virtual ICollection<MstFloor> Floors { get; set; } = new List<MstFloor>();
+        public MstApplication Application { get; set; }
+        // public ICollection<MstFloor> Floors { get; set; } = new List<MstFloor>();
     }
 }

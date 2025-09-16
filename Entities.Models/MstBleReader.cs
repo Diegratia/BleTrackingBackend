@@ -40,10 +40,10 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstBrand Brand { get; set; }
-        public virtual ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
-        public virtual ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
-        public virtual ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        public MstApplication Application { get; set; }
+        public MstBrand Brand { get; set; }
+        public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
+        public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
+        public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
     }
 }

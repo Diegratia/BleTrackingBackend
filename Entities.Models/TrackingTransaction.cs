@@ -14,15 +14,12 @@ namespace Entities.Models
         [Column("trans_time")]
         public DateTime? TransTime { get; set; }
 
-        [ForeignKey("Reader")]
         [Column("reader_id")]
         public Guid? ReaderId { get; set; } 
 
-        [ForeignKey("Card")]
         [Column("card_id")]
         public Guid?  CardId { get; set; }
 
-        [ForeignKey("FloorplanMaskedArea")]
         [Column("floorplan_masked_area_id")]
         public Guid? FloorplanMaskedAreaId { get; set; }
 
@@ -45,13 +42,12 @@ namespace Entities.Models
         public long? Battery { get; set; }
 
         [Required]
-        [ForeignKey("ApplicationId")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstBleReader Reader { get; set; }
-        public virtual Card Card { get; set; }
-        public virtual FloorplanMaskedArea FloorplanMaskedArea { get; set; }
+        public MstApplication Application { get; set; }
+        public MstBleReader Reader { get; set; }
+        public Card Card { get; set; }
+        public FloorplanMaskedArea FloorplanMaskedArea { get; set; }
     }
 }

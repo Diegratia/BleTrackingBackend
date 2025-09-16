@@ -1,7 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Helpers.Consumer;
 
 namespace Repositories.Repository
 {
@@ -15,7 +20,8 @@ namespace Repositories.Repository
         public async Task<CardAccess?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()
-                .FirstOrDefaultAsync(ca => ca.Id == id && ca.Status != 0);
+                .Where(ca => ca.Id == id && ca.Status != 0)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<CardAccess>> GetAllAsync()
@@ -28,7 +34,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.CardAccesses
-                .Include(ca => ca.Application)
                 .Include(ca => ca.CardAccessMaskedAreas)
                     .ThenInclude(cam => cam.MaskedArea)
                 .Where(ca => ca.Status != 0);
@@ -36,7 +41,7 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<CardAccess> AddAsync(CardAccess cardAccess)
+        public async Task<CardAccess> AddAsync(CardAccess entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -45,27 +50,27 @@ namespace Repositories.Repository
                 if (!applicationId.HasValue)
                     throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
 
-                cardAccess.ApplicationId = applicationId.Value;
+                entity.ApplicationId = applicationId.Value;
             }
-            else if (cardAccess.ApplicationId == Guid.Empty)
+            else if (entity.ApplicationId == Guid.Empty)
             {
                 throw new ArgumentException("System Admin must specify ApplicationId explicitly.");
             }
 
-            await ValidateApplicationIdAsync(cardAccess.ApplicationId);
-            ValidateApplicationIdForEntity(cardAccess, applicationId, isSystemAdmin);
+            await ValidateApplicationIdAsync(entity.ApplicationId);
+            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
-            _context.CardAccesses.Add(cardAccess);
+            _context.CardAccesses.Add(entity);
             await _context.SaveChangesAsync();
-            return cardAccess;
+            return entity;
         }
 
-        public async Task UpdateAsync(CardAccess cardAccess)
+        public async Task UpdateAsync(CardAccess entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            await ValidateApplicationIdAsync(cardAccess.ApplicationId);
-            ValidateApplicationIdForEntity(cardAccess, applicationId, isSystemAdmin);
+            await ValidateApplicationIdAsync(entity.ApplicationId);
+            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
             await _context.SaveChangesAsync();
         }
@@ -74,22 +79,15 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var entity = await _context.CardAccesses
-                .FirstOrDefaultAsync(ca => ca.Id == id && ca.Status != 0);
-
+            var entity = await _context.CardAccesses.FirstOrDefaultAsync(ca => ca.Id == id && ca.Status != 0);
             if (entity == null)
                 throw new KeyNotFoundException("CardAccess not found");
 
             if (!isSystemAdmin && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("You don’t have permission to delete this entity.");
 
-            entity.Status = 0; // soft delete
+            entity.Status = 0;
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<IEnumerable<CardAccess>> GetAllExportAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
         }
     }
 }

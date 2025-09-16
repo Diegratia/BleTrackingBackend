@@ -25,5 +25,5 @@ namespace Entities.Models
     [Column("status")]
     public int Status { get; set; } = 1;
     
-    }
+  }
 }

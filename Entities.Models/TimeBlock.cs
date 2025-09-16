@@ -30,7 +30,7 @@ namespace Entities.Models
 
         // Navigation property
 
-        public virtual MstApplication Application { get; set; }
-        public virtual TimeGroup TimeGroup { get; set; }
+        public MstApplication Application { get; set; }
+        public TimeGroup TimeGroup { get; set; }
     }
 }

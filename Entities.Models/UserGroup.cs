@@ -57,8 +57,8 @@ namespace Entities.Models
 
 
         [ForeignKey("ApplicationId")]
-        public virtual MstApplication Application { get; set; } // Navigation property
-        public virtual ICollection<User> Users { get; set; } = new List<User>();
+        public MstApplication Application { get; set; } // Navigation property
+        public ICollection<User> Users { get; set; } = new List<User>();
 
     }
 }

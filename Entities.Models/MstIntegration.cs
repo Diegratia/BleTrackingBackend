@@ -53,9 +53,9 @@ namespace Entities.Models
 
         //relasi dari mstIntegration terhadap domain dibawah ini
         //relasi one to .. terhadap domain dibawah ini
-        public virtual MstBrand Brand { get; set; }
+        public MstBrand Brand { get; set; }
 
-        public virtual MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
     }
 
 }

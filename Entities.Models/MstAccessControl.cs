@@ -12,7 +12,6 @@ namespace Entities.Models
     public class MstAccessControl : BaseModelWithTime, IApplicationEntity
     {
         [AllowNull]
-        [ForeignKey("Brand")]
         [Column("controller_brand_id")]
         public Guid? BrandId { get; set; }
 
@@ -39,12 +38,10 @@ namespace Entities.Models
         [Column("raw")]
         public string? Raw { get; set; }
 
-        [ForeignKey("Integration")]
         [Column("integration_id")]
         public Guid? IntegrationId { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -52,9 +49,9 @@ namespace Entities.Models
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstBrand Brand { get; set; }
-        public virtual MstIntegration Integration { get; set; }
-        public virtual ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        public MstApplication Application { get; set; }
+        public MstBrand Brand { get; set; }
+        public MstIntegration Integration { get; set; }
+        public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
     }
 }
