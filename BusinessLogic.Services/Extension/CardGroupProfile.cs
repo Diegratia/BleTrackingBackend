@@ -14,7 +14,11 @@ namespace BusinessLogic.Services.Extension
         public CardGroupProfile()
         {
 
-            CreateMap<CardGroup, CardGroupDto>();
+            // CreateMap<CardGroup, CardGroupDto>();
+            CreateMap<CardGroup, CardGroupDto>()
+                .ForMember(dest => dest.CardAccesses,
+                        opt => opt.MapFrom(src => src.CardGroupCardAccesses.Select(cga => cga.CardAccess)));
+
             CreateMap<CardGroupCreateDto, CardGroup>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             CreateMap<CardGroupUpdateDto, CardGroup>()

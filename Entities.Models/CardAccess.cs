@@ -12,7 +12,7 @@
     {
         [Column("name")]
         public string? Name { get; set; }
-        
+
         [Column("access_number")]
         public int? AccessNumber { get; set; }
 
@@ -27,6 +27,9 @@
         public int Status { get; set; } = 1;
         public ICollection<CardAccessMaskedArea?> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea?>();
         public MstApplication? Application { get; set; }
+
+        
+
     }
 }
         

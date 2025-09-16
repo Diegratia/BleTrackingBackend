@@ -19,7 +19,7 @@ namespace Entities.Models
 
     [Column("application_id")]
     public Guid ApplicationId { get; set; }
-    
+
     [Required]
     [Column("status")]
     public int Status { get; set; } = 1;
@@ -27,5 +27,8 @@ namespace Entities.Models
     public MstApplication Application { get; set; }
     public ICollection<Card> Cards { get; set; } = new List<Card>();
     public ICollection<CardGroupCardAccess?> CardGroupCardAccesses { get; set; } = new List<CardGroupCardAccess?>();
+
+     [NotMapped]
+     public ICollection<CardAccess> CardAccesses => CardGroupCardAccesses.Select(cga => cga.CardAccess).ToList();
   }
 }

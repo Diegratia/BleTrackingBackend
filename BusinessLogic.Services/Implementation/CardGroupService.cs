@@ -61,19 +61,28 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            if (dto.CardAccessIds.Any())
+           if (dto.CardAccessIds.Any())
             {
                 var accesses = await _cardAccessRepository.GetAllQueryable()
-                                .Where(c => dto.CardAccessIds.Contains(c.Id))
-                                .ToListAsync();
+                                    .Where(c => dto.CardAccessIds.Contains(c.Id))
+                                    .ToListAsync();
 
                 foreach (var access in accesses)
                 {
                     access.UpdatedAt = DateTime.UtcNow;
                     access.UpdatedBy = username;
                     access.ApplicationId = entity.ApplicationId;
+
+                    // 🔹 Tambahkan baris di join table
+                    entity.CardGroupCardAccesses.Add(new CardGroupCardAccess
+                    {
+                        CardGroupId = entity.Id,
+                        CardAccessId = access.Id,
+                        ApplicationId = entity.ApplicationId
+                    });
                 }
             }
+
 
                 var result = await _repository.AddAsync(entity);
                 return _mapper.Map<CardGroupDto>(result);  
