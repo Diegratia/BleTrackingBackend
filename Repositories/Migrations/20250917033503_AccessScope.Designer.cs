@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917033503_AccessScope")]
+    partial class AccessScope
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -495,6 +498,10 @@ namespace Repositories.Migrations
                         .HasColumnType("int")
                         .HasColumnName("access_number");
 
+                    b.Property<string>("AccessScope")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("access_scope");
+
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
@@ -565,10 +572,6 @@ namespace Repositories.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<string>("AccessScope")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("access_scope");
 
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier")

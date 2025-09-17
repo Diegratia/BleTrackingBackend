@@ -84,7 +84,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name", "AccessNumber" };
+            var searchableColumns = new[] { "Name", "AccessNumber", "AccessScope" };
             var validSortColumns = new[] { "UpdatedAt", "Status" , "AccessNumber" };
 
             var filterService = new GenericDataTableService<CardAccess, CardAccessDto>(

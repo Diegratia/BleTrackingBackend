@@ -16,9 +16,6 @@
         [Column("access_number")]
         public int? AccessNumber { get; set; }
 
-        [Column("access_scope")]
-        public AccessScope? AccessScope { get; set; }
-
         [Column("remarks")]
         public string? Remarks { get; set; }
 

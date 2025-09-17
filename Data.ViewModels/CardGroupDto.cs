@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace Data.ViewModels
 {
-   public class CardGroupCreateDto : CardCreateDto
+   public class CardGroupCreateDto : BaseModelDto
 {
     public string? Name { get; set; }
     public string? Remarks { get; set; }
-    public Guid ApplicationId { get; set; }
+    public string? AccessScope { get; set; }
     public List<Guid?> CardAccessIds { get; set; } = new();
     public List<Guid?> CardIds { get; set; } = new();
 }
@@ -18,6 +18,7 @@ namespace Data.ViewModels
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }
+        public string? AccessScope { get; set; }
         public List<Guid?> CardAccessIds { get; set; } = new();
         public List<Guid?> CardIds { get; set; } = new();
     }
@@ -27,6 +28,7 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string? Remarks { get; set; }
+        public string? AccessScope { get; set; }
         public List<CardMinimalDto?> Cards { get; set; } = new();
         public List<CardAccessDto?> CardAccesses { get; set; } = new();
     }
