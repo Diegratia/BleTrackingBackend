@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
             if (applicationIdClaim != null)
                 entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
 
-           if (dto.CardIds.Any())
+        if (dto.CardIds.Any())
             {
                 var cards = await _cardRepository.GetAllQueryable()
                                 .Where(c => dto.CardIds.Contains(c.Id))
@@ -55,6 +55,11 @@ namespace BusinessLogic.Services.Implementation
 
                 foreach (var card in cards)
                 {
+                    if (card == null)
+                    {
+                        throw new KeyNotFoundException($"Card Access with id {dto.CardAccessIds.First()} not found");
+                    }
+
                     card.UpdatedAt = DateTime.UtcNow;
                     card.UpdatedBy = username;
                     card.ApplicationId = entity.ApplicationId;
@@ -62,7 +67,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-           if (dto.CardAccessIds.Any())
+        if (dto.CardAccessIds.Any())
             {
                 var accesses = await _cardAccessRepository.GetAllQueryable()
                                     .Where(c => dto.CardAccessIds.Contains(c.Id))
@@ -70,6 +75,10 @@ namespace BusinessLogic.Services.Implementation
 
                 foreach (var access in accesses)
                 {
+                    if (access == null)
+                    {
+                        throw new KeyNotFoundException($"Card Access with id {dto.CardAccessIds.First()} not found");
+                    }
                     access.UpdatedAt = DateTime.UtcNow;
                     access.UpdatedBy = username;
                     access.ApplicationId = entity.ApplicationId;
@@ -92,86 +101,93 @@ namespace BusinessLogic.Services.Implementation
 
 
         public async Task UpdateAsync(Guid id, CardGroupUpdateDto dto)
-{
-    var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-    var entity = await _repository.GetAllQueryable()
-        .Include(cg => cg.Cards)
-        .Include(cg => cg.CardGroupCardAccesses)
-        .FirstOrDefaultAsync(cg => cg.Id == id);
-
-    if (entity == null)
-        throw new KeyNotFoundException("Card Group not found");
-
-    // Update scalar
-    entity.Name = dto.Name ?? entity.Name;
-    entity.Remarks = dto.Remarks ?? entity.Remarks;
-    entity.AccessScope = Enum.Parse<AccessScope>(dto.AccessScope ?? entity.AccessScope.ToString());
-    entity.UpdatedBy = username;
-    entity.UpdatedAt = DateTime.UtcNow;
-
-    // =============================
-    // 🔹 Update Cards
-    // =============================
-
-    // Ambil semua card yang sekarang terikat ke group ini
-    var existingCards = await _cardRepository.GetAllQueryable()
-        .Where(c => c.CardGroupId == entity.Id)
-        .ToListAsync();
-
-    // Kosongkan hubungan lama (set null)
-    foreach (var card in existingCards)
-    {
-        card.CardGroupId = null;
-        card.UpdatedAt = DateTime.UtcNow;
-        card.UpdatedBy = username;
-    }
-
-    // Kalau ada CardIds di request, assign ulang
-    if (dto.CardIds.Any())
-    {
-        var cards = await _cardRepository.GetAllQueryable()
-                            .Where(c => dto.CardIds.Contains(c.Id))
-                            .ToListAsync();
-
-        foreach (var card in cards)
         {
-            card.CardGroupId = entity.Id;
-            card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = username;
-        }
-    }
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-        // =============================
-        // 🔹 Update CardAccesses (join table)
-        // =============================
-        var existingAccessIds = entity.CardGroupCardAccesses.Select(ca => ca.CardAccessId).ToList();
-        var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+            var entity = await _repository.GetAllQueryable()
+                .Include(cg => cg.Cards)
+                .Include(cg => cg.CardGroupCardAccesses)
+                .FirstOrDefaultAsync(cg => cg.Id == id);
 
-        // Remove yang tidak ada di request
-        var toRemove = entity.CardGroupCardAccesses
-            .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
-            .ToList();
+            if (entity == null)
+                throw new KeyNotFoundException("Card Group not found");
 
-        foreach (var remove in toRemove)
-        {
-            entity.CardGroupCardAccesses.Remove(remove);
-        }
+            // Update scalar
+            entity.Name = dto.Name ?? entity.Name;
+            entity.Remarks = dto.Remarks ?? entity.Remarks;
+            entity.AccessScope = Enum.Parse<AccessScope>(dto.AccessScope ?? entity.AccessScope.ToString());
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
 
-        // Tambah yang baru
-        var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-        foreach (var addId in toAdd)
-        {
-            entity.CardGroupCardAccesses.Add(new CardGroupCardAccess
+            // =============================
+            // 🔹 Update Cards
+            // =============================
+
+            // Ambil semua card yang sekarang terikat ke group ini
+            var existingCards = await _cardRepository.GetAllQueryable()
+                .Where(c => c.CardGroupId == entity.Id)
+                .ToListAsync();
+
+            // Kosongkan hubungan lama (set null)
+            foreach (var card in existingCards)
             {
-                CardGroupId = entity.Id, 
-                CardAccessId = addId,
-                ApplicationId = entity.ApplicationId
-            });
-        }
+                card.CardGroupId = null;
+                card.UpdatedAt = DateTime.UtcNow;
+                card.UpdatedBy = username;
+            }
 
-    await _repository.UpdateAsync(entity);
-}
+            // Kalau ada CardIds di request, assign ulang
+            if (dto.CardIds.Any())
+            {
+                var cards = await _cardRepository.GetAllQueryable()
+                                    .Where(c => dto.CardIds.Contains(c.Id))
+                                    .ToListAsync();
+
+                foreach (var card in cards)
+                {
+                    if (card == null)
+                        throw new KeyNotFoundException($"Card with id {dto.CardIds.First()} not found");
+
+                    card.CardGroupId = entity.Id;
+                    card.UpdatedAt = DateTime.UtcNow;
+                    card.UpdatedBy = username;
+                }
+            }
+
+            // =============================
+            // 🔹 Update CardAccesses (join table)
+            // =============================
+            var existingAccessIds = entity.CardGroupCardAccesses.Select(ca => ca.CardAccessId).ToList();
+            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+            // Remove yang tidak ada di request
+            var toRemove = entity.CardGroupCardAccesses
+                .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
+                .ToList();
+
+            foreach (var remove in toRemove)
+            {
+                entity.CardGroupCardAccesses.Remove(remove);
+            }
+
+            // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
+
+                entity.CardGroupCardAccesses.Add(new CardGroupCardAccess
+                {
+                    CardGroupId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
+
+            await _repository.UpdateAsync(entity);
+        }
 
 
         public async Task DeleteAsync(Guid id)
