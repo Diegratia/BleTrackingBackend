@@ -21,8 +21,35 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("open")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                var alarms = await _service.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Alarm Triggers retrieved successfully",
+                    collection = new { data = alarms },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+         [HttpGet]
+        public async Task<IActionResult> OpenGetAll()
         {
             try
             {
