@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Entities.Models;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -105,6 +106,7 @@ namespace BusinessLogic.Services.Implementation
     // Update scalar
     entity.Name = dto.Name ?? entity.Name;
     entity.Remarks = dto.Remarks ?? entity.Remarks;
+    entity.AccessScope = Enum.Parse<AccessScope>(dto.AccessScope ?? entity.AccessScope.ToString());
     entity.UpdatedBy = username;
     entity.UpdatedAt = DateTime.UtcNow;
 
