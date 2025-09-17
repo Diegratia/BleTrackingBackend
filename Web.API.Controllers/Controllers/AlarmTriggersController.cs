@@ -23,7 +23,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpGet("open")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> OpenGetAll()
         {
             try
             {
@@ -49,7 +49,7 @@ namespace Web.API.Controllers.Controllers
         }
 
          [HttpGet]
-        public async Task<IActionResult> OpenGetAll()
+        public async Task<IActionResult> GetAll()
         {
             try
             {

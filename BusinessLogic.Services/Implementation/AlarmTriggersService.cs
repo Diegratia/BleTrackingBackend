@@ -30,6 +30,11 @@ namespace BusinessLogic.Services.Implementation
             var alarmTriggers = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<AlarmTriggersDto>>(alarmTriggers);
         }
+        public async Task<IEnumerable<AlarmTriggersOpenDto>> OpenGetAllAsync()
+        {
+            var alarmTriggers = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<AlarmTriggersOpenDto>>(alarmTriggers);
+        }
 
         public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
         {
