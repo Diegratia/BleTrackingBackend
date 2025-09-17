@@ -166,7 +166,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
+            var validSortColumns = new[] {  "UpdatedAt", "Name", "CreatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
             var enumColumns = new Dictionary<string, Type> { { "Status", typeof(int) } };
 
             var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(

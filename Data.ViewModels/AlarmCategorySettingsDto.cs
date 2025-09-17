@@ -10,18 +10,21 @@ namespace Data.ViewModels
     {
         public Guid Id { get; set; }
         public string? AlarmCategory { get; set; }
+        public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
         public int? IsEnabled { get; set; }
     }
     public class AlarmCategorySettingsCreateDto : BaseModelDto
     {
         public string? AlarmCategory { get; set; }
+        public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
         public int? IsEnabled { get; set; } = 0;
     }
     public class AlarmCategorySettingsUpdateDto
     {
         public string? AlarmCategory { get; set; }
+        public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
         public int? IsEnabled { get; set; }
     }

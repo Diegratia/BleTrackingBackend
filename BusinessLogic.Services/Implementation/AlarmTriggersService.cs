@@ -116,7 +116,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Floorplan.Name", "Beacon.Id" };
-            var validSortColumns = new[] { "Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive" };
+            var validSortColumns = new[] { "IdleTimestamp","Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive" };
 
             var filterService = new GenericDataTableService<AlarmTriggers, AlarmTriggersDto>(
                 query,

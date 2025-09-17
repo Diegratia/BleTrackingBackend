@@ -115,7 +115,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "DistrictHost", "CreatedAt", "UpdatedAt", "Status" };
+            var validSortColumns = new[] {  "UpdatedAt", "Name", "DistrictHost", "CreatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstDistrict, MstDistrictDto>(
                 query,

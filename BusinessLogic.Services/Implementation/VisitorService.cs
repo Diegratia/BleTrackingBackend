@@ -2345,7 +2345,7 @@ public class VisitorService : IVisitorService
             };
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "CardNumber", "Status", "PersonId", "CreatedAt", "UpdatedAt", "UpdatedBy", "CreatedBy", "IdentityType" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "OrganizationName", "DistrictName", "DepartmentName", "Gender", "CardNumber", "Status", "PersonId", "CreatedAt", "UpdatedBy", "CreatedBy", "IdentityType" };
 
             var filterService = new GenericDataTableService<Visitor, VisitorDto>(
                 query,
@@ -2353,7 +2353,6 @@ public class VisitorService : IVisitorService
                 searchableColumns,
                 validSortColumns,
                 enumColumns);
-
 
             return await filterService.FilterAsync(request);
         }

@@ -15,6 +15,9 @@ namespace Entities.Models
 
         [Column("alarm_level_priority")]
         public AlarmLevelPriority? AlarmLevelPriority { get; set; }
+
+        [Column("alarm_color")]
+        public string? AlarmColor { get; set; }
         
         [Column("is_enabled")]
         public int? IsEnabled { get; set; } = 0;

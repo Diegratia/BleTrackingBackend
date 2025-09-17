@@ -11,7 +11,7 @@ namespace Helpers.Consumer
     {
         [Key]
         [Column("id")]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Column("created_by")]
         public string? CreatedBy { get; set; }

@@ -46,6 +46,8 @@ namespace BusinessLogic.Services.Implementation
             //     throw new ArgumentException("Length must be greater than or equal to 1.");
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
+        //         if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn, StringComparer.OrdinalIgnoreCase))
+        // request.SortColumn = string.IsNullOrEmpty(request.SortColumn) ? (_validSortColumns.Any() ? _validSortColumns.First() : "UpdatedAt") : request.SortColumn;
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
               request.SortColumn = string.IsNullOrEmpty(request.SortColumn) ? (_validSortColumns.Any() ? _validSortColumns.First() : "UpdatedAt") : request.SortColumn;
             if (string.IsNullOrEmpty(request.SortDir) || !new[] { "asc", "desc" }.Contains(request.SortDir.ToLower()))
