@@ -140,20 +140,6 @@ namespace BusinessLogic.Services.Implementation
         }
     }
 
-    // if (dto.CardIds.Any())
-    // {
-    //     var cards = await _cardRepository.GetAllQueryable()
-    //                         .Where(c => dto.CardIds.Contains(c.Id))
-    //                         .ToListAsync();
-
-    //     foreach (var card in cards)
-    //     {
-    //         card.CardGroupId = entity.Id;
-    //         card.UpdatedAt = DateTime.UtcNow;
-    //         card.UpdatedBy = username;
-    //     }
-    // }
-
         // =============================
         // 🔹 Update CardAccesses (join table)
         // =============================

@@ -21,6 +21,13 @@ namespace Helpers.Consumer
         Tracking
     }
 
+    public enum AccessScope
+    {
+        All,
+        Specific,
+        None
+    }
+
     public enum LicenseType
     {
         Perpetual,

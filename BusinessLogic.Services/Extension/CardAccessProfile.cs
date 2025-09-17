@@ -26,18 +26,20 @@ namespace BusinessLogic.Services.Extension
             // ========================
             // CardAccess
             // ========================
-       CreateMap<CardAccess, CardAccessDto>()
-    .ForMember(dest => dest.MaskedAreaIds,
-               opt => opt.MapFrom(src => 
-                   src.CardAccessMaskedAreas.Select(ca => ca.MaskedAreaId).ToList()));
+            CreateMap<CardAccess, CardAccessDto>()
+         .ForMember(dest => dest.MaskedAreaIds,
+                    opt => opt.MapFrom(src =>
+                        src.CardAccessMaskedAreas.Select(ca => ca.MaskedAreaId).ToList()));
 
-      CreateMap<CardAccessCreateDto, CardAccess>()
-          .ForMember(dest => dest.CardAccessMaskedAreas, 
-              opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
+            CreateMap<CardAccessCreateDto, CardAccess>()
+                .ForMember(dest => dest.CardAccessMaskedAreas,
+                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })))
+               .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope)));
 
-      CreateMap<CardAccessUpdateDto, CardAccess>()
-          .ForMember(dest => dest.CardAccessMaskedAreas, 
-              opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
+            CreateMap<CardAccessUpdateDto, CardAccess>()
+                .ForMember(dest => dest.CardAccessMaskedAreas,
+                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })))
+                .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope)));
 
 
             // ========================

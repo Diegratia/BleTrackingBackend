@@ -152,14 +152,31 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-        public async Task<CardAccessDto?> GetByIdAsync(Guid id)
+            public async Task<CardAccessDto?> GetByIdAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<CardAccessDto>(entity);
+            if (entity == null) 
+                return null;
+
+            var dto = _mapper.Map<CardAccessDto>(entity);
+            dto.MaskedAreaIds = entity.CardAccessMaskedAreas
+                .Select(x => (Guid?)x.MaskedAreaId)
+                .ToList();
+
+            return dto;
         }
+
 
         public async Task DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+                throw new KeyNotFoundException("Card Access not found");
+
+            entity.Status = 0;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
         }
     }

@@ -1069,6 +1069,12 @@ namespace Repositories.DbContexts
                     .WithOne(e => e.CardAccess)
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.AccessScope)
+                .HasConversion(
+                        v => v.ToString().ToLower(), // Simpan ke DB sebagai "single"
+                        v => (AccessScope)Enum.Parse(typeof(AccessScope), v, true)
+                    );
             });
 
             // CardAccessMaskedArea (pivot CardAccess <-> FloorplanMaskedArea)
@@ -1155,8 +1161,6 @@ namespace Repositories.DbContexts
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId);
             });   
-           
-
             
         }
     }

@@ -318,32 +318,6 @@ namespace Repositories.Seeding
                     .RuleFor(f => f.Status, f => 1);
 
                 var floors = floorFaker.Generate(1);
-
-                                // Custom seeding
-                var floor = new MstFloor
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Gedung Tracking People",
-                    FloorImage = "https://example.com/buildings/custom.jpg",
-                    PixelX = 1280,
-                    PixelY = 280,
-                    FloorX = 17,
-                    FloorY = 4,
-                    MeterPerPx = 0.0137834819033742F,
-                    EngineFloorId = 10000,
-                    ApplicationId = context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id,
-                    CreatedBy = "System",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = "System",
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = 1
-                };
-                floors.Add(floor);
-
                 context.MstFloors.AddRange(floors);
                 context.SaveChanges();
             }
