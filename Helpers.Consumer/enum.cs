@@ -152,4 +152,10 @@ namespace Helpers.Consumer
         Start,
         Stop
     }
+    public enum AlarmLevelPriority
+    {
+        High,
+        Medium,
+        Low
+    }
 }

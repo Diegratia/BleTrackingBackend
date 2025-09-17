@@ -21,11 +21,11 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<CardGroupCreateDto, CardGroup>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope)));
+                .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)));
 
             CreateMap<CardGroupUpdateDto, CardGroup>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope)));
+                .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)));
 
             CreateMap<Card, CardDto>();
             CreateMap<Card, CardMinimalDto>();

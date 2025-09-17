@@ -35,6 +35,7 @@ namespace Repositories.DbContexts
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         public DbSet<Card> Cards{ get; set; }
         public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
+        public DbSet<AlarmCategorySettings> AlarmCategorySettings{ get; set; }
         
         // CardAccessService
         public DbSet<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; }
@@ -1114,6 +1115,27 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
+            });
+            
+            modelBuilder.Entity<AlarmCategorySettings>(entity =>
+            {
+                entity.ToTable("alarm_category_settings");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).IsRequired();
+
+                entity.Property(e => e.AlarmCategory)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
+                    );
+                entity.Property(e => e.AlarmLevelPriority)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmLevelPriority)Enum.Parse(typeof(AlarmLevelPriority), v, true)
+                    );
             });
 
             // Card

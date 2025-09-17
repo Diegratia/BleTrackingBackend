@@ -130,11 +130,15 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(AlarmTriggersProfile));
+builder.Services.AddAutoMapper(typeof(AlarmCategorySettingsProfile));
+
 // Registrasi Services
 builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
+builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<AlarmTriggersRepository>();
+builder.Services.AddScoped<AlarmCategorySettingsRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_TRIGGERS_PORT") ??
            builder.Configuration["Ports:AlarmTriggersService"] ?? "10027";
