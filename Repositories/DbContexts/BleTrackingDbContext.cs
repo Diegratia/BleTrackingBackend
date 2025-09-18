@@ -44,6 +44,8 @@ namespace Repositories.DbContexts
         public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
         public DbSet<TimeBlock> TimeBlocks{ get; set; }
         public DbSet<TimeGroup> TimeGroups{ get; set; }
+        public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
+        public DbSet<Geofence> Geofences{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -79,6 +81,8 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
+            modelBuilder.Entity<Geofence>().ToTable("geofence");
+            modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
@@ -293,6 +297,18 @@ namespace Repositories.DbContexts
                 entity.Property(m => m.Status)
                     .IsRequired()
                     .HasDefaultValue(1);
+            });
+
+             // MonitoringConfig
+            modelBuilder.Entity<MonitoringConfig>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // MstMember
@@ -692,6 +708,17 @@ namespace Repositories.DbContexts
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
                 
                     );
+            });
+            // Geofence
+            modelBuilder.Entity<Geofence>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
                 modelBuilder.Entity<AlarmTriggers>(entity =>

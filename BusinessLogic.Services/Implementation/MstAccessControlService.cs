@@ -83,6 +83,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var accessControl = await _repository.GetByIdAsync(id);
+            if (accessControl == null) throw new KeyNotFoundException("Access Control not found");
             accessControl.UpdatedBy = username;
             accessControl.UpdatedAt = DateTime.UtcNow;
             accessControl.Status = 0;

@@ -86,6 +86,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var category = await _repository.GetByIdAsync(id);
+                if(category == null)
+                    throw new KeyNotFoundException("Category not found");
             category.UpdatedAt = DateTime.UtcNow;
             category.UpdatedBy = username;
             await _repository.DeleteAsync(id);

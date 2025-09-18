@@ -295,15 +295,33 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
-  license-checker:
+  monitoring-config:
     build:
       context: .
-      dockerfile: Services.API/LicenseChecker/Dockerfile
+      dockerfile: Services.API/MonitoringConfig/Dockerfile
+    ports:
+      - "10029:10029"
     volumes:
-      - ./license.txt:/app/license.txt
-    stdin_open: true # biar bisa input dari keyboard
-    tty: true
-    restart: "no"
+      - ./.env:/app/.env
+    restart: always
+  geofence:
+    build:
+      context: .
+      dockerfile: Services.API/Geofence/Dockerfile
+    ports:
+      - "10030:10030"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  # license-checker:
+  #   build:
+  #     context: .
+  #     dockerfile: Services.API/LicenseChecker/Dockerfile
+  #   volumes:
+  #     - ./license.txt:/app/license.txt
+  #   stdin_open: true # biar bisa input dari keyboard
+  #   tty: true
+  #   restart: "no"
 
   nginx:
     build:

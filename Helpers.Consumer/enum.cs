@@ -115,7 +115,10 @@ namespace Helpers.Consumer
         WrongZone,
         Expired,
         Lost,
-        Blacklist
+        Blacklist,
+        Geofence,
+        OverPopulating,
+        StayOnArea
     }
 
     public enum ActionStatus

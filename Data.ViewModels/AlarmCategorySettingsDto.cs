@@ -16,14 +16,12 @@ namespace Data.ViewModels
     }
     public class AlarmCategorySettingsCreateDto : BaseModelDto
     {
-        public string? AlarmCategory { get; set; }
         public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
         public int? IsEnabled { get; set; } = 0;
     }
     public class AlarmCategorySettingsUpdateDto
     {
-        public string? AlarmCategory { get; set; }
         public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
         public int? IsEnabled { get; set; }

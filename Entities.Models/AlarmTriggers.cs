@@ -10,7 +10,7 @@ namespace Entities.Models
 {
     public class AlarmTriggers : BaseModelOnlyId, IApplicationEntity
     {
-        [Column("beacon_id")]
+        [Column("beacon_id", TypeName = "nvarchar(16)")]
         public string? BeaconId { get; set; }
 
         [Column("floorplan_id")]

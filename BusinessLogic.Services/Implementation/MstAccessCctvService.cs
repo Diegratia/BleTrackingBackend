@@ -80,6 +80,10 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var accessCctv = await _repository.GetByIdAsync(id);
+            if (accessCctv == null)
+            {
+                throw new KeyNotFoundException("Access CCTV not found");
+            }
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             accessCctv.UpdatedBy = username;
             accessCctv.UpdatedAt = DateTime.UtcNow;

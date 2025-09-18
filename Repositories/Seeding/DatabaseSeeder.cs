@@ -12,9 +12,6 @@ namespace Repositories.Seeding
     {
         public static void Seed(BleTrackingDbContext context)
         {
-
-   
-
             // 2. MstApplication
             if (!context.MstApplications.Any(a => a.ApplicationStatus != 0))
             {

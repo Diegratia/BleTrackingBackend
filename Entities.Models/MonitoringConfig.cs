@@ -8,7 +8,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MonitoringConfig : BaseModelOnlyIdWithTime
+    public class MonitoringConfig : BaseModelOnlyIdWithTime, IApplicationEntity
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
