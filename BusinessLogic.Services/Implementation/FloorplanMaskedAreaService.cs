@@ -15,6 +15,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -24,6 +25,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMqttPublisher _mqttPublisher;
 
 
 
@@ -31,13 +33,15 @@ namespace BusinessLogic.Services.Implementation
             FloorplanMaskedAreaRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            FloorplanDeviceRepository floorplanDeviceRepository
+            FloorplanDeviceRepository floorplanDeviceRepository,
+            IMqttPublisher mqttPublisher
             )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorplanDeviceRepository = floorplanDeviceRepository;
+            _mqttPublisher = mqttPublisher;
         }
 
         public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
@@ -49,6 +53,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync()
         {
             var areas = await _repository.GetAllAsync();
+            await _mqttPublisher.PublishAsync("engine/refresh/all", "");
             return _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(areas);
         }
 
@@ -74,7 +79,9 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedBy = username;
             area.UpdatedAt = DateTime.UtcNow;
 
+
             await _repository.AddAsync(area);
+            await _mqttPublisher.PublishAsync("engine/refresh/all", "");
             return _mapper.Map<FloorplanMaskedAreaDto>(area);
         }
 
@@ -94,7 +101,9 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, area);
             await _repository.UpdateAsync(area);
+            await _mqttPublisher.PublishAsync("engine/refresh/all", "");
         }
+
 
         public async Task DeleteAsync(Guid id)
         {
@@ -104,6 +113,7 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedAt = DateTime.UtcNow;
             area.Status = 0;
             await _repository.SoftDeleteAsync(id);
+            await _mqttPublisher.PublishAsync("engine/refresh/all", "");
         }
         
 
@@ -121,6 +131,7 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedAt = DateTime.UtcNow;
                 area.Status = 0;
                 await _repository.SoftDeleteAsync(id);
+                await _mqttPublisher.PublishAsync("engine/refresh/all", "");
 
                 // Soft delete child entities via their repositories
                 var floorplandevices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);

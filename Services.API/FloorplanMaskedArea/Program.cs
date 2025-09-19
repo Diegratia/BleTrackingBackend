@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -144,6 +145,9 @@ builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaServi
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
+
+builder.Services.AddSingleton<IMqttPublisher, MqttPublisher>();
+
 
 var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "10004" ??
            builder.Configuration["Ports:FloorplanMaskedAreaService"];

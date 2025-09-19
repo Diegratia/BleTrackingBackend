@@ -20,11 +20,13 @@ namespace BusinessLogic.Services.Implementation
     public class MonitoringConfigService : IMonitoringConfigService
     {
         private readonly MonitoringConfigRepository _repository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public MonitoringConfigService(MonitoringConfigRepository repository, IMapper mapper)
+        public MonitoringConfigService(MonitoringConfigRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
 
@@ -43,7 +45,12 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MonitoringConfigDto> CreateAsync(MonitoringConfigCreateDto createDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var config = _mapper.Map<MonitoringConfig>(createDto);
+            config.CreatedAt = DateTime.Now;
+            config.CreatedBy = username;
+            config.UpdatedAt = DateTime.Now;
+            config.UpdatedBy = username;
 
             await _repository.AddAsync(config);
             return _mapper.Map<MonitoringConfigDto>(config);
@@ -51,19 +58,26 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var config = await _repository.GetByIdAsync(id);
             if (config == null)
                 throw new KeyNotFoundException("Config not found");
             _mapper.Map(updateDto, config);
+
+            config.UpdatedAt = DateTime.Now;
+            config.UpdatedBy = username;
 
             await _repository.UpdateAsync(config);
         }
 
         public async Task DeleteAsync(Guid id)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var config = await _repository.GetByIdAsync(id);
             if (config == null)
                 throw new KeyNotFoundException("Config not found");
+            config.UpdatedAt = DateTime.Now;
+            config.UpdatedBy = username;
             await _repository.DeleteAsync(id);
         }
 
