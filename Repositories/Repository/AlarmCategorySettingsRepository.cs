@@ -19,7 +19,7 @@ namespace Repositories.Repository
         public async Task<AlarmCategorySettings> GetByIdAsync(Guid id)
         {
 
-            return await GetAllQueryable()
+            return await GetAllQueryable().Where(x => x.Id == id)
             .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Category not found");
         }
         public async Task<AlarmCategorySettings> AddAsync(AlarmCategorySettings category)
@@ -60,7 +60,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.AlarmCategorySettings
-                .Where(d => d.Id == id );
+                .Where(d => d.Id == id);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var category = await query.FirstOrDefaultAsync();

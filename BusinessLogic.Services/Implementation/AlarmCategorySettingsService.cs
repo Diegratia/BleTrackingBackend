@@ -77,6 +77,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Category not found");
             category.UpdatedAt = DateTime.UtcNow;
             category.UpdatedBy = username;
+            
             _mapper.Map(updateDto, category);
 
             await _repository.UpdateAsync(category);
