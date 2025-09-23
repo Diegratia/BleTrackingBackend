@@ -92,7 +92,7 @@ namespace Web.API.Controllers.Controllers
         // POST: api/MstFloorplan
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MstFloorplanCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] MstFloorplanCreateDto dto)
         {
             if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
@@ -132,7 +132,7 @@ namespace Web.API.Controllers.Controllers
         // PUT: api/MstFloorplan/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorplanUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorplanUpdateDto dto)
         {
            if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
@@ -439,7 +439,7 @@ namespace Web.API.Controllers.Controllers
         // POST: api/MstFloorplan
         [AllowAnonymous]
         [HttpPost("open")]
-        public async Task<IActionResult> OpenCreate([FromBody] MstFloorplanCreateDto dto)
+        public async Task<IActionResult> OpenCreate([FromForm] MstFloorplanCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -479,7 +479,7 @@ namespace Web.API.Controllers.Controllers
         // PUT: api/MstFloorplan/{id}
         [AllowAnonymous]
         [HttpPut("open/{id}")]
-        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] MstFloorplanUpdateDto dto)
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromForm] MstFloorplanUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {

@@ -88,7 +88,7 @@ namespace Web.API.Controllers.Controllers
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] MstFloorCreateDto mstFloorDto)
+        public async Task<IActionResult> Create([FromBody] MstFloorCreateDto mstFloorDto)
         {
             if (!ModelState.IsValid )
             {
@@ -127,7 +127,7 @@ namespace Web.API.Controllers.Controllers
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorUpdateDto mstFloorDto)
         {
             if (!ModelState.IsValid )
             {
@@ -433,7 +433,7 @@ namespace Web.API.Controllers.Controllers
 
         [AllowAnonymous]
         [HttpPost("open")]
-        public async Task<IActionResult> OpenCreate([FromForm] MstFloorCreateDto mstFloorDto)
+        public async Task<IActionResult> OpenCreate([FromBody] MstFloorCreateDto mstFloorDto)
         {
             if (!ModelState.IsValid )
             {
@@ -472,7 +472,7 @@ namespace Web.API.Controllers.Controllers
 
         [AllowAnonymous]
         [HttpPut("open/{id}")]
-        public async Task<IActionResult> OpenUpdate(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] MstFloorUpdateDto mstFloorDto)
         {
             if (!ModelState.IsValid )
             {
