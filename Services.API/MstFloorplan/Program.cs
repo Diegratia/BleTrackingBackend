@@ -182,15 +182,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 // Buat direktori Uploads/FloorplanImages jika belum ada
-// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorplanImages");
-// Directory.CreateDirectory(uploadsPath);
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorplanImages");
+Directory.CreateDirectory(uploadsPath);
 
 // // Sajikan file statis di /Uploads/FloorplanImages/
-// app.UseStaticFiles(new StaticFileOptions
-// {
-//     FileProvider = new PhysicalFileProvider(uploadsPath),
-//     RequestPath = "/Uploads/FloorplanImages"
-// });
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/FloorplanImages"
+});
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();
