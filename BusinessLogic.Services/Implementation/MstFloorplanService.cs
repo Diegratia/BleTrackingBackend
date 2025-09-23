@@ -69,35 +69,35 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
 
-            // if (createDto.FloorplanImage != null && createDto.FloorplanImage.Length > 0)
-            // {
-            //     if (string.IsNullOrEmpty(createDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorplanImage.ContentType))
-            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            if (createDto.FloorplanImage != null && createDto.FloorplanImage.Length > 0)
+            {
+                if (string.IsNullOrEmpty(createDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorplanImage.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-            //     if (createDto.FloorplanImage.Length > MaxFileSize)
-            //         throw new ArgumentException("File size exceeds 50 MB limit.");
+                if (createDto.FloorplanImage.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
 
-            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
-            //     Directory.CreateDirectory(uploadDir);
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                Directory.CreateDirectory(uploadDir);
 
-            //     var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
-            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
-            //     var filePath = Path.Combine(uploadDir, fileName);
+                var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
 
-            //     try
-            //     {
-            //         using (var stream = new FileStream(filePath, FileMode.Create))
-            //         {
-            //             await createDto.FloorplanImage.CopyToAsync(stream);
-            //         }
-            //     }
-            //     catch (IOException ex)
-            //     {
-            //         throw new IOException("Failed to save image file.", ex);
-            //     }
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createDto.FloorplanImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
 
-            //     floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
-            // }
+                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+            }
 
 
             floorplan.Id = Guid.NewGuid();
