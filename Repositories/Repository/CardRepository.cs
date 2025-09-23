@@ -103,7 +103,7 @@ namespace Repositories.Repository
         public async Task<FloorplanMaskedArea?> GetMaskedAreaByIdAsync(Guid id)
         {
             return await _context.FloorplanMaskedAreas
-                .WithActiveRelations()
+                // .WithActiveRelations()
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 

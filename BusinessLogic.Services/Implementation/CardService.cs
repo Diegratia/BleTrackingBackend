@@ -199,13 +199,21 @@ namespace BusinessLogic.Services.Implementation
             foreach (var row in rows)
             {
 
-                var maskedAreaStr = row.Cell(1).GetValue<string>();
-                if (!Guid.TryParse(maskedAreaStr, out var maskedAreaId))
-                    throw new ArgumentException($"Invalid maskedAreaId format at row {rowNumber}");
+               var maskedAreaStr = row.Cell(1).GetValue<string>();
 
-                var maskedArea = await _repository.GetMaskedAreaByIdAsync(maskedAreaId);
-                if (maskedArea == null)
-                    throw new ArgumentException($"maskedAreaId {maskedAreaId} not found at row {rowNumber}");
+                Guid? maskedAreaId = null;
+
+                if (!string.IsNullOrWhiteSpace(maskedAreaStr))
+                {
+                    if (!Guid.TryParse(maskedAreaStr, out var parsed))
+                        throw new ArgumentException($"Invalid maskedAreaId format at row {rowNumber}");
+
+                    var maskedArea = await _repository.GetMaskedAreaByIdAsync(parsed);
+                    if (maskedArea == null)
+                        throw new ArgumentException($"maskedAreaId {parsed} not found at row {rowNumber}");
+
+                    maskedAreaId = parsed;
+                }
 
 
                 var card = new Card
@@ -214,7 +222,7 @@ namespace BusinessLogic.Services.Implementation
                     RegisteredMaskedAreaId = maskedAreaId,
                     Name = row.Cell(2).GetValue<string>(),
                     Remarks = row.Cell(3).GetValue<string>() ?? null,
-                    CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>()),
+                    CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>(), ignoreCase: true),
                     CardNumber = row.Cell(5).GetValue<string>() ?? null,
                     QRCode = row.Cell(6).GetValue<string>() ?? null,
                     IsMultiMaskedArea = row.Cell(7).GetValue<bool?>() ?? false,
