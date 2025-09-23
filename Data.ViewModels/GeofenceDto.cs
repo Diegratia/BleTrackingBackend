@@ -12,6 +12,10 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? EngineId { get; set; }
+        public int IsActive { get; set; }
         public int Status { get; set; }
     }
     public class GeofenceCreateDto
@@ -20,6 +24,10 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? EngineId { get; set; }
+        public int IsActive { get; set; }
     }
     public class GeofenceUpdateDto
     {
@@ -27,5 +35,9 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? EngineId { get; set; }
+        public int IsActive { get; set; }
     }
 }

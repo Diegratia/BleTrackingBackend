@@ -715,9 +715,21 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

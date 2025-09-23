@@ -19,12 +19,27 @@ namespace Entities.Models
         public string? Color { get; set; }
         [Column("remarks")]
         public string? Remarks { get; set; }
+
+        [Column("floorplan_id")]
+        public Guid? FloorplanId { get; set; }
+
+        [Column("floor_id")]
+        public Guid? FloorId { get; set; }
+
+        [Column("engine_id")]
+        public string? EngineId { get; set; }
+
+        [Column("is_active")]
+        public int IsActive { get; set; }
+
         [Column("status")]
         public int Status { get; set; } = 1;
 
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
         public MstApplication Application { get; set; }
+        public MstFloor Floor { get; set; } //MstFloor
+        public MstFloorplan Floorplan { get; set; }
 
     }
 }

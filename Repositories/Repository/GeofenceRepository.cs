@@ -83,7 +83,10 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.Geofences.Where(d => d.Status != 0);
+            var query = _context.Geofences
+            .Include(d => d.Floor)
+            .Include(d => d.Floorplan)
+            .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
