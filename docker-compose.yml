@@ -36,7 +36,6 @@ services:
     ports:
       - "10013:10013"
     volumes:
-      - ./Uploads/FloorImages:/app/Uploads/FloorImages
       - ./.env:/app/.env
     restart: always
 
@@ -47,6 +46,7 @@ services:
     ports:
       - "10014:10014"
     volumes:
+      - ./Uploads/FloorplanImages:/app/Uploads/FloorplanImages
       - ./.env:/app/.env
     restart: always
 
