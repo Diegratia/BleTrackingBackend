@@ -118,7 +118,7 @@ namespace BusinessLogic.Services.Implementation
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-                        if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
+                if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
             {
                 if (string.IsNullOrEmpty(updateDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorplanImage.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation
                 if (updateDto.FloorplanImage.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
                 Directory.CreateDirectory(uploadDir);
 
                 if (!string.IsNullOrEmpty(floorplan.FloorplanImage))

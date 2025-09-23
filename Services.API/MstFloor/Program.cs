@@ -192,17 +192,17 @@ if (app.Environment.IsDevelopment())
 //     RequestPath = "/Uploads"
 // });
 
-app.UseCors("AllowAll");
-// Buat direktori Uploads/FloorImages jika belum ada
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
-Directory.CreateDirectory(uploadsPath);
+// app.UseCors("AllowAll");
+// // Buat direktori Uploads/FloorImages jika belum ada
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
+// Directory.CreateDirectory(uploadsPath);
 
-// Sajikan file statis di /Uploads/FloorImages/
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/Uploads/FloorImages"
-});
+// // Sajikan file statis di /Uploads/FloorImages/
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/FloorImages"
+// });
 
 
 // app.UseHttpsRedirection();
