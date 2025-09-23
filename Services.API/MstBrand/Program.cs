@@ -15,9 +15,11 @@
     using FluentValidation;
     using FluentValidation.AspNetCore;
     using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 
-    try
+try
     {
         Env.Load("/app/.env");
     }
@@ -141,13 +143,22 @@
     });
 
 
-
-
-
     builder.Services.AddHttpContextAccessor();
 
     builder.Services.AddScoped<IMstBrandService, MstBrandService>();
     builder.Services.AddScoped<MstBrandRepository>();
+
+            builder.Services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("fixed", opt =>
+            {
+                opt.Window = TimeSpan.FromMinutes(15);
+                opt.PermitLimit = 150;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
 
     var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "10009" ??
             builder.Configuration["Ports:MstBrandService"];
@@ -188,7 +199,8 @@
     app.UseApiKeyAuthentication();
     app.UseAuthentication();
     app.UseAuthorization();
-    app.MapControllers();
+    app.UseRateLimiter();
+    app.MapControllers().RequireRateLimiting("fixed");
     app.Run();
 
 

@@ -17,7 +17,8 @@ namespace Entities.Models
         public string? AreaShape { get; set; }
         [Column("color")]
         public string? Color { get; set; }
-
+        [Column("remarks")]
+        public string? Remarks { get; set; }
         [Column("status")]
         public int Status { get; set; } = 1;
 

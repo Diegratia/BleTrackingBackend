@@ -27,6 +27,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
         private readonly IFloorplanMaskedAreaService _maskedAreaService;
+        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
@@ -66,6 +68,38 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
+
+            // if (createDto.FloorplanImage != null && createDto.FloorplanImage.Length > 0)
+            // {
+            //     if (string.IsNullOrEmpty(createDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorplanImage.ContentType))
+            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+            //     if (createDto.FloorplanImage.Length > MaxFileSize)
+            //         throw new ArgumentException("File size exceeds 50 MB limit.");
+
+            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+            //     Directory.CreateDirectory(uploadDir);
+
+            //     var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
+            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            //     var filePath = Path.Combine(uploadDir, fileName);
+
+            //     try
+            //     {
+            //         using (var stream = new FileStream(filePath, FileMode.Create))
+            //         {
+            //             await createDto.FloorplanImage.CopyToAsync(stream);
+            //         }
+            //     }
+            //     catch (IOException ex)
+            //     {
+            //         throw new IOException("Failed to save image file.", ex);
+            //     }
+
+            //     floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+            // }
+
+
             floorplan.Id = Guid.NewGuid();
             floorplan.Status = 1;
             floorplan.CreatedBy = username;
@@ -83,6 +117,53 @@ namespace BusinessLogic.Services.Implementation
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
+
+                        if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
+            {
+                if (string.IsNullOrEmpty(updateDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorplanImage.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (updateDto.FloorplanImage.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+                Directory.CreateDirectory(uploadDir);
+
+                if (!string.IsNullOrEmpty(floorplan.FloorplanImage))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floorplan.FloorplanImage.TrimStart('/'));
+                    if (File.Exists(oldFilePath))
+                    {
+                        try
+                        {
+                            File.Delete(oldFilePath);
+                        }
+                        catch (IOException ex)
+                        {
+                            throw new IOException("Failed to delete old image file.", ex);
+                        }
+                    }
+                }
+
+                var fileExtension = Path.GetExtension(updateDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await updateDto.FloorplanImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
+
+                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+            }
+
 
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;

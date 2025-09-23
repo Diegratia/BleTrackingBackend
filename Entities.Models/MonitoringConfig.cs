@@ -10,8 +10,11 @@ namespace Entities.Models
 {
     public class MonitoringConfig : BaseModelOnlyIdWithTime, IApplicationEntity
     {
+        [Column("name")]
         public string? Name { get; set; }
+        [Column("description")]
         public string? Description { get; set; }
+        [Column("config")]
         [Required]
         public string Config { get; set; }
 

@@ -43,7 +43,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
 
-            public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
         {
             var departments = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstDepartmentDto>>(departments);
@@ -109,7 +109,7 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
-         public async Task<object> MixFilterAsync(DataTablesRequest request)
+        public async Task<object> MixFilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
@@ -124,8 +124,8 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
-        
-         public async Task<byte[]> ExportPdfAsync()
+
+        public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var districts = await _repository.GetAllExportAsync();
@@ -209,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
             return document.GeneratePdf();
         }
 
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var districts = await _repository.GetAllExportAsync();
 
@@ -249,6 +249,45 @@ namespace BusinessLogic.Services.Implementation
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
+        }
+        
+         public async Task<IEnumerable<MstDepartmentDto>> ImportAsync(IFormFile file)
+        {
+            var departments = new List<MstDepartment>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+            int rowNumber = 2; // start dari baris ke 2
+            foreach (var row in rows)
+            {
+
+                var department = new MstDepartment
+                {
+                    Id = Guid.NewGuid(),
+                    Code = row.Cell(1).GetValue<string>(),
+                    Name = row.Cell(2).GetValue<string>(),
+                    DepartmentHost = row.Cell(3).GetValue<string>() ?? "",
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                departments.Add(department);
+                rowNumber++;
+            }
+
+            foreach (var department in departments)
+            {
+                await _repository.AddAsync(department);
+            }
+
+            return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
     }
 }

@@ -12,6 +12,13 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public Guid FloorId { get; set; }
         // public Guid ApplicationId { get; set; }
+        public string? FloorplanImage { get; set; }
+        public float PixelX { get; set; }
+        public float PixelY { get; set; }
+        public float FloorX { get; set; }
+        public float FloorY { get; set; }
+        public long EngineId { get; set; } 
+        public float MeterPerPx { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }
@@ -31,6 +38,7 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public Guid FloorId { get; set; }
         // public Guid ApplicationId { get; set; }
+        
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }
@@ -45,13 +53,37 @@ namespace Data.ViewModels
     {
         public string Name { get; set; }
         public Guid FloorId { get; set; }
+        public IFormFile? FloorplanImage { get; set; }
+
+        public float PixelX { get; set; }
+
+        public float PixelY { get; set; }
+
+        public float FloorX { get; set; }
+
+        public float FloorY { get; set; }
+
+        public float MeterPerPx { get; set; }
+        public long EngineId { get; set; } 
         // public Guid ApplicationId { get; set; }
     }
 
-    public class MstFloorplanUpdateDto 
+    public class MstFloorplanUpdateDto
     {
         public string Name { get; set; }
         public Guid FloorId { get; set; }
+        public IFormFile? FloorplanImage { get; set; }
+
+        public float PixelX { get; set; }
+
+        public float PixelY { get; set; }
+
+        public float FloorX { get; set; }
+
+        public float FloorY { get; set; }
+
+        public float MeterPerPx { get; set; }
+        public long EngineId { get; set; } 
         // public Guid ApplicationId { get; set; }
     }
 

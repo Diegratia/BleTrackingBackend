@@ -94,7 +94,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] MstFloorplanCreateDto dto)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -134,7 +134,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorplanUpdateDto dto)
         {
-            if (!ModelState.IsValid)
+           if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new

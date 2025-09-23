@@ -15,6 +15,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -39,7 +40,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstMemberDto>>(members);
         }
 
-             public async Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync()
+        public async Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync()
         {
             var members = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstMemberDto>>(members);
@@ -248,7 +249,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2","Status" , "Brand.Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2", "Status", "Brand.Name" };
 
             var filterService = new GenericDataTableService<MstMember, MstMemberDto>(
                 query,
@@ -258,10 +259,10 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
-        
+
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var members = await _repository.GetAllAsync();
 
             var document = Document.Create(container =>
@@ -293,20 +294,20 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
-                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
                         });
 
                         // Table header
@@ -387,7 +388,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var members = await _repository.GetAllExportAsync();
 
@@ -398,7 +399,7 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "PersonId";
-            worksheet.Cell(1, 3).Value = "Organization"; 
+            worksheet.Cell(1, 3).Value = "Organization";
             worksheet.Cell(1, 4).Value = "Department";
             worksheet.Cell(1, 5).Value = "District";
             worksheet.Cell(1, 6).Value = "Identity";
@@ -463,5 +464,73 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
+        
+            public async Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file)
+        {
+            var members = new List<MstMember>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+            int rowNumber = 2; // start dari baris ke 2
+            foreach (var row in rows)
+            {
+                // validasi
+                var organizationIdStr = row.Cell(1).GetValue<string>();
+                if (!Guid.TryParse(organizationIdStr, out var organizationId))
+                    throw new ArgumentException($"Invalid Organization Id format at row {rowNumber}");
+
+                var organization = await _repository.GetOrganizationByIdAsync(organizationId);
+                if (organization == null)
+                    throw new ArgumentException($"OrganizationId {organizationId} not found at row {rowNumber}");
+
+                var departmentIdStr = row.Cell(2).GetValue<string>();
+                if (!Guid.TryParse(departmentIdStr, out var departmentId))
+                    throw new ArgumentException($"Invalid Department Id format at row {rowNumber}");
+
+                var department = await _repository.GetDepartmentByIdAsync(departmentId);
+                if (department == null)
+                    throw new ArgumentException($"Department Id {departmentId} not found at row {rowNumber}");
+
+                var districtIdStr = row.Cell(3).GetValue<string>();
+                if (!Guid.TryParse(districtIdStr, out var districtId))
+                    throw new ArgumentException($"Invalid District Id format at row {rowNumber}");
+
+                var district = await _repository.GetDistrictByIdAsync(districtId);
+                if (district == null)
+                    throw new ArgumentException($"districtId {districtId} not found at row {rowNumber}");
+
+                var member = new MstMember
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = organizationId,
+                    DepartmentId = departmentId,
+                    DistrictId = districtId,
+                    Name = row.Cell(4).GetValue<string>(),
+                    PersonId = row.Cell(5).GetValue<string>(),
+                    CardNumber = row.Cell(6).GetValue<string>(),
+                    Gender = (Gender)Enum.Parse(typeof(Gender), row.Cell(7).GetValue<string>(), ignoreCase: true),
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                members.Add(member);
+                rowNumber++;
+            }
+
+            foreach (var member in members)
+            {
+                await _repository.AddAsync(member);
+            }
+
+            return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+        }
+
     }
 }

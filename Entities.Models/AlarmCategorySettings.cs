@@ -22,6 +22,9 @@ namespace Entities.Models
         [Column("is_enabled")]
         public int? IsEnabled { get; set; } = 0;
 
+        [Column("remarks")]
+        public string? Remarks { get; set; }
+
         [Column("application_id")]
         [Required]
         public Guid ApplicationId { get; set; }

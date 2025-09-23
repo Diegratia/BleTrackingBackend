@@ -74,35 +74,35 @@ namespace BusinessLogic.Services.Implementation
         {
             var floor = _mapper.Map<MstFloor>(createDto);
 
-            if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
-            {
-                if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            // if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
+            // {
+            //     if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
+            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                if (createDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 50 MB limit.");
+            //     if (createDto.FloorImage.Length > MaxFileSize)
+            //         throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-                Directory.CreateDirectory(uploadDir);
+            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+            //     Directory.CreateDirectory(uploadDir);
 
-                var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
+            //     var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            //     var filePath = Path.Combine(uploadDir, fileName);
 
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.FloorImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
+            //     try
+            //     {
+            //         using (var stream = new FileStream(filePath, FileMode.Create))
+            //         {
+            //             await createDto.FloorImage.CopyToAsync(stream);
+            //         }
+            //     }
+            //     catch (IOException ex)
+            //     {
+            //         throw new IOException("Failed to save image file.", ex);
+            //     }
 
-                floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
-            }
+            //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.Id = Guid.NewGuid();
@@ -137,51 +137,51 @@ namespace BusinessLogic.Services.Implementation
             if (floor == null)
                 throw new KeyNotFoundException("Floor not found");
 
-            if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
-            {
-                if (string.IsNullOrEmpty(updateDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            // if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
+            // {
+            //     if (string.IsNullOrEmpty(updateDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
+            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                if (updateDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 50 MB limit.");
+            //     if (updateDto.FloorImage.Length > MaxFileSize)
+            //         throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-                Directory.CreateDirectory(uploadDir);
+            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+            //     Directory.CreateDirectory(uploadDir);
 
-                if (!string.IsNullOrEmpty(floor.FloorImage))
-                {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floor.FloorImage.TrimStart('/'));
-                    if (File.Exists(oldFilePath))
-                    {
-                        try
-                        {
-                            File.Delete(oldFilePath);
-                        }
-                        catch (IOException ex)
-                        {
-                            throw new IOException("Failed to delete old image file.", ex);
-                        }
-                    }
-                }
+            //     if (!string.IsNullOrEmpty(floor.FloorImage))
+            //     {
+            //         var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floor.FloorImage.TrimStart('/'));
+            //         if (File.Exists(oldFilePath))
+            //         {
+            //             try
+            //             {
+            //                 File.Delete(oldFilePath);
+            //             }
+            //             catch (IOException ex)
+            //             {
+            //                 throw new IOException("Failed to delete old image file.", ex);
+            //             }
+            //         }
+            //     }
 
-                var fileExtension = Path.GetExtension(updateDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
+            //     var fileExtension = Path.GetExtension(updateDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            //     var filePath = Path.Combine(uploadDir, fileName);
 
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.FloorImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
+            //     try
+            //     {
+            //         using (var stream = new FileStream(filePath, FileMode.Create))
+            //         {
+            //             await updateDto.FloorImage.CopyToAsync(stream);
+            //         }
+            //     }
+            //     catch (IOException ex)
+            //     {
+            //         throw new IOException("Failed to save image file.", ex);
+            //     }
 
-                floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
-            }
+            //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.UpdatedBy = username;
@@ -300,13 +300,13 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     BuildingId = buildingId,
                     Name = row.Cell(2).GetValue<string>(),
-                    FloorImage = row.Cell(3).GetValue<string>() ?? "",
-                    PixelX = row.Cell(4).GetValue<long>(),
-                    PixelY = row.Cell(5).GetValue<long>(),
-                    FloorX = row.Cell(6).GetValue<long>(),
-                    FloorY = row.Cell(7).GetValue<long>(),
-                    MeterPerPx = row.Cell(8).GetValue<float>(),
-                    EngineFloorId = row.Cell(9).GetValue<long>(),
+                    // FloorImage = row.Cell(3).GetValue<string>() ?? "",
+                    // PixelX = row.Cell(4).GetValue<long>(),
+                    // PixelY = row.Cell(5).GetValue<long>(),
+                    // FloorX = row.Cell(6).GetValue<long>(),
+                    // FloorY = row.Cell(7).GetValue<long>(),
+                    // MeterPerPx = row.Cell(8).GetValue<float>(),
+                    // EngineFloorId = row.Cell(9).GetValue<long>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -398,8 +398,8 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(floor.Building?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.BuildingId.ToString() ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.Name);
-                            table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
-                            table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
+                            // table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
+                            // table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedAt.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedBy ?? "-");
                         }
@@ -454,8 +454,8 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = floor.BuildingId.ToString();
                 worksheet.Cell(row, 4).Value = floor.Name;
-                worksheet.Cell(row, 5).Value = floor.EngineFloorId;
-                worksheet.Cell(row, 6).Value = floor.MeterPerPx;
+                // worksheet.Cell(row, 5).Value = floor.EngineFloorId;
+                // worksheet.Cell(row, 6).Value = floor.MeterPerPx;
                 worksheet.Cell(row, 7).Value = floor.CreatedBy;
                 worksheet.Cell(row, 8).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
                 worksheet.Cell(row, 9).Value = floor.Status == 1 ? "Active" : "Inactive";

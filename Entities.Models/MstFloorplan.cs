@@ -14,6 +14,31 @@ namespace Entities.Models
         [Column("name")]
         public string? Name { get; set; }
 
+        [Column("floorplan_image")]
+        public string? FloorplanImage { get; set; }
+
+         [Column("pixel_x")]
+        public float PixelX { get; set; }
+
+
+        [Column("pixel_y")]
+        public float PixelY { get; set; }
+
+
+        [Column("floor_x")]
+        public float FloorX { get; set; }
+
+
+        [Column("floor_y")]
+        public float FloorY { get; set; }
+
+
+        [Column("meter_per_px")]
+        public float MeterPerPx { get; set; }
+
+        [Column("engine_id")]
+        public long EngineId { get; set; }
+
         [Required]
         [Column("floor_id")]
         public Guid FloorId { get; set; }

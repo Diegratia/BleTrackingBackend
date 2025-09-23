@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -15,8 +16,9 @@ namespace BusinessLogic.Services.Interface
         Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos);
         Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+         Task<IEnumerable<MstDistrictDto>> ImportAsync(IFormFile file);
     }
 }

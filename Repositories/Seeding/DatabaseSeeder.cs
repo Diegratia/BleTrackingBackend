@@ -296,13 +296,13 @@ namespace Repositories.Seeding
                         .First()
                         .Id)
                     .RuleFor(f => f.Name, f => f.Address.StreetName())
-                    .RuleFor(f => f.FloorImage, f => $"https://example.com/floorplans/{f.Random.Word()}.png")
-                    .RuleFor(f => f.PixelX, f => f.Random.Float(1280, 1920))
-                    .RuleFor(f => f.PixelY, f => f.Random.Float(720, 1080))
-                    .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
-                    .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
-                    .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
-                    .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
+                    // .RuleFor(f => f.FloorImage, f => $"https://example.com/floorplans/{f.Random.Word()}.png")
+                    // .RuleFor(f => f.PixelX, f => f.Random.Float(1280, 1920))
+                    // .RuleFor(f => f.PixelY, f => f.Random.Float(720, 1080))
+                    // .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
+                    // .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
+                    // .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
+                    // .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -321,13 +321,13 @@ namespace Repositories.Seeding
                 {
                     Id = Guid.NewGuid(),
                     Name = "Gedung Tracking People",
-                    FloorImage = "https://example.com/buildings/custom.jpg",
-                    PixelX = 1280,
-                    PixelY = 280,
-                    FloorX = 17,
-                    FloorY = 4,
-                    MeterPerPx = 0.0137834819033742F,
-                    EngineFloorId = 10000,
+                    // FloorImage = "https://example.com/buildings/custom.jpg",
+                    // PixelX = 1280,
+                    // PixelY = 280,
+                    // FloorX = 17,
+                    // FloorY = 4,
+                    // MeterPerPx = 0.0137834819033742F,
+                    // EngineFloorId = 10000,
                     ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())

@@ -296,9 +296,6 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
-    
-
-
         // public async Task DeleteTrxVisitorAsync(Guid id)
         // {
         //     var trxvisitor = await _repository.GetByIdAsync(id);

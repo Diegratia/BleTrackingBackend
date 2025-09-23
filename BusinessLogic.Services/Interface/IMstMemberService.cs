@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -14,7 +15,8 @@ namespace BusinessLogic.Services.Interface
         Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto);
         Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);
         Task DeleteMemberAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
     }

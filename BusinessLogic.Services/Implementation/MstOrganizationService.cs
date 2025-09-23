@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
         }
 
-                public async Task<IEnumerable<OpenMstOrganizationDto>> OpenGetAllOrganizationsAsync()
+        public async Task<IEnumerable<OpenMstOrganizationDto>> OpenGetAllOrganizationsAsync()
         {
             var organizations = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstOrganizationDto>>(organizations);
@@ -56,7 +56,7 @@ namespace BusinessLogic.Services.Implementation
             var organization = _mapper.Map<MstOrganization>(dto);
             organization.Id = Guid.NewGuid();
             organization.Status = 1;
-            organization.CreatedBy = username; 
+            organization.CreatedBy = username;
             organization.CreatedAt = DateTime.UtcNow;
             organization.UpdatedBy = username;
             organization.UpdatedAt = DateTime.UtcNow;
@@ -99,8 +99,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Name" }; 
-            var validSortColumns = new[] { "UpdatedAt", "Name" , "Code", "OrganizationHost", "CreatedAt", "Status" };
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "Code", "OrganizationHost", "CreatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstOrganization, MstOrganizationDto>(
                 query,
@@ -188,7 +188,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var organizations = await _repository.GetAllExportAsync();
 
@@ -198,7 +198,7 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "Code";
-            worksheet.Cell(1, 3).Value = "Name"; 
+            worksheet.Cell(1, 3).Value = "Name";
             worksheet.Cell(1, 4).Value = "Organization Host";
             worksheet.Cell(1, 5).Value = "CreatedBy";
             worksheet.Cell(1, 6).Value = "CreatedAt";
@@ -213,8 +213,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = organization.Code;
-                worksheet.Cell(row, 3).Value = organization.Name?? "-";
-                worksheet.Cell(row, 4).Value = organization.OrganizationHost?? "-";
+                worksheet.Cell(row, 3).Value = organization.Name ?? "-";
+                worksheet.Cell(row, 4).Value = organization.OrganizationHost ?? "-";
                 worksheet.Cell(row, 5).Value = organization.CreatedBy ?? "-";
                 worksheet.Cell(row, 6).Value = organization.CreatedAt.ToString("yyyy-MM-dd");
                 worksheet.Cell(row, 7).Value = organization.UpdatedBy ?? "-";
@@ -229,5 +229,45 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
+        
+        public async Task<IEnumerable<MstOrganizationDto>> ImportAsync(IFormFile file)
+        {
+            var organizations = new List<MstOrganization>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+            int rowNumber = 2; // start dari baris ke 2
+            foreach (var row in rows)
+            {
+
+                var organization = new MstOrganization
+                {
+                    Id = Guid.NewGuid(),
+                    Code = row.Cell(1).GetValue<string>(),
+                    Name = row.Cell(2).GetValue<string>(),
+                    OrganizationHost = row.Cell(3).GetValue<string>() ?? "",
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                organizations.Add(organization);
+                rowNumber++;
+            }
+
+            foreach (var organization in organizations)
+            {
+                await _repository.AddAsync(organization);
+            }
+
+            return _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
+        }
+        
     }
 }

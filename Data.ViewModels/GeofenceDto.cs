@@ -9,6 +9,7 @@ namespace Data.ViewModels
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
+        public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
         public int Status { get; set; }
@@ -16,12 +17,14 @@ namespace Data.ViewModels
     public class GeofenceCreateDto
     {
         public string? Name { get; set; }
+        public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
     }
     public class GeofenceUpdateDto
     {
         public string? Name { get; set; }
+        public string? Remarks { get; set; }
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
     }

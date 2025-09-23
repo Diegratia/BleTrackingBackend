@@ -185,7 +185,7 @@ namespace BusinessLogic.Services.Implementation
                     Name = row.Cell(3).GetValue<string>(),
                     AreaShape = row.Cell(4).GetValue<string>(),
                     ColorArea = row.Cell(5).GetValue<string>(),
-                    RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>()),
+                    RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>(), true),
                     EngineAreaId = row.Cell(7).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
@@ -282,7 +282,6 @@ namespace BusinessLogic.Services.Implementation
                                 .PaddingVertical(4)
                                 .PaddingHorizontal(6);
                     });
-
                     page.Footer()
                         .AlignRight()
                         .Text(txt =>

@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstFloorCreateDto mstFloorDto)
         {
-            if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
+            if (!ModelState.IsValid )
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -129,7 +129,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
         {
-            if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
+            if (!ModelState.IsValid )
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -435,7 +435,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPost("open")]
         public async Task<IActionResult> OpenCreate([FromForm] MstFloorCreateDto mstFloorDto)
         {
-            if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
+            if (!ModelState.IsValid )
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
@@ -474,7 +474,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromForm] MstFloorUpdateDto mstFloorDto)
         {
-            if (!ModelState.IsValid || (mstFloorDto.FloorImage != null && mstFloorDto.FloorImage.Length == 0))
+            if (!ModelState.IsValid )
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
