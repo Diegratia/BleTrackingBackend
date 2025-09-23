@@ -192,7 +192,7 @@ if (app.Environment.IsDevelopment())
 //     RequestPath = "/Uploads"
 // });
 
-// app.UseCors("AllowAll");
+app.UseCors("AllowAll");
 // // Buat direktori Uploads/FloorImages jika belum ada
 // var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
 // Directory.CreateDirectory(uploadsPath);
