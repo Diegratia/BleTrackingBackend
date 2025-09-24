@@ -121,7 +121,6 @@ namespace BusinessLogic.Services.Implementation
 
                     card.UpdatedAt = DateTime.UtcNow;
                     card.UpdatedBy = username;
-                    card.ApplicationId = entity.ApplicationId;
                     card.CardGroupId = entity.Id;
                 }
             }
