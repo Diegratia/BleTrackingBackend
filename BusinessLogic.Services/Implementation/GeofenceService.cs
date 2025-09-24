@@ -80,6 +80,8 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Geofence not found");
             }
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            geofence.Status = 0;
+            geofence.IsActive = 0;
             geofence.UpdatedBy = username;
             geofence.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
