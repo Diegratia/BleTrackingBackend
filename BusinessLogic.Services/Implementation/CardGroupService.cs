@@ -18,15 +18,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly CardGroupRepository _repository;
         private readonly CardRepository _cardRepository;
-        private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardGroupService(CardGroupRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, CardRepository cardRepository, CardAccessRepository cardAccessRepository)
+        public CardGroupService(CardGroupRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, CardRepository cardRepository)
         {
             _repository = repository;
             _cardRepository = cardRepository;
-            _cardAccessRepository = cardAccessRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -57,7 +55,7 @@ namespace BusinessLogic.Services.Implementation
         //         {
         //             if (card == null)
         //             {
-        //                 throw new KeyNotFoundException($"Card Access with id {dto.CardAccessIds.First()} not found");
+        //                 throw new KeyNotFoundException($"Card Access with id {dto.CardIds.First()} not found");
         //             }
 
         //             card.UpdatedAt = DateTime.UtcNow;
@@ -95,6 +93,41 @@ namespace BusinessLogic.Services.Implementation
         //         var result = await _repository.AddAsync(entity);
         //         return _mapper.Map<CardGroupDto>(result);  
         // }
+
+        public async Task<CardGroupDto> CreateAsync(CardGroupCreateDto dto)
+        {
+            var entity = _mapper.Map<CardGroup>(dto);
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            entity.Id = Guid.NewGuid();
+            entity.CreatedBy = username;
+            entity.CreatedAt = DateTime.UtcNow;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.Status = 1;
+
+            if (dto.CardIds.Any())
+            {
+                var cards = await _cardRepository.GetAllQueryable()
+                                .Where(c => dto.CardIds.Contains(c.Id))
+                                .ToListAsync();
+
+                foreach (var card in cards)
+                {
+                    if (card == null)
+                    {
+                        throw new KeyNotFoundException($"Card Access with id {dto.CardIds.First()} not found");
+                    }
+
+                    card.UpdatedAt = DateTime.UtcNow;
+                    card.UpdatedBy = username;
+                    card.ApplicationId = entity.ApplicationId;
+                    card.CardGroupId = entity.Id;
+                }
+            }
+                var result = await _repository.AddAsync(entity);
+                return _mapper.Map<CardGroupDto>(result);  
+        }
 
 
 

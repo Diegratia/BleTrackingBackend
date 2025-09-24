@@ -9,8 +9,10 @@ namespace BusinessLogic.Services.Interface
 {
     public interface ICardService
     {
+        Task<CardMinimalsDto> GetByIdAsyncV2(Guid id);
         Task<CardDto> GetByIdAsync(Guid id);
         Task<IEnumerable<CardDto>> GetAllAsync();
+        Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2();
         Task<IEnumerable<OpenCardDto>> OpenGetAllAsync();
         Task<CardDto> CreateAsync(CardCreateDto createDto);
         Task UpdatesAsync(Guid id, CardEditDto dto);

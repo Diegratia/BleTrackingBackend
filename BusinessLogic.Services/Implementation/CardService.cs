@@ -45,11 +45,21 @@ namespace BusinessLogic.Services.Implementation
             var card = await _repository.GetByIdAsync(id);
             return card == null ? null : _mapper.Map<CardDto>(card);
         }
+        public async Task<CardMinimalsDto> GetByIdAsyncV2(Guid id)
+        {
+            var card = await _repository.GetByIdAsync(id);
+            return card == null ? null : _mapper.Map<CardMinimalsDto>(card);
+        }
 
         public async Task<IEnumerable<CardDto>> GetAllAsync()
         {
             var cards = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<CardDto>>(cards);
+        }
+        public async Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2()
+        {
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<CardMinimalsDto>>(cards);
         }
         
                 public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()

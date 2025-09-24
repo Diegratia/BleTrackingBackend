@@ -47,8 +47,70 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [HttpGet("v2")]
+        public async Task<IActionResult> GetAllV2()
+        {
+            try
+            {
+                var cards = await _service.GetAllAsyncV2();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card retrieved successfully",
+                    collection = new { data = cards },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         // GET: api/MstBleReader/{id}
+        [HttpGet("v2/{id}")]
+        public async Task<IActionResult> GetByIdV2(Guid id)
+        {
+            try
+            {
+                var card = await _service.GetByIdAsyncV2(id);
+                if (card == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Card not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = " Card retrieved successfully",
+                    collection = new { data = card },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+         // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
