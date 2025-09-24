@@ -85,43 +85,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // [HttpPost]
-        // public async Task<IActionResult> Create([FromBody] CardGroupCreateDto createDto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CardGroupCreateDto createDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
 
-        //     try
-        //     {
-        //         var createdCardRecord = await _cardGroupService.CreateAsync(createDto);
-        //         return StatusCode(201, new
-        //         {
-        //             success = true,
-        //             msg = "Card Group created successfully",
-        //             collection = new { data = createdCardRecord },
-        //             code = 201
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+            try
+            {
+                var createdCardRecord = await _cardGroupService.CreateAsync(createDto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Card Group created successfully",
+                    collection = new { data = createdCardRecord },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
@@ -171,53 +171,53 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // [HttpPut("{id}")]
-        // public async Task<IActionResult> Update(Guid id, [FromBody] CardGroupUpdateDto dto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] CardGroupUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
 
-        //     try
-        //     {
-        //         await _cardGroupService.UpdateAsync(id, dto);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Card updated successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (KeyNotFoundException)
-        //     {
-        //         return NotFound(new
-        //         {
-        //             success = false,
-        //             msg = "Card not found",
-        //             collection = new { data = (object)null },
-        //             code = 404
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+            try
+            {
+                await _cardGroupService.UpdateAsync(id, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Card not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         // DELETE: api/MstBleReader/{id}
         [HttpDelete("{id}")]
