@@ -38,7 +38,26 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.StatusCard, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+            CreateMap<CardAddDto, Card>()
+           .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+            CreateMap<CardEditDto, Card>()
+           .ForMember(dest => dest.Id, opt => opt.Ignore())
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<CardAccessEdit, Card>()
+           .ForMember(dest => dest.Id, opt => opt.Ignore())
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+
+
+            CreateMap<Card, CardMinimalsDto>()
+                .ForMember(dest => dest.CardAccesses,
+                        opt => opt.MapFrom(src => src.CardCardAccesses.Select(cga => cga.CardAccess)));
+
             CreateMap<Card, CardDto>();
+            CreateMap<CardMinimalsDto, CardAddDto>();
+            
              CreateMap<Card, OpenCardDto>();
                 // .ForMember(dest => dest.CardType, opt => opt.MapFrom(src => src.CardType != null ? src.CardType.ToString() : null));
             // .ForMember(dest => dest.VisitorId, opt => opt.Ignore())

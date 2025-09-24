@@ -40,8 +40,10 @@ namespace Repositories.Repository
                 .Include(b => b.RegisteredMaskedArea)
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
-                .Include(b => b.CardGroup)  
+                .Include(b => b.CardGroup)
                 .Include(b => b.Application)
+                .Include(b => b.CardCardAccesses)
+                        .ThenInclude(cga => cga.CardAccess)
                 .Where(b => b.StatusCard != 0);
 
             query = query.WithActiveRelations();

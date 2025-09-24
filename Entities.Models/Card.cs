@@ -60,7 +60,7 @@ namespace Entities.Models
 
         [Column("status_card")]
         public int? StatusCard { get; set; }
-        
+
         [Required]
         [ForeignKey("Application")]
         [Column("application_id")]
@@ -76,6 +76,9 @@ namespace Entities.Models
         public FloorplanMaskedArea RegisteredMaskedArea { get; set; }
         public CardGroup CardGroup { get; set; }
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<CardCardAccess?> CardCardAccesses { get; set; } = new List<CardCardAccess?>();
+        [NotMapped]
+        public ICollection<CardAccess> CardAccesses => CardCardAccesses.Select(cga => cga.CardAccess).ToList();
     }
 }
 

@@ -19,6 +19,9 @@
         [Column("remarks")]
         public string? Remarks { get; set; }
 
+        [Column("access_scope")]
+        public AccessScope? AccessScope { get; set; }
+
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 

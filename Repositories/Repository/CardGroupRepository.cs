@@ -38,8 +38,8 @@ namespace Repositories.Repository
             var query = _context.CardGroups
                 .Include(b => b.Application)
                 .Include(b => b.Cards)
-               .Include(b => b.CardGroupCardAccesses)
-                        .ThenInclude(cga => cga.CardAccess)
+                // .Include(b => b.CardGroupCardAccesses)
+                //         .ThenInclude(cga => cga.CardAccess)
                 .Where(b => b.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);

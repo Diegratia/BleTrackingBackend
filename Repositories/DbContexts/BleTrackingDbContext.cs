@@ -41,7 +41,8 @@ namespace Repositories.DbContexts
         public DbSet<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; }
         public DbSet<CardGroup> CardGroups{ get; set; }
         public DbSet<CardAccess> CardAccesses{ get; set; }
-        public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
+        // public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
+        public DbSet<CardCardAccess> CardCardAccesses{ get; set; }
         public DbSet<TimeBlock> TimeBlocks{ get; set; }
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
@@ -1084,16 +1085,11 @@ namespace Repositories.DbContexts
                     .HasForeignKey(e => e.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                entity.HasMany(e => e.CardGroupCardAccesses)
-                    .WithOne(e => e.CardGroup)
-                    .HasForeignKey(e => e.CardGroupId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                // entity.HasMany(e => e.CardGroupCardAccesses)
+                //     .WithOne(e => e.CardGroup)
+                //     .HasForeignKey(e => e.CardGroupId)
+                //     .OnDelete(DeleteBehavior.NoAction);
                 
-                entity.Property(e => e.AccessScope)
-                .HasConversion(
-                        v => v.ToString().ToLower(), // Simpan ke DB sebagai "single"
-                        v => (AccessScope)Enum.Parse(typeof(AccessScope), v, true)
-                    );
                 
             });
 
@@ -1117,6 +1113,12 @@ namespace Repositories.DbContexts
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                entity.Property(e => e.AccessScope)
+                .HasConversion(
+                        v => v.ToString().ToLower(), // Simpan ke DB sebagai "single"
+                        v => (AccessScope)Enum.Parse(typeof(AccessScope), v, true)
+                    );
+
               
             });
 
@@ -1139,15 +1141,33 @@ namespace Repositories.DbContexts
             });
 
             // CardGroupCardAccess (pivot CardGroup <-> CardAccess)
-            modelBuilder.Entity<CardGroupCardAccess>(entity =>
+            // modelBuilder.Entity<CardGroupCardAccess>(entity =>
+            // {
+            //     entity.ToTable("card_group_card_accesses");
+
+            //     entity.HasKey(e => new { e.CardGroupId, e.CardAccessId });
+
+            //     entity.HasOne(e => e.CardGroup)
+            //         .WithMany(e => e.CardGroupCardAccesses)
+            //         .HasForeignKey(e => e.CardGroupId)
+            //         .OnDelete(DeleteBehavior.NoAction);
+
+            //     entity.HasOne(e => e.CardAccess)
+            //         .WithMany()
+            //         .HasForeignKey(e => e.CardAccessId)
+            //         .OnDelete(DeleteBehavior.NoAction);
+            // });
+
+                //pivot card dan card access
+                modelBuilder.Entity<CardCardAccess>(entity =>
             {
-                entity.ToTable("card_group_card_accesses");
+                entity.ToTable("card_card_accesses");
 
-                entity.HasKey(e => new { e.CardGroupId, e.CardAccessId });
+                entity.HasKey(e => new { e.CardId, e.CardAccessId });
 
-                entity.HasOne(e => e.CardGroup)
-                    .WithMany(e => e.CardGroupCardAccesses)
-                    .HasForeignKey(e => e.CardGroupId)
+                entity.HasOne(e => e.Card)
+                    .WithMany(e => e.CardCardAccesses)
+                    .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.CardAccess)
@@ -1210,11 +1230,16 @@ namespace Repositories.DbContexts
                     .WithMany(g => g.Cards)
                     .HasForeignKey(m => m.CardGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.HasOne(m => m.Visitor)
                     .WithMany()
                     .HasForeignKey(m => m.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.HasMany(e => e.CardCardAccesses)
+                    .WithOne(e => e.Card)
+                    .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
                 
             });

@@ -17,9 +17,6 @@ namespace Entities.Models
     [Column("remarks")]
     public string? Remarks { get; set; }
 
-    [Column("access_scope")]
-    public AccessScope? AccessScope { get; set; }
-
     [Column("application_id")]
     public Guid ApplicationId { get; set; }
 
@@ -29,9 +26,9 @@ namespace Entities.Models
 
     public MstApplication Application { get; set; }
     public ICollection<Card> Cards { get; set; } = new List<Card>();
-    public ICollection<CardGroupCardAccess?> CardGroupCardAccesses { get; set; } = new List<CardGroupCardAccess?>();
+    // public ICollection<CardGroupCardAccess?> CardGroupCardAccesses { get; set; } = new List<CardGroupCardAccess?>();
 
-     [NotMapped]
-     public ICollection<CardAccess> CardAccesses => CardGroupCardAccesses.Select(cga => cga.CardAccess).ToList();
+    //  [NotMapped]
+    //  public ICollection<CardAccess> CardAccesses => CardGroupCardAccesses.Select(cga => cga.CardAccess).ToList();
   }
 }

@@ -32,11 +32,13 @@ namespace BusinessLogic.Services.Extension
                         src.CardAccessMaskedAreas.Select(ca => ca.MaskedAreaId).ToList()));
 
             CreateMap<CardAccessCreateDto, CardAccess>()
+            .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)))
                 .ForMember(dest => dest.CardAccessMaskedAreas,
                     opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
 
 
             CreateMap<CardAccessUpdateDto, CardAccess>()
+            .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)))
                 .ForMember(dest => dest.CardAccessMaskedAreas,
                     opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
                 

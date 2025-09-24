@@ -145,6 +145,7 @@ builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<CardAccessRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
            builder.Configuration["Ports:CardService"] ?? "10026";
