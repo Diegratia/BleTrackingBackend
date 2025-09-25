@@ -144,7 +144,7 @@ builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
-builder.Services.AddScoped<OverpopulatingRepository>();
+builder.Services.AddScoped<StayOnAreaRepository>();
 
 var port = Environment.GetEnvironmentVariable("GEOFENCE_PORT") ?? "10030" ??
            builder.Configuration["Ports:GeofenceService"];
