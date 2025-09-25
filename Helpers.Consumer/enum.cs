@@ -119,7 +119,8 @@ namespace Helpers.Consumer
         Geofence,
         OverPopulating,
         StayOnArea,
-        Boundary
+        Boundary,
+        CardAccess
     }
 
     public enum ActionStatus
