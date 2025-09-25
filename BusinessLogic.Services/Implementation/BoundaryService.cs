@@ -44,7 +44,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<BoundaryDto> CreateAsync(BoundaryCreateDto createDto)
         {
-            var boundary = _mapper.Map<Geofence>(createDto);
+            var boundary = _mapper.Map<Boundary>(createDto);
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             boundary.Id = Guid.NewGuid();
