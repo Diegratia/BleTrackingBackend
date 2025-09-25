@@ -18,7 +18,8 @@ namespace Helpers.Consumer.Mqtt
             var brokerPort = int.Parse(config["Mqtt:Port"] ?? "1888");
             var username = config["Mqtt:Username"] ?? "bio_mqtt";
             var password = config["Mqtt:Password"] ?? "P@ssw0rd";
-            var clientId = config["Mqtt:ClientId"] ?? Guid.NewGuid().ToString();
+            var clientId = config["Mqtt:ClientId"] + "-" + Guid.NewGuid() ?? Guid.NewGuid().ToString();
+            // var clientId = config["Mqtt:ClientId"] ?? Guid.NewGuid().ToString();
 
             _options = new MqttClientOptionsBuilder()
                 .WithClientId(clientId)

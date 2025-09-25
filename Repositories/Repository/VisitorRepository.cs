@@ -20,7 +20,7 @@ namespace Repositories.Repository
 
         public async Task<List<Visitor>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().AsNoTracking().ToListAsync();
         }
 
         public async Task<Visitor?> GetByIdAsync(Guid id)

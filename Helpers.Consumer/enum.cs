@@ -118,7 +118,8 @@ namespace Helpers.Consumer
         Blacklist,
         Geofence,
         OverPopulating,
-        StayOnArea
+        StayOnArea,
+        Boundary
     }
 
     public enum ActionStatus

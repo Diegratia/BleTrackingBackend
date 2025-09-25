@@ -37,7 +37,8 @@ namespace BusinessLogic.Services.Implementation
         
 
         public async Task<object> FilterAsync(DataTablesRequest request)
-        {
+        {   
+            //comment ini untuk 0 record
             if (request.Length == 0)
             {
                 request.Length = await _query.CountAsync();
@@ -57,9 +58,9 @@ namespace BusinessLogic.Services.Implementation
 
             // var totalRecords = await query.CountAsync();
 
-            // Calculate total records before filtering
-        var totalRecords = await query.CountAsync();
-        // Console.WriteLine($"Total records before filtering: {totalRecords}");
+            // Calculate total records before filtering - comment ini untuk 0 record
+            var totalRecords = await query.CountAsync();
+            // Console.WriteLine($"Total records before filtering: {totalRecords}");
 
             // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
@@ -328,7 +329,7 @@ namespace BusinessLogic.Services.Implementation
                 projectionQuery = query.Select(f => new { Entity = f, MaskedAreaCount = 0 });
             }
 
-            // Hitung recordsTotal dan recordsFiltered dari projectionQuery sebelum paging
+            // Hitung recordsTotal dan recordsFiltered dari projectionQuery sebelum paging - uncomment ini untuk 0 recordsFiltered
             // var totalRecords = await projectionQuery.CountAsync();
 
             // Sorting

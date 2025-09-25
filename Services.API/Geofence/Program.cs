@@ -131,11 +131,20 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(GeofenceProfile));
+builder.Services.AddAutoMapper(typeof(BoundaryProfile));
+builder.Services.AddAutoMapper(typeof(StayOnAreaProfile));
+builder.Services.AddAutoMapper(typeof(OverpopulatingProfile));
 // Registrasi Services
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
+builder.Services.AddScoped<IBoundaryService, BoundaryService>();
+builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
+builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
 builder.Services.AddScoped<GeofenceRepository>();
+builder.Services.AddScoped<OverpopulatingRepository>();
+builder.Services.AddScoped<BoundaryRepository>();
+builder.Services.AddScoped<OverpopulatingRepository>();
 
 var port = Environment.GetEnvironmentVariable("GEOFENCE_PORT") ?? "10030" ??
            builder.Configuration["Ports:GeofenceService"];

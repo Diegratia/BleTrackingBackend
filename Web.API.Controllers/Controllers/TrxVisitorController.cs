@@ -347,7 +347,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-         [Authorize("RequireAllAndUserCreated")]
+        [Authorize("RequireAllAndUserCreated")]
         [HttpPost("minimal/{filter}")]
         public async Task<IActionResult> MinimalFilter([FromBody] DataTablesRequest request)
         {

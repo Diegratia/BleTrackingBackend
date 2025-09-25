@@ -47,6 +47,9 @@ namespace Repositories.DbContexts
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
         public DbSet<Geofence> Geofences{ get; set; }
+        public DbSet<StayOnArea> StayOnAreas{ get; set; }
+        public DbSet<Boundary> Boundarys{ get; set; }
+        public DbSet<Overpopulating> Overpopulatings{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -83,6 +86,9 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
             modelBuilder.Entity<Geofence>().ToTable("geofence");
+            modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
+            modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
+            modelBuilder.Entity<Boundary>().ToTable("boundary");
             modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
@@ -712,6 +718,78 @@ namespace Repositories.DbContexts
             });
             // Geofence
             modelBuilder.Entity<Geofence>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // Boundary
+            modelBuilder.Entity<Boundary>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // StayOnArea
+            modelBuilder.Entity<StayOnArea>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // Overpopulating
+            modelBuilder.Entity<Overpopulating>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
 

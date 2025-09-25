@@ -23,7 +23,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<FloorplanMaskedArea>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().AsNoTracking().ToListAsync();
         }
 
         public async Task<FloorplanMaskedArea> AddAsync(FloorplanMaskedArea area)
