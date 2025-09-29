@@ -146,7 +146,7 @@ builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 
-var port = Environment.GetEnvironmentVariable("GEOFENCE_PORT") ?? "10030" ??
+var port = Environment.GetEnvironmentVariable("GEOFENCE_PORT") ?? "5030" ??
            builder.Configuration["Ports:GeofenceService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

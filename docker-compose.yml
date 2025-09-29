@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Services.API/Auth/Dockerfile
     ports:
-      - "10001:10001"
+      - "5001:5001"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Services.API/FloorplanDevice/Dockerfile
     ports:
-      - "10003:10003"
+      - "5003:5003"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Services.API/FloorplanMaskedArea/Dockerfile
     ports:
-      - "10004:10004"
+      - "5004:5004"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Services.API/MstFloor/Dockerfile
     ports:
-      - "10013:10013"
+      - "5013:5013"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: Services.API/MstFloorplan/Dockerfile
     ports:
-      - "10014:10014"
+      - "5014:5014"
     volumes:
       - ./Uploads/FloorplanImages:/app/Uploads/FloorplanImages
       - ./.env:/app/.env
@@ -55,7 +55,7 @@ services:
       context: .
       dockerfile: Services.API/MstIntegration/Dockerfile
     ports:
-      - "10015:10015"
+      - "5015:5015"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -65,7 +65,7 @@ services:
       context: .
       dockerfile: Services.API/MstAccessControl/Dockerfile
     ports:
-      - "10006:10006"
+      - "5006:5006"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -75,7 +75,7 @@ services:
       context: .
       dockerfile: Services.API/MstAccessCctv/Dockerfile
     ports:
-      - "10005:10005"
+      - "5005:5005"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -85,7 +85,7 @@ services:
       context: .
       dockerfile: Services.API/MstBleReader/Dockerfile
     ports:
-      - "10008:10008"
+      - "5008:5008"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -95,7 +95,7 @@ services:
       context: .
       dockerfile: Services.API/MstBrand/Dockerfile
     ports:
-      - "10009:10009"
+      - "5009:5009"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -105,7 +105,7 @@ services:
       context: .
       dockerfile: Services.API/MstApplication/Dockerfile
     ports:
-      - "10007:10007"
+      - "5007:5007"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -115,7 +115,7 @@ services:
       context: .
       dockerfile: Services.API/Visitor/Dockerfile
     ports:
-      - "10019:10019"
+      - "5019:5019"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -125,7 +125,7 @@ services:
       context: .
       dockerfile: Services.API/AlarmRecordTracking/Dockerfile
     ports:
-      - "10002:10002"
+      - "5002:5002"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -135,7 +135,7 @@ services:
       context: .
       dockerfile: Services.API/MstBuilding/Dockerfile
     ports:
-      - "10010:10010"
+      - "5010:5010"
     # depends_on:
     #   - mst-application
     volumes:
@@ -147,7 +147,7 @@ services:
       context: .
       dockerfile: Services.API/MstDepartment/Dockerfile
     ports:
-      - "10011:10011"
+      - "5011:5011"
     # depends_on:
     #   - mst-application
     volumes:
@@ -159,7 +159,7 @@ services:
       context: .
       dockerfile: Services.API/MstDistrict/Dockerfile
     ports:
-      - "10012:10012"
+      - "5012:5012"
     # depends_on:
     #   - mst-application
     volumes:
@@ -171,7 +171,7 @@ services:
       context: .
       dockerfile: Services.API/MstMember/Dockerfile
     ports:
-      - "10016:10016"
+      - "5016:5016"
     # depends_on:
     #   - mst-application
     #   - mst-organization
@@ -187,7 +187,7 @@ services:
       context: .
       dockerfile: Services.API/MstOrganization/Dockerfile
     ports:
-      - "10017:10017"
+      - "5017:5017"
     # depends_on:
     #   - mst-application
     volumes:
@@ -199,7 +199,7 @@ services:
       context: .
       dockerfile: Services.API/TrackingTransaction/Dockerfile
     ports:
-      - "10018:10018"
+      - "5018:5018"
     # depends_on:
     #   - mst-blereader
     #   - floorplan-masked-area
@@ -212,7 +212,7 @@ services:
       context: .
       dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
     ports:
-      - "10020:10020"
+      - "5020:5020"
     # depends_on:
     #   - floorplan-masked-area
     #   - visitor
@@ -226,7 +226,7 @@ services:
       context: .
       dockerfile: Services.API/BleReaderNode/Dockerfile
     ports:
-      - "10021:10021"
+      - "5021:5021"
     # depends_on:
     #   - mst-blereader
     #   - mst-application
@@ -239,7 +239,7 @@ services:
       context: .
       dockerfile: Services.API/MstEngine/Dockerfile
     ports:
-      - "10022:10022"
+      - "5022:5022"
     # depends_on:
     #   - mst-blereader
     #   - mst-application
@@ -252,7 +252,7 @@ services:
       context: .
       dockerfile: Services.API/CardRecord/Dockerfile
     ports:
-      - "10024:10024"
+      - "5024:5024"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -262,7 +262,7 @@ services:
       context: .
       dockerfile: Services.API/TrxVisitor/Dockerfile
     ports:
-      - "10025:10025"
+      - "5025:5025"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -271,7 +271,7 @@ services:
       context: .
       dockerfile: Services.API/Card/Dockerfile
     ports:
-      - "10026:10026"
+      - "5026:5026"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -281,7 +281,7 @@ services:
       context: .
       dockerfile: Services.API/AlarmTriggers/Dockerfile
     ports:
-      - "10027:10027"
+      - "5027:5027"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -291,7 +291,7 @@ services:
       context: .
       dockerfile: Services.API/CardAccess/Dockerfile
     ports:
-      - "10028:10028"
+      - "5028:5028"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -300,7 +300,7 @@ services:
       context: .
       dockerfile: Services.API/MonitoringConfig/Dockerfile
     ports:
-      - "10029:10029"
+      - "5029:5029"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -309,7 +309,7 @@ services:
       context: .
       dockerfile: Services.API/Geofence/Dockerfile
     ports:
-      - "10030:10030"
+      - "5030:5030"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -328,7 +328,7 @@ services:
       context: .
       dockerfile: Dockerfile.nginx
     ports:
-      - "10000:10000"
+      - "5000:5000"
     volumes:
       - ./.env:/app/.env
     restart: always

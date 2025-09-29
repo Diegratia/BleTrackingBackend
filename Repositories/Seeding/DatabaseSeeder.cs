@@ -302,7 +302,7 @@ namespace Repositories.Seeding
                     // .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
                     // .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
                     // .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
-                    // .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
+                    // .RuleFor(f => f.EngineFloorId, f => f.Random.Long(5000, 99999))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -327,7 +327,7 @@ namespace Repositories.Seeding
                     // FloorX = 17,
                     // FloorY = 4,
                     // MeterPerPx = 0.0137834819033742F,
-                    // EngineFloorId = 10000,
+                    // EngineFloorId = 5000,
                     ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -386,7 +386,7 @@ namespace Repositories.Seeding
                     // .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
                     .RuleFor(i => i.ApiTypeAuth, f => ApiTypeAuth.ApiKey)
                     .RuleFor(i => i.ApiUrl, f => f.Internet.Url())
-                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:10000")
+                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:5000")
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
                     // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())

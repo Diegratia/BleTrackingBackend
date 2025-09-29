@@ -143,7 +143,7 @@ builder.Services.AddScoped<VisitorBlacklistAreaRepository>();
 
 
 var port = Environment.GetEnvironmentVariable("VISITOR_BLACKLIST_AREA_PORT") ??
-           builder.Configuration["Ports:VisitorBlacklistAreaService"] ?? "10020";
+           builder.Configuration["Ports:VisitorBlacklistAreaService"] ?? "5020";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

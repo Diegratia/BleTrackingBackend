@@ -138,7 +138,7 @@ builder.Services.AddScoped<IMstAccessCctvService, MstAccessCctvService>();
 
 builder.Services.AddScoped<MstAccessCctvRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_ACCESS_CCTV_PORT") ?? "10005" ??
+var port = Environment.GetEnvironmentVariable("MST_ACCESS_CCTV_PORT") ?? "5005" ??
            builder.Configuration["Ports:MstAccessCctvService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

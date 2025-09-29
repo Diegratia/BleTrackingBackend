@@ -138,7 +138,7 @@ builder.Services.AddScoped<IMonitoringConfigService, MonitoringConfigService>();
 
 builder.Services.AddScoped<MonitoringConfigRepository>();
 
-var port = Environment.GetEnvironmentVariable("MONITORING_CONFIG_PORT") ?? "10029" ??
+var port = Environment.GetEnvironmentVariable("MONITORING_CONFIG_PORT") ?? "5029" ??
            builder.Configuration["Ports:MonitoringConfigService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

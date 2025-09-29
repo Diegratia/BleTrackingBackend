@@ -15,6 +15,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/AlarmTriggers/out ./
 
-EXPOSE 10027
+EXPOSE 5027
 
 ENTRYPOINT ["dotnet", "AlarmTriggers.dll"]

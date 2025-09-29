@@ -148,7 +148,7 @@ builder.Services.AddScoped<RefreshTokenRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
-var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "10007" ??
+var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "5007" ??
            builder.Configuration["Ports:MstApplicationService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

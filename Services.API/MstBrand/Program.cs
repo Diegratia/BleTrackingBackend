@@ -160,7 +160,7 @@ try
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
 
-    var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "10009" ??
+    var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "5009" ??
             builder.Configuration["Ports:MstBrandService"];
     var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
     var host = env == "Production" ? "0.0.0.0" : "localhost";

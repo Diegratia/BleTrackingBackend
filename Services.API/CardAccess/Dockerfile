@@ -15,5 +15,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/CardAccess/out ./
 
-EXPOSE 10028
+EXPOSE 5028
 ENTRYPOINT ["dotnet", "CardAccess.dll"] 

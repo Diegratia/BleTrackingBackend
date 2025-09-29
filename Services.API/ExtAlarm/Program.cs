@@ -142,7 +142,7 @@ builder.Services.AddScoped<IExtAlarmService, ExtAlarmService>();
 // builder.Services.AddScoped<ExtAlarmRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_RECORD_PORT") ??
-           builder.Configuration["Ports:ExtAlarmPService"] ?? "10027";
+           builder.Configuration["Ports:ExtAlarmPService"] ?? "5027";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

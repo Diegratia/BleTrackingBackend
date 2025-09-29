@@ -55,7 +55,7 @@ builder.Services.AddControllers();
 // Konfigurasi DbContext
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTracking;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
 
 // Konfigurasi AutoMapper
 builder.Services.AddAutoMapper(typeof(AuthProfile));
@@ -169,7 +169,7 @@ builder.Services.AddScoped<RefreshTokenRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
-var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "10001" ??
+var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "5001" ??
            builder.Configuration["Ports:AuthService"] ;
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -184,7 +184,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

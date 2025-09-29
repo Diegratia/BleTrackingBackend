@@ -149,7 +149,7 @@ builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddSingleton<IMqttPublisher, MqttPublisher>();
 
 
-var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "10004" ??
+var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "5004" ??
            builder.Configuration["Ports:FloorplanMaskedAreaService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

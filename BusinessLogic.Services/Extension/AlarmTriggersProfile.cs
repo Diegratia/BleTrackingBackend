@@ -15,10 +15,10 @@ namespace BusinessLogic.Services.Extension
         {
 
             CreateMap<AlarmTriggers, AlarmTriggersDto>()
-               .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
+                .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
                 .ForMember(dest => dest.AlarmRecordStatus, opt => opt.MapFrom(src => src.Alarm.ToString()));
             CreateMap<AlarmTriggers, AlarmTriggersOpenDto>()
-               .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
+                .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
                 .ForMember(dest => dest.AlarmRecordStatus, opt => opt.MapFrom(src => src.Alarm.ToString()));
             CreateMap<AlarmTriggersUpdateDto, AlarmTriggers>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

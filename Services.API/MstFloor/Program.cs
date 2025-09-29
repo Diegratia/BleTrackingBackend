@@ -152,7 +152,7 @@ builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 
 var port = Environment.GetEnvironmentVariable("MST_FLOOR_PORT") ??
-           builder.Configuration["Ports:MstFloorService"] ?? "10013";
+           builder.Configuration["Ports:MstFloorService"] ?? "5013";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

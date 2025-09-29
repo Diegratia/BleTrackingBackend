@@ -727,7 +727,7 @@ public class VisitorService : IVisitorService
             // newTrx.IsMember = isMember;
 
 
-            // var invitationUrl = $"http://192.168.1.116:10000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            // var invitationUrl = $"http://192.168.1.116:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
             var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
             // var memberInvitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
 

@@ -147,7 +147,7 @@ builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ?? "10014" ??
+var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ?? "5014" ??
            builder.Configuration["Ports:MstFloorplanService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

@@ -14,5 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/MstTrackingLog/out ./
 
-EXPOSE 10017
+EXPOSE 5017
 ENTRYPOINT ["dotnet", "MstTrackingLog.dll"] 

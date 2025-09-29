@@ -14,7 +14,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/Services.API/BleReaderNode/out ./
 
-EXPOSE 10021
+EXPOSE 5021
 
 ENTRYPOINT ["dotnet", "BleReaderNode.dll"]
 
