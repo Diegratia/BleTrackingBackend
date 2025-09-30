@@ -23,7 +23,7 @@ namespace Data.ViewModels
 
     public class TimeBlockUpdateDto 
     {
-        public Guid Id { get; set; }
+        public Guid? Id { get; set; }
         public string? DayOfWeek { get; set; }  // pakai string
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }

@@ -34,10 +34,10 @@ CreateMap<TimeBlockCreateDto, TimeBlock>()
 CreateMap<TimeBlockUpdateDto, TimeBlock>()
         // .ForMember(dest => dest.Id, opt => opt.Ignore())
         .ForMember(dest => dest.Generate, opt => opt.Ignore())
-    .ForMember(dest => dest.DayOfWeek,
-        opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.DayOfWeek)
-            ? Enum.Parse<DayOfWeek>(src.DayOfWeek, true)
-            : (DayOfWeek?)null));
+        .ForMember(dest => dest.DayOfWeek,
+            opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.DayOfWeek)
+                ? Enum.Parse<DayOfWeek>(src.DayOfWeek, true)
+                : (DayOfWeek?)null));
         }
     }
 }

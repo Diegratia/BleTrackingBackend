@@ -82,6 +82,7 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Include(a => a.Floor)
                 .Include(a => a.Floorplan)
+                .Include(a => a.Application)
                 .Where(a => a.Status != 0);
 
             query = query.WithActiveRelations();

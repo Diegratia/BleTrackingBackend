@@ -27,7 +27,7 @@ namespace Data.ViewModels
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public List<TimeBlockUpdateDto> TimeBlocks { get; set; } = new();
+        public List<TimeBlockUpdateDto?> TimeBlocks { get; set; } = new();
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
 }

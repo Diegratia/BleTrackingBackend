@@ -17,32 +17,18 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<TimeGroup> GetByIdAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            public async Task<TimeGroup?> GetByIdAsync(Guid id)
+            {
+                return await GetAllQueryable()
+                    .Where(tg => tg.Id == id && tg.Status != 0)
+                    .FirstOrDefaultAsync();
+            }
 
-            var query = _context.TimeGroups
-                .Include(d => d.TimeBlocks)
-                .Where(d => d.Id == id && d.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.FirstOrDefaultAsync();
-        }
-
-        public async Task<IEnumerable<TimeGroup>> GetAllAsync()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.TimeGroups
-                .Include(d => d.TimeBlocks)
-                .Include(ca => ca.CardAccessTimeGroups)
-                .Where(b => b.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
-        }
+            public async Task<IEnumerable<TimeGroup>> GetAllAsync()
+            {
+                return await GetAllQueryable()
+                .ToListAsync();
+            }
 
         public async Task<TimeGroup> AddAsync(TimeGroup entity)
         {
@@ -84,7 +70,8 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.TimeGroups
-                .Include(x => x.TimeBlocks)
+                .Include(d => d.TimeBlocks)
+                .Include(ca => ca.CardAccessTimeGroups)
                 .Where(d => d.Id == id && d.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);

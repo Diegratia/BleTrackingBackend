@@ -242,7 +242,7 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardCardAccesses.Remove(remove);
             }
 
-                    // // Tambah yang baru
+                // // Tambah yang baru
                 var toAdd = newAccessIds.Except(existingAccessIds).ToList();
                 foreach (var addId in toAdd)
                 {

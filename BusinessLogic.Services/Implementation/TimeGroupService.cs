@@ -52,8 +52,16 @@ namespace BusinessLogic.Services.Implementation
         public async Task<TimeGroupDto?> GetByIdAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<TimeGroupDto>(entity);
+            if (entity == null)
+                return null;
+            var dto = _mapper.Map<TimeGroupDto>(entity);
+            dto.CardAccessIds = entity.CardAccessTimeGroups
+                .Select(x => (Guid?)x.CardAccessId)
+                .ToList();
+
+            return dto;
         }
+        
 
         // public async Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto)
         // {
@@ -62,11 +70,22 @@ namespace BusinessLogic.Services.Implementation
         //     return _mapper.Map<TimeGroupDto>(result);
         // }
 
-            public async Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto)
+        public async Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto)
         {
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
             var entity = _mapper.Map<TimeGroup>(dto);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            entity.Id = Guid.NewGuid();
+            entity.ApplicationId = applicationIdClaim != null
+                ? Guid.Parse(applicationIdClaim.Value)
+                : Guid.Empty; // atau throw error kalau wajib
+
+            entity.CreatedBy = username;
+            entity.CreatedAt = DateTime.UtcNow;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.Status = 1;
 
             // Inject CardAccesses (optional)
             if (dto.CardAccessIds.Any())
@@ -78,6 +97,8 @@ namespace BusinessLogic.Services.Implementation
 
                 if (validAccesses.Count != dto.CardAccessIds.Count)
                     throw new ArgumentException("Some CardAccessIds are invalid.");
+                if (applicationIdClaim != null)
+                    entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
 
                 entity.CardAccessTimeGroups = validAccesses
                     .Select(id => new CardAccessTimeGroups
@@ -88,12 +109,6 @@ namespace BusinessLogic.Services.Implementation
                     })
                     .ToList();
             }
-
-            entity.Id = Guid.NewGuid();
-            entity.CreatedBy = username;
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
 
             // Inject ApplicationId ke semua time blocks
             if (applicationIdClaim != null)
@@ -109,7 +124,6 @@ namespace BusinessLogic.Services.Implementation
                     block.UpdatedAt = DateTime.UtcNow;
                 }
             }
-            entity.Status = 1;
 
             var result = await _repository.AddAsync(entity);
 
@@ -121,53 +135,204 @@ namespace BusinessLogic.Services.Implementation
             return dtoResult;
         }
 
-         public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //  public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+        // {
+        //     var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException();
+        //     var entity = await _repository.GetByIdAsync(id);
+        //     if (entity == null)
+        //         throw new KeyNotFoundException();
 
-            // map property scalar saja (jangan map koleksi TimeBlocks)
-            entity.Name = dto.Name;
-            entity.Description = dto.Description;
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
+        //     // map property scalar saja (jangan map koleksi TimeBlocks)
+        //     entity.Name = dto.Name;
+        //     entity.Description = dto.Description;
+        //     entity.UpdatedBy = username;
+        //     entity.UpdatedAt = DateTime.UtcNow;
 
-            // update existing blocks
-            foreach (var blockDto in dto.TimeBlocks.Where(x => x.Id != Guid.Empty))
+        //     if (applicationIdClaim != null)
+        //         entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
+
+        //     // update existing blocks
+        //     foreach (var blockDto in dto.TimeBlocks)
+        //     {
+        //         var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id);
+        //         if (existing != null)
+        //         {
+        //             existing.DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
+        //                 ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
+        //                 : null;
+        //             existing.StartTime = blockDto.StartTime;
+        //             existing.EndTime = blockDto.EndTime;
+        //             existing.UpdatedAt = DateTime.UtcNow;
+        //             existing.UpdatedBy = username;
+        //         }
+        //        else
+        //         {
+        //             var newBlock = new TimeBlock
+        //             {
+        //                 Id = Guid.NewGuid(), // di sini baru assign
+        //                 DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
+        //                     ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
+        //                     : null,
+        //                 StartTime = blockDto.StartTime,
+        //                 EndTime = blockDto.EndTime,
+        //                 TimeGroupId = entity.Id,
+        //                 ApplicationId = entity.ApplicationId,
+        //                 Status = 1,
+        //                 CreatedBy = username,
+        //                 CreatedAt = DateTime.UtcNow,
+        //                 UpdatedBy = username,
+        //                 UpdatedAt = DateTime.UtcNow
+        //             };
+
+        //             entity.TimeBlocks.Add(newBlock);
+        //         }
+
+        //     }
+
+        //     entity.CardAccessTimeGroups.Clear();
+        //      // TimeGroups
+        //     if (dto.CardAccessIds.Any())
+        //     {
+        //         entity.CardAccessTimeGroups = dto.CardAccessIds
+        //             .Where(id => id.HasValue)
+        //             .Select(id => new CardAccessTimeGroups
+        //             {
+        //                 TimeGroupId = entity.Id,
+        //                 CardAccessId = id.Value,
+        //                 ApplicationId = entity.ApplicationId
+        //             })
+        //             .ToList();
+        //     }
+
+        //             Console.WriteLine("Blocks in entity: " + entity.TimeBlocks.Count);
+        // foreach (var b in entity.TimeBlocks)
+        // {
+        //     Console.WriteLine($"Block: {b.Id}, Day={b.DayOfWeek}, Start={b.StartTime}, End={b.EndTime}");
+        // }
+
+        //     await _repository.UpdateAsync(entity);
+        // }
+
+    public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+{
+    var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
+    var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+    var entity = await _repository.GetByIdAsync(id);
+    if (entity == null)
+        throw new KeyNotFoundException("TimeGroup not found");
+
+    // Update scalar
+    entity.Name = dto.Name ?? entity.Name;
+    entity.Description = dto.Description ?? entity.Description;
+    entity.UpdatedBy = username;
+    entity.UpdatedAt = DateTime.UtcNow;
+
+    if (applicationIdClaim != null)
+        entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
+    if (entity.ApplicationId == Guid.Empty)
+        throw new ArgumentException("ApplicationId cannot be empty.");
+
+            // ================================
+            // 🔹 Sync TimeBlocks
+            // ================================
+            // Ambil hanya Id yang memang dikirim (update)
+            // hanya Id lama dari DTO
+            // Id lama yang dikirim client
+var dtoIds = dto.TimeBlocks
+    .Where(b => b.Id.HasValue && b.Id.Value != Guid.Empty)
+    .Select(b => b.Id!.Value)
+    .ToList();
+
+
+            foreach (var blockDto in dto.TimeBlocks)
             {
-                var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id);
-                if (existing != null)
+                if (blockDto.Id.HasValue && blockDto.Id.Value != Guid.Empty) // update existing
                 {
-                    existing.DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
-                        ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
-                        : null;
-                    existing.StartTime = blockDto.StartTime;
-                    existing.EndTime = blockDto.EndTime;
-                    existing.UpdatedAt = DateTime.UtcNow;
-                    existing.UpdatedBy = username;
+                    var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id.Value);
+                    if (existing != null)
+                    {
+                        existing.DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
+                            ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
+                            : existing.DayOfWeek;
+                        existing.StartTime = blockDto.StartTime;
+                        existing.EndTime = blockDto.EndTime;
+                        existing.UpdatedAt = DateTime.UtcNow;
+                        existing.UpdatedBy = username;
+                    }
+                }
+                else // add new
+                {
+                    entity.TimeBlocks.Add(new TimeBlock
+                    {
+                        Id = Guid.NewGuid(),
+                        DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
+                            ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
+                            : null,
+                        StartTime = blockDto.StartTime,
+                        EndTime = blockDto.EndTime,
+                        TimeGroupId = entity.Id,
+                        ApplicationId = entity.ApplicationId,
+                        Status = 1,
+                        CreatedBy = username,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = username,
+                        UpdatedAt = DateTime.UtcNow
+                    });
                 }
             }
 
-            entity.CardAccessTimeGroups.Clear();
-             // TimeGroups
-            if (dto.CardAccessIds.Any())
-            {
-                entity.CardAccessTimeGroups = dto.CardAccessIds
-                    .Where(id => id.HasValue)
-                    .Select(id => new CardAccessTimeGroups
-                    {
-                        TimeGroupId = entity.Id,
-                        CardAccessId = id.Value,
-                        ApplicationId = entity.ApplicationId
-                    })
-                    .ToList();
-            }
 
-            await _repository.UpdateAsync(entity);
+// Cari blok existing di DB (bukan yang baru di-Add)
+var existingDbIds = entity.TimeBlocks
+    .Where(tb => tb.Id != Guid.Empty) // cuma yg punya Id valid
+    .Select(tb => tb.Id)
+    .ToList();
+
+var toRemove = entity.TimeBlocks
+    .Where(b => existingDbIds.Contains(b.Id) && !dtoIds.Contains(b.Id)) 
+    .ToList();
+
+foreach (var remove in toRemove)
+{
+    entity.TimeBlocks.Remove(remove);
+}
+
+
+
+    // ================================
+    // 🔹 Sync CardAccessTimeGroups
+    // ================================
+    if (dto.CardAccessIds != null)
+    {
+        var newIds = dto.CardAccessIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
+        var existingIds = entity.CardAccessTimeGroups.Select(c => c.CardAccessId).ToList();
+
+        // remove
+        var toRemoveAccess = entity.CardAccessTimeGroups
+            .Where(c => !newIds.Contains(c.CardAccessId))
+            .ToList();
+
+        foreach (var rem in toRemoveAccess)
+            entity.CardAccessTimeGroups.Remove(rem);
+
+        // add
+        var toAddAccess = newIds.Except(existingIds).ToList();
+        foreach (var add in toAddAccess)
+        {
+            entity.CardAccessTimeGroups.Add(new CardAccessTimeGroups
+            {
+                TimeGroupId = entity.Id,
+                CardAccessId = add,
+                ApplicationId = entity.ApplicationId
+            });
         }
+    }
+
+    await _repository.UpdateAsync(entity);
+}
 
 
 
