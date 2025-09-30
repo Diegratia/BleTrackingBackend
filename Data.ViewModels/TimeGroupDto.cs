@@ -7,6 +7,7 @@ namespace Data.ViewModels
 {
     public class TimeGroupDto : BaseModelDto
     {
+        public Guid Id { get; set;}
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<TimeBlockDto> TimeBlocks { get; set; } = new();

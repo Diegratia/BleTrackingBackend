@@ -36,7 +36,17 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<TimeGroupDto>> GetAllsAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<TimeGroupDto>>(entities);
+            var dtos = _mapper.Map<List<TimeGroupDto>>(entities);
+
+             foreach (var dto in dtos)
+            {
+                var entity = entities.First(e => e.Id == dto.Id);
+                dto.CardAccessIds = entity.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.CardAccessId)
+                    .ToList();
+            }
+
+            return dtos;
         }
 
         public async Task<TimeGroupDto?> GetByIdAsync(Guid id)
@@ -139,6 +149,21 @@ namespace BusinessLogic.Services.Implementation
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.UpdatedBy = username;
                 }
+            }
+
+            entity.CardAccessTimeGroups.Clear();
+             // TimeGroups
+            if (dto.CardAccessIds.Any())
+            {
+                entity.CardAccessTimeGroups = dto.CardAccessIds
+                    .Where(id => id.HasValue)
+                    .Select(id => new CardAccessTimeGroups
+                    {
+                        TimeGroupId = entity.Id,
+                        CardAccessId = id.Value,
+                        ApplicationId = entity.ApplicationId
+                    })
+                    .ToList();
             }
 
             await _repository.UpdateAsync(entity);
