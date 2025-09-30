@@ -39,6 +39,7 @@ namespace Repositories.DbContexts
         
         // CardAccessService
         public DbSet<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; }
+        public DbSet<CardAccessTimeGroups> CardAccessTimeGroups { get; set; }
         public DbSet<CardGroup> CardGroups{ get; set; }
         public DbSet<CardAccess> CardAccesses{ get; set; }
         // public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
@@ -927,6 +928,11 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.CardAccessTimeGroups)
+                    .WithOne(e => e.TimeGroup)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
                 modelBuilder.Entity<TimeBlock>(entity =>
@@ -1190,6 +1196,11 @@ namespace Repositories.DbContexts
                     .WithOne(e => e.CardAccess)
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasMany(e => e.CardAccessTimeGroups)
+                    .WithOne(e => e.CardAccess)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(e => e.AccessScope)
                 .HasConversion(
@@ -1217,27 +1228,27 @@ namespace Repositories.DbContexts
                     .HasForeignKey(e => e.MaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
+            
+             // CardAccessTimeGroups (pivot CardAccess <-> TimeGroups)
+            modelBuilder.Entity<CardAccessTimeGroups>(entity =>
+            {
+                entity.ToTable("card_access_time_groups");
 
-            // CardGroupCardAccess (pivot CardGroup <-> CardAccess)
-            // modelBuilder.Entity<CardGroupCardAccess>(entity =>
-            // {
-            //     entity.ToTable("card_group_card_accesses");
+                entity.HasKey(e => new { e.CardAccessId, e.TimeGroupId });
 
-            //     entity.HasKey(e => new { e.CardGroupId, e.CardAccessId });
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany(e => e.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            //     entity.HasOne(e => e.CardGroup)
-            //         .WithMany(e => e.CardGroupCardAccesses)
-            //         .HasForeignKey(e => e.CardGroupId)
-            //         .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(e => e.TimeGroup)
+                    .WithMany(ma => ma.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
 
-            //     entity.HasOne(e => e.CardAccess)
-            //         .WithMany()
-            //         .HasForeignKey(e => e.CardAccessId)
-            //         .OnDelete(DeleteBehavior.NoAction);
-            // });
-
-                //pivot card dan card access
-                modelBuilder.Entity<CardCardAccess>(entity =>
+            //pivot card dan card access
+            modelBuilder.Entity<CardCardAccess>(entity =>
             {
                 entity.ToTable("card_card_accesses");
 

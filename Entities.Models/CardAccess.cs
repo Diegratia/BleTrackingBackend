@@ -29,10 +29,8 @@
         [Column("status")]
         public int Status { get; set; } = 1;
         public ICollection<CardAccessMaskedArea?> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea?>();
+        public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
         public MstApplication? Application { get; set; }
-
-        
-
     }
 }
         

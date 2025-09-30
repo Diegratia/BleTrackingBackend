@@ -19,10 +19,16 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private FloorplanMaskedAreaRepository _areaRepository;
+        private TimeGroupRepository _timeGroupRepository;
 
-        public CardAccessService(CardAccessRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, FloorplanMaskedAreaRepository areaRepository)
+        public CardAccessService(CardAccessRepository repository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        FloorplanMaskedAreaRepository areaRepository,
+        TimeGroupRepository timeGroupRepository)
         {
             _repository = repository;
+            _timeGroupRepository = timeGroupRepository;
             _areaRepository = areaRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
@@ -47,37 +53,58 @@ namespace BusinessLogic.Services.Implementation
             if (applicationIdClaim != null)
                 entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
 
-            // inject masked areas
-         if (dto.MaskedAreaIds.Any())
-        {
-            // validasi id yang bener-bener ada
-            var validMaskedAreas = await _areaRepository.GetAllQueryable()
-                .Where(m => dto.MaskedAreaIds.Contains(m.Id))
-                .Select(m => m.Id)
-                .ToListAsync();
-
-            if (validMaskedAreas.Count != dto.MaskedAreaIds.Count)
+            // MaskedAreas
+            if (dto.MaskedAreaIds.Any())
             {
-                throw new ArgumentException("Some MaskedAreaIds are invalid.");
+                var validMaskedAreas = await _areaRepository.GetAllQueryable()
+                    .Where(m => dto.MaskedAreaIds.Contains(m.Id))
+                    .Select(m => m.Id)
+                    .ToListAsync();
+
+                if (validMaskedAreas.Count != dto.MaskedAreaIds.Count)
+                    throw new ArgumentException("Some MaskedAreaIds are invalid.");
+
+                entity.CardAccessMaskedAreas = validMaskedAreas
+                    .Select(id => new CardAccessMaskedArea
+                    {
+                        CardAccessId = entity.Id,
+                        MaskedAreaId = id,
+                        ApplicationId = entity.ApplicationId
+                    }).ToList();
             }
 
-            entity.CardAccessMaskedAreas = validMaskedAreas
-                .Select(id => new CardAccessMaskedArea
-                {
-                    CardAccessId = entity.Id,
-                    MaskedAreaId = id,
-                    ApplicationId = entity.ApplicationId
-                }).ToList();
-        }
+            // TimeGroups
+            if (dto.TimeGroupIds.Any())
+            {
+                var validTimegroups = await _timeGroupRepository.GetAllQueryable()
+                    .Where(t => dto.TimeGroupIds.Contains(t.Id))
+                    .Select(t => t.Id)
+                    .ToListAsync();
 
+                if (validTimegroups.Count != dto.TimeGroupIds.Count)
+                    throw new ArgumentException("Some TimeGroupIds are invalid.");
 
-                var dtoResult = _mapper.Map<CardAccessDto>(entity);
-                dtoResult.MaskedAreaIds = entity.CardAccessMaskedAreas?
+                entity.CardAccessTimeGroups = validTimegroups
+                    .Select(id => new CardAccessTimeGroups
+                    {
+                        CardAccessId = entity.Id,
+                        TimeGroupId = id,
+                        ApplicationId = entity.ApplicationId
+                    }).ToList();
+            }
+
+            
+            await _repository.AddAsync(entity);
+
+            var dtoResult = _mapper.Map<CardAccessDto>(entity);
+            dtoResult.MaskedAreaIds = entity.CardAccessMaskedAreas?
                 .Select(x => (Guid?)x.MaskedAreaId)
                 .ToList();
+            dtoResult.TimeGroupIds = entity.CardAccessTimeGroups?
+                .Select(x => (Guid?)x.TimeGroupId)
+                .ToList();
 
-                await _repository.AddAsync(entity);
-                return dtoResult;
+            return dtoResult;
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

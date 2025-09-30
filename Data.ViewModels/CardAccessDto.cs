@@ -11,14 +11,17 @@ namespace Data.ViewModels
         public string? AccessScope { get; set; }
         public string? Remarks { get; set; }
         public List<Guid?> MaskedAreaIds { get; set; } = new();
+        public List<Guid?> TimeGroupIds { get; set; } = new();
     }
 
-    public class CardAccessUpdateDto 
+    public class CardAccessUpdateDto
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }
         public string? AccessScope { get; set; }
         public List<Guid?> MaskedAreaIds { get; set; } = new();
+        public List<Guid?> TimeGroupIds { get; set; } = new();
+        
     }
 
     public class CardAccessDto : BaseModelDto
@@ -29,5 +32,7 @@ namespace Data.ViewModels
         public string? AccessScope { get; set; }
         public string? Remarks { get; set; }
         public List<Guid?> MaskedAreaIds { get; set; } = new();
+        public List<Guid?> TimeGroupIds { get; set; } = new();
+
     }
 }

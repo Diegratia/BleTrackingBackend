@@ -8,6 +8,7 @@ using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Repository;
 
 namespace BusinessLogic.Services.Implementation
@@ -17,16 +18,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly TimeGroupRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly CardAccessRepository _cardAccessRepository;
 
         public TimeGroupService(
             TimeGroupRepository repository,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            CardAccessRepository cardAccessRepository
         )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cardAccessRepository = cardAccessRepository;
         }
 
         public async Task<IEnumerable<TimeGroupDto>> GetAllsAsync()
@@ -48,11 +52,33 @@ namespace BusinessLogic.Services.Implementation
         //     return _mapper.Map<TimeGroupDto>(result);
         // }
 
-                public async Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto)
+            public async Task<TimeGroupDto> CreateAsync(TimeGroupCreateDto dto)
         {
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
             var entity = _mapper.Map<TimeGroup>(dto);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            // Inject CardAccesses (optional)
+            if (dto.CardAccessIds.Any())
+            {
+                var validAccesses = await _cardAccessRepository.GetAllQueryable()
+                    .Where(ca => dto.CardAccessIds.Contains(ca.Id))
+                    .Select(ca => ca.Id)
+                    .ToListAsync();
+
+                if (validAccesses.Count != dto.CardAccessIds.Count)
+                    throw new ArgumentException("Some CardAccessIds are invalid.");
+
+                entity.CardAccessTimeGroups = validAccesses
+                    .Select(id => new CardAccessTimeGroups
+                    {
+                        CardAccessId = id,
+                        TimeGroupId = entity.Id,
+                        ApplicationId = entity.ApplicationId
+                    })
+                    .ToList();
+            }
+
             entity.Id = Guid.NewGuid();
             entity.CreatedBy = username;
             entity.CreatedAt = DateTime.UtcNow;
@@ -76,7 +102,13 @@ namespace BusinessLogic.Services.Implementation
             entity.Status = 1;
 
             var result = await _repository.AddAsync(entity);
-            return _mapper.Map<TimeGroupDto>(result);
+
+            var dtoResult = _mapper.Map<TimeGroupDto>(result);
+            dtoResult.CardAccessIds = entity.CardAccessTimeGroups?
+                .Select(x => (Guid?)x.CardAccessId)
+                .ToList();
+
+            return dtoResult;
         }
 
          public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
@@ -129,6 +161,8 @@ namespace BusinessLogic.Services.Implementation
                     block.CreatedAt = DateTime.UtcNow;
                     block.UpdatedAt = DateTime.UtcNow;
                 }
+            
+            
             entity.Status = 0;
             entity.UpdatedBy = username;
             entity.UpdatedAt = DateTime.UtcNow;

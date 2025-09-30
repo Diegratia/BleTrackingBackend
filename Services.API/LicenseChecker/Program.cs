@@ -14,7 +14,7 @@ class Program
 
         // Koneksi langsung, bisa diganti ambil dari appsettings.json kalau mau
         services.AddDbContext<BleTrackingDbContext>(options =>
-            options.UseSqlServer( "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+            options.UseSqlServer( "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
         var serviceProvider = services.BuildServiceProvider();
 
         using (var scope = serviceProvider.CreateScope())

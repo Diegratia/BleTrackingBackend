@@ -10,6 +10,7 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<TimeBlockDto> TimeBlocks { get; set; } = new();
+        public List<Guid?> CardAccessIds { get; set; } = new();
     }
 
 
@@ -18,6 +19,7 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<TimeBlockCreateDto> TimeBlocks { get; set; } = new();
+        public List<Guid?> CardAccessIds { get; set; } = new();
     }
 
     public class TimeGroupUpdateDto
@@ -25,5 +27,6 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<TimeBlockUpdateDto> TimeBlocks { get; set; } = new();
+        public List<Guid?> CardAccessIds { get; set; } = new();
     }
 }

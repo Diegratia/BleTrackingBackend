@@ -25,6 +25,6 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         public ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
-        
+        public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
     }
 }
