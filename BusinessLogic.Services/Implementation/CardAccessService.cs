@@ -151,6 +151,21 @@ namespace BusinessLogic.Services.Implementation
                     .ToList();
             }
 
+            entity.CardAccessTimeGroups.Clear();
+             // TimeGroups
+            if (dto.TimeGroupIds.Any())
+            {
+                entity.CardAccessTimeGroups = dto.TimeGroupIds
+                    .Where(id => id.HasValue)
+                    .Select(id => new CardAccessTimeGroups
+                    {
+                        CardAccessId = entity.Id,
+                        TimeGroupId = id.Value,
+                        ApplicationId = entity.ApplicationId
+                    })
+                    .ToList();
+            }
+
             await _repository.UpdateAsync(entity);
         }
 
@@ -173,6 +188,9 @@ namespace BusinessLogic.Services.Implementation
                 dto.MaskedAreaIds = entity.CardAccessMaskedAreas
                     .Select(x => (Guid?)x.MaskedAreaId)
                     .ToList();
+                dto.TimeGroupIds = entity.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.TimeGroupId)
+                    .ToList();
             }
 
             return dtos;
@@ -189,6 +207,9 @@ namespace BusinessLogic.Services.Implementation
             dto.MaskedAreaIds = entity.CardAccessMaskedAreas
                 .Select(x => (Guid?)x.MaskedAreaId)
                 .ToList();
+            dto.TimeGroupIds = entity.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.TimeGroupId)
+                    .ToList();
 
             return dto;
         }

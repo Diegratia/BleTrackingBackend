@@ -36,6 +36,7 @@ namespace Repositories.Repository
 
             var query = _context.TimeGroups
                 .Include(d => d.TimeBlocks)
+                .Include(ca => ca.CardAccessTimeGroups)
                 .Where(b => b.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -101,6 +102,7 @@ namespace Repositories.Repository
 
             var query = _context.TimeGroups
                 .Include(d => d.TimeBlocks)
+                .Include(ca => ca.CardAccessTimeGroups)
                 .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);

@@ -72,8 +72,8 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardAccessTimeGroups = validAccesses
                     .Select(id => new CardAccessTimeGroups
                     {
-                        CardAccessId = id,
                         TimeGroupId = entity.Id,
+                        CardAccessId = id,
                         ApplicationId = entity.ApplicationId
                     })
                     .ToList();

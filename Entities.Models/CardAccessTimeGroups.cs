@@ -18,7 +18,6 @@ namespace Entities.Models
     public Guid TimeGroupId { get; set; }
     public TimeGroup TimeGroup { get; set; } 
 
-    [ForeignKey("Application")]
     [Column("application_id")]
     public Guid ApplicationId { get; set; }
 
