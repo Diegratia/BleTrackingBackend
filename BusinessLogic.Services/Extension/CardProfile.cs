@@ -39,10 +39,12 @@ namespace BusinessLogic.Services.Extension
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CardAddDto, Card>()
+            .ForMember(dest => dest.CardType, opt => opt.MapFrom(src => Enum.Parse<CardType>(src.CardType, true)))
            .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<CardEditDto, Card>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())
+           .ForMember(dest => dest.CardType, opt => opt.MapFrom(src => Enum.Parse<CardType>(src.CardType, true)))
            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CardAccessEdit, Card>()
