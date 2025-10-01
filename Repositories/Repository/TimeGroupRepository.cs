@@ -7,6 +7,7 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 
 namespace Repositories.Repository
 {
@@ -100,6 +101,79 @@ namespace Repositories.Repository
                 
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        public IQueryable<TimeGroupMinimalDto> MinimalGetAllQueryable()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.TimeGroups
+                .Where(d => d.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(tg => new TimeGroupMinimalDto
+            {
+                Id = tg.Id,
+                Name = tg.Name,
+                Description = tg.Description,
+                ApplicationId = tg.ApplicationId,
+                UpdatedAt = tg.UpdatedAt,
+
+                // langsung ambil list CardAccessId
+                CardAccessIds = tg.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.CardAccessId)
+                    .ToList(),
+
+                // kalau mau minimal juga bisa expose TimeBlocks
+                TimeBlocks = tg.TimeBlocks
+                    .Where(tb => tb.Status != 0) // filter only active
+                    .Select(tb => new TimeBlockMinimalDto
+                    {
+                        Id = tb.Id,
+                        DayOfWeek = tb.DayOfWeek.HasValue ? tb.DayOfWeek.Value.ToString() : null,
+                        ApplicationId = tb.ApplicationId,
+                        StartTime = tb.StartTime,
+                        EndTime = tb.EndTime
+                    })
+                    .ToList()
+            });
+        }
+
+
+         public IQueryable<CardAccessMinimalDto> MinimalGetAllQueryableDto()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.CardAccesses
+            .Include(ca => ca.CardAccessTimeGroups)
+                .ThenInclude(ca => ca.TimeGroup)
+            .Include(ca => ca.CardAccessMaskedAreas)
+                .ThenInclude(cam => cam.MaskedArea)
+            .Where(ca => ca.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            
+            return query.Select(ca => new CardAccessMinimalDto
+                {
+                    Id = ca.Id,
+                    Name = ca.Name,
+                    AccessNumber = ca.AccessNumber ?? 0,
+                    AccessScope = ca.AccessScope.ToString(),
+                    Remarks = ca.Remarks,
+                    UpdatedAt = ca.UpdatedAt,
+                    ApplicationId = ca.ApplicationId,
+
+                    MaskedAreaIds = ca.CardAccessMaskedAreas
+                        .Select(x => (Guid?)x.MaskedAreaId)
+                        .ToList(),
+
+                    TimeGroupIds = ca.CardAccessTimeGroups
+                        .Select(x => (Guid?)x.TimeGroupId)
+                        .ToList()
+                });
+
+            
         }
 
         public async Task<IEnumerable<TimeGroup>> GetAllExportAsync()

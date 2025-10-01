@@ -128,7 +128,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.MinimalGetAllQueryableDto();
 
-            var searchableColumns = new[] { "Name", "AccessNumber", "AccessScope" };
+            var searchableColumns = new[] { "Name"};
             var validSortColumns = new[] { "UpdatedAt", "Status" , "AccessNumber", "AccessScope" };
 
             var filterService = new MinimalGenericDataTableService<CardAccessMinimalDto>(

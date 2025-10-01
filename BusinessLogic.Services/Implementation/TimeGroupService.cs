@@ -7,6 +7,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Repository;
@@ -343,14 +344,29 @@ public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
             await _repository.DeleteAsync(id);
         }
         
+        //  public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryable();
+
+        //     var searchableColumns = new[] { "Name" };
+        //     var validSortColumns = new[] { "UpdatedAt", "Status", "Name" };
+
+        //     var filterService = new GenericDataTableService<TimeGroup, TimeGroupDto>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
          public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.MinimalGetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
             var validSortColumns = new[] { "UpdatedAt", "Status", "Name" };
 
-            var filterService = new GenericDataTableService<TimeGroup, TimeGroupDto>(
+            var filterService = new MinimalGenericDataTableService<TimeGroupMinimalDto>(
                 query,
                 _mapper,
                 searchableColumns,
