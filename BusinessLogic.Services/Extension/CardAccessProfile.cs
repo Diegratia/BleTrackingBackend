@@ -26,11 +26,19 @@ namespace BusinessLogic.Services.Extension
             // ========================
             // CardAccess
             // ========================
-CreateMap<CardAccess, CardAccessDto>()
+            // CreateMap<CardAccess, CardAccessDto>()
+            //     .ForMember(dest => dest.MaskedAreaIds, 
+            //         opt => opt.MapFrom(src => src.CardAccessMaskedAreas.Select(x => (Guid?)x.MaskedAreaId).ToList()))
+            //     .ForMember(dest => dest.TimeGroupIds, 
+            //         opt => opt.MapFrom(src => src.CardAccessTimeGroups.Select(x => (Guid?)x.TimeGroupId).ToList()));
+
+    CreateMap<CardAccess, CardAccessDto>()
     .ForMember(dest => dest.MaskedAreaIds, 
-        opt => opt.MapFrom(src => src.CardAccessMaskedAreas.Select(x => (Guid?)x.MaskedAreaId).ToList()))
+        opt => opt.MapFrom(src => src.CardAccessMaskedAreas.Select(x => (Guid?)x.MaskedAreaId)))
     .ForMember(dest => dest.TimeGroupIds, 
-        opt => opt.MapFrom(src => src.CardAccessTimeGroups.Select(x => (Guid?)x.TimeGroupId).ToList()));
+        opt => opt.MapFrom(src => src.CardAccessTimeGroups.Select(x => (Guid?)x.TimeGroupId)));
+
+
 
 
 

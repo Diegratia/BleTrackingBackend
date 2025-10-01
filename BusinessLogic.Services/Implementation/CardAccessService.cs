@@ -2,6 +2,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Repository;
@@ -107,14 +108,30 @@ namespace BusinessLogic.Services.Implementation
             return dtoResult;
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        // public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryable();
+
+        //     var searchableColumns = new[] { "Name", "AccessNumber", "AccessScope" };
+        //     var validSortColumns = new[] { "UpdatedAt", "Status" , "AccessNumber", "AccessScope" };
+
+        //     var filterService = new GenericDataTableService<CardAccess, CardAccessDto>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
+        
+            public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.MinimalGetAllQueryableDto();
 
             var searchableColumns = new[] { "Name", "AccessNumber", "AccessScope" };
             var validSortColumns = new[] { "UpdatedAt", "Status" , "AccessNumber", "AccessScope" };
 
-            var filterService = new GenericDataTableService<CardAccess, CardAccessDto>(
+            var filterService = new MinimalGenericDataTableService<CardAccessMinimalDto>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -152,7 +169,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             entity.CardAccessTimeGroups.Clear();
-             // TimeGroups
+            // TimeGroups
             if (dto.TimeGroupIds.Any())
             {
                 entity.CardAccessTimeGroups = dto.TimeGroupIds
@@ -204,12 +221,12 @@ namespace BusinessLogic.Services.Implementation
                 return null;
 
             var dto = _mapper.Map<CardAccessDto>(entity);
-            // dto.MaskedAreaIds = entity.CardAccessMaskedAreas
-            //     .Select(x => (Guid?)x.MaskedAreaId)
-            //     .ToList();
-            // dto.TimeGroupIds = entity.CardAccessTimeGroups
-            //         .Select(x => (Guid?)x.TimeGroupId)
-            //         .ToList();
+            dto.MaskedAreaIds = entity.CardAccessMaskedAreas
+                .Select(x => (Guid?)x.MaskedAreaId)
+                .ToList();
+            dto.TimeGroupIds = entity.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.TimeGroupId)
+                    .ToList();
 
             return dto;
         }

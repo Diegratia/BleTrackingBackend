@@ -97,6 +97,8 @@ namespace Repositories.Repository
                 .Include(ca => ca.CardAccessTimeGroups)
                 .Where(d => d.Status != 0);
 
+                
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 

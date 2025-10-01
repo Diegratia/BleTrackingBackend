@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 
 namespace Repositories.Repository
 {
@@ -42,6 +43,42 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        public IQueryable<CardAccessMinimalDto> MinimalGetAllQueryableDto()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.CardAccesses
+            .Include(ca => ca.CardAccessTimeGroups)
+                .ThenInclude(ca => ca.TimeGroup)
+            .Include(ca => ca.CardAccessMaskedAreas)
+                .ThenInclude(cam => cam.MaskedArea)
+            .Where(ca => ca.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            
+            return query.Select(ca => new CardAccessMinimalDto
+                {
+                    Id = ca.Id,
+                    Name = ca.Name,
+                    AccessNumber = ca.AccessNumber ?? 0,
+                    AccessScope = ca.AccessScope.ToString(),
+                    Remarks = ca.Remarks,
+                    UpdatedAt = ca.UpdatedAt,
+                    ApplicationId = ca.ApplicationId,
+
+                    MaskedAreaIds = ca.CardAccessMaskedAreas
+                        .Select(x => (Guid?)x.MaskedAreaId)
+                        .ToList(),
+
+                    TimeGroupIds = ca.CardAccessTimeGroups
+                        .Select(x => (Guid?)x.TimeGroupId)
+                        .ToList()
+                });
+
+            
+        }
+
 
         public async Task<CardAccess> AddAsync(CardAccess entity)
         {
