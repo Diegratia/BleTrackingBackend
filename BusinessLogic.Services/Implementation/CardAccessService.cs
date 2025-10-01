@@ -204,12 +204,12 @@ namespace BusinessLogic.Services.Implementation
                 return null;
 
             var dto = _mapper.Map<CardAccessDto>(entity);
-            dto.MaskedAreaIds = entity.CardAccessMaskedAreas
-                .Select(x => (Guid?)x.MaskedAreaId)
-                .ToList();
-            dto.TimeGroupIds = entity.CardAccessTimeGroups
-                    .Select(x => (Guid?)x.TimeGroupId)
-                    .ToList();
+            // dto.MaskedAreaIds = entity.CardAccessMaskedAreas
+            //     .Select(x => (Guid?)x.MaskedAreaId)
+            //     .ToList();
+            // dto.TimeGroupIds = entity.CardAccessTimeGroups
+            //         .Select(x => (Guid?)x.TimeGroupId)
+            //         .ToList();
 
             return dto;
         }

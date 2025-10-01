@@ -947,9 +947,9 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
+                entity.Property(e => e.TimeGroupId).HasColumnName("time_group_id").HasMaxLength(36);
                 entity.HasOne(m => m.TimeGroup)
-                    .WithMany()
+                    .WithMany(g => g.TimeBlocks) 
                     .HasForeignKey(m => m.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

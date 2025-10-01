@@ -215,96 +215,78 @@ namespace BusinessLogic.Services.Implementation
         //     await _repository.UpdateAsync(entity);
         // }
 
-    public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
 {
-    var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+    var appIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
 
+    // ambil entity tracked via repo
     var entity = await _repository.GetByIdAsync(id);
     if (entity == null)
         throw new KeyNotFoundException("TimeGroup not found");
 
-    // Update scalar
+    // update scalar
     entity.Name = dto.Name ?? entity.Name;
     entity.Description = dto.Description ?? entity.Description;
     entity.UpdatedBy = username;
     entity.UpdatedAt = DateTime.UtcNow;
 
-    if (applicationIdClaim != null)
-        entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
+    if (appIdClaim != null)
+        entity.ApplicationId = Guid.Parse(appIdClaim.Value);
     if (entity.ApplicationId == Guid.Empty)
         throw new ArgumentException("ApplicationId cannot be empty.");
 
-            // ================================
-            // 🔹 Sync TimeBlocks
-            // ================================
-            // Ambil hanya Id yang memang dikirim (update)
-            // hanya Id lama dari DTO
-            // Id lama yang dikirim client
-var dtoIds = dto.TimeBlocks
-    .Where(b => b.Id.HasValue && b.Id.Value != Guid.Empty)
-    .Select(b => b.Id!.Value)
-    .ToList();
+    // sync timeblocks
+    var dtoIds = dto.TimeBlocks
+        .Where(b => b.Id.HasValue && b.Id.Value != Guid.Empty)
+        .Select(b => b.Id!.Value)
+        .ToList();
 
-
-            foreach (var blockDto in dto.TimeBlocks)
+    foreach (var blockDto in dto.TimeBlocks)
+    {
+        if (blockDto.Id.HasValue && blockDto.Id.Value != Guid.Empty)
+        {
+            // update existing
+            var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id.Value);
+            if (existing != null)
             {
-                if (blockDto.Id.HasValue && blockDto.Id.Value != Guid.Empty) // update existing
-                {
-                    var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id.Value);
-                    if (existing != null)
-                    {
-                        existing.DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
-                            ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
-                            : existing.DayOfWeek;
-                        existing.StartTime = blockDto.StartTime;
-                        existing.EndTime = blockDto.EndTime;
-                        existing.UpdatedAt = DateTime.UtcNow;
-                        existing.UpdatedBy = username;
-                    }
-                }
-                else // add new
-                {
-                    entity.TimeBlocks.Add(new TimeBlock
-                    {
-                        Id = Guid.NewGuid(),
-                        DayOfWeek = !string.IsNullOrEmpty(blockDto.DayOfWeek)
-                            ? Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true)
-                            : null,
-                        StartTime = blockDto.StartTime,
-                        EndTime = blockDto.EndTime,
-                        TimeGroupId = entity.Id,
-                        ApplicationId = entity.ApplicationId,
-                        Status = 1,
-                        CreatedBy = username,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedBy = username,
-                        UpdatedAt = DateTime.UtcNow
-                    });
-                }
+                existing.DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true);
+                existing.StartTime = blockDto.StartTime;
+                existing.EndTime = blockDto.EndTime;
+                existing.UpdatedAt = DateTime.UtcNow;
+                existing.UpdatedBy = username;
             }
+        }
+        else
+        {
+            // add new ✅ tracked otomatis karena parent tracked
+            entity.TimeBlocks.Add(new TimeBlock
+            {
+                Id = Guid.NewGuid(),
+                DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true),
+                StartTime = blockDto.StartTime,
+                EndTime = blockDto.EndTime,
+                TimeGroupId = entity.Id,
+                ApplicationId = entity.ApplicationId,
+                Status = 1,
+                CreatedBy = username,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedBy = username,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+    }
 
+    // remove lama
+    var toRemove = entity.TimeBlocks
+        .Where(b => !dtoIds.Contains(b.Id))
+        .ToList();
+    foreach (var remove in toRemove)
+    {
+        entity.TimeBlocks.Remove(remove);
+    }
 
-// Cari blok existing di DB (bukan yang baru di-Add)
-var existingDbIds = entity.TimeBlocks
-    .Where(tb => tb.Id != Guid.Empty) // cuma yg punya Id valid
-    .Select(tb => tb.Id)
-    .ToList();
-
-var toRemove = entity.TimeBlocks
-    .Where(b => existingDbIds.Contains(b.Id) && !dtoIds.Contains(b.Id)) 
-    .ToList();
-
-foreach (var remove in toRemove)
-{
-    entity.TimeBlocks.Remove(remove);
-}
-
-
-
-    // ================================
-    // 🔹 Sync CardAccessTimeGroups
-    // ================================
+    // sync cardAccess
     if (dto.CardAccessIds != null)
     {
         var newIds = dto.CardAccessIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
@@ -314,7 +296,6 @@ foreach (var remove in toRemove)
         var toRemoveAccess = entity.CardAccessTimeGroups
             .Where(c => !newIds.Contains(c.CardAccessId))
             .ToList();
-
         foreach (var rem in toRemoveAccess)
             entity.CardAccessTimeGroups.Remove(rem);
 
@@ -331,8 +312,11 @@ foreach (var remove in toRemove)
         }
     }
 
+    // commit via repo
     await _repository.UpdateAsync(entity);
 }
+
+
 
 
 

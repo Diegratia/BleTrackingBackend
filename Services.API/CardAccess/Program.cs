@@ -135,6 +135,7 @@ builder.Services.AddAutoMapper(typeof(CardAccessProfile));
 // Registrasi Services\
 // builder.Services.AddScoped<ITimeBlockService, TimeBlockService>();
 builder.Services.AddScoped<ITimeGroupService, TimeGroupService>();
+builder.Services.AddScoped<ITimeBlockService, TimeBlockService>();
 builder.Services.AddScoped<ICardGroupService, CardGroupService>();
 builder.Services.AddScoped<ICardAccessService, CardAccessService>();
 builder.Services.AddScoped<ICardService, CardService>();

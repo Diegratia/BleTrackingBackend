@@ -12,8 +12,8 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    [Migration("20250923101544_geofenceRelation")]
-    partial class geofenceRelation
+    [Migration("20251001031442_deleteTimeGroup1")]
+    partial class deleteTimeGroup1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -422,6 +422,85 @@ namespace Repositories.Migrations
                     b.ToTable("ble_reader_node", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.Boundary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("boundary", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
                     b.Property<Guid>("Id")
@@ -550,6 +629,10 @@ namespace Repositories.Migrations
                         .HasColumnType("int")
                         .HasColumnName("access_number");
 
+                    b.Property<string>("AccessScope")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("access_scope");
+
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
@@ -614,16 +697,62 @@ namespace Repositories.Migrations
                     b.ToTable("card_access_masked_areas", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.CardAccessTimeGroups", b =>
+                {
+                    b.Property<Guid>("CardAccessId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_access_id");
+
+                    b.Property<Guid>("TimeGroupId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("time_group_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("CardAccessId", "TimeGroupId");
+
+                    b.HasIndex("TimeGroupId");
+
+                    b.ToTable("card_access_time_groups", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardCardAccess", b =>
+                {
+                    b.Property<Guid>("CardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_id");
+
+                    b.Property<Guid>("CardAccessId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_access_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("CardId", "CardAccessId");
+
+                    b.HasIndex("CardAccessId");
+
+                    b.ToTable("card_card_accesses", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.CardGroup", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<string>("AccessScope")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("access_scope");
 
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier")
@@ -662,31 +791,6 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.ToTable("card_groups", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.CardGroupCardAccess", b =>
-                {
-                    b.Property<Guid>("CardGroupId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("card_group_id");
-
-                    b.Property<Guid>("CardAccessId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("card_access_id");
-
-                    b.Property<Guid>("ApplicationId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("application_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int")
-                        .HasColumnName("status");
-
-                    b.HasKey("CardGroupId", "CardAccessId");
-
-                    b.HasIndex("CardAccessId");
-
-                    b.ToTable("card_group_card_accesses", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
@@ -2310,6 +2414,85 @@ namespace Repositories.Migrations
                     b.ToTable("mst_organization", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.Overpopulating", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("overpopulating", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2339,6 +2522,85 @@ namespace Repositories.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("refresh_token", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.StayOnArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("stay_on_area", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.TimeBlock", b =>
@@ -2384,9 +2646,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("time_group_id");
 
-                    b.Property<Guid?>("TimeGroupId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
@@ -2400,8 +2659,6 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("TimeGroupId");
-
-                    b.HasIndex("TimeGroupId1");
 
                     b.ToTable("time_block", (string)null);
                 });
@@ -3166,6 +3423,31 @@ namespace Repositories.Migrations
                     b.Navigation("Reader");
                 });
 
+            modelBuilder.Entity("Entities.Models.Boundary", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
@@ -3235,6 +3517,44 @@ namespace Repositories.Migrations
                     b.Navigation("MaskedArea");
                 });
 
+            modelBuilder.Entity("Entities.Models.CardAccessTimeGroups", b =>
+                {
+                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
+                        .WithMany("CardAccessTimeGroups")
+                        .HasForeignKey("CardAccessId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
+                        .WithMany("CardAccessTimeGroups")
+                        .HasForeignKey("TimeGroupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CardAccess");
+
+                    b.Navigation("TimeGroup");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardCardAccess", b =>
+                {
+                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
+                        .WithMany()
+                        .HasForeignKey("CardAccessId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany("CardCardAccesses")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("CardAccess");
+                });
+
             modelBuilder.Entity("Entities.Models.CardGroup", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
@@ -3244,25 +3564,6 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.Navigation("Application");
-                });
-
-            modelBuilder.Entity("Entities.Models.CardGroupCardAccess", b =>
-                {
-                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
-                        .WithMany()
-                        .HasForeignKey("CardAccessId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.CardGroup", "CardGroup")
-                        .WithMany("CardGroupCardAccesses")
-                        .HasForeignKey("CardGroupId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("CardAccess");
-
-                    b.Navigation("CardGroup");
                 });
 
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
@@ -3719,6 +4020,31 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
                 });
 
+            modelBuilder.Entity("Entities.Models.Overpopulating", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -3730,6 +4056,31 @@ namespace Repositories.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Entities.Models.StayOnArea", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
             modelBuilder.Entity("Entities.Models.TimeBlock", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
@@ -3739,13 +4090,9 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
-                        .WithMany()
+                        .WithMany("TimeBlocks")
                         .HasForeignKey("TimeGroupId")
                         .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("Entities.Models.TimeGroup", null)
-                        .WithMany("TimeBlocks")
-                        .HasForeignKey("TimeGroupId1");
 
                     b.Navigation("Application");
 
@@ -3925,18 +4272,20 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
+                    b.Navigation("CardCardAccesses");
+
                     b.Navigation("CardRecords");
                 });
 
             modelBuilder.Entity("Entities.Models.CardAccess", b =>
                 {
                     b.Navigation("CardAccessMaskedAreas");
+
+                    b.Navigation("CardAccessTimeGroups");
                 });
 
             modelBuilder.Entity("Entities.Models.CardGroup", b =>
                 {
-                    b.Navigation("CardGroupCardAccesses");
-
                     b.Navigation("Cards");
                 });
 
@@ -4035,6 +4384,8 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.TimeGroup", b =>
                 {
+                    b.Navigation("CardAccessTimeGroups");
+
                     b.Navigation("TimeBlocks");
                 });
 

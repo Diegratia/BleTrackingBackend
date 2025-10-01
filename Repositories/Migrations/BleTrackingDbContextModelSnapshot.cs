@@ -2643,9 +2643,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("time_group_id");
 
-                    b.Property<Guid?>("TimeGroupId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
@@ -2659,8 +2656,6 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("TimeGroupId");
-
-                    b.HasIndex("TimeGroupId1");
 
                     b.ToTable("time_block", (string)null);
                 });
@@ -4092,13 +4087,9 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
-                        .WithMany()
+                        .WithMany("TimeBlocks")
                         .HasForeignKey("TimeGroupId")
                         .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("Entities.Models.TimeGroup", null)
-                        .WithMany("TimeBlocks")
-                        .HasForeignKey("TimeGroupId1");
 
                     b.Navigation("Application");
 

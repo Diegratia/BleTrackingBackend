@@ -6,11 +6,32 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class AlarmTriggersTable : Migration
+    public partial class deleteTimeGroup1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "alarm_category_settings",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    alarm_category = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    alarm_level_priority = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    alarm_color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_enabled = table.Column<int>(type: "int", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_alarm_category_settings", x => x.id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "mst_application",
                 columns: table => new
@@ -38,6 +59,80 @@ namespace Repositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_mst_application", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "card_accesses",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    access_number = table.Column<int>(type: "int", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    access_scope = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_accesses", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_accesses_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "card_groups",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_groups", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_groups_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "monitoring_config",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    config = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_monitoring_config", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_monitoring_config_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -70,7 +165,7 @@ namespace Repositories.Migrations
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     image = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    ApplicationId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     _generate = table.Column<long>(type: "bigint", nullable: false)
@@ -84,13 +179,13 @@ namespace Repositories.Migrations
                 {
                     table.PrimaryKey("PK_mst_building", x => x.id);
                     table.ForeignKey(
-                        name: "FK_mst_building_mst_application_MstApplicationId",
-                        column: x => x.MstApplicationId,
+                        name: "FK_mst_building_mst_application_ApplicationId",
+                        column: x => x.ApplicationId,
                         principalTable: "mst_application",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "FK_mst_building_mst_application_application_id",
-                        column: x => x.application_id,
+                        name: "FK_mst_building_mst_application_MstApplicationId",
+                        column: x => x.MstApplicationId,
                         principalTable: "mst_application",
                         principalColumn: "id");
                 });
@@ -219,6 +314,30 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "time_group",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_time_group", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_time_group_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user_group",
                 columns: table => new
                 {
@@ -273,8 +392,6 @@ namespace Repositories.Migrations
                     upload_fr_error = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -307,8 +424,6 @@ namespace Repositories.Migrations
                     engine_reader_id = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -373,13 +488,6 @@ namespace Repositories.Migrations
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     building_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    floor_image = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    pixel_x = table.Column<float>(type: "real", nullable: false),
-                    pixel_y = table.Column<float>(type: "real", nullable: false),
-                    floor_x = table.Column<float>(type: "real", nullable: false),
-                    floor_y = table.Column<float>(type: "real", nullable: false),
-                    meter_per_px = table.Column<float>(type: "real", nullable: false),
-                    engine_floor_id = table.Column<long>(type: "bigint", nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     _generate = table.Column<int>(type: "int", nullable: false)
@@ -436,8 +544,6 @@ namespace Repositories.Migrations
                     MstDepartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     MstDistrictId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     MstOrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -485,6 +591,61 @@ namespace Repositories.Migrations
                         name: "FK_mst_member_mst_organization_organization_id",
                         column: x => x.organization_id,
                         principalTable: "mst_organization",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "card_access_time_groups",
+                columns: table => new
+                {
+                    card_access_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    time_group_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_access_time_groups", x => new { x.card_access_id, x.time_group_id });
+                    table.ForeignKey(
+                        name: "FK_card_access_time_groups_card_accesses_card_access_id",
+                        column: x => x.card_access_id,
+                        principalTable: "card_accesses",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_access_time_groups_time_group_time_group_id",
+                        column: x => x.time_group_id,
+                        principalTable: "time_group",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "time_block",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    day_of_week = table.Column<int>(type: "int", nullable: true),
+                    start_time = table.Column<TimeSpan>(type: "time", nullable: true),
+                    end_time = table.Column<TimeSpan>(type: "time", nullable: true),
+                    time_group_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_time_block", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_time_block_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_time_block_time_group_time_group_id",
+                        column: x => x.time_group_id,
+                        principalTable: "time_group",
                         principalColumn: "id");
                 });
 
@@ -575,8 +736,6 @@ namespace Repositories.Migrations
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -607,7 +766,7 @@ namespace Repositories.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    controller_brand_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    controller_brand_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     description = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -618,8 +777,6 @@ namespace Repositories.Migrations
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     MstApplicationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -656,6 +813,13 @@ namespace Repositories.Migrations
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    floorplan_image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    pixel_x = table.Column<float>(type: "real", nullable: false),
+                    pixel_y = table.Column<float>(type: "real", nullable: false),
+                    floor_x = table.Column<float>(type: "real", nullable: false),
+                    floor_y = table.Column<float>(type: "real", nullable: false),
+                    meter_per_px = table.Column<float>(type: "real", nullable: false),
+                    engine_id = table.Column<long>(type: "bigint", nullable: false),
                     floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
@@ -715,11 +879,11 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AlarmTriggers",
+                name: "alarm_triggers",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    beacon_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    beacon_id = table.Column<string>(type: "nvarchar(16)", nullable: true),
                     floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     pos_x = table.Column<float>(type: "real", nullable: true),
                     pos_y = table.Column<float>(type: "real", nullable: true),
@@ -729,21 +893,73 @@ namespace Repositories.Migrations
                     first_distance = table.Column<float>(type: "real", nullable: true),
                     second_distance = table.Column<float>(type: "real", nullable: true),
                     trigger_time = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    action = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    action = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     is_active = table.Column<bool>(type: "bit", nullable: true),
+                    idle_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    done_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    cancel_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    waiting_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    investigated_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    investigated_done_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    idle_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    done_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    cancel_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    waiting_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    investigated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    investigated_result = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AlarmTriggers", x => x.id);
+                    table.PrimaryKey("PK_alarm_triggers", x => x.id);
                     table.ForeignKey(
-                        name: "FK_AlarmTriggers_mst_application_application_id",
+                        name: "FK_alarm_triggers_mst_application_application_id",
                         column: x => x.application_id,
                         principalTable: "mst_application",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "FK_AlarmTriggers_mst_floorplan_floorplan_id",
+                        name: "FK_alarm_triggers_mst_floorplan_floorplan_id",
+                        column: x => x.floorplan_id,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "boundary",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    area_shape = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    engine_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_active = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_boundary", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_boundary_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_boundary_mst_floor_floor_id",
+                        column: x => x.floor_id,
+                        principalTable: "mst_floor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_boundary_mst_floorplan_floorplan_id",
                         column: x => x.floorplan_id,
                         principalTable: "mst_floorplan",
                         principalColumn: "id");
@@ -754,7 +970,7 @@ namespace Repositories.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     area_shape = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -764,8 +980,7 @@ namespace Repositories.Migrations
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     MstFloorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MstFloorplanId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -790,11 +1005,135 @@ namespace Repositories.Migrations
                         principalTable: "mst_floor",
                         principalColumn: "id");
                     table.ForeignKey(
+                        name: "FK_floorplan_masked_area_mst_floorplan_MstFloorplanId",
+                        column: x => x.MstFloorplanId,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
+                    table.ForeignKey(
                         name: "FK_floorplan_masked_area_mst_floorplan_floorplan_id",
                         column: x => x.floorplan_id,
                         principalTable: "mst_floorplan",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "geofence",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    area_shape = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    engine_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_active = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_geofence", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_geofence_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_geofence_mst_floor_floor_id",
+                        column: x => x.floor_id,
+                        principalTable: "mst_floor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_geofence_mst_floorplan_floorplan_id",
+                        column: x => x.floorplan_id,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "overpopulating",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    area_shape = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    engine_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_active = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_overpopulating", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_overpopulating_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_overpopulating_mst_floor_floor_id",
+                        column: x => x.floor_id,
+                        principalTable: "mst_floor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_overpopulating_mst_floorplan_floorplan_id",
+                        column: x => x.floorplan_id,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "stay_on_area",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    area_shape = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    floorplan_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    engine_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    is_active = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_stay_on_area", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_stay_on_area_mst_application_application_id",
+                        column: x => x.application_id,
+                        principalTable: "mst_application",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_stay_on_area_mst_floor_floor_id",
+                        column: x => x.floor_id,
+                        principalTable: "mst_floor",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_stay_on_area_mst_floorplan_floorplan_id",
+                        column: x => x.floorplan_id,
+                        principalTable: "mst_floorplan",
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -803,12 +1142,12 @@ namespace Repositories.Migrations
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    alarm_triggers_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: false),
-                    action = table.Column<string>(type: "nvarchar(255)", nullable: false),
+                    visitor_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    ble_reader_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    alarm_triggers_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    floorplan_masked_area_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
+                    alarm_record_status = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    action = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
                     idle_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
                     done_timestamp = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -833,9 +1172,9 @@ namespace Repositories.Migrations
                 {
                     table.PrimaryKey("PK_alarm_record_tracking", x => x.id);
                     table.ForeignKey(
-                        name: "FK_alarm_record_tracking_AlarmTriggers_alarm_triggers_id",
+                        name: "FK_alarm_record_tracking_alarm_triggers_alarm_triggers_id",
                         column: x => x.alarm_triggers_id,
-                        principalTable: "AlarmTriggers",
+                        principalTable: "alarm_triggers",
                         principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_alarm_record_tracking_floorplan_masked_area_FloorplanMaskedAreaId1",
@@ -900,8 +1239,7 @@ namespace Repositories.Migrations
                     checkout_at = table.Column<DateTime>(type: "datetime2", nullable: true),
                     status_card = table.Column<int>(type: "int", nullable: true),
                     application_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: false),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    card_group_id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 36, nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -910,6 +1248,11 @@ namespace Repositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_card", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_card_card_groups_card_group_id",
+                        column: x => x.card_group_id,
+                        principalTable: "card_groups",
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_card_floorplan_masked_area_registered_masked_area_id",
                         column: x => x.registered_masked_area_id,
@@ -929,6 +1272,30 @@ namespace Repositories.Migrations
                         name: "FK_card_visitor_visitor_id",
                         column: x => x.visitor_id,
                         principalTable: "visitor",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "card_access_masked_areas",
+                columns: table => new
+                {
+                    card_access_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    masked_area_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_access_masked_areas", x => new { x.card_access_id, x.masked_area_id });
+                    table.ForeignKey(
+                        name: "FK_card_access_masked_areas_card_accesses_card_access_id",
+                        column: x => x.card_access_id,
+                        principalTable: "card_accesses",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_access_masked_areas_floorplan_masked_area_masked_area_id",
+                        column: x => x.masked_area_id,
+                        principalTable: "floorplan_masked_area",
                         principalColumn: "id");
                 });
 
@@ -1062,8 +1429,6 @@ namespace Repositories.Migrations
                     is_member = table.Column<int>(type: "int", nullable: true),
                     agenda = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1110,8 +1475,6 @@ namespace Repositories.Migrations
                     status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     FloorplanMaskedAreaId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1148,6 +1511,30 @@ namespace Repositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "card_card_accesses",
+                columns: table => new
+                {
+                    card_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    card_access_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    application_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_card_card_accesses", x => new { x.card_id, x.card_access_id });
+                    table.ForeignKey(
+                        name: "FK_card_card_accesses_card_accesses_card_access_id",
+                        column: x => x.card_access_id,
+                        principalTable: "card_accesses",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_card_card_accesses_card_card_id",
+                        column: x => x.card_id,
+                        principalTable: "card",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "card_record",
                 columns: table => new
                 {
@@ -1169,8 +1556,6 @@ namespace Repositories.Migrations
                     CardId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     MstMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VisitorId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    _generate = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     created_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1322,13 +1707,13 @@ namespace Repositories.Migrations
                 column: "VisitorId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AlarmTriggers_application_id",
-                table: "AlarmTriggers",
+                name: "IX_alarm_triggers_application_id",
+                table: "alarm_triggers",
                 column: "application_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AlarmTriggers_floorplan_id",
-                table: "AlarmTriggers",
+                name: "IX_alarm_triggers_floorplan_id",
+                table: "alarm_triggers",
                 column: "floorplan_id");
 
             migrationBuilder.CreateIndex(
@@ -1348,9 +1733,29 @@ namespace Repositories.Migrations
                 column: "ble_reader_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_boundary_application_id",
+                table: "boundary",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_boundary_floor_id",
+                table: "boundary",
+                column: "floor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_boundary_floorplan_id",
+                table: "boundary",
+                column: "floorplan_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_card_application_id",
                 table: "card",
                 column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_card_group_id",
+                table: "card",
+                column: "card_group_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_card_number",
@@ -1376,6 +1781,31 @@ namespace Repositories.Migrations
                 name: "IX_card_visitor_id",
                 table: "card",
                 column: "visitor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_access_masked_areas_masked_area_id",
+                table: "card_access_masked_areas",
+                column: "masked_area_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_access_time_groups_time_group_id",
+                table: "card_access_time_groups",
+                column: "time_group_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_accesses_application_id",
+                table: "card_accesses",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_card_accesses_card_access_id",
+                table: "card_card_accesses",
+                column: "card_access_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_card_groups_application_id",
+                table: "card_groups",
+                column: "application_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_record_application_id",
@@ -1494,6 +1924,31 @@ namespace Repositories.Migrations
                 column: "MstFloorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_floorplan_masked_area_MstFloorplanId",
+                table: "floorplan_masked_area",
+                column: "MstFloorplanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_geofence_application_id",
+                table: "geofence",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_geofence_floor_id",
+                table: "geofence",
+                column: "floor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_geofence_floorplan_id",
+                table: "geofence",
+                column: "floorplan_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_monitoring_config_application_id",
+                table: "monitoring_config",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_mst_access_cctv_application_id",
                 table: "mst_access_cctv",
                 column: "application_id");
@@ -1550,9 +2005,9 @@ namespace Repositories.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_mst_building_application_id",
+                name: "IX_mst_building_ApplicationId",
                 table: "mst_building",
-                column: "application_id");
+                column: "ApplicationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_mst_building_MstApplicationId",
@@ -1691,9 +2146,54 @@ namespace Repositories.Migrations
                 column: "MstApplicationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_overpopulating_application_id",
+                table: "overpopulating",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_overpopulating_floor_id",
+                table: "overpopulating",
+                column: "floor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_overpopulating_floorplan_id",
+                table: "overpopulating",
+                column: "floorplan_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_refresh_token_user_id",
                 table: "refresh_token",
                 column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_stay_on_area_application_id",
+                table: "stay_on_area",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_stay_on_area_floor_id",
+                table: "stay_on_area",
+                column: "floor_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_stay_on_area_floorplan_id",
+                table: "stay_on_area",
+                column: "floorplan_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_time_block_application_id",
+                table: "time_block",
+                column: "application_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_time_block_time_group_id",
+                table: "time_block",
+                column: "time_group_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_time_group_application_id",
+                table: "time_group",
+                column: "application_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tracking_transaction_application_id",
@@ -1842,10 +2342,25 @@ namespace Repositories.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "alarm_category_settings");
+
+            migrationBuilder.DropTable(
                 name: "alarm_record_tracking");
 
             migrationBuilder.DropTable(
                 name: "ble_reader_node");
+
+            migrationBuilder.DropTable(
+                name: "boundary");
+
+            migrationBuilder.DropTable(
+                name: "card_access_masked_areas");
+
+            migrationBuilder.DropTable(
+                name: "card_access_time_groups");
+
+            migrationBuilder.DropTable(
+                name: "card_card_accesses");
 
             migrationBuilder.DropTable(
                 name: "card_record");
@@ -1854,10 +2369,25 @@ namespace Repositories.Migrations
                 name: "floorplan_device");
 
             migrationBuilder.DropTable(
+                name: "geofence");
+
+            migrationBuilder.DropTable(
+                name: "monitoring_config");
+
+            migrationBuilder.DropTable(
                 name: "mst_engine");
 
             migrationBuilder.DropTable(
+                name: "overpopulating");
+
+            migrationBuilder.DropTable(
                 name: "refresh_token");
+
+            migrationBuilder.DropTable(
+                name: "stay_on_area");
+
+            migrationBuilder.DropTable(
+                name: "time_block");
 
             migrationBuilder.DropTable(
                 name: "tracking_transaction");
@@ -1869,7 +2399,10 @@ namespace Repositories.Migrations
                 name: "visitor_blacklist_area");
 
             migrationBuilder.DropTable(
-                name: "AlarmTriggers");
+                name: "alarm_triggers");
+
+            migrationBuilder.DropTable(
+                name: "card_accesses");
 
             migrationBuilder.DropTable(
                 name: "mst_access_cctv");
@@ -1879,6 +2412,9 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "user");
+
+            migrationBuilder.DropTable(
+                name: "time_group");
 
             migrationBuilder.DropTable(
                 name: "card");
@@ -1891,6 +2427,9 @@ namespace Repositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "user_group");
+
+            migrationBuilder.DropTable(
+                name: "card_groups");
 
             migrationBuilder.DropTable(
                 name: "floorplan_masked_area");

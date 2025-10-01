@@ -31,6 +31,10 @@
         public ICollection<CardAccessMaskedArea?> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea?>();
         public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
         public MstApplication? Application { get; set; }
+        // [NotMapped]
+        // public ICollection<FloorplanMaskedArea> MaskedAreaIds => CardAccessMaskedAreas.Select(cga => cga.MaskedArea).ToList();
+        // [NotMapped]
+        // public ICollection<TimeGroup> TimeGroupIds => CardAccessTimeGroups.Select(cga => cga.TimeGroup).ToList();
     }
 }
         

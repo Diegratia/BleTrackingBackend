@@ -26,21 +26,28 @@ namespace BusinessLogic.Services.Extension
             // ========================
             // CardAccess
             // ========================
-            CreateMap<CardAccess, CardAccessDto>()
-         .ForMember(dest => dest.MaskedAreaIds,
-                    opt => opt.MapFrom(src =>
-                        src.CardAccessMaskedAreas.Select(ca => ca.MaskedAreaId).ToList()));
+CreateMap<CardAccess, CardAccessDto>()
+    .ForMember(dest => dest.MaskedAreaIds, 
+        opt => opt.MapFrom(src => src.CardAccessMaskedAreas.Select(x => (Guid?)x.MaskedAreaId).ToList()))
+    .ForMember(dest => dest.TimeGroupIds, 
+        opt => opt.MapFrom(src => src.CardAccessTimeGroups.Select(x => (Guid?)x.TimeGroupId).ToList()));
+
+
 
             CreateMap<CardAccessCreateDto, CardAccess>()
             .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)))
                 .ForMember(dest => dest.CardAccessMaskedAreas,
-                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
+                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })))
+                .ForMember(dest => dest.CardAccessTimeGroups,
+                    opt => opt.MapFrom(src => src.TimeGroupIds.Select(id => new CardAccessTimeGroups { TimeGroupId = id.Value })));
 
 
             CreateMap<CardAccessUpdateDto, CardAccess>()
             .ForMember(dest => dest.AccessScope, opt => opt.MapFrom(src => Enum.Parse<AccessScope>(src.AccessScope, true)))
                 .ForMember(dest => dest.CardAccessMaskedAreas,
-                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })));
+                    opt => opt.MapFrom(src => src.MaskedAreaIds.Select(id => new CardAccessMaskedArea { MaskedAreaId = id.Value })))
+                .ForMember(dest => dest.CardAccessTimeGroups,
+                    opt => opt.MapFrom(src => src.TimeGroupIds.Select(id => new CardAccessTimeGroups { TimeGroupId = id.Value })));
                 
 
             // ========================

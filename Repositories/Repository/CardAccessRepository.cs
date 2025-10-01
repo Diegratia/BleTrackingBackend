@@ -35,6 +35,7 @@ namespace Repositories.Repository
 
             var query = _context.CardAccesses
             .Include(ca => ca.CardAccessTimeGroups)
+                .ThenInclude(ca => ca.TimeGroup)
             .Include(ca => ca.CardAccessMaskedAreas)
                 .ThenInclude(cam => cam.MaskedArea)
             .Where(ca => ca.Status != 0);

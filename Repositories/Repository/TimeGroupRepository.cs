@@ -62,6 +62,11 @@ namespace Repositories.Repository
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
             // _context.TimeGroups.Update(entity); // Optional
+                        foreach (var entry in _context.ChangeTracker.Entries())
+            {
+                Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
+            }
+
             await _context.SaveChangesAsync();
         }
 

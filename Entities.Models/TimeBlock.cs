@@ -17,7 +17,6 @@ namespace Entities.Models
         [Column("end_time")]
         public TimeSpan? EndTime { get; set; }
 
-        [ForeignKey("TimeGroup")]
         [Column("time_group_id")]
         public Guid? TimeGroupId { get; set; }
 

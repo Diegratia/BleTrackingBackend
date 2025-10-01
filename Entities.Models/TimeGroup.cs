@@ -22,7 +22,6 @@ namespace Entities.Models
         public int Status { get; set; }
 
         // Navigation property
-
         public MstApplication Application { get; set; }
         public ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
         public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
