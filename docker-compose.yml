@@ -139,6 +139,7 @@ services:
     # depends_on:
     #   - mst-application
     volumes:
+      - ./Uploads/BuildingImages:/app/Uploads/BuildingImages
       - ./.env:/app/.env
     restart: always
 
@@ -346,5 +347,3 @@ services:
 
 volumes:
   sqlserver_data:
-
-
