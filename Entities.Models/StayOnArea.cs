@@ -26,7 +26,8 @@ namespace Entities.Models
 
         [Column("engine_id")]
         public string? EngineId { get; set; }
-
+        [Column("max_duration")]
+        public int? MaxDuration { get; set; } // minute
         [Column("is_active")]
         public int IsActive { get; set; }
 

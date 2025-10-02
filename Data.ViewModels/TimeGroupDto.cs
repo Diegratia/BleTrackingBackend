@@ -14,7 +14,6 @@ namespace Data.ViewModels
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
 
-
     public class TimeGroupCreateDto : BaseModelDto
     {
         public string? Name { get; set; }

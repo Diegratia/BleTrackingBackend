@@ -94,7 +94,7 @@ namespace Data.ViewModels
             public List<Guid?> CardAccessIds { get; set; } = new();
         }
 
-         public class CardEditDto : BaseModelDto
+        public class CardEditDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }
@@ -109,12 +109,12 @@ namespace Data.ViewModels
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
 
-     public class CardAccessEdit : BaseModelDto
+    public class CardAccessEdit : BaseModelDto
     {
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
     
-     public class OpenCardDto : BaseModelDto
+    public class OpenCardDto : BaseModelDto
     {
         public long Generate { get; set; }
         [JsonPropertyName("card_id")]

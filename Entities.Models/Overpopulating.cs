@@ -31,6 +31,9 @@ namespace Entities.Models
         [Column("is_active")]
         public int IsActive { get; set; }
 
+        [Column("max_capacity")]
+        public int? MaxCapacity { get; set; }
+
         [Column("status")]
         public int Status { get; set; } = 1;
 

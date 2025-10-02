@@ -222,18 +222,18 @@ namespace Repositories.Seeding
                         .Id)
                     .RuleFor(b => b.Status, f => 1);
 
-                var brands = brandFaker.Generate(3);
+                var brands = brandFaker.Generate(1);
 
-                  var brand = new MstBrand
+                var brand = new MstBrand
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bio - Initial",
                     Tag = "People Tracking Tag",
                     ApplicationId = context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id,
+                      .Where(a => a.ApplicationStatus != 0)
+                      .OrderBy(r => Guid.NewGuid())
+                      .First()
+                      .Id,
                     Status = 1
                 };
                 brands.Add(brand);
@@ -243,106 +243,120 @@ namespace Repositories.Seeding
             }
 
             // 3. MstBuilding
-            if (!context.MstBuildings.Any(b => b.Status != 0))
+            if (!context.MstBuildings.Any())
             {
-                var buildingFaker = new Faker<MstBuilding>()
-                    .RuleFor(b => b.Id, f => Guid.NewGuid())
-                    .RuleFor(b => b.Name, f => f.Address.City() + " Building")
-                    .RuleFor(b => b.Image, f => $"https://example.com/buildings/{f.Random.Word()}.jpg")
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                var customBuilding = new MstBuilding
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Gedung Tracking People",
+                    Image = "https://example.com/buildings/custom.jpg",
+                    ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(b => b.CreatedBy, f => "System")
-                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.UpdatedBy, f => "System")
-                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.Status, f => 1);
+                        .Select(a => a.Id)
+                        .First(),
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
 
-                var buildings = buildingFaker.Generate(1);
-
-                // // Custom seeding
-                // var building = new MstBuilding
-                // {
-                //     Id = Guid.NewGuid(),
-                //     Name = "Gedung Tracking People",
-                //     Image = "https://example.com/buildings/custom.jpg",
-                //     ApplicationId = context.MstApplications
-                //         .Where(a => a.ApplicationStatus != 0)
-                //         .OrderBy(r => Guid.NewGuid())
-                //         .First()
-                //         .Id,
-                //     CreatedBy = "System",
-                //     CreatedAt = DateTime.UtcNow,
-                //     UpdatedBy = "System",
-                //     UpdatedAt = DateTime.UtcNow,
-                //     Status = 1
-                // };
-                // buildings.Add(building);
-
-                context.MstBuildings.AddRange(buildings);
+                context.MstBuildings.Add(customBuilding);
                 context.SaveChanges();
             }
+            // if (!context.MstBuildings.Any(b => b.Status != 0))
+            // {
+            //     var buildingFaker = new Faker<MstBuilding>()
+            //         .RuleFor(b => b.Id, f => Guid.NewGuid())
+            //         .RuleFor(b => b.Name, f => f.Address.City() + " Building")
+            //         .RuleFor(b => b.Image, f => $"https://example.com/buildings/{f.Random.Word()}.jpg")
+            //         .RuleFor(b => b.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(b => b.CreatedBy, f => "System")
+            //         .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(b => b.UpdatedBy, f => "System")
+            //         .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(b => b.Status, f => 1);
+
+            //     var buildings = buildingFaker.Generate(1);
+
+            //     // // Custom seeding
+            //     var building = new MstBuilding
+            //     {
+            //         Id = Guid.NewGuid(),
+            //         Name = "Gedung Tracking People",
+            //         Image = "https://example.com/buildings/custom.jpg",
+            //         ApplicationId = context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id,
+            //         CreatedBy = "System",
+            //         CreatedAt = DateTime.UtcNow,
+            //         UpdatedBy = "System",
+            //         UpdatedAt = DateTime.UtcNow,
+            //         Status = 1
+            //     };
+            //     buildings.Add(building);
+
+            //     context.MstBuildings.AddRange(buildings);
+            //     context.SaveChanges();
+            // }
 
             // 4. MstFloor 
             if (!context.MstFloors.Any(f => f.Status != 0))
             {
-                var floorFaker = new Faker<MstFloor>()
-                    .RuleFor(f => f.Id, f => Guid.NewGuid())
-                    .RuleFor(f => f.BuildingId, f => context.MstBuildings
-                        .Where(b => b.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(f => f.Name, f => f.Address.StreetName())
-                    // .RuleFor(f => f.FloorImage, f => $"https://example.com/floorplans/{f.Random.Word()}.png")
-                    // .RuleFor(f => f.PixelX, f => f.Random.Float(1280, 1920))
-                    // .RuleFor(f => f.PixelY, f => f.Random.Float(720, 1080))
-                    // .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
-                    // .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
-                    // .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
-                    // .RuleFor(f => f.EngineFloorId, f => f.Random.Long(5000, 99999))
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(f => f.CreatedBy, f => "System")
-                    .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(f => f.UpdatedBy, f => "System")
-                    .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
-                    .RuleFor(f => f.Status, f => 1);
-
-                var floors = floorFaker.Generate(1);
-
-                                // Custom seeding
-                // var floor = new MstFloor
-                // {
-                //     Id = Guid.NewGuid(),
-                //     Name = "Gedung Tracking People",
-                //     // FloorImage = "https://example.com/buildings/custom.jpg",
-                //     // PixelX = 1280,
-                //     // PixelY = 280,
-                //     // FloorX = 17,
-                //     // FloorY = 4,
-                //     // MeterPerPx = 0.0137834819033742F,
-                //     // EngineFloorId = 5000,
-                //     ApplicationId = context.MstApplications
+                // var floorFaker = new Faker<MstFloor>()
+                //     .RuleFor(f => f.Id, f => Guid.NewGuid())
+                //     .RuleFor(f => f.BuildingId, f => context.MstBuildings
+                //         .Where(b => b.Status != 0)
+                //         .OrderBy(r => Guid.NewGuid())
+                //         .First()
+                //         .Id)
+                //     .RuleFor(f => f.Name, f => f.Address.StreetName())
+                //     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                 //         .Where(a => a.ApplicationStatus != 0)
                 //         .OrderBy(r => Guid.NewGuid())
                 //         .First()
-                //         .Id,
-                //     CreatedBy = "System",
-                //     CreatedAt = DateTime.UtcNow,
-                //     UpdatedBy = "System",
-                //     UpdatedAt = DateTime.UtcNow,
-                //     Status = 1
-                // };
+                //         .Id)
+                //     .RuleFor(f => f.CreatedBy, f => "System")
+                //     .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
+                //     .RuleFor(f => f.UpdatedBy, f => "System")
+                //     .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
+                //     .RuleFor(f => f.Status, f => 1);
+
+                // var floors = floorFaker.Generate(1);
+
+                // Custom seeding
+                var floor = new MstFloor
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Tracking People Floor",
+                    BuildingId = context.MstBuildings
+                        .Where(b => b.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id,
+                    ApplicationId = context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.MstFloors.Add(floor);
+                context.SaveChanges();
                 // floors.Add(floor);
 
-                context.MstFloors.AddRange(floors);
-                context.SaveChanges();
+                // context.MstFloors.AddRange(floors);
+                // context.SaveChanges();
             }
 
             // 5. MstFloorplan (bergantung pada MstFloor dan MstApplication)

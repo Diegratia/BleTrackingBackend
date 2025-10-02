@@ -133,6 +133,7 @@ namespace Repositories.Repository
                         Id = tb.Id,
                         DayOfWeek = tb.DayOfWeek.HasValue ? tb.DayOfWeek.Value.ToString() : null,
                         ApplicationId = tb.ApplicationId,
+                        TimeGroupId = tb.TimeGroupId,
                         StartTime = tb.StartTime,
                         EndTime = tb.EndTime
                     })
