@@ -38,27 +38,47 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var alarmTriggers = await _repository.GetByIdAsync(id);
-            if (alarmTriggers == null || alarmTriggers.IsActive == false)
-                throw new KeyNotFoundException($"alarmTriggers with ID {id} not found or has been deleted.");
+            if (alarmTriggers == null)
+                    throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} not found.");
 
-                 if (alarmTriggers.IsActive == false)
-                    throw new KeyNotFoundException($"alarmTriggers with beaconId {id} has been deleted.");
-                if (dto.ActionStatus == "investigated" || dto.ActionStatus == "postponeinvestigated" || dto.ActionStatus == "waiting")
-                {
-                    alarmTriggers.IsActive = true;
-                }
-                else
-                {
-                    alarmTriggers.IsActive = false;
-                }
+                            if (alarmTriggers.IsActive == false)
+                                throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} has been deleted.");
+                            if (dto.ActionStatus == "postponeinvestigated")
+                            {
+                                alarmTriggers.IsActive = true;
+                            }
+                            else if (dto.ActionStatus == "investigated")
+                            {
+                                alarmTriggers.IsActive = true;
+                                alarmTriggers.InvestigatedBy = username;
+                                alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
+                            }
+                            else if (dto.ActionStatus == "noaction")
+                            {
+                                alarmTriggers.IsActive = false;
+                                alarmTriggers.CancelBy = username;
+                                alarmTriggers.CancelTimestamp = DateTime.UtcNow;
+                            }
+                            else if (dto.ActionStatus == "waiting")
+                            {
+                                alarmTriggers.IsActive = false;
+                                alarmTriggers.WaitingBy = username;
+                                alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
+                            }
+                            else if (dto.ActionStatus == "done")
+                            {
+                                alarmTriggers.IsActive = false;
+                                alarmTriggers.DoneBy = username;
+                                alarmTriggers.DoneTimestamp = DateTime.UtcNow;
+                            }
+                    
+                            _mapper.Map(dto, alarmTriggers);
 
-            // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            // alarmTriggers.UpdatedBy = username;
-            // alarmTriggers.UpdatedAt = DateTime.UtcNow;
-            _mapper.Map(dto, alarmTriggers);
+                        
 
             await _repository.UpdateAsync(alarmTriggers);
         }
