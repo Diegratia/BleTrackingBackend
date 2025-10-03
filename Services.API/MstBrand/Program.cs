@@ -17,6 +17,7 @@
     using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using BusinessLogic.Services.Extension.RootExtension;
 
 
 try
@@ -56,8 +57,7 @@ try
 
 
     builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                            "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
     builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 
@@ -192,6 +192,7 @@ try
             c.RoutePrefix = string.Empty; 
         });
     }
+    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
 
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
@@ -200,6 +201,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseRateLimiter();
+    app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
     app.MapControllers().RequireRateLimiting("fixed");
     app.Run();
 

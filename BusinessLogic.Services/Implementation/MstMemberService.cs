@@ -16,22 +16,28 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class MstMemberService : IMstMemberService
     {
         private readonly MstMemberRepository _repository;
+        private readonly CardRepository _cardRepository;
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Max 5 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MstMemberService(MstMemberRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstMemberService(MstMemberRepository repository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        CardRepository cardRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cardRepository = cardRepository;
         }
 
         public async Task<IEnumerable<MstMemberDto>> GetAllMembersAsync()
@@ -54,8 +60,34 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto)
         {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var card = await _cardRepository.GetByIdAsync(createDto.CardId.Value);
+            if (card == null)
+                throw new InvalidOperationException("Card not found.");
+            Console.WriteLine("Username: {0}, Card: {1}", username, card);
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
+
+            var existingMember = await _repository.GetAllQueryable()
+            .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
+                                     b.IdentityId == createDto.IdentityId ||
+                                     b.PersonId == createDto.PersonId);
+            
+            if (existingMember != null)
+        {
+            if (existingMember.Email == createDto.Email)
+                throw new ArgumentException($"Member with Email {createDto.Email} already exists.");
+            if (existingMember.IdentityId == createDto.IdentityId)
+                throw new ArgumentException($"Member with IdentityId {createDto.IdentityId} already exists.");
+            if (existingMember.PersonId == createDto.PersonId)
+                throw new ArgumentException($"Member with PersonId {createDto.PersonId} already exists.");
+        }
+
+
+            if (card.IsUsed == true)
+                throw new InvalidOperationException("Card already checked in by another visitor.");
+            // if (card == null)
+            //     throw new InvalidOperationException("Card not found.");
 
             // Validasi relasi
             // var department = await _repository.GetDepartmentByIdAsync(createDto.DepartmentId);
@@ -118,18 +150,42 @@ namespace BusinessLogic.Services.Implementation
                 member.FaceImage = null;
             }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            member.Id = Guid.NewGuid();
-            member.Status = 1;
-            member.CreatedBy = username;
-            member.CreatedAt = DateTime.UtcNow;
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
-            member.JoinDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            member.ExitDate = DateOnly.MaxValue;
-            member.BirthDate = createDto.BirthDate;
+            var cardRecordDto = new CardRecordCreateDto
+        {
+            CardId = createDto.CardId,
+            MemberId = member.Id,
+        };
 
-            await _repository.AddAsync(member);
+                    member.Id = Guid.NewGuid();
+                    member.Status = 1;
+                    member.CreatedBy = username;
+                    member.CreatedAt = DateTime.UtcNow;
+                    member.UpdatedBy = username;
+                    member.UpdatedAt = DateTime.UtcNow;
+                    member.BleCardNumber = card.Dmac;
+                    member.CardNumber = card.CardNumber;
+
+            // member.JoinDate = createDto.JoinDate;
+            // member.BirthDate = createDto.BirthDate;
+
+            using var transaction = await _repository.BeginTransactionAsync();
+                try
+                {
+                    await _repository.AddAsync(member);
+                    card.IsUsed = true;
+                    card.LastUsed = member.Name;
+                    card.MemberId = member.Id;
+                    card.CheckinAt = DateTime.UtcNow;
+                    await _cardRepository.UpdateAsync(card);
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
             return _mapper.Map<MstMemberDto>(member);
         }
 

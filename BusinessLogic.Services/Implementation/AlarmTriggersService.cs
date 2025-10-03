@@ -77,9 +77,6 @@ namespace BusinessLogic.Services.Implementation
                             }
                     
                             _mapper.Map(dto, alarmTriggers);
-
-                        
-
             await _repository.UpdateAsync(alarmTriggers);
         }
         

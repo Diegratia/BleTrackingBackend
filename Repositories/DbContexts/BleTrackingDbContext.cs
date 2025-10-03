@@ -324,9 +324,9 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.OrganizationId).HasMaxLength(36);
+                entity.Property(e => e.DepartmentId).HasMaxLength(36);
+                entity.Property(e => e.DistrictId).HasMaxLength(36);
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(

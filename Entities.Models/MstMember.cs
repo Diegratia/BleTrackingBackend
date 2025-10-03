@@ -15,17 +15,14 @@ namespace Entities.Models
         [Column("person_id")]
         public string? PersonId { get; set; }
 
-        [Required]
         [Column("organization_id")]
-        public Guid OrganizationId { get; set; }
+        public Guid? OrganizationId { get; set; }
 
-        [Required]
         [Column("department_id")]
-        public Guid DepartmentId { get; set; }
+        public Guid? DepartmentId { get; set; }
 
-        [Required]
         [Column("district_id")]
-        public Guid DistrictId { get; set; }
+        public Guid? DistrictId { get; set; }
 
         [StringLength(255)]
         [Column("identity_id")]
@@ -93,13 +90,9 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
 
         public MstApplication Application { get; set; }
-
         public MstOrganization Organization { get; set; }
-
         public MstDepartment Department { get; set; }
-
         public MstDistrict District { get; set; }
-
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
     }
 }

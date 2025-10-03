@@ -442,8 +442,7 @@ public class VisitorService : IVisitorService
             CardId = createDto.CardId,
             VisitorId = visitor.Id,
         };
-    
-
+        
         // Perform all database operations in a transaction
             using var transaction = await _visitorRepository.BeginTransactionAsync();
         try
