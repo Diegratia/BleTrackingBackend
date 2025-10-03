@@ -27,6 +27,8 @@ namespace Entities.Models
 
         [Column("engine_id")]
         public string? EngineId { get; set; }
+        [Column("boundary_type")]
+        public BoundaryType BoundaryType { get; set; }
 
         [Column("is_active")]
         public int IsActive { get; set; }

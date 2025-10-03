@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Helpers.Consumer;
 
 namespace Data.ViewModels
 {
@@ -15,6 +16,7 @@ namespace Data.ViewModels
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
         public string? EngineId { get; set; }
+        public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
         public int Status { get; set; }
     }
@@ -27,6 +29,7 @@ namespace Data.ViewModels
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
         public string? EngineId { get; set; }
+        public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
     }
     public class BoundaryUpdateDto
@@ -38,6 +41,7 @@ namespace Data.ViewModels
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
         public string? EngineId { get; set; }
+        public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
     }
 }

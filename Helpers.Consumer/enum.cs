@@ -163,4 +163,11 @@ namespace Helpers.Consumer
         Medium,
         Low
     }
+
+    public enum BoundaryType
+    {
+        AtoB, 
+        BtoA,
+        Both
+    }
 }
