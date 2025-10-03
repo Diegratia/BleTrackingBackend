@@ -119,6 +119,8 @@ namespace Data.ViewModels
         public string? Address { get; set; }
         public IFormFile? FaceImage { get; set; }
         public DateOnly? BirthDate { get; set; }
+        public DateOnly? JoinDate { get; set; }
+        public Guid? CardId { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string

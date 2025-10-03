@@ -150,12 +150,6 @@ namespace BusinessLogic.Services.Implementation
                 member.FaceImage = null;
             }
 
-            var cardRecordDto = new CardRecordCreateDto
-        {
-            CardId = createDto.CardId,
-            MemberId = member.Id,
-        };
-
                     member.Id = Guid.NewGuid();
                     member.Status = 1;
                     member.CreatedBy = username;
@@ -189,106 +183,68 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstMemberDto>(member);
         }
 
-        public async Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto)
+            public async Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto)
         {
-            if (updateDto == null)
-                throw new ArgumentNullException(nameof(updateDto));
+            // if (updateDto == null)
+            //     throw new ArgumentNullException(nameof(updateDto));
 
             var member = await _repository.GetByIdAsync(id);
             if (member == null)
                 throw new KeyNotFoundException($"Member with ID {id} not found or has been deleted.");
 
-            // Validasi relasi jika berubah
-            // if (member.DepartmentId != updateDto.DepartmentId)
-            // {
-            //     var department = await _repository.GetDepartmentByIdAsync(updateDto.DepartmentId);
-            //     if (department == null)
-            //         throw new ArgumentException($"Department with ID {updateDto.DepartmentId} not found.");
-            //     member.DepartmentId = updateDto.DepartmentId;
-            // }
-
-            // if (member.OrganizationId != updateDto.OrganizationId)
-            // {
-            //     var organization = await _repository.GetOrganizationByIdAsync(updateDto.OrganizationId);
-            //     if (organization == null)
-            //         throw new ArgumentException($"Organization with ID {updateDto.OrganizationId} not found.");
-            //     member.OrganizationId = updateDto.OrganizationId;
-            // }
-
-            // if (member.DistrictId != updateDto.DistrictId)
-            // {
-            //     var district = await _repository.GetDistrictByIdAsync(updateDto.DistrictId);
-            //     if (district == null)
-            //         throw new ArgumentException($"District with ID {updateDto.DistrictId} not found.");
-            //     member.DistrictId = updateDto.DistrictId;
-            // }
-
-            // Tangani upload gambar
-            if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
-            {
-                try
-                {
-                    // Validasi tipe file
-                    if (string.IsNullOrEmpty(updateDto.FaceImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FaceImage.ContentType))
-                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                    // Validasi ukuran file
-                    if (updateDto.FaceImage.Length > MaxFileSize)
-                        throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                    // Hapus file lama jika ada
-                    if (!string.IsNullOrEmpty(member.FaceImage))
-                    {
-                        var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), member.FaceImage.TrimStart('/'));
-                        if (File.Exists(oldFilePath))
-                        {
-                            try
-                            {
-                                File.Delete(oldFilePath);
-                            }
-                            catch (IOException ex)
-                            {
-                                throw new IOException("Failed to delete old image file.", ex);
-                            }
-                        }
-                    }
-
-                    // Folder penyimpanan
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "MemberFaceImages");
-                    Directory.CreateDirectory(uploadDir);
-
-                    // Buat nama file unik
-                    var fileExtension = Path.GetExtension(updateDto.FaceImage.FileName)?.ToLower() ?? ".jpg";
-                    var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                    var filePath = Path.Combine(uploadDir, fileName);
-
-                    // Simpan file
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.FaceImage.CopyToAsync(stream);
-                    }
-
-                    member.FaceImage = $"/Uploads/MemberFaceImages/{fileName}";
-                    member.UploadFr = 1; // Sukses
-                    member.UploadFrError = "Upload successful";
-                }
-                catch (Exception ex)
-                {
-                    member.UploadFr = 2; // Gagal
-                    member.UploadFrError = ex.Message;
-                    member.FaceImage = null;
-                }
-            }
+            var cardId = updateDto.CardId ?? Guid.Empty;
+            var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdAsync(cardId) : null;
+            if (updateDto.CardId.HasValue && card == null)
+                throw new KeyNotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
-            member.BirthDate = updateDto.BirthDate;
 
-            _mapper.Map(updateDto, member);
-            await _repository.UpdateAsync(member);
+            using var transaction = await _repository.BeginTransactionAsync();
+            try
+            {
+                // Reset card lama (jika beda dengan card baru)
+                var oldCard = await _cardRepository.GetAllQueryable()
+                    .FirstOrDefaultAsync(c => c.MemberId == member.Id && c.StatusCard != 0);
+
+                if (oldCard != null && oldCard.Id != cardId)
+                {
+                    oldCard.IsUsed = false;
+                    oldCard.MemberId = null;
+                    oldCard.CheckinAt = null;
+                    await _cardRepository.UpdateAsync(oldCard);
+                }
+
+                // Assign card baru
+                if (updateDto.CardId.HasValue)
+                {
+                    if (card!.MemberId.HasValue && card.MemberId != member.Id)
+                        throw new InvalidOperationException("This card is already assigned to another member.");
+
+                    card.IsUsed = true;
+                    card.LastUsed = member.Name;
+                    card.MemberId = member.Id;
+                    card.CheckinAt = DateTime.UtcNow;
+                    await _cardRepository.UpdateAsync(card);
+                }
+
+                // Update member
+                _mapper.Map(updateDto, member);
+                member.UpdatedBy = username;
+                member.UpdatedAt = DateTime.UtcNow;
+
+                await _repository.UpdateAsync(member);
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
             return _mapper.Map<MstMemberDto>(member);
         }
+
 
         public async Task DeleteMemberAsync(Guid id)
         {
