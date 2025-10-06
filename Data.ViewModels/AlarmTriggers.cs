@@ -15,6 +15,7 @@ namespace Data.ViewModels
         public string SecondGatewayId { get; set; }
         public DateTime? TriggerTime { get; set; }
         public string? AlarmRecordStatus { get; set; }
+        public string? AlarmColor { get; set; }
         public string? ActionStatus { get; set; }
         public bool? IsActive { get; set; }
         public DateTime? IdleTimestamp { get; set; }
@@ -45,6 +46,7 @@ namespace Data.ViewModels
         public string SecondGatewayId { get; set; }
         public DateTime? TriggerTime { get; set; }
         public string? AlarmRecordStatus { get; set; }
+        public string? AlarmColor { get; set; }
         public string? ActionStatus { get; set; }
         public bool? IsActive { get; set; }
         public DateTime? IdleTimestamp { get; set; }

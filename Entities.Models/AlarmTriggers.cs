@@ -39,6 +39,8 @@ namespace Entities.Models
 
         [Column("trigger_time")]
         public DateTime? TriggerTime { get; set; }
+        [Column("alarm_color")]
+        public string? AlarmColor { get; set; }
 
         [Column("alarm_record_status")]
         public AlarmRecordStatus? Alarm { get; set; }

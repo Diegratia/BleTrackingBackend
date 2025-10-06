@@ -166,8 +166,8 @@ namespace Helpers.Consumer
 
     public enum BoundaryType
     {
-        Both,
-        AtoB, 
-        BtoA
+        Both, // 0
+        AtoB, // 1
+        BtoA // 2
     }
 }
