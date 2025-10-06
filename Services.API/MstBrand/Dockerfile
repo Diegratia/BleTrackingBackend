@@ -1,43 +1,39 @@
-# =============================
-# 🧱 Step 1 - Build & Restore
-# =============================
+# build with cache
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Salin file project & solution saja (agar restore bisa di-cache)
-COPY *.sln ./
-COPY Services.API/MstBrand/MstBrand.csproj Services.API/MstBrand/
-COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
-COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/
-COPY Repositories/Repositories.csproj Repositories/
-COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
+# copy project file dulu
+  COPY *.sln ./
+  COPY Services.API/MstBrand/MstBrand.csproj Services.API/MstBrand/
+  COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
+  COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/
+  COPY Entities.Models/Entities.Models.csproj Entities.Models/
+  COPY Helpers.Consumer/Helpers.Consumer.csproj Helpers.Consumer/
+  COPY Repositories/Repositories.csproj Repositories/
+  COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-# Restore hanya project target agar layer restore bisa di-cache
-RUN dotnet restore Services.API/MstBrand/MstBrand.csproj
+WORKDIR /app/Services.API/MstBrand
+RUN dotnet restore
 
-# Salin seluruh source code
+# copy source code
+WORKDIR /app
 COPY . .
 
-# Build project
-RUN dotnet build Services.API/MstBrand/MstBrand.csproj -c Release -o /app/build
+# output publish
+WORKDIR /app/Services.API/MstBrand
+RUN dotnet publish -c Release -o out
 
-# Publish ke lokasi sesuai struktur aslimu
-RUN dotnet publish Services.API/MstBrand/MstBrand.csproj -c Release -o /app/Services.API/MstBrand/out
-
-
-# =============================
-# 🚀 Step 2 - Runtime
-# =============================
+# runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Salin hasil publish dari stage build
+# copy hasil build
 COPY --from=build /app/Services.API/MstBrand/out ./
 
-# Port sesuai API-mu
 EXPOSE 5009
-
 ENTRYPOINT ["dotnet", "MstBrand.dll"]
+
+
 
 
 
@@ -48,11 +44,8 @@ ENTRYPOINT ["dotnet", "MstBrand.dll"]
 # COPY ./ ./
 
 # WORKDIR /app/Services.API/MstBrand
-# # COPY Services.API/MstBrand/*.csproj ./
-# # COPY Services.API/Common/ ./Common/
 # RUN dotnet restore
 
-# # COPY Services.API/MstBrand/ ./
 # RUN dotnet publish -c Release -o out
 
 # FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
