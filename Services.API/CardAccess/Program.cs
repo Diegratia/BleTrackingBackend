@@ -151,7 +151,7 @@ builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_ACCESS_PORT") ??
-           builder.Configuration["Ports:CardRecordService"] ?? "5028";
+           builder.Configuration["Ports:CardAccessService"] ?? "5028";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
