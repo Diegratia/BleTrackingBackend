@@ -1,6 +1,6 @@
 using System;
 using System.Text.Json.Serialization;
-using Azure.Core.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Data.ViewModels
 {
