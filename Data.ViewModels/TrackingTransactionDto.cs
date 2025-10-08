@@ -9,6 +9,8 @@ namespace Data.ViewModels
         public DateTime? TransTime { get; set; }
         public Guid? ReaderId { get; set; }
         public Guid? CardId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
         public Guid? FloorplanMaskedAreaId { get; set; }
         public float? CoordinateX { get; set; }
         public float? CoordinateY { get; set; }
