@@ -218,11 +218,38 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
-
+  monitoring-config:
+    image: dev1pci2025/bletrackingbackend-monitoring-config:latest
+    ports:
+      - "5029:5029"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  geofence:
+    image: dev1pci2025/bletrackingbackend-geofence:latest
+    ports:
+      - "5030:5030"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
   card:
     image: dev1pci2025/bletrackingbackend-card:latest
     ports:
       - "5026:5026"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  visitor-card:
+    image: dev1pci2025/bletrackingbackend-visitor-card:latest
+    ports:
+      - "5028:5028"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  alarm-triggers:
+    image: dev1pci2025/bletrackingbackend-alarm-triggers:latest
+    ports:
+      - "5029:5029"
     volumes:
       - ./.env:/app/.env
     restart: always
