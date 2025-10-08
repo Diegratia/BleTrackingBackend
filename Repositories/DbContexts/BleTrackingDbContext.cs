@@ -387,6 +387,7 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BuildingId)
                     .OnDelete(DeleteBehavior.NoAction);
+                    
             });
 
             // FloorplanMaskedArea
@@ -510,6 +511,8 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.MemberId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.CardId).HasMaxLength(36);
                 entity.Property(e => e.AlarmStatus)
@@ -527,6 +530,16 @@ namespace Repositories.DbContexts
                 entity.HasOne(t => t.Reader)
                     .WithMany()
                     .HasForeignKey(t => t.ReaderId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Visitor)
+                    .WithMany()
+                    .HasForeignKey(t => t.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Member)
+                    .WithMany()
+                    .HasForeignKey(t => t.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(t => t.FloorplanMaskedArea)
@@ -645,9 +658,11 @@ namespace Repositories.DbContexts
                 entity.ToTable("mst_floorplan");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
+                // entity.Property(e => e.EngineId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
 
+                // entity.HasOne(f => f.Engine).WithMany().HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Floor).WithMany().HasForeignKey(f => f.FloorId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Application).WithMany().HasForeignKey(f => f.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 

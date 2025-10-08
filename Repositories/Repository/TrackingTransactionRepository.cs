@@ -96,6 +96,8 @@ namespace Repositories.Repository
 
             var query = _context.TrackingTransactions
                 .IgnoreQueryFilters()  
+                .Include(t => t.Member)
+                .Include(t => t.Visitor)
                 .Include(t => t.Reader)
                 .Include(t => t.Card)
                 .Include(t => t.FloorplanMaskedArea);

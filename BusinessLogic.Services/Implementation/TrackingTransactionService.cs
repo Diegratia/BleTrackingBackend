@@ -78,8 +78,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] {  "Reader.Name", "FloorplanMaskedArea.Name" };
-            var validSortColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "TransTime", "CardId", "AlarmStatus" };
+            var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+            var validSortColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name","TransTime", "CardId", "AlarmStatus" };
 
             var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
                 query,
