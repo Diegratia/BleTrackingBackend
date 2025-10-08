@@ -223,7 +223,7 @@ try
             c.RoutePrefix = string.Empty; 
         });
     }
-    // var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
 
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
@@ -232,9 +232,9 @@ try
     app.UseAuthentication();
     app.UseAuthorization(); 
     // app.UseRateLimiter();
-    // app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
-    // app.MapControllers().RequireRateLimiting("fixed");
-    // app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
+    app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    app.MapControllers();
     app.MapControllers();
     app.Run();
 
