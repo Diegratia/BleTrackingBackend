@@ -247,13 +247,13 @@ services:
     ports:
       - "5028:5028"
     volumes:
-      - ./.env:/app/.env
+      - ./.env:/app/.envc
     restart: always
     
   alarm-triggers:
     image: dev1pci2025/bletrackingbackend-alarm-triggers:latest
     ports:
-      - "5029:5029"
+      - "5027:5027"
     volumes:
       - ./.env:/app/.env
     restart: always

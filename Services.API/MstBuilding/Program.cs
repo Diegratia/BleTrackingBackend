@@ -199,7 +199,7 @@ app.UseStaticFiles(new StaticFileOptions
 // app.MapControllers();
 // app.Run();
 
-    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+    // var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
 
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
@@ -208,8 +208,8 @@ app.UseStaticFiles(new StaticFileOptions
     app.UseAuthentication();
     app.UseAuthorization(); 
     // app.UseRateLimiter();
-    app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
-    app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    // app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
+    // app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
     app.MapControllers();
     app.Run();
 
