@@ -25,7 +25,7 @@ WORKDIR /app
 
 COPY --from=build /app/Services.API/MstBuilding/out ./
 
-EXPOSE 5008
+EXPOSE 5010
 ENTRYPOINT ["dotnet", "MstBuilding.dll"]
 
 # FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
