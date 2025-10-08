@@ -242,8 +242,8 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-card:
-    image: dev1pci2025/bletrackingbackend-visitor-card:latest
+  card-access:
+    image: dev1pci2025/bletrackingbackend-card-access:latest
     ports:
       - "5028:5028"
     volumes:
