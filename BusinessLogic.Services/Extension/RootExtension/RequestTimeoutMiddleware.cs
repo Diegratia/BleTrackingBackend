@@ -33,6 +33,7 @@ namespace BusinessLogic.Services.Extension.RootExtension
                 {
                     context.Response.StatusCode = StatusCodes.Status408RequestTimeout;
                     context.Response.ContentType = "application/json";
+                    
                     var response = new
                     {
                         success = false,

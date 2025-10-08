@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 try
 {
@@ -135,6 +137,18 @@ builder.Services.AddScoped<IMstDistrictService, MstDistrictService>();
 
 builder.Services.AddScoped<MstDistrictRepository>();
 
+            builder.Services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("fixed", opt =>
+            {
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.PermitLimit = 150;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
+
 
 var port = Environment.GetEnvironmentVariable("MST_DISTRICT_PORT") ?? "5012" ??
            builder.Configuration["Ports:MstDistrictService"];
@@ -175,7 +189,7 @@ app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("fixed");
 app.Run();
 
 

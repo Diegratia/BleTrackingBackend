@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
+
 
 try
 {
@@ -42,8 +44,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -190,13 +191,27 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 
-// app.UseHttpsRedirection();
-app.UseRouting();
-app.UseApiKeyAuthentication();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+// // app.UseHttpsRedirection();
+// app.UseRouting();
+// app.UseApiKeyAuthentication();
+// app.UseAuthentication();
+// app.UseAuthorization();
+// app.MapControllers();
+// app.Run();
+
+    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+
+    app.UseCors("AllowAll");
+    // app.UseHttpsRedirection();
+    app.UseRouting();
+    app.UseApiKeyAuthentication();
+    app.UseAuthentication();
+    app.UseAuthorization(); 
+    // app.UseRateLimiter();
+    app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
+    app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    app.MapControllers();
+    app.Run();
 
 
 

@@ -14,7 +14,7 @@
     using DotNetEnv;
     using FluentValidation;
     using FluentValidation.AspNetCore;
-    using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using BusinessLogic.Services.Extension.RootExtension;
@@ -148,17 +148,41 @@ try
     builder.Services.AddScoped<IMstBrandService, MstBrandService>();
     builder.Services.AddScoped<MstBrandRepository>();
 
-            builder.Services.AddRateLimiter(options =>
-        {
-            options.AddFixedWindowLimiter("fixed", opt =>
-            {
-                opt.Window = TimeSpan.FromMinutes(15);
-                opt.PermitLimit = 150;
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0;
-            });
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-        });
+    // builder.Services.AddRateLimiter(options =>
+    // {
+    //     options.AddFixedWindowLimiter("fixed", opt =>
+    //     {
+    //         opt.Window = TimeSpan.FromMinutes(1);
+    //         opt.PermitLimit = 150;
+    //         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    //         opt.QueueLimit = 0;
+    //     });
+
+    //     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    //     options.OnRejected = async (context, token) =>
+    //     {
+    //         var httpResponse = context.HttpContext.Response;
+    //         httpResponse.StatusCode = StatusCodes.Status429TooManyRequests;
+    //         httpResponse.ContentType = "application/json";
+
+    //         // Optional: tambahkan header supaya client tahu kapan bisa retry
+    //         httpResponse.Headers["Retry-After"] = ((int)TimeSpan.FromMinutes(1).TotalSeconds).ToString();
+
+    //         var response = new
+    //         {
+    //             success = false,
+    //             msg = "Too many requests. Please try again later.",
+    //             collection = new { data = (object?)null },
+    //             code = 429
+    //         };
+
+    //         var json = System.Text.Json.JsonSerializer.Serialize(response);
+
+    //         await httpResponse.WriteAsync(json, token);
+    //     };
+    // });
+
 
     var port = Environment.GetEnvironmentVariable("MST_BRAND_PORT") ?? "5009" ??
             builder.Configuration["Ports:MstBrandService"];
@@ -167,21 +191,28 @@ try
     builder.WebHost.UseUrls($"http://{host}:{port}");
 
     var app = builder.Build();
+    
+    app.MapGet("/hc", () => Results.Ok(new
+    {
+        code = 200,
+        msg = "Health Check",
+    }))
+    .AllowAnonymous();
 
     using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-        try
-        {
-            // context.Database.Migrate(); 
-            // DatabaseSeeder.Seed(context); 
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error during migration or seeding: {ex.Message}");
-            throw;
-        }
+        // context.Database.Migrate(); 
+        // DatabaseSeeder.Seed(context); 
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
+        throw;
+    }
+}
 
     if (app.Environment.IsDevelopment())
     {
@@ -199,10 +230,12 @@ try
     app.UseRouting();
     app.UseApiKeyAuthentication();
     app.UseAuthentication();
-    app.UseAuthorization();
-    app.UseRateLimiter();
+    app.UseAuthorization(); 
+    // app.UseRateLimiter();
     app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
-    app.MapControllers().RequireRateLimiting("fixed");
+    // app.MapControllers().RequireRateLimiting("fixed");
+    app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    app.MapControllers();
     app.Run();
 
 
