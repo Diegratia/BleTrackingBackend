@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     [Route("api/[controller]")]
     [ApiController]
     public class MstEngineController : ControllerBase
@@ -259,7 +259,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -280,7 +280,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -301,5 +301,20 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+            // GET: [HttpPost("stop/{engineId}")]
+            [HttpPost("stop/{engineId}")]
+            public async Task<IActionResult> StopEngine(string engineId)
+            {
+                await _mstEngineService.StopEngineAsync(engineId);
+                return Ok(new { message = $"Stop command sent to engine {engineId}" });
+            }
+            // GET: [HttpPost("start/{engineId}")]
+            [HttpPost("start/{engineId}")]
+            public async Task<IActionResult> StartEngine(string engineId)
+            {
+                await _mstEngineService.StartEngineAsync(engineId);
+                return Ok(new { message = $"Start command sent to engine {engineId}" });
+            }
+
     }
 }

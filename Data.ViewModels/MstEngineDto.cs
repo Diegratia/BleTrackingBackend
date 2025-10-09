@@ -25,8 +25,13 @@ namespace Data.ViewModels
         public ServiceStatus? ServiceStatus { get; set; }
     }
 
-    public class MstEngineUpdateDto 
+    public class MstEngineUpdateDto
     {
         public string? Name { get; set; }
+        public string? EngineId { get; set; }
+        public int? Port { get; set; }
+        public int? IsLive { get; set; }
+        public DateTime? LastLive { get; set; }
+        public ServiceStatus? ServiceStatus { get; set; }
     }
 }

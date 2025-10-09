@@ -155,7 +155,9 @@ namespace Helpers.Consumer
     public enum ServiceStatus
     {
         Start,
-        Stop
+        Stop,
+        Online,
+        Offline
     }
     public enum AlarmLevelPriority
     {

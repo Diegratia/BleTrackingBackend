@@ -712,10 +712,10 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstEngine>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.EngineId).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1); // untuk delete
-                entity.Property(e => e.IsLive).IsRequired().HasDefaultValue(1); // untuk monitoring status
-                entity.Property(e => e.LastLive).IsRequired();
+                entity.Property(e => e.EngineId).HasMaxLength(255);
+                entity.Property(e => e.Status); 
+                entity.Property(e => e.IsLive); 
+                entity.Property(e => e.LastLive);
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -725,7 +725,6 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.ServiceStatus).HasMaxLength(50)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)

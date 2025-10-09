@@ -38,10 +38,10 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            if (request.Length == 0)
-            {
-                request.Length = await _query.CountAsync();
-            }
+            // if (request.Length == 0)
+            // {
+            //     request.Length = await _query.CountAsync();
+            // }
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
@@ -274,7 +274,11 @@ namespace BusinessLogic.Services.Implementation
             query = query.OrderBy($"{request.SortColumn} {sortDirection}");
 
             // Paging
-            query = query.Skip(request.Start).Take(request.Length);
+                if (request.Length == 0)
+            {
+                request.Length = await _query.CountAsync();
+            }
+            // query = query.Skip(request.Start).Take(request.Length);
 
             // Execute query
             var data = await query.ToListAsync();

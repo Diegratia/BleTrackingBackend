@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace Helpers.Consumer.Mqtt
 {
-    public interface IMqttPublisher
+    public interface IMqttClientService
     {
         Task PublishAsync(string topic, string payload, bool retain = false, int qos = 1);
+        Task SubscribeAsync(string topic, int qos = 1);
+        event Func<string, string, Task>? OnMessageReceived;
     }
 }
 

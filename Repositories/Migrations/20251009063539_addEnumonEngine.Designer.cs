@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251009063539_addEnumonEngine")]
+    partial class addEnumonEngine
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1882,15 +1885,20 @@ namespace Repositories.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<string>("EngineId")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("engine_id");
 
                     b.Property<int?>("IsLive")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
+                        .HasDefaultValue(1)
                         .HasColumnName("is_live");
 
                     b.Property<DateTime?>("LastLive")
+                        .IsRequired()
                         .HasColumnType("datetime2")
                         .HasColumnName("last_live");
 
@@ -1904,12 +1912,16 @@ namespace Repositories.Migrations
                         .HasColumnName("port");
 
                     b.Property<string>("ServiceStatus")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("service_status");
 
                     b.Property<int?>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
+                        .HasDefaultValue(1)
                         .HasColumnName("status");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1925,8 +1937,7 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("EngineId")
-                        .IsUnique()
-                        .HasFilter("[engine_id] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("mst_engine", (string)null);
                 });

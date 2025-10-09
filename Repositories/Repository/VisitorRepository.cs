@@ -37,7 +37,7 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
-                public async Task<Visitor?> GetByIdPublicDuplicateAsync(string email, string identityId, string personId, Guid id)
+        public async Task<Visitor?> GetByIdPublicDuplicateAsync(string email, string identityId, string personId, Guid id)
         {
             return await _context.Visitors
             .Where(x => x.Id == id && x.Status != 0)

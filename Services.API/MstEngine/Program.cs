@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Implementation.EngineService;
 
 try
 {
@@ -43,7 +45,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -134,7 +136,9 @@ builder.Services.AddAutoMapper(typeof(MstEngineProfile));
 builder.Services.AddScoped<IMstEngineService, MstEngineService>();
 
 builder.Services.AddScoped<MstEngineRepository>();
-
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<EngineMqttListener>();
+// builder.Services.AddHostedService<EngineStatusMonitor>(); 
 
 
 var port = Environment.GetEnvironmentVariable("MST_ENGINE_PORT") ??

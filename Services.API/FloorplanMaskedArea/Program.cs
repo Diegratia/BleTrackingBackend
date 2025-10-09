@@ -146,7 +146,7 @@ builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaServi
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 
-builder.Services.AddSingleton<IMqttPublisher, MqttPublisher>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 
 var port = Environment.GetEnvironmentVariable("FLOORPLAN_MASKED_AREA_PORT") ?? "5004" ??

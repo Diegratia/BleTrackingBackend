@@ -12,13 +12,14 @@ namespace BusinessLogic.Services.Extension
     {
         public MstEngineProfile()
         {
-            CreateMap<MstEngine, MstEngineDto>() 
+            CreateMap<MstEngine, MstEngineDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.IsLive, opt => opt.MapFrom(src => src.IsLive));
             CreateMap<MstEngineCreateDto, MstEngine>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             CreateMap<MstEngineUpdateDto, MstEngine>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore());
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
                  
         }
     }

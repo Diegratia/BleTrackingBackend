@@ -11,7 +11,7 @@
     <PackageReference Include="Bogus" Version="35.6.2" />
     <PackageReference Include="BCrypt.Net" Version="0.1.0" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
-    <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
+    <PackageReference Include="MQTTnet" Version="4.3.3.952" />
         <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.6" />
      <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="QuestPDF" Version="2025.7.0" />
