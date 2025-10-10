@@ -193,7 +193,7 @@ namespace BusinessLogic.Services.Implementation
                                 {
                                     // Karena HasConversion menyimpan sebagai lowercase string
                                     var dbValue = enumValue.ToString().ToLower();
-                                    query = query.Where($"{filter.Key}.ToLower() == @0", dbValue);
+                                    query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower() == @0", dbValue);
                                 }
                                 else
                                 {
