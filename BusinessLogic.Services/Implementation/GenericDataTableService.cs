@@ -104,192 +104,389 @@ namespace BusinessLogic.Services.Implementation
                     }
                 }
             }
+            
 
-            // Custom filters
+
+            // 🧩 Apply Custom Filters
             if (request.Filters != null && request.Filters.Any())
             {
                 foreach (var filter in request.Filters)
                 {
+                    // ⛔ Skip jika key kosong
                     if (string.IsNullOrEmpty(filter.Key))
                         continue;
 
-
+                    var key = filter.Key;
                     var value = filter.Value;
-                    // if (value == null || value.ToString() == "empty")
 
-                    // return new
-                    // {
-                    //     draw = request.Draw,
-                    //     recordsTotal = totalRecords,
-                    //     recordsFiltered = 0,
-                    //     data = "",
-                    // };
+                    // ⛔ Skip jika value null
                     if (value == null)
                         continue;
 
-                    if (value is JsonElement jsonElement)
+                    // =========================
+                    // 1️⃣ Handle JsonElement Value
+                    // =========================
+                    if (value is JsonElement json)
                     {
-                        if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+                        // 🔹 Handle GUID / ID filters
+                        if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
-                            // Handle single Guid or array of Guids
-                            if (jsonElement.ValueKind == JsonValueKind.Array)
+                            if (json.ValueKind == JsonValueKind.Array)
                             {
-                                var guidValues = jsonElement.EnumerateArray()
-                                    .Select(e => Guid.TryParse(e.GetString(), out var guid) ? guid : (Guid?)null)
+                                var guids = json.EnumerateArray()
+                                    .Select(e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null)
                                     .Where(g => g.HasValue)
                                     .Select(g => g.Value)
                                     .ToArray();
-                                if (guidValues.Any())
-                                {
-                                    query = query.Where($"@0.Contains({filter.Key})", guidValues);
-                                }
+
+                                if (guids.Any())
+                                    query = query.Where($"@0.Contains({key})", guids);
                             }
-                            else if (jsonElement.ValueKind == JsonValueKind.String && Guid.TryParse(jsonElement.GetString(), out var guidValue))
+                            else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
                             {
-                                query = query.Where($"{filter.Key} == @0", guidValue);
+                                query = query.Where($"{key} == @0", guidVal);
                             }
                             else
                             {
-                                var stringValue = jsonElement.GetString();
-                                query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
+                                var strVal = json.GetString();
+                                query = query.Where($"{key} != null && {key}.ToLower().Contains(@0)", strVal.ToLower());
                             }
+
+                            continue;
                         }
-            
-                        else if (_enumColumns.ContainsKey(filter.Key))
+
+                        // 🔹 Handle Enum columns
+                        if (_enumColumns.ContainsKey(key))
                         {
-                            var enumType = _enumColumns[filter.Key];
-                            if (jsonElement.ValueKind == JsonValueKind.Array)
+                            var enumType = _enumColumns[key];
+
+                            if (json.ValueKind == JsonValueKind.Array)
                             {
-                                var enumValues = jsonElement.EnumerateArray()
+                                var enumValues = json.EnumerateArray()
                                     .Select(e =>
                                     {
                                         if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
-                                        {
                                             return Enum.IsDefined(enumType, intVal) ? Enum.ToObject(enumType, intVal) : null;
-                                        }
-                                        else if (e.ValueKind == JsonValueKind.String && Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
-                                        {
+
+                                        if (e.ValueKind == JsonValueKind.String &&
+                                            Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
                                             return enumObj;
-                                        }
+
                                         return null;
                                     })
                                     .Where(v => v != null)
                                     .ToArray();
 
                                 if (enumValues.Any())
-                                {
-                                    query = query.Where($"@0.Contains({filter.Key})", enumValues);
-                                }
+                                    query = query.Where($"@0.Contains({key})", enumValues);
                             }
-                            else if (jsonElement.ValueKind == JsonValueKind.String)
+                            else if (json.ValueKind == JsonValueKind.String)
                             {
-                                var stringValue = jsonElement.GetString();
-                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
-                                {
-                                    query = query.Where($"{filter.Key} == @0", enumValue);
-                                }
+                                var strVal = json.GetString();
+                                if (Enum.TryParse(enumType, strVal, true, out var enumVal))
+                                    query = query.Where($"{key} == @0", enumVal);
                                 else
-                                {
-                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
-                                }
+                                    throw new ArgumentException($"Invalid enum value for '{key}': {strVal}");
                             }
-                            else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
+                            else if (json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out var intEnum))
                             {
-                                var enumValue = Enum.ToObject(enumType, intEnumVal);
-                                query = query.Where($"{filter.Key} == @0", enumValue);
+                                var enumVal = Enum.ToObject(enumType, intEnum);
+                                query = query.Where($"{key} == @0", enumVal);
                             }
                             else
                             {
-                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
+                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{key}': {json.ValueKind}");
                             }
+
+                            continue;
                         }
-                        else if (jsonElement.ValueKind == JsonValueKind.String)
+
+                        // 🔹 Handle simple JsonElement types
+                        switch (json.ValueKind)
                         {
-                            query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString().ToLower());
+                            case JsonValueKind.String:
+                                query = query.Where($"{key} != null && {key}.ToString().ToLower().Contains(@0)", json.GetString().ToLower());
+                                break;
+
+                            case JsonValueKind.Number when json.TryGetInt32(out var intVal):
+                                query = query.Where($"{key} == @0", intVal);
+                                break;
+
+                            case JsonValueKind.Number when json.TryGetSingle(out var floatVal):
+                                query = query.Where($"{key} == @0", floatVal);
+                                break;
+
+                            case JsonValueKind.True:
+                            case JsonValueKind.False:
+                                query = query.Where($"{key} == @0", json.GetBoolean());
+                                break;
+
+                            default:
+                                throw new ArgumentException($"Unsupported JsonElement type for '{key}': {json.ValueKind}");
                         }
-                        else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
-                        {
-                            query = query.Where($"{filter.Key} == @0", intValue);
-                        }
-                        else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetSingle(out var floatValue))
-                        {
-                            query = query.Where($"{filter.Key} == @0", floatValue);
-                        }
-                        else if (jsonElement.ValueKind == JsonValueKind.True || jsonElement.ValueKind == JsonValueKind.False)
-                        {
-                            query = query.Where($"{filter.Key} == @0", jsonElement.GetBoolean());
-                        }
-                        else
-                        {
-                            throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
-                        }
+
+                        continue;
                     }
-                    else if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(filter.Key))
+
+                    // =========================
+                    // 2️⃣ Handle Non-JsonElement Value
+                    // =========================
+
+                    // 🔹 Enum Collections
+                    if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(key))
                     {
-                        var enumType = _enumColumns[filter.Key];
-                        var enumValues = enumCollection
-                            .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var enumValue) ? enumValue : null)
+                        var enumType = _enumColumns[key];
+                        var enums = enumCollection
+                            .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var parsed) ? parsed : null)
                             .Where(e => e != null)
                             .ToArray();
-                        if (enumValues.Any())
-                        {
-                            query = query.Where($"@0.Contains({filter.Key})", enumValues);
-                        }
+
+                        if (enums.Any())
+                            query = query.Where($"@0.Contains({key})", enums);
+
+                        continue;
                     }
-                    else if (value is IEnumerable<Guid> guidCollection)
+
+                    // 🔹 GUID Collections
+                    if (value is IEnumerable<Guid> guidCollection)
                     {
-                        var guidValues = guidCollection.ToArray();
-                        if (guidValues.Any())
-                        {
-                            query = query.Where($"@0.Contains({filter.Key})", guidValues);
-                        }
+                        var guids = guidCollection.ToArray();
+                        if (guids.Any())
+                            query = query.Where($"@0.Contains({key})", guids);
+
+                        continue;
                     }
-                    else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
+
+                    // 🔹 String values
+                    if (value is string str && !string.IsNullOrEmpty(str))
                     {
-                        if (_enumColumns.ContainsKey(filter.Key))
+                        if (_enumColumns.ContainsKey(key))
                         {
-                            var enumType = _enumColumns[filter.Key];
-                            if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
-                            {
-                                query = query.Where($"{filter.Key} == @0", enumValue);
-                            }
+                            var enumType = _enumColumns[key];
+                            if (Enum.TryParse(enumType, str, true, out var enumVal))
+                                query = query.Where($"{key} == @0", enumVal);
                             else
-                            {
-                                throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
-                            }
+                                throw new ArgumentException($"Invalid enum value for '{key}': {str}");
                         }
                         else
                         {
-                            query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", stringValue.ToLower());
+                            query = query.Where($"{key} != null && {key}.ToString().ToLower().Contains(@0)", str.ToLower());
                         }
+
+                        continue;
                     }
-                    else if (value is Guid guidValue)
+
+                    // 🔹 Simple value types
+                    switch (value)
                     {
-                        query = query.Where($"{filter.Key} == @0", guidValue);
-                    }
-                    else if (value is int intValue)
-                    {
-                        query = query.Where($"{filter.Key} == @0", intValue);
-                    }
-                    else if (value is float floatValue)
-                    {
-                        query = query.Where($"{filter.Key} == @0", floatValue);
-                    }
-                    else if (value is bool boolValue)
-                    {
-                        query = query.Where($"{filter.Key} == @0", boolValue);
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"Unsupported filter type for column '{filter.Key}': {value.GetType().Name}");
+                        case Guid guidVal:
+                            query = query.Where($"{key} == @0", guidVal);
+                            break;
+
+                        case int intVal:
+                            query = query.Where($"{key} == @0", intVal);
+                            break;
+
+                        case float floatVal:
+                            query = query.Where($"{key} == @0", floatVal);
+                            break;
+
+                        case bool boolVal:
+                            query = query.Where($"{key} == @0", boolVal);
+                            break;
+
+                        default:
+                            throw new ArgumentException($"Unsupported filter type for column '{key}': {value.GetType().Name}");
                     }
                 }
             }
 
+
+            // // Custom filters
+            // if (request.Filters != null && request.Filters.Any())
+            // {
+            //     foreach (var filter in request.Filters)
+            //     {
+            //         if (string.IsNullOrEmpty(filter.Key))
+            //             continue;
+
+
+            //         var value = filter.Value;
+            //         // if (value == null || value.ToString() == "empty")
+
+            //         // return new
+            //         // {
+            //         //     draw = request.Draw,
+            //         //     recordsTotal = totalRecords,
+            //         //     recordsFiltered = 0,
+            //         //     data = "",
+            //         // };
+            //         if (value == null)
+            //             continue;
+
+            //         if (value is JsonElement jsonElement)
+            //         {
+            //             if (filter.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+            //             {
+            //                 // Handle single Guid or array of Guids
+            //                 if (jsonElement.ValueKind == JsonValueKind.Array)
+            //                 {
+            //                     var guidValues = jsonElement.EnumerateArray()
+            //                         .Select(e => Guid.TryParse(e.GetString(), out var guid) ? guid : (Guid?)null)
+            //                         .Where(g => g.HasValue)
+            //                         .Select(g => g.Value)
+            //                         .ToArray();
+            //                     if (guidValues.Any())
+            //                     {
+            //                         query = query.Where($"@0.Contains({filter.Key})", guidValues);
+            //                     }
+            //                 }
+            //                 else if (jsonElement.ValueKind == JsonValueKind.String && Guid.TryParse(jsonElement.GetString(), out var guidValue))
+            //                 {
+            //                     query = query.Where($"{filter.Key} == @0", guidValue);
+            //                 }
+            //                 else
+            //                 {
+            //                     var stringValue = jsonElement.GetString();
+            //                     query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
+            //                 }
+            //             }
+
+            //             else if (_enumColumns.ContainsKey(filter.Key))
+            //             {
+            //                 var enumType = _enumColumns[filter.Key];
+            //                 if (jsonElement.ValueKind == JsonValueKind.Array)
+            //                 {
+            //                     var enumValues = jsonElement.EnumerateArray()
+            //                         .Select(e =>
+            //                         {
+            //                             if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
+            //                             {
+            //                                 return Enum.IsDefined(enumType, intVal) ? Enum.ToObject(enumType, intVal) : null;
+            //                             }
+            //                             else if (e.ValueKind == JsonValueKind.String && Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
+            //                             {
+            //                                 return enumObj;
+            //                             }
+            //                             return null;
+            //                         })
+            //                         .Where(v => v != null)
+            //                         .ToArray();
+
+            //                     if (enumValues.Any())
+            //                     {
+            //                         query = query.Where($"@0.Contains({filter.Key})", enumValues);
+            //                     }
+            //                 }
+            //                 else if (jsonElement.ValueKind == JsonValueKind.String)
+            //                 {
+            //                     var stringValue = jsonElement.GetString();
+            //                     if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+            //                     {
+            //                         query = query.Where($"{filter.Key} == @0", enumValue);
+            //                     }
+            //                     else
+            //                     {
+            //                         throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+            //                     }
+            //                 }
+            //                 else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
+            //                 {
+            //                     var enumValue = Enum.ToObject(enumType, intEnumVal);
+            //                     query = query.Where($"{filter.Key} == @0", enumValue);
+            //                 }
+            //                 else
+            //                 {
+            //                     throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonElement.ValueKind}");
+            //                 }
+            //             }
+            //             else if (jsonElement.ValueKind == JsonValueKind.String)
+            //             {
+            //                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString().ToLower());
+            //             }
+            //             else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
+            //             {
+            //                 query = query.Where($"{filter.Key} == @0", intValue);
+            //             }
+            //             else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetSingle(out var floatValue))
+            //             {
+            //                 query = query.Where($"{filter.Key} == @0", floatValue);
+            //             }
+            //             else if (jsonElement.ValueKind == JsonValueKind.True || jsonElement.ValueKind == JsonValueKind.False)
+            //             {
+            //                 query = query.Where($"{filter.Key} == @0", jsonElement.GetBoolean());
+            //             }
+            //             else
+            //             {
+            //                 throw new ArgumentException($"Unsupported JsonElement type for column '{filter.Key}': {jsonElement.ValueKind}");
+            //             }
+            //         }
+            //         else if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(filter.Key))
+            //         {
+            //             var enumType = _enumColumns[filter.Key];
+            //             var enumValues = enumCollection
+            //                 .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var enumValue) ? enumValue : null)
+            //                 .Where(e => e != null)
+            //                 .ToArray();
+            //             if (enumValues.Any())
+            //             {
+            //                 query = query.Where($"@0.Contains({filter.Key})", enumValues);
+            //             }
+            //         }
+            //         else if (value is IEnumerable<Guid> guidCollection)
+            //         {
+            //             var guidValues = guidCollection.ToArray();
+            //             if (guidValues.Any())
+            //             {
+            //                 query = query.Where($"@0.Contains({filter.Key})", guidValues);
+            //             }
+            //         }
+            //         else if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
+            //         {
+            //             if (_enumColumns.ContainsKey(filter.Key))
+            //             {
+            //                 var enumType = _enumColumns[filter.Key];
+            //                 if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+            //                 {
+            //                     query = query.Where($"{filter.Key} == @0", enumValue);
+            //                 }
+            //                 else
+            //                 {
+            //                     throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", stringValue.ToLower());
+            //             }
+            //         }
+            //         else if (value is Guid guidValue)
+            //         {
+            //             query = query.Where($"{filter.Key} == @0", guidValue);
+            //         }
+            //         else if (value is int intValue)
+            //         {
+            //             query = query.Where($"{filter.Key} == @0", intValue);
+            //         }
+            //         else if (value is float floatValue)
+            //         {
+            //             query = query.Where($"{filter.Key} == @0", floatValue);
+            //         }
+            //         else if (value is bool boolValue)
+            //         {
+            //             query = query.Where($"{filter.Key} == @0", boolValue);
+            //         }
+            //         else
+            //         {
+            //             throw new ArgumentException($"Unsupported filter type for column '{filter.Key}': {value.GetType().Name}");
+            //         }
+            //     }
+            // }
+
             // Total after filter
             // var filteredRecords = await query.CountAsync();
 
-            
+
 
 
             // Proyeksi sementara
