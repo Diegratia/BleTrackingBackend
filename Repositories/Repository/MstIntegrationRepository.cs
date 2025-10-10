@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
@@ -43,6 +44,16 @@ namespace Repositories.Repository
                 .Where(i => i.Id == id && i.Status != 0);
 
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+        public async Task<MstIntegration?> GetApiKeyAsync(string apiKeyValue)
+        {
+
+            var query = _context.MstIntegrations
+                .Include(i => i.Brand)
+                .Include(i => i.Application)
+                .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
+
+            return await query;
         }
 
         public async Task<IEnumerable<MstIntegration>> GetAllAsync()

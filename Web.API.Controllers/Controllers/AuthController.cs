@@ -117,6 +117,55 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+
+        [HttpPost("integration-login")]
+        public async Task<IActionResult> IntegarationLoginAsync([FromBody] IntegrationLoginDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var response = await _authService.IntegrationLoginAsync(dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "User Login successful",
+                    collection = new { data = response },
+                    code = 200
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    msg = ex.Message ?? "Invalid credentials",
+                    collection = new { data = (object)null },
+                    code = 401
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         [HttpPost("register")]
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -211,6 +260,33 @@ namespace Web.API.Controllers.Controllers
             try
             {
                 var users = await _authService.GetAllUsersAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "User retrieved successfully",
+                    collection = new { data = users },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("integration")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        public async Task<IActionResult> GetAllIntegrationUsers()
+        {
+            try
+            {
+                var users = await _authService.GetAllIntegrationAsync();
                 return Ok(new
                 {
                     success = true,

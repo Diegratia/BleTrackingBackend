@@ -6,14 +6,17 @@ namespace Data.ViewModels
     public class LoginDto
     {
         public string Username { get; set; }
-        // public string Email { get; set; }
         public string Password { get; set; }
     }
 
         public class LoginVisitorDto
     {
         public string EmailConfirmationCode { get; set; }
-        // public string Email { get; set; }
+    }
+        public class IntegrationLoginDto
+    {
+        public string IntegrationUsername { get; set; }
+        public string ApiKeyValue { get; set; }
     }
 
     public class AuthResponseDto
@@ -23,6 +26,7 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
+        public bool IsIntegration { get; set; }
         public Guid GroupId { get; set; }
         public Guid ApplicationId { get; set; }
         public string LevelPriority { get; set; }
@@ -92,10 +96,12 @@ namespace Data.ViewModels
         public string Email { get; set; }
         public Guid GroupId { get; set; }
         public int IsEmailConfirmation { get; set; }
+        public bool isIntegration { get; set; }
         public string EmailConfirmationCode { get; set; }
         public DateTime EmailConfirmationExpiredAt { get; set; }
         public DateTime EmailConfirmationAt { get; set; }
         public DateTime LastLoginAt { get; set; }
+        public Guid ApplicationId { get; set; }
         public int? StatusActive { get; set; }
     }
 

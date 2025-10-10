@@ -36,6 +36,7 @@ public static class ApiKeyMiddlewareExtensions
                 path.Contains("/refresh", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/public", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/hc", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/integration-login", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);

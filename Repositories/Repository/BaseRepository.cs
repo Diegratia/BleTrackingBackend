@@ -136,53 +136,6 @@ namespace Repositories.Repository
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
         }
         
-//         var apiKey = _httpContextAccessor.HttpContext.Request.Headers["X-API-KEY"].FirstOrDefault();
-// var domain = _httpContextAccessor.HttpContext.Request.Headers["Referer"].FirstOrDefault();
-
-// var validDomain = GetValidDomainFromApiKey(apiKey);
-
-// if (validDomain != null && !domain.StartsWith(validDomain))
-// {
-//     // Return error atau tidak mengizinkan akses
-// }
-
-// // ...
-
-// private string GetValidDomainFromApiKey(string apiKey)
-// {
-//     // Query tabel untuk mendapatkan domain yang diizinkan untuk API key
-//     var domain = _dbContext.ApiKeys.Where(x => x.ApiKey == apiKey).Select(x => x.Domain).FirstOrDefault();
-//     return domain;
-// }
-        
-        // public enum LevelPriority
-        // {
-        //     System,
-        //     SuperAdmin,
-        //     PrimaryAdmin,
-        //     Primary,
-        //     Secondary,
-        //     UserCreated
-        // }
-
-        //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
-        //     {
-        //         return query.Where(c =>
-        //             (c.Visitor == null || c.Visitor.Status != 0) &&
-        //             (c.Visitor.Department == null || c.Visitor.Department.Status != 0) &&
-        //             (c.Visitor.Department.District == null || c.Visitor.Department.District.Status != 0));
-        //     }
-
-        // public static IQueryable<FloorplanMaskedArea> WithActiveRelations(this IQueryable<FloorplanMaskedArea> query)
-        // {
-        //     return query.Where(m =>
-        //         m.Floorplan != null &&
-        //         m.Floorplan.Status != 0 &&
-        //         m.Floorplan.Floor != null &&
-        //         m.Floorplan.Floor.Status != 0 &&
-        //         m.Floorplan.Floor.Department != null &&
-        //         m.Floorplan.Floor.Department.Status != 0);
-        // }
 
 
     }

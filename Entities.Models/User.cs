@@ -60,6 +60,9 @@ namespace Entities.Models
         [Required]
         [Column("status_active")]
         public StatusActive StatusActive { get; set; }
+        
+        [Column("is_integration")]
+        public bool IsIntegration { get; set; }
 
         [Required]
         [Column("group_id")]

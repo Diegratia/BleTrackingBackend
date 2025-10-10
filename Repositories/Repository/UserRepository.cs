@@ -62,6 +62,16 @@ namespace Repositories.Repository
             return await query.ToListAsync();
         }
 
+        public async Task<List<User>> GetAllIntegrationAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.StatusActive != 0 && u.IsIntegration == true && u.Group.LevelPriority == LevelPriority.SuperAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
+        }
+
         public async Task<User> GetByEmailAsync(string email)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -96,6 +106,16 @@ namespace Repositories.Repository
             var query = _context.Users
                 .Include(u => u.Group)
                 .Where(u => u.EmailConfirmationCode.ToLower() == EmailConfirmationCode.ToLower() && u.StatusActive != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Email Confirmation Code not found");
+        }
+
+            public async Task<User> GetByIntegrationUsername(string Username)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.StatusActive != 0 && u.IsIntegration == true && u.Group.LevelPriority == LevelPriority.SuperAdmin);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Email Confirmation Code not found");
         }
@@ -228,88 +248,3 @@ namespace Repositories.Repository
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// using System;
-// using System.Threading.Tasks;
-// using Entities.Models;
-// using Microsoft.EntityFrameworkCore;
-// using Repositories.DbContexts;
-
-// namespace Repositories.Repository
-// {
-//     public class UserRepository
-//     {
-//         private readonly BleTrackingDbContext _context;
-
-//         public UserRepository(BleTrackingDbContext context)
-//         {
-//             _context = context;
-//         }
-
-//         public async Task<User> GetByIdAsync(Guid id)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Id == id && u.StatusActive != 0);
-//         }
-
-//         public async Task<List<User>> GetAllAsync()
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .Where(u => u.StatusActive != 0)
-//                 .ToListAsync();
-//         }
-
-//         public async Task<User> GetByUsernameAsync(string username)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
-//         }
-//         public async Task<User> GetByEmailConfirmPasswordAsync(string email)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 0 && u.StatusActive == 0);
-//         }
-//         public async Task<User> GetByEmailSetPasswordAsync(string email)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 1 && u.StatusActive == 0);
-//         }
-
-//         public async Task<bool> EmailExistsAsync(string email)
-//         {
-//             return await _context.Users
-//                 .AnyAsync(u => u.Email == email && u.StatusActive != 0);
-//         }
-
-//         public async Task<User> AddAsync(User user)
-//         {
-//             _context.Users.Add(user);
-//             await _context.SaveChangesAsync();
-//             return user;
-//         }
-
-//         public async Task UpdateAsync(User user)
-//         {
-//             // _context.Users.Update(user);
-//             await _context.SaveChangesAsync();
-//         }
-//     }
-// }
-

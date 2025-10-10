@@ -163,6 +163,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
+builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
 // builder.Services.AddScoped<VisitorRepository>();
 // service email
