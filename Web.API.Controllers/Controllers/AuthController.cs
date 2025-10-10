@@ -280,7 +280,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpGet("integration")]
+        [AllowAnonymous]
+        [HttpGet("integration-users")]
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         public async Task<IActionResult> GetAllIntegrationUsers()
         {
