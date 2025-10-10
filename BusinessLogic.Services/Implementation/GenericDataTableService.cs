@@ -183,7 +183,8 @@ namespace BusinessLogic.Services.Implementation
 
                                 if (enumValues.Any())
                                 {
-                                    query = query.Where($"@0.Contains({filter.Key}.ToLower())", enumValues);
+                                    query = query.Where($"@0.Contains(({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\"))", enumValues);
+
                                 }
                             }
                             else if (jsonKind == JsonValueKind.String)
@@ -193,7 +194,8 @@ namespace BusinessLogic.Services.Implementation
                                 {
                                     // Karena HasConversion menyimpan sebagai lowercase string
                                     var dbValue = enumValue.ToString().ToLower();
-                                    query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower() == @0", dbValue);
+                                    query = query.Where($"({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\") == @0", dbValue);
+
                                 }
                                 else
                                 {
@@ -205,7 +207,8 @@ namespace BusinessLogic.Services.Implementation
                                 // fallback jika user kirim int
                                 var enumValue = Enum.ToObject(enumType, intEnumVal);
                                 var dbValue = enumValue.ToString().ToLower();
-                                query = query.Where($"{filter.Key}.ToLower() == @0", dbValue);
+                                query = query.Where($"({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\") == @0", dbValue);
+
                             }
                             else
                             {
