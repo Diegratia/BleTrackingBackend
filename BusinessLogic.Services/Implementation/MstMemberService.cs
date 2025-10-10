@@ -260,7 +260,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var enumColumns = new Dictionary<string, Type>
+            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Gender", typeof(Gender) },
                 { "IdentityType", typeof(IdentityType) }
