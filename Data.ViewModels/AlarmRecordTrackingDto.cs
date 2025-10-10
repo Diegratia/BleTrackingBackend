@@ -28,6 +28,7 @@ namespace Data.ViewModels
         public string? InvestigatedResult { get; set; }
 
         public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
         public AlarmTriggersDto? AlarmTriggers { get; set; }
         public MstBleReaderDto? Reader { get; set; }
         public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }

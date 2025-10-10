@@ -21,6 +21,8 @@ namespace Data.ViewModels
         public MstBleReaderDto? Reader { get; set; }
         public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }
         public CardDto? Card { get; set; }
+        public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
     }
 
     public class TrackingTransactionCreateDto : BaseModelDto
