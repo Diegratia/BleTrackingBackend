@@ -154,20 +154,7 @@ namespace BusinessLogic.Services.Implementation
                                 query = query.Where($"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)", stringValue.ToLower());
                             }
                         }
-                        // else if (_enumColumns.ContainsKey(filter.Key))
-                        // {
-                        //     var enumType = _enumColumns[filter.Key];
-                        //     if (jsonElement.ValueKind == JsonValueKind.Array)
-                        //     {
-                        //         var enumValues = jsonElement.EnumerateArray()
-                        //             .Select(e => Enum.TryParse(enumType, e.GetString(), true, out var enumValue) ? enumValue : null)
-                        //             .Where(e => e != null)
-                        //             .ToArray();
-                        //         if (enumValues.Any())
-                        //         {
-                        //             query = query.Where($"@0.Contains({filter.Key})", enumValues);
-                        //         }
-                        //     }
+
                         else if (_enumColumns.ContainsKey(filter.Key))
                         {
                             var enumType = _enumColumns[filter.Key];
@@ -194,18 +181,59 @@ namespace BusinessLogic.Services.Implementation
                                     query = query.Where($"@0.Contains({filter.Key})", enumValues);
                                 }
                             }
-                            else if (jsonElement.ValueKind == JsonValueKind.String)
+                            else if (_enumColumns.ContainsKey(filter.Key))
                             {
-                                var stringValue = jsonElement.GetString();
-                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                                // var enumType = _enumColumns[filter.Key];
+                                var jsonKind = jsonElement.ValueKind;
+
+                                if (jsonKind == JsonValueKind.String)
                                 {
-                                    query = query.Where($"{filter.Key} == @0", enumValue);
+                                    var stringValue = jsonElement.GetString();
+                                    if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                                    {
+                                        // Karena HasConversion menyimpan sebagai string.ToLower(), kita juga cocokkan string-nya
+                                        var dbValue = enumValue.ToString().ToLower();
+                                        query = query.Where($"{filter.Key}.ToLower() == @0", dbValue);
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                    }
                                 }
-                                else
+                                else if (jsonKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
                                 {
-                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                                    // fallback jika user kirim int, tetap dukung
+                                    var enumValue = Enum.ToObject(enumType, intEnumVal);
+                                    var dbValue = enumValue.ToString().ToLower();
+                                    query = query.Where($"{filter.Key}.ToLower() == @0", dbValue);
+                                }
+                                else if (jsonKind == JsonValueKind.Array)
+                                {
+                                    // dukung array enum string
+                                    var enumValues = jsonElement.EnumerateArray()
+                                        .Select(e => e.GetString())
+                                        .Where(s => !string.IsNullOrEmpty(s))
+                                        .Select(s => s.ToLower())
+                                        .ToArray();
+                                    if (enumValues.Any())
+                                    {
+                                        query = query.Where($"@0.Contains({filter.Key}.ToLower())", enumValues);
+                                    }
                                 }
                             }
+
+                            // else if (jsonElement.ValueKind == JsonValueKind.String)
+                            // {
+                            //     var stringValue = jsonElement.GetString();
+                            //     if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                            //     {
+                            //         query = query.Where($"{filter.Key} == @0", enumValue);
+                            //     }
+                            //     else
+                            //     {
+                            //         throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+                            //     }
+                            // }
                             else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
                             {
                                 var enumValue = Enum.ToObject(enumType, intEnumVal);
@@ -302,7 +330,7 @@ namespace BusinessLogic.Services.Implementation
             // Total after filter
             // var filteredRecords = await query.CountAsync();
 
-            
+
 
 
             // Proyeksi sementara
@@ -367,7 +395,7 @@ namespace BusinessLogic.Services.Implementation
             // === MODE TABLE (default) ===
             query = query.OrderBy($"{request.SortColumn} {sortDirection}");
 
-              // Paging
+            // Paging
             if (request.Length > 0)
             {
                 projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
@@ -399,6 +427,7 @@ namespace BusinessLogic.Services.Implementation
             };
         }
     }
+}
     
 
 // public async Task<object> FilterAsync(DataTablesRequest request)
@@ -584,5 +613,4 @@ namespace BusinessLogic.Services.Implementation
 //     };
 // }
 
-}
 
