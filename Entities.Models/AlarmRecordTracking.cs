@@ -17,6 +17,9 @@ namespace Entities.Models
         [Column("visitor_id")]
         public Guid? VisitorId { get; set; }
 
+        [Column("member_id")]
+        public Guid? MemberId { get; set; }
+
         [Column("ble_reader_id")]
         public Guid? ReaderId { get; set; }
 
@@ -79,6 +82,7 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         public Visitor Visitor { get; set; }
+        public MstMember Member { get; set; }
         public MstBleReader Reader { get; set; }
         public FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
         public AlarmTriggers AlarmTriggers{ get; set; } 

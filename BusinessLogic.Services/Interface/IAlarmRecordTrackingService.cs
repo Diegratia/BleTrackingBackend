@@ -6,8 +6,6 @@ namespace BusinessLogic.Services.Interface
     {
         Task<AlarmRecordTrackingDto> GetByIdAsync(Guid id);
         Task<IEnumerable<AlarmRecordTrackingDto>> GetAllAsync();
-        Task<AlarmRecordTrackingDto> CreateAsync(AlarmRecordTrackingCreateDto createDto);
-        Task UpdateAsync(Guid id, AlarmRecordTrackingUpdateDto updateDto);
         // Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();

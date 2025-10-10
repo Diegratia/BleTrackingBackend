@@ -18,14 +18,6 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
                 .ForMember(dest => dest.AlarmRecordStatus, opt => opt.MapFrom(src => src.Alarm.ToString()))
                 .ForMember(dest => dest.FloorplanMaskedArea, opt => opt.MapFrom(src => src.FloorplanMaskedArea));
-
-            CreateMap<AlarmRecordTrackingCreateDto, AlarmRecordTracking>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Generate, opt => opt.Ignore());
-
-            CreateMap<AlarmRecordTrackingUpdateDto, AlarmRecordTracking>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Generate, opt => opt.Ignore());
                
 
             CreateMap<Visitor, VisitorDto>();

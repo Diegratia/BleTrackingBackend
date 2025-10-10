@@ -56,6 +56,7 @@ namespace Repositories.Repository
                       .IgnoreQueryFilters()
                     .Include(v => v.Application)
                     .Include(v => v.Visitor)
+                    .Include(v => v.Member)
                     .Include(v => v.Reader)
                     .Include(v => v.FloorplanMaskedArea)
                     .Include(v => v.AlarmTriggers)
@@ -90,43 +91,6 @@ namespace Repositories.Repository
                 return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             }
 
-        
-
-        public async Task AddAsync(AlarmRecordTracking entity)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            if (!isSystemAdmin)
-            {
-                if (!applicationId.HasValue)
-                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
-
-                entity.ApplicationId = applicationId.Value;
-            }
-            else if (entity.ApplicationId == Guid.Empty)
-            {
-                throw new ArgumentException("SystemAdmin Must specify ApplicationId explicitly.");
-            }
-
-            await ValidateApplicationIdAsync(entity.ApplicationId);
-            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
-            await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
-
-            await _context.AlarmRecordTrackings.AddAsync(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(AlarmRecordTracking entity)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            await ValidateApplicationIdAsync(entity.ApplicationId);
-            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
-            await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
-
-            _context.AlarmRecordTrackings.Update(entity);
-            await _context.SaveChangesAsync();
-        }
 
         public async Task<IEnumerable<AlarmRecordTracking>> GetAllExportAsync()
         {

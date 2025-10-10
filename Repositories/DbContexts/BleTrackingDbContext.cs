@@ -558,6 +558,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.MemberId).HasMaxLength(36);
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.AlarmTriggersId).HasMaxLength(36);
@@ -582,6 +583,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(a => a.Visitor)
                     .WithMany()
                     .HasForeignKey(a => a.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(a => a.Member)
+                    .WithMany(b => b.AlarmRecordTrackings)
+                    .HasForeignKey(a => a.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 // Relasi one-to-many dengan MstBleReader
