@@ -162,7 +162,6 @@ else if (_enumColumns.ContainsKey(filter.Key))
 
     if (jsonKind == JsonValueKind.Array)
     {
-        // Dukung array berisi string atau int
         var enumValues = jsonElement.EnumerateArray()
             .Select(e =>
             {
@@ -183,7 +182,7 @@ else if (_enumColumns.ContainsKey(filter.Key))
 
         if (enumValues.Any())
         {
-            query = query.Where($"@0.Contains((Convert.ToString({filter.Key}) ?? \"\").ToLower())", enumValues);
+            query = query.Where($"@0.Contains((\"\" + {filter.Key}).ToLower())", enumValues);
         }
     }
     else if (jsonKind == JsonValueKind.String)
@@ -192,7 +191,7 @@ else if (_enumColumns.ContainsKey(filter.Key))
         if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
         {
             var dbValue = enumValue.ToString().ToLower();
-            query = query.Where($"(Convert.ToString({filter.Key}) ?? \"\").ToLower() == @0", dbValue);
+            query = query.Where($"((\"\" + {filter.Key}).ToLower()) == @0", dbValue);
         }
         else
         {
@@ -201,10 +200,9 @@ else if (_enumColumns.ContainsKey(filter.Key))
     }
     else if (jsonKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
     {
-        // fallback jika user kirim int
         var enumValue = Enum.ToObject(enumType, intEnumVal);
         var dbValue = enumValue.ToString().ToLower();
-        query = query.Where($"(Convert.ToString({filter.Key}) ?? \"\").ToLower() == @0", dbValue);
+        query = query.Where($"((\"\" + {filter.Key}).ToLower()) == @0", dbValue);
     }
     else
     {
