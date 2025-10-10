@@ -260,6 +260,12 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Gender", typeof(Gender) },
+                { "IdentityType", typeof(IdentityType) }
+            };
+
             var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
             var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2", "Status", "Brand.Name", "CardNumber" };
 
@@ -267,7 +273,8 @@ namespace BusinessLogic.Services.Implementation
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }
