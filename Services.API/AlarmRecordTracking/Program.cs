@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 
@@ -143,7 +143,7 @@ builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingServi
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 
-var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "10002" ??
+var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "5002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";

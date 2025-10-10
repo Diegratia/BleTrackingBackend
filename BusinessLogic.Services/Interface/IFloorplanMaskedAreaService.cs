@@ -11,9 +11,11 @@ namespace BusinessLogic.Services.Interface
     {
         Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id);
         Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync();
+        Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync();
         Task<FloorplanMaskedAreaDto> CreateAsync(FloorplanMaskedAreaCreateDto createDto);
         Task UpdateAsync(Guid id, FloorplanMaskedAreaUpdateDto updateDto);
         Task DeleteAsync(Guid id);
+        Task SoftDeleteAsync(Guid id);
         Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file);
         Task<object> FilterAsync(DataTablesRequest request); 
         Task<byte[]> ExportPdfAsync();

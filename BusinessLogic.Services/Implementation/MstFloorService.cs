@@ -29,14 +29,26 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorRepository _repository;
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
-        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
+        private readonly MstFloorplanRepository _floorplanRepository;
+        private readonly IMstFloorplanService _floorplanService;
 
-        public MstFloorService(MstFloorRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstFloorService(
+                                        MstFloorRepository repository,
+                                        IMapper mapper,
+                                        IHttpContextAccessor httpContextAccessor,
+                                        FloorplanMaskedAreaRepository maskedAreaRepository,
+                                        MstFloorplanRepository floorplanRepository,
+                                        IMstFloorplanService floorplanService)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _maskedAreaRepository = maskedAreaRepository;
+            _floorplanRepository = floorplanRepository;
+            _floorplanService = floorplanService;
         }
 
         public async Task<MstFloorDto> GetByIdAsync(Guid id)
@@ -51,47 +63,53 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstFloorDto>>(floors);
         }
 
+                public async Task<IEnumerable<OpenMstFloorDto>> OpenGetAllAsync()
+        {
+            var floors = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstFloorDto>>(floors);
+        }
+
 
         public async Task<MstFloorDto> CreateAsync(MstFloorCreateDto createDto)
         {
             var floor = _mapper.Map<MstFloor>(createDto);
 
-            if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
-            {
-                if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            // if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
+            // {
+            //     if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
+            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                if (createDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+            //     if (createDto.FloorImage.Length > MaxFileSize)
+            //         throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-                Directory.CreateDirectory(uploadDir);
+            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+            //     Directory.CreateDirectory(uploadDir);
 
-                var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
+            //     var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            //     var filePath = Path.Combine(uploadDir, fileName);
 
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.FloorImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
+            //     try
+            //     {
+            //         using (var stream = new FileStream(filePath, FileMode.Create))
+            //         {
+            //             await createDto.FloorImage.CopyToAsync(stream);
+            //         }
+            //     }
+            //     catch (IOException ex)
+            //     {
+            //         throw new IOException("Failed to save image file.", ex);
+            //     }
 
-                floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
-            }
+            //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.Id = Guid.NewGuid();
             floor.Status = 1;
-            floor.CreatedBy = username;
+            floor.CreatedBy = username ?? "Annonymous";
             floor.CreatedAt = DateTime.UtcNow;
-            floor.UpdatedBy = username;
+            floor.UpdatedBy = username ?? "Annonymous";
             floor.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(floor);
@@ -119,51 +137,51 @@ namespace BusinessLogic.Services.Implementation
             if (floor == null)
                 throw new KeyNotFoundException("Floor not found");
 
-            if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
-            {
-                if (string.IsNullOrEmpty(updateDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            // if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
+            // {
+            //     if (string.IsNullOrEmpty(updateDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorImage.ContentType))
+            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
-                if (updateDto.FloorImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+            //     if (updateDto.FloorImage.Length > MaxFileSize)
+            //         throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-                Directory.CreateDirectory(uploadDir);
+            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
+            //     Directory.CreateDirectory(uploadDir);
 
-                if (!string.IsNullOrEmpty(floor.FloorImage))
-                {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floor.FloorImage.TrimStart('/'));
-                    if (File.Exists(oldFilePath))
-                    {
-                        try
-                        {
-                            File.Delete(oldFilePath);
-                        }
-                        catch (IOException ex)
-                        {
-                            throw new IOException("Failed to delete old image file.", ex);
-                        }
-                    }
-                }
+            //     if (!string.IsNullOrEmpty(floor.FloorImage))
+            //     {
+            //         var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floor.FloorImage.TrimStart('/'));
+            //         if (File.Exists(oldFilePath))
+            //         {
+            //             try
+            //             {
+            //                 File.Delete(oldFilePath);
+            //             }
+            //             catch (IOException ex)
+            //             {
+            //                 throw new IOException("Failed to delete old image file.", ex);
+            //             }
+            //         }
+            //     }
 
-                var fileExtension = Path.GetExtension(updateDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
+            //     var fileExtension = Path.GetExtension(updateDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
+            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            //     var filePath = Path.Combine(uploadDir, fileName);
 
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.FloorImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
+            //     try
+            //     {
+            //         using (var stream = new FileStream(filePath, FileMode.Create))
+            //         {
+            //             await updateDto.FloorImage.CopyToAsync(stream);
+            //         }
+            //     }
+            //     catch (IOException ex)
+            //     {
+            //         throw new IOException("Failed to save image file.", ex);
+            //     }
 
-                floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
-            }
+            //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
+            // }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.UpdatedBy = username;
@@ -175,18 +193,85 @@ namespace BusinessLogic.Services.Implementation
 
         }
 
-        public async Task DeleteAsync(Guid id)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var floor = await _repository.GetByIdAsync(id);
-            if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floor = await _repository.GetByIdAsync(id);
+        //     if (floor == null)
+        //         throw new KeyNotFoundException("Floor not found");
 
+
+        //     floor.UpdatedBy = username;
+        //     floor.UpdatedAt = DateTime.UtcNow;
+        //     floor.Status = 0;
+        //     await _repository.SoftDeleteAsync(id);
+        // }
+
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floor = await _repository.GetByIdAsync(id);
+        //     if (floor == null)
+        //         throw new KeyNotFoundException("Floor not found");
+
+        //     using var transaction = await _repository.BeginTransactionAsync();
+        //     try
+        //     {
+        //         // Soft delete parent
+        //         floor.UpdatedBy = username;
+        //         floor.UpdatedAt = DateTime.UtcNow;
+        //         floor.Status = 0;
+        //         await _repository.SoftDeleteAsync(id);
+
+        //         // Soft delete child entities via their repositories
+        //         var maskedAreas = await _maskedAreaRepository.GetByFloorIdAsync(id);
+        //         foreach (var maskedArea in maskedAreas)
+        //         {
+        //             maskedArea.UpdatedBy = username;
+        //             maskedArea.UpdatedAt = DateTime.UtcNow;
+        //             maskedArea.Status = 0;
+        //             await _maskedAreaRepository.SoftDeleteAsync(maskedArea.Id);
+        //         }
+
+        //         var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+        //         foreach (var floorplan in floorplans)
+        //         {
+        //             floorplan.UpdatedBy = username;
+        //             floorplan.UpdatedAt = DateTime.UtcNow;
+        //             floorplan.Status = 0;
+        //             await _floorplanRepository.DeleteAsync(floorplan.Id);
+        //         }
+
+        //         // await _repository.BeginTransactionAsync();
+        //         await transaction.CommitAsync();
+        //     }
+        //     catch
+        //     {
+        //         await transaction.RollbackAsync();
+        //         throw;
+        //     }
+        // }
+        
+    public async Task DeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        var floor = await _repository.GetByIdAsync(id);
+        if (floor == null)
+            throw new KeyNotFoundException("Floor not found");
+
+        await _repository.ExecuteInTransactionAsync(async () =>
+        {
+            var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+            foreach (var floorplan in floorplans)
+            {
+                await _floorplanService.DeleteAsync(floorplan.Id);
+            }
             floor.UpdatedBy = username;
             floor.UpdatedAt = DateTime.UtcNow;
             floor.Status = 0;
             await _repository.SoftDeleteAsync(id);
-        }
+        });
+    }
 
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)
         {
@@ -215,13 +300,13 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     BuildingId = buildingId,
                     Name = row.Cell(2).GetValue<string>(),
-                    FloorImage = row.Cell(3).GetValue<string>() ?? "", 
-                    PixelX = row.Cell(4).GetValue<long>(),
-                    PixelY = row.Cell(5).GetValue<long>(),
-                    FloorX = row.Cell(6).GetValue<long>(),
-                    FloorY = row.Cell(7).GetValue<long>(),
-                    MeterPerPx = row.Cell(8).GetValue<float>(),
-                    EngineFloorId = row.Cell(9).GetValue<long>(),
+                    // FloorImage = row.Cell(3).GetValue<string>() ?? "",
+                    // PixelX = row.Cell(4).GetValue<long>(),
+                    // PixelY = row.Cell(5).GetValue<long>(),
+                    // FloorX = row.Cell(6).GetValue<long>(),
+                    // FloorY = row.Cell(7).GetValue<long>(),
+                    // MeterPerPx = row.Cell(8).GetValue<float>(),
+                    // EngineFloorId = row.Cell(9).GetValue<long>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -246,7 +331,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Building.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Status", "Building.Name", "EngineFloorId" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status", "Building.Name", "EngineFloorId" };
 
             var filterService = new GenericDataTableService<MstFloor, MstFloorDto>(
                 query,
@@ -313,8 +398,8 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(floor.Building?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.BuildingId.ToString() ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.Name);
-                            table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
-                            table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
+                            // table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
+                            // table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedAt.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedBy ?? "-");
                         }
@@ -369,8 +454,8 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = floor.BuildingId.ToString();
                 worksheet.Cell(row, 4).Value = floor.Name;
-                worksheet.Cell(row, 5).Value = floor.EngineFloorId;
-                worksheet.Cell(row, 6).Value = floor.MeterPerPx;
+                // worksheet.Cell(row, 5).Value = floor.EngineFloorId;
+                // worksheet.Cell(row, 6).Value = floor.MeterPerPx;
                 worksheet.Cell(row, 7).Value = floor.CreatedBy;
                 worksheet.Cell(row, 8).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
                 worksheet.Cell(row, 9).Value = floor.Status == 1 ? "Active" : "Inactive";

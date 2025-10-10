@@ -27,16 +27,26 @@ namespace BusinessLogic.Services.Implementation
     public class MstBuildingService : IMstBuildingService
     {
         private readonly MstBuildingRepository _repository;
+        private readonly IMstFloorService _floorService;
+        private readonly MstFloorRepository _floorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
-        private const long MaxFileSize = 1 * 1024 * 1024; // Maksimal 1 MB
+        private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
 
-        public MstBuildingService(MstBuildingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstBuildingService(
+            MstBuildingRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            IMstFloorService floorService,
+            MstFloorRepository floorRepository
+            )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _floorService = floorService;
+            _floorRepository = floorRepository;
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -51,6 +61,12 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
         }
 
+            public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
+        {
+            var buildings = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstBuildingDto>>(buildings);
+        }
+
         public async Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto createDto)
         {
             var building = _mapper.Map<MstBuilding>(createDto);
@@ -60,7 +76,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (createDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 5 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
@@ -84,7 +100,7 @@ namespace BusinessLogic.Services.Implementation
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
             }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
             building.CreatedAt = DateTime.UtcNow;
@@ -98,7 +114,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
@@ -109,7 +125,7 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (updateDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 1 MB limit.");
+                    throw new ArgumentException("File size exceeds 5 MB limit.");
 
                 var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
@@ -158,15 +174,37 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBuildingDto>(building);
         }
 
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var building = await _repository.GetByIdAsync(id);
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     building.UpdatedBy = username;
+        //     building.UpdatedAt = DateTime.UtcNow;
+        //     building.Status = 0;
+        //     await _repository.DeleteAsync(id);
+        // }
+
         public async Task DeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        var building = await _repository.GetByIdAsync(id);
+        if (building == null)
+            throw new KeyNotFoundException("building not found");
+
+        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            var building = await _repository.GetByIdAsync(id);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var floors = await _floorRepository.GetByBuildingIdAsync(id);
+            foreach (var floor in floors)
+            {
+                await _floorService.DeleteAsync(floor.Id);
+            }
             building.UpdatedBy = username;
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
             await _repository.DeleteAsync(id);
-        }
+        });
+    }
+        
 
          public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {
@@ -214,7 +252,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Status" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstBuilding, MstBuildingDto>(
                 query,

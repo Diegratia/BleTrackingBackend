@@ -11,6 +11,7 @@ namespace Helpers.Consumer
     {
         [Required]
         [Column("_generate")]
+        [NotMapped]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Generate { get; set; }
 

@@ -21,11 +21,18 @@ namespace Helpers.Consumer
         Tracking
     }
 
+    public enum AccessScope
+    {
+        All,
+        Specific,
+        None
+    }
+
     public enum LicenseType
     {
         Perpetual,
         Annual
-  }
+    }
 
     public enum VisitorActiveStatus
     {
@@ -107,15 +114,20 @@ namespace Helpers.Consumer
         Help,
         WrongZone,
         Expired,
-        Lost
+        Lost,
+        Blacklist,
+        Geofence,
+        OverPopulating,
+        StayOnArea,
+        Boundary,
+        CardAccess
     }
 
     public enum ActionStatus
     {
         Idle,
         Done,
-        Cancel,
-        Need,
+        NoAction,
         Waiting,
         Investigated,
         DoneInvestigated,
@@ -139,10 +151,25 @@ namespace Helpers.Consumer
         Monitor,
         Alarm
     }
-    
+
     public enum ServiceStatus
     {
         Start,
-        Stop
+        Stop,
+        Online,
+        Offline
+    }
+    public enum AlarmLevelPriority
+    {
+        High,
+        Medium,
+        Low
+    }
+
+    public enum BoundaryType
+    {
+        Both, // 0
+        AtoB, // 1
+        BtoA // 2
     }
 }

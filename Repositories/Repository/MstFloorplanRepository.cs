@@ -73,11 +73,10 @@ namespace Repositories.Repository
             var query = _context.MstFloorplans
                 .Where(f => f.Id == id && f.Status != 0);
 
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            var floorplan = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
 
-            var floorplan = await query.FirstOrDefaultAsync();
             if (floorplan == null)
-                throw new KeyNotFoundException("Floorplan not found or access denied");
+                throw new KeyNotFoundException("Floorplan not found or unauthorized");
 
             await _context.SaveChangesAsync();
         }
@@ -105,6 +104,7 @@ namespace Repositories.Repository
 
             var query = _context.MstFloorplans
                 .Include(f => f.Floor)
+                // .Include(f => f.Engine)
                 .Where(f => f.Status != 0);
             
             query = query.WithActiveRelations();
@@ -131,6 +131,13 @@ namespace Repositories.Repository
                 MaskedAreaCount = f.FloorplanMaskedAreas.Count()
             }).AsNoTracking();
         }
+
+            public async Task<List<MstFloorplan>> GetByFloorIdAsync(Guid floorId)
+            {
+                return await _context.MstFloorplans
+                    .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+                    .ToListAsync();
+            }
         
 
         private async Task ValidateFloorOwnershipAsync(Guid floorId, Guid appId)

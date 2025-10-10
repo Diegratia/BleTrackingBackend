@@ -14,20 +14,20 @@ namespace Entities.Models
         [Column("timestamp")]
         public DateTime? Timestamp { get; set; }
 
-        [Required]
-        [ForeignKey("Visitor")]
         [Column("visitor_id")]
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
 
-        [Required]
-        [ForeignKey("Reader")]
+        [Column("member_id")]
+        public Guid? MemberId { get; set; }
+
         [Column("ble_reader_id")]
-        public Guid ReaderId { get; set; }
+        public Guid? ReaderId { get; set; }
 
-        [Required]
-        [ForeignKey("FloorplanMaskedArea")]
+        [Column("alarm_triggers_id")]
+        public Guid? AlarmTriggersId { get; set; }
+
         [Column("floorplan_masked_area_id")]
-        public Guid FloorplanMaskedAreaId { get; set; }
+        public Guid? FloorplanMaskedAreaId { get; set; }
 
         [Column("alarm_record_status")]
         public AlarmRecordStatus? Alarm { get; set; }
@@ -36,7 +36,6 @@ namespace Entities.Models
         public ActionStatus? Action { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -81,9 +80,11 @@ namespace Entities.Models
         [Column("investigated_result")]
         public string? InvestigatedResult { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual Visitor Visitor { get; set; }
-        public virtual MstBleReader Reader { get; set; }
-        public virtual FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
+        public MstApplication Application { get; set; }
+        public Visitor Visitor { get; set; }
+        public MstMember Member { get; set; }
+        public MstBleReader Reader { get; set; }
+        public FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
+        public AlarmTriggers AlarmTriggers{ get; set; } 
     }
 }

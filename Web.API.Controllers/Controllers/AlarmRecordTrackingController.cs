@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequireAllAndUserCreated")]
+    [Authorize("RequireAllAndUserCreated")]
     public class AlarmRecordTrackingController : ControllerBase
     {
         private readonly IAlarmRecordTrackingService _service;
@@ -83,128 +83,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] AlarmRecordTrackingCreateDto createDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var alarm = await _service.CreateAsync(createDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Alarm created successfully",
-                    collection = new { data = alarm },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] AlarmRecordTrackingUpdateDto updateDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                await _service.UpdateAsync(id, updateDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Alarm not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
-        // [HttpDelete("{id}")]
-        // public async Task<IActionResult> Delete(Guid id)
-        // {
-        //     try
-        //     {
-        //         await _service.DeleteAsync(id);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Alarm deleted successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (KeyNotFoundException)
-        //     {
-        //         return NotFound(new
-        //         {
-        //             success = false,
-        //             msg = "Alarm not found",
-        //             collection = new { data = (object)null },
-        //             code = 404
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -254,7 +132,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -275,7 +153,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -297,7 +175,57 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-      
+        /******************************************************************************
+        OPEN
+       ********************************************************************************/
+        [HttpPost("open{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _service.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Alarm Record Tracking filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
     }
 }

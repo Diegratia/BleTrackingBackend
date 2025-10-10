@@ -20,7 +20,7 @@ namespace Repositories.Repository
 
         public async Task<List<Visitor>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().AsNoTracking().ToListAsync();
         }
 
         public async Task<Visitor?> GetByIdAsync(Guid id)
@@ -35,6 +35,17 @@ namespace Repositories.Repository
             return await _context.Visitors
             .Where(x => x.Id == id && x.Status != 0)
             .FirstOrDefaultAsync();
+        }
+
+        public async Task<Visitor?> GetByIdPublicDuplicateAsync(string email, string identityId, string personId, Guid id)
+        {
+            return await _context.Visitors
+            .Where(x => x.Id != id && x.Status != 0)
+               .FirstOrDefaultAsync(b =>
+                        (!string.IsNullOrWhiteSpace(email) && b.Email == email) ||
+                        (!string.IsNullOrWhiteSpace(identityId) && b.IdentityId == identityId) ||
+                        (!string.IsNullOrWhiteSpace(personId) && b.PersonId == personId)
+                    );
         }
 
        public async Task AddAsync(Visitor visitor)
@@ -79,6 +90,7 @@ namespace Repositories.Repository
         }
 
 
+
   
 
         public async Task DeleteAsync(Visitor visitor)
@@ -111,6 +123,21 @@ namespace Repositories.Repository
                 query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+            public IQueryable<Visitor> GetAllQueryableRaw()
+        {
+
+            var query = _context.Visitors
+                // .Include(x => x.Department)
+                // .Include(x => x.District)
+                // .Include(x => x.Organization)
+                // .Include(v => v.Application)
+                .Where(x => x.Status != 0);
+
+                query = query.WithActiveRelations();
+
+            return query;
         }
 
         //   public IQueryable<Visitor> GetAllQueryable()

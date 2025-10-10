@@ -10,6 +10,8 @@ using BusinessLogic.Services.Extension;
 using Repositories.Repository;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 try
 {
@@ -42,10 +44,17 @@ builder.Configuration
 // Konfigurasi Controllers
 builder.Services.AddControllers();
 
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBrandCreateDtoValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBrandUpdateDtoValidator>();
+
 // Konfigurasi DbContext
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 // Konfigurasi AutoMapper
 builder.Services.AddAutoMapper(typeof(AuthProfile));
@@ -154,12 +163,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
+builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
 // builder.Services.AddScoped<VisitorRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
-var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "10001" ??
+var port = Environment.GetEnvironmentVariable("AUTH_PORT") ?? "5001" ??
            builder.Configuration["Ports:AuthService"] ;
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -174,7 +184,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        DatabaseSeeder.Seed(context); 
     }
     catch (Exception ex)
     {

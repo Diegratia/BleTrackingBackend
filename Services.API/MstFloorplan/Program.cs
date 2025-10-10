@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -138,12 +138,16 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
 
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
 builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ?? "10014" ??
+
+var port = Environment.GetEnvironmentVariable("MST_FLOORPLAN_PORT") ?? "5014" ??
            builder.Configuration["Ports:MstFloorplanService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -177,6 +181,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+// Buat direktori Uploads/FloorplanImages jika belum ada
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorplanImages");
+Directory.CreateDirectory(uploadsPath);
+
+// // Sajikan file statis di /Uploads/FloorplanImages/
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/FloorplanImages"
+});
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();

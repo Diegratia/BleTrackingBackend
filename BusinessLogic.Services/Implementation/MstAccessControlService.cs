@@ -42,6 +42,12 @@ namespace BusinessLogic.Services.Implementation
             .GetAllAsync();
             return _mapper.Map<IEnumerable<MstAccessControlDto>>(accessControls);
         }
+                public async Task<IEnumerable<OpenMstAccessControlDto>> OpenGetAllAsync()
+        {
+            var accessControls = await _repository
+            .GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstAccessControlDto>>(accessControls);
+        }
 
         public async Task<MstAccessControlDto> CreateAsync(MstAccessControlCreateDto createDto)
         {
@@ -77,6 +83,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var accessControl = await _repository.GetByIdAsync(id);
+            if (accessControl == null) throw new KeyNotFoundException("Access Control not found");
             accessControl.UpdatedBy = username;
             accessControl.UpdatedAt = DateTime.UtcNow;
             accessControl.Status = 0;

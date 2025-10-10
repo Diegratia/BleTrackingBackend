@@ -16,6 +16,34 @@ namespace Repositories.Repository
         {
         }
 
+            public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstOrganizations
+                .Where(b => b.Id == id && b.Status != 0);
+                query = query.WithActiveRelations();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+            public async Task<MstDistrict?> GetDistrictByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstDistricts
+                .Where(b => b.Id == id && b.Status != 0);
+                // query = query.WithActiveRelations();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+            public async Task<MstDepartment?> GetDepartmentByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstDepartments
+                .Where(b => b.Id == id && b.Status != 0);
+                query = query.WithActiveRelations();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+
         public async Task<List<MstMember>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();
@@ -27,6 +55,25 @@ namespace Repositories.Repository
             return await GetAllQueryable()
             .Where(x => x.Id == id && x.Status != 0)
             .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Member not found");
+        }
+
+        public async Task<MstMember?> GetByIdRawAsync(Guid id)
+        {
+            var query = _context.MstMembers
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+            .Where(x => x.Id == id && x.Status != 0);
+
+            return await query.FirstOrDefaultAsync();
+        }
+
+                   public async Task<User> GetByIdAsyncRaw(Guid id)
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Id == id && u.StatusActive != 0);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
         }
 
         public async Task AddAsync(MstMember member)

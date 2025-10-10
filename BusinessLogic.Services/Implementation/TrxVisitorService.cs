@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
 using Helpers.Consumer;
+using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,9 @@ using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-    
+using  Data.ViewModels.Dto.Helpers.MinimalDto;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
+
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -54,7 +57,13 @@ namespace BusinessLogic.Services.Implementation
         {
             var trxvisitors = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
-        }    
+        }  
+
+              public async Task<IEnumerable<OpenTrxVisitorDto>> OpenGetAllTrxVisitorsAsync()
+        {
+            var trxvisitors = await _repository.OpenGetAllAsync();
+            return _mapper.Map<IEnumerable<OpenTrxVisitorDto>>(trxvisitors);
+        }     
 
         public async Task<IEnumerable<TrxVisitorDtoz>> GetAllTrxVisitorsAsyncMinimal()
         {
@@ -229,7 +238,8 @@ namespace BusinessLogic.Services.Implementation
         public async Task CheckoutVisitorAsync(Guid trxVisitorId)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
 
             if (trx == null)
                 throw new Exception("No active session found");
@@ -285,9 +295,6 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
         }
-
-    
-
 
         // public async Task DeleteTrxVisitorAsync(Guid id)
         // {
@@ -376,8 +383,9 @@ namespace BusinessLogic.Services.Implementation
 
             public async Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
@@ -397,8 +405,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
@@ -414,14 +423,15 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UnblockVisitorAsync(Guid trxVisitorId)
         {
-            var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
+            // var trx = await _repository.GetByIdAsync(trxVisitorId);
             if (trx == null)
                 throw new InvalidOperationException("No active session found");
 
             trx.UnblockAt = DateTime.UtcNow;
             trx.Status = VisitorStatus.Unblock;
             trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             await _repository.UpdateAsync(trx);
         }
@@ -439,7 +449,57 @@ namespace BusinessLogic.Services.Implementation
             };
 
             var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var validSortColumns = new[] { "InvitationCreatedAt", "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+
+            var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns,
+                enumColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+        
+           public async Task<object> MinimalFilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryableMinimal();
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
+            };
+
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
             var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+
+              var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns,
+                enumColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+
+          public async Task<object> FilterRawAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryableRaw();
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Status", typeof(VisitorStatus) },
+                { "Gender", typeof(Gender) },
+                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
+                { "IdentityType", typeof(IdentityType) }
+            };
+
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
                 query,

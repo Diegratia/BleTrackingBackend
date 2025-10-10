@@ -50,6 +50,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        
+
         // GET: api/FloorplanDevice/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -212,7 +214,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-         [HttpPost("import")]
+        [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -319,7 +321,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -340,7 +342,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -356,6 +358,249 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        //OPEN
+
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var devices = await _service.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan devices retrieved successfully",
+                    collection = new { data = devices },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // GET: api/FloorplanDevice/{id}
+        [HttpGet("open/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetById(Guid id)
+        {
+            try
+            {
+                var device = await _service.GetByIdAsync(id);
+                if (device == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Floorplan device not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan device retrieved successfully",
+                    collection = new { data = device },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // POST: api/FloorplanDevice
+        [HttpPost("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenCreate([FromBody] FloorplanDeviceCreateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createdDevice = await _service.CreateAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Floorplan device created successfully",
+                    collection = new { data = createdDevice },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // PUT: api/FloorplanDevice/{id}
+        [AllowAnonymous]
+        [HttpPut("open/{id}")]
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] FloorplanDeviceUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _service.UpdateAsync(id, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan device updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Floorplan device not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // DELETE: api/FloorplanDevice/{id}
+        [AllowAnonymous]
+        [HttpDelete("open/{id}")]
+        public async Task<IActionResult> OpenDelete(Guid id)
+        {
+            try
+            {
+                await _service.DeleteAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan device deleted successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Floorplan device not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+        [AllowAnonymous]
+        [HttpPost("open/{filter}")]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _service.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Floorplan Devices filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

@@ -16,8 +16,8 @@ namespace BusinessLogic.Services.Extension
             CreateMap<FloorplanDeviceCreateDto, FloorplanDevice>()
                  .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type)))
-                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type, true)))
+                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus, true)))
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
@@ -26,8 +26,8 @@ namespace BusinessLogic.Services.Extension
             CreateMap<FloorplanDeviceUpdateDto, FloorplanDevice>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type)))
-                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type, true)))
+                .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus, true)))
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
@@ -36,12 +36,13 @@ namespace BusinessLogic.Services.Extension
             CreateMap<FloorplanDevice, FloorplanDeviceDto>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
                 .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => src.DeviceStatus.ToString()));
-                // .ForMember(dest => dest.Floorplan, opt => opt.Ignore()) // Diisi di service
-                // .ForMember(dest => dest.AccessCctv, opt => opt.Ignore()) // Diisi di service
-                // .ForMember(dest => dest.Reader, opt => opt.Ignore()) // Diisi di service
-                // .ForMember(dest => dest.AccessControl, opt => opt.Ignore()) // Diisi di service
-                // .ForMember(dest => dest.FloorplanMaskedArea, opt => opt.Ignore()); // Diisi di service
+            // .ForMember(dest => dest.Floorplan, opt => opt.Ignore()) // Diisi di service
+            // .ForMember(dest => dest.AccessCctv, opt => opt.Ignore()) // Diisi di service
+            // .ForMember(dest => dest.Reader, opt => opt.Ignore()) // Diisi di service
+            // .ForMember(dest => dest.AccessControl, opt => opt.Ignore()) // Diisi di service
+            // .ForMember(dest => dest.FloorplanMaskedArea, opt => opt.Ignore()); // Diisi di service
 
+            CreateMap<FloorplanDevice, OpenFloorplanDeviceDto>();
             CreateMap<MstFloorplan, MstFloorplanDto>();
             CreateMap<MstAccessCctv, MstAccessCctvDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();

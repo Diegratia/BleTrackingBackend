@@ -43,9 +43,21 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
 
+        public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
+        {
+            var departments = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstDepartmentDto>>(departments);
+        }
+
+        //     public async Task<IEnumerable<MstDepartmentDto>> MixGetAllAsync()
+        // {
+        //     var departments = await _repository.MixGetAllAsync();
+        //     return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
+        // }
+
         public async Task<MstDepartmentDto> CreateAsync(MstDepartmentCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = _mapper.Map<MstDepartment>(createDto);
             department.Id = Guid.NewGuid();
             department.CreatedBy = username;
@@ -60,7 +72,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstDepartmentUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = await _repository.GetByIdAsync(id);
             if (department == null)
                 throw new KeyNotFoundException("Department not found");
@@ -74,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = await _repository.GetByIdAsync(id);
             department.UpdatedBy = username;
             department.UpdatedAt = DateTime.UtcNow;
@@ -82,6 +94,22 @@ namespace BusinessLogic.Services.Implementation
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllQueryable();
+
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "DepartmentHost", "CreatedAt", "Status" };
+
+            var filterService = new GenericDataTableService<MstDepartment, MstDepartmentDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+
+            return await filterService.FilterAsync(request);
+        }
+
+        public async Task<object> MixFilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
@@ -96,8 +124,8 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
-        
-         public async Task<byte[]> ExportPdfAsync()
+
+        public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var districts = await _repository.GetAllExportAsync();
@@ -181,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
             return document.GeneratePdf();
         }
 
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var districts = await _repository.GetAllExportAsync();
 
@@ -221,6 +249,45 @@ namespace BusinessLogic.Services.Implementation
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
+        }
+        
+         public async Task<IEnumerable<MstDepartmentDto>> ImportAsync(IFormFile file)
+        {
+            var departments = new List<MstDepartment>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+            int rowNumber = 2; // start dari baris ke 2
+            foreach (var row in rows)
+            {
+
+                var department = new MstDepartment
+                {
+                    Id = Guid.NewGuid(),
+                    Code = row.Cell(1).GetValue<string>(),
+                    Name = row.Cell(2).GetValue<string>(),
+                    DepartmentHost = row.Cell(3).GetValue<string>() ?? "",
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                departments.Add(department);
+                rowNumber++;
+            }
+
+            foreach (var department in departments)
+            {
+                await _repository.AddAsync(department);
+            }
+
+            return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
         }
     }
 }

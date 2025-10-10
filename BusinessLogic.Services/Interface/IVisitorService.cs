@@ -8,12 +8,14 @@ namespace BusinessLogic.Services.Interface
 {
     public interface IVisitorService
     {
-        Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
+        // Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
+        Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto);
         // Task<VisitorDto> CreateVisitorWithTrxAsync(VisitorWithTrxCreateDto createDto);
         Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto);
         Task<VisitorDto> GetVisitorByIdAsync(Guid id);
         Task<VisitorDto> GetVisitorByIdPublicAsync(Guid id);
         Task<IEnumerable<VisitorDto>> GetAllVisitorsAsync();
+        Task<IEnumerable<OpenVisitorDto>> OpenGetAllVisitorsAsync();
         Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto);
         Task DeleteVisitorAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);

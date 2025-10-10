@@ -24,6 +24,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstApplicationRepository _applicationRepository;
         private readonly UserGroupRepository _userGroupRepository;
         private readonly UserRepository _userRepository;
+        private readonly IMstIntegrationService _integrationService;
+        private readonly IMstBrandService _brandService;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -31,12 +33,16 @@ namespace BusinessLogic.Services.Implementation
             MstApplicationRepository applicationRepository,
             UserGroupRepository userGroupRepository,
             UserRepository userRepository,
+            IMstIntegrationService integrationService,
+            IMstBrandService brandService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
         {
             _applicationRepository = applicationRepository;
             _userGroupRepository = userGroupRepository;
             _userRepository = userRepository;
+            _integrationService = integrationService;
+            _brandService = brandService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -53,12 +59,23 @@ namespace BusinessLogic.Services.Implementation
             return application == null ? null : _mapper.Map<MstApplicationDto>(application);
         }
 
+        public string RandomApiKeyGenerator(int length = 32)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
         public async Task<MstApplicationDto> CreateApplicationAsync(MstApplicationCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var application = _mapper.Map<MstApplication>(dto);
-            // application.Id = Guid.NewGuid();
+
+            var genetateApplicationId = Guid.NewGuid();
+            application.Id = genetateApplicationId;
+
             application.ApplicationStatus = 1;
 
             var createdApplication = await _applicationRepository.AddAsync(application);
@@ -67,32 +84,58 @@ namespace BusinessLogic.Services.Implementation
             //     createdApplication.Id, LevelPriority.Primary);
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            using var transaction = await _applicationRepository.BeginTransactionAsync();
+            try
+            {
 
-            // if (userGroup == null)
-            // {
-            //     userGroup = new UserGroup
-            //     {
-            //         Id = Guid.NewGuid(),
-            //         Name = $"Primary Group for {createdApplication.Id}",
-            //         LevelPriority = LevelPriority.Primary,
-            //         ApplicationId = createdApplication.Id,
-            //         CreatedBy = username,
-            //         CreatedAt = DateTime.UtcNow,
-            //         UpdatedBy = username,
-            //         UpdatedAt = DateTime.UtcNow,
-            //         Status = 1
-            //     };
-            //     await _userGroupRepository.AddAsync(userGroup);
-            // }
+                // if (userGroup == null)
+                // {
+                //     userGroup = new UserGroup
+                //     {
+                //         Id = Guid.NewGuid(),
+                //         Name = $"Primary Group for {createdApplication.Id}",
+                //         LevelPriority = LevelPriority.Primary,
+                //         ApplicationId = createdApplication.Id,
+                //         CreatedBy = username,
+                //         CreatedAt = DateTime.UtcNow,
+                //         UpdatedBy = username,
+                //         UpdatedAt = DateTime.UtcNow,
+                //         Status = 1
+                //     };
+                //     await _userGroupRepository.AddAsync(userGroup);
+                // }
 
-            var userGroups = new List<UserGroup>
+                var createdBrand = new MstBrandCreateDto
+                {
+                    ApplicationId = createdApplication.Id,
+                    Name = $"BIO-{createdApplication.Id}",
+                    Tag = $"BIO-Tag-{createdApplication.Id}",
+                };
+                var brandId = await _brandService.CreateInternalAsync(createdBrand);
+                var createdBrandId = brandId.Id;
+
+                var createIntegration = new MstIntegrationCreateDto
+                {
+                    BrandId = createdBrandId,
+                    IntegrationType = IntegrationType.Api.ToString().ToLower(),
+                    ApiTypeAuth = ApiTypeAuth.ApiKey.ToString().ToLower(),
+                    ApiUrl = "bio-peopletracking.com",
+                    ApiAuthUsername = $"bio-peopletracking-{createdApplication.Id}",
+                    ApiAuthPasswd = RandomApiKeyGenerator(8),
+                    ApiKeyField = "X-BIO-PEOPLETRACKING-API-KEY",
+                    ApiKeyValue = RandomApiKeyGenerator(32),
+                    ApplicationId = createdApplication.Id,
+                };
+
+
+                var userGroups = new List<UserGroup>
             {
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Super Admin Group",
+                    Name = $"Super Admin Group-{genetateApplicationId}",
                     LevelPriority = LevelPriority.SuperAdmin,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -102,9 +145,9 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Operator Admin Group",
+                    Name = $"Operator Admin Group-{genetateApplicationId}",
                     LevelPriority = LevelPriority.PrimaryAdmin,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -114,9 +157,9 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Operator Security Group",
+                    Name = $"Operator Security Group-{genetateApplicationId}",
                     LevelPriority = LevelPriority.Primary,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -126,9 +169,9 @@ namespace BusinessLogic.Services.Implementation
                 new UserGroup
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Other Primary Group",
+                    Name = $"Other Primary Group-{genetateApplicationId}",
                     LevelPriority = LevelPriority.Primary,
-                    ApplicationId = application.Id,
+                    ApplicationId = genetateApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -137,16 +180,16 @@ namespace BusinessLogic.Services.Implementation
                 }
             };
 
-            foreach (var group in userGroups)
-            {
-                await _userGroupRepository.AddAsync(group);
-            }
-            var users = new List<User>
+                foreach (var group in userGroups)
+                {
+                    await _userGroupRepository.AddAsyncRaw(group);
+                }
+                var users = new List<User>
             {
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "SuperAdmin",
+                    Username = $"SuperAdmin-{genetateApplicationId}",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "superadmin@example.com",
@@ -162,7 +205,7 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Operator Primary Admin",
+                    Username = $"Operator Primary Admin-{genetateApplicationId}",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "operator@example.com",
@@ -178,7 +221,7 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Security Primary",
+                    Username = $"Security Primary-{genetateApplicationId}",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "securityuser@example.com",
@@ -194,7 +237,7 @@ namespace BusinessLogic.Services.Implementation
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "Other Primary User",
+                    Username = $"Other Primary User-{genetateApplicationId}",
                     Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     Email = "otherprimary@example.com",
@@ -209,16 +252,26 @@ namespace BusinessLogic.Services.Implementation
                 }
             };
 
-            foreach (var user in users)
-            {
-                await _userRepository.AddRawAsync(user);
-                // await _userRepository.AddAsync(user);
+                foreach (var user in users)
+                {
+                    await _userRepository.AddRawAsync(user);
+                    // await _userRepository.AddAsync(user);
+                }
 
+
+
+                // await _applicationRepository.AddAsync(application);
+                await _integrationService.CreateAsync(createIntegration);
+                // await _brandService.CreateAsync(createdBrand);
+                await transaction.CommitAsync();
+                return _mapper.Map<MstApplicationDto>(createdApplication);
             }
-
-            // await _applicationRepository.AddAsync(application);
-
-            return _mapper.Map<MstApplicationDto>(createdApplication);
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            
         }
 
         public async Task UpdateApplicationAsync(Guid id, MstApplicationUpdateDto dto)

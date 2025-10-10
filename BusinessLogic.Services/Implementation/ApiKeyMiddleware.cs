@@ -7,85 +7,81 @@ using Microsoft.AspNetCore.Http;
 using Helpers.Consumer;
 
 public static class ApiKeyMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseApiKeyAuthentication(this IApplicationBuilder app)
-        {
-            return app.UseMiddleware<ApiKeyMiddleware>();
-        }
-    }
 
-public class ApiKeyMiddleware
 {
-    private readonly RequestDelegate _next;
-    private readonly IServiceProvider _serviceProvider;
-
-    public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
+    public static IApplicationBuilder UseApiKeyAuthentication(this IApplicationBuilder app)
     {
-        _next = next;
-        _serviceProvider = serviceProvider;
+        return app.UseMiddleware<ApiKeyMiddleware>();
     }
+}
 
-     public async Task InvokeAsync(HttpContext context)
+    public class ApiKeyMiddleware
     {
-        var KeyField = "X-API-KEY-TRACKING-PEOPLE";
-        var apiUrl = "http://192.168.1.116:10000";
+        private readonly RequestDelegate _next;
+        private readonly IServiceProvider _serviceProvider;
+        private const string KeyField = "X-BIOPEOPLETRACKING-API-KEY";
+        private const string QueryParamKey = "apiKey";
 
-        if (context.Request.Path.Value.Contains("/export", StringComparison.OrdinalIgnoreCase))
+        public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
         {
-            await _next(context); 
-            return;
+            _next = next;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
-        if (context.Request.Path.Value.Contains("/refresh", StringComparison.OrdinalIgnoreCase))
+
+        public async Task InvokeAsync(HttpContext context)
         {
-            await _next(context); 
-            return;
-        }
-          if (context.Request.Path.Value.Contains("/public", StringComparison.OrdinalIgnoreCase))
-        {
-            await _next(context); 
-            return;
-        }
-            if (context.Request.Path.Value.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
-        {
+           //skip
+            var path = context.Request.Path.Value ?? string.Empty;
+            if (path.Contains("/export", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/refresh", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/public", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/hc", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/integration-login", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
+            {
+                await _next(context);
+                return;
+            }
+
+            string apiKeyValue = null;
+
+            if (context.Request.Headers.TryGetValue(KeyField, out var headerApiKey))
+            {
+                apiKeyValue = headerApiKey.ToString();
+            }
+            else if (context.Request.Query.TryGetValue(QueryParamKey, out var queryApiKey))
+            {
+                apiKeyValue = queryApiKey.ToString();
+            }
+
+            if (string.IsNullOrEmpty(apiKeyValue))
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"success\": false, \"msg\": \"API Key is missing or empty\", \"collection\": { \"data\": null }, \"code\": 401}");
+                return;
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
+            var integration = await dbContext.MstIntegrations
+                .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
+
+            if (integration == null)
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
+                return;
+            }
+
+            context.Items["MstIntegration"] = integration;
+
             await _next(context);
-            return;
         }
-        // Periksa header X-API-KEY-TRACKING-PEOPLE untuk semua endpoint
-        if (!context.Request.Headers.TryGetValue(KeyField, out var apiKeyValues))
-        {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("{\"success\": false, \"msg\": \"API Key is missing\", \"collection\": { \"data\": null }, \"code\": 401}");
-            return;
-        }
-        Console.Write(apiKeyValues);
-
-        var KeyValue = apiKeyValues.ToString(); 
-        if (string.IsNullOrEmpty(KeyValue))
-        {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("{\"success\": false, \"msg\": \"API Key is empty\", \"collection\": { \"data\": null }, \"code\": 401}");
-            return;
-        }
-
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-        var integration = await dbContext.MstIntegrations
-            .FirstOrDefaultAsync(i => i.ApiKeyField == KeyField && i.ApiKeyValue == KeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
-
-        if (integration == null)
-        {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
-            return;
-        }
-
-        context.Items["MstIntegration"] = integration;
-
-        await _next(context);
     }
 
 
-    }
 
 
 

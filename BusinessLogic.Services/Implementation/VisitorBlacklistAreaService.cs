@@ -11,17 +11,22 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Helpers.Consumer.DtoHelpers;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class VisitorBlacklistAreaService : IVisitorBlacklistAreaService
     {
         private readonly VisitorBlacklistAreaRepository _repository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public VisitorBlacklistAreaService(VisitorBlacklistAreaRepository repository, IMapper mapper)
+        public VisitorBlacklistAreaService(VisitorBlacklistAreaRepository repository, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _repository = repository;
+            _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
 
@@ -29,11 +34,62 @@ namespace BusinessLogic.Services.Implementation
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
+           var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
             var entity = _mapper.Map<VisitorBlacklistArea>(dto);
             entity.Id = Guid.NewGuid();
+            entity.Status = 1;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.CreatedBy = username;
+            entity.CreatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(entity);
             return _mapper.Map<VisitorBlacklistAreaDto>(entity);
+        }
+        
+        public async Task<IEnumerable<VisitorBlacklistAreaDto>> CreatesVisitorBlacklistAreaAsync(VisitorBlacklistAreaRequestDto request)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var entities = new List<VisitorBlacklistArea>();
+            foreach (var area in request.VisitorBlacklistAreas)
+            {
+                var entity = _mapper.Map<VisitorBlacklistArea>(area);
+                entity.Id = Guid.NewGuid();
+                entity.Status = 1;
+                entity.UpdatedBy = username;
+                entity.UpdatedAt = DateTime.UtcNow;
+                entity.CreatedBy = username;
+                entity.CreatedAt = DateTime.UtcNow;
+                entity.VisitorId = request.VisitorId;
+                entities.Add(entity);
+            }
+
+            await _repository.AddRangeAsync(entities);
+            return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
+        }
+
+
+        public async Task<List<VisitorBlacklistAreaDto>> CreateBatchVisitorBlacklistAreaAsync(List<VisitorBlacklistAreaCreateDto> dtos)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var result = new List<VisitorBlacklistAreaDto>();
+            foreach (var dto in dtos)
+            {
+                var blacklistArea = _mapper.Map<VisitorBlacklistArea>(dto);
+                blacklistArea.Id = Guid.NewGuid();
+                blacklistArea.CreatedBy = username;
+                blacklistArea.UpdatedBy = username;
+                blacklistArea.CreatedAt = DateTime.UtcNow;
+                blacklistArea.UpdatedAt = DateTime.UtcNow;
+                blacklistArea.Status = 1;
+                await _repository.AddAsync(blacklistArea);
+                result.Add(_mapper.Map<VisitorBlacklistAreaDto>(blacklistArea));
+            }
+            return result;
         }
 
         public async Task<VisitorBlacklistAreaDto> GetVisitorBlacklistAreaByIdAsync(Guid id)
@@ -47,14 +103,24 @@ namespace BusinessLogic.Services.Implementation
             var entities = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
         }
+        
+                public async Task<IEnumerable<OpenVisitorBlacklistAreaDto>> OpenGetAllVisitorBlacklistAreasAsync()
+        {
+            var entities = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenVisitorBlacklistAreaDto>>(entities);
+        }
 
         public async Task UpdateVisitorBlacklistAreaAsync(Guid id, VisitorBlacklistAreaUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(dto, entity);
             await _repository.UpdateAsync(entity);
@@ -65,6 +131,10 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             await _repository.DeleteAsync(entity);
         }
@@ -84,6 +154,23 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+
+        // public async Task<object> MinimalFilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryableMinimal();
+
+        //     var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
+        //     var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
+
+        //     var filterService = new GenericDataTableService<VisitorBlacklistArea, VisitorBlacklistAreaDtoMinimal>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
+
 
           public async Task<byte[]> ExportPdfAsync()
         {

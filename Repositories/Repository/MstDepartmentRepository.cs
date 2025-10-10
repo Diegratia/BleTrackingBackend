@@ -88,9 +88,31 @@
                 return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             }
             
+        // public (IQueryable<MstDepartment>, IQueryable<MstOrganization>, IQueryable<MstDistrict>) MixGetAllQueryable()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        //     var departmentQuery = _context.MstDepartments
+        //         .Where(d => d.Status != 0);
+        //     var organizationQuery = _context.MstOrganizations
+        //         .Where(d => d.Status != 0);
+        //     var districtQuery = _context.MstDistricts
+        //         .Where(d => d.Status != 0);
+
+        //     var filteredDepartmentQuery = ApplyApplicationIdFilter(departmentQuery, applicationId, isSystemAdmin);
+        //     var filteredOrganizationQuery = ApplyApplicationIdFilter(organizationQuery, applicationId, isSystemAdmin);
+        //     var filteredDistrictQuery = ApplyApplicationIdFilter(districtQuery, applicationId, isSystemAdmin);
+
+        //     return (filteredDepartmentQuery, filteredOrganizationQuery, filteredDistrictQuery);
+        // }
+
+        //     public async Task<IEnumerable<MstDepartment>> MixGetAllAsync()
+        // {
+        //     return await MixGetAllQueryable().Item1.ToListAsync();
+        // }
+            
             public async Task<IEnumerable<MstDepartment>> GetAllExportAsync()
-            {
-                return await GetAllQueryable().ToListAsync();
-            }
+        {
+            return await GetAllQueryable().ToListAsync();
+        }
         }
     }

@@ -16,6 +16,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<VisitorBlacklistAreaCreateDto, VisitorBlacklistArea>();
             CreateMap<VisitorBlacklistAreaUpdateDto, VisitorBlacklistArea>();
             CreateMap<VisitorBlacklistArea, VisitorBlacklistAreaDto>();
+            CreateMap<VisitorBlacklistArea, OpenVisitorBlacklistAreaDto>();
             CreateMap<VisitorBlacklistAreaDto, VisitorBlacklistArea>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
             CreateMap<Visitor, VisitorDto>();

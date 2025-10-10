@@ -6,12 +6,13 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class MstMemberController : ControllerBase
     {
         private readonly IMstMemberService _mstMemberService;
@@ -21,7 +22,7 @@ namespace Web.API.Controllers.Controllers
             _mstMemberService = mstMemberService;
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -49,7 +50,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -87,7 +88,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstMemberCreateDto mstMemberDto)
@@ -127,7 +128,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/MstMember/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto mstMemberDto)
@@ -177,7 +178,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         // DELETE: api/MstMember/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -215,7 +216,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -265,7 +266,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-         [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -286,7 +287,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-         [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -302,6 +303,95 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .xlsx files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var floors = await _mstMemberService.ImportAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Members imported successfully",
+                    collection = new { data = floors },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        //OPEN
+
+        // GET: api/MstMember
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var members = await _mstMemberService.OpenGetAllMembersAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Members retrieved successfully",
+                    collection = new { data = members },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

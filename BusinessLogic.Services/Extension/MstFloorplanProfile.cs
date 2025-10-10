@@ -16,15 +16,23 @@ namespace BusinessLogic.Services.Extension
            .ForMember(dest => dest.MaskedAreaCount, opt => opt.MapFrom(src => src.FloorplanMaskedAreas.Count(m => m.Status != 0)))
             .ForMember(dest => dest.DeviceCount, opt => opt.MapFrom(src => src.FloorplanDevices.Count(m => m.Status != 0)));
 
+            CreateMap<MstFloorplan, OpenMstFloorplanDto>();
+            //    .ForMember(dest => dest.MaskedAreaCount, opt => opt.MapFrom(src => src.FloorplanMaskedAreas.Count(m => m.Status != 0)))
+            //     .ForMember(dest => dest.DeviceCount, opt => opt.MapFrom(src => src.FloorplanDevices.Count(m => m.Status != 0)));
+
             CreateMap<MstFloorplanCreateDto, MstFloorplan>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore());
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.FloorplanImage, opt => opt.Ignore());
+
 
             CreateMap<MstFloorplanUpdateDto, MstFloorplan>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.FloorplanImage, opt => opt.Ignore());
+                
         }
     }
 }

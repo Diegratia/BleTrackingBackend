@@ -42,48 +42,6 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<AlarmRecordTrackingDto>>(alarms);
         }
 
-        public async Task<AlarmRecordTrackingDto> CreateAsync(AlarmRecordTrackingCreateDto createDto)
-        {
-            // Validasi relasi
-
-            var alarm = _mapper.Map<AlarmRecordTracking>(createDto);
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            // Set nilai default untuk properti yang tidak ada di DTO
-            alarm.Id = Guid.NewGuid();
-            alarm.Timestamp = DateTime.UtcNow;
-            alarm.IdleTimestamp = DateTime.UtcNow;
-            alarm.DoneTimestamp = DateTime.MaxValue;
-            alarm.CancelTimestamp = DateTime.MaxValue;
-            alarm.WaitingTimestamp = DateTime.MaxValue;
-            alarm.InvestigatedTimestamp = DateTime.MaxValue;
-            alarm.IdleBy = username;
-            alarm.DoneBy = username;
-            alarm.CancelBy = username;
-            alarm.WaitingBy = username;
-            alarm.InvestigatedBy = username;
-            alarm.InvestigatedDoneAt = DateTime.MaxValue;
-
-            await _repository.AddAsync(alarm);
-            return _mapper.Map<AlarmRecordTrackingDto>(alarm);
-        }
-
-        public async Task UpdateAsync(Guid id, AlarmRecordTrackingUpdateDto updateDto)
-        {
-            var alarm = await _repository.GetByIdAsync(id);
-            if (alarm == null)
-                throw new KeyNotFoundException("Alarm record not found");
-
-            _mapper.Map(updateDto, alarm);
-
-            await _repository.UpdateAsync(alarm);
-        }
-
-        // public async Task DeleteAsync(Guid id)
-        // {
-        //     await _repository.DeleteAsync(id);
-        // }
-
          public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();

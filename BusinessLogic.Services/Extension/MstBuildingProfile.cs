@@ -15,6 +15,9 @@ namespace BusinessLogic.Services.Extension
             // Mapping dari Domain ke DTO
             CreateMap<MstBuilding, MstBuildingDto>();
 
+            CreateMap<MstBuilding, OpenMstBuildingDto>();
+        // .ForMember(dest => dest.buildingId, opt => opt.MapFrom(src => src.id));
+
             // Mapping dari Create DTO ke Domain
             CreateMap<MstBuildingCreateDto, MstBuilding>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

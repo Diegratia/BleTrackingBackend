@@ -34,6 +34,23 @@ namespace Repositories.DbContexts
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         public DbSet<Card> Cards{ get; set; }
+        public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
+        public DbSet<AlarmCategorySettings> AlarmCategorySettings{ get; set; }
+        
+        // CardAccessService
+        public DbSet<CardAccessMaskedArea> CardAccessMaskedAreas { get; set; }
+        public DbSet<CardAccessTimeGroups> CardAccessTimeGroups { get; set; }
+        public DbSet<CardGroup> CardGroups{ get; set; }
+        public DbSet<CardAccess> CardAccesses{ get; set; }
+        // public DbSet<CardGroupCardAccess> CardGroupCardAccesses{ get; set; }
+        public DbSet<CardCardAccess> CardCardAccesses{ get; set; }
+        public DbSet<TimeBlock> TimeBlocks{ get; set; }
+        public DbSet<TimeGroup> TimeGroups{ get; set; }
+        public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
+        public DbSet<Geofence> Geofences{ get; set; }
+        public DbSet<StayOnArea> StayOnAreas{ get; set; }
+        public DbSet<Boundary> Boundarys{ get; set; }
+        public DbSet<Overpopulating> Overpopulatings{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -69,6 +86,11 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
+            modelBuilder.Entity<Geofence>().ToTable("geofence");
+            modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
+            modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
+            modelBuilder.Entity<Boundary>().ToTable("boundary");
+            modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
             // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
             // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
@@ -209,6 +231,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.IntegrationId).HasMaxLength(36);
+                entity.Property(e => e.BrandId).HasMaxLength(36);
 
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -218,6 +241,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Integration)
                     .WithMany()
                     .HasForeignKey(m => m.IntegrationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Brand)
+                    .WithMany()
+                    .HasForeignKey(m => m.BrandId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(m => m.Status)
@@ -279,14 +307,26 @@ namespace Repositories.DbContexts
                     .HasDefaultValue(1);
             });
 
+             // MonitoringConfig
+            modelBuilder.Entity<MonitoringConfig>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
             // MstMember
             modelBuilder.Entity<MstMember>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.OrganizationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DepartmentId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.DistrictId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.OrganizationId).HasMaxLength(36);
+                entity.Property(e => e.DepartmentId).HasMaxLength(36);
+                entity.Property(e => e.DistrictId).HasMaxLength(36);
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -347,6 +387,7 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BuildingId)
                     .OnDelete(DeleteBehavior.NoAction);
+                    
             });
 
             // FloorplanMaskedArea
@@ -354,6 +395,7 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorplanId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.RestrictedStatus)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
@@ -365,6 +407,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Floor)
                     .WithMany()
                     .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(m => m.Status)
@@ -429,6 +476,9 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(v => v.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(m => m.Status)
+                    .HasDefaultValue(1);
                 
                 
             });
@@ -461,6 +511,8 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.MemberId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.CardId).HasMaxLength(36);
                 entity.Property(e => e.AlarmStatus)
@@ -480,6 +532,16 @@ namespace Repositories.DbContexts
                     .HasForeignKey(t => t.ReaderId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                entity.HasOne(t => t.Visitor)
+                    .WithMany()
+                    .HasForeignKey(t => t.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Member)
+                    .WithMany()
+                    .HasForeignKey(t => t.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasOne(t => t.FloorplanMaskedArea)
                     .WithMany()
                     .HasForeignKey(t => t.FloorplanMaskedAreaId)
@@ -496,14 +558,15 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.MemberId).HasMaxLength(36);
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
+                entity.Property(e => e.AlarmTriggersId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.Alarm)
                     .HasColumnName("alarm_record_status")
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
@@ -511,7 +574,6 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.Action)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)
@@ -521,6 +583,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(a => a.Visitor)
                     .WithMany()
                     .HasForeignKey(a => a.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(a => a.Member)
+                    .WithMany(b => b.AlarmRecordTrackings)
+                    .HasForeignKey(a => a.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 // Relasi one-to-many dengan MstBleReader
@@ -533,6 +600,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(a => a.FloorplanMaskedArea)
                    .WithMany()
                     .HasForeignKey(a => a.FloorplanMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(a => a.AlarmTriggers)
+                   .WithMany()
+                    .HasForeignKey(a => a.AlarmTriggersId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 // Relasi one-to-many dengan MstApplication
@@ -592,9 +664,11 @@ namespace Repositories.DbContexts
                 entity.ToTable("mst_floorplan");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
+                // entity.Property(e => e.EngineId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
 
+                // entity.HasOne(f => f.Engine).WithMany().HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Floor).WithMany().HasForeignKey(f => f.FloorId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Application).WithMany().HasForeignKey(f => f.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 
@@ -644,10 +718,10 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstEngine>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.EngineId).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1); // untuk delete
-                entity.Property(e => e.IsLive).IsRequired().HasDefaultValue(1); // untuk monitoring status
-                entity.Property(e => e.LastLive).IsRequired();
+                entity.Property(e => e.EngineId).HasMaxLength(255);
+                entity.Property(e => e.Status); 
+                entity.Property(e => e.IsLive); 
+                entity.Property(e => e.LastLive);
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
@@ -657,12 +731,141 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.ServiceStatus).HasMaxLength(50)
                     .HasColumnType("nvarchar(255)")
-                    .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
                 
                     );
+            });
+            // Geofence
+            modelBuilder.Entity<Geofence>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // Boundary
+            modelBuilder.Entity<Boundary>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // StayOnArea
+            modelBuilder.Entity<StayOnArea>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+             // Overpopulating
+            modelBuilder.Entity<Overpopulating>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+                modelBuilder.Entity<AlarmTriggers>(entity =>
+            {
+                entity.ToTable("alarm_triggers");
+                // entity.ToTable("alarm_triggers");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                   entity.Property(e => e.Alarm)
+                    .HasColumnName("alarm_record_status")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
+                    );
+
+                entity.Property(e => e.Action)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ActionStatus)Enum.Parse(typeof(ActionStatus), v, true)
+                    );
+
+                // Relasi one-to-many dengan Visitor
+                entity.HasOne(a => a.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(a => a.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<CardRecord>(entity =>
@@ -732,6 +935,43 @@ namespace Repositories.DbContexts
                     .WithMany() // atau .WithMany(m => m.CardRecords)
                     .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction); 
+            });
+
+            modelBuilder.Entity<TimeGroup>(entity =>
+            {
+                entity.ToTable("time_group");
+
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.CardAccessTimeGroups)
+                    .WithOne(e => e.TimeGroup)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+                modelBuilder.Entity<TimeBlock>(entity =>
+            {
+                entity.ToTable("time_block");
+
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.TimeGroupId).HasColumnName("time_group_id").HasMaxLength(36);
+                entity.HasOne(m => m.TimeGroup)
+                    .WithMany(g => g.TimeBlocks) 
+                    .HasForeignKey(m => m.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             //  modelBuilder.Entity<MstTrackingLog>(entity =>
@@ -919,9 +1159,6 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (Gender)Enum.Parse(typeof(Gender), v, true)
                     );
-
-       
-                
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -935,6 +1172,138 @@ namespace Repositories.DbContexts
 
                 entity.HasIndex(v => v.PersonId);
                 entity.HasIndex(v => v.Email);
+            });
+
+            // CardGroup
+            modelBuilder.Entity<CardGroup>(entity =>
+            {
+                entity.ToTable("card_groups");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.ApplicationId).IsRequired();
+
+                entity.HasOne(e => e.Application)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                // entity.HasMany(e => e.CardGroupCardAccesses)
+                //     .WithOne(e => e.CardGroup)
+                //     .HasForeignKey(e => e.CardGroupId)
+                //     .OnDelete(DeleteBehavior.NoAction);
+                
+                
+            });
+
+            // CardAccess
+            modelBuilder.Entity<CardAccess>(entity =>
+            {
+                entity.ToTable("card_accesses");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).IsRequired();
+                entity.Property(e => e.ApplicationId).IsRequired();
+
+                entity.HasOne(e => e.Application)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.CardAccessMaskedAreas)
+                    .WithOne(e => e.CardAccess)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasMany(e => e.CardAccessTimeGroups)
+                    .WithOne(e => e.CardAccess)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.AccessScope)
+                .HasConversion(
+                        v => v.ToString().ToLower(), // Simpan ke DB sebagai "single"
+                        v => (AccessScope)Enum.Parse(typeof(AccessScope), v, true)
+                    );
+
+              
+            });
+
+            // CardAccessMaskedArea (pivot CardAccess <-> FloorplanMaskedArea)
+            modelBuilder.Entity<CardAccessMaskedArea>(entity =>
+            {
+                entity.ToTable("card_access_masked_areas");
+
+                entity.HasKey(e => new { e.CardAccessId, e.MaskedAreaId });
+
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany(e => e.CardAccessMaskedAreas)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.MaskedArea)
+                    .WithMany(ma => ma.CardAccessMaskedAreas)
+                    .HasForeignKey(e => e.MaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+            
+             // CardAccessTimeGroups (pivot CardAccess <-> TimeGroups)
+            modelBuilder.Entity<CardAccessTimeGroups>(entity =>
+            {
+                entity.ToTable("card_access_time_groups");
+
+                entity.HasKey(e => new { e.CardAccessId, e.TimeGroupId });
+
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany(e => e.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.TimeGroup)
+                    .WithMany(ma => ma.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //pivot card dan card access
+            modelBuilder.Entity<CardCardAccess>(entity =>
+            {
+                entity.ToTable("card_card_accesses");
+
+                entity.HasKey(e => new { e.CardId, e.CardAccessId });
+
+                entity.HasOne(e => e.Card)
+                    .WithMany(e => e.CardCardAccesses)
+                    .HasForeignKey(e => e.CardId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.CardAccess)
+                    .WithMany()
+                    .HasForeignKey(e => e.CardAccessId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+            
+            modelBuilder.Entity<AlarmCategorySettings>(entity =>
+            {
+                entity.ToTable("alarm_category_settings");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).IsRequired();
+
+                entity.Property(e => e.AlarmCategory)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
+                    );
+                entity.Property(e => e.AlarmLevelPriority)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (AlarmLevelPriority)Enum.Parse(typeof(AlarmLevelPriority), v, true)
+                    );
             });
 
             // Card
@@ -964,11 +1333,22 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.RegisteredMaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+
+                entity.Property(e => e.CardGroupId).HasMaxLength(36);
+                entity.HasOne(m => m.CardGroup)
+                    .WithMany(g => g.Cards)
+                    .HasForeignKey(m => m.CardGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.HasOne(m => m.Visitor)
                     .WithMany()
                     .HasForeignKey(m => m.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.HasMany(e => e.CardCardAccesses)
+                    .WithOne(e => e.Card)
+                    .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
                 
             });
@@ -979,7 +1359,6 @@ namespace Repositories.DbContexts
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId);
             });   
-           
 
             
         }

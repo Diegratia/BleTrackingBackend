@@ -40,6 +40,27 @@ namespace Repositories.Repository
             return await query.ToListAsync();
         }
 
+//         public async Task<IEnumerable<MstBrand>> GetAllAsync()
+// {
+//     using (var connection = _connectionFactory.CreateConnection())
+//     {
+//         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+//         var query = "SELECT * FROM MstBrands WHERE Status != @Status";
+//         var parameters = new { Status = 0 };
+
+//         if (!isSystemAdmin)
+//         {
+//             query += " AND (ApplicationId = @ApplicationId OR ApplicationId IS NULL)";
+//             parameters["ApplicationId"] = applicationId;
+//         }
+
+//         var brands = await connection.QueryAsync<MstBrand>(query, parameters);
+
+//         return brands;
+//     }
+// }
+
         public async Task<MstBrand> AddAsync(MstBrand brand)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -59,6 +80,13 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(brand.ApplicationId);
             ValidateApplicationIdForEntity(brand, applicationId, isSystemAdmin);
 
+            _context.MstBrands.Add(brand);
+            await _context.SaveChangesAsync();
+            return brand;
+        }
+
+        public async Task<MstBrand> RawAddAsync(MstBrand brand)
+        {
             _context.MstBrands.Add(brand);
             await _context.SaveChangesAsync();
             return brand;
@@ -116,3 +144,4 @@ namespace Repositories.Repository
         }
     }
 }
+

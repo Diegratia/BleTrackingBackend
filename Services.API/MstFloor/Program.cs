@@ -45,7 +45,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -141,13 +141,18 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(MstFloorProfile));
 builder.Services.AddScoped<IMstFloorService, MstFloorService>();
+builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
 builder.Services.AddScoped<MstFloorRepository>();
+builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 
 
 var port = Environment.GetEnvironmentVariable("MST_FLOOR_PORT") ??
-           builder.Configuration["Ports:MstFloorService"] ?? "10013";
+           builder.Configuration["Ports:MstFloorService"] ?? "5013";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
@@ -188,16 +193,16 @@ if (app.Environment.IsDevelopment())
 // });
 
 app.UseCors("AllowAll");
-// Buat direktori Uploads/FloorImages jika belum ada
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
-Directory.CreateDirectory(uploadsPath);
+// // Buat direktori Uploads/FloorImages jika belum ada
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
+// Directory.CreateDirectory(uploadsPath);
 
-// Sajikan file statis di /Uploads/FloorImages/
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/Uploads/FloorImages"
-});
+// // Sajikan file statis di /Uploads/FloorImages/
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/FloorImages"
+// });
 
 
 // app.UseHttpsRedirection();

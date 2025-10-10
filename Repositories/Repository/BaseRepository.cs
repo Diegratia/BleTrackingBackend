@@ -27,22 +27,25 @@ namespace Repositories.Repository
             var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
             if (isSystemAdmin == true)
             {
-                return (null, true); // System admin tidak perlu filter ApplicationId
+                return (null, true); // system ga perlu filter applicationId
             }
 
-            // Prioritas 1: Dari token Bearer (claim di JWT)
+            // cek di token
             var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
             if (Guid.TryParse(applicationIdClaim, out var applicationIdFromToken))
             {
                 return (applicationIdFromToken, false);
             }
-
-            // Prioritas 2: Dari MstIntegration (X-API-KEY-TRACKING-PEOPLE)
-            // var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
-            // if (integration?.ApplicationId != null)
+            // var integrationFromHeader = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+            // if (integrationFromHeader?.ApplicationId != null)
             // {
-            //     return (integration.ApplicationId, false);
+            //     return (integrationFromHeader.ApplicationId, false);
             // }
+            var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+            if (integration?.ApplicationId != null)
+            {
+                return (integration.ApplicationId, false);
+            }
 
             return (null, false);
         }
@@ -75,8 +78,41 @@ namespace Repositories.Repository
             return await _context.Database.BeginTransactionAsync();
         }
 
+        public async Task ExecuteInTransactionAsync(Func<Task> action)
+        {
+            IDbContextTransaction transaction = null;
+            if (_context.Database.CurrentTransaction == null)
+            {
+                transaction = await _context.Database.BeginTransactionAsync();
+            }
 
-           protected string GetUserEmail()
+            try
+            {
+                await action();
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
+        }
+
+
+        protected string GetUserEmail()
         {
             var email = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
             if (string.IsNullOrWhiteSpace(email))
@@ -89,45 +125,17 @@ namespace Repositories.Repository
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.SuperAdmin.ToString()) ?? false;
         }
-        
-            protected bool IsPrimary()
+
+        protected bool IsPrimary()
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.Primary.ToString()) ?? false;
         }
 
-            protected bool IsPrimaryAdmin()
+        protected bool IsPrimaryAdmin()
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
         }
         
-        // public enum LevelPriority
-        // {
-        //     System,
-        //     SuperAdmin,
-        //     PrimaryAdmin,
-        //     Primary,
-        //     Secondary,
-        //     UserCreated
-        // }
-
-        //     public static IQueryable<Card> WithActiveRelations(this IQueryable<Card> query)
-        //     {
-        //         return query.Where(c =>
-        //             (c.Visitor == null || c.Visitor.Status != 0) &&
-        //             (c.Visitor.Department == null || c.Visitor.Department.Status != 0) &&
-        //             (c.Visitor.Department.District == null || c.Visitor.Department.District.Status != 0));
-        //     }
-
-        // public static IQueryable<FloorplanMaskedArea> WithActiveRelations(this IQueryable<FloorplanMaskedArea> query)
-        // {
-        //     return query.Where(m =>
-        //         m.Floorplan != null &&
-        //         m.Floorplan.Status != 0 &&
-        //         m.Floorplan.Floor != null &&
-        //         m.Floorplan.Floor.Status != 0 &&
-        //         m.Floorplan.Floor.Department != null &&
-        //         m.Floorplan.Floor.Department.Status != 0);
-        // }
 
 
     }

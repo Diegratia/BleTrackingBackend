@@ -15,20 +15,33 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class FloorplanMaskedAreaService : IFloorplanMaskedAreaService
     {
         private readonly FloorplanMaskedAreaRepository _repository;
+        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        // private readonly IMqttPublisher _mqttPublisher;
 
-        public FloorplanMaskedAreaService(FloorplanMaskedAreaRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+
+
+        public FloorplanMaskedAreaService(
+            FloorplanMaskedAreaRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            FloorplanDeviceRepository floorplanDeviceRepository
+            // IMqttPublisher mqttPublisher
+            )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _floorplanDeviceRepository = floorplanDeviceRepository;
+            // _mqttPublisher = mqttPublisher;
         }
 
         public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
@@ -40,7 +53,14 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync()
         {
             var areas = await _repository.GetAllAsync();
+            // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
             return _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(areas);
+        }
+
+        public async Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync()
+        {
+            var areas = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenFloorplanMaskedAreaDto>>(areas);
         }
 
         public async Task<FloorplanMaskedAreaDto> CreateAsync(FloorplanMaskedAreaCreateDto createDto)
@@ -59,7 +79,9 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedBy = username;
             area.UpdatedAt = DateTime.UtcNow;
 
+
             await _repository.AddAsync(area);
+            // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
             return _mapper.Map<FloorplanMaskedAreaDto>(area);
         }
 
@@ -79,7 +101,9 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, area);
             await _repository.UpdateAsync(area);
+            // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
         }
+
 
         public async Task DeleteAsync(Guid id)
         {
@@ -89,6 +113,36 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedAt = DateTime.UtcNow;
             area.Status = 0;
             await _repository.SoftDeleteAsync(id);
+            // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
+        }
+        
+
+        public async Task SoftDeleteAsync(Guid id)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var area = await _repository.GetByIdAsync(id);
+            if (area == null)
+                throw new KeyNotFoundException("area not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                // Soft delete parent
+                area.UpdatedBy = username;
+                area.UpdatedAt = DateTime.UtcNow;
+                area.Status = 0;
+                await _repository.SoftDeleteAsync(id);
+                // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
+
+                // Soft delete child entities via their repositories
+                var floorplandevices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+                foreach (var floorplandevice in floorplandevices)
+                {
+                    floorplandevice.UpdatedBy = username;
+                    floorplandevice.UpdatedAt = DateTime.UtcNow;
+                    floorplandevice.Status = 0;
+                    await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
+                }
+            });
         }
 
         public async Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file)
@@ -102,7 +156,7 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 
@@ -131,7 +185,7 @@ namespace BusinessLogic.Services.Implementation
                     Name = row.Cell(3).GetValue<string>(),
                     AreaShape = row.Cell(4).GetValue<string>(),
                     ColorArea = row.Cell(5).GetValue<string>(),
-                    RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>()),
+                    RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>(), true),
                     EngineAreaId = row.Cell(7).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
@@ -228,7 +282,6 @@ namespace BusinessLogic.Services.Implementation
                                 .PaddingVertical(4)
                                 .PaddingHorizontal(6);
                     });
-
                     page.Footer()
                         .AlignRight()
                         .Text(txt =>

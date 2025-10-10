@@ -22,6 +22,58 @@ namespace Repositories.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Entities.Models.AlarmCategorySettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AlarmCategory")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("alarm_category");
+
+                    b.Property<string>("AlarmColor")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("alarm_color");
+
+                    b.Property<string>("AlarmLevelPriority")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("alarm_level_priority");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<int?>("IsEnabled")
+                        .HasColumnType("int")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("alarm_category_settings", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
                 {
                     b.Property<Guid>("Id")
@@ -31,14 +83,17 @@ namespace Repositories.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("action");
 
                     b.Property<string>("Alarm")
-                        .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("alarm_record_status");
+
+                    b.Property<Guid?>("AlarmTriggersId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("alarm_triggers_id");
 
                     b.Property<Guid>("ApplicationId")
                         .HasMaxLength(36)
@@ -63,7 +118,7 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("done_timestamp");
 
-                    b.Property<Guid>("FloorplanMaskedAreaId")
+                    b.Property<Guid?>("FloorplanMaskedAreaId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floorplan_masked_area_id");
@@ -104,13 +159,18 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("investigated_timestamp");
 
+                    b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("MstBleReaderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ReaderId")
+                    b.Property<Guid?>("ReaderId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ble_reader_id");
@@ -119,7 +179,7 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("timestamp");
 
-                    b.Property<Guid>("VisitorId")
+                    b.Property<Guid?>("VisitorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("visitor_id");
@@ -138,6 +198,8 @@ namespace Repositories.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AlarmTriggersId");
+
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorplanMaskedAreaId");
@@ -147,6 +209,8 @@ namespace Repositories.Migrations
                     b.HasIndex("Generate")
                         .IsUnique()
                         .HasDatabaseName("alarm_record_tracking__generate_unique");
+
+                    b.HasIndex("MemberId");
 
                     b.HasIndex("MstApplicationId");
 
@@ -159,6 +223,135 @@ namespace Repositories.Migrations
                     b.HasIndex("VisitorId1");
 
                     b.ToTable("alarm_record_tracking", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.AlarmTriggers", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Alarm")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("alarm_record_status");
+
+                    b.Property<string>("AlarmColor")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("alarm_color");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("BeaconId")
+                        .HasColumnType("nvarchar(16)")
+                        .HasColumnName("beacon_id");
+
+                    b.Property<string>("CancelBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("cancel_by");
+
+                    b.Property<DateTime?>("CancelTimestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("cancel_timestamp");
+
+                    b.Property<string>("DoneBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("done_by");
+
+                    b.Property<DateTime?>("DoneTimestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("done_timestamp");
+
+                    b.Property<float?>("FirstDistance")
+                        .HasColumnType("real")
+                        .HasColumnName("first_distance");
+
+                    b.Property<string>("FirstGatewayId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("first_gateway_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<string>("IdleBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("idle_by");
+
+                    b.Property<DateTime?>("IdleTimestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("idle_timestamp");
+
+                    b.Property<string>("InvestigatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("investigated_by");
+
+                    b.Property<DateTime?>("InvestigatedDoneAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("investigated_done_at");
+
+                    b.Property<string>("InvestigatedResult")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("investigated_result");
+
+                    b.Property<DateTime?>("InvestigatedTimestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("investigated_timestamp");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool?>("IsInRestrictedArea")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_in_restricted_area");
+
+                    b.Property<float?>("PosX")
+                        .HasColumnType("real")
+                        .HasColumnName("pos_x");
+
+                    b.Property<float?>("PosY")
+                        .HasColumnType("real")
+                        .HasColumnName("pos_y");
+
+                    b.Property<float?>("SecondDistance")
+                        .HasColumnType("real")
+                        .HasColumnName("second_distance");
+
+                    b.Property<string>("SecondGatewayId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("second_gateway_id");
+
+                    b.Property<DateTime?>("TriggerTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("trigger_time");
+
+                    b.Property<string>("WaitingBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("waiting_by");
+
+                    b.Property<DateTime?>("WaitingTimestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("waiting_timestamp");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("alarm_triggers", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
@@ -237,6 +430,89 @@ namespace Repositories.Migrations
                     b.ToTable("ble_reader_node", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.Boundary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<int>("BoundaryType")
+                        .HasColumnType("int")
+                        .HasColumnName("boundary_type");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("boundary", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
                     b.Property<Guid>("Id")
@@ -250,8 +526,13 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<Guid?>("CardGroupId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_group_id");
+
                     b.Property<string>("CardNumber")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("card_number");
 
                     b.Property<string>("CardType")
@@ -276,15 +557,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<string>("Dmac")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("dmac");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<bool?>("IsMultiMaskedArea")
                         .HasColumnType("bit")
@@ -341,6 +615,12 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
+                    b.HasIndex("CardGroupId");
+
+                    b.HasIndex("CardNumber");
+
+                    b.HasIndex("Dmac");
+
                     b.HasIndex("MemberId");
 
                     b.HasIndex("RegisteredMaskedAreaId");
@@ -348,6 +628,181 @@ namespace Repositories.Migrations
                     b.HasIndex("VisitorId");
 
                     b.ToTable("card", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("AccessNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("access_number");
+
+                    b.Property<string>("AccessScope")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("access_scope");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("card_accesses", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccessMaskedArea", b =>
+                {
+                    b.Property<Guid>("CardAccessId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_access_id");
+
+                    b.Property<Guid>("MaskedAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("masked_area_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("CardAccessId", "MaskedAreaId");
+
+                    b.HasIndex("MaskedAreaId");
+
+                    b.ToTable("card_access_masked_areas", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccessTimeGroups", b =>
+                {
+                    b.Property<Guid>("CardAccessId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_access_id");
+
+                    b.Property<Guid>("TimeGroupId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("time_group_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("CardAccessId", "TimeGroupId");
+
+                    b.HasIndex("TimeGroupId");
+
+                    b.ToTable("card_access_time_groups", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardCardAccess", b =>
+                {
+                    b.Property<Guid>("CardId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_id");
+
+                    b.Property<Guid>("CardAccessId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("card_access_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("CardId", "CardAccessId");
+
+                    b.HasIndex("CardAccessId");
+
+                    b.ToTable("card_card_accesses", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.CardGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("card_groups", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
@@ -401,13 +856,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<Guid?>("MemberId")
                         .HasColumnType("uniqueidentifier")
@@ -651,17 +1099,14 @@ namespace Repositories.Migrations
                         .HasColumnName("floor_id");
 
                     b.Property<Guid>("FloorplanId")
+                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floorplan_id");
 
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
-
                     b.Property<Guid?>("MstFloorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("MstFloorplanId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -698,7 +1143,137 @@ namespace Repositories.Migrations
 
                     b.HasIndex("MstFloorId");
 
+                    b.HasIndex("MstFloorplanId");
+
                     b.ToTable("floorplan_masked_area", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.Geofence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("geofence", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.MonitoringConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("Config")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("config");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("monitoring_config", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.MstAccessCctv", b =>
@@ -722,13 +1297,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
@@ -789,6 +1357,7 @@ namespace Repositories.Migrations
                         .HasColumnName("application_id");
 
                     b.Property<Guid?>("BrandId")
+                        .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("controller_brand_id");
 
@@ -815,13 +1384,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("door_id");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<Guid?>("IntegrationId")
                         .HasMaxLength(36)
@@ -1018,13 +1580,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("engine_reader_id");
 
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
-
                     b.Property<string>("Gmac")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -1114,8 +1669,7 @@ namespace Repositories.Migrations
 
                     b.Property<Guid>("ApplicationId")
                         .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("application_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -1326,21 +1880,24 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
                     b.Property<string>("EngineId")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("engine_id");
 
                     b.Property<int?>("IsLive")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasDefaultValue(1)
                         .HasColumnName("is_live");
 
                     b.Property<DateTime?>("LastLive")
-                        .IsRequired()
                         .HasColumnType("datetime2")
                         .HasColumnName("last_live");
 
@@ -1354,21 +1911,29 @@ namespace Repositories.Migrations
                         .HasColumnName("port");
 
                     b.Property<string>("ServiceStatus")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("service_status");
 
                     b.Property<int?>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasDefaultValue(1)
                         .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
+
+                    b.HasIndex("EngineId")
+                        .IsUnique()
+                        .HasFilter("[engine_id] IS NOT NULL");
 
                     b.ToTable("mst_engine", (string)null);
                 });
@@ -1400,23 +1965,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<long>("EngineFloorId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("engine_floor_id");
-
-                    b.Property<string>("FloorImage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("floor_image");
-
-                    b.Property<float>("FloorX")
-                        .HasColumnType("real")
-                        .HasColumnName("floor_x");
-
-                    b.Property<float>("FloorY")
-                        .HasColumnType("real")
-                        .HasColumnName("floor_y");
-
                     b.Property<int>("Generate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -1424,22 +1972,10 @@ namespace Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Generate"));
 
-                    b.Property<float>("MeterPerPx")
-                        .HasColumnType("real")
-                        .HasColumnName("meter_per_px");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
-
-                    b.Property<float>("PixelX")
-                        .HasColumnType("real")
-                        .HasColumnName("pixel_x");
-
-                    b.Property<float>("PixelY")
-                        .HasColumnType("real")
-                        .HasColumnName("pixel_y");
 
                     b.Property<int?>("Status")
                         .IsRequired()
@@ -1487,10 +2023,26 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
+                    b.Property<long>("EngineId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("engine_id");
+
                     b.Property<Guid>("FloorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("floor_id");
+
+                    b.Property<float>("FloorX")
+                        .HasColumnType("real")
+                        .HasColumnName("floor_x");
+
+                    b.Property<float>("FloorY")
+                        .HasColumnType("real")
+                        .HasColumnName("floor_y");
+
+                    b.Property<string>("FloorplanImage")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("floorplan_image");
 
                     b.Property<long>("Generate")
                         .ValueGeneratedOnAdd()
@@ -1498,6 +2050,10 @@ namespace Repositories.Migrations
                         .HasColumnName("_generate");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+
+                    b.Property<float>("MeterPerPx")
+                        .HasColumnType("real")
+                        .HasColumnName("meter_per_px");
 
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
@@ -1509,6 +2065,14 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
+
+                    b.Property<float>("PixelX")
+                        .HasColumnType("real")
+                        .HasColumnName("pixel_x");
+
+                    b.Property<float>("PixelY")
+                        .HasColumnType("real")
+                        .HasColumnName("pixel_y");
 
                     b.Property<int?>("Status")
                         .IsRequired()
@@ -1673,12 +2237,12 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<Guid>("DepartmentId")
+                    b.Property<Guid?>("DepartmentId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("department_id");
 
-                    b.Property<Guid>("DistrictId")
+                    b.Property<Guid?>("DistrictId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("district_id");
@@ -1699,13 +2263,6 @@ namespace Repositories.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("gender");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("HeadMember1")
                         .HasMaxLength(255)
@@ -1743,7 +2300,7 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("OrganizationId")
+                    b.Property<Guid?>("OrganizationId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("organization_id");
@@ -1880,6 +2437,89 @@ namespace Repositories.Migrations
                     b.ToTable("mst_organization", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.Overpopulating", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<int?>("MaxCapacity")
+                        .HasColumnType("int")
+                        .HasColumnName("max_capacity");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("overpopulating", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1909,6 +2549,198 @@ namespace Repositories.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("refresh_token", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.StayOnArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EngineId")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("engine_id");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<int?>("MaxDuration")
+                        .HasColumnType("int")
+                        .HasColumnName("max_duration");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("stay_on_area", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<int?>("DayOfWeek")
+                        .HasColumnType("int")
+                        .HasColumnName("day_of_week");
+
+                    b.Property<TimeSpan?>("EndTime")
+                        .HasColumnType("time")
+                        .HasColumnName("end_time");
+
+                    b.Property<TimeSpan?>("StartTime")
+                        .HasColumnType("time")
+                        .HasColumnName("start_time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("TimeGroupId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("time_group_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("TimeGroupId");
+
+                    b.ToTable("time_block", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("time_group", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
@@ -1961,6 +2793,11 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("FloorplanMaskedAreaId1")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
                     b.Property<Guid?>("MstBleReaderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1973,6 +2810,11 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("trans_time");
 
+                    b.Property<Guid?>("VisitorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
@@ -1983,9 +2825,13 @@ namespace Repositories.Migrations
 
                     b.HasIndex("FloorplanMaskedAreaId1");
 
+                    b.HasIndex("MemberId");
+
                     b.HasIndex("MstBleReaderId");
 
                     b.HasIndex("ReaderId");
+
+                    b.HasIndex("VisitorId");
 
                     b.ToTable("tracking_transaction", (string)null);
                 });
@@ -2061,13 +2907,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
@@ -2243,6 +3082,10 @@ namespace Repositories.Migrations
                         .HasColumnType("int")
                         .HasColumnName("is_email_confirmation");
 
+                    b.Property<bool>("IsIntegration")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_integration");
+
                     b.Property<DateTime>("LastLoginAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("last_login_at");
@@ -2391,13 +3234,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("gender");
 
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
-
                     b.Property<string>("IdentityId")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -2507,12 +3343,11 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("FloorplanMaskedAreaId1")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<long>("Generate")
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("status");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -2547,6 +3382,11 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
                 {
+                    b.HasOne("Entities.Models.AlarmTriggers", "AlarmTriggers")
+                        .WithMany()
+                        .HasForeignKey("AlarmTriggersId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.MstApplication", "Application")
                         .WithMany()
                         .HasForeignKey("ApplicationId")
@@ -2556,12 +3396,16 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
                         .WithMany()
                         .HasForeignKey("FloorplanMaskedAreaId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.FloorplanMaskedArea", null)
                         .WithMany("AlarmRecordTrackings")
                         .HasForeignKey("FloorplanMaskedAreaId1");
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany("AlarmRecordTrackings")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("AlarmRecordTrackings")
@@ -2574,26 +3418,46 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstBleReader", "Reader")
                         .WithMany()
                         .HasForeignKey("ReaderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.Visitor", "Visitor")
                         .WithMany()
                         .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.Visitor", null)
                         .WithMany("AlarmRecordTrackings")
                         .HasForeignKey("VisitorId1");
 
+                    b.Navigation("AlarmTriggers");
+
                     b.Navigation("Application");
 
                     b.Navigation("FloorplanMaskedArea");
 
+                    b.Navigation("Member");
+
                     b.Navigation("Reader");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("Entities.Models.AlarmTriggers", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floorplan");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
@@ -2615,6 +3479,31 @@ namespace Repositories.Migrations
                     b.Navigation("Reader");
                 });
 
+            modelBuilder.Entity("Entities.Models.Boundary", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
                     b.HasOne("Entities.Models.MstApplication", "Application")
@@ -2622,6 +3511,11 @@ namespace Repositories.Migrations
                         .HasForeignKey("ApplicationId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Entities.Models.CardGroup", "CardGroup")
+                        .WithMany("Cards")
+                        .HasForeignKey("CardGroupId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstMember", "Member")
                         .WithMany()
@@ -2640,11 +3534,92 @@ namespace Repositories.Migrations
 
                     b.Navigation("Application");
 
+                    b.Navigation("CardGroup");
+
                     b.Navigation("Member");
 
                     b.Navigation("RegisteredMaskedArea");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccess", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccessMaskedArea", b =>
+                {
+                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
+                        .WithMany("CardAccessMaskedAreas")
+                        .HasForeignKey("CardAccessId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.FloorplanMaskedArea", "MaskedArea")
+                        .WithMany("CardAccessMaskedAreas")
+                        .HasForeignKey("MaskedAreaId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CardAccess");
+
+                    b.Navigation("MaskedArea");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccessTimeGroups", b =>
+                {
+                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
+                        .WithMany("CardAccessTimeGroups")
+                        .HasForeignKey("CardAccessId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
+                        .WithMany("CardAccessTimeGroups")
+                        .HasForeignKey("TimeGroupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CardAccess");
+
+                    b.Navigation("TimeGroup");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardCardAccess", b =>
+                {
+                    b.HasOne("Entities.Models.CardAccess", "CardAccess")
+                        .WithMany()
+                        .HasForeignKey("CardAccessId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.Card", "Card")
+                        .WithMany("CardCardAccesses")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("CardAccess");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardGroup", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("Entities.Models.CardRecord", b =>
@@ -2777,20 +3752,60 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
-                        .WithMany("FloorplanMaskedAreas")
+                        .WithMany()
                         .HasForeignKey("FloorplanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Entities.Models.MstFloor", null)
                         .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("MstFloorId");
 
+                    b.HasOne("Entities.Models.MstFloorplan", null)
+                        .WithMany("FloorplanMaskedAreas")
+                        .HasForeignKey("MstFloorplanId");
+
                     b.Navigation("Application");
 
                     b.Navigation("Floor");
 
                     b.Navigation("Floorplan");
+                });
+
+            modelBuilder.Entity("Entities.Models.Geofence", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
+            modelBuilder.Entity("Entities.Models.MonitoringConfig", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("Entities.Models.MstAccessCctv", b =>
@@ -2825,7 +3840,8 @@ namespace Repositories.Migrations
 
                     b.HasOne("Entities.Models.MstBrand", "Brand")
                         .WithMany()
-                        .HasForeignKey("BrandId");
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstIntegration", "Integration")
                         .WithMany()
@@ -3005,14 +4021,12 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstDepartment", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstDistrict", "District")
                         .WithMany()
                         .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", null)
                         .WithMany("Members")
@@ -3033,8 +4047,7 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstOrganization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Application");
 
@@ -3060,6 +4073,31 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
                 });
 
+            modelBuilder.Entity("Entities.Models.Overpopulating", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -3069,6 +4107,60 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Entities.Models.StayOnArea", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany()
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany()
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeBlock", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
+                        .WithMany("TimeBlocks")
+                        .HasForeignKey("TimeGroupId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("TimeGroup");
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
@@ -3093,6 +4185,11 @@ namespace Repositories.Migrations
                         .WithMany("TrackingTransactions")
                         .HasForeignKey("FloorplanMaskedAreaId1");
 
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.MstBleReader", null)
                         .WithMany("TrackingTransactions")
                         .HasForeignKey("MstBleReaderId");
@@ -3102,13 +4199,22 @@ namespace Repositories.Migrations
                         .HasForeignKey("ReaderId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Application");
 
                     b.Navigation("Card");
 
                     b.Navigation("FloorplanMaskedArea");
 
+                    b.Navigation("Member");
+
                     b.Navigation("Reader");
+
+                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.TrxVisitor", b =>
@@ -3233,7 +4339,21 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
+                    b.Navigation("CardCardAccesses");
+
                     b.Navigation("CardRecords");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardAccess", b =>
+                {
+                    b.Navigation("CardAccessMaskedAreas");
+
+                    b.Navigation("CardAccessTimeGroups");
+                });
+
+            modelBuilder.Entity("Entities.Models.CardGroup", b =>
+                {
+                    b.Navigation("Cards");
                 });
 
             modelBuilder.Entity("Entities.Models.FloorplanMaskedArea", b =>
@@ -3241,6 +4361,8 @@ namespace Repositories.Migrations
                     b.Navigation("AlarmRecordTrackings");
 
                     b.Navigation("BlacklistAreas");
+
+                    b.Navigation("CardAccessMaskedAreas");
 
                     b.Navigation("FloorplanDevices");
 
@@ -3319,12 +4441,21 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("Entities.Models.MstMember", b =>
                 {
+                    b.Navigation("AlarmRecordTrackings");
+
                     b.Navigation("CardRecords");
                 });
 
             modelBuilder.Entity("Entities.Models.MstOrganization", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Entities.Models.TimeGroup", b =>
+                {
+                    b.Navigation("CardAccessTimeGroups");
+
+                    b.Navigation("TimeBlocks");
                 });
 
             modelBuilder.Entity("Entities.Models.UserGroup", b =>

@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class MstAccessControlController : ControllerBase
     {
         private readonly IMstAccessControlService _mstAccessControlService;
@@ -210,7 +210,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-         [HttpPost("{filter}")]
+        [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
@@ -259,7 +259,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
             try
@@ -280,7 +280,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
             try
@@ -296,6 +296,84 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        //OPEN
+
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var accessControls = await _mstAccessControlService.OpenGetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Access Controls retrieved successfully",
+                    collection = new { data = accessControls },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpPost("open/{filter}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _mstAccessControlService.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Access Control filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
                     collection = new { data = (object)null },
                     code = 500
                 });

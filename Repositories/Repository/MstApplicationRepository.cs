@@ -1,19 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
-    public class MstApplicationRepository
+    public class MstApplicationRepository : BaseRepository
     {
-        private readonly BleTrackingDbContext _context;
+        // private readonly BleTrackingDbContext _context;
 
-        public MstApplicationRepository(BleTrackingDbContext context)
+        // public MstApplicationRepository(BleTrackingDbContext context)
+        // {
+        //     _context = context;
+        // }
+         public MstApplicationRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _context = context;
         }
 
         public async Task<MstApplication> GetByIdAsync(Guid id)

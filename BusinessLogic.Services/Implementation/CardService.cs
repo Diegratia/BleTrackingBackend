@@ -28,12 +28,14 @@ namespace BusinessLogic.Services.Implementation
     public class CardService : ICardService
     {
         private readonly CardRepository _repository;
+        private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardService(CardRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _cardAccessRepository = cardAccessRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -43,11 +45,27 @@ namespace BusinessLogic.Services.Implementation
             var card = await _repository.GetByIdAsync(id);
             return card == null ? null : _mapper.Map<CardDto>(card);
         }
+        public async Task<CardMinimalsDto> GetByIdAsyncV2(Guid id)
+        {
+            var card = await _repository.GetByIdAsync(id);
+            return card == null ? null : _mapper.Map<CardMinimalsDto>(card);
+        }
 
         public async Task<IEnumerable<CardDto>> GetAllAsync()
         {
             var cards = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<CardDto>>(cards);
+        }
+        public async Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2()
+        {
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<CardMinimalsDto>>(cards);
+        }
+        
+                public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
+        {
+            var cards = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenCardDto>>(cards);
         }
         
         //      public async Task<IEnumerable<CardDto>> GetAllAsync()
@@ -64,7 +82,7 @@ namespace BusinessLogic.Services.Implementation
         //                     }
         //                     catch (Exception ex)
         //                     {
-                    
+
         //         }
         //     }
 
@@ -113,7 +131,7 @@ namespace BusinessLogic.Services.Implementation
 
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
-          
+
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.UpdatedAt = DateTime.UtcNow;
@@ -124,20 +142,188 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<CardDto>(createdCard);
         }
         
+            public async Task<CardMinimalsDto> CreatesAsync(CardAddDto dto)
+        {
+            var existingCard = await _repository.GetAllQueryable()
+            .FirstOrDefaultAsync(b =>
+                                b.CardNumber == dto.CardNumber ||
+                                b.Dmac == dto.Dmac);
+
+            if (existingCard != null)
+            {
+                if (existingCard.CardNumber == dto.CardNumber)
+                {
+                    throw new ArgumentException($"Card with Number {dto.CardNumber} already exists.");
+                }
+                else if (existingCard.Dmac == dto.Dmac)
+                {
+                    throw new ArgumentException($"Card with Mac {dto.Dmac} already exists.");
+                }
+            }
+            
+            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
+            var entity = _mapper.Map<Card>(dto);
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            entity.Id = Guid.NewGuid();
+            entity.CreatedBy = username;
+            entity.CreatedAt = DateTime.UtcNow;
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.StatusCard = 1;
+
+            if (applicationIdClaim != null)
+                entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
+
+        if (dto.CardAccessIds.Any())
+            {
+                var accesses = await _cardAccessRepository.GetAllQueryable()
+                                    .Where(c => dto.CardAccessIds.Contains(c.Id))
+                                    .ToListAsync();
+
+                foreach (var access in accesses)
+                {
+                    if (access == null)
+                    {
+                        throw new KeyNotFoundException($"Card Access with id {dto.CardAccessIds.First()} not found");
+                    }
+                    // 🔹 Tambahkan baris di join table
+                    entity.CardCardAccesses.Add(new CardCardAccess
+                    {
+                        CardId = entity.Id,
+                        CardAccessId = access.Id,
+                        ApplicationId = entity.ApplicationId
+                    });
+                }
+            }
+                var result = await _repository.AddAsync(entity);
+                return _mapper.Map<CardMinimalsDto>(result);  
+        }
+
+        
+         public async Task UpdatesAsync(Guid id, CardEditDto dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var entity = await _repository.GetAllQueryable()
+                .Include(cg => cg.CardCardAccesses)
+                .FirstOrDefaultAsync(cg => cg.Id == id);
+
+            if (entity == null)
+                throw new KeyNotFoundException("Card Group not found");
+
+            // Update scalar
+            entity.Name = dto.Name ?? entity.Name;
+            entity.Remarks = dto.Remarks ?? entity.Remarks;
+            entity.CardNumber = dto.CardNumber ?? entity.CardNumber;
+            entity.Dmac = dto.Dmac ?? entity.Dmac;
+            entity.IsMultiMaskedArea = dto.IsMultiMaskedArea ?? entity.IsMultiMaskedArea;
+            entity.RegisteredMaskedAreaId = dto.RegisteredMaskedAreaId ?? entity.RegisteredMaskedAreaId;
+            entity.VisitorId = dto.VisitorId ?? entity.VisitorId;
+            entity.MemberId = dto.MemberId ?? entity.MemberId;
+            entity.CardGroupId = dto.CardGroupId ?? entity.CardGroupId;
+            entity.CardType = (CardType)Enum.Parse<CardType>(dto.CardType);
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            // =============================
+            // 🔹 Update CardAccesses (join table)
+            // =============================
+            var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
+            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+            // Remove yang tidak ada di request
+            var toRemove = entity.CardCardAccesses
+                .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
+                .ToList();
+
+            foreach (var remove in toRemove)
+            {
+                entity.CardCardAccesses.Remove(remove);
+            }
+
+                // // Tambah yang baru
+                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+                foreach (var addId in toAdd)
+                {
+                    var access = await _cardAccessRepository.GetByIdAsync(addId);
+                    if (access == null)
+                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+
+                    entity.CardCardAccesses.Add(new CardCardAccess
+                    {
+                        CardId = entity.Id,
+                        CardAccessId = addId,
+                        ApplicationId = entity.ApplicationId
+                    });
+                }
+
+            await _repository.UpdateAsync(entity);
+        }
+
+        public async Task UpdateAccessAsync(Guid id, CardAccessEdit dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var entity = await _repository.GetAllQueryable()
+                .Include(cg => cg.CardCardAccesses)
+                .FirstOrDefaultAsync(cg => cg.Id == id);
+
+            if (entity == null)
+                throw new KeyNotFoundException("Card Group not found");
+
+            // Update scalar
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            // =============================
+            // 🔹 Update CardAccesses (join table)
+            // =============================
+            var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
+            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+            // Remove yang tidak ada di request
+            var toRemove = entity.CardCardAccesses
+                .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
+                .ToList();
+
+            foreach (var remove in toRemove)
+            {
+                entity.CardCardAccesses.Remove(remove);
+            }
+
+                    // // Tambah yang baru
+                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+                foreach (var addId in toAdd)
+                {
+                    var access = await _cardAccessRepository.GetByIdAsync(addId);
+                    if (access == null)
+                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+
+                    entity.CardCardAccesses.Add(new CardCardAccess
+                    {
+                        CardId = entity.Id,
+                        CardAccessId = addId,
+                        ApplicationId = entity.ApplicationId
+                    });
+                }
+
+            await _repository.UpdateAsync(entity);
+        }
 
         public async Task UpdateAsync(Guid id, CardUpdateDto updateDto)
         {
             var card = await _repository.GetByIdAsync(id);
-            var updatecard = _mapper.Map<Card>(updateDto);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 
-              var existingCard = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b =>  
+            var existingCard = await _repository.GetAllQueryable()
+            .Where(b => b.Id != id)
+            .FirstOrDefaultAsync(b =>
                                 b.CardNumber == updateDto.CardNumber ||
                                 b.Dmac == updateDto.Dmac);
-        
-        if (existingCard != null)
+
+            if (existingCard != null)
             {
                 if (existingCard.CardNumber == updateDto.CardNumber)
                 {
@@ -149,21 +335,21 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            if (updatecard.VisitorId != null && updatecard.MemberId == null)
+            if (updateDto.VisitorId != null && updateDto.MemberId == null)
             {
-                updatecard.IsUsed = true;
+                updateDto.IsUsed = true;
             }
-            else if (updatecard.VisitorId == null && updatecard.MemberId != null)
+            else if (updateDto.VisitorId == null && updateDto.MemberId != null)
             {
-                updatecard.IsUsed = true;
+                updateDto.IsUsed = true;
             }
             else
             {
-                updatecard.IsUsed = false;
+                updateDto.IsUsed = false;
             }
 
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
 
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
@@ -173,7 +359,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var card = await _repository.GetByIdAsync(id);
             card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
         }
@@ -193,13 +379,21 @@ namespace BusinessLogic.Services.Implementation
             foreach (var row in rows)
             {
 
-                var maskedAreaStr = row.Cell(1).GetValue<string>();
-                if (!Guid.TryParse(maskedAreaStr, out var maskedAreaId))
-                    throw new ArgumentException($"Invalid maskedAreaId format at row {rowNumber}");
+               var maskedAreaStr = row.Cell(1).GetValue<string>();
 
-                var maskedArea = await _repository.GetMaskedAreaByIdAsync(maskedAreaId);
-                if (maskedArea == null)
-                    throw new ArgumentException($"maskedAreaId {maskedAreaId} not found at row {rowNumber}");
+                Guid? maskedAreaId = null;
+
+                if (!string.IsNullOrWhiteSpace(maskedAreaStr))
+                {
+                    if (!Guid.TryParse(maskedAreaStr, out var parsed))
+                        throw new ArgumentException($"Invalid maskedAreaId format at row {rowNumber}");
+
+                    var maskedArea = await _repository.GetMaskedAreaByIdAsync(parsed);
+                    if (maskedArea == null)
+                        throw new ArgumentException($"maskedAreaId {parsed} not found at row {rowNumber}");
+
+                    maskedAreaId = parsed;
+                }
 
 
                 var card = new Card
@@ -208,7 +402,7 @@ namespace BusinessLogic.Services.Implementation
                     RegisteredMaskedAreaId = maskedAreaId,
                     Name = row.Cell(2).GetValue<string>(),
                     Remarks = row.Cell(3).GetValue<string>() ?? null,
-                    CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>()),
+                    CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>(), ignoreCase: true),
                     CardNumber = row.Cell(5).GetValue<string>() ?? null,
                     QRCode = row.Cell(6).GetValue<string>() ?? null,
                     IsMultiMaskedArea = row.Cell(7).GetValue<bool?>() ?? false,
@@ -240,7 +434,7 @@ namespace BusinessLogic.Services.Implementation
             var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
             var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt", "IsUsed", "RegisteredMaskedAreaId", "IsMultiMaskedArea" };
 
-            var filterService = new GenericDataTableService<Card, CardDto>(
+            var filterService = new GenericDataTableService<Card, CardMinimalsDto>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -276,7 +470,14 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
                             columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+
                         });
 
                         // Table header
@@ -285,9 +486,14 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
                             header.Cell().Element(CellStyle).Text("Card Number").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Card Barcode").SemiBold();
                             header.Cell().Element(CellStyle).Text("Card Type").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Is Member").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Dmac").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Is Multi Masked Area").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Registered Masked Area").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Is Used").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Last Used").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Status").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Card Type").SemiBold();
                         });
 
                         // Table body
@@ -296,10 +502,15 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(card.Name);
-                            table.Cell().Element(CellStyle).Text(card.CardNumber);
-                            table.Cell().Element(CellStyle).Text(card.QRCode);
                             table.Cell().Element(CellStyle).Text(card.CardType.ToString());
+                            table.Cell().Element(CellStyle).Text(card.CardNumber);
+                            table.Cell().Element(CellStyle).Text(card.Dmac);
+                            table.Cell().Element(CellStyle).Text(card.IsMultiMaskedArea == true ? "Yes" : "No");
+                            table.Cell().Element(CellStyle).Text(card.RegisteredMaskedAreaId.ToString());
                             table.Cell().Element(CellStyle).Text(card.IsUsed == true ? "Yes" : "No");
+                            table.Cell().Element(CellStyle).Text(card.LastUsed);
+                            table.Cell().Element(CellStyle).Text(card.StatusCard.ToString());
+                            table.Cell().Element(CellStyle).Text(card.CardType.ToString());
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -333,10 +544,18 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "Card Number";
-            worksheet.Cell(1, 4).Value = "Card Barcode";
-            worksheet.Cell(1, 5).Value = "Card Type";
-            worksheet.Cell(1, 6).Value = "Is Member";
+            worksheet.Cell(1, 3).Value = "Card Type";
+            worksheet.Cell(1, 4).Value = "Card Number";
+            worksheet.Cell(1, 5).Value = "Dmac";
+            worksheet.Cell(1, 6).Value = "Is Multi Masked Area";
+            worksheet.Cell(1, 7).Value = "Registered Masked Area";
+            worksheet.Cell(1, 8).Value = "Is Used";
+            worksheet.Cell(1, 9).Value = "Last Used";
+            worksheet.Cell(1, 10).Value = "Status";
+            worksheet.Cell(1, 11).Value = "Card Type";
+            worksheet.Cell(1, 12).Value = "MaskedAreaId";
+            worksheet.Cell(1, 13).Value = "VisitorId";
+            worksheet.Cell(1, 14).Value = "MemberId";
 
             int row = 2;
             int no = 1;
@@ -345,10 +564,18 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = card.Name;
-                worksheet.Cell(row, 3).Value = card.CardNumber;
-                worksheet.Cell(row, 4).Value = card.QRCode;
-                worksheet.Cell(row, 5).Value = card.CardType.ToString();
-                worksheet.Cell(row, 6).Value = card.IsUsed == true ? "Yes" : "No";
+                worksheet.Cell(row, 3).Value = card.CardType.ToString();
+                worksheet.Cell(row, 4).Value = card.CardNumber;
+                worksheet.Cell(row, 5).Value = card.Dmac;
+                worksheet.Cell(row, 6).Value = card.IsMultiMaskedArea == true ? "Yes" : "No";
+                worksheet.Cell(row, 7).Value = card.RegisteredMaskedAreaId.ToString();
+                worksheet.Cell(row, 8).Value = card.IsUsed == true ? "Yes" : "No";
+                worksheet.Cell(row, 9).Value = card.LastUsed;
+                worksheet.Cell(row, 10).Value = card.StatusCard.ToString();
+                worksheet.Cell(row, 11).Value = card.CardType.ToString();
+                worksheet.Cell(row, 12).Value = card.RegisteredMaskedAreaId.ToString();
+                worksheet.Cell(row, 13).Value = card.VisitorId.ToString();
+                worksheet.Cell(row, 14).Value = card.MemberId.ToString();
                 row++;
             }
 

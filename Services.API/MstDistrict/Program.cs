@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 try
 {
@@ -43,7 +45,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -135,8 +137,20 @@ builder.Services.AddScoped<IMstDistrictService, MstDistrictService>();
 
 builder.Services.AddScoped<MstDistrictRepository>();
 
+            builder.Services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("fixed", opt =>
+            {
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.PermitLimit = 150;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
 
-var port = Environment.GetEnvironmentVariable("MST_DISTRICT_PORT") ?? "10012" ??
+
+var port = Environment.GetEnvironmentVariable("MST_DISTRICT_PORT") ?? "5012" ??
            builder.Configuration["Ports:MstDistrictService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -175,7 +189,7 @@ app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("fixed");
 app.Run();
 
 

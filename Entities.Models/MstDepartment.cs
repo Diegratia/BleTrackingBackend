@@ -24,7 +24,6 @@ namespace Entities.Models
         public string? DepartmentHost { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; } 
 
@@ -32,8 +31,8 @@ namespace Entities.Models
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        public virtual MstApplication Application { get; set; }
-        // public virtual ICollection<MstBuilding> Buildings { get; set; } = new List<MstBuilding>();
-        public virtual ICollection<MstMember> Members { get; set; } = new List<MstMember>();
+        public MstApplication Application { get; set; }
+        // public ICollection<MstBuilding> Buildings { get; set; } = new List<MstBuilding>();
+        public ICollection<MstMember> Members { get; set; } = new List<MstMember>();
     }
 }

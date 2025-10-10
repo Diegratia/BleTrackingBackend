@@ -12,6 +12,9 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using MQTTnet.Client;
+using Helpers.Consumer.Mqtt;
+using System.Text.Json;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -19,11 +22,14 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly MstEngineRepository _engineRepository;
         private readonly IMapper _mapper;
+        private readonly IMqttClientService _mqttClientService;
 
-        public MstEngineService(MstEngineRepository engineRepository, IMapper mapper)
+
+        public MstEngineService(MstEngineRepository engineRepository, IMapper mapper, IMqttClientService mqttClientService)
         {
             _engineRepository = engineRepository;
             _mapper = mapper;
+            _mqttClientService = mqttClientService;
         }
 
         public async Task<IEnumerable<MstEngineDto>> GetAllEnginesAsync()
@@ -31,10 +37,23 @@ namespace BusinessLogic.Services.Implementation
             var engines = await _engineRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstEngineDto>>(engines);
         }
+        public async Task<IEnumerable<MstEngineDto>> GetAllOnlineAsync()
+        {
+            var engines = await _engineRepository.GetAllOnlineAsync();
+            // pastikan kalau null, balikin list kosong
+            return _mapper.Map<IEnumerable<MstEngineDto>>(engines ?? new List<MstEngine>());
+        }
+
 
         public async Task<MstEngineDto> GetEngineByIdAsync(Guid id)
         {
             var engine = await _engineRepository.GetByIdAsync(id);
+            return engine == null ? null : _mapper.Map<MstEngineDto>(engine);
+        }
+
+            public async Task<MstEngineDto> GetEngineIdAsync(string engineId)
+        {
+            var engine = await _engineRepository.GetByEngineIdAsync(engineId);
             return engine == null ? null : _mapper.Map<MstEngineDto>(engine);
         }
 
@@ -61,6 +80,18 @@ namespace BusinessLogic.Services.Implementation
             await _engineRepository.UpdateAsync(engine);
         }
 
+            public async Task UpdateEngineByIdAsync(string engineId, MstEngineUpdateDto dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            var engine = await _engineRepository.GetByEngineIdAsync(engineId);
+            if (engine == null)
+                throw new KeyNotFoundException($"Engine with ID {engineId} not found");
+
+            _mapper.Map(dto, engine);
+            await _engineRepository.UpdateByEngineStringAsync(engine);
+        }
+
         public async Task DeleteEngineAsync(Guid id)
         {
             var engine = await _engineRepository.GetByIdAsync(id);
@@ -70,6 +101,34 @@ namespace BusinessLogic.Services.Implementation
             engine.IsLive = 0;
 
             await _engineRepository.DeleteAsync(id);
+        }
+
+        public async Task StopEngineAsync(string engineId)
+        {
+            var topic = $"engine/stop/{engineId}";
+            var payload = JsonSerializer.Serialize(new
+            {
+                engineId,
+                status = "stop",
+                timestamp = DateTime.UtcNow
+            });
+
+            await _mqttClientService.PublishAsync(topic, payload);
+            Console.WriteLine($"Sent stop command to {topic}");
+        }
+
+            public async Task StartEngineAsync(string engineId)
+        {
+            var topic = $"engine/start/{engineId}";
+            var payload = JsonSerializer.Serialize(new
+            {
+                engineId,
+                status = "start",
+                timestamp = DateTime.UtcNow
+            });
+
+            await _mqttClientService.PublishAsync(topic, payload);
+            Console.WriteLine($"Sent start command to {topic}");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

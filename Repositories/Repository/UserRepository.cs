@@ -62,6 +62,16 @@ namespace Repositories.Repository
             return await query.ToListAsync();
         }
 
+        public async Task<List<User>> GetAllIntegrationAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.StatusActive != 0 && u.IsIntegration == true && u.Group.LevelPriority == LevelPriority.SuperAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.ToListAsync();
+        }
+
         public async Task<User> GetByEmailAsync(string email)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -87,7 +97,27 @@ namespace Repositories.Repository
                 .Include(u => u.Group)
                 .Where(u => u.Username.ToLower() == username.ToLower() && u.StatusActive != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("UserName not found");
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Username not found");
+        }
+        
+        public async Task<User> GetByConfirmationCodeAsync(string EmailConfirmationCode)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.EmailConfirmationCode.ToLower() == EmailConfirmationCode.ToLower() && u.StatusActive != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Email Confirmation Code not found");
+        }
+
+            public async Task<User> GetByIntegrationUsername(string Username)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.StatusActive != 0 && u.IsIntegration == true && u.Group.LevelPriority == LevelPriority.SuperAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Email Confirmation Code not found");
         }
 
         // public async Task<User> GetByEmailConfirmPasswordAsync(string email)
@@ -102,12 +132,12 @@ namespace Repositories.Repository
         // }
 
         public async Task<User> GetByEmailConfirmPasswordAsync(string email)
-            {
-                var query = _context.Users
-                    .Include(u => u.Group)
-                    .Where(u => u.Email == email); // ⛔ tanpa filter dulu
-                return await query.FirstOrDefaultAsync(); // lihat apakah user ada
-            }
+        {
+            var query = _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.Email == email); // ⛔ tanpa filter dulu
+            return await query.FirstOrDefaultAsync(); // lihat apakah user ada
+        }
 
         public async Task<User> GetByEmailConfirmPasswordAsyncRaw(string email)
         {
@@ -139,6 +169,13 @@ namespace Repositories.Repository
         {
             var query = _context.Users
                 .Where(u => u.Email == email && u.StatusActive != 0);
+            return await query.AnyAsync();
+        }
+
+               public async Task<bool> EmailExistsAsyncNotActiveRaw(string email)
+        {
+            var query = _context.Users
+                .Where(u => u.Email == email && u.StatusActive == 0);
             return await query.AnyAsync();
         }
 
@@ -174,6 +211,16 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateRawAsync(User user)
+        {
+            var existingUser = await GetByIdAsyncRaw(user.Id);
+            if (existingUser == null)
+                throw new KeyNotFoundException("User not found");
+
+            _context.Entry(existingUser).CurrentValues.SetValues(user);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task UpdateConfirmAsync(User user)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -201,88 +248,3 @@ namespace Repositories.Repository
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// using System;
-// using System.Threading.Tasks;
-// using Entities.Models;
-// using Microsoft.EntityFrameworkCore;
-// using Repositories.DbContexts;
-
-// namespace Repositories.Repository
-// {
-//     public class UserRepository
-//     {
-//         private readonly BleTrackingDbContext _context;
-
-//         public UserRepository(BleTrackingDbContext context)
-//         {
-//             _context = context;
-//         }
-
-//         public async Task<User> GetByIdAsync(Guid id)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Id == id && u.StatusActive != 0);
-//         }
-
-//         public async Task<List<User>> GetAllAsync()
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .Where(u => u.StatusActive != 0)
-//                 .ToListAsync();
-//         }
-
-//         public async Task<User> GetByUsernameAsync(string username)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
-//         }
-//         public async Task<User> GetByEmailConfirmPasswordAsync(string email)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 0 && u.StatusActive == 0);
-//         }
-//         public async Task<User> GetByEmailSetPasswordAsync(string email)
-//         {
-//             return await _context.Users
-//                 .Include(u => u.Group)
-//                 .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 1 && u.StatusActive == 0);
-//         }
-
-//         public async Task<bool> EmailExistsAsync(string email)
-//         {
-//             return await _context.Users
-//                 .AnyAsync(u => u.Email == email && u.StatusActive != 0);
-//         }
-
-//         public async Task<User> AddAsync(User user)
-//         {
-//             _context.Users.Add(user);
-//             await _context.SaveChangesAsync();
-//             return user;
-//         }
-
-//         public async Task UpdateAsync(User user)
-//         {
-//             // _context.Users.Update(user);
-//             await _context.SaveChangesAsync();
-//         }
-//     }
-// }
-

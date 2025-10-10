@@ -23,7 +23,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<FloorplanMaskedArea>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().AsNoTracking().ToListAsync();
         }
 
         public async Task<FloorplanMaskedArea> AddAsync(FloorplanMaskedArea area)
@@ -66,7 +66,7 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Where(a => a.Id == id && a.Status != 0);
 
-              query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var area = await query.FirstOrDefaultAsync();
             if (area == null)
@@ -82,6 +82,7 @@ namespace Repositories.Repository
             var query = _context.FloorplanMaskedAreas
                 .Include(a => a.Floor)
                 .Include(a => a.Floorplan)
+                .Include(a => a.Application)
                 .Where(a => a.Status != 0);
 
             query = query.WithActiveRelations();
@@ -99,7 +100,6 @@ namespace Repositories.Repository
             return await _context.MstFloors
                 .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorId && f.Status != 0);
-                
         }
 
         public async Task<MstFloorplan?> GetFloorplanByIdAsync(Guid floorplanId)
@@ -108,5 +108,19 @@ namespace Repositories.Repository
                 .WithActiveRelations()
                 .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
         }
+
+        public async Task<List<FloorplanMaskedArea>> GetByFloorIdAsync(Guid floorId)
+        {
+            return await _context.FloorplanMaskedAreas
+                .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+                .ToListAsync();
+        }
+    
+            public async Task<List<FloorplanMaskedArea>> GetByFloorplanIdAsync(Guid floorplanId)
+    {
+        return await _context.FloorplanMaskedAreas
+            .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+            .ToListAsync();
+    }
     }
 }

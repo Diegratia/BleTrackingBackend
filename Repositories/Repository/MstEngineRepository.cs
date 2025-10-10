@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
@@ -20,6 +21,10 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+        public async Task<IEnumerable<MstEngine>> GetAllOnlineAsync()
+        {
+            return await GetAllQueryable().Where(e => e.ServiceStatus == ServiceStatus.Online).ToListAsync() ?? new List<MstEngine>();
+        }
 
         public async Task<MstEngine?> GetByIdAsync(Guid id)
         {
@@ -29,6 +34,14 @@ namespace Repositories.Repository
                 .Where(e => e.Id == id && e.Status != 0);
 
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+            public async Task<MstEngine?> GetByEngineIdAsync(string engineId)
+        {
+
+            var query = _context.MstEngines
+                .Where(e => e.EngineId == engineId && e.Status != 0);
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<MstEngine> AddAsync(MstEngine engine)
@@ -65,6 +78,14 @@ namespace Repositories.Repository
             // _context.MstEngines.Update(engine);
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateByEngineStringAsync(MstEngine engine)
+        {
+            _context.MstEngines.Attach(engine);
+            _context.Entry(engine).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task DeleteAsync(Guid id)
         {

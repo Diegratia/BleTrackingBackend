@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
+
 
 try
 {
@@ -42,8 +44,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -136,9 +137,16 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(MstBuildingProfile));
 builder.Services.AddScoped<IMstBuildingService, MstBuildingService>();
+builder.Services.AddScoped<IMstFloorService, MstFloorService>();
+builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<MstBuildingRepository>();
+builder.Services.AddScoped<MstFloorRepository>();
+builder.Services.AddScoped<MstFloorplanRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "10010" ??
+var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "5010" ??
            builder.Configuration["Ports:MstBuildingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
@@ -183,13 +191,27 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 
-// app.UseHttpsRedirection();
-app.UseRouting();
-app.UseApiKeyAuthentication();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+// // app.UseHttpsRedirection();
+// app.UseRouting();
+// app.UseApiKeyAuthentication();
+// app.UseAuthentication();
+// app.UseAuthorization();
+// app.MapControllers();
+// app.Run();
+
+    // var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+
+    app.UseCors("AllowAll");
+    // app.UseHttpsRedirection();
+    app.UseRouting();
+    app.UseApiKeyAuthentication();
+    app.UseAuthentication();
+    app.UseAuthorization(); 
+    // app.UseRateLimiter();
+    // app.UseRequestTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
+    // app.UseFixedWindowRateLimiter(150, TimeSpan.FromMinutes(1));
+    app.MapControllers();
+    app.Run();
 
 
 

@@ -20,7 +20,7 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable()
             .Where(a => a.Id == id && a.Status != 0)
-            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Access CCTV not found");
+            .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstAccessCctv>> GetAllAsync()
@@ -80,9 +80,6 @@ namespace Repositories.Repository
                 .Where(a => a.Id == id && a.Status != 0);
 
             var accessCctv = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-
-            if (accessCctv == null)
-                throw new KeyNotFoundException("Access CCTV not found or unauthorized.");
 
             await _context.SaveChangesAsync();
         }

@@ -44,7 +44,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -135,12 +135,12 @@ builder.Services.AddAutoMapper(typeof(MstBleReaderProfile));
 builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 builder.Services.AddScoped<MstBleReaderRepository>();
 
-// builder.Services.AddHttpClient("10009", client =>
+// builder.Services.AddHttpClient("5009", client =>
 // {
-//     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:MstBrandService"] ?? "http://localhost:10009");
+//     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:MstBrandService"] ?? "http://localhost:5009");
 // }).AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>();
 
-var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ?? "10008" ??
+var port = Environment.GetEnvironmentVariable("MST_BLE_READER_PORT") ?? "5008" ??
            builder.Configuration["Ports:MstBleReaderService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

@@ -20,7 +20,7 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable()
             .Where(r => r.Status != 0 && r.Id == id)
-            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("BLE Reader not found");
+            .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstBleReader>> GetAllAsync()

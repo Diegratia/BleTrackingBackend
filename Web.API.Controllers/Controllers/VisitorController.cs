@@ -11,7 +11,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class VisitorController : ControllerBase
     {
         private readonly IVisitorService _visitorService;
@@ -22,53 +22,55 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/Visitor
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] VisitorCreateDto visitorDto)
-        {
-            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost]
+        // public async Task<IActionResult> Create([FromForm] VisitorCreateDto visitorDto)
+        // {
+        //     if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var createdVisitor = await _visitorService.CreateVisitorAsync(visitorDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Visitor created successfully",
-                    collection = new { data = createdVisitor },
-                    code = 201
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var createdVisitor = await _visitorService.CreateVisitorAsync(visitorDto);
+        //         return StatusCode(201, new
+        //         {
+        //             success = true,
+        //             msg = "Visitor created successfully",
+        //             collection = new { data = createdVisitor },
+        //             code = 201
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
+
+        
 
         // GET: api/Visitor/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
@@ -218,7 +220,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-
         // GET: api/Visitor
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
@@ -246,6 +247,8 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+
+        
 
         // PUT: api/VisitorBlacklistArea/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
@@ -611,6 +614,287 @@ namespace Web.API.Controllers.Controllers
                     msg = ex.Message,
                     collection = new { data = (object)null },
                     code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        //
+        
+        [AllowAnonymous]
+        [HttpGet("open")]
+        public async Task<IActionResult> OpenGetAll()
+        {
+            try
+            {
+                var visitors = await _visitorService.OpenGetAllVisitorsAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        [AllowAnonymous]
+        [HttpPost("open/{filter}")]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var result = await _visitorService.FilterAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitors filtered successfully",
+                    collection = result,
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("open/batch/send-invitation")]
+        public async Task<IActionResult> OpenSendBatchInvitationByEmailAsync([FromBody] List<SendEmailInvitationDto> dto)
+
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+            }
+            try
+            {
+
+                await _visitorService.SendBatchInvitationByEmailAsync(dto);
+                return Ok(new { success = true, msg = "Invitation Send successfully", code = 200 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+            }
+        }
+
+        [HttpPost("open/create")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenCreate([FromForm] OpenVisitorCreateDto visitorDto)
+        {
+            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                var createdVisitor = await _visitorService.CreateVisitorAsync(visitorDto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Visitor created successfully",
+                    collection = new { data = createdVisitor },
+                    code = 201
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPut("open/{id}")]
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromForm] VisitorUpdateDto visitorDto)
+        {
+            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _visitorService.UpdateVisitorAsync(id, visitorDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        // DELETE: api/VisitorBlacklistArea/{id}
+        [AllowAnonymous]
+        [HttpDelete("open/{id}")]
+        public async Task<IActionResult> OpenDelete(Guid id)
+        {
+            try
+            {
+                await _visitorService.DeleteVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor deleted successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        
+         // GET: api/Visitor/{id}
+        [AllowAnonymous]
+        [HttpGet("open/{id}")]
+        public async Task<IActionResult> OpenGetById(Guid id)
+        {
+            try
+            {
+                var visitor = await _visitorService.GetVisitorByIdAsync(id);
+                if (visitor == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        msg = "Visitor blacklist area not found",
+                        collection = new { data = (object)null },
+                        code = 404
+                    });
+                }
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor retrieved successfully",
+                    collection = new { data = visitor },
+                    code = 200
                 });
             }
             catch (Exception ex)

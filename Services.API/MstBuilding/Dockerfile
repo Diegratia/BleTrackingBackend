@@ -1,18 +1,48 @@
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-COPY ./ ./
+
+  COPY *.sln ./
+  COPY Services.API/MstBuilding/MstBuilding.csproj Services.API/MstBuilding/
+  COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
+  COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/
+  COPY Entities.Models/Entities.Models.csproj Entities.Models/
+  COPY Helpers.Consumer/Helpers.Consumer.csproj Helpers.Consumer/
+  COPY Repositories/Repositories.csproj Repositories/
+  COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
 WORKDIR /app/Services.API/MstBuilding
-# COPY Services.API/MstBuilding/*.csproj ./
-# COPY Services.API/Common/ ./Common/
 RUN dotnet restore
 
-# COPY Services.API/MstBuilding/ ./
+WORKDIR /app
+COPY . .
+
+WORKDIR /app/Services.API/MstBuilding
 RUN dotnet publish -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
 COPY --from=build /app/Services.API/MstBuilding/out ./
 
-EXPOSE 10010
-ENTRYPOINT ["dotnet", "MstBuilding.dll"] 
+EXPOSE 5010
+ENTRYPOINT ["dotnet", "MstBuilding.dll"]
+
+# FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# WORKDIR /app
+# COPY ./ ./
+
+# WORKDIR /app/Services.API/MstBuilding
+# # COPY Services.API/MstBuilding/*.csproj ./
+# # COPY Services.API/Common/ ./Common/
+# RUN dotnet restore
+
+# # COPY Services.API/MstBuilding/ ./
+# RUN dotnet publish -c Release -o out
+
+# FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# WORKDIR /app
+# COPY --from=build /app/Services.API/MstBuilding/out ./
+
+# EXPOSE 5010
+# ENTRYPOINT ["dotnet", "MstBuilding.dll"] 

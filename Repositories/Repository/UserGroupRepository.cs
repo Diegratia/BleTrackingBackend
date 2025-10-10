@@ -44,6 +44,12 @@ namespace Repositories.Repository
             return await _context.UserGroups
                 .FirstOrDefaultAsync(ug => ug.ApplicationId == applicationId && ug.LevelPriority == levelPriority && ug.Status != 0);
         }
+        
+                public async Task<UserGroup?> GetByApplicationIdAndPriorityAsyncRaw(Guid applicationId, LevelPriority levelPriority)
+        {
+            return await _context.UserGroups
+                .FirstOrDefaultAsync(ug => ug.ApplicationId == applicationId && ug.LevelPriority == levelPriority && ug.Status != 0);
+        }
 
         public async Task<UserGroup> AddAsync(UserGroup userGroup)
         {
@@ -61,7 +67,14 @@ namespace Repositories.Repository
 
             await ValidateApplicationIdAsync(userGroup.ApplicationId);
             ValidateApplicationIdForEntity(userGroup, applicationId, isSystemAdmin);
-            
+
+            _context.UserGroups.Add(userGroup);
+            await _context.SaveChangesAsync();
+            return userGroup;
+        }
+
+         public async Task<UserGroup> AddAsyncRaw(UserGroup userGroup)
+        {
             _context.UserGroups.Add(userGroup);
             await _context.SaveChangesAsync();
             return userGroup;

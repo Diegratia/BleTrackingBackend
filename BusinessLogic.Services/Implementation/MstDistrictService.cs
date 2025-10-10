@@ -45,9 +45,15 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
         }
 
+        public async Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync()
+        {
+            var districts = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstDistrictDto>>(districts);
+        }
+
         public async Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = _mapper.Map<MstDistrict>(createDto);
 
             district.Id = Guid.NewGuid();
@@ -64,7 +70,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var result = new List<MstDistrictDto>();
             foreach (var dto in dtos)
             {
@@ -77,14 +83,14 @@ namespace BusinessLogic.Services.Implementation
                 district.UpdatedAt = DateTime.UtcNow;
                 district.Status = 1;
                 await _repository.AddAsync(district);
-                result.Add( _mapper.Map<MstDistrictDto>(district));
+                result.Add(_mapper.Map<MstDistrictDto>(district));
             }
             return result;
         }
 
         public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = await _repository.GetByIdAsync(id);
             if (district == null)
                 throw new KeyNotFoundException("District not found");
@@ -97,7 +103,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = await _repository.GetByIdAsync(id);
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
@@ -109,7 +115,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "DistrictHost", "CreatedAt", "UpdatedAt", "Status" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "DistrictHost", "CreatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstDistrict, MstDistrictDto>(
                 query,
@@ -168,7 +174,7 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Status").SemiBold();
 
                         });
-                        
+
 
                         // Table body
                         int index = 1;
@@ -205,7 +211,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var districts = await _repository.GetAllExportAsync();
 
@@ -245,6 +251,45 @@ namespace BusinessLogic.Services.Implementation
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
+        }
+        
+        public async Task<IEnumerable<MstDistrictDto>> ImportAsync(IFormFile file)
+        {
+            var districts = new List<MstDistrict>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+            int rowNumber = 2; // start dari baris ke 2
+            foreach (var row in rows)
+            {
+
+                var district = new MstDistrict
+                {
+                    Id = Guid.NewGuid(),
+                    Code = row.Cell(1).GetValue<string>(),
+                    Name = row.Cell(2).GetValue<string>(),
+                    DistrictHost = row.Cell(3).GetValue<string>() ?? "",
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                districts.Add(district);
+                rowNumber++;
+            }
+
+            foreach (var district in districts)
+            {
+                await _repository.AddAsync(district);
+            }
+
+            return _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
         }
     }
 }

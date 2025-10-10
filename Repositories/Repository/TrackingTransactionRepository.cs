@@ -96,6 +96,8 @@ namespace Repositories.Repository
 
             var query = _context.TrackingTransactions
                 .IgnoreQueryFilters()  
+                .Include(t => t.Member)
+                .Include(t => t.Visitor)
                 .Include(t => t.Reader)
                 .Include(t => t.Card)
                 .Include(t => t.FloorplanMaskedArea);
@@ -106,7 +108,7 @@ namespace Repositories.Repository
         private async Task ValidateRelatedEntitiesAsync(TrackingTransaction transaction, Guid? applicationId, bool isSystemAdmin)
         {
             if (isSystemAdmin) return;
-
+            
             if (!applicationId.HasValue)
                 throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
 

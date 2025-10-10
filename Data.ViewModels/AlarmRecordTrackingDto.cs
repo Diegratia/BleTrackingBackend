@@ -7,9 +7,11 @@ namespace Data.ViewModels
         public long Generate { get; set; }
         public Guid Id { get; set; }
         public DateTime? Timestamp { get; set; }
-        public Guid VisitorId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid FloorplanMaskedAreaId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+        public Guid? ReaderId { get; set; }
+        public Guid? FloorplanMaskedAreaId { get; set; }
+        public Guid? AlarmTriggersId { get; set; }
         public string? AlarmRecordStatus { get; set; }
         public string? ActionStatus { get; set; }
         public DateTime? IdleTimestamp { get; set; }
@@ -26,29 +28,9 @@ namespace Data.ViewModels
         public string? InvestigatedResult { get; set; }
 
         public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
+        public AlarmTriggersDto? AlarmTriggers { get; set; }
         public MstBleReaderDto? Reader { get; set; }
         public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }
-    }
-
-    public class AlarmRecordTrackingCreateDto : BaseModelDto
-    {
-       
-        public Guid VisitorId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid FloorplanMaskedAreaId { get; set; }
-        public string? AlarmRecordStatus { get; set; }
-        public string? ActionStatus { get; set; }
-        public string? InvestigatedResult { get; set; }
-    }
-
-    public class AlarmRecordTrackingUpdateDto : BaseModelDto
-    {
-       
-        public Guid VisitorId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid FloorplanMaskedAreaId { get; set; }
-        public string? AlarmRecordStatus { get; set; }
-        public string? ActionStatus { get; set; }
-        public string? InvestigatedResult { get; set; }
     }
 }

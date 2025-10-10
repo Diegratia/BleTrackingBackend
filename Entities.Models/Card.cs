@@ -65,13 +65,20 @@ namespace Entities.Models
         [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-        // isikan  null jika bisa digunakan disemua area.
 
-        public virtual MstApplication Application { get; set; }
-        public virtual MstMember Member { get; set; }
-        public virtual Visitor Visitor { get; set; }
-        public virtual FloorplanMaskedArea RegisteredMaskedArea { get; set; }
-        public virtual ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        [ForeignKey(nameof(CardGroup))]
+        [Column("card_group_id")]
+        public Guid? CardGroupId { get; set; }
+
+        public MstApplication Application { get; set; }
+        public MstMember Member { get; set; }
+        public Visitor Visitor { get; set; }
+        public FloorplanMaskedArea RegisteredMaskedArea { get; set; }
+        public CardGroup CardGroup { get; set; }
+        public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<CardCardAccess?> CardCardAccesses { get; set; } = new List<CardCardAccess?>();
+        [NotMapped]
+        public ICollection<CardAccess> CardAccesses => CardCardAccesses.Select(cga => cga.CardAccess).ToList();
     }
 }
 

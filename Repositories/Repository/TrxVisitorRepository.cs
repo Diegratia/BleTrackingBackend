@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
-using Data.ViewModels;
 using System.Security.Claims;
+// using Data.ViewModels.MinimalDto;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace Repositories.Repository
 {
@@ -26,6 +27,13 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+                public async Task<TrxVisitor?> OpenGetByIdAsync(Guid id)
+        {
+            return await GetAllQueryableRaw()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<TrxVisitor?> GetByPublicIdAsync(Guid id)
         {
             return await _context.TrxVisitors
@@ -36,6 +44,11 @@ namespace Repositories.Repository
         public async Task<IEnumerable<TrxVisitor>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();
+        }
+        
+              public async Task<IEnumerable<TrxVisitor>> OpenGetAllAsync()
+        {
+            return await GetAllQueryableRaw().ToListAsync();
         }
 
         // public IQueryable<TrxVisitor> GetAllQueryable()
@@ -52,40 +65,54 @@ namespace Repositories.Repository
         //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         // }
 
-         public IQueryable<TrxVisitor> GetAllQueryable()
+        public IQueryable<TrxVisitor> GetAllQueryable()
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+            var isPrimary = IsPrimary();
+
+            var query = _context.TrxVisitors
+                .Include(v => v.Application)
+                .Include(v => v.Visitor)
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member)
+                .AsQueryable();
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
+            {
+                var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+                if (String.Equals(userRole, LevelPriority.Secondary.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t =>
+                        _context.MstMembers.Any(m => m.Email == userEmail &&
+                            (t.PurposePerson == m.Id || (t.MemberIdentity == m.IdentityId && t.IsMember == 1))));
+                }
+                else if (String.Equals(userRole, LevelPriority.UserCreated.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t =>
+                        _context.Visitors.Any(v => v.Email == userEmail && t.VisitorId == v.Id));
+                }
+                else
+                {
+                    query = query.Where(t => false); // No access for other roles
+                }
+            }
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+     public IQueryable<TrxVisitor> GetAllQueryableRaw()
     {
-        var userEmail = GetUserEmail();
         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-        var isSuperAdmin = IsSuperAdmin();
-        var isPrimaryAdmin = IsPrimaryAdmin();
-        var isPrimary = IsPrimary();
 
         var query = _context.TrxVisitors
-            .Include(v => v.Application)
+            // .Include(v => v.Application)
             .Include(v => v.Visitor)
             .Include(v => v.MaskedArea)
             .Include(v => v.Member)
             .AsQueryable();
-
-        if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
-        {
-            var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
-            if (String.Equals(userRole, LevelPriority.Secondary.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(t =>
-                    _context.MstMembers.Any(m => m.Email == userEmail &&
-                        (t.PurposePerson == m.Id || (t.MemberIdentity == m.IdentityId && t.IsMember == 1))));
-            }
-            else if (String.Equals(userRole, LevelPriority.UserCreated.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(t =>
-                    _context.Visitors.Any(v => v.Email == userEmail && t.VisitorId == v.Id));
-            }
-            else
-            {
-                query = query.Where(t => false); // No access for other roles
-            }
-        }
 
         return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
     }
@@ -118,6 +145,8 @@ namespace Repositories.Repository
             var query = _context.TrxVisitors
                 .Include(v => v.MaskedArea)
                 .Include(v => v.Member)
+                .Include(v => v.Visitor)
+                .Include(v => v.Application)
                 .AsQueryable();
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -126,15 +155,27 @@ namespace Repositories.Repository
             {
                 Id = v.Id,
                 CheckedInAt = v.CheckedInAt,
-                Member = v.Member == null ? null : new MstMemberDtoz
+                CheckedOutAt = v.CheckedOutAt,
+                TrxStatus = v.TrxStatus,
+                VisitorId = v.VisitorId,
+                ApplicationId = v.ApplicationId,
+                Member = v.Member == null ? null : new MstMemberDto
                 {
                     Id = v.Member.Id,
-                    Name = v.Member.Name
+                    Name = v.Member.Name,
+                    ApplicationId = v.ApplicationId,
                 },
-                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDtoz
+                Visitor = v.Visitor == null ? null : new VisitorDto
+                {
+                    Id = v.Visitor.Id,
+                    Name = v.Visitor.Name,
+                    ApplicationId = v.ApplicationId,
+                },
+                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDto
                 {
                     Id = v.MaskedArea.Id,
-                    Name = v.MaskedArea.Name
+                    Name = v.MaskedArea.Name,
+                    ApplicationId = v.ApplicationId,
                 }
             });
         }

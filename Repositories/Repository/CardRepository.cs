@@ -40,8 +40,12 @@ namespace Repositories.Repository
                 .Include(b => b.RegisteredMaskedArea)
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
-                .Include(b => b.Application)
-                .Where(b => b.StatusCard != 0);
+                .Include(b => b.CardGroup)
+                // .Include(b => b.Application)
+                .Include(b => b.CardCardAccesses)
+                        .ThenInclude(cga => cga.CardAccess)
+                .Where(b => b.StatusCard != 0)
+                .AsSplitQuery(); 
 
             query = query.WithActiveRelations();
 
@@ -102,7 +106,7 @@ namespace Repositories.Repository
         public async Task<FloorplanMaskedArea?> GetMaskedAreaByIdAsync(Guid id)
         {
             return await _context.FloorplanMaskedAreas
-                .WithActiveRelations()
+                // .WithActiveRelations()
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
         }
 

@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -138,6 +138,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstMemberProfile));
 
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
+builder.Services.AddScoped<CardRepository>();
+
 
 // builder.Services.AddScoped<IMstOrganizationService, MstOrganizationService>();
 // builder.Services.AddScoped<IMstDistrictService, MstDistrictService>();
@@ -148,7 +150,7 @@ builder.Services.AddScoped<MstMemberRepository>();
 
 
 
-var port = Environment.GetEnvironmentVariable("MST_MEMBER_PORT") ?? "10016" ??
+var port = Environment.GetEnvironmentVariable("MST_MEMBER_PORT") ?? "5016" ??
            builder.Configuration["Ports:MstMemberService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

@@ -19,12 +19,10 @@ namespace Entities.Models
         public string Rtsp { get; set; }
 
         [AllowNull]
-        [ForeignKey("Integration")]
         [Column("integration_id")]
         public Guid? IntegrationId { get; set; }
 
         [Required]
-        [ForeignKey("Application")]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
@@ -32,9 +30,9 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        public virtual MstIntegration Integration { get; set; }
+        public MstIntegration Integration { get; set; }
 
-        public virtual MstApplication Application { get; set; }
-        public virtual ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        public MstApplication Application { get; set; }
+        public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
     }
 }

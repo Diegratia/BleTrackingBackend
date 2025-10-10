@@ -12,6 +12,7 @@ namespace BusinessLogic.Services.Interface
         Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto dto);
         Task<MstBuildingDto> GetByIdAsync(Guid id);
         Task<IEnumerable<MstBuildingDto>> GetAllAsync();
+         Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync();
         Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file);

@@ -27,10 +27,10 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
-        public virtual MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
 
-        // public virtual ICollection<MstIntegration> Integrations { get; set; } = new List<MstIntegration>(); 
-        // public virtual ICollection<MstBleReader> BleReaders { get; set; } = new List<MstBleReader>();
+        // public ICollection<MstIntegration> Integrations { get; set; } = new List<MstIntegration>(); 
+        // public ICollection<MstBleReader> BleReaders { get; set; } = new List<MstBleReader>();
 
     }
 }

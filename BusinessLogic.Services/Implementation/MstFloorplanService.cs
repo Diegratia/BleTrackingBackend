@@ -24,13 +24,24 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorplanRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
+        private readonly IFloorplanMaskedAreaService _maskedAreaService;
+        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
+            FloorplanDeviceRepository floorplanDeviceRepository,
+            FloorplanMaskedAreaRepository maskedAreaRepository,
+            IFloorplanMaskedAreaService maskedAreaService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _floorplanDeviceRepository = floorplanDeviceRepository;
+            _maskedAreaRepository = maskedAreaRepository;
+            _maskedAreaService = maskedAreaService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -47,10 +58,48 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
         }
 
+                public async Task<IEnumerable<OpenMstFloorplanDto>> OpenGetAllAsync()
+        {
+            var floorplans = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstFloorplanDto>>(floorplans);
+        }
+
         public async Task<MstFloorplanDto> CreateAsync(MstFloorplanCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
+
+            if (createDto.FloorplanImage != null && createDto.FloorplanImage.Length > 0)
+            {
+                if (string.IsNullOrEmpty(createDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorplanImage.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (createDto.FloorplanImage.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                Directory.CreateDirectory(uploadDir);
+
+                var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createDto.FloorplanImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
+
+                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+            }
+
+
             floorplan.Id = Guid.NewGuid();
             floorplan.Status = 1;
             floorplan.CreatedBy = username;
@@ -64,10 +113,57 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstFloorplanUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
+
+                if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
+            {
+                if (string.IsNullOrEmpty(updateDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorplanImage.ContentType))
+                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                if (updateDto.FloorplanImage.Length > MaxFileSize)
+                    throw new ArgumentException("File size exceeds 50 MB limit.");
+
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                Directory.CreateDirectory(uploadDir);
+
+                if (!string.IsNullOrEmpty(floorplan.FloorplanImage))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floorplan.FloorplanImage.TrimStart('/'));
+                    if (File.Exists(oldFilePath))
+                    {
+                        try
+                        {
+                            File.Delete(oldFilePath);
+                        }
+                        catch (IOException ex)
+                        {
+                            throw new IOException("Failed to delete old image file.", ex);
+                        }
+                    }
+                }
+
+                var fileExtension = Path.GetExtension(updateDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDir, fileName);
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await updateDto.FloorplanImage.CopyToAsync(stream);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new IOException("Failed to save image file.", ex);
+                }
+
+                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+            }
+
 
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;
@@ -76,17 +172,74 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(floorplan);
         }
 
-        public async Task DeleteAsync(Guid id)
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floorplan = await _repository.GetByIdAsync(id);
+        //     if (floorplan == null)
+        //         throw new KeyNotFoundException("Floorplan not found");
+
+        //     floorplan.UpdatedBy = username;
+        //     floorplan.UpdatedAt = DateTime.UtcNow;
+        //     floorplan.Status = 0;
+        //     await _repository.DeleteAsync(id);
+        // }
+
+        //    public async Task DeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var floorplan = await _repository.GetByIdAsync(id);
+        //     if (floorplan == null)
+        //         throw new KeyNotFoundException("Floorplan not found");
+
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         // Soft delete parent
+        //         floorplan.UpdatedBy = username;
+        //         floorplan.UpdatedAt = DateTime.UtcNow;
+        //         floorplan.Status = 0;
+        //         await _repository.DeleteAsync(id);
+
+        //         // Soft delete child entities via their repositories
+        //         var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+        //         foreach (var maskedArea in maskedAreas)
+        //         {
+        //             maskedArea.UpdatedBy = username;
+        //             maskedArea.UpdatedAt = DateTime.UtcNow;
+        //             maskedArea.Status = 0;
+        //             await _maskedAreaRepository.SoftDeleteAsync(maskedArea.Id);
+        //         }
+
+        //         var floorplandevices = await _floorplanDeviceRepository.GetByFloorplanIdAsync(id);
+        //         foreach (var floorplandevice in floorplandevices)
+        //         {
+        //             floorplandevice.UpdatedBy = username;
+        //             floorplandevice.UpdatedAt = DateTime.UtcNow;
+        //             floorplandevice.Status = 0;
+        //             await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
+        //         }
+        //     });
+        // }
+
+           public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-            floorplan.UpdatedBy = username;
-            floorplan.UpdatedAt = DateTime.UtcNow;
-            floorplan.Status = 0;
-            await _repository.DeleteAsync(id);
+                await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+                foreach (var maskedArea in maskedAreas)
+                {
+                    await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+                }
+                floorplan.UpdatedBy = username;
+                floorplan.UpdatedAt = DateTime.UtcNow;
+                floorplan.Status = 0;
+                await _repository.DeleteAsync(id);
+            });
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -94,7 +247,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] { "Name", "CreatedAt", "UpdatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
+            var validSortColumns = new[] {  "UpdatedAt", "Name", "CreatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
             var enumColumns = new Dictionary<string, Type> { { "Status", typeof(int) } };
 
             var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(

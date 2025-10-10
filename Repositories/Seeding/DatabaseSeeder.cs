@@ -12,9 +12,6 @@ namespace Repositories.Seeding
     {
         public static void Seed(BleTrackingDbContext context)
         {
-
-   
-
             // 2. MstApplication
             if (!context.MstApplications.Any(a => a.ApplicationStatus != 0))
             {
@@ -211,7 +208,7 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-                     // 1. MstBrand
+            // 1. MstBrand
             if (!context.MstBrands.Any(b => b.Status != 0))
             {
                 var brandFaker = new Faker<MstBrand>()
@@ -225,66 +222,141 @@ namespace Repositories.Seeding
                         .Id)
                     .RuleFor(b => b.Status, f => 1);
 
-                var brands = brandFaker.Generate(3);
+                var brands = brandFaker.Generate(1);
+
+                var brand = new MstBrand
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Bio - Initial",
+                    Tag = "People Tracking Tag",
+                    ApplicationId = context.MstApplications
+                      .Where(a => a.ApplicationStatus != 0)
+                      .OrderBy(r => Guid.NewGuid())
+                      .First()
+                      .Id,
+                    Status = 1
+                };
+                brands.Add(brand);
+
                 context.MstBrands.AddRange(brands);
                 context.SaveChanges();
             }
 
             // 3. MstBuilding
-            if (!context.MstBuildings.Any(b => b.Status != 0))
+            if (!context.MstBuildings.Any())
             {
-                var buildingFaker = new Faker<MstBuilding>()
-                    .RuleFor(b => b.Id, f => Guid.NewGuid())
-                    .RuleFor(b => b.Name, f => f.Address.City() + " Building")
-                    .RuleFor(b => b.Image, f => $"https://example.com/buildings/{f.Random.Word()}.jpg")
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                var customBuilding = new MstBuilding
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Gedung Tracking People",
+                    Image = "https://example.com/buildings/custom.jpg",
+                    ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(b => b.CreatedBy, f => "System")
-                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.UpdatedBy, f => "System")
-                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.Status, f => 1);
+                        .Select(a => a.Id)
+                        .First(),
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
 
-                var buildings = buildingFaker.Generate(2);
-                context.MstBuildings.AddRange(buildings);
+                context.MstBuildings.Add(customBuilding);
                 context.SaveChanges();
             }
+            // if (!context.MstBuildings.Any(b => b.Status != 0))
+            // {
+            //     var buildingFaker = new Faker<MstBuilding>()
+            //         .RuleFor(b => b.Id, f => Guid.NewGuid())
+            //         .RuleFor(b => b.Name, f => f.Address.City() + " Building")
+            //         .RuleFor(b => b.Image, f => $"https://example.com/buildings/{f.Random.Word()}.jpg")
+            //         .RuleFor(b => b.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(b => b.CreatedBy, f => "System")
+            //         .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(b => b.UpdatedBy, f => "System")
+            //         .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(b => b.Status, f => 1);
+
+            //     var buildings = buildingFaker.Generate(1);
+
+            //     // // Custom seeding
+            //     var building = new MstBuilding
+            //     {
+            //         Id = Guid.NewGuid(),
+            //         Name = "Gedung Tracking People",
+            //         Image = "https://example.com/buildings/custom.jpg",
+            //         ApplicationId = context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id,
+            //         CreatedBy = "System",
+            //         CreatedAt = DateTime.UtcNow,
+            //         UpdatedBy = "System",
+            //         UpdatedAt = DateTime.UtcNow,
+            //         Status = 1
+            //     };
+            //     buildings.Add(building);
+
+            //     context.MstBuildings.AddRange(buildings);
+            //     context.SaveChanges();
+            // }
 
             // 4. MstFloor 
             if (!context.MstFloors.Any(f => f.Status != 0))
             {
-                var floorFaker = new Faker<MstFloor>()
-                    .RuleFor(f => f.Id, f => Guid.NewGuid())
-                    .RuleFor(f => f.BuildingId, f => context.MstBuildings
+                // var floorFaker = new Faker<MstFloor>()
+                //     .RuleFor(f => f.Id, f => Guid.NewGuid())
+                //     .RuleFor(f => f.BuildingId, f => context.MstBuildings
+                //         .Where(b => b.Status != 0)
+                //         .OrderBy(r => Guid.NewGuid())
+                //         .First()
+                //         .Id)
+                //     .RuleFor(f => f.Name, f => f.Address.StreetName())
+                //     .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                //         .Where(a => a.ApplicationStatus != 0)
+                //         .OrderBy(r => Guid.NewGuid())
+                //         .First()
+                //         .Id)
+                //     .RuleFor(f => f.CreatedBy, f => "System")
+                //     .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
+                //     .RuleFor(f => f.UpdatedBy, f => "System")
+                //     .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
+                //     .RuleFor(f => f.Status, f => 1);
+
+                // var floors = floorFaker.Generate(1);
+
+                // Custom seeding
+                var floor = new MstFloor
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Tracking People Floor",
+                    BuildingId = context.MstBuildings
                         .Where(b => b.Status != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id)
-                    .RuleFor(f => f.Name, f => f.Address.StreetName())
-                    .RuleFor(f => f.FloorImage, f => $"https://example.com/floorplans/{f.Random.Word()}.png")
-                    .RuleFor(f => f.PixelX, f => f.Random.Float(1280, 1920))
-                    .RuleFor(f => f.PixelY, f => f.Random.Float(720, 1080))
-                    .RuleFor(f => f.FloorX, f => f.Random.Float(20, 100))
-                    .RuleFor(f => f.FloorY, f => f.Random.Float(20, 100))
-                    .RuleFor(f => f.MeterPerPx, f => f.Random.Float())
-                    .RuleFor(f => f.EngineFloorId, f => f.Random.Long(10000, 99999))
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                        .Id,
+                    ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id)
-                    .RuleFor(f => f.CreatedBy, f => "System")
-                    .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(f => f.UpdatedBy, f => "System")
-                    .RuleFor(f => f.UpdatedAt, f => DateTime.UtcNow)
-                    .RuleFor(f => f.Status, f => 1);
-
-                var floors = floorFaker.Generate(2);
-                context.MstFloors.AddRange(floors);
+                        .Id,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.MstFloors.Add(floor);
                 context.SaveChanges();
+                // floors.Add(floor);
+
+                // context.MstFloors.AddRange(floors);
+                // context.SaveChanges();
             }
 
             // 5. MstFloorplan (bergantung pada MstFloor dan MstApplication)
@@ -328,11 +400,11 @@ namespace Repositories.Seeding
                     // .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
                     .RuleFor(i => i.ApiTypeAuth, f => ApiTypeAuth.ApiKey)
                     .RuleFor(i => i.ApiUrl, f => f.Internet.Url())
-                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:10000")
+                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:5000")
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
                     // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())
-                    .RuleFor(i => i.ApiKeyField, f => "X-API-KEY-TRACKING-PEOPLE")
+                    .RuleFor(i => i.ApiKeyField, f => "X-BIOPEOPLETRACKING-API-KEY")
                     // .RuleFor(i => i.ApiKeyValue, f => f.Random.AlphaNumeric(20))
                     .RuleFor(i => i.ApiKeyValue, f => "FujDuGTsyEXVwkKrtRgn52APwAVRGmPOiIRX8cffynDvIW35bJaGeH3NcH6HcSeK")
                     .RuleFor(i => i.ApplicationId, f => context.MstApplications
@@ -659,56 +731,109 @@ namespace Repositories.Seeding
             }
 
             // 25. Card
-            if (!context.Cards.Any())
+                if (!context.Cards.Any())
             {
-                var cardFaker = new Faker<Card>()
-                    .RuleFor(e => e.Id, f => Guid.NewGuid())
-                    .RuleFor(e => e.Name, f => f.Random.Word())
-                    .RuleFor(e => e.Remarks, f => f.Random.String(255))
-                    .RuleFor(e => e.CardType, f => f.PickRandom<Helpers.Consumer.CardType>())
-                    .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
-                    .RuleFor(e => e.QRCode, f => f.Random.String(10))
-                    .RuleFor(e => e.Dmac, f => f.Internet.Mac())
-                    .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
-                    // .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
-                    .RuleFor(t => t.RegisteredMaskedAreaId, f => f.Random.Bool()
+                var faker = new Faker(); // Create a Faker instance for random data
+                var customDmacs = new[] { "BC572913EA8B", "BC572913EA73", "BC572913EA8A", "BC572905DB85", "BC572905DB80" };
+                
+                var cards = customDmacs.Select(dmac => new Card
+                {
+                    Id = Guid.NewGuid(),
+                    Name = dmac, // Set Name to match Dmac
+                    Remarks = faker.Random.String2(255), // Random string up to 255 characters
+                    CardType = faker.PickRandom<Helpers.Consumer.CardType>(),
+                    CardNumber = faker.Random.Number(1000, 9999).ToString(),
+                    QRCode = faker.Random.String2(10),
+                    Dmac = dmac, // Set custom Dmac
+                    IsMultiMaskedArea = faker.Random.Bool(),
+                    RegisteredMaskedAreaId = faker.Random.Bool()
                         ? (Guid?)null
                         : context.FloorplanMaskedAreas
                             .Where(a => a.Status != 0)
                             .OrderBy(r => Guid.NewGuid())
                             .First()
-                            .Id)
-                     .RuleFor(t => t.VisitorId, f => f.Random.Bool()
+                            .Id,
+                    VisitorId = faker.Random.Bool()
                         ? (Guid?)null
                         : context.Visitors
                             .Where(a => a.Status != 0)
                             .OrderBy(r => Guid.NewGuid())
                             .First()
-                            .Id)
-                     .RuleFor(t => t.MemberId, f => f.Random.Bool() 
-                        ? (Guid?)null 
+                            .Id,
+                    MemberId = faker.Random.Bool()
+                        ? (Guid?)null
                         : context.MstMembers
                             .Where(a => a.Status != 0)
                             .OrderBy(r => Guid.NewGuid())
                             .First()
-                            .Id)
-                    .RuleFor(e => e.IsUsed, f => f.Random.Bool())
-                    .RuleFor(e => e.LastUsed, f => f.Person.FullName)
-                    .RuleFor(b => b.ApplicationId, f => context.MstApplications
+                            .Id,
+                    IsUsed = faker.Random.Bool(),
+                    LastUsed = faker.Person.FullName,
+                    ApplicationId = context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id)
-                    .RuleFor(e => e.StatusCard, f => 1)
-                    .RuleFor(b => b.CreatedBy, f => "System")
-                    .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(b => b.UpdatedBy, f => "System")
-                    .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
+                        .Id,
+                    StatusCard = 1,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow
+                }).ToList();
 
-                var cards = cardFaker.Generate(4);
                 context.Cards.AddRange(cards);
                 context.SaveChanges();
             }
+            // if (!context.Cards.Any())
+            // {
+            //     var cardFaker = new Faker<Card>()
+            //         .RuleFor(e => e.Id, f => Guid.NewGuid())
+            //         .RuleFor(e => e.Name, f => f.Random.Word())
+            //         .RuleFor(e => e.Remarks, f => f.Random.String(255))
+            //         .RuleFor(e => e.CardType, f => f.PickRandom<Helpers.Consumer.CardType>())
+            //         .RuleFor(e => e.CardNumber, f => f.Random.Number(1000, 9999).ToString())
+            //         .RuleFor(e => e.QRCode, f => f.Random.String(10))
+            //         .RuleFor(e => e.Dmac, f => f.Internet.Mac())
+            //         .RuleFor(e => e.IsMultiMaskedArea, f => f.Random.Bool())
+            //         // .RuleFor(e => e.RegisteredMaskedAreaId, f => f.Random.Bool() ? (Guid?)null : Guid.NewGuid())
+            //         .RuleFor(t => t.RegisteredMaskedAreaId, f => f.Random.Bool()
+            //             ? (Guid?)null
+            //             : context.FloorplanMaskedAreas
+            //                 .Where(a => a.Status != 0)
+            //                 .OrderBy(r => Guid.NewGuid())
+            //                 .First()
+            //                 .Id)
+            //          .RuleFor(t => t.VisitorId, f => f.Random.Bool()
+            //             ? (Guid?)null
+            //             : context.Visitors
+            //                 .Where(a => a.Status != 0)
+            //                 .OrderBy(r => Guid.NewGuid())
+            //                 .First()
+            //                 .Id)
+            //          .RuleFor(t => t.MemberId, f => f.Random.Bool() 
+            //             ? (Guid?)null 
+            //             : context.MstMembers
+            //                 .Where(a => a.Status != 0)
+            //                 .OrderBy(r => Guid.NewGuid())
+            //                 .First()
+            //                 .Id)
+            //         .RuleFor(e => e.IsUsed, f => f.Random.Bool())
+            //         .RuleFor(e => e.LastUsed, f => f.Person.FullName)
+            //         .RuleFor(b => b.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(e => e.StatusCard, f => 1)
+            //         .RuleFor(b => b.CreatedBy, f => "System")
+            //         .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(b => b.UpdatedBy, f => "System")
+            //         .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
+
+            //     var cards = cardFaker.Generate(1);
+            //     context.Cards.AddRange(cards);
+            //     context.SaveChanges();
+            // }
 
             // 16. TrackingTransaction
             if (!context.TrackingTransactions.Any())
@@ -767,7 +892,8 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.VisitorId, f => context.Visitors
                         .OrderBy(r => Guid.NewGuid())
                         .First()
-                        .Id);
+                        .Id)
+                    .RuleFor(v => v.Status, f => 1);
 
                 var blacklists = blacklistFaker.Generate(2);
                 context.VisitorBlacklistAreas.AddRange(blacklists);
@@ -775,50 +901,50 @@ namespace Repositories.Seeding
             }
 
             // 18. AlarmRecordTracking
-            if (!context.AlarmRecordTrackings.Any())
-            {
-                var alarmFaker = new Faker<AlarmRecordTracking>()
-                    .RuleFor(a => a.Id, f => Guid.NewGuid())
-                    .RuleFor(a => a.Timestamp, f => f.Date.Recent(1))
-                    .RuleFor(a => a.VisitorId, f => context.Visitors
-                        .Where(r => r.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.ReaderId, f => context.MstBleReaders
-                        .Where(r => r.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
-                        .Where(a => a.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.Alarm, f => f.PickRandom<AlarmRecordStatus>())
-                    .RuleFor(a => a.Action, f => f.PickRandom<ActionStatus>())
-                    .RuleFor(a => a.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
-                    .RuleFor(a => a.IdleBy, f => f.Name.FullName())
-                    .RuleFor(a => a.DoneBy, f => f.Name.FullName())
-                    .RuleFor(a => a.CancelBy, f => f.Name.FullName())
-                    .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
-                    .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
-                    .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
-                    .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
+            // if (!context.AlarmRecordTrackings.Any())
+            // {
+            //     var alarmFaker = new Faker<AlarmRecordTracking>()
+            //         .RuleFor(a => a.Id, f => Guid.NewGuid())
+            //         .RuleFor(a => a.Timestamp, f => f.Date.Recent(1))
+            //         .RuleFor(a => a.VisitorId, f => context.Visitors
+            //             .Where(r => r.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.ReaderId, f => context.MstBleReaders
+            //             .Where(r => r.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
+            //             .Where(a => a.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.Alarm, f => f.PickRandom<AlarmRecordStatus>())
+            //         .RuleFor(a => a.Action, f => f.PickRandom<ActionStatus>())
+            //         .RuleFor(a => a.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(a => a.IdleTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.DoneTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.CancelTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.WaitingTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.InvestigatedTimestamp, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now))
+            //         .RuleFor(a => a.IdleBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.DoneBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.CancelBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.WaitingBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.InvestigatedBy, f => f.Name.FullName())
+            //         .RuleFor(a => a.InvestigatedResult, f => f.Lorem.Sentence())
+            //         .RuleFor(a => a.InvestigatedDoneAt, f => f.Date.Between(new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now));
 
-                var alarms = alarmFaker.Generate(50);
-                context.AlarmRecordTrackings.AddRange(alarms);
-                context.SaveChanges();
-            }
+            //     var alarms = alarmFaker.Generate(50);
+            //     context.AlarmRecordTrackings.AddRange(alarms);
+            //     context.SaveChanges();
+            // }
 
             // 19. FloorplanDevice
             if (!context.FloorplanDevices.Any(d => d.Status != 0))
@@ -1009,8 +1135,36 @@ namespace Repositories.Seeding
                 context.TrxVisitors.AddRange(trxVisitors);
                 context.SaveChanges();
             }
-            
-  
+
+            // 25. Settings
+            if (!context.AlarmCategorySettings.Any())
+            {
+                var settingsFaker = new Faker<AlarmCategorySettings>();
+                var settings = Enum.GetValues(typeof(AlarmRecordStatus))
+                    .Cast<AlarmRecordStatus>()
+                    .Select(status => new AlarmCategorySettings
+                    {
+                        Id = Guid.NewGuid(),
+                        AlarmCategory = status,
+                        AlarmLevelPriority = AlarmLevelPriority.High,
+                        AlarmColor = "System",
+                        IsEnabled = 0,
+                        Remarks = "Initial Remarks",
+                        ApplicationId = context.MstApplications
+                            .Where(a => a.ApplicationStatus != 0)
+                            .OrderBy(r => Guid.NewGuid())
+                            .First()
+                            .Id,
+                        CreatedBy = "System",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                    })
+                    .ToList();
+
+                context.AlarmCategorySettings.AddRange(settings);
+                context.SaveChanges();
+            }
 
                // 22. MstLogEngine
             // if (!context.MstLogTrackings.Any())

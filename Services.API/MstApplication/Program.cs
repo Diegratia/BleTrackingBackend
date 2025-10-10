@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=Password_123#;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -132,18 +132,23 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstApplicationProfile));
 // Registrasi Services
 builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
+builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
+builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 
 builder.Services.AddScoped<MstApplicationRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<MstBrandRepository>();
+builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
-var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "10007" ??
+var port = Environment.GetEnvironmentVariable("MST_APPLICATION_PORT") ?? "5007" ??
            builder.Configuration["Ports:MstApplicationService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";

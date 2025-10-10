@@ -15,6 +15,8 @@ namespace BusinessLogic.Services.Extension
             CreateMap<MstBleReader, MstBleReaderDto>()
                 .ForMember(dest => dest.Brand, opt => opt.MapFrom(src => src.Brand))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+                 CreateMap<MstBleReader, OpenMstBleReaderDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<MstBleReaderCreateDto, MstBleReader>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())

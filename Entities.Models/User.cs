@@ -60,6 +60,9 @@ namespace Entities.Models
         [Required]
         [Column("status_active")]
         public StatusActive StatusActive { get; set; }
+        
+        [Column("is_integration")]
+        public bool IsIntegration { get; set; }
 
         [Required]
         [Column("group_id")]
@@ -70,9 +73,9 @@ namespace Entities.Models
         public Guid ApplicationId { get; set; } // Foreign key
 
         [ForeignKey("GroupId")]
-        public virtual UserGroup Group { get; set; } // Navigation property
+        public UserGroup Group { get; set; } // Navigation property
 
         [ForeignKey("ApplicationId")]
-        public virtual MstApplication Application { get; set; } // Navigation property
+        public MstApplication Application { get; set; } // Navigation property
     }
 }

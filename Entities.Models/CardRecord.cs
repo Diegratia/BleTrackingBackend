@@ -70,9 +70,9 @@ namespace Entities.Models
         [NotMapped]
         public bool IsActive => CheckoutAt == null; 
 
-        public virtual MstApplication Application { get; set; }
-        public virtual Visitor Visitor { get; set; }
-        public virtual MstMember Member { get; set; }
-        public virtual Card Card { get; set; }
+        public MstApplication Application { get; set; }
+        public Visitor Visitor { get; set; }
+        public MstMember Member { get; set; }
+        public Card Card { get; set; }
     }
 }

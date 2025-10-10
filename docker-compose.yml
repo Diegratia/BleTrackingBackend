@@ -3,8 +3,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/Auth/Dockerfile
+    image: dev1pci2025/bletrackingbackend-auth:latest
     ports:
-      - "10001:10001"
+      - "5001:5001"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -13,15 +14,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/FloorplanDevice/Dockerfile
+    image: dev1pci2025/bletrackingbackend-floorplan-device:latest
     ports:
-      - "10003:10003"
-    # depends_on:
-    #   - mst-floorplan
-    #   - mst-accesscctv
-    #   - mst-blereader
-    #   - mst-accesscontrol
-    #   - floorplan-masked-area
-    #   - mst-application
+      - "5003:5003"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -30,11 +25,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/FloorplanMaskedArea/Dockerfile
+    image: dev1pci2025/bletrackingbackend-floorplan-masked-area:latest
     ports:
-      - "10004:10004"
-    # depends_on:
-    #   - mst-floor
-    #   - mst-floorplan
+      - "5004:5004"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -43,10 +36,10 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstFloor/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-floor:latest
     ports:
-      - "10013:10013"
+      - "5013:5013"
     volumes:
-      - ./Uploads/FloorImages:/app/Uploads/FloorImages
       - ./.env:/app/.env
     restart: always
 
@@ -54,11 +47,11 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstFloorplan/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-floorplan:latest
     ports:
-      - "10014:10014"
-    # depends_on:
-    #   - mst-floor
+      - "5014:5014"
     volumes:
+      - ./Uploads/FloorplanImages:/app/Uploads/FloorplanImages
       - ./.env:/app/.env
     restart: always
 
@@ -66,11 +59,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstIntegration/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-integration:latest
     ports:
-      - "10015:10015"
-    # depends_on:
-    #   - mst-brand
-    #   - mst-application
+      - "5015:5015"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -79,12 +70,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstAccessControl/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-accesscontrol:latest
     ports:
-      - "10006:10006"
-    # depends_on:
-    #   - mst-brand
-    #   - mst-integration
-    #   - mst-application
+      - "5006:5006"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -93,11 +81,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstAccessCctv/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-accesscctv:latest
     ports:
-      - "10005:10005"
-    # depends_on:
-    #   - mst-integration
-    #   - mst-application
+      - "5005:5005"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -106,10 +92,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstBleReader/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-blereader:latest
     ports:
-      - "10008:10008"
-    # depends_on:
-    #   - mst-brand
+      - "5008:5008"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -118,8 +103,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstBrand/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-brand:latest
     ports:
-      - "10009:10009"
+      - "5009:5009"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -128,8 +114,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstApplication/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-application:latest
     ports:
-      - "10007:10007"
+      - "5007:5007"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -138,10 +125,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/Visitor/Dockerfile
+    image: dev1pci2025/bletrackingbackend-visitor:latest
     ports:
-      - "10019:10019"
-    # depends_on:
-    #   - mst-application
+      - "5019:5019"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -150,13 +136,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/AlarmRecordTracking/Dockerfile
+    image: dev1pci2025/bletrackingbackend-alarm-record-tracking:latest
     ports:
-      - "10002:10002"
-    # depends_on:
-    #   - visitor
-    #   - mst-blereader
-    #   - floorplan-masked-area
-    #   - mst-application
+      - "5002:5002"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -165,11 +147,11 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstBuilding/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-building:latest
     ports:
-      - "10010:10010"
-    # depends_on:
-    #   - mst-application
+      - "5010:5010"
     volumes:
+      - ./Uploads/BuildingImages:/app/Uploads/BuildingImages
       - ./.env:/app/.env
     restart: always
 
@@ -177,10 +159,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstDepartment/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-department:latest
     ports:
-      - "10011:10011"
-    # depends_on:
-    #   - mst-application
+      - "5011:5011"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -189,10 +170,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstDistrict/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-district:latest
     ports:
-      - "10012:10012"
-    # depends_on:
-    #   - mst-application
+      - "5012:5012"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -201,13 +181,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstMember/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-member:latest
     ports:
-      - "10016:10016"
-    # depends_on:
-    #   - mst-application
-    #   - mst-organization
-    #   - mst-department
-    #   - mst-district
+      - "5016:5016"
     volumes:
       - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
       - ./.env:/app/.env
@@ -217,10 +193,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstOrganization/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-organization:latest
     ports:
-      - "10017:10017"
-    # depends_on:
-    #   - mst-application
+      - "5017:5017"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -229,11 +204,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/TrackingTransaction/Dockerfile
+    image: dev1pci2025/bletrackingbackend-tracking-transaction:latest
     ports:
-      - "10018:10018"
-    # depends_on:
-    #   - mst-blereader
-    #   - floorplan-masked-area
+      - "5018:5018"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -242,11 +215,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
+    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
     ports:
-      - "10020:10020"
-    # depends_on:
-    #   - floorplan-masked-area
-    #   - visitor
+      - "5020:5020"
     volumes:
       - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
@@ -256,11 +227,9 @@ services:
     build:
       context: .
       dockerfile: Services.API/BleReaderNode/Dockerfile
+    image: dev1pci2025/bletrackingbackend-ble-reader-node:latest
     ports:
-      - "10021:10021"
-    # depends_on:
-    #   - mst-blereader
-    #   - mst-application
+      - "5021:5021"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -269,31 +238,20 @@ services:
     build:
       context: .
       dockerfile: Services.API/MstEngine/Dockerfile
+    image: dev1pci2025/bletrackingbackend-mst-engine:latest
     ports:
-      - "10022:10022"
-    # depends_on:
-    #   - mst-blereader
-    #   - mst-application
+      - "5022:5022"
     volumes:
       - ./.env:/app/.env
     restart: always
-
-  # visitor-card:
-  #   build:
-  #     context: .
-  #     dockerfile: Services.API/VisitorCard/Dockerfile
-  #   ports:
-  #     - "10023:10023"
-  #   volumes:
-  #     - ./.env:/app/.env
-  #   restart: always
 
   card-record:
     build:
       context: .
       dockerfile: Services.API/CardRecord/Dockerfile
+    image: dev1pci2025/bletrackingbackend-card-record:latest
     ports:
-      - "10024:10024"
+      - "5024:5024"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -302,48 +260,99 @@ services:
     build:
       context: .
       dockerfile: Services.API/TrxVisitor/Dockerfile
+    image: dev1pci2025/bletrackingbackend-trx-visitor:latest
     ports:
-      - "10025:10025"
+      - "5025:5025"
     volumes:
       - ./.env:/app/.env
     restart: always
+
   card:
     build:
       context: .
       dockerfile: Services.API/Card/Dockerfile
+    image: dev1pci2025/bletrackingbackend-card:latest
     ports:
-      - "10026:10026"
+      - "5026:5026"
     volumes:
       - ./.env:/app/.env
     restart: always
+
+  alarm-triggers:
+    build:
+      context: .
+      dockerfile: Services.API/AlarmTriggers/Dockerfile
+    image: dev1pci2025/bletrackingbackend-alarm-triggers:latest
+    ports:
+      - "5027:5027"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  card-access:
+    build:
+      context: .
+      dockerfile: Services.API/CardAccess/Dockerfile
+    image: dev1pci2025/bletrackingbackend-card-access:latest
+    ports:
+      - "5028:5028"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  monitoring-config:
+    build:
+      context: .
+      dockerfile: Services.API/MonitoringConfig/Dockerfile
+    image: dev1pci2025/bletrackingbackend-monitoring-config:latest
+    ports:
+      - "5029:5029"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  geofence:
+    build:
+      context: .
+      dockerfile: Services.API/Geofence/Dockerfile
+    image: dev1pci2025/bletrackingbackend-geofence:latest
+    ports:
+      - "5030:5030"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  # license-checker:
+  #   build:
+  #     context: .
+  #     dockerfile: Services.API/LicenseChecker/Dockerfile
+  #   volumes:
+  #     - ./license.txt:/app/license.txt
+  #   stdin_open: true # biar bisa input dari keyboard
+  #   tty: true
+  #   restart: "no"
 
   nginx:
     build:
       context: .
       dockerfile: Dockerfile.nginx
+    image: dev1pci2025/bletrackingbackend-nginx:latest
     ports:
-      - "10000:10000"
-    # depends_on:
-    #   - auth
-    #   - floorplan-device
-    #   - floorplan-masked-area
-    #   - mst-accesscctv
-    #   - mst-accesscontrol
-    #   - mst-application
-    #   - mst-brand
-    #   - mst-blereader
-    #   - mst-department
-    #   - mst-district
-    #   - mst-floor
-    #   - mst-floorplan
-    #   - mst-integration
-    #   - mst-member
-    #   - mst-organization
-    #   - tracking-transaction
-    #   - visitor
-    #   - visitor-blacklist-area
-    #   - alarm-record-tracking
-    #   - ble-reader-node
+      - "5000:5000"
     volumes:
       - ./.env:/app/.env
     restart: always
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    ports:
+      - "5433:1433"
+    environment:
+      SA_PASSWORD: "P@ssw0rd"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+volumes:
+  sqlserver_data:

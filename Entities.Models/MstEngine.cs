@@ -5,15 +5,14 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Entities.Models
 {
-    public class MstEngine : IApplicationEntity
+    [Index(nameof(EngineId), IsUnique = true)]
+    public class MstEngine : BaseModelOnlyIdWithTime,IApplicationEntity
     {
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
         [MaxLength(255)]
         [Column("name")]
         public string? Name { get; set; }
@@ -42,7 +41,7 @@ namespace Entities.Models
         [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-            
-        public virtual MstApplication Application { get; set; }
+
+        public MstApplication Application { get; set; }
     }
 }
