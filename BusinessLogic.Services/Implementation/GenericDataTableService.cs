@@ -155,66 +155,62 @@ namespace BusinessLogic.Services.Implementation
                             }
                         }
 
-                        else if (_enumColumns.ContainsKey(filter.Key))
-                        {
-                            var enumType = _enumColumns[filter.Key];
-                            var jsonKind = jsonElement.ValueKind;
+else if (_enumColumns.ContainsKey(filter.Key))
+{
+    var enumType = _enumColumns[filter.Key];
+    var jsonKind = jsonElement.ValueKind;
 
-                            if (jsonKind == JsonValueKind.Array)
-                            {
-                                // Dukung array berisi string atau int
-                                var enumValues = jsonElement.EnumerateArray()
-                                    .Select(e =>
-                                    {
-                                        if (e.ValueKind == JsonValueKind.String)
-                                        {
-                                            if (Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
-                                                return enumObj.ToString().ToLower();
-                                        }
-                                        else if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
-                                        {
-                                            if (Enum.IsDefined(enumType, intVal))
-                                                return Enum.ToObject(enumType, intVal).ToString().ToLower();
-                                        }
-                                        return null;
-                                    })
-                                    .Where(v => v != null)
-                                    .ToArray();
+    if (jsonKind == JsonValueKind.Array)
+    {
+        // Dukung array berisi string atau int
+        var enumValues = jsonElement.EnumerateArray()
+            .Select(e =>
+            {
+                if (e.ValueKind == JsonValueKind.String)
+                {
+                    if (Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
+                        return enumObj.ToString().ToLower();
+                }
+                else if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
+                {
+                    if (Enum.IsDefined(enumType, intVal))
+                        return Enum.ToObject(enumType, intVal).ToString().ToLower();
+                }
+                return null;
+            })
+            .Where(v => v != null)
+            .ToArray();
 
-                                if (enumValues.Any())
-                                {
-                                    query = query.Where($"@0.Contains(({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\"))", enumValues);
-
-                                }
-                            }
-                            else if (jsonKind == JsonValueKind.String)
-                            {
-                                var stringValue = jsonElement.GetString();
-                                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
-                                {
-                                    // Karena HasConversion menyimpan sebagai lowercase string
-                                    var dbValue = enumValue.ToString().ToLower();
-                                    query = query.Where($"({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\") == @0", dbValue);
-
-                                }
-                                else
-                                {
-                                    throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
-                                }
-                            }
-                            else if (jsonKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
-                            {
-                                // fallback jika user kirim int
-                                var enumValue = Enum.ToObject(enumType, intEnumVal);
-                                var dbValue = enumValue.ToString().ToLower();
-                                query = query.Where($"({filter.Key} != null ? {filter.Key}.ToString().ToLower() : \"\") == @0", dbValue);
-
-                            }
-                            else
-                            {
-                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonKind}");
-                            }
-                        }
+        if (enumValues.Any())
+        {
+            query = query.Where($"@0.Contains((Convert.ToString({filter.Key}) ?? \"\").ToLower())", enumValues);
+        }
+    }
+    else if (jsonKind == JsonValueKind.String)
+    {
+        var stringValue = jsonElement.GetString();
+        if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+        {
+            var dbValue = enumValue.ToString().ToLower();
+            query = query.Where($"(Convert.ToString({filter.Key}) ?? \"\").ToLower() == @0", dbValue);
+        }
+        else
+        {
+            throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
+        }
+    }
+    else if (jsonKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
+    {
+        // fallback jika user kirim int
+        var enumValue = Enum.ToObject(enumType, intEnumVal);
+        var dbValue = enumValue.ToString().ToLower();
+        query = query.Where($"(Convert.ToString({filter.Key}) ?? \"\").ToLower() == @0", dbValue);
+    }
+    else
+    {
+        throw new ArgumentException($"Unsupported JsonElement type for enum column '{filter.Key}': {jsonKind}");
+    }
+}
 
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
