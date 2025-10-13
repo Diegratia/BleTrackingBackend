@@ -39,6 +39,12 @@ namespace Entities.Models
         [Column("is_used")]
         public bool? IsUsed { get; set; }
 
+        [Column("is_block")]
+        public bool? IsBlock { get; set; }
+
+        [Column("block_at")]
+        public DateTime? BlockAt { get; set; }
+
         [Column("last_used_by")]
         public string? LastUsed { get; set; }
 

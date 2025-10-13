@@ -8,15 +8,17 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class VisitorBlacklistArea : BaseModelWithTime, IApplicationEntity
+    public class BlacklistArea : BaseModelWithTime, IApplicationEntity
     {
         [Required]
         [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        [Required]
         [Column("visitor_id")]
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+
+        [Column("member_id")]
+        public Guid? MemberId { get; set; }
 
         [Required]
         [Column("application_id")]
@@ -25,9 +27,9 @@ namespace Entities.Models
         [Required]
         [Column("status")]
         public int Status { get; set; }
-
         public FloorplanMaskedArea FloorplanMaskedArea { get; set; }
         public MstApplication Application { get; set;}
         public Visitor Visitor { get; set; }
+        public MstMember Member { get; set; }
     }
 }

@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
 
            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            var entity = _mapper.Map<VisitorBlacklistArea>(dto);
+            var entity = _mapper.Map<BlacklistArea>(dto);
             entity.Id = Guid.NewGuid();
             entity.Status = 1;
             entity.UpdatedBy = username;
@@ -54,10 +54,10 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            var entities = new List<VisitorBlacklistArea>();
-            foreach (var area in request.VisitorBlacklistAreas)
+            var entities = new List<BlacklistArea>();
+            foreach (var area in request.BlacklistAreas)
             {
-                var entity = _mapper.Map<VisitorBlacklistArea>(area);
+                var entity = _mapper.Map<BlacklistArea>(area);
                 entity.Id = Guid.NewGuid();
                 entity.Status = 1;
                 entity.UpdatedBy = username;
@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
             var result = new List<VisitorBlacklistAreaDto>();
             foreach (var dto in dtos)
             {
-                var blacklistArea = _mapper.Map<VisitorBlacklistArea>(dto);
+                var blacklistArea = _mapper.Map<BlacklistArea>(dto);
                 blacklistArea.Id = Guid.NewGuid();
                 blacklistArea.CreatedBy = username;
                 blacklistArea.UpdatedBy = username;
@@ -117,7 +117,7 @@ namespace BusinessLogic.Services.Implementation
 
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
-                throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+                throw new KeyNotFoundException($"BlacklistArea with ID {id} not found.");
 
             entity.UpdatedBy = username;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -130,7 +130,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
-                throw new KeyNotFoundException($"VisitorBlacklistArea with ID {id} not found.");
+                throw new KeyNotFoundException($"BlacklistArea with ID {id} not found.");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             entity.UpdatedBy = username;
@@ -146,7 +146,7 @@ namespace BusinessLogic.Services.Implementation
             var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
             var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
 
-            var filterService = new GenericDataTableService<VisitorBlacklistArea, VisitorBlacklistAreaDto>(
+            var filterService = new GenericDataTableService<BlacklistArea, VisitorBlacklistAreaDto>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -162,7 +162,7 @@ namespace BusinessLogic.Services.Implementation
         //     var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
         //     var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
 
-        //     var filterService = new GenericDataTableService<VisitorBlacklistArea, VisitorBlacklistAreaDtoMinimal>(
+        //     var filterService = new GenericDataTableService<BlacklistArea, VisitorBlacklistAreaDtoMinimal>(
         //         query,
         //         _mapper,
         //         searchableColumns,

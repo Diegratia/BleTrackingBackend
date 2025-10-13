@@ -21,7 +21,7 @@ namespace Web.API.Controllers.Controllers
             _visitorBlacklistAreaService = visitorBlacklistAreaService;
         }
 
-        // POST: api/VisitorBlacklistArea
+        // POST: api/BlacklistArea
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] VisitorBlacklistAreaCreateDto dto)
         {
@@ -154,7 +154,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // GET: api/VisitorBlacklistArea/{id}
+        // GET: api/BlacklistArea/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -191,7 +191,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // GET: api/VisitorBlacklistArea
+        // GET: api/BlacklistArea
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -218,7 +218,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // PUT: api/VisitorBlacklistArea/{id}
+        // PUT: api/BlacklistArea/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] VisitorBlacklistAreaUpdateDto dto)
         {
@@ -277,7 +277,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/VisitorBlacklistArea/{id}
+        // DELETE: api/BlacklistArea/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -439,7 +439,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // PUT: api/VisitorBlacklistArea/{id}
+        // PUT: api/BlacklistArea/{id}
         [HttpPut("open/{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] VisitorBlacklistAreaUpdateDto dto)
@@ -499,7 +499,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/VisitorBlacklistArea/{id}
+        // DELETE: api/BlacklistArea/{id}
         [HttpDelete("open/{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenDelete(Guid id)
@@ -636,7 +636,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // GET: api/VisitorBlacklistArea/{id}
+        // GET: api/BlacklistArea/{id}
         [HttpGet("open/{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetById(Guid id)

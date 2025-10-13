@@ -200,8 +200,18 @@ namespace BusinessLogic.Services.Implementation
                 return _mapper.Map<CardMinimalsDto>(result);  
         }
 
+        public async Task BlockCardAsync(Guid id, CardBlockDto dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var Card = await _repository.GetByIdAsync(id);
+            Card.IsBlock = dto.IsBlock;
+            Card.UpdatedBy = username;
+            Card.BlockAt = DateTime.UtcNow;
+            Card.UpdatedAt = DateTime.UtcNow;
+            await _repository.UpdateAsync(Card);
+        }
         
-         public async Task UpdatesAsync(Guid id, CardEditDto dto)
+        public async Task UpdatesAsync(Guid id, CardEditDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -242,21 +252,21 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardCardAccesses.Remove(remove);
             }
 
-                // // Tambah yang baru
-                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-                foreach (var addId in toAdd)
-                {
-                    var access = await _cardAccessRepository.GetByIdAsync(addId);
-                    if (access == null)
-                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+            // // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
 
-                    entity.CardCardAccesses.Add(new CardCardAccess
-                    {
-                        CardId = entity.Id,
-                        CardAccessId = addId,
-                        ApplicationId = entity.ApplicationId
-                    });
-                }
+                entity.CardCardAccesses.Add(new CardCardAccess
+                {
+                    CardId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
 
             await _repository.UpdateAsync(entity);
         }

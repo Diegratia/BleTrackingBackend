@@ -18,16 +18,16 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<List<VisitorBlacklistArea>> GetAllAsync()
+        public async Task<List<BlacklistArea>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();
         }
 
-        public async Task<VisitorBlacklistArea?> GetByIdAsync(Guid id)
+        public async Task<BlacklistArea?> GetByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.VisitorBlacklistAreas
+            var query = _context.BlacklistAreas
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Visitor)
                 .Where(v => v.Id == id && v.Status != 0);
@@ -35,11 +35,11 @@ namespace Repositories.Repository
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
-        public IQueryable<VisitorBlacklistArea> GetAllQueryable()
+        public IQueryable<BlacklistArea> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.VisitorBlacklistAreas
+            var query = _context.BlacklistAreas
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Visitor)
                 .Where(v => v.Status != 0);
@@ -51,7 +51,7 @@ namespace Repositories.Repository
         // {
         //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        //     var query = _context.VisitorBlacklistAreas
+        //     var query = _context.BlacklistAreas
         //         .Include(v => v.FloorplanMaskedArea)
         //         .Include(v => v.Visitor)
         //         .AsQueryable();
@@ -74,7 +74,7 @@ namespace Repositories.Repository
         //     });
         // }
 
-        public async Task AddRangeAsync(IEnumerable<VisitorBlacklistArea> entities)
+        public async Task AddRangeAsync(IEnumerable<BlacklistArea> entities)
         {
              var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -98,11 +98,11 @@ namespace Repositories.Repository
                 await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
             }
 
-            await _context.VisitorBlacklistAreas.AddRangeAsync(entities);
+            await _context.BlacklistAreas.AddRangeAsync(entities);
             await _context.SaveChangesAsync();
         }
 
-        public async Task AddAsync(VisitorBlacklistArea entity)
+        public async Task AddAsync(BlacklistArea entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -122,11 +122,11 @@ namespace Repositories.Repository
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
             await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
 
-            await _context.VisitorBlacklistAreas.AddAsync(entity);
+            await _context.BlacklistAreas.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(VisitorBlacklistArea entity)
+        public async Task UpdateAsync(BlacklistArea entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -134,22 +134,22 @@ namespace Repositories.Repository
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
             await ValidateRelatedEntitiesAsync(entity, applicationId, isSystemAdmin);
 
-            // _context.VisitorBlacklistAreas.Update(entity);
+            // _context.BlacklistAreas.Update(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(VisitorBlacklistArea entity)
+        public async Task DeleteAsync(BlacklistArea entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             if (!isSystemAdmin && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("You don’t have permission to delete this entity.");
 
-            _context.VisitorBlacklistAreas.Remove(entity);
+            _context.BlacklistAreas.Remove(entity);
             await _context.SaveChangesAsync();
         }
 
-        private async Task ValidateRelatedEntitiesAsync(VisitorBlacklistArea entity, Guid? applicationId, bool isSystemAdmin)
+        private async Task ValidateRelatedEntitiesAsync(BlacklistArea entity, Guid? applicationId, bool isSystemAdmin)
         {
             if (isSystemAdmin) return;
 

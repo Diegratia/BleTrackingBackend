@@ -55,6 +55,6 @@ namespace Data.ViewModels
     public class VisitorBlacklistAreaRequestDto : BaseModelDto
     {
         public Guid VisitorId { get; set; }
-        public List<VisitorBlacklistAreaCreateDto> VisitorBlacklistAreas { get; set; }
+        public List<VisitorBlacklistAreaCreateDto> BlacklistAreas { get; set; }
     }
 }

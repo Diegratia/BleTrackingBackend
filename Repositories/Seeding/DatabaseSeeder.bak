@@ -785,7 +785,7 @@ namespace Repositories.Seeding
             }
 
             // 17. VisitorBlacklistArea
-            if (!context.VisitorBlacklistAreas.Any())
+            if (!context.BlacklistAreas.Any())
             {
                 var blacklistFaker = new Faker<VisitorBlacklistArea>()
                     .RuleFor(v => v.Id, f => Guid.NewGuid())
@@ -806,7 +806,7 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.Status, f => 1);
 
                 var blacklists = blacklistFaker.Generate(2);
-                context.VisitorBlacklistAreas.AddRange(blacklists);
+                context.BlacklistAreas.AddRange(blacklists);
                 context.SaveChanges();
             }
 

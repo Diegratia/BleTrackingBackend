@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -43,7 +44,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 // builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -141,6 +142,7 @@ builder.Services.AddAutoMapper(typeof(TrxVisitorProfile));
 
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
+builder.Services.AddScoped<IMqttClientService, MqttClientService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 

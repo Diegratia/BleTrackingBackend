@@ -874,10 +874,10 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 17. VisitorBlacklistArea
-            if (!context.VisitorBlacklistAreas.Any())
+            // 17. BlacklistArea
+            if (!context.BlacklistAreas.Any())
             {
-                var blacklistFaker = new Faker<VisitorBlacklistArea>()
+                var blacklistFaker = new Faker<BlacklistArea>()
                     .RuleFor(v => v.Id, f => Guid.NewGuid())
                     .RuleFor(v => v.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
                         .Where(a => a.Status != 0)
@@ -896,7 +896,7 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.Status, f => 1);
 
                 var blacklists = blacklistFaker.Generate(2);
-                context.VisitorBlacklistAreas.AddRange(blacklists);
+                context.BlacklistAreas.AddRange(blacklists);
                 context.SaveChanges();
             }
 

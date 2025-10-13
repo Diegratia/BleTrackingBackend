@@ -94,6 +94,7 @@ namespace Entities.Models
         public MstDepartment Department { get; set; }
         public MstDistrict District { get; set; }
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<BlacklistArea> BlacklistAreas { get; set; } = new List<BlacklistArea>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
     }
 }

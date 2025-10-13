@@ -202,7 +202,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // PUT: api/VisitorBlacklistArea/{id}
+        // PUT: api/BlacklistArea/{id}
         [HttpPut("{id}")]
         [Authorize("RequireAll")]
         public async Task<IActionResult> Update(Guid id, [FromForm] TrxVisitorUpdateDto trxVisitorDto)
@@ -262,7 +262,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/VisitorBlacklistArea/{id}
+        // DELETE: api/BlacklistArea/{id}
         // [HttpDelete("{id}")]
         // public async Task<IActionResult> Delete(Guid id)
         // {

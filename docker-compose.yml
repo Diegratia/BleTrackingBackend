@@ -214,7 +214,7 @@ services:
   visitor-blacklist-area:
     build:
       context: .
-      dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
+      dockerfile: Services.API/BlacklistArea/Dockerfile
     image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
     ports:
       - "5020:5020"

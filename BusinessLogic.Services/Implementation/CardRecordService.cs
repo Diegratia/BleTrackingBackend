@@ -126,6 +126,7 @@ namespace BusinessLogic.Services.Implementation
             card.CheckinAt = null;
             card.IsUsed = false;
             card.VisitorId = null;
+            card.IsBlock = false;
             card.LastUsed = visitor.Name;
 
             visitor.BleCardNumber = null;

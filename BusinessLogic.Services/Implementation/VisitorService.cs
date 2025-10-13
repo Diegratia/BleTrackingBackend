@@ -1656,6 +1656,7 @@ public class VisitorService : IVisitorService
                     newTrx.IsMember = 0;
 
                     await _trxVisitorRepository.AddAsync(newTrx);
+                    // await _mqttClientService.PublishAsync("tracking/trxVisitor/checkin", createDto.ToString(), false, 1);
                     await transaction.CommitAsync();
 
                     // Send email after commit

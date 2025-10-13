@@ -13,11 +13,11 @@ namespace BusinessLogic.Services.Extension
 
         public VisitorBlacklistAreaProfile()
         {
-            CreateMap<VisitorBlacklistAreaCreateDto, VisitorBlacklistArea>();
-            CreateMap<VisitorBlacklistAreaUpdateDto, VisitorBlacklistArea>();
-            CreateMap<VisitorBlacklistArea, VisitorBlacklistAreaDto>();
-            CreateMap<VisitorBlacklistArea, OpenVisitorBlacklistAreaDto>();
-            CreateMap<VisitorBlacklistAreaDto, VisitorBlacklistArea>();
+            CreateMap<VisitorBlacklistAreaCreateDto, BlacklistArea>();
+            CreateMap<VisitorBlacklistAreaUpdateDto, BlacklistArea>();
+            CreateMap<BlacklistArea, VisitorBlacklistAreaDto>();
+            CreateMap<BlacklistArea, OpenVisitorBlacklistAreaDto>();
+            CreateMap<VisitorBlacklistAreaDto, BlacklistArea>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
             CreateMap<Visitor, VisitorDto>();
         }
