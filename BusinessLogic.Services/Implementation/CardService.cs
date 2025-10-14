@@ -30,12 +30,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly CardRepository _repository;
         private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
+        private readonly MstMemberRepository _mstMemberRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, MstMemberRepository mstMemberRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _cardAccessRepository = cardAccessRepository;
+            _mstMemberRepository = mstMemberRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -373,6 +375,27 @@ namespace BusinessLogic.Services.Implementation
             card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
 
             _mapper.Map(updateDto, card);
+            await _repository.UpdateAsync(card);
+        }
+
+        public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
+        {
+            var username =  _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
+            var card = await _repository.GetByIdAsync(id);
+            var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId.Value);
+            if (card == null)
+                throw new KeyNotFoundException("Card not found");
+
+            if (member == null)
+                throw new KeyNotFoundException("Member not found");
+
+            card.UpdatedAt = DateTime.UtcNow;
+            card.IsUsed = true;
+            card.LastUsed = member.Name;
+            card.UpdatedBy = username;
+            member.CardNumber = card.CardNumber;
+            member.BleCardNumber = card.Dmac;
+            _mapper.Map(dto, card);
             await _repository.UpdateAsync(card);
         }
 

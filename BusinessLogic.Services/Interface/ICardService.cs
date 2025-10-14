@@ -11,6 +11,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<CardMinimalsDto> GetByIdAsyncV2(Guid id);
         Task<CardDto> GetByIdAsync(Guid id);
+        Task AssignToMemberAsync(Guid id, CardAssignDto dto);
         Task<IEnumerable<CardDto>> GetAllAsync();
         Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2();
         Task<IEnumerable<OpenCardDto>> OpenGetAllAsync();

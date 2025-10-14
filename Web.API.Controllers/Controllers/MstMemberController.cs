@@ -150,7 +150,7 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = "Member updated successfully",
+                    msg = "Member Block successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });
