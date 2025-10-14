@@ -171,7 +171,33 @@ var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
 
-var app = builder.Build();
+    var app = builder.Build();
+
+        app.MapGet("/hc", async (IServiceProvider sp) =>
+    {
+        var db = sp.GetRequiredService<BleTrackingDbContext>();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+            return Results.Ok(new
+            {
+                code = 200,
+                msg = "Healthy",
+                details = new
+                {
+                    database = "Connected"
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Health check failed");
+            return Results.Problem("Database unreachable", statusCode: 500);
+        }
+    })
+    .AllowAnonymous();
 
 using (var scope = app.Services.CreateScope())
 {

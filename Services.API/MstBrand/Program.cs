@@ -190,15 +190,8 @@ try
     var host = env == "Production" ? "0.0.0.0" : "localhost";
     builder.WebHost.UseUrls($"http://{host}:{port}");
 
-    var app = builder.Build();
+        var app = builder.Build();
 
-// app.MapGet("/hc", () => Results.Ok(new
-// {
-//     code = 200,
-//     msg = "Health Check",
-// }))
-// .AllowAnonymous();
-    
         app.MapGet("/hc", async (IServiceProvider sp) =>
     {
         var db = sp.GetRequiredService<BleTrackingDbContext>();
@@ -224,6 +217,14 @@ try
         }
     })
     .AllowAnonymous();
+
+    // app.MapGet("/hc", () => Results.Ok(new
+// {
+//     code = 200,
+//     msg = "Health Check",
+// }))
+// .AllowAnonymous();
+    
 
 
     using (var scope = app.Services.CreateScope())
