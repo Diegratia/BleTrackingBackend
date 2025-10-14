@@ -12,7 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
-using Helpers.Consumer.Mqtt;
+// using Helpers.Consumer.Mqtt;
 
 try
 {
