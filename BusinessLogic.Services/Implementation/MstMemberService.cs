@@ -260,10 +260,11 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var Member = await _repository.GetByIdAsync(id);
-            Member.IsBlock = dto.IsBlock.HasValue ? dto.IsBlock.Value : Member.IsBlock;
+          
             Member.UpdatedBy = username;
             Member.BlockAt = DateTime.UtcNow;
             Member.UpdatedAt = DateTime.UtcNow;
+            _mapper.Map(dto, Member);
             await _repository.UpdateAsync(Member);
             return _mapper.Map<MstMemberDto>(Member);
         }
