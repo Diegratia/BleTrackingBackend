@@ -20,8 +20,8 @@ using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using  Data.ViewModels.Dto.Helpers.MinimalDto;
-using Data.ViewModels.Dto.Helpers.MinimalDto;
-using Helpers.Consumer.Mqtt;
+// using Data.ViewModels.Dto.Helpers.MinimalDto;
+// using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -43,7 +43,7 @@ namespace BusinessLogic.Services.Implementation
             CardRepository cardRepository,
             VisitorRepository visitorRepository,
             ICardRecordService cardRecordService,
-            IMqttClientService mqttClientService,
+            // IMqttClientService mqttClientService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
         {

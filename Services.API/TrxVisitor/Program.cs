@@ -12,7 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
-using Helpers.Consumer.Mqtt;
+// using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -142,7 +142,7 @@ builder.Services.AddAutoMapper(typeof(TrxVisitorProfile));
 
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
-builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+// builder.Services.AddScoped<IMqttClientService, MqttClientService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 
