@@ -131,7 +131,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
         [HttpPut("block/{id}")]
-        public async Task<IActionResult> BlockMember(Guid id, [FromForm] MemberBlockDto dto)
+        public async Task<IActionResult> BlockMember(Guid id, [FromBody] MemberBlockDto dto)
         {
             if (!ModelState.IsValid)
             {
