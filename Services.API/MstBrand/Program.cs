@@ -191,13 +191,40 @@ try
     builder.WebHost.UseUrls($"http://{host}:{port}");
 
     var app = builder.Build();
+
+// app.MapGet("/hc", () => Results.Ok(new
+// {
+//     code = 200,
+//     msg = "Health Check",
+// }))
+// .AllowAnonymous();
     
-    app.MapGet("/hc", () => Results.Ok(new
+        app.MapGet("/hc", async (IServiceProvider sp) =>
     {
-        code = 200,
-        msg = "Health Check",
-    }))
+        var db = sp.GetRequiredService<BleTrackingDbContext>();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+            return Results.Ok(new
+            {
+                code = 200,
+                msg = "Healthy",
+                details = new
+                {
+                    database = "Connected"
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Health check failed");
+            return Results.Problem("Database unreachable", statusCode: 500);
+        }
+    })
     .AllowAnonymous();
+
 
     using (var scope = app.Services.CreateScope())
 {
