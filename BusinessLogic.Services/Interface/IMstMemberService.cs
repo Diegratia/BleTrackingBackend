@@ -11,6 +11,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<IEnumerable<MstMemberDto>> GetAllMembersAsync();
         Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync();
+        Task<MstMemberDto> BlockCardAsync(Guid id, MemberBlockDto dto);
         Task<MstMemberDto> GetMemberByIdAsync(Guid id);
         Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto);
         Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);

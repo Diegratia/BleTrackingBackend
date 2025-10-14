@@ -158,6 +158,12 @@ namespace Repositories.Repository
             if (!applicationId.HasValue)
                 throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
 
+            // var visitor = await _context.Visitors
+            //     .FirstOrDefaultAsync(v => v.Id == entity.VisitorId && v.ApplicationId == applicationId);
+
+            // if (visitor == null)
+            //     throw new UnauthorizedAccessException("Visitor not found or not accessible in your application.");
+
             var floorplanArea = await _context.FloorplanMaskedAreas
                 .FirstOrDefaultAsync(f => f.Id == entity.FloorplanMaskedAreaId && f.ApplicationId == applicationId);
 

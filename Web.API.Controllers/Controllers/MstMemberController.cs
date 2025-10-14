@@ -129,6 +129,45 @@ namespace Web.API.Controllers.Controllers
         }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        // POST: api/MstMember
+        [HttpPost]
+        public async Task<IActionResult> BlockMember(Guid id, [FromForm] MemberBlockDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            try
+            {
+                var blockMember = await _mstMemberService.BlockCardAsync(id, dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Member created successfully",
+                    collection = new { data = blockMember },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/MstMember/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto mstMemberDto)
