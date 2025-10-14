@@ -19,8 +19,6 @@ namespace Data.ViewModels
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime? BlockAt { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
         public Guid? CardGroupId { get; set; }
@@ -49,8 +47,6 @@ namespace Data.ViewModels
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime BlockAt { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
         public Guid? CardGroupId { get; set; }
@@ -73,8 +69,6 @@ namespace Data.ViewModels
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime BlockAt { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
         public Guid? CardGroupId { get; set; }
@@ -108,7 +102,6 @@ namespace Data.ViewModels
         public string? CardNumber { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
-        public bool? IsBlock { get; set; }
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
@@ -121,10 +114,10 @@ namespace Data.ViewModels
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
 
-        public class CardBlockDto : BaseModelDto
-    {
-        public bool? IsBlock { get; set; }
-    }
+    //     public class CardBlockDto : BaseModelDto
+    // {
+    //     public bool? IsBlock { get; set; }
+    // }
     
     public class OpenCardDto : BaseModelDto
     {
@@ -140,8 +133,6 @@ namespace Data.ViewModels
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime BlockAt { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
         public DateTime? CheckinAt { get; set; }
@@ -180,7 +171,6 @@ namespace Data.ViewModels
         public string? QRCode { get; set; }
         public string? Dmac { get; set; }
         public bool? IsMultiMaskedArea { get; set; }
-        public bool? IsBlock { get; set; }
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
         public string? LastUsed { get; set; }

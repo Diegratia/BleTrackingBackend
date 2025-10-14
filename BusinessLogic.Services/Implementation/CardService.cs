@@ -200,16 +200,27 @@ namespace BusinessLogic.Services.Implementation
                 return _mapper.Map<CardMinimalsDto>(result);  
         }
 
-        public async Task BlockCardAsync(Guid id, CardBlockDto dto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var Card = await _repository.GetByIdAsync(id);
-            Card.IsBlock = dto.IsBlock;
-            Card.UpdatedBy = username;
-            Card.BlockAt = DateTime.UtcNow;
-            Card.UpdatedAt = DateTime.UtcNow;
-            await _repository.UpdateAsync(Card);
-        }
+        // public async Task BlockCardAsync(Guid id, CardBlockDto dto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var Card = await _repository.GetByIdAsync(id);
+        //     if (Card.MemberId != null)
+        //     {
+        //         Card.IsBlock = dto.IsBlock;
+        //         Card.UpdatedBy = username;
+        //         Card.BlockAt = DateTime.UtcNow;
+        //         Card.UpdatedAt = DateTime.UtcNow;
+        //     }
+        //     else if (Card.VisitorId != null)
+        //     {
+        //         Card.IsBlock = dto.IsBlock;
+        //         Card.UpdatedBy = username;
+        //         Card.BlockAt = DateTime.UtcNow;
+        //         Card.UpdatedAt = DateTime.UtcNow;
+        //     }
+
+        //         await _repository.UpdateAsync(Card);
+        // }
         
         public async Task UpdatesAsync(Guid id, CardEditDto dto)
         {

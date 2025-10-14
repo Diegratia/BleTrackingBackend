@@ -79,6 +79,12 @@ namespace Entities.Models
         [Column("head_member2")]
         public string? HeadMember2 { get; set; }
 
+        [Column("is_block")]
+        public bool? IsBlock { get; set; }
+
+        [Column("block_at")]
+        public DateTime? BlockAt { get; set; }
+
         [Required]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
