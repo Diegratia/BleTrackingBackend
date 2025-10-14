@@ -380,7 +380,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
         {
-            var username =  _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var card = await _repository.GetByIdAsync(id);
             var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId.Value);
             if (card == null)
