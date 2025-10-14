@@ -144,15 +144,15 @@ namespace Web.API.Controllers.Controllers
                     code = 400
                 });
             }
-            try
+             try
             {
-                var blockMember = await _mstMemberService.BlockCardAsync(id, dto);
-                return StatusCode(201, new
+                await _mstMemberService.BlockCardAsync(id, dto);
+                return Ok(new
                 {
                     success = true,
-                    msg = "Member created successfully",
-                    collection = new { data = blockMember },
-                    code = 201
+                    msg = "Member updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
                 });
             }
             catch (Exception ex)

@@ -82,7 +82,7 @@ namespace Data.ViewModels
         // public MstDistrictDto? District { get; set; }
     }
 
-    public class MemberBlockDto : BaseModelDto
+    public class MemberBlockDto
     {
         public bool? IsBlock { get; set; }
     }

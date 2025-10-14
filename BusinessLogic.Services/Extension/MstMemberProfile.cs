@@ -42,8 +42,9 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<MstMemberDto, MstMember>();
             CreateMap<MemberBlockDto, MstMember>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.Generate, opt => opt.Ignore());
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Generate, opt => opt.Ignore());
+
             CreateMap<MstOrganization, MstOrganizationDto>();
             CreateMap<MstDistrict, MstDistrictDto>();
             CreateMap<MstDepartment, MstDepartmentDto>();
