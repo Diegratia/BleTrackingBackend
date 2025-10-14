@@ -11,10 +11,12 @@ namespace Data.ViewModels
 
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
 
         public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
         public VisitorDto Visitor { get; set; }
+        public MstMemberDto Member { get; set; }
 
     }
 
@@ -27,7 +29,9 @@ namespace Data.ViewModels
 
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+
 
         // public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
         // public VisitorDto Visitor { get; set; }
@@ -39,7 +43,8 @@ namespace Data.ViewModels
 
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
 
     }
 
@@ -48,13 +53,16 @@ namespace Data.ViewModels
 
         public Guid FloorplanMaskedAreaId { get; set; }
 
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
 
     }
-    
+
     public class BlacklistAreaRequestDto : BaseModelDto
     {
-        public Guid VisitorId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
         public List<BlacklistAreaCreateDto> BlacklistAreas { get; set; }
     }
+    
 }

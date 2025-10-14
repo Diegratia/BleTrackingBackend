@@ -64,13 +64,38 @@ namespace BusinessLogic.Services.Implementation
                 entity.UpdatedAt = DateTime.UtcNow;
                 entity.CreatedBy = username;
                 entity.CreatedAt = DateTime.UtcNow;
-                entity.VisitorId = request.VisitorId;
+                entity.VisitorId = request.VisitorId.HasValue ? request.VisitorId.Value : null;
+                entity.MemberId = request.MemberId.HasValue ? request.MemberId.Value : null;
                 entities.Add(entity);
             }
 
             await _repository.AddRangeAsync(entities);
             return _mapper.Map<IEnumerable<BlacklistAreaDto>>(entities);
         }
+
+        //  public async Task<IEnumerable<BlacklistAreaDto>> CreatesMemberBlacklistAreaAsync(MemberBlacklistAreaRequestDto request)
+        // {
+        //     if (request == null) throw new ArgumentNullException(nameof(request));
+
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     var entities = new List<BlacklistArea>();
+        //     foreach (var area in request.BlacklistAreas)
+        //     {
+        //         var entity = _mapper.Map<BlacklistArea>(area);
+        //         entity.Id = Guid.NewGuid();
+        //         entity.Status = 1;
+        //         entity.UpdatedBy = username;
+        //         entity.UpdatedAt = DateTime.UtcNow;
+        //         entity.CreatedBy = username;
+        //         entity.CreatedAt = DateTime.UtcNow;
+        //         entity.MemberId = request.MemberId;
+        //         entities.Add(entity);
+        //     }
+
+        //     await _repository.AddRangeAsync(entities);
+        //     return _mapper.Map<IEnumerable<BlacklistAreaDto>>(entities);
+        // }
 
 
         public async Task<List<BlacklistAreaDto>> CreateBatchBlacklistAreaAsync(List<BlacklistAreaCreateDto> dtos)
