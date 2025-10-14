@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Data.ViewModels
 {
-    public class VisitorBlacklistAreaDto : BaseModelDto
+    public class BlacklistAreaDto : BaseModelDto
     {
         public long Generate { get; set; }
 
@@ -18,7 +18,7 @@ namespace Data.ViewModels
 
     }
 
-    public class OpenVisitorBlacklistAreaDto : BaseModelDto
+    public class OpenBlacklistAreaDto : BaseModelDto
     {
         public long Generate { get; set; }
 
@@ -34,7 +34,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaCreateDto : BaseModelDto
+    public class BlacklistAreaCreateDto : BaseModelDto
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }
@@ -43,7 +43,7 @@ namespace Data.ViewModels
 
     }
 
-    public class VisitorBlacklistAreaUpdateDto
+    public class BlacklistAreaUpdateDto
     {
 
         public Guid FloorplanMaskedAreaId { get; set; }
@@ -52,9 +52,9 @@ namespace Data.ViewModels
 
     }
     
-    public class VisitorBlacklistAreaRequestDto : BaseModelDto
+    public class BlacklistAreaRequestDto : BaseModelDto
     {
         public Guid VisitorId { get; set; }
-        public List<VisitorBlacklistAreaCreateDto> BlacklistAreas { get; set; }
+        public List<BlacklistAreaCreateDto> BlacklistAreas { get; set; }
     }
 }

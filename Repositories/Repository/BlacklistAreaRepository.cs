@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
-    public class VisitorBlacklistAreaRepository : BaseRepository
+    public class BlacklistAreaRepository : BaseRepository
     {
-        public VisitorBlacklistAreaRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public BlacklistAreaRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
@@ -47,7 +47,7 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        //  public IQueryable<VisitorBlacklistAreaDtoMinimal> GetAllQueryableMinimal()
+        //  public IQueryable<BlacklistAreaDtoMinimal> GetAllQueryableMinimal()
         // {
         //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -58,7 +58,7 @@ namespace Repositories.Repository
 
         //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-        //     return query.Select(v => new VisitorBlacklistAreaDtoMinimal
+        //     return query.Select(v => new BlacklistAreaDtoMinimal
         //     {
         //         Id = v.Id,
         //         FloorplanMaskedArea = v.FloorplanMaskedArea == null ? null : new FloorplanMaskedAreaDtoMinimal

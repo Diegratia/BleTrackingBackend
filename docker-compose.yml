@@ -211,11 +211,11 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-blacklist-area:
+  blacklist-area:
     build:
       context: .
       dockerfile: Services.API/BlacklistArea/Dockerfile
-    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
+    image: dev1pci2025/bletrackingbackend-blacklist-area:latest
     ports:
       - "5020:5020"
     volumes:

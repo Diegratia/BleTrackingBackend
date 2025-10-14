@@ -8,7 +8,7 @@ using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace Helpers.Consumer.DtoHelpers.MinimalDto
 {
-    public class VisitorBlacklistAreaDtoMinimal : BaseModelDto
+    public class BlacklistAreaDtoMinimal : BaseModelDto
     {
            public Guid Id { get; set; }
 

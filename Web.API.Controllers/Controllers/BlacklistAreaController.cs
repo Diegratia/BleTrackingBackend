@@ -12,18 +12,18 @@ namespace Web.API.Controllers.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-    public class VisitorBlacklistAreaController : ControllerBase
+    public class BlacklistAreaController : ControllerBase
     {
-        private readonly IVisitorBlacklistAreaService _visitorBlacklistAreaService;
+        private readonly IBlacklistAreaService _BlacklistAreaService;
 
-        public VisitorBlacklistAreaController(IVisitorBlacklistAreaService visitorBlacklistAreaService)
+        public BlacklistAreaController(IBlacklistAreaService BlacklistAreaService)
         {
-            _visitorBlacklistAreaService = visitorBlacklistAreaService;
+            _BlacklistAreaService = BlacklistAreaService;
         }
 
         // POST: api/BlacklistArea
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] VisitorBlacklistAreaCreateDto dto)
+        public async Task<IActionResult> Create([FromBody] BlacklistAreaCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -39,7 +39,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdBlacklistArea = await _visitorBlacklistAreaService.CreateVisitorBlacklistAreaAsync(dto);
+                var createdBlacklistArea = await _BlacklistAreaService.CreateBlacklistAreaAsync(dto);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -70,7 +70,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
         [HttpPost("collection")]
-        public async Task<IActionResult> CreateCollection([FromBody] VisitorBlacklistAreaRequestDto request)
+        public async Task<IActionResult> CreateCollection([FromBody] BlacklistAreaRequestDto request)
         {
             if (!ModelState.IsValid)
             {
@@ -86,7 +86,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdBlacklistArea = await _visitorBlacklistAreaService.CreatesVisitorBlacklistAreaAsync(request);
+                var createdBlacklistArea = await _BlacklistAreaService.CreatesBlacklistAreaAsync(request);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -118,7 +118,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("batch")]
-        public async Task<IActionResult> Create([FromBody] List<VisitorBlacklistAreaCreateDto> dto)
+        public async Task<IActionResult> Create([FromBody] List<BlacklistAreaCreateDto> dto)
         {
             if (!ModelState.IsValid)
             {
@@ -133,7 +133,7 @@ namespace Web.API.Controllers.Controllers
             }
             try
             {
-                var createdBlacklist = await _visitorBlacklistAreaService.CreateBatchVisitorBlacklistAreaAsync(dto);
+                var createdBlacklist = await _BlacklistAreaService.CreateBatchBlacklistAreaAsync(dto);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -160,7 +160,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var blacklistArea = await _visitorBlacklistAreaService.GetVisitorBlacklistAreaByIdAsync(id);
+                var blacklistArea = await _BlacklistAreaService.GetBlacklistAreaByIdAsync(id);
                 if (blacklistArea == null)
                 {
                     return NotFound(new
@@ -197,7 +197,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var blacklistAreas = await _visitorBlacklistAreaService.GetAllVisitorBlacklistAreasAsync();
+                var blacklistAreas = await _BlacklistAreaService.GetAllBlacklistAreasAsync();
                 return Ok(new
                 {
                     success = true,
@@ -220,7 +220,7 @@ namespace Web.API.Controllers.Controllers
 
         // PUT: api/BlacklistArea/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] VisitorBlacklistAreaUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] BlacklistAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -236,7 +236,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _visitorBlacklistAreaService.UpdateVisitorBlacklistAreaAsync(id, dto);
+                await _BlacklistAreaService.UpdateBlacklistAreaAsync(id, dto);
                 return Ok(new
                 {
                     success = true,
@@ -283,7 +283,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _visitorBlacklistAreaService.DeleteVisitorBlacklistAreaAsync(id);
+                await _BlacklistAreaService.DeleteBlacklistAreaAsync(id);
                 return Ok(new
                 {
                     success = true,
@@ -331,7 +331,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _visitorBlacklistAreaService.FilterAsync(request);
+                var result = await _BlacklistAreaService.FilterAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -379,7 +379,7 @@ namespace Web.API.Controllers.Controllers
 
         //     try
         //     {
-        //         var result = await _visitorBlacklistAreaService.MinimalFilterAsync(request);
+        //         var result = await _BlacklistAreaService.MinimalFilterAsync(request);
         //         return Ok(new
         //         {
         //             success = true,
@@ -418,7 +418,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var blacklistAreas = await _visitorBlacklistAreaService.OpenGetAllVisitorBlacklistAreasAsync();
+                var blacklistAreas = await _BlacklistAreaService.OpenGetAllBlacklistAreasAsync();
                 return Ok(new
                 {
                     success = true,
@@ -442,7 +442,7 @@ namespace Web.API.Controllers.Controllers
         // PUT: api/BlacklistArea/{id}
         [HttpPut("open/{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] VisitorBlacklistAreaUpdateDto dto)
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] BlacklistAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -458,7 +458,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _visitorBlacklistAreaService.UpdateVisitorBlacklistAreaAsync(id, dto);
+                await _BlacklistAreaService.UpdateBlacklistAreaAsync(id, dto);
                 return Ok(new
                 {
                     success = true,
@@ -506,7 +506,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                await _visitorBlacklistAreaService.DeleteVisitorBlacklistAreaAsync(id);
+                await _BlacklistAreaService.DeleteBlacklistAreaAsync(id);
                 return Ok(new
                 {
                     success = true,
@@ -555,7 +555,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _visitorBlacklistAreaService.FilterAsync(request);
+                var result = await _BlacklistAreaService.FilterAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -589,7 +589,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpPost("open")]
         [AllowAnonymous]
-        public async Task<IActionResult> OpenCreate([FromBody] VisitorBlacklistAreaCreateDto dto)
+        public async Task<IActionResult> OpenCreate([FromBody] BlacklistAreaCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -605,7 +605,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var createdBlacklistArea = await _visitorBlacklistAreaService.CreateVisitorBlacklistAreaAsync(dto);
+                var createdBlacklistArea = await _BlacklistAreaService.CreateBlacklistAreaAsync(dto);
                 return StatusCode(201, new
                 {
                     success = true,
@@ -643,7 +643,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var blacklistArea = await _visitorBlacklistAreaService.GetVisitorBlacklistAreaByIdAsync(id);
+                var blacklistArea = await _BlacklistAreaService.GetBlacklistAreaByIdAsync(id);
                 if (blacklistArea == null)
                 {
                     return NotFound(new

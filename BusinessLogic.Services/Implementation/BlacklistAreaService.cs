@@ -17,20 +17,20 @@ using Helpers.Consumer.DtoHelpers;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class VisitorBlacklistAreaService : IVisitorBlacklistAreaService
+    public class BlacklistAreaService : IBlacklistAreaService
     {
-        private readonly VisitorBlacklistAreaRepository _repository;
+        private readonly BlacklistAreaRepository _repository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public VisitorBlacklistAreaService(VisitorBlacklistAreaRepository repository, IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public BlacklistAreaService(BlacklistAreaRepository repository, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _repository = repository;
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
 
-        public async Task<VisitorBlacklistAreaDto> CreateVisitorBlacklistAreaAsync(VisitorBlacklistAreaCreateDto dto)
+        public async Task<BlacklistAreaDto> CreateBlacklistAreaAsync(BlacklistAreaCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
@@ -45,10 +45,10 @@ namespace BusinessLogic.Services.Implementation
             entity.CreatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(entity);
-            return _mapper.Map<VisitorBlacklistAreaDto>(entity);
+            return _mapper.Map<BlacklistAreaDto>(entity);
         }
         
-        public async Task<IEnumerable<VisitorBlacklistAreaDto>> CreatesVisitorBlacklistAreaAsync(VisitorBlacklistAreaRequestDto request)
+        public async Task<IEnumerable<BlacklistAreaDto>> CreatesBlacklistAreaAsync(BlacklistAreaRequestDto request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
 
@@ -69,14 +69,14 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.AddRangeAsync(entities);
-            return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
+            return _mapper.Map<IEnumerable<BlacklistAreaDto>>(entities);
         }
 
 
-        public async Task<List<VisitorBlacklistAreaDto>> CreateBatchVisitorBlacklistAreaAsync(List<VisitorBlacklistAreaCreateDto> dtos)
+        public async Task<List<BlacklistAreaDto>> CreateBatchBlacklistAreaAsync(List<BlacklistAreaCreateDto> dtos)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var result = new List<VisitorBlacklistAreaDto>();
+            var result = new List<BlacklistAreaDto>();
             foreach (var dto in dtos)
             {
                 var blacklistArea = _mapper.Map<BlacklistArea>(dto);
@@ -87,30 +87,30 @@ namespace BusinessLogic.Services.Implementation
                 blacklistArea.UpdatedAt = DateTime.UtcNow;
                 blacklistArea.Status = 1;
                 await _repository.AddAsync(blacklistArea);
-                result.Add(_mapper.Map<VisitorBlacklistAreaDto>(blacklistArea));
+                result.Add(_mapper.Map<BlacklistAreaDto>(blacklistArea));
             }
             return result;
         }
 
-        public async Task<VisitorBlacklistAreaDto> GetVisitorBlacklistAreaByIdAsync(Guid id)
+        public async Task<BlacklistAreaDto> GetBlacklistAreaByIdAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            return _mapper.Map<VisitorBlacklistAreaDto>(entity);
+            return _mapper.Map<BlacklistAreaDto>(entity);
         }
 
-        public async Task<IEnumerable<VisitorBlacklistAreaDto>> GetAllVisitorBlacklistAreasAsync()
+        public async Task<IEnumerable<BlacklistAreaDto>> GetAllBlacklistAreasAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<VisitorBlacklistAreaDto>>(entities);
+            return _mapper.Map<IEnumerable<BlacklistAreaDto>>(entities);
         }
         
-                public async Task<IEnumerable<OpenVisitorBlacklistAreaDto>> OpenGetAllVisitorBlacklistAreasAsync()
+                public async Task<IEnumerable<OpenBlacklistAreaDto>> OpenGetAllBlacklistAreasAsync()
         {
             var entities = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenVisitorBlacklistAreaDto>>(entities);
+            return _mapper.Map<IEnumerable<OpenBlacklistAreaDto>>(entities);
         }
 
-        public async Task UpdateVisitorBlacklistAreaAsync(Guid id, VisitorBlacklistAreaUpdateDto dto)
+        public async Task UpdateBlacklistAreaAsync(Guid id, BlacklistAreaUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteVisitorBlacklistAreaAsync(Guid id)
+        public async Task DeleteBlacklistAreaAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
@@ -146,7 +146,7 @@ namespace BusinessLogic.Services.Implementation
             var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
             var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
 
-            var filterService = new GenericDataTableService<BlacklistArea, VisitorBlacklistAreaDto>(
+            var filterService = new GenericDataTableService<BlacklistArea, BlacklistAreaDto>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -162,7 +162,7 @@ namespace BusinessLogic.Services.Implementation
         //     var searchableColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" }; 
         //     var validSortColumns = new[] { "Visitor.Name", "FloorplanMaskedArea.Name" };
 
-        //     var filterService = new GenericDataTableService<BlacklistArea, VisitorBlacklistAreaDtoMinimal>(
+        //     var filterService = new GenericDataTableService<BlacklistArea, BlacklistAreaDtoMinimal>(
         //         query,
         //         _mapper,
         //         searchableColumns,
@@ -175,7 +175,7 @@ namespace BusinessLogic.Services.Implementation
           public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;
-            var visitorBlacklistAreas = await _repository.GetAllAsync();
+            var BlacklistAreas = await _repository.GetAllAsync();
 
             var document = Document.Create(container =>
             {
@@ -210,7 +210,7 @@ namespace BusinessLogic.Services.Implementation
 
                         // Table body
                         int index = 1;
-                        foreach (var blacklistArea in visitorBlacklistAreas)
+                        foreach (var blacklistArea in BlacklistAreas)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(blacklistArea.Visitor?.Name ?? "-");
@@ -240,7 +240,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportExcelAsync()
         {
-            var visitorBlacklistAreas = await _repository.GetAllAsync();
+            var BlacklistAreas = await _repository.GetAllAsync();
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Visitor Blacklist Areas");
@@ -253,7 +253,7 @@ namespace BusinessLogic.Services.Implementation
             int row = 2;
             int no = 1;
 
-            foreach (var blacklistArea in visitorBlacklistAreas)
+            foreach (var blacklistArea in BlacklistAreas)
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = blacklistArea.Visitor?.Name ?? "-";

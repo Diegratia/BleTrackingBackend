@@ -2360,7 +2360,7 @@ public class VisitorService : IVisitorService
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var visitorBlacklistAreas = await _visitorRepository.GetAllAsync();
+            var BlacklistAreas = await _visitorRepository.GetAllAsync();
 
             var document = Document.Create(container =>
             {
@@ -2404,7 +2404,7 @@ public class VisitorService : IVisitorService
                         });
 
                         int index = 1;
-                        foreach (var visitor in visitorBlacklistAreas)
+                        foreach (var visitor in BlacklistAreas)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(visitor.PersonId ?? "-");

@@ -131,19 +131,19 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHttpContextAccessor();
 
 
-builder.Services.AddAutoMapper(typeof(VisitorBlacklistAreaProfile));
+builder.Services.AddAutoMapper(typeof(BlacklistAreaProfile));
 
-builder.Services.AddScoped<IVisitorBlacklistAreaService, VisitorBlacklistAreaService>();
+builder.Services.AddScoped<IBlacklistAreaService, BlacklistAreaService>();
 
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
-builder.Services.AddScoped<VisitorBlacklistAreaRepository>();
+builder.Services.AddScoped<BlacklistAreaRepository>();
 
 
 
 var port = Environment.GetEnvironmentVariable("VISITOR_BLACKLIST_AREA_PORT") ??
-           builder.Configuration["Ports:VisitorBlacklistAreaService"] ?? "5020";
+           builder.Configuration["Ports:BlacklistAreaService"] ?? "5020";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");

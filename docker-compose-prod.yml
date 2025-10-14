@@ -169,8 +169,8 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-blacklist-area:
-    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
+  blacklist-area:
+    image: dev1pci2025/bletrackingbackend-blacklist-area:latest
     ports:
       - "5020:5020"
     # depends_on:
@@ -249,7 +249,7 @@ services:
     volumes:
       - ./.env:/app/.envc
     restart: always
-    
+
   alarm-triggers:
     image: dev1pci2025/bletrackingbackend-alarm-triggers:latest
     ports:
