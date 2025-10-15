@@ -26,25 +26,22 @@ app.MapGet("/hc", async (IHttpClientFactory httpClientFactory, ILoggerFactory lo
         try
         {
             var response = await client.GetAsync(url, cts.Token);
-            var content = await response.Content.ReadAsStringAsync(cts.Token);
-
             return new
             {
                 Name = name,
                 Status = response.IsSuccessStatusCode ? "Healthy" : "Unhealthy",
-                Code = (int)response.StatusCode,
-                Details = response.IsSuccessStatusCode ? content : null
+                Code = (int)response.StatusCode
             };
         }
         catch (TaskCanceledException)
         {
             logger.LogWarning("Timeout while checking {Service}", name);
-            return new { Name = name, Status = "Timeout", Code = 408, Details = (string?)null };
+            return new { Name = name, Status = "Timeout", Code = 408 };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error while checking {Service}", name);
-            return new { Name = name, Status = "Unreachable", Code = 500, Details = ex.Message };
+            return new { Name = name, Status = "Unreachable", Code = 500 };
         }
     });
 
@@ -59,8 +56,7 @@ app.MapGet("/hc", async (IHttpClientFactory httpClientFactory, ILoggerFactory lo
         services = results.ToDictionary(x => x.Name, x => new
         {
             x.Status,
-            x.Code,
-            x.Details
+            x.Code
         })
     }, new JsonSerializerOptions { WriteIndented = true });
 });
