@@ -383,7 +383,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
 
-            projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
+            // projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
             var filteredRecords = await projectionQuery.CountAsync();
             // var filteredRecords = query.Count();
 
