@@ -60,6 +60,7 @@ namespace BusinessLogic.Services.Implementation
 
             // Calculate total records before filtering - comment ini untuk 0 record
             var totalRecords = await query.CountAsync();
+            
             // Console.WriteLine($"Total records before filtering: {totalRecords}");
 
             // Search
@@ -104,25 +105,6 @@ namespace BusinessLogic.Services.Implementation
                     }
                 }
             }
-
-                // Date filter
-            // if (request.DateFilters != null && request.DateFilters.Any())
-            // {
-            //     foreach (var dateFilter in request.DateFilters)
-            //     {
-            //         if (string.IsNullOrEmpty(dateFilter.Key) || !_validSortColumns.Contains(dateFilter.Key))
-            //             throw new ArgumentException($"Invalid date column: {dateFilter.Key}");
-
-            //         var filter = dateFilter.Value;
-            //         if (filter.DateFrom.HasValue && filter.DateTo.HasValue)
-            //             query = query.Where($"{dateFilter.Key} >= @0 && {dateFilter.Key} <= @1", filter.DateFrom.Value, filter.DateTo.Value.AddDays(1).AddTicks(-1));
-            //         else if (filter.DateFrom.HasValue)
-            //             query = query.Where($"{dateFilter.Key} >= @0", filter.DateFrom.Value);
-            //         else if (filter.DateTo.HasValue)
-            //             query = query.Where($"{dateFilter.Key} <= @0", filter.DateTo.Value.AddDays(1).AddTicks(-1));
-            //     }
-            // }
-
 
 
             // 🧩 Apply Custom Filters
@@ -402,8 +384,8 @@ namespace BusinessLogic.Services.Implementation
 
 
             projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
-            // var filteredRecords = await projectionQuery.CountAsync();
-            var filteredRecords = query.Count();
+            var filteredRecords = await projectionQuery.CountAsync();
+            // var filteredRecords = query.Count();
 
             // === MODE COUNT ===
             if (string.Equals(request.Mode, "count", StringComparison.OrdinalIgnoreCase))
@@ -420,10 +402,18 @@ namespace BusinessLogic.Services.Implementation
             query = query.OrderBy($"{request.SortColumn} {sortDirection}");
 
             // Paging
+            // if (request.Length > 0)
+            // {
+            //     projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
+            // }
+
             if (request.Length > 0)
             {
-                projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
-            }
+                var totalFilteredRecords = filteredRecords;
+                var start = request.Start < totalFilteredRecords ? request.Start : totalFilteredRecords - request.Length;
+                projectionQuery = projectionQuery.Skip(start).Take(request.Length);
+        }
+
 
             // Execute query
             var data = await projectionQuery.ToListAsync();
