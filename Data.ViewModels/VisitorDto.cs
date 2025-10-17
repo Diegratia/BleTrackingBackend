@@ -107,9 +107,7 @@ namespace Data.ViewModels
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
         public string? IdentityType { get; set; }
-        public string? CardNumber { get; set; }
         public Guid? cardId { get; set; }
-        public string? BleCardNumber { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }

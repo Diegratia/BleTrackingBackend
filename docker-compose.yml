@@ -343,24 +343,16 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  gateway-health-api:
-    build:
-      context: .
-      dockerfile: Services.API/GatewayHealthApi/Dockerfile
-    container_name: gateway-health-api
-    restart: always
-    expose:
-      - "8080" # hanya visible untuk Nginx di dalam jaringan Docker
-    networks:
-      - default
-    depends_on:
-      - auth
-      - mst-member
-      - mst-building
-      - mst-floorplan
-      - card
-      - tracking-transaction
-      - geofence
+  # gateway-health-api:
+  #   build:
+  #     context: .
+  #     dockerfile: Services.API/GatewayHealthApi/Dockerfile
+  #   container_name: gateway-health-api
+  #   restart: always
+  #   expose:
+  #     - "8080" # hanya visible untuk Nginx di dalam jaringan Docker
+  #   networks:
+  #     - default
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest

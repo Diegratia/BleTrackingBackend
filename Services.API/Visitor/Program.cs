@@ -44,7 +44,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,4433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -160,6 +160,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<CardRecordRepository>();
 builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<CardAccessRepository>();
 // builder.Services.AddScoped<RefreshTokenRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
