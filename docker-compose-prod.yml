@@ -265,3 +265,9 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+
+  gateway-health-api:
+    image: dev1pci2025/bletrackingbackend-gateway-health-api:latest
+    restart: always
+    expose:
+      - "8080" # hanya visible untuk Nginx di dalam jaringan Docker

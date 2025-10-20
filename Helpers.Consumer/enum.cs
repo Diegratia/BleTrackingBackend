@@ -50,8 +50,14 @@ namespace Helpers.Consumer
 
     public enum PersonType
     {
-        Visitor,
-        Member,
+        RegulerEmployee,
+        Suspect,
+        Highthreat,
+        VIP,
+        Staff,
+        Contractor,
+        Delivery,
+        Visitor
     }
 
     public enum CardType

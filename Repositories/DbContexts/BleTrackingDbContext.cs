@@ -857,7 +857,7 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                   entity.Property(e => e.Alarm)
+                 entity.Property(e => e.Alarm)
                     .HasColumnName("alarm_record_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -1139,6 +1139,13 @@ namespace Repositories.DbContexts
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (VisitorActiveStatus)Enum.Parse(typeof(VisitorActiveStatus), v, true)
+                    );
+                entity.Property(e => e.PersonType)
+                    .HasColumnName("person_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (PersonType)Enum.Parse(typeof(PersonType), v, true)
                     );
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)

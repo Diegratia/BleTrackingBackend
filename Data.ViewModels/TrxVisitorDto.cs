@@ -118,6 +118,7 @@ namespace Data.ViewModels
     {
         public string? VehiclePlateNumber { get; set; }
         public string? Agenda { get; set; }
+        public string? PersonType { get; set; }
         public Guid? PurposePerson { get; set; }
         public DateTime? VisitorPeriodStart { get; set; }
         public DateTime? VisitorPeriodEnd { get; set; }
