@@ -39,6 +39,7 @@ namespace Data.ViewModels
         public string? MemberIdentity { get; set; }
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
+        public string? PersonType { get; set; }
         public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         public VisitorDto? Visitor { get; set; }
         public MstMemberDto? Member { get; set; }
@@ -77,6 +78,7 @@ namespace Data.ViewModels
         public string? MemberIdentity { get; set; }
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
+          public string? PersonType { get; set; }
         // public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         // public VisitorDto? Visitor { get; set; }
         // public MstMemberDto? Member { get; set; }

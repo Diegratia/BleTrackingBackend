@@ -1,9 +1,12 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
+
+set VERSION=latest
 
 set DOCKER_USER=dev1pci2025
 set PROJECT=bletrackingbackend
-set VERSION=latest
+
+echo 🔖 Menggunakan TAG: %VERSION%
 
 echo 🔐 Login Docker Hub...
 docker login || exit /b
@@ -44,10 +47,15 @@ for %%S in (
     gateway-health-api
     nginx
 ) do (
+    set LOCAL_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:latest
+    set NEW_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:%VERSION%
+
+    echo 🏷️ Menandai %%S menjadi tag %VERSION% ...
+    docker tag !LOCAL_IMAGE! !NEW_IMAGE! || exit /b
+
     echo 🚀 Push %%S ...
-    docker tag %PROJECT%_%%S %DOCKER_USER%/%PROJECT%-%%S:%VERSION%
-    docker push %PROJECT%_%%S %DOCKER_USER%/%PROJECT%-%%S:%VERSION%
+    docker push !NEW_IMAGE! || exit /b
 )
 
-echo ✅ Selesai push semua image!
+echo ✅ Semua image berhasil di-push dengan tag %VERSION%!
 pause
