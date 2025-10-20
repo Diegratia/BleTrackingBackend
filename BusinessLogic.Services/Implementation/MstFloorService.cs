@@ -300,13 +300,6 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     BuildingId = buildingId,
                     Name = row.Cell(2).GetValue<string>(),
-                    // FloorImage = row.Cell(3).GetValue<string>() ?? "",
-                    // PixelX = row.Cell(4).GetValue<long>(),
-                    // PixelY = row.Cell(5).GetValue<long>(),
-                    // FloorX = row.Cell(6).GetValue<long>(),
-                    // FloorY = row.Cell(7).GetValue<long>(),
-                    // MeterPerPx = row.Cell(8).GetValue<float>(),
-                    // EngineFloorId = row.Cell(9).GetValue<long>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -331,7 +324,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Building.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status", "Building.Name", "EngineFloorId" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status", "Building.Name"};
 
             var filterService = new GenericDataTableService<MstFloor, MstFloorDto>(
                 query,
@@ -371,7 +364,6 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2); // Building Name
                             columns.RelativeColumn(2); // Building Id
                             columns.RelativeColumn(2); // Floor Name
-                            columns.RelativeColumn(1); // EngineFloorId
                             columns.RelativeColumn(1); // MeterPerPx
                             columns.RelativeColumn(2); // CreatedAt
                             columns.RelativeColumn(2); // CreatedBy
@@ -384,7 +376,6 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Building").SemiBold();
                             header.Cell().Element(CellStyle).Text("BuildingId").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
-                            header.Cell().Element(CellStyle).Text("EngineFloorId").SemiBold();
                             header.Cell().Element(CellStyle).Text("Meter/Px").SemiBold();
                             header.Cell().Element(CellStyle).Text("Created At").SemiBold();
                             header.Cell().Element(CellStyle).Text("Created By").SemiBold();
@@ -398,8 +389,6 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(floor.Building?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.BuildingId.ToString() ?? "-");
                             table.Cell().Element(CellStyle).Text(floor.Name);
-                            // table.Cell().Element(CellStyle).Text(floor.EngineFloorId.ToString());
-                            // table.Cell().Element(CellStyle).Text(floor.MeterPerPx.ToString("0.00"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedAt.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(floor.CreatedBy ?? "-");
                         }
@@ -437,11 +426,9 @@ namespace BusinessLogic.Services.Implementation
             worksheet.Cell(1, 2).Value = "Building";
             worksheet.Cell(1, 3).Value = "BuildingId";
             worksheet.Cell(1, 4).Value = "Floor Name";
-            worksheet.Cell(1, 5).Value = "Engine Floor ID";
-            worksheet.Cell(1, 6).Value = "Meter/Px";
-            worksheet.Cell(1, 7).Value = "Created By";
-            worksheet.Cell(1, 8).Value = "Created At";
-            worksheet.Cell(1, 9).Value = "Status";
+            worksheet.Cell(1, 5).Value = "Created By";
+            worksheet.Cell(1, 6).Value = "Created At";
+            worksheet.Cell(1, 7).Value = "Status";
 
             int row = 2;
             int no = 1;
@@ -454,11 +441,9 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = floor.BuildingId.ToString();
                 worksheet.Cell(row, 4).Value = floor.Name;
-                // worksheet.Cell(row, 5).Value = floor.EngineFloorId;
-                // worksheet.Cell(row, 6).Value = floor.MeterPerPx;
-                worksheet.Cell(row, 7).Value = floor.CreatedBy;
-                worksheet.Cell(row, 8).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cell(row, 9).Value = floor.Status == 1 ? "Active" : "Inactive";
+                worksheet.Cell(row, 5).Value = floor.CreatedBy;
+                worksheet.Cell(row, 6).Value = floor.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 7).Value = floor.Status == 1 ? "Active" : "Inactive";
                 row++;
             }
 

@@ -25,7 +25,7 @@ namespace Entities.Models
 
         [Required]
         [Column("area_shape")]
-        public string AreaShape { get; set; }
+        public string AreaShape { get; set; }   
 
         [StringLength(255)]
         [Column("color_area")]
@@ -35,10 +35,10 @@ namespace Entities.Models
         [Column("restricted_status")]
         public RestrictedStatus RestrictedStatus { get; set; }
 
-        [Required]
-        [StringLength(255)]
-        [Column("engine_area_id")]
-        public string EngineAreaId { get; set; }
+        // [Required]
+        // [StringLength(255)]
+        // [Column("engine_area_id")]
+        // public string EngineAreaId { get; set; }
 
         // [Required]
         // [Column("wide_area")]

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251020042358_removeEngineIdAtFloorplan")]
+    partial class removeEngineIdAtFloorplan
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1942,10 +1945,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("EngineTrackingId")
+                    b.Property<string>("EngineId")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
-                        .HasColumnName("engine_tracking_id");
+                        .HasColumnName("engine_id");
 
                     b.Property<int?>("IsLive")
                         .HasColumnType("int")
@@ -1985,9 +1988,9 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("EngineTrackingId")
+                    b.HasIndex("EngineId")
                         .IsUnique()
-                        .HasFilter("[engine_tracking_id] IS NOT NULL");
+                        .HasFilter("[engine_id] IS NOT NULL");
 
                     b.ToTable("mst_engine", (string)null);
                 });
@@ -2077,11 +2080,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<Guid?>("EngineId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("engine_id");
-
                     b.Property<Guid>("FloorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2147,8 +2145,6 @@ namespace Repositories.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
-
-                    b.HasIndex("EngineId");
 
                     b.HasIndex("FloorId");
 
@@ -4007,11 +4003,6 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.MstEngine", "Engine")
-                        .WithMany("Floorplans")
-                        .HasForeignKey("EngineId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Entities.Models.MstFloor", "Floor")
                         .WithMany()
                         .HasForeignKey("FloorId")
@@ -4027,8 +4018,6 @@ namespace Repositories.Migrations
                         .HasForeignKey("MstFloorId");
 
                     b.Navigation("Application");
-
-                    b.Navigation("Engine");
 
                     b.Navigation("Floor");
                 });
@@ -4430,11 +4419,6 @@ namespace Repositories.Migrations
             modelBuilder.Entity("Entities.Models.MstDistrict", b =>
                 {
                     b.Navigation("Members");
-                });
-
-            modelBuilder.Entity("Entities.Models.MstEngine", b =>
-                {
-                    b.Navigation("Floorplans");
                 });
 
             modelBuilder.Entity("Entities.Models.MstFloor", b =>

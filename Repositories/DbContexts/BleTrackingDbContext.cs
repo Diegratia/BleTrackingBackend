@@ -675,12 +675,13 @@ namespace Repositories.DbContexts
                 entity.ToTable("mst_floorplan");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorId).HasMaxLength(36).IsRequired();
-                // entity.Property(e => e.EngineId).HasMaxLength(36);
+                entity.Property(e => e.EngineId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
 
                 // entity.HasOne(f => f.Engine).WithMany().HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Floor).WithMany().HasForeignKey(f => f.FloorId).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(f => f.Engine).WithMany(f => f.Floorplans).HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Application).WithMany().HasForeignKey(f => f.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(f => f.Generate).IsUnique();
@@ -729,7 +730,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstEngine>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.EngineId).HasMaxLength(255);
+                entity.Property(e => e.EngineTrackingId).HasMaxLength(255);
                 entity.Property(e => e.Status); 
                 entity.Property(e => e.IsLive); 
                 entity.Property(e => e.LastLive);
@@ -738,6 +739,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.Floorplans)
+                    .WithOne(e => e.Engine)
+                    .HasForeignKey(e => e.EngineId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(e => e.ServiceStatus).HasMaxLength(50)

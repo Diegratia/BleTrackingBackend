@@ -38,7 +38,7 @@ namespace BusinessLogic.Services.Implementation
                 var json = JsonDocument.Parse(payload);
                 var status = json.RootElement.GetProperty("status").GetString()?.ToLowerInvariant();
                 var timestamp = json.RootElement.GetProperty("timestamp").GetString()?.ToLowerInvariant();
-                var engineId = json.RootElement.GetProperty("engineId").GetString()?.ToLowerInvariant();
+                var engineId = json.RootElement.GetProperty("engineTrackingId").GetString()?.ToLowerInvariant();
 
                 if (string.IsNullOrEmpty(status))
                 {

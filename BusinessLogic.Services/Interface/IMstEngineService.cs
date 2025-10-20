@@ -9,13 +9,13 @@ namespace BusinessLogic.Services.Interface
     {
         Task<IEnumerable<MstEngineDto>> GetAllEnginesAsync();
         Task<IEnumerable<MstEngineDto>> GetAllOnlineAsync();
-        Task StopEngineAsync(string engineId);
-        Task StartEngineAsync(string engineId);
-        Task<MstEngineDto> GetEngineIdAsync(string engineId);
+        Task StopEngineAsync(string EngineTrackingId);
+        Task StartEngineAsync(string EngineTrackingId);
+        Task<MstEngineDto> GetEngineIdAsync(string EngineTrackingId);
         Task<MstEngineDto> GetEngineByIdAsync(Guid id);
         Task<MstEngineDto> CreateEngineAsync(MstEngineCreateDto dto);
         Task UpdateEngineAsync(Guid id, MstEngineUpdateDto dto);
-        Task UpdateEngineByIdAsync(string engineId, MstEngineUpdateDto dto);
+        Task UpdateEngineByIdAsync(string EngineTrackingId, MstEngineUpdateDto dto);
         Task DeleteEngineAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 
         Task<byte[]> ExportPdfAsync();

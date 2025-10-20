@@ -26,10 +26,10 @@ namespace Entities.Models
         [Column("gmac")]
         public string? Gmac { get; set; }
 
-        [Required]
-        [StringLength(255)]
-        [Column("engine_reader_id")]
-        public string EngineReaderId { get; set; }
+        // [Required]
+        // [StringLength(255)]
+        // [Column("engine_reader_id")]
+        // public string EngineReaderId { get; set; }
 
         [Required]
         [Column("status")]

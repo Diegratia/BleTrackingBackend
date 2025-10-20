@@ -17,7 +17,7 @@ namespace Data.ViewModels
         public float PixelY { get; set; }
         public float FloorX { get; set; }
         public float FloorY { get; set; }
-        public long? EngineId { get; set; }
+        public Guid? EngineId { get; set; }
         public float MeterPerPx { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -27,6 +27,8 @@ namespace Data.ViewModels
         public int MaskedAreaCount { get; set; }
         public int DeviceCount { get; set; }
         public MstFloorDto Floor { get; set; }
+        public MstEngineDto Engine { get; set; }
+
     }
 
     public class OpenMstFloorplanDto : BaseModelDto
@@ -64,7 +66,7 @@ namespace Data.ViewModels
         public float FloorY { get; set; }
 
         public float MeterPerPx { get; set; }
-        public long? EngineId { get; set; }
+        public Guid? EngineId { get; set; }
         // public Guid ApplicationId { get; set; }
     }
 
@@ -83,7 +85,8 @@ namespace Data.ViewModels
         public float FloorY { get; set; }
 
         public float MeterPerPx { get; set; }
-        public long? EngineId { get; set; }
+        public Guid? EngineId { get; set; }
+
         // public Guid ApplicationId { get; set; }
     }
 

@@ -186,7 +186,6 @@ namespace BusinessLogic.Services.Implementation
                     AreaShape = row.Cell(4).GetValue<string>(),
                     ColorArea = row.Cell(5).GetValue<string>(),
                     RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>(), true),
-                    EngineAreaId = row.Cell(7).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,

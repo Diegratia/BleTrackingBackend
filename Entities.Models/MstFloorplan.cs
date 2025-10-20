@@ -37,7 +37,7 @@ namespace Entities.Models
         public float MeterPerPx { get; set; }
 
         [Column("engine_id")]
-        public long EngineId { get; set; }
+        public Guid? EngineId { get; set; }
 
         [Required]
         [Column("floor_id")]
@@ -54,6 +54,7 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         public MstFloor Floor { get; set; }
+        public MstEngine? Engine { get; set; }
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
         public ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
     }

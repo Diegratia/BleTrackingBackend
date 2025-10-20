@@ -42,8 +42,8 @@ while (!stoppingToken.IsCancellationRequested)
             var diff = now - engine.LastLive.Value.ToUniversalTime();
             if (diff.TotalSeconds > _offlineThresholdSeconds)
             {
-                Console.WriteLine($"⚠️ Engine {engine.EngineId} offline ({diff.TotalSeconds:F0}s ago)");
-                await engineService.UpdateEngineByIdAsync(engine.EngineId, new Data.ViewModels.MstEngineUpdateDto
+                Console.WriteLine($"⚠️ Engine {engine.EngineTrackingId} offline ({diff.TotalSeconds:F0}s ago)");
+                await engineService.UpdateEngineByIdAsync(engine.EngineTrackingId, new Data.ViewModels.MstEngineUpdateDto
                 {
                     ServiceStatus = ServiceStatus.Offline,
                     IsLive = 0,

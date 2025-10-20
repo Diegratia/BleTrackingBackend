@@ -51,9 +51,9 @@ namespace BusinessLogic.Services.Implementation
             return engine == null ? null : _mapper.Map<MstEngineDto>(engine);
         }
 
-            public async Task<MstEngineDto> GetEngineIdAsync(string engineId)
+            public async Task<MstEngineDto> GetEngineIdAsync(string EngineTrackingId)
         {
-            var engine = await _engineRepository.GetByEngineIdAsync(engineId);
+            var engine = await _engineRepository.GetByEngineIdAsync(EngineTrackingId);
             return engine == null ? null : _mapper.Map<MstEngineDto>(engine);
         }
 
@@ -80,13 +80,13 @@ namespace BusinessLogic.Services.Implementation
             await _engineRepository.UpdateAsync(engine);
         }
 
-            public async Task UpdateEngineByIdAsync(string engineId, MstEngineUpdateDto dto)
+            public async Task UpdateEngineByIdAsync(string EngineTrackingId, MstEngineUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var engine = await _engineRepository.GetByEngineIdAsync(engineId);
+            var engine = await _engineRepository.GetByEngineIdAsync(EngineTrackingId);
             if (engine == null)
-                throw new KeyNotFoundException($"Engine with ID {engineId} not found");
+                throw new KeyNotFoundException($"Engine with ID {EngineTrackingId} not found");
 
             _mapper.Map(dto, engine);
             await _engineRepository.UpdateByEngineStringAsync(engine);
@@ -103,12 +103,12 @@ namespace BusinessLogic.Services.Implementation
             await _engineRepository.DeleteAsync(id);
         }
 
-        public async Task StopEngineAsync(string engineId)
+        public async Task StopEngineAsync(string EngineTrackingId)
         {
-            var topic = $"engine/stop/{engineId}";
+            var topic = $"engine/stop/{EngineTrackingId}";
             var payload = JsonSerializer.Serialize(new
             {
-                engineId,
+                EngineTrackingId,
                 status = "stop",
                 timestamp = DateTime.UtcNow
             });
@@ -117,12 +117,12 @@ namespace BusinessLogic.Services.Implementation
             Console.WriteLine($"Sent stop command to {topic}");
         }
 
-            public async Task StartEngineAsync(string engineId)
+            public async Task StartEngineAsync(string EngineTrackingId)
         {
-            var topic = $"engine/start/{engineId}";
+            var topic = $"engine/start/{EngineTrackingId}";
             var payload = JsonSerializer.Serialize(new
             {
-                engineId,
+                EngineTrackingId,
                 status = "start",
                 timestamp = DateTime.UtcNow
             });
@@ -136,7 +136,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _engineRepository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "EngineId", "Status", "Port", "IsLive", "LastLive" };
+            var validSortColumns = new[] { "Name", "EngineTrackingId", "Status", "Port", "IsLive", "LastLive" };
 
             var filterService = new GenericDataTableService<MstEngine, MstEngineDto>(
                 query,
@@ -185,7 +185,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
-                            header.Cell().Element(CellStyle).Text("EngineId").SemiBold();
+                            header.Cell().Element(CellStyle).Text("EngineTrackingId").SemiBold();
                             header.Cell().Element(CellStyle).Text("Port").SemiBold();
                             header.Cell().Element(CellStyle).Text("Status").SemiBold();
                             header.Cell().Element(CellStyle).Text("Is Live").SemiBold();
@@ -199,7 +199,7 @@ namespace BusinessLogic.Services.Implementation
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(engine.Name);
-                            table.Cell().Element(CellStyle).Text(engine.EngineId);
+                            table.Cell().Element(CellStyle).Text(engine.EngineTrackingId);
                             table.Cell().Element(CellStyle).Text(engine.Port);
                             table.Cell().Element(CellStyle).Text(engine.Status);
                             table.Cell().Element(CellStyle).Text(engine.IsLive);
@@ -238,7 +238,7 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "No";
             worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "EngineId";
+            worksheet.Cell(1, 3).Value = "EngineTrackingId";
             worksheet.Cell(1, 4).Value = "Port";
             worksheet.Cell(1, 5).Value = "Status";
             worksheet.Cell(1, 6).Value = "IsLive";
@@ -254,7 +254,7 @@ namespace BusinessLogic.Services.Implementation
 
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = engine.Name;
-                worksheet.Cell(row, 3).Value = engine.EngineId;
+                worksheet.Cell(row, 3).Value = engine.EngineTrackingId;
                 worksheet.Cell(row, 4).Value = engine.Port;
                 worksheet.Cell(row, 5).Value = engine.Status;
                 worksheet.Cell(row, 6).Value = engine.IsLive;

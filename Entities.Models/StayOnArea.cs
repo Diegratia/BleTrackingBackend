@@ -24,8 +24,8 @@ namespace Entities.Models
         [Column("floor_id")]
         public Guid? FloorId { get; set; }
 
-        [Column("engine_id")]
-        public string? EngineId { get; set; }
+        // [Column("engine_id")]
+        // public string? EngineId { get; set; }
         [Column("max_duration")]
         public int? MaxDuration { get; set; } // minute
         [Column("is_active")]
