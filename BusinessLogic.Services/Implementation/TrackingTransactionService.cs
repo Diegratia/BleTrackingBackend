@@ -14,6 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -89,10 +90,55 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+
+                public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
+        {
+            var query = _repository.GetAllWithAlarmQueryable();
+
+            var searchableColumns = new[]
+            {
+                "Tracking.Reader.Name",
+                "Tracking.FloorplanMaskedArea.Name",
+                "Tracking.Visitor.Name",
+                "Tracking.Member.Name",
+                "AlarmRecord.Reader.Name",
+                "AlarmRecord.Action",
+                "AlarmRecord.Alarm"
+            };
+
+            var validSortColumns = new[]
+            {
+                "Tracking.TransTime",
+                "Tracking.Reader.Name",
+                "Tracking.FloorplanMaskedArea.Name",
+                "Tracking.Visitor.Name",
+                "AlarmRecord.Timestamp",
+                "AlarmRecord.Action",
+                "AlarmRecord.Alarm"
+            };
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Tracking.AlarmStatus", typeof(AlarmStatus) },
+                { "AlarmRecord.Alarm", typeof(AlarmRecordStatus) },
+                { "AlarmRecord.Action", typeof(ActionStatus) }
+            };
+
+            var filterService = new GenericDataTableService<TrackingTransactionWithAlarm, TrackingTransactionWithAlarm>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns,
+                enumColumns
+            );
+
+            return await filterService.FilterAsync(request);
+        }
+
         
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var trackingTransactions = await _repository.GetAllWithIncludesAsync();
 
             var document = Document.Create(container =>

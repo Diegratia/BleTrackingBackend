@@ -22,6 +22,8 @@ namespace BusinessLogic.Services.Extension
             CreateMap<TrackingTransaction, TrackingTransactionDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
+            CreateMap<TrackingTransactionWithAlarm, TrackingTransactionWithAlarmDto>();
+
         }
     }
 }

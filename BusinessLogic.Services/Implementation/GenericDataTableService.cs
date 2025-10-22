@@ -43,6 +43,9 @@ namespace BusinessLogic.Services.Implementation
             {
                 request.Length = await _query.CountAsync();
             }
+
+
+
             // if (request.Length < 1)
             //     throw new ArgumentException("Length must be greater than or equal to 1.");
             if (request.Start < 0)
@@ -59,9 +62,10 @@ namespace BusinessLogic.Services.Implementation
             // var totalRecords = await query.CountAsync();
 
             // Calculate total records before filtering - comment ini untuk 0 record
-            var totalRecords = await query.CountAsync();
-            
+            long totalRecords = await query.LongCountAsync();
+
             // Console.WriteLine($"Total records before filtering: {totalRecords}");
+            
 
             // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
@@ -382,9 +386,12 @@ namespace BusinessLogic.Services.Implementation
                 projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
             }
 
+            
+
 
             // projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
-            var filteredRecords = await projectionQuery.CountAsync();
+           long filteredRecords = await projectionQuery.LongCountAsync();
+
             // var filteredRecords = query.Count();
 
             // === MODE COUNT ===
@@ -407,12 +414,36 @@ namespace BusinessLogic.Services.Implementation
             //     projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
             // }
 
-            if (request.Length > 0)
-            {
-                var totalFilteredRecords = filteredRecords;
-                var start = request.Start < totalFilteredRecords ? request.Start : totalFilteredRecords - request.Length;
-                projectionQuery = projectionQuery.Skip(start).Take(request.Length);
-        }
+            //     if (request.Length > 0)
+            //     {
+            //         var totalFilteredRecords = filteredRecords;
+            //         var start = request.Start < totalFilteredRecords ? request.Start : totalFilteredRecords - request.Length;
+            //         projectionQuery = projectionQuery.Skip(start).Take(request.Length);
+            // }
+
+                if (filteredRecords == 0)
+                    {
+                        return new
+                        {
+                            draw = request.Draw,
+                            recordsTotal = totalRecords,
+                            recordsFiltered = 0,
+                            data = new List<TDto>()
+                        };
+                    }
+        
+            var totalFilteredRecords = filteredRecords;
+            var start = request.Start;
+
+            if (start < 0) start = 0;
+            if (totalFilteredRecords <= 0) start = 0; // tidak ada data, offset = 0
+                                                      // if (start >= totalFilteredRecords) start = Math.Max(totalFilteredRecords - request.Length, 0);
+            if (start >= totalFilteredRecords)
+    start = (int)Math.Max(totalFilteredRecords - request.Length, 0);
+
+
+            projectionQuery = projectionQuery.Skip(start).Take(request.Length);
+
 
 
             // Execute query
