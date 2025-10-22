@@ -2589,7 +2589,7 @@ public class VisitorService : IVisitorService
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _visitorRepository.GetAllQueryable();
+            var query = _visitorRepository.GetAllQueryable().AsNoTracking();
 
             var enumColumns = new Dictionary<string, Type>
             {

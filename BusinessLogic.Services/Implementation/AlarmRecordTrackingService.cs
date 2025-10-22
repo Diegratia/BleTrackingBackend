@@ -14,6 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -44,10 +45,10 @@ namespace BusinessLogic.Services.Implementation
 
          public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
-            var searchableColumns = new[] { "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name" }; 
-            var validSortColumns = new[] {  "Timestamp", "IdleTimestamp", "DoneTimestamp", "CancelTimestamp", "WaitingTimestamp", "InvestigatedTimestamp", "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "Action", "AlarmRecordStatus"};
+            var searchableColumns = new[] { "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name"  }; 
+            var validSortColumns = new[] {  "Timestamp", "IdleTimestamp", "DoneTimestamp", "CancelTimestamp", "WaitingTimestamp", "InvestigatedTimestamp", "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "Action", "AlarmRecordStatus", "FloorplanMaskedArea.Id" };
 
             var filterService = new GenericDataTableService<AlarmRecordTracking, AlarmRecordTrackingDto>(
                 query,

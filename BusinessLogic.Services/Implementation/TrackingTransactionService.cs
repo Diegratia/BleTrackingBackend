@@ -15,6 +15,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -77,7 +78,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
             var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
             var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };

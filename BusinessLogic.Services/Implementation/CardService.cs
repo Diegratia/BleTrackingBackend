@@ -473,7 +473,7 @@ namespace BusinessLogic.Services.Implementation
 
           public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
             var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
             var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt", "IsUsed", "RegisteredMaskedAreaId", "IsMultiMaskedArea" };

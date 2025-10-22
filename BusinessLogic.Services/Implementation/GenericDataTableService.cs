@@ -145,49 +145,44 @@ namespace BusinessLogic.Services.Implementation
 
                                 if (guids.Any())
                                 {
-                                    var prop = typeof(TModel).GetProperty(key);
+                                    var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
                                     var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
-
                                     if (key.Contains('.'))
                                     {
-                                        // Navigasi property
                                         var parent = key.Split('.')[0];
                                         query = query.Where($"{parent} != null && @0.Contains({key})", guids);
                                     }
                                     else
                                     {
-                                        // Field langsung
                                         query = isNullableGuid
                                             ? query.Where($"{key} != null && @0.Contains({key}.Value)", guids)
                                             : query.Where($"@0.Contains({key})", guids);
                                     }
                                 }
                             }
-
-                            // if (json.ValueKind == JsonValueKind.Array)
-                            // {
-                            //     var guids = json.EnumerateArray()
-                            //         .Select(e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null)
-                            //         .Where(g => g.HasValue)
-                            //         .Select(g => g.Value)
-                            //         .ToArray();
-
-                            //     if (guids.Any())
-                            //         query = query.Where($"@0.Contains({key})", guids);
-                            // }
-                            // else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
-                            // {
-                            //     query = query.Where($"{key} == @0", guidVal);
-                            // }
-                            // else
-                            // {
-                            //     var strVal = json.GetString();
-                            //     query = query.Where($"{key} != null && {key}.ToLower().Contains(@0)", strVal.ToLower());
-                            // }
-
+                            else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
+                            {
+                                var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
+                                var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
+                                if (key.Contains('.'))
+                                {
+                                    var parent = key.Split('.')[0];
+                                    query = query.Where($"{parent} != null && {key} == @0", guidVal);
+                                }
+                                else
+                                {
+                                    query = isNullableGuid
+                                        ? query.Where($"{key} != null && {key}.Value == @0", guidVal)
+                                        : query.Where($"{key} == @0", guidVal);
+                                }
+                            }
+                            else
+                            {
+                                var strVal = json.GetString();
+                                query = query.Where($"{key} != null && {key}.ToLower().Contains(@0)", strVal?.ToLower());
+                            }
                             continue;
                         }
-
                         // 🔹 Handle Enum columns
                         if (_enumColumns.ContainsKey(key))
                         {
