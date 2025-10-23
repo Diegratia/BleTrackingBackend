@@ -321,6 +321,16 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+  analytics:
+    build:
+      context: .
+      dockerfile: Services.API/Analytics/Dockerfile
+    image: dev1pci2025/bletrackingbackend-analytics:latest
+    ports:
+      - "5031:5031"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
 
   # license-checker:
   #   build:

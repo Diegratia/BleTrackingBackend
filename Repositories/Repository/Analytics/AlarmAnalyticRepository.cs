@@ -1,0 +1,220 @@
+using Entities.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Repositories.DbContexts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Repositories.Repository.Analytics
+{
+    public class AlarmAnalyticsRepository : BaseRepository
+    {
+        private readonly BleTrackingDbContext _context;
+
+        public AlarmAnalyticsRepository(BleTrackingDbContext context, IHttpContextAccessor accessor)
+            : base(context, accessor)
+        {
+            _context = context;
+        }
+
+        // ===================================================================
+        // 1️⃣ Daily Summary
+        // ===================================================================
+        public async Task<List<(DateTime Date, int Total, int Done, int Cancelled, double? AvgResponseSeconds)>>
+            GetDailySummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => a.Timestamp.Value.Date)
+                .Select(g => new ValueTuple<DateTime, int, int, int, double?>(
+                    g.Key,
+                    g.Count(),
+                    g.Count(x => x.DoneTimestamp != null),
+                    g.Count(x => x.CancelTimestamp != null),
+                    g.Where(x => x.DoneTimestamp != null)
+                        .Average(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 2️⃣ Area Summary
+        // ===================================================================
+        public async Task<List<(Guid? AreaId, string AreaName, int Total, int Done, double? AvgResponseSeconds)>>
+            GetAreaSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Include(a => a.FloorplanMaskedArea)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => new { a.FloorplanMaskedAreaId, a.FloorplanMaskedArea.Name })
+                .Select(g => new ValueTuple<Guid?, string, int, int, double?>(
+                    g.Key.FloorplanMaskedAreaId,
+                    g.Key.Name,
+                    g.Count(),
+                    g.Count(x => x.DoneTimestamp != null),
+                    g.Where(x => x.DoneTimestamp != null)
+                        .Average(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 3️⃣ Operator Summary
+        // ===================================================================
+        public async Task<List<(string OperatorName, int TotalHandled, double? AvgResponseSeconds)>>
+            GetOperatorSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.DoneBy != null)
+                .GroupBy(a => a.DoneBy)
+                .Select(g => new ValueTuple<string, int, double?>(
+                    g.Key,
+                    g.Count(),
+                    g.Average(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 4️⃣ Status Summary
+        // ===================================================================
+        public async Task<List<(string Status, int Total)>> GetStatusSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.Alarm != null)
+                .GroupBy(a => a.Alarm.ToString())
+                .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 5️⃣ Building Summary
+        // ===================================================================
+        public async Task<List<(Guid? BuildingId, string BuildingName, int Total, int Done, double? AvgResponseSeconds)>>
+            GetBuildingSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => new
+                {
+                    a.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
+                    a.FloorplanMaskedArea.Floorplan.Floor.Building.Name
+                })
+                .Select(g => new ValueTuple<Guid?, string, int, int, double?>(
+                    g.Key.Id,
+                    g.Key.Name,
+                    g.Count(),
+                    g.Count(x => x.DoneTimestamp != null),
+                    g.Where(x => x.DoneTimestamp != null)
+                        .Average(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 6️⃣ Visitor Summary
+        // ===================================================================
+        public async Task<List<(Guid? VisitorId, string VisitorName, int TotalTriggered, int Done)>>
+            GetVisitorSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Include(a => a.Visitor)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => new { a.VisitorId, a.Visitor.Name })
+                .Select(g => new ValueTuple<Guid?, string, int, int>(
+                    g.Key.VisitorId,
+                    g.Key.Name,
+                    g.Count(),
+                    g.Count(x => x.DoneTimestamp != null)
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 7️⃣ Time of Day Summary
+        // ===================================================================
+        public async Task<List<(int Hour, int Total)>> GetTimeOfDaySummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => a.Timestamp.Value.Hour)
+                .Select(g => new ValueTuple<int, int>(g.Key, g.Count()))
+                .OrderBy(x => x.Item1)
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 8️⃣ Weekly Trend
+        // ===================================================================
+        public async Task<List<(string DayOfWeek, int Total)>> GetWeeklyTrendAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => a.Timestamp.Value.DayOfWeek.ToString())
+                .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 9️⃣ Floor Summary
+        // ===================================================================
+        public async Task<List<(Guid? FloorId, string FloorName, int Total, int Done, double? AvgResponseSeconds)>>
+            GetFloorSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => new
+                {
+                    a.FloorplanMaskedArea.Floorplan.Floor.Id,
+                    a.FloorplanMaskedArea.Floorplan.Floor.Name
+                })
+                .Select(g => new ValueTuple<Guid?, string, int, int, double?>(
+                    g.Key.Id,
+                    g.Key.Name,
+                    g.Count(),
+                    g.Count(x => x.DoneTimestamp != null),
+                    g.Where(x => x.DoneTimestamp != null)
+                        .Average(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                ))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 🔟 Duration Summary
+        // ===================================================================
+        public async Task<List<(string DurationRange, int Count)>> GetDurationSummaryAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(x => x.DoneTimestamp != null && x.Timestamp >= from && x.Timestamp <= to)
+                .Select(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
+                .GroupBy(sec =>
+                    sec <= 30 ? "0–30s" :
+                    sec <= 60 ? "30–60s" :
+                    sec <= 300 ? "1–5m" :
+                    sec <= 900 ? "5–15m" : ">15m"
+                )
+                .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+                .ToListAsync();
+        }
+
+        // ===================================================================
+        // 1️⃣1️⃣ Trend by Action
+        // ===================================================================
+        public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmRecordTrackings
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .GroupBy(a => new { Date = a.Timestamp.Value.Date, Action = a.Action.ToString() })
+                .Select(g => new ValueTuple<DateTime, string, int>(
+                    g.Key.Date,
+                    g.Key.Action,
+                    g.Count()
+                ))
+                .ToListAsync();
+        }
+    }
+}
