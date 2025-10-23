@@ -59,13 +59,30 @@ namespace BusinessLogic.Services.Implementation
 
             var query = _query;
 
+             long totalRecords = await query.LongCountAsync();
+
+            // =======================================
+            // 🔹 2. Apply TimeReport
+            // =======================================
+            if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
+            {
+                var timeRange = GetTimeRange(request.TimeReport);
+                if (timeRange.HasValue)
+                {
+                    // ⏱️ Gunakan request.SortColumn yang sudah tervalidasi sebagai dasar waktu
+                    query = query.Where($"{request.SortColumn} >= @0 && {request.SortColumn} <= @1",
+                        timeRange.Value.from, timeRange.Value.to);
+                }
+            }   
+
+
             // var totalRecords = await query.CountAsync();
 
             // Calculate total records before filtering - comment ini untuk 0 record
-            long totalRecords = await query.LongCountAsync();
+           
 
             // Console.WriteLine($"Total records before filtering: {totalRecords}");
-            
+
 
             // Search
             if (!string.IsNullOrEmpty(request.SearchValue))
@@ -381,11 +398,11 @@ namespace BusinessLogic.Services.Implementation
                 projectionQuery = projectionQuery.OrderBy($"Entity.{request.SortColumn} {sortDirection}");
             }
 
-            
+
 
 
             // projectionQuery = projectionQuery.Skip(request.Start).Take(request.Length);
-           long filteredRecords = await projectionQuery.LongCountAsync();
+            long filteredRecords = await projectionQuery.LongCountAsync();
 
             // var filteredRecords = query.Count();
 
@@ -416,17 +433,17 @@ namespace BusinessLogic.Services.Implementation
             //         projectionQuery = projectionQuery.Skip(start).Take(request.Length);
             // }
 
-                if (filteredRecords == 0)
-                    {
-                        return new
-                        {
-                            draw = request.Draw,
-                            recordsTotal = totalRecords,
-                            recordsFiltered = 0,
-                            data = new List<TDto>()
-                        };
-                    }
-        
+            if (filteredRecords == 0)
+            {
+                return new
+                {
+                    draw = request.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = 0,
+                    data = new List<TDto>()
+                };
+            }
+
             var totalFilteredRecords = filteredRecords;
             var start = request.Start;
 
@@ -434,7 +451,7 @@ namespace BusinessLogic.Services.Implementation
             if (totalFilteredRecords <= 0) start = 0; // tidak ada data, offset = 0
                                                       // if (start >= totalFilteredRecords) start = Math.Max(totalFilteredRecords - request.Length, 0);
             if (start >= totalFilteredRecords)
-    start = (int)Math.Max(totalFilteredRecords - request.Length, 0);
+                start = (int)Math.Max(totalFilteredRecords - request.Length, 0);
 
 
             projectionQuery = projectionQuery.Skip(start).Take(request.Length);
@@ -466,8 +483,43 @@ namespace BusinessLogic.Services.Implementation
                 data = dtos
             };
         }
+
+
+        private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+        {
+            if (string.IsNullOrEmpty(timeReport))
+                return null;
+
+            var now = DateTime.UtcNow;
+            return timeReport.ToLower() switch
+            {
+                "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
+                "weekly" =>
+                (
+                    now.Date.AddDays(-(int)now.DayOfWeek + 1),
+                    now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)
+                ),
+                "monthly" =>
+                (
+                    new DateTime(now.Year, now.Month, 1),
+                    new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)).AddDays(1).AddTicks(-1)
+                ),
+                "yearly" =>
+                (
+                    new DateTime(now.Year, 1, 1),
+                    new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
+                ),
+                _ => null
+            };
+        }
+
+
     }
+
+    
 }
+
+
 
 // public async Task<object> FilterAsync(DataTablesRequest request)
 // {
