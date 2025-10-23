@@ -150,101 +150,82 @@ namespace BusinessLogic.Services.Implementation
                     if (value is JsonElement json)
                     {
                         // 🔹 Handle GUID / ID filters
-                        if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (json.ValueKind == JsonValueKind.Array)
-                            {
-                                var guids = json.EnumerateArray()
-                                    .Select(e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null)
-                                    .Where(g => g.HasValue)
-                                    .Select(g => g.Value)
-                                    .ToArray();
+                         // 🔹 Handle GUID / ID filters
+    if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+    {
+        // auto fallback: "Parent.Id" → "ParentId"
+        string targetKey = key;
+        if (key.Contains('.'))
+        {
+            var candidate = key.Replace(".", "");
+            if (typeof(TModel).GetProperty(candidate) != null)
+                targetKey = candidate;
+            else
+            {
+                var parent = key.Split('.')[0];
+                query = query.Where($"{parent} != null");
+            }
+        }
 
-                                if (guids.Any())
-                                {
-                                    var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
-                                    var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
-                                    if (key.Contains('.'))
-                                    {
-                                        var parent = key.Split('.')[0];
-                                        query = query.Where($"{parent} != null && @0.Contains({key})", guids);
-                                    }
-                                    else
-                                    {
-                                        query = isNullableGuid
-                                            ? query.Where($"{key} != null && @0.Contains({key}.Value)", guids)
-                                            : query.Where($"@0.Contains({key})", guids);
-                                    }
-                                }
-                            }
-                            else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
-                            {
-                                var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
-                                var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
-                                if (key.Contains('.'))
-                                {
-                                    var parent = key.Split('.')[0];
-                                    query = query.Where($"{parent} != null && {key} == @0", guidVal);
-                                }
-                                else
-                                {
-                                    query = isNullableGuid
-                                        ? query.Where($"{key} != null && {key}.Value == @0", guidVal)
-                                        : query.Where($"{key} == @0", guidVal);
-                                }
-                            }
-                            else
-                            {
-                                var strVal = json.GetString();
-                                query = query.Where($"{key} != null && {key}.ToLower().Contains(@0)", strVal?.ToLower());
-                            }
-                            continue;
-                        }
-                        // 🔹 Handle Enum columns
-                        if (_enumColumns.ContainsKey(key))
-                        {
-                            var enumType = _enumColumns[key];
+        if (json.ValueKind == JsonValueKind.Array)
+        {
+            var guids = json.EnumerateArray()
+                .Select(e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null)
+                .Where(g => g.HasValue)
+                .Select(g => g.Value)
+                .ToArray();
 
-                            if (json.ValueKind == JsonValueKind.Array)
-                            {
-                                var enumValues = json.EnumerateArray()
-                                    .Select(e =>
-                                    {
-                                        if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
-                                            return Enum.IsDefined(enumType, intVal) ? Enum.ToObject(enumType, intVal) : null;
+            if (guids.Any())
+                query = query.Where($"@0.Contains({targetKey})", guids);
+        }
+        else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
+        {
+            query = query.Where($"{targetKey} == @0", guidVal);
+        }
+        else
+        {
+            var strVal = json.GetString();
+            if (!string.IsNullOrEmpty(strVal))
+                query = query.Where($"{targetKey}.ToString().ToLower().Contains(@0)", strVal.ToLower());
+        }
+        continue;
+    }
 
-                                        if (e.ValueKind == JsonValueKind.String &&
-                                            Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
-                                            return enumObj;
+    // 🔹 Handle Enum columns
+    if (_enumColumns.ContainsKey(key))
+    {
+        var enumType = _enumColumns[key];
+        if (json.ValueKind == JsonValueKind.Array)
+        {
+            var enumValues = json.EnumerateArray()
+                .Select(e =>
+                {
+                    if (e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var intVal))
+                        return Enum.IsDefined(enumType, intVal) ? Enum.ToObject(enumType, intVal) : null;
+                    if (e.ValueKind == JsonValueKind.String && Enum.TryParse(enumType, e.GetString(), true, out var enumObj))
+                        return enumObj;
+                    return null;
+                })
+                .Where(v => v != null)
+                .ToArray();
 
-                                        return null;
-                                    })
-                                    .Where(v => v != null)
-                                    .ToArray();
+            if (enumValues.Any())
+                query = query.Where($"@0.Contains({key})", enumValues);
+        }
+        else if (json.ValueKind == JsonValueKind.String)
+        {
+            var strVal = json.GetString();
+            if (Enum.TryParse(enumType, strVal, true, out var enumVal))
+                query = query.Where($"{key} == @0", enumVal);
+        }
+        else if (json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out var intEnum))
+        {
+            var enumVal = Enum.ToObject(enumType, intEnum);
+            query = query.Where($"{key} == @0", enumVal);
+        }
+        continue;
+    }
 
-                                if (enumValues.Any())
-                                    query = query.Where($"@0.Contains({key})", enumValues);
-                            }
-                            else if (json.ValueKind == JsonValueKind.String)
-                            {
-                                var strVal = json.GetString();
-                                if (Enum.TryParse(enumType, strVal, true, out var enumVal))
-                                    query = query.Where($"{key} == @0", enumVal);
-                                else
-                                    throw new ArgumentException($"Invalid enum value for '{key}': {strVal}");
-                            }
-                            else if (json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out var intEnum))
-                            {
-                                var enumVal = Enum.ToObject(enumType, intEnum);
-                                query = query.Where($"{key} == @0", enumVal);
-                            }
-                            else
-                            {
-                                throw new ArgumentException($"Unsupported JsonElement type for enum column '{key}': {json.ValueKind}");
-                            }
-
-                            continue;
-                        }
 
                         // 🔹 Handle simple JsonElement types
                         switch (json.ValueKind)
