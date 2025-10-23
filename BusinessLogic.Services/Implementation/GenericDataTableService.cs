@@ -41,27 +41,25 @@ namespace BusinessLogic.Services.Implementation
                 throw new ArgumentException("Start cannot be negative.");
 
             if (request.Length <= 0 || request.Length > 10000)
-            {
-                request.Length = 10000; // batas maksimum data sekali fetch
-            }
+                request.Length = 10000;
 
-            // 🔹 Sort column validation
+            // ✅ Validasi Sort Column & Direction
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
                 request.SortColumn = _validSortColumns.FirstOrDefault() ?? "UpdatedAt";
 
             if (string.IsNullOrEmpty(request.SortDir) || !new[] { "asc", "desc" }.Contains(request.SortDir.ToLower()))
                 request.SortDir = "desc";
 
-            // 🔹 Base query (no tracking untuk hemat memory)
+            // 🧠 Base Query (no tracking)
             var query = _query.AsNoTracking();
 
             // =======================================
-            // 🔸 1. Total records (sebelum filter)
+            // 1️⃣ Total Records (Before Filter)
             // =======================================
             long totalRecords = await query.LongCountAsync();
 
             // =======================================
-            // 🔸 2. Apply TimeReport
+            // 2️⃣ Apply TimeReport
             // =======================================
             if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
             {
@@ -78,7 +76,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // =======================================
-            // 🔸 3. Apply Search
+            // 3️⃣ Apply Search
             // =======================================
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
@@ -89,21 +87,19 @@ namespace BusinessLogic.Services.Implementation
                             ? $"{col.Split('.')[0]} != null && {col}.ToLower().Contains(@0)"
                             : $"{col} != null && {col}.ToLower().Contains(@0)")
                     .Aggregate((current, next) => $"{current} || {next}");
-
                 query = query.Where(predicates, search);
             }
 
             // =======================================
-            // 🔸 4. Apply DateFilters & Custom Filters
+            // 4️⃣ Apply Date & Custom Filters
             // =======================================
             query = ApplyDateAndCustomFilters(query, request);
 
             // =======================================
-            // 🔸 5. Count filtered records
+            // 5️⃣ Filtered Records (after all filters)
             // =======================================
             long filteredRecords = await query.LongCountAsync();
 
-            // === MODE COUNT ONLY ===
             if (string.Equals(request.Mode, "count", StringComparison.OrdinalIgnoreCase))
             {
                 return new
@@ -115,38 +111,34 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // =======================================
-            // 🔸 6. Sorting & Paging
+            // 6️⃣ Sorting & Paging
             // =======================================
             query = query.OrderBy($"{request.SortColumn} {request.SortDir}");
             query = query.Skip(request.Start).Take(request.Length);
 
             // =======================================
-            // 🔸 7. Hybrid Projection / Mapping
+            // 7️⃣ Hybrid DTO Projection
             // =======================================
             List<TDto> data;
-
             if (typeof(TModel) == typeof(TDto))
             {
-                // ✅ Query sudah projection ke DTO → langsung gunakan
                 data = await query.Cast<TDto>().ToListAsync();
             }
             else
             {
                 try
                 {
-                    // ✅ Gunakan ProjectTo (SQL projection, hemat memory)
                     data = await query.ProjectTo<TDto>(_mapper.ConfigurationProvider).ToListAsync();
                 }
                 catch
                 {
-                    // ⚠️ Fallback ke mapping in-memory jika tidak bisa di-ProjectTo
                     var entities = await query.ToListAsync();
                     data = _mapper.Map<List<TDto>>(entities);
                 }
             }
 
             // =======================================
-            // 🔸 8. Return Response
+            // 8️⃣ Return
             // =======================================
             return new
             {
@@ -158,7 +150,7 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // =======================================
-        // 🔹 Apply DateFilter & Custom Filter
+        // 🧩 Date & Custom Filters
         // =======================================
         private IQueryable<TModel> ApplyDateAndCustomFilters(IQueryable<TModel> query, DataTablesRequest request)
         {
@@ -192,13 +184,14 @@ namespace BusinessLogic.Services.Implementation
                     var key = filter.Key;
                     var value = filter.Value;
 
+                    // ✅ 1️⃣ Handle JsonElement
                     if (value is JsonElement json)
                     {
                         query = ApplyJsonFilter(query, key, json);
                         continue;
                     }
 
-                    // 🔸 Enum Collections
+                    // ✅ 2️⃣ Enum Collections
                     if (value is IEnumerable<object> enumCollection && _enumColumns.ContainsKey(key))
                     {
                         var enumType = _enumColumns[key];
@@ -206,24 +199,21 @@ namespace BusinessLogic.Services.Implementation
                             .Select(e => Enum.TryParse(enumType, e?.ToString(), true, out var parsed) ? parsed : null)
                             .Where(e => e != null)
                             .ToArray();
-
                         if (enums.Any())
                             query = query.Where($"@0.Contains({key})", enums);
-
                         continue;
                     }
 
-                    // 🔸 GUID Collections
+                    // ✅ 3️⃣ GUID Collections
                     if (value is IEnumerable<Guid> guidCollection)
                     {
                         var guids = guidCollection.ToArray();
                         if (guids.Any())
                             query = query.Where($"@0.Contains({key})", guids);
-
                         continue;
                     }
 
-                    // 🔸 String
+                    // ✅ 4️⃣ String Values
                     if (value is string str && !string.IsNullOrEmpty(str))
                     {
                         if (_enumColumns.ContainsKey(key))
@@ -231,16 +221,17 @@ namespace BusinessLogic.Services.Implementation
                             var enumType = _enumColumns[key];
                             if (Enum.TryParse(enumType, str, true, out var enumVal))
                                 query = query.Where($"{key} == @0", enumVal);
+                            else
+                                throw new ArgumentException($"Invalid enum value for '{key}': {str}");
                         }
                         else
                         {
                             query = query.Where($"{key} != null && {key}.ToString().ToLower().Contains(@0)", str.ToLower());
                         }
-
                         continue;
                     }
 
-                    // 🔸 Simple types
+                    // ✅ 5️⃣ Simple value types
                     switch (value)
                     {
                         case Guid guidVal:
@@ -255,6 +246,8 @@ namespace BusinessLogic.Services.Implementation
                         case bool boolVal:
                             query = query.Where($"{key} == @0", boolVal);
                             break;
+                        default:
+                            throw new ArgumentException($"Unsupported filter type for column '{key}': {value.GetType().Name}");
                     }
                 }
             }
@@ -263,10 +256,11 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // =======================================
-        // 🔹 Apply JSON Element Filter
+        // 🧩 JSON Filter Handler (Nested + Enum)
         // =======================================
         private IQueryable<TModel> ApplyJsonFilter(IQueryable<TModel> query, string key, JsonElement json)
         {
+            // 🔸 Handle GUID/ID filters
             if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
             {
                 if (json.ValueKind == JsonValueKind.Array)
@@ -277,11 +271,37 @@ namespace BusinessLogic.Services.Implementation
                         .Select(g => g.Value)
                         .ToArray();
                     if (guids.Any())
-                        query = query.Where($"@0.Contains({key})", guids);
+                    {
+                        var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
+                        var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
+                        if (key.Contains('.'))
+                        {
+                            var parent = key.Split('.')[0];
+                            query = query.Where($"{parent} != null && @0.Contains({key})", guids);
+                        }
+                        else
+                        {
+                            query = isNullableGuid
+                                ? query.Where($"{key} != null && @0.Contains({key}.Value)", guids)
+                                : query.Where($"@0.Contains({key})", guids);
+                        }
+                    }
                 }
                 else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
                 {
-                    query = query.Where($"{key} == @0", guidVal);
+                    var prop = typeof(TModel).GetProperty(key.Contains('.') ? key.Split('.').Last() : key);
+                    var isNullableGuid = prop != null && prop.PropertyType == typeof(Guid?);
+                    if (key.Contains('.'))
+                    {
+                        var parent = key.Split('.')[0];
+                        query = query.Where($"{parent} != null && {key} == @0", guidVal);
+                    }
+                    else
+                    {
+                        query = isNullableGuid
+                            ? query.Where($"{key} != null && {key}.Value == @0", guidVal)
+                            : query.Where($"{key} == @0", guidVal);
+                    }
                 }
                 else
                 {
@@ -291,9 +311,11 @@ namespace BusinessLogic.Services.Implementation
                 return query;
             }
 
+            // 🔸 Enum Columns
             if (_enumColumns.ContainsKey(key))
             {
                 var enumType = _enumColumns[key];
+
                 if (json.ValueKind == JsonValueKind.Array)
                 {
                     var enumValues = json.EnumerateArray()
@@ -316,15 +338,21 @@ namespace BusinessLogic.Services.Implementation
                     var strVal = json.GetString();
                     if (Enum.TryParse(enumType, strVal, true, out var enumVal))
                         query = query.Where($"{key} == @0", enumVal);
+                    else
+                        throw new ArgumentException($"Invalid enum value for '{key}': {strVal}");
                 }
                 else if (json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out var intEnum))
                 {
                     var enumVal = Enum.ToObject(enumType, intEnum);
                     query = query.Where($"{key} == @0", enumVal);
                 }
+                else
+                    throw new ArgumentException($"Unsupported JsonElement type for enum '{key}': {json.ValueKind}");
+
                 return query;
             }
 
+            // 🔸 Simple Json Types
             switch (json.ValueKind)
             {
                 case JsonValueKind.String:
@@ -340,13 +368,15 @@ namespace BusinessLogic.Services.Implementation
                 case JsonValueKind.False:
                     query = query.Where($"{key} == @0", json.GetBoolean());
                     break;
+                default:
+                    throw new ArgumentException($"Unsupported JsonElement type for '{key}': {json.ValueKind}");
             }
 
             return query;
         }
 
         // =======================================
-        // 🔹 Time Range Preset
+        // 🕒 Time Range Helper
         // =======================================
         private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
         {
