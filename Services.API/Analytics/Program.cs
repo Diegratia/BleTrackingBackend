@@ -262,7 +262,7 @@ builder.Configuration
 // === DB Context (Read-only) ===
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection");
+    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,4433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
     options.UseSqlServer(conn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
@@ -282,11 +282,52 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(o => o.AddPolicy("RequireAll", p => p.RequireAuthenticatedUser()));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAuthenticatedUser", policy =>
+        policy.RequireAuthenticatedUser());
+    options.AddPolicy("RequiredSystemUser", policy =>
+        policy.RequireRole("System"));
+    options.AddPolicy("RequirePrimaryRole", policy =>
+        policy.RequireRole("Primary"));
+    options.AddPolicy("RequireSuperAdminRole", policy =>
+        policy.RequireRole("SuperAdmin"));
+
+    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
+    });
+
+    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
+    });
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
+    });
+   options.AddPolicy("RequireAll", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
+    });
+     options.AddPolicy("RequireAllAndUserCreated", policy =>
+    {
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ) || context.User.IsInRole("UserCreated"));
+    });
+    options.AddPolicy("RequireUserCreatedRole", policy =>
+        policy.RequireRole("UserCreated"));
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
+
 
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
@@ -294,8 +335,11 @@ builder.Services.AddScoped<AlarmAnalyticsRepository>();
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 
 // === Host config ===
-var port = Environment.GetEnvironmentVariable("ANALYTICS_PORT") ?? "5031";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+var port = Environment.GetEnvironmentVariable("ANALYTICS_PORT") ??
+           builder.Configuration["Ports:AnalyticsService"] ?? "5031";
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var host = env == "Production" ? "0.0.0.0" : "localhost";
+builder.WebHost.UseUrls($"http://{host}:{port}");
 
 var app = builder.Build();
 

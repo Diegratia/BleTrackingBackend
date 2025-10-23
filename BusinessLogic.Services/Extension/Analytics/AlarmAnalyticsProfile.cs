@@ -2,6 +2,7 @@ using AutoMapper;
 using Entities.Models;
 using Data.ViewModels.AlarmAnalytics;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension.Analytics
 {
@@ -10,6 +11,7 @@ namespace BusinessLogic.Services.Extension.Analytics
         public AlarmAnalyticsProfile()
         {
             // Mapping dari entity utama ke DTO (untuk log/detail alarm analytics)
+            CreateMap<AlarmAnalyticsRequest, AlarmAnalyticsRequestRM>();
             CreateMap<AlarmRecordTracking, AlarmAnalyticsDto>()
                 .ForMember(dest => dest.Visitor, opt => opt.MapFrom(src => src.Visitor))
                 .ForMember(dest => dest.Reader, opt => opt.MapFrom(src => src.Reader))

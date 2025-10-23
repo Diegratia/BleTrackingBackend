@@ -3,6 +3,8 @@ using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels;
 using Data.ViewModels.AlarmAnalytics;
 using Repositories.Repository.Analytics;
+using Repositories.Repository.RepoModel;
+
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
@@ -17,17 +19,13 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _mapper = mapper;
         }
 
-        private static (DateTime from, DateTime to) NormalizeDateRange(AlarmAnalyticsRequest request)
-        {
-            var from = request.From ?? DateTime.UtcNow.Date.AddDays(-7);
-            var to = request.To ?? DateTime.UtcNow;
-            return (from, to);
-        }
-
+        // ===================================================================
+        // 1️⃣ Daily Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmDailySummaryVM>> GetDailySummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetDailySummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetDailySummaryAsync(filter);
 
             var result = data.Select(x => new AlarmDailySummaryVM
             {
@@ -42,10 +40,14 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 .Ok(result, "Daily alarm summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 2️⃣ Area Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmAreaSummaryVM>> GetAreaSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetAreaSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetAreaSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmAreaSummaryVM
             {
                 FloorplanMaskedAreaId = x.AreaId,
@@ -54,38 +56,56 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 Done = x.Done,
                 AvgResponseSeconds = x.AvgResponseSeconds
             });
-            return ResponseCollection<AlarmAreaSummaryVM>.Ok(result, "Area summary retrieved successfully");
+
+            return ResponseCollection<AlarmAreaSummaryVM>
+                .Ok(result, "Area summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 3️⃣ Operator Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmOperatorSummaryVM>> GetOperatorSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetOperatorSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetOperatorSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmOperatorSummaryVM
             {
                 OperatorName = x.OperatorName,
                 TotalHandled = x.TotalHandled,
                 AvgResponseSeconds = x.AvgResponseSeconds
             });
-            return ResponseCollection<AlarmOperatorSummaryVM>.Ok(result, "Operator summary retrieved successfully");
+
+            return ResponseCollection<AlarmOperatorSummaryVM>
+                .Ok(result, "Operator summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 4️⃣ Status Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmStatusSummaryVM>> GetStatusSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetStatusSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetStatusSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmStatusSummaryVM
             {
                 Status = x.Status,
                 Total = x.Total
             });
-            return ResponseCollection<AlarmStatusSummaryVM>.Ok(result, "Status summary retrieved successfully");
+
+            return ResponseCollection<AlarmStatusSummaryVM>
+                .Ok(result, "Status summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 5️⃣ Building Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmBuildingSummaryVM>> GetBuildingSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetBuildingSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetBuildingSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmBuildingSummaryVM
             {
                 BuildingId = x.BuildingId,
@@ -94,13 +114,19 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 Done = x.Done,
                 AvgResponseSeconds = x.AvgResponseSeconds
             });
-            return ResponseCollection<AlarmBuildingSummaryVM>.Ok(result, "Building summary retrieved successfully");
+
+            return ResponseCollection<AlarmBuildingSummaryVM>
+                .Ok(result, "Building summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 6️⃣ Visitor Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmVisitorSummaryVM>> GetVisitorSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetVisitorSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetVisitorSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmVisitorSummaryVM
             {
                 VisitorId = x.VisitorId,
@@ -108,37 +134,55 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 TotalTriggered = x.TotalTriggered,
                 Done = x.Done
             });
-            return ResponseCollection<AlarmVisitorSummaryVM>.Ok(result, "Visitor summary retrieved successfully");
+
+            return ResponseCollection<AlarmVisitorSummaryVM>
+                .Ok(result, "Visitor summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 7️⃣ Time of Day Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmTimeOfDaySummaryVM>> GetTimeOfDaySummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetTimeOfDaySummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetTimeOfDaySummaryAsync(filter);
+
             var result = data.Select(x => new AlarmTimeOfDaySummaryVM
             {
                 Hour = x.Hour,
                 Total = x.Total
             });
-            return ResponseCollection<AlarmTimeOfDaySummaryVM>.Ok(result, "Time of day summary retrieved successfully");
+
+            return ResponseCollection<AlarmTimeOfDaySummaryVM>
+                .Ok(result, "Time of day summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 8️⃣ Weekly Trend
+        // ===================================================================
         public async Task<ResponseCollection<AlarmWeeklyTrendVM>> GetWeeklyTrendAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetWeeklyTrendAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetWeeklyTrendAsync(filter);
+
             var result = data.Select(x => new AlarmWeeklyTrendVM
             {
                 DayOfWeek = x.DayOfWeek,
                 Total = x.Total
             });
-            return ResponseCollection<AlarmWeeklyTrendVM>.Ok(result, "Weekly trend retrieved successfully");
+
+            return ResponseCollection<AlarmWeeklyTrendVM>
+                .Ok(result, "Weekly trend retrieved successfully");
         }
 
+        // ===================================================================
+        // 9️⃣ Floor Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmFloorSummaryVM>> GetFloorSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetFloorSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetFloorSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmFloorSummaryVM
             {
                 FloorId = x.FloorId,
@@ -147,32 +191,46 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 Done = x.Done,
                 AvgResponseSeconds = x.AvgResponseSeconds
             });
-            return ResponseCollection<AlarmFloorSummaryVM>.Ok(result, "Floor summary retrieved successfully");
+
+            return ResponseCollection<AlarmFloorSummaryVM>
+                .Ok(result, "Floor summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 🔟 Duration Summary
+        // ===================================================================
         public async Task<ResponseCollection<AlarmDurationSummaryVM>> GetDurationSummaryAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetDurationSummaryAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetDurationSummaryAsync(filter);
+
             var result = data.Select(x => new AlarmDurationSummaryVM
             {
                 DurationRange = x.DurationRange,
                 Count = x.Count
             });
-            return ResponseCollection<AlarmDurationSummaryVM>.Ok(result, "Duration summary retrieved successfully");
+
+            return ResponseCollection<AlarmDurationSummaryVM>
+                .Ok(result, "Duration summary retrieved successfully");
         }
 
+        // ===================================================================
+        // 1️⃣1️⃣ Trend by Action
+        // ===================================================================
         public async Task<ResponseCollection<AlarmTrendByActionVM>> GetTrendByActionAsync(AlarmAnalyticsRequest request)
         {
-            var (from, to) = NormalizeDateRange(request);
-            var data = await _repo.GetTrendByActionAsync(from, to);
+            var filter = _mapper.Map<AlarmAnalyticsRequestRM>(request);
+            var data = await _repo.GetTrendByActionAsync(filter);
+
             var result = data.Select(x => new AlarmTrendByActionVM
             {
                 Date = x.Date,
                 ActionStatus = x.ActionStatus,
                 Total = x.Total
             });
-            return ResponseCollection<AlarmTrendByActionVM>.Ok(result, "Trend by action retrieved successfully");
+
+            return ResponseCollection<AlarmTrendByActionVM>
+                .Ok(result, "Trend by action retrieved successfully");
         }
     }
 }

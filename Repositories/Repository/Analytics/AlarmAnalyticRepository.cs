@@ -2,6 +2,8 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+// using Repositories.RepoModels.Analytics;
+using Repositories.Repository.RepoModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,10 +25,18 @@ namespace Repositories.Repository.Analytics
         // 1️⃣ Daily Summary
         // ===================================================================
         public async Task<List<(DateTime Date, int Total, int Done, int Cancelled, double? AvgResponseSeconds)>>
-            GetDailySummaryAsync(DateTime from, DateTime to)
+            GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => a.Timestamp.Value.Date)
                 .Select(g => new ValueTuple<DateTime, int, int, int, double?>(
                     g.Key,
@@ -43,11 +53,18 @@ namespace Repositories.Repository.Analytics
         // 2️⃣ Area Summary
         // ===================================================================
         public async Task<List<(Guid? AreaId, string AreaName, int Total, int Done, double? AvgResponseSeconds)>>
-            GetAreaSummaryAsync(DateTime from, DateTime to)
+            GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Include(a => a.FloorplanMaskedArea)
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => new { a.FloorplanMaskedAreaId, a.FloorplanMaskedArea.Name })
                 .Select(g => new ValueTuple<Guid?, string, int, int, double?>(
                     g.Key.FloorplanMaskedAreaId,
@@ -64,10 +81,17 @@ namespace Repositories.Repository.Analytics
         // 3️⃣ Operator Summary
         // ===================================================================
         public async Task<List<(string OperatorName, int TotalHandled, double? AvgResponseSeconds)>>
-            GetOperatorSummaryAsync(DateTime from, DateTime to)
+            GetOperatorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.DoneBy != null)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.DoneBy != null);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => a.DoneBy)
                 .Select(g => new ValueTuple<string, int, double?>(
                     g.Key,
@@ -80,10 +104,17 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 4️⃣ Status Summary
         // ===================================================================
-        public async Task<List<(string Status, int Total)>> GetStatusSummaryAsync(DateTime from, DateTime to)
+        public async Task<List<(string Status, int Total)>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.Alarm != null)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.Alarm != null);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => a.Alarm.ToString())
                 .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
                 .ToListAsync();
@@ -93,11 +124,18 @@ namespace Repositories.Repository.Analytics
         // 5️⃣ Building Summary
         // ===================================================================
         public async Task<List<(Guid? BuildingId, string BuildingName, int Total, int Done, double? AvgResponseSeconds)>>
-            GetBuildingSummaryAsync(DateTime from, DateTime to)
+            GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
                 .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => new
                 {
                     a.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
@@ -118,11 +156,18 @@ namespace Repositories.Repository.Analytics
         // 6️⃣ Visitor Summary
         // ===================================================================
         public async Task<List<(Guid? VisitorId, string VisitorName, int TotalTriggered, int Done)>>
-            GetVisitorSummaryAsync(DateTime from, DateTime to)
+            GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
                 .Include(a => a.Visitor)
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => new { a.VisitorId, a.Visitor.Name })
                 .Select(g => new ValueTuple<Guid?, string, int, int>(
                     g.Key.VisitorId,
@@ -136,10 +181,17 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 7️⃣ Time of Day Summary
         // ===================================================================
-        public async Task<List<(int Hour, int Total)>> GetTimeOfDaySummaryAsync(DateTime from, DateTime to)
+        public async Task<List<(int Hour, int Total)>> GetTimeOfDaySummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => a.Timestamp.Value.Hour)
                 .Select(g => new ValueTuple<int, int>(g.Key, g.Count()))
                 .OrderBy(x => x.Item1)
@@ -149,10 +201,17 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 8️⃣ Weekly Trend
         // ===================================================================
-        public async Task<List<(string DayOfWeek, int Total)>> GetWeeklyTrendAsync(DateTime from, DateTime to)
+        public async Task<List<(string DayOfWeek, int Total)>> GetWeeklyTrendAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => a.Timestamp.Value.DayOfWeek.ToString())
                 .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
                 .ToListAsync();
@@ -162,11 +221,18 @@ namespace Repositories.Repository.Analytics
         // 9️⃣ Floor Summary
         // ===================================================================
         public async Task<List<(Guid? FloorId, string FloorName, int Total, int Done, double? AvgResponseSeconds)>>
-            GetFloorSummaryAsync(DateTime from, DateTime to)
+            GetFloorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
                 .Include(a => a.FloorplanMaskedArea.Floorplan.Floor)
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => new
                 {
                     a.FloorplanMaskedArea.Floorplan.Floor.Id,
@@ -186,10 +252,17 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 🔟 Duration Summary
         // ===================================================================
-        public async Task<List<(string DurationRange, int Count)>> GetDurationSummaryAsync(DateTime from, DateTime to)
+        public async Task<List<(string DurationRange, int Count)>> GetDurationSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(x => x.DoneTimestamp != null && x.Timestamp >= from && x.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(x => x.DoneTimestamp != null && x.Timestamp >= from && x.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .Select(x => EF.Functions.DateDiffSecond(x.Timestamp, x.DoneTimestamp))
                 .GroupBy(sec =>
                     sec <= 30 ? "0–30s" :
@@ -204,10 +277,17 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 1️⃣1️⃣ Trend by Action
         // ===================================================================
-        public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(DateTime from, DateTime to)
+        public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(AlarmAnalyticsRequestRM request)
         {
-            return await _context.AlarmRecordTrackings
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to)
+            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
                 .GroupBy(a => new { Date = a.Timestamp.Value.Date, Action = a.Action.ToString() })
                 .Select(g => new ValueTuple<DateTime, string, int>(
                     g.Key.Date,
@@ -215,6 +295,30 @@ namespace Repositories.Repository.Analytics
                     g.Count()
                 ))
                 .ToListAsync();
+        }
+
+        // ===================================================================
+        // 🔧 Shared Filter Logic
+        // ===================================================================
+        private IQueryable<AlarmRecordTracking> ApplyFilters(
+            IQueryable<AlarmRecordTracking> query, AlarmAnalyticsRequestRM request)
+        {
+            if (request.BuildingId.HasValue)
+                query = query.Where(a => a.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);
+
+            if (request.FloorId.HasValue)
+                query = query.Where(a => a.FloorplanMaskedArea.Floorplan.Floor.Id == request.FloorId);
+
+            if (request.FloorplanMaskedAreaId.HasValue)
+                query = query.Where(a => a.FloorplanMaskedAreaId == request.FloorplanMaskedAreaId);
+
+            if (request.VisitorId.HasValue)
+                query = query.Where(a => a.VisitorId == request.VisitorId);
+
+            if (!string.IsNullOrWhiteSpace(request.OperatorName))
+                query = query.Where(a => a.DoneBy == request.OperatorName);
+
+            return query;
         }
     }
 }
