@@ -44,6 +44,7 @@ for %%S in (
     card-access
     monitoring-config
     geofence
+    analytics
     gateway-health-api
     nginx
 ) do (

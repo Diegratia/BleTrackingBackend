@@ -258,6 +258,14 @@ services:
       - ./.env:/app/.env
     restart: always
 
+  analytics:
+    image: dev1pci2025/bletrackingbackend-analytics:latest
+    ports:
+      - "5031:5031"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
   nginx:
     image: dev1pci2025/bletrackingbackend-nginx:latest
     ports:
