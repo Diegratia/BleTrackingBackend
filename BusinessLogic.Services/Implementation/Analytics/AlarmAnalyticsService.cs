@@ -167,13 +167,14 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             var result = data.Select(x => new AlarmWeeklyTrendVM
             {
-                DayOfWeek = x.DayOfWeek,
+                // ✅ Ambil dari DateTime-nya
+                DayOfWeek = x.Date.ToString("dddd"), // contoh: "Monday"
                 Total = x.Total
             });
 
-            return ResponseCollection<AlarmWeeklyTrendVM>
-                .Ok(result, "Weekly trend retrieved successfully");
+            return ResponseCollection<AlarmWeeklyTrendVM>.Ok(result, "Weekly trend retrieved successfully");
         }
+
 
         // ===================================================================
         // 9️⃣ Floor Summary

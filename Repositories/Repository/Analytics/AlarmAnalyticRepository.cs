@@ -5,8 +5,8 @@ using Repositories.DbContexts;
 // using Repositories.RepoModels.Analytics;
 using Repositories.Repository.RepoModel;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Repositories.Repository.Analytics
@@ -104,9 +104,13 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 4️⃣ Status Summary
         // ===================================================================
+
         public async Task<List<(string Status, int Total)>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var (from, to) = (
+                request.From ?? DateTime.UtcNow.Date.AddDays(-7),
+                request.To ?? DateTime.UtcNow
+            );
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -114,11 +118,41 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
-            return await query
-                .GroupBy(a => a.Alarm.ToString())
-                .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+            // ✅ Step 1: Gunakan enum langsung (tanpa ToString)
+            var rawData = await query
+                .GroupBy(a => a.Alarm)
+                .Select(g => new
+                {
+                    Alarm = g.Key,
+                    Total = g.Count()
+                })
                 .ToListAsync();
+
+            // ✅ Step 2: Convert enum ke string di memory
+            return rawData
+                .Select(x => (
+                    Status: x.Alarm.HasValue ? x.Alarm.Value.ToString() : "Unknown",
+                    x.Total
+                ))
+                .ToList();
         }
+
+
+        // public async Task<List<(string Status, int Total)>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        // {
+        //     var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+        //     var query = _context.AlarmRecordTrackings
+        //         .AsNoTracking()
+        //         .Where(a => a.Timestamp >= from && a.Timestamp <= to && a.Alarm != null);
+
+        //     query = ApplyFilters(query, request);
+
+        //     return await query
+        //         .GroupBy(a => a.Alarm.ToString())
+        //         .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+        //         .ToListAsync();
+        // }
 
         // ===================================================================
         // 5️⃣ Building Summary
@@ -201,9 +235,12 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 8️⃣ Weekly Trend
         // ===================================================================
-        public async Task<List<(string DayOfWeek, int Total)>> GetWeeklyTrendAsync(AlarmAnalyticsRequestRM request)
+            public async Task<List<(DateTime Date, int Total)>> GetWeeklyTrendAsync(AlarmAnalyticsRequestRM request)
         {
-            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var (from, to) = (
+                request.From ?? DateTime.UtcNow.Date.AddDays(-7),
+                request.To ?? DateTime.UtcNow
+            );
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -211,11 +248,24 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
-            return await query
-                .GroupBy(a => a.Timestamp.Value.DayOfWeek.ToString())
-                .Select(g => new ValueTuple<string, int>(g.Key, g.Count()))
+            // ✅ gunakan anonymous type, bukan ValueTuple
+            var rawData = await query
+                .GroupBy(a => a.Timestamp.Value.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Total = g.Count()
+                })
+                .OrderBy(x => x.Date)
                 .ToListAsync();
+
+            // ✅ baru ubah ke ValueTuple setelah keluar dari EF
+            return rawData
+                .Select(x => (x.Date, x.Total))
+                .ToList();
         }
+
+
 
         // ===================================================================
         // 9️⃣ Floor Summary
@@ -277,9 +327,13 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 1️⃣1️⃣ Trend by Action
         // ===================================================================
+
         public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(AlarmAnalyticsRequestRM request)
         {
-            var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var (from, to) = (
+                request.From ?? DateTime.UtcNow.Date.AddDays(-7),
+                request.To ?? DateTime.UtcNow
+            );
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -287,15 +341,48 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
-            return await query
-                .GroupBy(a => new { Date = a.Timestamp.Value.Date, Action = a.Action.ToString() })
-                .Select(g => new ValueTuple<DateTime, string, int>(
-                    g.Key.Date,
-                    g.Key.Action,
-                    g.Count()
-                ))
+            // ✅ Group by Action (integer) — aman untuk SQL translation
+            var rawData = await query
+                .GroupBy(a => new { Date = a.Timestamp.Value.Date, Action = a.Action })
+                .Select(g => new
+                {
+                    Date = g.Key.Date,
+                    Action = g.Key.Action,
+                    Total = g.Count()
+                })
+                .OrderBy(x => x.Date)
                 .ToListAsync();
+
+            // ✅ Convert ke ValueTuple dan ubah Action jadi string di memory
+            return rawData
+                .Select(x => (
+                    x.Date,
+                    ActionStatus: x.Action.HasValue ? x.Action.Value.ToString() : "Unknown",
+                    x.Total
+                ))
+                .ToList();
         }
+
+
+        // public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(AlarmAnalyticsRequestRM request)
+        // {
+        //     var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
+
+        //     var query = _context.AlarmRecordTrackings
+        //         .AsNoTracking()
+        //         .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+        //     query = ApplyFilters(query, request);
+
+        //     return await query
+        //         .GroupBy(a => new { Date = a.Timestamp.Value.Date, Action = a.Action.ToString() })
+        //         .Select(g => new ValueTuple<DateTime, string, int>(
+        //             g.Key.Date,
+        //             g.Key.Action,
+        //             g.Count()
+        //         ))
+        //         .ToListAsync();
+        // }
 
         // ===================================================================
         // 🔧 Shared Filter Logic
