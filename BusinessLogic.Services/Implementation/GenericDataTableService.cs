@@ -187,7 +187,6 @@ namespace BusinessLogic.Services.Implementation
                     // ✅ 1️⃣ Handle JsonElement
                     if (value is JsonElement json)
                     {
-<<<<<<< HEAD
                         // 🔹 Handle GUID / ID filters
                          // 🔹 Handle GUID / ID filters
     if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
@@ -290,9 +289,6 @@ namespace BusinessLogic.Services.Implementation
                                 throw new ArgumentException($"Unsupported JsonElement type for '{key}': {json.ValueKind}");
                         }
 
-=======
-                        query = ApplyJsonFilter(query, key, json);
->>>>>>> fad520c053b4b85761e351c2f70b807e2917accb
                         continue;
                     }
 
