@@ -189,22 +189,24 @@ namespace BusinessLogic.Services.Implementation
                     {
                         // 🔹 Handle GUID / ID filters
                          // 🔹 Handle GUID / ID filters
+    // === 1️⃣ Handle GUID / ID filters ===
     if (key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
     {
-        // auto fallback: "Parent.Id" → "ParentId"
+        // 🔹 Fallback otomatis: "Parent.Id" → "ParentId"
         string targetKey = key;
         if (key.Contains('.'))
         {
             var candidate = key.Replace(".", "");
             if (typeof(TModel).GetProperty(candidate) != null)
-                targetKey = candidate;
+                targetKey = candidate; // pakai FK langsung
             else
             {
                 var parent = key.Split('.')[0];
-                query = query.Where($"{parent} != null");
+                query = query.Where($"{parent} != null"); // guard
             }
         }
 
+        // 🔹 Handle array GUID
         if (json.ValueKind == JsonValueKind.Array)
         {
             var guids = json.EnumerateArray()
@@ -214,18 +216,31 @@ namespace BusinessLogic.Services.Implementation
                 .ToArray();
 
             if (guids.Any())
-                query = query.Where($"@0.Contains({targetKey})", guids);
+            {
+                var prop = typeof(TModel).GetProperty(targetKey);
+                var isNullable = prop != null && prop.PropertyType == typeof(Guid?);
+                query = isNullable
+                    ? query.Where($"{targetKey} != null && @0.Contains({targetKey}.Value)", guids)
+                    : query.Where($"@0.Contains({targetKey})", guids);
+            }
         }
+        // 🔹 Handle single GUID string
         else if (json.ValueKind == JsonValueKind.String && Guid.TryParse(json.GetString(), out var guidVal))
         {
-            query = query.Where($"{targetKey} == @0", guidVal);
+            var prop = typeof(TModel).GetProperty(targetKey);
+            var isNullable = prop != null && prop.PropertyType == typeof(Guid?);
+            query = isNullable
+                ? query.Where($"{targetKey} != null && {targetKey}.Value == @0", guidVal)
+                : query.Where($"{targetKey} == @0", guidVal);
         }
         else
         {
+            // fallback string search
             var strVal = json.GetString();
             if (!string.IsNullOrEmpty(strVal))
-                query = query.Where($"{targetKey}.ToString().ToLower().Contains(@0)", strVal.ToLower());
+                query = query.Where($"{targetKey} != null && {targetKey}.ToString().ToLower().Contains(@0)", strVal.ToLower());
         }
+
         continue;
     }
 
