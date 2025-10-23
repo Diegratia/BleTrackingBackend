@@ -498,7 +498,7 @@ namespace BusinessLogic.Services.Implementation
                 (
                     now.Date.AddDays(-(int)now.DayOfWeek + 1),
                     now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)
-                ),
+            ),
                 "monthly" =>
                 (
                     new DateTime(now.Year, now.Month, 1),
