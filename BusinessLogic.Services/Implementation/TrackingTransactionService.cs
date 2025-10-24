@@ -77,25 +77,51 @@ namespace BusinessLogic.Services.Implementation
         //     await _repository.DeleteAsync(transaction);
         // }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
-        {
-            var timeRange = GetTimeRange(request.TimeReport);
-            var query = _repository.GetProjectionQueryable(timeRange?.from, timeRange?.to);
+            public async Task<object> FilterAsync(DataTablesRequest request)
+            {
+                // Query dari repository sudah projection manual (langsung ke RM)
+                var query = _repository.GetProjectionQueryableManual();
+
+                var searchableColumns = new[]
+                {
+                    "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName"
+                };
+
+                var validSortColumns = new[]
+                {
+                    "TransTime", "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName", "CardId", "AlarmStatus"
+                };
+
+                // 🧠 Di sini kita tidak butuh AutoMapper, karena source dan target sama (TModel == TDto)
+                var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
+                    query,
+                    _mapper, // masih bisa dikirim, tapi tidak akan dipakai
+                    searchableColumns,
+                    validSortColumns
+                );
+
+                return await filterService.FilterAsync(request);
+            }
+
+        // public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var timeRange = GetTimeRange(request.TimeReport);
+        //     var query = _repository.GetProjectionQueryable(timeRange?.from, timeRange?.to);
 
 
-            var searchableColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
-            var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
+        //     var searchableColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
 
-            var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+        //     var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
 
 
 
-            return await filterService.FilterAsync(request);
-        }
+        //     return await filterService.FilterAsync(request);
+        // }
 
         //  public async Task<object> FilterAsync(DataTablesRequest request)
         // {

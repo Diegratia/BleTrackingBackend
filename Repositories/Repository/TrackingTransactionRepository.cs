@@ -123,6 +123,30 @@ namespace Repositories.Repository
             return query.ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
         }
 
+        public IQueryable<TrackingTransactionRM> GetProjectionQueryableManual()
+{
+    return _context.TrackingTransactions
+        .AsNoTracking()
+        .Select(t => new TrackingTransactionRM
+        {
+            Id = t.Id,
+            TransTime = t.TransTime,
+            ReaderId = t.ReaderId,
+            ReaderName = t.Reader != null ? t.Reader.Name : null,
+            VisitorId = t.VisitorId,
+            VisitorName = t.Visitor != null ? t.Visitor.Name : null,
+            MemberId = t.MemberId,
+            MemberName = t.Member != null ? t.Member.Name : null,
+            FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+            FloorplanMaskedAreaName = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.Name : null,
+            CoordinateX = t.CoordinateX,
+            CoordinateY = t.CoordinateY,
+            AlarmStatus = t.AlarmStatus.HasValue ? t.AlarmStatus.ToString() : null,
+            Battery = t.Battery
+        });
+}
+
+
         
         public IQueryable<TrackingTransactionWithAlarm> GetAllWithAlarmQueryable()
         {
