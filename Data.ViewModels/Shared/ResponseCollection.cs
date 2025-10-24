@@ -6,9 +6,7 @@ namespace Data.ViewModels
     {
         public bool Success { get; set; } = true;
         public string Message { get; set; } = "OK";
-        public IEnumerable<T>? Data { get; set; }
-        public int? TotalRecords { get; set; }
-        public int? FilteredRecords { get; set; }
+        public CollectionContent<T> Collection { get; set; } = new();
 
         public static ResponseCollection<T> Ok(IEnumerable<T> data, string message = "OK")
         {
@@ -16,7 +14,10 @@ namespace Data.ViewModels
             {
                 Success = true,
                 Message = message,
-                Data = data
+                Collection = new CollectionContent<T>
+                {
+                    Data = data
+                }
             };
         }
 
@@ -26,8 +27,18 @@ namespace Data.ViewModels
             {
                 Success = false,
                 Message = message,
-                Data = null
+                Collection = new CollectionContent<T>
+                {
+                    Data = new List<T>()
+                }
             };
         }
+    }
+
+    public class CollectionContent<T>
+    {
+        public IEnumerable<T>? Data { get; set; }
+        public int? TotalRecords { get; set; }
+        public int? FilteredRecords { get; set; }
     }
 }
