@@ -31,7 +31,16 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetAreaSummaryAsync(request);
-                return ResponseCollection<object>.Ok(data.Cast<object>(), "Incident area summary retrieved Okfully");
+                return ResponseCollection<object>.Ok(
+                data.Select(x => new
+                {
+                    AreaId = x.AreaId,
+                    AreaName = x.AreaName,
+                    Total = x.Total
+                }),
+                "Incident area summary retrieved successfully"
+            );
+
             }
             catch (Exception ex)
             {
@@ -48,7 +57,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetDailySummaryAsync(request);
-                return ResponseCollection<object>.Ok(data.Cast<object>(), "Incident area summary retrieved successfully");
+                var result = data.Select(x => new { Date = x.Date, Total = x.Total });
+                return ResponseCollection<object>.Ok(result, "Incident daily summary retrieved successfully");
             }
             catch (Exception ex)
             {
@@ -65,7 +75,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetStatusSummaryAsync(request);
-                return ResponseCollection<object>.Ok(data.Cast<object>(), "Incident status summary retrieved Okfully");
+                var result = data.Select(x => new { Status = x.Status, Total = x.Total });
+                return ResponseCollection<object>.Ok(result, "Incident status summary retrieved successfully");
             }
             catch (Exception ex)
             {
@@ -82,7 +93,13 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetVisitorSummaryAsync(request);
-                return ResponseCollection<object>.Ok(data.Cast<object>(), "Incident visitor summary retrieved Okfully");
+                var result = data.Select(x => new
+                {
+                    VisitorId = x.VisitorId,
+                    VisitorName = x.VisitorName,
+                    Total = x.Total
+                });
+                return ResponseCollection<object>.Ok(result, "Incident visitor summary retrieved Okfully");
             }
             catch (Exception ex)
             {
@@ -99,7 +116,14 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetBuildingSummaryAsync(request);
-                return ResponseCollection<object>.Ok(data.Cast<object>(), "Incident building summary retrieved Okfully");
+                var result = data.Select(x => new
+            {
+                BuildingId = x.BuildingId,
+                BuildingName = x.BuildingName,
+                Total = x.Total
+            });
+
+                return ResponseCollection<object>.Ok(result, "Incident building summary retrieved Okfully");
             }
             catch (Exception ex)
             {
