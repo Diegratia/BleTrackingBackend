@@ -24,32 +24,36 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 1️⃣ Total Alarm per Area (Incident-level)
         // ===================================================================
-public async Task<List<(Guid? AreaId, string AreaName, int Total)>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
-{
-    var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-
-    var query = _context.AlarmRecordTrackings
-        .AsNoTracking()
-        .Include(a => a.FloorplanMaskedArea)
-        .Where(a => a.Timestamp >= from && a.Timestamp <= to);
-
-    query = ApplyFilters(query, request);
-
-    var incidents = await query
-        .Select(a => new
+        public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            a.AlarmTriggersId,
-            a.FloorplanMaskedAreaId,
-            AreaName = a.FloorplanMaskedArea.Name
-        })
-        .Distinct()
-        .ToListAsync();
+        var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
 
-    return incidents
-        .GroupBy(x => new { x.FloorplanMaskedAreaId, x.AreaName })
-        .Select(g => (g.Key.FloorplanMaskedAreaId, g.Key.AreaName, g.Count()))
-        .ToList();
-}
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Include(a => a.FloorplanMaskedArea)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            var data = await query
+                .Select(a => new
+                {
+                    a.AlarmTriggersId,
+                    a.FloorplanMaskedAreaId,
+                    AreaName = a.FloorplanMaskedArea.Name
+                })
+                .Distinct()
+                .GroupBy(x => new { x.FloorplanMaskedAreaId, x.AreaName })
+                .Select(g => new AlarmAreaSummaryRM
+                {
+                    AreaId = g.Key.FloorplanMaskedAreaId,
+                    AreaName = g.Key.AreaName,
+                    Total = g.Count()
+                })
+                .ToListAsync();
+
+            return data;
+        }
 
 
         // ===================================================================

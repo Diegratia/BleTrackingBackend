@@ -23,6 +23,12 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
+            CreateMap<AlarmAreaSummaryRM, AlarmAreaSummaryDto>();
+            CreateMap<AlarmVisitorSummaryRM, AlarmVisitorSummaryDto>();
+            CreateMap<AlarmBuildingSummaryRM, AlarmBuildingSummaryDto>();
+            CreateMap<AlarmDailySummaryRM, AlarmDailySummaryDto>();
+            CreateMap<AlarmStatusSummaryRM, AlarmStatusSummaryDto>();
+            
         }
     }
 }
