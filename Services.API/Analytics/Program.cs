@@ -242,6 +242,8 @@ using Repositories.Repository.Analytics;
 using DotNetEnv;
 using Data.ViewModels;
 using BusinessLogic.Services.Extension.Analytics;
+using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Interface;
 
 try
 {
@@ -331,7 +333,9 @@ builder.Services.AddHttpContextAccessor();
 
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
+builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
 builder.Services.AddScoped<AlarmAnalyticsRepository>();
+builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 
 // === Host config ===

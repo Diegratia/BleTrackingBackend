@@ -39,6 +39,9 @@ namespace BusinessLogic.Services.Implementation
         {
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
+            
+            if (request.Length == 0)
+                throw new ArgumentException("Length cannot be negative.");
 
             if (request.Length <= 0 || request.Length > 1000)
                 request.Length = 1000;
@@ -49,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (string.IsNullOrEmpty(request.SortDir) || !new[] { "asc", "desc" }.Contains(request.SortDir.ToLower()))
                 request.SortDir = "desc";
-
+            
             // 🧠 Base Query (no tracking)
             var query = _query.AsNoTracking();
 
@@ -61,6 +64,11 @@ namespace BusinessLogic.Services.Implementation
             // =======================================
             // 2️⃣ Apply TimeReport
             // =======================================
+            // ✅ Override: jika DateFilters ada isinya, anggap CustomDate
+            if (request.DateFilters != null && request.DateFilters.Any())
+            {
+                request.TimeReport = "CustomDate";
+            }
             if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
             {
                 var timeRange = GetTimeRange(request.TimeReport);
