@@ -139,8 +139,7 @@ namespace Repositories.Repository
             MemberName = t.Member != null ? t.Member.Name : null,
             FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
             FloorplanMaskedAreaName = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.Name : null,
-            CoordinateX = t.CoordinateX,
-            CoordinateY = t.CoordinateY,
+            AreaShape = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.AreaShape : null,
             AlarmStatus = t.AlarmStatus.HasValue ? t.AlarmStatus.ToString() : null,
             Battery = t.Battery
         });
