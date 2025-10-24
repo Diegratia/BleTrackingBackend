@@ -59,33 +59,43 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 2️⃣ Total Alarm per Hari (Incident-level)
         // ===================================================================
-            public async Task<List<(DateTime Date, int Total)>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
-        {
-            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+                public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
+            {
+                var (from, to) = (
+                    request.From ?? DateTime.UtcNow.AddDays(-7),
+                    request.To ?? DateTime.UtcNow
+                );
 
-            var query = _context.AlarmRecordTrackings
-                .AsNoTracking()
-                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+                var query = _context.AlarmRecordTrackings
+                    .AsNoTracking()
+                    .Where(a => a.Timestamp >= from && a.Timestamp <= to);
 
-            query = ApplyFilters(query, request);
+                query = ApplyFilters(query, request);
 
-            // lakukan Distinct di database
-            var incidents = await query
-                .Select(a => new
-                {
-                    Date = a.Timestamp.Value.Date,
-                    a.AlarmTriggersId
-                })
-                .Distinct()
-                .ToListAsync();
+                // Ambil data minimal yang diperlukan dan Distinct berdasarkan AlarmTriggersId + Date
+                var incidents = await query
+                    .Select(a => new
+                    {
+                        Date = a.Timestamp.Value.Date,
+                        a.AlarmTriggersId
+                    })
+                    .Distinct()
+                    .ToListAsync();
 
-            // lakukan GroupBy di memory
-            return incidents
-                .GroupBy(x => x.Date)
-                .Select(g => (g.Key, g.Count()))
-                .OrderBy(x => x.Key)
-                .ToList();
-        }
+                // GroupBy di memory — lebih aman dari segi EF Translation
+                var grouped = incidents
+                    .GroupBy(x => x.Date)
+                    .Select(g => new AlarmDailySummaryRM
+                    {
+                        Date = g.Key,
+                        Total = g.Count()
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                return grouped;
+            }
+
 
 
         // ===================================================================
