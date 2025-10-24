@@ -93,7 +93,7 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
-                public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
+            public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllWithAlarmQueryable();
 
