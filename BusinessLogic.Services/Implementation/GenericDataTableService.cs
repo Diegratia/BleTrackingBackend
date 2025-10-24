@@ -40,8 +40,8 @@ namespace BusinessLogic.Services.Implementation
             if (request.Start < 0)
                 throw new ArgumentException("Start cannot be negative.");
 
-            if (request.Length <= 0 || request.Length > 10000)
-                request.Length = 10000;
+            if (request.Length <= 0 || request.Length > 1000)
+                request.Length = 1000;
 
             // ✅ Validasi Sort Column & Direction
             if (string.IsNullOrEmpty(request.SortColumn) || !_validSortColumns.Contains(request.SortColumn))
