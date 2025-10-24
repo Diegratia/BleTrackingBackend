@@ -97,6 +97,24 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
+        //  public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryable().AsNoTracking();
+
+        //     var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
+
+        //     var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
+
+
+
         public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllWithAlarmQueryable();
