@@ -79,9 +79,11 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetProjectionQueryable();
+            var timeRange = GetTimeRange(request.TimeReport);
+            var query = _repository.GetProjectionQueryable(timeRange?.from, timeRange?.to);
 
-            var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+
+            var searchableColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
             var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
 
             var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
@@ -90,10 +92,12 @@ namespace BusinessLogic.Services.Implementation
                 searchableColumns,
                 validSortColumns);
 
+
+
             return await filterService.FilterAsync(request);
         }
 
-            public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
+        public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllWithAlarmQueryable();
 
@@ -137,7 +141,7 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
-        
+
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -224,7 +228,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var trackingTransactions = await _repository.GetAllExportAsync();
 
@@ -234,7 +238,7 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "TransTime";
-            worksheet.Cell(1, 3).Value = "Reader Name"; 
+            worksheet.Cell(1, 3).Value = "Reader Name";
             worksheet.Cell(1, 4).Value = "Card Id";
             worksheet.Cell(1, 5).Value = "Coordinate X";
             worksheet.Cell(1, 6).Value = "Coordinate Y";
@@ -250,7 +254,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = trackingtransaction.TransTime;
-                worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name?? "-";
+                worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name ?? "-";
                 worksheet.Cell(row, 4).Value = trackingtransaction.Card.Dmac ?? "-";
                 worksheet.Cell(row, 5).Value = trackingtransaction.CoordinateX;
                 worksheet.Cell(row, 6).Value = trackingtransaction.CoordinateY;
@@ -267,5 +271,35 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
+        
+        private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+{
+    if (string.IsNullOrEmpty(timeReport))
+        return null;
+
+    var now = DateTime.UtcNow; // gunakan UTC agar konsisten lintas zona waktu
+
+    return timeReport.ToLower() switch
+    {
+        "daily" => (
+            now.Date,
+            now.Date.AddDays(1).AddTicks(-1)
+        ),
+        "weekly" => (
+            now.Date.AddDays(-(int)now.DayOfWeek + 1), // Senin
+            now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu
+        ),
+        "monthly" => (
+            new DateTime(now.Year, now.Month, 1),
+            new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)).AddDays(1).AddTicks(-1)
+        ),
+        "yearly" => (
+            new DateTime(now.Year, 1, 1),
+            new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
+        ),
+        _ => null // CustomDate akan diabaikan (gunakan DateFilters manual)
+    };
+}
+
     }
 }

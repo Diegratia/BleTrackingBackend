@@ -110,12 +110,18 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
         
-                public IQueryable<TrackingTransactionRM> GetProjectionQueryable()
-                {
-                    return _context.AlarmRecordTrackings
-                    .AsNoTracking()
-                    .ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
-                }
+        public IQueryable<TrackingTransactionRM> GetProjectionQueryable(DateTime? from = null, DateTime? to = null)
+        {
+            var query = _context.TrackingTransactions
+                .AsNoTracking();
+
+            // ✅ Filter waktu di entity langsung, bukan DTO
+            if (from.HasValue && to.HasValue)
+                query = query.Where(a => a.TransTime >= from && a.TransTime <= to);
+
+            // ✅ Baru di-project ke DTO
+            return query.ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
+        }
 
         
         public IQueryable<TrackingTransactionWithAlarm> GetAllWithAlarmQueryable()
