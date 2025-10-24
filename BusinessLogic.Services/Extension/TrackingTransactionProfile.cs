@@ -28,9 +28,9 @@ namespace BusinessLogic.Services.Extension
              CreateMap<AlarmRecordTracking, TrackingTransactionRM>()
             .ForMember(dest => dest.ReaderName, opt => opt.MapFrom(src => src.Reader.Name))
             .ForMember(dest => dest.VisitorName, opt => opt.MapFrom(src => src.Visitor.Name))
-            .ForMember(dest => dest.MaskedAreaName, opt => opt.MapFrom(src => src.FloorplanMaskedArea.Name))
-            .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => src.Alarm.ToString()))
-            .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()));
+            .ForMember(dest => dest.FloorplanMaskedAreaName, opt => opt.MapFrom(src => src.FloorplanMaskedArea.Name))
+            .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()))
+            .ForMember(dest => dest.AlarmRecprdStatus, opt => opt.MapFrom(src => src.Alarm.ToString()));
 
         }
     }

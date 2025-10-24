@@ -18,6 +18,8 @@ namespace Repositories.Repository.RepoModel
         public float? CoordinateX { get; set; }
         public float? CoordinateY { get; set; }
         public string AlarmStatus { get; set; }
+        public string ActionStatus { get; set; }
+        public string AlarmRecprdStatus { get; set; }
         public long? Battery { get; set; }
     }
 }
