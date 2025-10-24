@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -24,6 +25,16 @@ namespace BusinessLogic.Services.Extension
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
             CreateMap<TrackingTransactionWithAlarm, TrackingTransactionWithAlarmDto>();
 
+             CreateMap<AlarmRecordTracking, TrackingTransactionRM>()
+            .ForMember(dest => dest.ReaderName, opt => opt.MapFrom(src => src.Reader.Name))
+            .ForMember(dest => dest.VisitorName, opt => opt.MapFrom(src => src.Visitor.Name))
+            .ForMember(dest => dest.MaskedAreaName, opt => opt.MapFrom(src => src.FloorplanMaskedArea.Name))
+            .ForMember(dest => dest.AlarmStatus, opt => opt.MapFrom(src => src.Alarm.ToString()))
+            .ForMember(dest => dest.ActionStatus, opt => opt.MapFrom(src => src.Action.ToString()));
+
         }
     }
 }
+
+
+

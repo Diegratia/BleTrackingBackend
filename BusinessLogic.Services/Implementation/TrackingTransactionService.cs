@@ -16,6 +16,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -78,12 +79,12 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable().AsNoTracking();
+            var query = _repository.GetProjectionQueryable();
 
             var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
             var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
 
-            var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
+            var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
                 query,
                 _mapper,
                 searchableColumns,

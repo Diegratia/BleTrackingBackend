@@ -1,19 +1,24 @@
 using Entities.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Repository.RepoModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 
 namespace Repositories.Repository
 {
     public class TrackingTransactionRepository : BaseRepository
     {
-        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        private readonly IMapper _mapper;
+        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper)
             : base(context, httpContextAccessor)
         {
+            _mapper = mapper;
         }
 
         public async Task<TrackingTransaction?> GetByIdAsync(Guid id)
@@ -105,38 +110,46 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
         
+                public IQueryable<TrackingTransactionRM> GetProjectionQueryable()
+                {
+                    return _context.AlarmRecordTrackings
+                    .AsNoTracking()
+                    .ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
+                }
+
+        
         public IQueryable<TrackingTransactionWithAlarm> GetAllWithAlarmQueryable()
-            {
-                var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-                var trackingQuery = _context.TrackingTransactions
-                    .IgnoreQueryFilters()
-                    .Include(t => t.Reader)
-                    .Include(t => t.Card)
-                    .Include(t => t.Visitor)
-                    .Include(t => t.Member)
-                    .Include(t => t.FloorplanMaskedArea);
+            var trackingQuery = _context.TrackingTransactions
+                .IgnoreQueryFilters()
+                .Include(t => t.Reader)
+                .Include(t => t.Card)
+                .Include(t => t.Visitor)
+                .Include(t => t.Member)
+                .Include(t => t.FloorplanMaskedArea);
 
-                var alarmQuery = _context.AlarmRecordTrackings
-                    .IgnoreQueryFilters()
-                    .Include(a => a.Reader)
-                    .Include(a => a.Visitor)
-                    .Include(a => a.Member)
-                    .Include(a => a.FloorplanMaskedArea);
+            var alarmQuery = _context.AlarmRecordTrackings
+                .IgnoreQueryFilters()
+                .Include(a => a.Reader)
+                .Include(a => a.Visitor)
+                .Include(a => a.Member)
+                .Include(a => a.FloorplanMaskedArea);
 
-                // join berdasarkan VisitorId — bisa diubah ke CardId jika lebih akurat
-                var joined = from tt in ApplyApplicationIdFilter(trackingQuery, applicationId, isSystemAdmin)
-                            join ar in ApplyApplicationIdFilter(alarmQuery, applicationId, isSystemAdmin)
-                                on tt.VisitorId equals ar.VisitorId into alarmGroup
-                            from ar in alarmGroup.DefaultIfEmpty()
-                            select new TrackingTransactionWithAlarm
-                            {
-                                Tracking = tt,
-                                AlarmRecord = ar
-                            };
+            // join berdasarkan VisitorId — bisa diubah ke CardId jika lebih akurat
+            var joined = from tt in ApplyApplicationIdFilter(trackingQuery, applicationId, isSystemAdmin)
+                         join ar in ApplyApplicationIdFilter(alarmQuery, applicationId, isSystemAdmin)
+                             on tt.VisitorId equals ar.VisitorId into alarmGroup
+                         from ar in alarmGroup.DefaultIfEmpty()
+                         select new TrackingTransactionWithAlarm
+                         {
+                             Tracking = tt,
+                             AlarmRecord = ar
+                         };
 
-                return joined;
-            }
+            return joined;
+        }
 
 
         private async Task ValidateRelatedEntitiesAsync(TrackingTransaction transaction, Guid? applicationId, bool isSystemAdmin)
