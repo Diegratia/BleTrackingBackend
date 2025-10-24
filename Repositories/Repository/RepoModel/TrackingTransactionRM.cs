@@ -1,4 +1,5 @@
 using System;
+using Bogus.DataSets;
 
 namespace Repositories.Repository.RepoModel
 {
@@ -11,5 +12,6 @@ namespace Repositories.Repository.RepoModel
         public string? MaskedAreaName { get; set; }
         public string? AlarmStatus { get; set; }
         public string? ActionStatus { get; set; }
+        public DateTime? TransTime { get; set; }
     }
 }
