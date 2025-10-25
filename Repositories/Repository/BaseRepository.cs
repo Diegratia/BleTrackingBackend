@@ -135,9 +135,27 @@ namespace Repositories.Repository
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
         }
-        
 
+        protected (DateTime from, DateTime to)? ResolveTimeRange(string? timeReport)
+        {
+            if (string.IsNullOrWhiteSpace(timeReport))
+                return null;
 
+            var now = DateTime.UtcNow;
+
+            return timeReport.Trim().ToLower() switch
+            {
+                "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
+                "weekly" => (now.Date.AddDays(-(int)now.DayOfWeek + 1),
+                            now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)),
+                "monthly" => (new DateTime(now.Year, now.Month, 1),
+                            new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
+                                .AddDays(1).AddTicks(-1)),
+                "yearly" => (new DateTime(now.Year, 1, 1),
+                            new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)),
+                _ => null
+            };
+        }
     }
 }
 
