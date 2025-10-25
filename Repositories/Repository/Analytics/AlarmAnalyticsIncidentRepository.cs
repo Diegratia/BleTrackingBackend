@@ -55,16 +55,15 @@ namespace Repositories.Repository.Analytics
             return data;
         }
 
-
         // ===================================================================
         // 2️⃣ Total Alarm per Hari (Incident-level)
         // ===================================================================
         public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            var (from, to) = (
-                request.From ?? DateTime.UtcNow.AddDays(-7),
-                request.To ?? DateTime.UtcNow
-            );
+            // 🕒 Gunakan helper untuk override from-to
+            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
+            var to = range?.to ?? request.To ?? DateTime.UtcNow;
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -72,7 +71,6 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
-            // Ambil data minimal yang diperlukan dan Distinct berdasarkan AlarmTriggersId + Date
             var incidents = await query
                 .Select(a => new
                 {
@@ -82,7 +80,6 @@ namespace Repositories.Repository.Analytics
                 .Distinct()
                 .ToListAsync();
 
-            // GroupBy di memory — lebih aman dari segi EF Translation
             var grouped = incidents
                 .GroupBy(x => x.Date)
                 .Select(g => new AlarmDailySummaryRM
@@ -98,10 +95,11 @@ namespace Repositories.Repository.Analytics
 
 
 
+
         // ===================================================================
         // 3️⃣ Alarm per Status (Incident-level)
         // ===================================================================
-            public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -143,7 +141,7 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 4️⃣ Total Alarm per Visitor (Incident-level)
         // ===================================================================
-            public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -213,40 +211,40 @@ namespace Repositories.Repository.Analytics
                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
                 .Select(g => new AlarmBuildingSummaryRM
                 {
-                BuildingId = g.Key.BuildingId,
-                   BuildingName = g.Key.BuildingName,
-                   Total = g.Count()
+                    BuildingId = g.Key.BuildingId,
+                    BuildingName = g.Key.BuildingName,
+                    Total = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
                 .ToList();
-                return grouped;
+            return grouped;
         }
-//    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
-//         {
-//             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+        //    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
+        //         {
+        //             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
 
-//             var query = _context.AlarmRecordTrackings
-//                 .AsNoTracking()
-//                 .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
-//                 .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+        //             var query = _context.AlarmRecordTrackings
+        //                 .AsNoTracking()
+        //                 .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
+        //                 .Where(a => a.Timestamp >= from && a.Timestamp <= to);
 
-//             query = ApplyFilters(query, request);
+        //             query = ApplyFilters(query, request);
 
-//             var incidents = await query
-//                 .Select(a => new
-//                 {
-//                     a.AlarmTriggersId,
-//                     BuildingId = a.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
-//                     BuildingName = a.FloorplanMaskedArea.Floorplan.Floor.Building.Name
-//                 })
-//                 .Distinct()
-//                 .ToListAsync();
+        //             var incidents = await query
+        //                 .Select(a => new
+        //                 {
+        //                     a.AlarmTriggersId,
+        //                     BuildingId = a.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
+        //                     BuildingName = a.FloorplanMaskedArea.Floorplan.Floor.Building.Name
+        //                 })
+        //                 .Distinct()
+        //                 .ToListAsync();
 
-//             return incidents
-//                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
-//                 .Select(g => (g.Key.BuildingId, g.Key.BuildingName, g.Count()))
-//                 .ToList();
-// }
+        //             return incidents
+        //                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
+        //                 .Select(g => (g.Key.BuildingId, g.Key.BuildingName, g.Count()))
+        //                 .ToList();
+        // }
 
 
         // ===================================================================
@@ -271,5 +269,49 @@ namespace Repositories.Repository.Analytics
 
             return query;
         }
-    }
+
+                    // =======================================
+            // 🕒 Time Range Helper (Reusable)
+            // =======================================
+            private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+            {
+                if (string.IsNullOrWhiteSpace(timeReport))
+                    return null;
+
+                // Gunakan UTC agar konsisten untuk server analytics
+                var now = DateTime.UtcNow;
+
+                // Pastikan format switch case aman (lowercase)
+                return timeReport.Trim().ToLower() switch
+                {
+                    "daily" => (
+                        now.Date,
+                        now.Date.AddDays(1).AddTicks(-1)
+                    ),
+
+                    "weekly" => (
+                        now.Date.AddDays(-(int)now.DayOfWeek + 1),                // Senin awal minggu
+                        now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu akhir
+                    ),
+
+                    "monthly" => (
+                        new DateTime(now.Year, now.Month, 1),
+                        new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
+                            .AddDays(1).AddTicks(-1)
+                    ),
+
+                    "yearly" => (
+                        new DateTime(now.Year, 1, 1),
+                        new DateTime(now.Year, 12, 31)
+                            .AddDays(1).AddTicks(-1)
+                    ),
+
+                    _ => null
+                };
 }
+
+    }
+    
+    
+}
+

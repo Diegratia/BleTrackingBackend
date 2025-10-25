@@ -7,6 +7,7 @@ namespace Repositories.Repository.RepoModel
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
+         public string? TimeRange { get; set; }  // ← tambahkan ini
         public Guid? FloorplanMaskedAreaId { get; set; }
         public string? OperatorName { get; set; }
         public Guid? VisitorId { get; set; }
