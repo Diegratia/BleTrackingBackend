@@ -7,7 +7,7 @@ using Quartz;
 using BusinessLogic.Services.JobsScheduler;
 
 
-namespace Helpers.Consumer
+namespace BusinessLogic.Services.Jobs
 {
     public class QuartzConfig
     {

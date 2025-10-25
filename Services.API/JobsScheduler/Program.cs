@@ -2,7 +2,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Repositories.DbContexts;
-using Helpers.Consumer;
+using BusinessLogic.Services.Jobs;
+using DotNetEnv;
+
+try
+{
+    Env.Load("/app/.env");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load .env file: {ex.Message}");
+}
 
 var builder = Host.CreateDefaultBuilder(args);
 
