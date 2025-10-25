@@ -211,11 +211,11 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  scheduler-jobs:
+  jobs-scheduler:
     build:
       context: .
-      dockerfile: BleTrackingQuartzScheduler/Dockerfile
-    image: dev1pci2025/bletrackingbackend-quartz-scheduler:latest
+      dockerfile: Services.API/JobsScheduler/Dockerfile
+    image: dev1pci2025/bletrackingbackend-jobs-scheduler:latest
     volumes:
       - ./.env:/app/.env
     restart: always
