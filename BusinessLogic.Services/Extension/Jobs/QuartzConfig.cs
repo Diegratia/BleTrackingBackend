@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using BusinessLogic.Services.JobsScheduler;
+using Quartz.AspNetCore;
 
 namespace BusinessLogic.Services.Jobs
 {

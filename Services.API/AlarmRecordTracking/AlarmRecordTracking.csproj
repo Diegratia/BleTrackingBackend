@@ -7,24 +7,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bogus" Version="35.6.2" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.6.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.13">
+    <PackageReference Include="Bogus" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt"  />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="BCrypt.Net-Next"  />
+    <PackageReference Include="DotNetEnv" />
   </ItemGroup>
 
+
   <ItemGroup>
-  	<ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
+    <ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
+    <ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
 
