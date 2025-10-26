@@ -218,6 +218,8 @@ services:
     image: dev1pci2025/bletrackingbackend-jobs-scheduler:latest
     volumes:
       - ./.env:/app/.env
+    ports:
+      - "5032:5032"
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

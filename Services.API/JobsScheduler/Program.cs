@@ -18,16 +18,17 @@ var builder = Host.CreateDefaultBuilder(args);
 
 builder.ConfigureServices((hostContext, services) =>
 {
-    // Tambahkan DbContext
     services.AddDbContext<BleTrackingDbContext>(options =>
         options.UseSqlServer(hostContext.Configuration.GetConnectionString("BleTrackingDbConnection") ??
                             "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
-
-    // Tambahkan Quartz
+    services.AddLogging(logging => logging.AddConsole());
     QuartzConfig.AddQuartzServices(services);
 });
-
 var host = builder.Build();
+// Pastikan scheduler dimulai
+var schedulerFactory = host.Services.GetRequiredService<ISchedulerFactory>();
+var scheduler = await schedulerFactory.GetScheduler();
+await scheduler.Start();
 
 // Jalankan host
 await host.RunAsync();
