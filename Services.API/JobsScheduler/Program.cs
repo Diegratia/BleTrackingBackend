@@ -6,6 +6,8 @@ using Quartz;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Jobs;
 using DotNetEnv;
+using BusinessLogic.Services.JobsScheduler;
+using Web.API.Controllers.Controllers;
 
 try
 {

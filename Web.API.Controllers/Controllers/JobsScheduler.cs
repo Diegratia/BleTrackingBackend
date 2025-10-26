@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Quartz;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.JobsScheduler
+namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
