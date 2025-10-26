@@ -6,6 +6,7 @@ WORKDIR /app
   COPY Services.API/JobsScheduler/JobsScheduler.csproj Services.API/JobsScheduler/
   COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
   COPY Repositories/Repositories.csproj Repositories/
+  COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
 WORKDIR /app/Services.API/JobsScheduler
 RUN dotnet restore
