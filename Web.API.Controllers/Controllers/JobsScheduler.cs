@@ -6,11 +6,11 @@ namespace BusinessLogic.Services.JobsScheduler
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ManualTriggerController : ControllerBase
+    public class JobsSchedulerController : ControllerBase
     {
         private readonly ISchedulerFactory _schedulerFactory;
 
-        public ManualTriggerController(ISchedulerFactory schedulerFactory)
+        public JobsSchedulerController(ISchedulerFactory schedulerFactory)
         {
             _schedulerFactory = schedulerFactory;
         }
