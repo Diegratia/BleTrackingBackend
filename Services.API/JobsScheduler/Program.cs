@@ -15,7 +15,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
-    throw; // Hentikan eksekusi jika .env gagal dimuat
+    throw;
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,7 +34,13 @@ BusinessLogic.Services.Jobs.QuartzConfig.AddQuartzServices(builder.Services);
 // Tambahkan controller untuk API
 builder.Services.AddControllers();
 
-// Tambahkan endpoint API (opsional untuk debugging Swagger, jika diperlukan)
+// Konfigurasi Kestrel untuk mendengarkan pada port 5032
+builder.WebHost.UseKestrel(options =>
+{
+    options.ListenAnyIP(5032); // Mendengarkan pada semua IP (0.0.0.0) di port 5032
+});
+
+// Tambahkan endpoint API (opsional untuk debugging Swagger)
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
