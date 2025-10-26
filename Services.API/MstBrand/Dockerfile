@@ -4,6 +4,10 @@ WORKDIR /app
 
 # copy project file dulu
   COPY *.sln ./
+  COPY Directory.Packages.props ./
+  COPY global.json ./
+  COPY Directory.Packages.props ./
+  COPY global.json ./
   COPY Services.API/MstBrand/MstBrand.csproj Services.API/MstBrand/
   COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
   COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/

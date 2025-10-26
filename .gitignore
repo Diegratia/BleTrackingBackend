@@ -491,3 +491,4 @@ obj/
 # *.targets
 *.http
 build/
+doc
