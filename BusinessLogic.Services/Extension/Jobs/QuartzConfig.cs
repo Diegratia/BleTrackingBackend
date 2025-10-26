@@ -25,7 +25,7 @@ namespace BusinessLogic.Services.Jobs
                 q.AddTrigger(opts => opts
                     .ForJob(createJobKey)
                     .WithIdentity("CreateDailyTrackingTableTrigger", "Tracking")
-                    .WithCronSchedule("0 1 0 * * ?")); // Setiap hari jam 00:01
+                    .WithCronSchedule("0 42 2 * * ?")); // Setiap hari jam 00:01
 
                 // Job untuk drop table lama setiap hari jam 00:05
                 var dropJobKey = new JobKey("DropOldTrackingTables", "Tracking");
