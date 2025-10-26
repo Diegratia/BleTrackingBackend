@@ -20,7 +20,7 @@ COPY . .
 WORKDIR /app/Services.API/Auth
 RUN dotnet publish -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-slim AS runtime
 WORKDIR /app
 
 COPY --from=build /app/Services.API/Auth/out ./
