@@ -13,7 +13,6 @@
 
     <ItemGroup>
   	<ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-    <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
 
 </Project>
