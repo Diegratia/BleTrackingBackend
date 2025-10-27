@@ -216,7 +216,6 @@ namespace BusinessLogic.Services.Implementation
             return dtos;
         }
 
-
         public async Task<CardAccessDto?> GetByIdAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);

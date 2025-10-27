@@ -54,7 +54,7 @@ namespace Repositories.Repository.Analytics
             public async Task<List<TrackingAreaSummaryRM>> GetAreaSummaryAsync(TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);
-            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1); 
             var to = range?.to ?? request.To ?? DateTime.UtcNow;
             var tableName = GetTableNameByDate(DateTime.UtcNow);
 
@@ -79,7 +79,8 @@ namespace Repositories.Repository.Analytics
                 {
                     AreaId = g.Key.FloorplanMaskedAreaId,
                     AreaName = g.Key.AreaName,
-                    TotalRecords = g.Count() // Jumlah card unik per area
+                    // jumlah card unik per area
+                    TotalRecords = g.Count() 
                 })
                 .OrderByDescending(x => x.TotalRecords)
                 .ToListAsync();
