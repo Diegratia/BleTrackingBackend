@@ -6,14 +6,21 @@ using Helpers.Consumer;
 
 namespace Data.ViewModels
 {
-    public class CardAccessCreateDto : BaseModelDto
-    {
-        public string? Name { get; set; }
-        public string? AccessScope { get; set; }
-        public string? Remarks { get; set; }
-        public List<Guid?> MaskedAreaIds { get; set; } = new();
-        public List<Guid?> TimeGroupIds { get; set; } = new();
-    }
+        public class CardAccessCreateDto : BaseModelDto
+        {
+            public string? Name { get; set; }
+            public string? AccessScope { get; set; }
+            public string? Remarks { get; set; }
+
+            public List<Guid?> MaskedAreaIds { get; set; } = new();
+            public List<Guid?> TimeGroupIds { get; set; } = new();
+
+            // 🔹 Tambahan opsional
+            public Guid? BuildingId { get; set; }
+            public Guid? FloorId { get; set; }
+            public Guid? FloorplanId { get; set; }
+        }
+
 
     public class CardAccessUpdateDto
     {
@@ -22,6 +29,11 @@ namespace Data.ViewModels
         public string? AccessScope { get; set; }
         public List<Guid?> MaskedAreaIds { get; set; } = new();
         public List<Guid?> TimeGroupIds { get; set; } = new();
+
+                    // 🔹 Tambahan opsional
+            public Guid? BuildingId { get; set; }
+            public Guid? FloorId { get; set; }
+            public Guid? FloorplanId { get; set; }
 
     }
 
