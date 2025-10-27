@@ -21,8 +21,9 @@ namespace BusinessLogic.Services.JobsScheduler
 
         public async Task Execute(IJobExecutionContext context)
         {
-                var today = DateTime.UtcNow.ToString("yyyyMMdd"); // UTC
-                var tableName = $"tracking_transaction_{today}";
+            var wibNow = DateTime.UtcNow.AddHours(7);
+            var tableName = $"tracking_transaction_{wibNow:yyyyMMdd}";
+
             try
             {
                 _logger.LogInformation("Starting CreateDailyTrackingTableJob at {Time:UTC}", DateTime.UtcNow);

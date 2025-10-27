@@ -334,9 +334,12 @@ builder.Services.AddHttpContextAccessor();
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
+builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
 builder.Services.AddScoped<AlarmAnalyticsRepository>();
+builder.Services.AddScoped<TrackingAnalyticsRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
+builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));
 
 // === Host config ===
 var port = Environment.GetEnvironmentVariable("ANALYTICS_PORT") ??

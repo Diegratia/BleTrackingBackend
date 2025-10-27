@@ -26,8 +26,10 @@ namespace Repositories.Repository
 
         private string GetCurrentTableName()
         {
-            return $"tracking_transaction_{DateTime.Today:yyyyMMdd}";
+            var wibNow = DateTime.UtcNow.AddHours(7);
+            return $"tracking_transaction_{wibNow:yyyyMMdd}";
         }
+
 
         public async Task<TrackingTransaction?> GetByIdAsync(Guid id)
         {
