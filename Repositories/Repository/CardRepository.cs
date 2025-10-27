@@ -130,6 +130,34 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+        public async Task AssignCardAccessAsync(Guid cardId, IEnumerable<Guid> cardAccessIds, string username)
+        {
+            var card = await _context.Cards
+                .Include(c => c.CardCardAccesses)
+                .FirstOrDefaultAsync(c => c.Id == cardId);
+
+            if (card == null)
+                throw new KeyNotFoundException("Card not found");
+
+            // Hapus relasi lama
+            card.CardCardAccesses.Clear();
+
+            // Tambahkan yang baru
+            foreach (var accessId in cardAccessIds.Distinct())
+            {
+                card.CardCardAccesses.Add(new CardCardAccess
+                {
+                    CardId = card.Id,
+                    CardAccessId = accessId,
+                    ApplicationId = card.ApplicationId,
+                    Status = 1
+                });
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+
         private async Task ValidateRelatedEntitiesAsync(Card card, Guid? applicationId, bool isSystemAdmin)
         {
             if (isSystemAdmin) return;

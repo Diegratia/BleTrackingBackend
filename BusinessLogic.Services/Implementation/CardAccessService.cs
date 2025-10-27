@@ -21,18 +21,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private FloorplanMaskedAreaRepository _areaRepository;
         private TimeGroupRepository _timeGroupRepository;
+        private CardRepository _cardRepository;
 
         public CardAccessService(CardAccessRepository repository,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         FloorplanMaskedAreaRepository areaRepository,
-        TimeGroupRepository timeGroupRepository)
+        TimeGroupRepository timeGroupRepository,
+        CardRepository cardRepository)
         {
             _repository = repository;
             _timeGroupRepository = timeGroupRepository;
             _areaRepository = areaRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cardRepository = cardRepository;
         }
 
         public async Task<CardAccessDto> CreateAsync(CardAccessCreateDto dto)
@@ -94,7 +97,7 @@ namespace BusinessLogic.Services.Implementation
                     }).ToList();
             }
 
-            
+
             await _repository.AddAsync(entity);
 
             var dtoResult = _mapper.Map<CardAccessDto>(entity);
@@ -123,13 +126,13 @@ namespace BusinessLogic.Services.Implementation
 
         //     return await filterService.FilterAsync(request);
         // }
-        
-            public async Task<object> FilterAsync(DataTablesRequest request)
+
+        public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.MinimalGetAllQueryableDto();
 
-            var searchableColumns = new[] { "Name"};
-            var validSortColumns = new[] { "UpdatedAt", "Status" , "AccessNumber", "AccessScope" };
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Status", "AccessNumber", "AccessScope" };
 
             var filterService = new MinimalGenericDataTableService<CardAccessMinimalDto>(
                 query,
@@ -193,7 +196,7 @@ namespace BusinessLogic.Services.Implementation
         //     return _mapper.Map<IEnumerable<CardAccessDto>>(list);
 
         // }
-        
+
         public async Task<IEnumerable<CardAccessDto>> GetAllAsync()
         {
             var entities = await _repository.GetAllAsync();
@@ -214,10 +217,10 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-            public async Task<CardAccessDto?> GetByIdAsync(Guid id)
+        public async Task<CardAccessDto?> GetByIdAsync(Guid id)
         {
             var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) 
+            if (entity == null)
                 return null;
 
             var dto = _mapper.Map<CardAccessDto>(entity);
@@ -244,5 +247,61 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
         }
+
+        // public async Task AssignCardAccessToCardAsync(CardAssignAccessDto dto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     var card = await _context.Cards
+        //         .Include(c => c.CardCardAccesses)
+        //         .FirstOrDefaultAsync(c => c.Id == dto.CardId);
+
+        //     if (card == null)
+        //         throw new KeyNotFoundException("Card not found");
+
+        //     // Bersihkan relasi lama
+        //     card.CardCardAccesses.Clear();
+
+        //     // Tambahkan relasi baru
+        //     foreach (var accessId in dto.CardAccessIds.Distinct())
+        //     {
+        //         card.CardCardAccesses.Add(new CardCardAccess
+        //         {
+        //             CardId = card.Id,
+        //             CardAccessId = accessId,
+        //             ApplicationId = card.ApplicationId,
+        //             Status = 1
+        //         });
+        //     }
+
+        //     await _context.SaveChangesAsync();
+        // }
+        
+
+               public async Task AssignCardAccessToCardAsync(CardAssignAccessDto dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            // 1️⃣ Ambil semua accessId yang relevan
+            var allAccessIds = new HashSet<Guid>();
+
+            // Manual CardAccessIds dari input
+            if (dto.CardAccessIds?.Any() == true)
+            {
+                foreach (var id in dto.CardAccessIds)
+                    allAccessIds.Add(id);
+            }
+
+            // Dari lokasi (building/floor/floorplan)
+            var locationAccessIds = await _repository.GetCardAccessIdsByLocationAsync(
+                dto.BuildingId, dto.FloorId, dto.FloorplanId);
+
+            foreach (var id in locationAccessIds)
+                allAccessIds.Add(id);
+
+            // 2️⃣ Simpan lewat CardRepository
+            await _cardRepository.AssignCardAccessAsync(dto.CardId, allAccessIds, username);
+        }
+
     }
 }

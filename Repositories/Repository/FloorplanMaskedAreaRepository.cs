@@ -115,12 +115,43 @@ namespace Repositories.Repository
                 .Where(ma => ma.FloorId == floorId && ma.Status != 0)
                 .ToListAsync();
         }
+
+        public async Task<List<FloorplanMaskedArea>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+            return await _context.FloorplanMaskedAreas
+                .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                .ToListAsync();
+        }
     
-            public async Task<List<FloorplanMaskedArea>> GetByFloorplanIdAsync(Guid floorplanId)
+        public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
+        Guid? buildingId,
+        Guid? floorId,
+        Guid? floorplanId)
     {
-        return await _context.FloorplanMaskedAreas
-            .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+        var query = _context.FloorplanMaskedAreas.AsQueryable();
+
+        if (floorplanId.HasValue)
+        {
+            query = query.Where(m => m.FloorplanId == floorplanId.Value);
+        }
+        else if (floorId.HasValue)
+        {
+            query = query.Where(m => m.Floorplan.FloorId == floorId.Value);
+        }
+        else if (buildingId.HasValue)
+        {
+            query = query.Where(m => m.Floorplan.Floor.BuildingId == buildingId.Value);
+        }
+        else
+        {
+            return new List<Guid>(); // No filter
+        }
+
+        return await query
+            .Select(m => m.Id)
+            .Distinct()
             .ToListAsync();
     }
+
     }
 }
