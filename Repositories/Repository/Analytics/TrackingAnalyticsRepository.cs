@@ -20,18 +20,14 @@ namespace Repositories.Repository.Analytics
             _context = context;
         }
 
-        // ===========================================================
-        // 🧩 Helper: Get WIB-based Table Name
-        // ===========================================================
+        // get wib table name
         private static string GetTableNameByDate(DateTime utcDate)
         {
             var wibDate = utcDate.AddHours(7);
             return $"tracking_transaction_{wibDate:yyyyMMdd}";
         }
 
-        // ===========================================================
-        // 🧩 Helper: Apply Time Range
-        // ===========================================================
+        // apply time tange
         private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
         {
             if (string.IsNullOrWhiteSpace(timeReport))
@@ -54,9 +50,7 @@ namespace Repositories.Repository.Analytics
             };
         }
 
-        // ===========================================================
-        // 1️⃣ Area Summary
-        // ===========================================================
+            // area sum
             public async Task<List<TrackingAreaSummaryRM>> GetAreaSummaryAsync(TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);
@@ -94,87 +88,81 @@ namespace Repositories.Repository.Analytics
         }
 
 
-        // ===========================================================
-        // 2️⃣ Daily Summary
-        // ===========================================================
-       public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
-{
-    var range = GetTimeRange(request.TimeRange);
-    var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
-    var to = range?.to ?? request.To ?? DateTime.UtcNow;
-    var tableName = GetTableNameByDate(DateTime.UtcNow);
-
-    var query = _context.Set<TrackingTransaction>()
-        .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-        .AsNoTracking()
-        .Where(t => t.TransTime >= from && t.TransTime <= to);
-
-    query = ApplyFilters(query, request);
-
-    var incidents = await query
-        .Select(t => new
+        // daily sum
+            public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
         {
-            Date = t.TransTime.Value.Date,
-            t.CardId
-        })
-        .Distinct()
-        .ToListAsync();
+            var range = GetTimeRange(request.TimeRange);
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
+            var to = range?.to ?? request.To ?? DateTime.UtcNow;
+            var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-    var grouped = incidents
-        .GroupBy(x => x.Date)
-        .Select(g => new TrackingDailySummaryRM
+            var query = _context.Set<TrackingTransaction>()
+                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+                .AsNoTracking()
+                .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+            query = ApplyFilters(query, request);
+
+            var incidents = await query
+                .Select(t => new
+                {
+                    Date = t.TransTime.Value.Date,
+                    t.CardId
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var grouped = incidents
+                .GroupBy(x => x.Date)
+                .Select(g => new TrackingDailySummaryRM
+                {
+                    Date = g.Key,
+                    TotalRecords = g.Count()
+                })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            return grouped;
+        }
+
+
+        // building sum
+                public async Task<List<TrackingBuildingSummaryRM>> GetBuildingSummaryAsync(TrackingAnalyticsRequestRM request)
         {
-            Date = g.Key,
-            TotalRecords = g.Count()
-        })
-        .OrderBy(x => x.Date)
-        .ToList();
+            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-    return grouped;
-}
+            var query = _context.Set<TrackingTransaction>()
+                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+                .AsNoTracking()
+                .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Where(t => t.TransTime >= from && t.TransTime <= to);
 
+            query = ApplyFilters(query, request);
 
-        // ===========================================================
-        // 3️⃣ Building Summary
-        // ===========================================================
-        public async Task<List<TrackingBuildingSummaryRM>> GetBuildingSummaryAsync(TrackingAnalyticsRequestRM request)
-{
-    var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-    var tableName = GetTableNameByDate(DateTime.UtcNow);
+            var data = await query
+                .Select(t => new
+                {
+                    t.CardId,
+                    BuildingId = t.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
+                    BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name
+                })
+                .Distinct()
+                .GroupBy(x => new { x.BuildingId, x.BuildingName })
+                .Select(g => new TrackingBuildingSummaryRM
+                {
+                    BuildingId = g.Key.BuildingId,
+                    BuildingName = g.Key.BuildingName,
+                    TotalRecords = g.Count()
+                })
+                .OrderByDescending(x => x.TotalRecords)
+                .ToListAsync();
 
-    var query = _context.Set<TrackingTransaction>()
-        .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-        .AsNoTracking()
-        .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
-        .Where(t => t.TransTime >= from && t.TransTime <= to);
-
-    query = ApplyFilters(query, request);
-
-    var data = await query
-        .Select(t => new
-        {
-            t.CardId,
-            BuildingId = t.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
-            BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name
-        })
-        .Distinct()
-        .GroupBy(x => new { x.BuildingId, x.BuildingName })
-        .Select(g => new TrackingBuildingSummaryRM
-        {
-            BuildingId = g.Key.BuildingId,
-            BuildingName = g.Key.BuildingName,
-            TotalRecords = g.Count()
-        })
-        .OrderByDescending(x => x.TotalRecords)
-        .ToListAsync();
-
-    return data;
-}
+            return data;
+        }
 
 
-        // ===========================================================
-        // 4️⃣ Visitor Summary
-        // ===========================================================
+        // visitor sum
        public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsRequestRM request)
 {
     var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
@@ -218,9 +206,7 @@ namespace Repositories.Repository.Analytics
 }
 
 
-        // ===========================================================
-        // 4️⃣ Card Summary
-        // ===========================================================
+        // card sum
        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
 {
     var (from, to) = (
@@ -434,9 +420,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        // ===========================================================
-        // 🧩 Helper Filters
-        // ===========================================================
+        // helpers filter
         private IQueryable<TrackingTransaction> ApplyFilters(IQueryable<TrackingTransaction> query, TrackingAnalyticsRequestRM request)
         {
             if (request.BuildingId.HasValue)

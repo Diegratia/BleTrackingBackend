@@ -129,7 +129,7 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
         
-                public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
+        public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
             Guid? buildingId,
             Guid? floorId,
             Guid? floorplanId)

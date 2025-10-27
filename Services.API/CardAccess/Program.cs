@@ -149,6 +149,8 @@ builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<CardAccessRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
+
 
 var port = Environment.GetEnvironmentVariable("CARD_ACCESS_PORT") ??
            builder.Configuration["Ports:CardAccessService"] ?? "5028";
