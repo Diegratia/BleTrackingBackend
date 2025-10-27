@@ -19,7 +19,7 @@ public class DropOldTrackingTablesJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var thirtyDaysAgo = DateTime.Today.AddDays(-30).ToString("yyyyMMdd");
+        var thirtyDaysAgo = DateTime.UtcNow.AddHours(7).AddDays(-30).ToString("yyyyMMdd");
         
         var sql = $@"
             DECLARE @sql NVARCHAR(MAX) = '';

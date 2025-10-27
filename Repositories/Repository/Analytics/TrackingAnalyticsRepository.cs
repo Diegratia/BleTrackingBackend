@@ -359,8 +359,8 @@ namespace Repositories.Repository.Analytics
                         ExitTime = last.TransTime,
                         Positions = g.Select(p => new TrackingPositionPointRM
                         {
-                            X = p.CoordinateX ?? 0,
-                            Y = p.CoordinateY ?? 0
+                            X = (float)Math.Round(p.CoordinateX ?? 0),
+                            Y = (float)Math.Round(p.CoordinateY ?? 0)
                         })
                         .Distinct()
                         .ToList()
@@ -374,7 +374,7 @@ namespace Repositories.Repository.Analytics
 
                 public async Task<List<TrackingHeatmapRM>> GetHeatmapDataAsync(TrackingAnalyticsRequestRM request)
         {
-            var tableName = GetTableNameByDate(DateTime.UtcNow); // WIB
+            var tableName = GetTableNameByDate(DateTime.UtcNow); 
             var (from, to) = (request.From ?? DateTime.UtcNow.AddHours(-2), request.To ?? DateTime.UtcNow);
 
             var query = _context.Set<TrackingTransaction>()
