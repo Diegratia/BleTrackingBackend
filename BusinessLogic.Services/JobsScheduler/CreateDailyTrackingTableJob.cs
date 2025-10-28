@@ -35,28 +35,29 @@ namespace BusinessLogic.Services.JobsScheduler
                 var sql = $@"
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{tableName}' AND xtype='U')
                     CREATE TABLE [dbo].[{tableName}] (
-                        [Id] [uniqueidentifier] NOT NULL,
-                        [CreatedAt] [datetime2](7) NOT NULL,
-                        [UpdatedAt] [datetime2](7) NULL,
-                        [TransTime] [datetime2](7) NULL,
-                        [ReaderId] [uniqueidentifier] NULL,
-                        [CardId] [uniqueidentifier] NULL,
-                        [VisitorId] [uniqueidentifier] NULL,
-                        [MemberId] [uniqueidentifier] NULL,
-                        [FloorplanMaskedAreaId] [uniqueidentifier] NULL,
-                        [CoordinateX] [real] NULL,
-                        [CoordinateY] [real] NULL,
-                        [CoordinatePxX] [real] NULL,
-                        [CoordinatePxY] [real] NULL,
-                        [AlarmStatus] [nvarchar](255) NULL,
-                        [Battery] [bigint] NULL,
-                        [ApplicationId] [uniqueidentifier] NOT NULL,
-                        CONSTRAINT [PK_{tableName}] PRIMARY KEY CLUSTERED ([Id] ASC)
+                        [id] [uniqueidentifier] NOT NULL,
+                        [created_at] [datetime2](7) NOT NULL,
+                        [updated_at] [datetime2](7) NULL,
+                        [trans_time] [datetime2](7) NULL,
+                        [reader_id] [uniqueidentifier] NULL,
+                        [card_id] [uniqueidentifier] NULL,
+                        [visitor_id] [uniqueidentifier] NULL,
+                        [member_id] [uniqueidentifier] NULL,
+                        [floorplan_masked_area_id] [uniqueidentifier] NULL,
+                        [coordinate_x] [real] NULL,
+                        [coordinate_y] [real] NULL,
+                        [coordinate_px_y] [real] NULL,
+                        [coordinate_px_x] [real] NULL,
+                        [alarm_status] [nvarchar](255) NULL,
+                        [battery] [bigint] NULL,
+                        [application_id] [uniqueidentifier] NOT NULL,
+                        CONSTRAINT [PK_{tableName}] PRIMARY KEY CLUSTERED ([id] ASC)
                     )
-                    CREATE NONCLUSTERED INDEX [IX_{tableName}_TransTime] ON [dbo].[{tableName}] ([TransTime] ASC)
-                    CREATE NONCLUSTERED INDEX [IX_{tableName}_ApplicationId] ON [dbo].[{tableName}] ([ApplicationId] ASC)
-                    CREATE NONCLUSTERED INDEX [IX_{tableName}_ReaderId] ON [dbo].[{tableName}] ([ReaderId] ASC)
-                    CREATE NONCLUSTERED INDEX [IX_{tableName}_VisitorId] ON [dbo].[{tableName}] ([VisitorId] ASC)";
+                        CREATE NONCLUSTERED INDEX [IX_{tableName}_trans_time] ON [dbo].[{tableName}] ([trans_time] ASC);
+                        CREATE NONCLUSTERED INDEX [IX_{tableName}_application_id] ON [dbo].[{tableName}] ([application_id] ASC);
+                        CREATE NONCLUSTERED INDEX [IX_{tableName}_reader_id] ON [dbo].[{tableName}] ([reader_id] ASC);
+                        CREATE NONCLUSTERED INDEX [IX_{tableName}_visitor_id] ON [dbo].[{tableName}] ([visitor_id] ASC);
+                    ";
 
                 await _context.Database.ExecuteSqlRawAsync(sql);
                 _logger.LogInformation("Table {TableName} created successfully at {Time:UTC}", tableName, DateTime.UtcNow);
