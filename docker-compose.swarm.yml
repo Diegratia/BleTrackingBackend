@@ -1,0 +1,42 @@
+services:
+  tracking-transaction:
+    image: dev1pci2025/bletrackingbackend-tracking-transaction:dev
+    ports:
+      - "5018:5018"
+    volumes:
+      - ./.env:/app/.env
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 60s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+
+  alarm-record-tracking:
+    image: dev1pci2025/bletrackingbackend-alarm-record-tracking:dev
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./.env:/app/.env
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 60s
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+
+networks:
+  default:
+    driver: overlay

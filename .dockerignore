@@ -1,0 +1,23 @@
+# Exclude big folders
+bin/
+obj/
+Uploads/
+node_modules/
+.vs/
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+docker-bake.*
+.dockerignore
+
+# Git, build artifacts
+.git
+.gitignore
+*.user
+*.log
+*.db
+*.bak
+*.swp
+publish/
