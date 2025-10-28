@@ -102,7 +102,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-         public async Task<ResponseCollection<TrackingMovementRM>> GetTrackingMovementByCardIdAsync(Guid cardId)
+        public async Task<ResponseCollection<TrackingMovementRM>> GetTrackingMovementByCardIdAsync(Guid cardId)
         {
             try
             {
@@ -130,6 +130,20 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 _logger.LogError(ex, "Error while getting heatmap data");
                 return ResponseCollection<TrackingHeatmapRM>.Error($"Internal server error: {ex.Message}");
+            }
+        }
+        
+         public async Task<ResponseCollection<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
+        {
+            try
+            {
+                var data = await _repository.GetCardSummaryAsync(request);
+                return ResponseCollection<TrackingCardSummaryRM>.Ok(data, "Tracking Summary retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting heatmap data");
+                return ResponseCollection<TrackingCardSummaryRM>.Error($"Internal server error: {ex.Message}");
             }
         }
     }

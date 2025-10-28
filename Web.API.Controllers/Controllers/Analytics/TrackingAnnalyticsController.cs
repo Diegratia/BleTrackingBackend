@@ -70,7 +70,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(response);
         }
 
-         // 🔹 GET movement by Card ID
+        // 🔹 GET movement by Card ID
         [HttpGet("movement/{cardId}")]
         public async Task<IActionResult> GetMovement(Guid cardId)
         {
@@ -83,6 +83,13 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetHeatmap([FromBody] TrackingAnalyticsRequestRM request)
         {
             var result = await _service.GetHeatmapDataAsync(request);
+            return Ok(result);
+        }
+        
+        [HttpPost("card-summary")]
+        public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
+        {
+            var result = await _service.GetCardSummaryAsync(request);
             return Ok(result);
         }
     }
