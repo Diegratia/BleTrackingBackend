@@ -140,9 +140,20 @@ builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
+builder.Services.AddScoped<IGeofenceService, GeofenceService>();
+builder.Services.AddScoped<IBoundaryService, BoundaryService>();
+builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
+builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+
 builder.Services.AddScoped<MstFloorplanRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+
+builder.Services.AddScoped<GeofenceRepository>();
+builder.Services.AddScoped<BoundaryRepository>();
+builder.Services.AddScoped<StayOnAreaRepository>();
+builder.Services.AddScoped<OverpopulatingRepository>();
+
 
 
 
