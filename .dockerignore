@@ -1,23 +1,49 @@
-# Exclude big folders
-bin/
-obj/
-Uploads/
-node_modules/
-.vs/
-
-# Docker itself
-Dockerfile
-docker-compose.yml
-docker-compose.*.yml
-docker-bake.*
-.dockerignore
-
-# Git, build artifacts
+# Ignore git and IDE stuff
 .git
 .gitignore
+.vs/
+.vscode/
 *.user
-*.log
-*.db
-*.bak
+*.suo
 *.swp
-publish/
+
+# Ignore build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/debug/
+**/release/
+
+# Ignore uploads and generated content
+Uploads/
+Uploads/**
+Logs/
+Logs/**
+*.log
+
+# Ignore dependencies and node modules
+node_modules/
+packages/
+.nuget/
+
+# Ignore docker and compose
+docker-compose.yml
+docker-compose.*
+Dockerfile
+Dockerfile.*
+.dockerignore
+
+# Ignore misc big files
+*.zip
+*.tar
+*.7z
+*.bak
+*.db
+*.pdb
+*.dll
+*.exe
+*.jpg
+*.jpeg
+*.png
+*.mp4
