@@ -76,10 +76,7 @@ namespace Repositories.Repository
                         .ToList()
             });
 
-
         }
-
-
         public async Task<CardAccess> AddAsync(CardAccess entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

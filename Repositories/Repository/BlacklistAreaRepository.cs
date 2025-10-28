@@ -27,7 +27,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.BlacklistAreas
+            var query = _context.BlacklistAreas     
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Visitor)
                 .Include(v => v.Member)
@@ -41,6 +41,7 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.BlacklistAreas
+                .IgnoreQueryFilters()
                 .Include(v => v.FloorplanMaskedArea)
                 .Include(v => v.Visitor)
                 .Include(v => v.Member)

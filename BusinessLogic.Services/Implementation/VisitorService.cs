@@ -573,7 +573,7 @@ public class VisitorService : IVisitorService
             if (!applicationId.HasValue || applicationId == Guid.Empty)
                 throw new InvalidOperationException("Invalid ApplicationId");
 
-            // Find or create UserGroup with LevelPriority.UserCreated
+            // find or create user group
             var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId.Value, LevelPriority.UserCreated);
             if (userGroup == null)
             {
@@ -606,7 +606,7 @@ public class VisitorService : IVisitorService
             visitor.UpdatedBy = username;
             visitor.UpdatedAt = DateTime.UtcNow;
 
-            // Handle FaceImage upload
+            // handle face image
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
                 try
@@ -646,7 +646,7 @@ public class VisitorService : IVisitorService
                 visitor.FaceImage = "";
             }
 
-            // Create User account
+            // create account
             if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
                 throw new InvalidOperationException("Email is already registered");
 
@@ -667,7 +667,7 @@ public class VisitorService : IVisitorService
                 GroupId = userGroup.Id
             };
 
-            // Create TrxVisitor with check-in
+            // create trx visitor checkin
             var newTrx = _mapper.Map<TrxVisitor>(createDto);
             newTrx.Id = Guid.NewGuid();
             newTrx.VisitorId = visitor.Id;
@@ -688,31 +688,31 @@ public class VisitorService : IVisitorService
             newTrx.UpdatedAt = DateTime.UtcNow;
             newTrx.IsInvitationAccepted = true;
 
-            // Check for active transactions
+            // check active trx
             var activeTrx = await _trxVisitorRepository.GetAllQueryableRaw()
                 .Where(t => t.VisitorId == visitor.Id && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null)
                 .AnyAsync();
             if (activeTrx)
                 throw new InvalidOperationException("Visitor already has an active transaction");
 
-            // Assign CardAccess berdasarkan MaskedAreaId
+            // aSSIGN card access berdasarkan maskedareaid
             if (createDto.MaskedAreaId.HasValue)
             {
-                // Cari CardAccess berdasarkan MaskedAreaId
+                // cari card access berdasarkan maskedareaid
                 var cardAccess = await _cardAccessRepository.GetAllQueryable()
                     .Where(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value))
                     .FirstOrDefaultAsync();
                 if (cardAccess == null)
                     throw new KeyNotFoundException($"CardAccess for MaskedAreaId {createDto.MaskedAreaId} not found");
 
-                // Ambil kartu
+                // get card
                 var card = await _cardRepository.GetAllQueryable()
                     .Where(ca => ca.CardCardAccesses.Any(cam => cam.Card.CardNumber == createDto.CardNumber))
                     .FirstOrDefaultAsync();
                 if (card == null)
                     throw new KeyNotFoundException($"Card with Id {createDto.CardNumber} not found");
 
-                // Hapus semua CardAccess yang tidak terkait dengan CardAccess ini
+                // hapus card access yang tidak sesuai
                 var accessesToRemove = card.CardCardAccesses
                     .Where(cca => cca.CardAccessId != cardAccess.Id)
                     .ToList();
@@ -721,7 +721,7 @@ public class VisitorService : IVisitorService
                     card.CardCardAccesses.Remove(access);
                 }
 
-                // Tambahkan CardAccess jika belum ada
+                // add card access kalau ga ada
                 if (!card.CardCardAccesses.Any(cca => cca.CardAccessId == cardAccess.Id))
                 {
                     card.CardCardAccesses.Add(new CardCardAccess
@@ -733,21 +733,21 @@ public class VisitorService : IVisitorService
                 }
             }
 
-            // Create CardRecord
+            // create card record
             var cardRecordDto = new CardRecordCreateDto
             {
                 CardId = CardByCardNumber.Id,
                 VisitorId = visitor.Id,
             };
 
-            // Perform all database operations in a transaction
+            // transaction
             using var transaction = await _visitorRepository.BeginTransactionAsync();
             try
             {
                 await _userRepository.AddAsync(newUser);
                 await _visitorRepository.AddAsync(visitor);
                 await _trxVisitorRepository.AddAsync(newTrx);
-                await _cardRecordService.CreateAsync(cardRecordDto); // Simpan perubahan CardAccess
+                await _cardRecordService.CreateAsync(cardRecordDto); 
                 await transaction.CommitAsync();
             }
             catch
@@ -756,7 +756,7 @@ public class VisitorService : IVisitorService
                 throw;
             }
 
-            // Send verification email
+            // email verification
             await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
 
             var result = _mapper.Map<VisitorDto>(visitor);
@@ -1241,7 +1241,7 @@ public class VisitorService : IVisitorService
             // newTrx.IsMember = isMember;
 
 
-            // var invitationUrl = $"http://172.18.96.1:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            // var invitationUrl = $"http://192.168.1.116:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
             var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
             // var memberInvitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
 
@@ -2557,7 +2557,7 @@ public class VisitorService : IVisitorService
                     Id = Guid.NewGuid(),
                     Username = emailLower,
                     Email = emailLower,
-                    Password = BCrypt.Net.BCrypt.HashPassword("Password_123#"),
+                    Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                     IsCreatedPassword = 1,
                     IsEmailConfirmation = 1,
                     EmailConfirmationCode = userConfirmationCode,

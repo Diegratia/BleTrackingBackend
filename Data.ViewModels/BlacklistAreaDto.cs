@@ -5,18 +5,18 @@ namespace Data.ViewModels
 {
     public class BlacklistAreaDto : BaseModelDto
     {
-        public long Generate { get; set; }
+        // public long Generate { get; set; }
 
-        public Guid Id { get; set; }
+        public Guid? Id { get; set; }
 
-        public Guid FloorplanMaskedAreaId { get; set; }
+        public Guid? FloorplanMaskedAreaId { get; set; }
 
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
 
-        public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
-        public VisitorDto Visitor { get; set; }
-        public MstMemberDto Member { get; set; }
+        public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }
+        public VisitorDto? Visitor { get; set; }
+        public MstMemberDto? Member { get; set; }
 
     }
 

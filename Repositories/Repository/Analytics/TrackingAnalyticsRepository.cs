@@ -384,7 +384,7 @@ namespace Repositories.Repository.Analytics
                 .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
                 .AsNoTracking()
                 .Where(t => t.TransTime >= from && t.TransTime <= to)
-                .Where(t => t.CoordinatePxX != null && t.CoordinatePxY != null);
+                .Where(t => t.CoordinateX != null && t.CoordinateY != null);
 
             // filter opsional
             if (request.FloorplanId.HasValue)
@@ -397,8 +397,8 @@ namespace Repositories.Repository.Analytics
             var points = await query
                 .Select(t => new
                 {
-                    X = t.CoordinatePxX!.Value,
-                    Y = t.CoordinatePxY!.Value,
+                    X = t.CoordinateX!.Value,
+                    Y = t.CoordinateY!.Value,
                     FloorplanId = t.FloorplanMaskedArea.Floorplan.Id,
                     MaskedAreaId = t.FloorplanMaskedAreaId
                 })

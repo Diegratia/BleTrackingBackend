@@ -27,6 +27,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
         private readonly IFloorplanMaskedAreaService _maskedAreaService;
+        private readonly IGeofenceService _geofenceService;
+        private readonly IStayOnAreaService _stayOnAreaService;
+        private readonly IOverpopulatingService _overpopulatingService;
+        private readonly IBoundaryService _boundaryService;
+        private readonly GeofenceRepository _geofenceRepository;
+        private readonly StayOnAreaRepository _stayOnAreaRepository;
+        private readonly OverpopulatingRepository _overpopulatingRepository;
+        private readonly BoundaryRepository _boundaryRepository;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
 
@@ -35,13 +43,29 @@ namespace BusinessLogic.Services.Implementation
             FloorplanDeviceRepository floorplanDeviceRepository,
             FloorplanMaskedAreaRepository maskedAreaRepository,
             IFloorplanMaskedAreaService maskedAreaService,
+            GeofenceRepository geofenceRepository,
+            StayOnAreaRepository stayOnAreaRepository,
+            OverpopulatingRepository overpopulatingRepository,
+            BoundaryRepository boundaryRepository,
+            IGeofenceService geofenceService,
+            IStayOnAreaService stayOnAreaService,
+            IOverpopulatingService overpopulatingService,
+            IBoundaryService boundaryService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _floorplanDeviceRepository = floorplanDeviceRepository;
             _maskedAreaRepository = maskedAreaRepository;
+            _geofenceRepository = geofenceRepository;
+            _stayOnAreaRepository = stayOnAreaRepository;
+            _overpopulatingRepository = overpopulatingRepository;
+            _boundaryRepository = boundaryRepository;
             _maskedAreaService = maskedAreaService;
+            _geofenceService = geofenceService;
+            _stayOnAreaService = stayOnAreaService;
+            _overpopulatingService = overpopulatingService;
+            _boundaryService = boundaryService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -231,9 +255,29 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.ExecuteInTransactionAsync(async () =>
             {
                 var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+                var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+                var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+                var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+                var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
                 foreach (var maskedArea in maskedAreas)
                 {
                     await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+                }
+                foreach (var geofence in geofences)
+                {
+                    await _geofenceService.DeleteAsync(geofence.Id);
+                }
+                foreach (var stayOnArea in stayOnAreas)
+                {
+                    await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
+                }
+                foreach (var boundary in boundaries)
+                {
+                    await _boundaryService.DeleteAsync(boundary.Id);
+                }
+                foreach (var overpopulating in overpopulatings)
+                {
+                    await _overpopulatingService.DeleteAsync(overpopulating.Id);
                 }
                 floorplan.UpdatedBy = username;
                 floorplan.UpdatedAt = DateTime.UtcNow;

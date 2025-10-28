@@ -25,7 +25,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<Geofence>> GetAllAsync()
         {
-             return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<Geofence> AddAsync(Geofence geofence)
@@ -79,6 +79,7 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+
         public IQueryable<Geofence> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -89,6 +90,13 @@ namespace Repositories.Repository
             .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+        
+        public async Task<List<Geofence>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+            return await _context.Geofences
+                .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                .ToListAsync();
         }
     }
 }
