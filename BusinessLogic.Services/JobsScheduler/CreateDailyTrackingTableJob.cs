@@ -21,7 +21,9 @@ namespace BusinessLogic.Services.JobsScheduler
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var wibNow = DateTime.UtcNow.AddHours(7);
+            // var wibNow = DateTime.UtcNow.AddHours(7);
+            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             var tableName = $"tracking_transaction_{wibNow:yyyyMMdd}";
 
             try

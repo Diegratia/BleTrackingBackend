@@ -545,7 +545,7 @@ namespace BusinessLogic.Services.Implementation
 
 // namespace BusinessLogic.Services.Implementation
 // {
-//     public class GenericDataTableProjectionService<TModel, TDto>
+//     public class GenericDataTableService<TModel, TDto>
 //         where TModel : class
 //         where TDto : class
 //     {
@@ -555,7 +555,7 @@ namespace BusinessLogic.Services.Implementation
 //         private readonly string[] _validSortColumns;
 //         private readonly Dictionary<string, Type> _enumColumns;
 
-//         public GenericDataTableProjectionService(
+//         public GenericDataTableService(
 //             IQueryable<TModel> query,
 //             IMapper mapper,
 //             string[] searchableColumns,

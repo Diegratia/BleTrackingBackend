@@ -727,7 +727,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpPost("open/create")]
         [AllowAnonymous]
-        public async Task<IActionResult> OpenCreate([FromForm] OpenVisitorCreateDto visitorDto)
+        public async Task<IActionResult> OpenCreate([FromForm] VMSOpenVisitorCreateDto visitorDto)
         {
             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {

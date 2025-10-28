@@ -375,20 +375,20 @@ services:
     networks:
       - default
 
-  # cloudflare-tunnel:
-  #   image: cloudflare/cloudflared:dev
-  #   container_name: cloudflare-tunnel
-  #   command: tunnel --url http://host.docker.internal:5000
-  #   restart: unless-stopped
-  #   environment:
-  #     - TUNNEL_LOGLEVEL=info
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    command: tunnel --url http://host.docker.internal:5000
+    restart: unless-stopped
+    environment:
+      - TUNNEL_LOGLEVEL=info
 #   sqlserver:
 #     image: mcr.microsoft.com/mssql/server:2022-dev
 #     container_name: sqlserver
 #     ports:
-#       - "5433:1433"
+#       - "1433:1433"
 #     environment:
-#       SA_PASSWORD: "P@ssw0rd"
+#       SA_PASSWORD: "Password_123#"
 #       ACCEPT_EULA: "Y"
 #     volumes:
 #       - sqlserver_data:/var/opt/mssql

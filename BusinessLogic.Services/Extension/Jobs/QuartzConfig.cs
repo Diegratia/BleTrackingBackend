@@ -21,7 +21,10 @@ namespace BusinessLogic.Services.Jobs
                 q.AddTrigger(opts => opts
                     .ForJob(createJobKey)
                     .WithIdentity("CreateDailyTrackingTableTrigger", "Tracking")
-                    .WithCronSchedule("0 1 17 * * ?")); // 17:01 UTC = 00:01 WIB
+                        // .WithCronSchedule("0 1 17 * * ?")); // 17:01 UTC = 00:01 WIB
+                        .WithCronSchedule("0 1 0 * * ?", x =>
+                        x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"))
+                    ));
 
                 // Job untuk drop table lama setiap hari jam 00:05 WIB (17:05 UTC)
                 var dropJobKey = new JobKey("DropOldTrackingTables", "Tracking");
@@ -29,7 +32,10 @@ namespace BusinessLogic.Services.Jobs
                 q.AddTrigger(opts => opts
                     .ForJob(dropJobKey)
                     .WithIdentity("DropOldTrackingTablesTrigger", "Tracking")
-                    .WithCronSchedule("0 5 17 * * ?")); // 17:05 UTC = 00:05 WIB
+                    // .WithCronSchedule("0 5 17 * * ?")); // 17:05 UTC = 00:05 WIB
+                        .WithCronSchedule("0 5 0 * * ?", x =>
+                        x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"))
+                    ));
             });
 
             services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);

@@ -29,7 +29,6 @@ namespace Repositories.Repository.RepoModel
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
         public string? TimeRange { get; set; }
-
         public Guid? BuildingId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
