@@ -256,9 +256,9 @@ public class VisitorService : IVisitorService
 
         //     return result;
         // }
-  
-//vms before showing      
-//     public async Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto)
+
+        //vms before showing      
+        //     public async Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto)
         // {
         //     if (createDto == null)
         //         throw new ArgumentNullException(nameof(createDto));
@@ -509,6 +509,267 @@ public class VisitorService : IVisitorService
 
         //     return result;
         // }
+
+        // vms backup create
+        // public async Task<VisitorDto> CreateVisitorAsync(VMSOpenVisitorCreateDto createDto)
+        // {
+        //     if (createDto == null)
+        //         throw new ArgumentNullException(nameof(createDto));
+
+        //     if (string.IsNullOrWhiteSpace(createDto.Email))
+        //         throw new ArgumentException("Email is required", nameof(createDto.Email));
+
+        //     if (string.IsNullOrWhiteSpace(createDto.Name))
+        //         throw new ArgumentException("Name is required", nameof(createDto.Name));
+
+        //     if (createDto.CardNumber == string.Empty)
+        //         throw new ArgumentException("Card Number is required for check-in", nameof(createDto.CardNumber));
+
+        //     // Check for duplicate visitor
+        //     var existingVisitor = await _visitorRepository.GetAllQueryable()
+        //         .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
+        //                                  b.IdentityId == createDto.IdentityId ||
+        //                                  b.PersonId == createDto.PersonId);
+
+        //     if (existingVisitor != null)
+        //     {
+        //         // if (existingVisitor.Email == createDto.Email)
+        //         //     throw new ArgumentException($"Visitor with Email {createDto.Email} already exists.");
+        //         if (existingVisitor.IdentityId == createDto.IdentityId)
+        //             throw new ArgumentException($"Visitor with IdentityId {createDto.IdentityId} already exists.");
+        //         if (existingVisitor.PersonId == createDto.PersonId)
+        //             throw new ArgumentException($"Visitor with PersonId {createDto.PersonId} already exists.");
+        //     }
+
+        //     var CardByCardNumber = await _cardRepository.GetByCardNumberAsync(createDto.CardNumber);
+
+        //     // if (CardByCardNumber == null)
+        //     //     throw new KeyNotFoundException($"Card with CardNumber {createDto.CardNumber} not found.");
+
+        //     // Get ApplicationId and username
+        //     Guid? applicationId = null;
+        //     string username = "System";
+
+        //     if (_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false)
+        //     {
+        //         var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //         if (string.IsNullOrWhiteSpace(currentUserId))
+        //             throw new UnauthorizedAccessException("User not authenticated");
+
+        //         var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+        //         if (currentUser == null)
+        //             throw new UnauthorizedAccessException("Current user not found");
+
+        //         applicationId = currentUser.ApplicationId;
+        //         username = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     }
+        //     else
+        //     {
+        //         var integration = _httpContextAccessor.HttpContext?.Items["MstIntegration"] as MstIntegration;
+        //         if (integration?.ApplicationId == null)
+        //             throw new UnauthorizedAccessException("ApplicationId not found in context");
+
+        //         applicationId = integration.ApplicationId;
+        //     }
+
+        //     if (!applicationId.HasValue || applicationId == Guid.Empty)
+        //         throw new InvalidOperationException("Invalid ApplicationId");
+
+        //     // find or create user group
+        //     var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(applicationId.Value, LevelPriority.UserCreated);
+        //     if (userGroup == null)
+        //     {
+        //         userGroup = new UserGroup
+        //         {
+        //             Id = Guid.NewGuid(),
+        //             Name = "VisitorGroup",
+        //             LevelPriority = LevelPriority.UserCreated,
+        //             ApplicationId = applicationId.Value,
+        //             Status = 1,
+        //             CreatedBy = username,
+        //             CreatedAt = DateTime.UtcNow,
+        //             UpdatedBy = username,
+        //             UpdatedAt = DateTime.UtcNow
+        //         };
+        //         await _userGroupRepository.AddAsync(userGroup);
+        //     }
+
+        //     var visitor = _mapper.Map<Visitor>(createDto);
+        //     if (visitor == null)
+        //         throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
+
+        //     var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+
+        //     visitor.Id = Guid.NewGuid();
+        //     visitor.ApplicationId = applicationId.Value;
+        //     visitor.Status = 1;
+        //     visitor.CreatedBy = username;
+        //     visitor.CreatedAt = DateTime.UtcNow;
+        //     visitor.UpdatedBy = username;
+        //     visitor.UpdatedAt = DateTime.UtcNow;
+
+        //     // handle face image
+        //     if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+        //     {
+        //         try
+        //         {
+        //             if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+        //                 throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+        //             if (createDto.FaceImage.Length > MaxFileSize)
+        //                 throw new ArgumentException("File size exceeds 5 MB limit.");
+
+        //             var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+        //             Directory.CreateDirectory(uploadDir);
+
+        //             var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+        //             var filePath = Path.Combine(uploadDir, fileName);
+
+        //             using (var stream = new FileStream(filePath, FileMode.Create))
+        //             {
+        //                 await createDto.FaceImage.CopyToAsync(stream);
+        //             }
+
+        //             visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+        //             visitor.UploadFr = 1;
+        //             visitor.UploadFrError = "Upload successful";
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             visitor.UploadFr = 2;
+        //             visitor.UploadFrError = ex.Message;
+        //             visitor.FaceImage = "";
+        //         }
+        //     }
+        //     else
+        //     {
+        //         visitor.UploadFr = 0;
+        //         visitor.UploadFrError = "No file uploaded";
+        //         visitor.FaceImage = "";
+        //     }
+
+
+        //     // create account
+        //     // if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
+        //     //     throw new InvalidOperationException("Email is already registered");
+
+        //     var newUser = new User
+        //     {
+        //         Id = Guid.NewGuid(),
+        //         Username = createDto.Email.ToLower(),
+        //         Email = createDto.Email.ToLower(),
+        //         Password = BCrypt.Net.BCrypt.HashPassword("P@ss0wrd"),
+        //         IsCreatedPassword = 1,
+        //         IsEmailConfirmation = 1,
+        //         EmailConfirmationCode = confirmationCode,
+        //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+        //         EmailConfirmationAt = DateTime.UtcNow,
+        //         LastLoginAt = DateTime.MinValue,
+        //         StatusActive = StatusActive.Active,
+        //         ApplicationId = applicationId.Value,
+        //         GroupId = userGroup.Id
+        //     };
+
+        //     // create trx visitor checkin
+        //     var newTrx = _mapper.Map<TrxVisitor>(createDto);
+        //     newTrx.Id = Guid.NewGuid();
+        //     newTrx.VisitorId = visitor.Id;
+        //     newTrx.Status = VisitorStatus.Checkin;
+        //     newTrx.VisitorActiveStatus = VisitorActiveStatus.Active;
+        //     newTrx.InvitationCode = confirmationCode;
+        //     newTrx.VisitorGroupCode = 1;
+        //     newTrx.VisitorNumber = $"VIS{DateTime.UtcNow.Ticks}";
+        //     newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
+        //     newTrx.InvitationCreatedAt = DateTime.UtcNow;
+        //     newTrx.TrxStatus = 1;
+        //     newTrx.CheckedInAt = DateTime.UtcNow;
+        //     newTrx.CheckinBy = username;
+        //     newTrx.ApplicationId = applicationId.Value;
+        //     newTrx.CreatedBy = username;
+        //     newTrx.CreatedAt = DateTime.UtcNow;
+        //     newTrx.UpdatedBy = username;
+        //     newTrx.UpdatedAt = DateTime.UtcNow;
+        //     newTrx.IsInvitationAccepted = true;
+
+        //     // check active trx
+        //     var activeTrx = await _trxVisitorRepository.GetAllQueryableRaw()
+        //         .Where(t => t.VisitorId == visitor.Id && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null)
+        //         .AnyAsync();
+        //     if (activeTrx)
+        //         throw new InvalidOperationException("Visitor already has an active transaction");
+
+        //     // aSSIGN card access berdasarkan maskedareaid
+        //     if (createDto.MaskedAreaId.HasValue)
+        //     {
+        //         // cari card access berdasarkan maskedareaid
+        //         var cardAccess = await _cardAccessRepository.GetAllQueryable()
+        //             .Where(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value))
+        //             .FirstOrDefaultAsync();
+        //         if (cardAccess == null)
+        //             throw new KeyNotFoundException($"CardAccess for MaskedAreaId {createDto.MaskedAreaId} not found");
+
+        //         // get card
+        //         var card = await _cardRepository.GetAllQueryable()
+        //             .Where(ca => ca.CardCardAccesses.Any(cam => cam.Card.CardNumber == createDto.CardNumber))
+        //             .FirstOrDefaultAsync();
+        //         if (card == null)
+        //             throw new KeyNotFoundException($"Card with Id {createDto.CardNumber} not found");
+
+        //         // hapus card access yang tidak sesuai
+        //         var accessesToRemove = card.CardCardAccesses
+        //             .Where(cca => cca.CardAccessId != cardAccess.Id)
+        //             .ToList();
+        //         foreach (var access in accessesToRemove)
+        //         {
+        //             card.CardCardAccesses.Remove(access);
+        //         }
+
+        //         // add card access kalau ga ada
+        //         if (!card.CardCardAccesses.Any(cca => cca.CardAccessId == cardAccess.Id))
+        //         {
+        //             card.CardCardAccesses.Add(new CardCardAccess
+        //             {
+        //                 CardId = card.Id,
+        //                 CardAccessId = cardAccess.Id,
+        //                 ApplicationId = card.ApplicationId
+        //             });
+        //         }
+        //     }
+
+        //     // create card record
+        //     var cardRecordDto = new CardRecordCreateDto
+        //     {
+        //         CardId = CardByCardNumber.Id,
+        //         VisitorId = visitor.Id,
+        //     };
+
+        //     // transaction
+        //     using var transaction = await _visitorRepository.BeginTransactionAsync();
+        //     try
+        //     {
+        //         await _userRepository.AddAsync(newUser);
+        //         await _visitorRepository.AddAsync(visitor);
+        //         await _trxVisitorRepository.AddAsync(newTrx);
+        //         await _cardRecordService.CreateAsync(cardRecordDto);
+        //         await transaction.CommitAsync();
+        //     }
+        //     catch
+        //     {
+        //         await transaction.RollbackAsync();
+        //         throw;
+        //     }
+
+        //     // email verification
+        //     await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+
+        //     var result = _mapper.Map<VisitorDto>(visitor);
+        //     if (result == null)
+        //         throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+
+        //     return result;
+        // }
+
+        //latest vms create
         public async Task<VisitorDto> CreateVisitorAsync(VMSOpenVisitorCreateDto createDto)
         {
             if (createDto == null)
@@ -520,31 +781,21 @@ public class VisitorService : IVisitorService
             if (string.IsNullOrWhiteSpace(createDto.Name))
                 throw new ArgumentException("Name is required", nameof(createDto.Name));
 
-            if (createDto.CardNumber == string.Empty)
+            if (string.IsNullOrWhiteSpace(createDto.CardNumber))
                 throw new ArgumentException("Card Number is required for check-in", nameof(createDto.CardNumber));
 
-            // Check for duplicate visitor
+            // cari visitor existing
             var existingVisitor = await _visitorRepository.GetAllQueryable()
                 .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
-                                         b.IdentityId == createDto.IdentityId ||
-                                         b.PersonId == createDto.PersonId);
+                                        b.IdentityId == createDto.IdentityId ||
+                                        b.PersonId == createDto.PersonId);
 
-            if (existingVisitor != null)
-            {
-                if (existingVisitor.Email == createDto.Email)
-                    throw new ArgumentException($"Visitor with Email {createDto.Email} already exists.");
-                if (existingVisitor.IdentityId == createDto.IdentityId)
-                    throw new ArgumentException($"Visitor with IdentityId {createDto.IdentityId} already exists.");
-                if (existingVisitor.PersonId == createDto.PersonId)
-                    throw new ArgumentException($"Visitor with PersonId {createDto.PersonId} already exists.");
-            }
+            // ambil card berdasarkan nomor kartu
+            var cardByCardNumber = await _cardRepository.GetByCardNumberAsync(createDto.CardNumber);
+            if (cardByCardNumber == null)
+                throw new KeyNotFoundException($"Card with CardNumber {createDto.CardNumber} not found.");
 
-            var CardByCardNumber = await _cardRepository.GetByCardNumberAsync(createDto.CardNumber);
-
-            // if (CardByCardNumber == null)
-            //     throw new KeyNotFoundException($"Card with CardNumber {createDto.CardNumber} not found.");
-
-            // Get ApplicationId and username
+            // dapatkan ApplicationId dan username
             Guid? applicationId = null;
             string username = "System";
 
@@ -592,82 +843,75 @@ public class VisitorService : IVisitorService
                 await _userGroupRepository.AddAsync(userGroup);
             }
 
-            var visitor = _mapper.Map<Visitor>(createDto);
-            if (visitor == null)
-                throw new InvalidOperationException("Failed to map VisitorCreateDto to Visitor");
+            // kalau visitor sudah ada → skip pembuatan user & visitor baru
+            Visitor visitor;
+            bool isNewVisitor = false;
 
-            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-
-            visitor.Id = Guid.NewGuid();
-            visitor.ApplicationId = applicationId.Value;
-            visitor.Status = 1;
-            visitor.CreatedBy = username;
-            visitor.CreatedAt = DateTime.UtcNow;
-            visitor.UpdatedBy = username;
-            visitor.UpdatedAt = DateTime.UtcNow;
-
-            // handle face image
-            if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+            if (existingVisitor != null)
             {
-                try
-                {
-                    if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
-                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                    if (createDto.FaceImage.Length > MaxFileSize)
-                        throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                    Directory.CreateDirectory(uploadDir);
-
-                    var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
-                    var filePath = Path.Combine(uploadDir, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.FaceImage.CopyToAsync(stream);
-                    }
-
-                    visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
-                    visitor.UploadFr = 1;
-                    visitor.UploadFrError = "Upload successful";
-                }
-                catch (Exception ex)
-                {
-                    visitor.UploadFr = 2;
-                    visitor.UploadFrError = ex.Message;
-                    visitor.FaceImage = "";
-                }
+                visitor = existingVisitor;
             }
             else
             {
-                visitor.UploadFr = 0;
-                visitor.UploadFrError = "No file uploaded";
-                visitor.FaceImage = "";
+                visitor = _mapper.Map<Visitor>(createDto);
+                visitor.Id = Guid.NewGuid();
+                visitor.ApplicationId = applicationId.Value;
+                visitor.Status = 1;
+                visitor.CreatedBy = username;
+                visitor.CreatedAt = DateTime.UtcNow;
+                visitor.UpdatedBy = username;
+                visitor.UpdatedAt = DateTime.UtcNow;
+                isNewVisitor = true;
+
+                // handle upload face image
+                if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
+                {
+                    try
+                    {
+                        if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
+                            throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                        if (createDto.FaceImage.Length > MaxFileSize)
+                            throw new ArgumentException("File size exceeds 5 MB limit.");
+
+                        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        Directory.CreateDirectory(uploadDir);
+
+                        var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+                        var filePath = Path.Combine(uploadDir, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await createDto.FaceImage.CopyToAsync(stream);
+                        }
+
+                        visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+                        visitor.UploadFr = 1;
+                        visitor.UploadFrError = "Upload successful";
+                    }
+                    catch (Exception ex)
+                    {
+                        visitor.UploadFr = 2;
+                        visitor.UploadFrError = ex.Message;
+                        visitor.FaceImage = "";
+                    }
+                }
+                else
+                {
+                    visitor.UploadFr = 0;
+                    visitor.UploadFrError = "No file uploaded";
+                    visitor.FaceImage = "";
+                }
             }
 
-            // create account
-            if (await _userRepository.EmailExistsAsync(createDto.Email.ToLower()))
-                throw new InvalidOperationException("Email is already registered");
+            // check active trx dulu biar tidak double checkin
+            var hasActiveTrx = await _trxVisitorRepository.GetAllQueryableRaw()
+                .AnyAsync(t => t.VisitorId == visitor.Id && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null);
+            if (hasActiveTrx)
+                throw new InvalidOperationException("Visitor already has an active transaction");
 
-            var newUser = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = createDto.Email.ToLower(),
-                Email = createDto.Email.ToLower(),
-                Password = BCrypt.Net.BCrypt.HashPassword("P@ss0wrd"),
-                IsCreatedPassword = 1,
-                IsEmailConfirmation = 1,
-                EmailConfirmationCode = confirmationCode,
-                EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
-                EmailConfirmationAt = DateTime.UtcNow,
-                LastLoginAt = DateTime.MinValue,
-                StatusActive = StatusActive.Active,
-                ApplicationId = applicationId.Value,
-                GroupId = userGroup.Id
-            };
-
-            // create trx visitor checkin
+            // generate trx visitor baru
+            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             var newTrx = _mapper.Map<TrxVisitor>(createDto);
             newTrx.Id = Guid.NewGuid();
             newTrx.VisitorId = visitor.Id;
@@ -688,40 +932,26 @@ public class VisitorService : IVisitorService
             newTrx.UpdatedAt = DateTime.UtcNow;
             newTrx.IsInvitationAccepted = true;
 
-            // check active trx
-            var activeTrx = await _trxVisitorRepository.GetAllQueryableRaw()
-                .Where(t => t.VisitorId == visitor.Id && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null)
-                .AnyAsync();
-            if (activeTrx)
-                throw new InvalidOperationException("Visitor already has an active transaction");
-
-            // aSSIGN card access berdasarkan maskedareaid
+            // assign card access
             if (createDto.MaskedAreaId.HasValue)
             {
-                // cari card access berdasarkan maskedareaid
                 var cardAccess = await _cardAccessRepository.GetAllQueryable()
-                    .Where(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value))
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value));
+
                 if (cardAccess == null)
                     throw new KeyNotFoundException($"CardAccess for MaskedAreaId {createDto.MaskedAreaId} not found");
 
-                // get card
                 var card = await _cardRepository.GetAllQueryable()
-                    .Where(ca => ca.CardCardAccesses.Any(cam => cam.Card.CardNumber == createDto.CardNumber))
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(ca => ca.CardCardAccesses.Any(cam => cam.Card.CardNumber == createDto.CardNumber));
+
                 if (card == null)
-                    throw new KeyNotFoundException($"Card with Id {createDto.CardNumber} not found");
+                    throw new KeyNotFoundException($"Card with CardNumber {createDto.CardNumber} not found");
 
-                // hapus card access yang tidak sesuai
-                var accessesToRemove = card.CardCardAccesses
-                    .Where(cca => cca.CardAccessId != cardAccess.Id)
-                    .ToList();
+                // sync card access
+                var accessesToRemove = card.CardCardAccesses.Where(cca => cca.CardAccessId != cardAccess.Id).ToList();
                 foreach (var access in accessesToRemove)
-                {
                     card.CardCardAccesses.Remove(access);
-                }
 
-                // add card access kalau ga ada
                 if (!card.CardCardAccesses.Any(cca => cca.CardAccessId == cardAccess.Id))
                 {
                     card.CardCardAccesses.Add(new CardCardAccess
@@ -733,21 +963,41 @@ public class VisitorService : IVisitorService
                 }
             }
 
-            // create card record
             var cardRecordDto = new CardRecordCreateDto
             {
-                CardId = CardByCardNumber.Id,
+                CardId = cardByCardNumber.Id,
                 VisitorId = visitor.Id,
             };
 
-            // transaction
             using var transaction = await _visitorRepository.BeginTransactionAsync();
             try
             {
-                await _userRepository.AddAsync(newUser);
-                await _visitorRepository.AddAsync(visitor);
+                if (isNewVisitor)
+                {
+                    // buat user baru hanya untuk visitor baru
+                    var newUser = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        Username = createDto.Email.ToLower(),
+                        Email = createDto.Email.ToLower(),
+                        Password = BCrypt.Net.BCrypt.HashPassword("P@ss0wrd"),
+                        IsCreatedPassword = 1,
+                        IsEmailConfirmation = 1,
+                        EmailConfirmationCode = confirmationCode,
+                        EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
+                        EmailConfirmationAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.MinValue,
+                        StatusActive = StatusActive.Active,
+                        ApplicationId = applicationId.Value,
+                        GroupId = userGroup.Id
+                    };
+
+                    await _userRepository.AddAsync(newUser);
+                    await _visitorRepository.AddAsync(visitor);
+                }
+
                 await _trxVisitorRepository.AddAsync(newTrx);
-                await _cardRecordService.CreateAsync(cardRecordDto); 
+                await _cardRecordService.CreateAsync(cardRecordDto);
                 await transaction.CommitAsync();
             }
             catch
@@ -756,8 +1006,9 @@ public class VisitorService : IVisitorService
                 throw;
             }
 
-            // email verification
-            await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
+            // kirim email konfirmasi hanya kalau visitor baru
+            if (isNewVisitor)
+                await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
 
             var result = _mapper.Map<VisitorDto>(visitor);
             if (result == null)
@@ -765,7 +1016,7 @@ public class VisitorService : IVisitorService
 
             return result;
         }
-        
+
         
         // public async Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto)
         // {
