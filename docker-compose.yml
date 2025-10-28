@@ -210,6 +210,14 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 10s # delay 10 detik sebelum restart lagi
+        max_attempts: 5
+        window: 60s # failure tolerance selama 1 menit
 
   jobs-scheduler:
     build:
@@ -388,7 +396,7 @@ services:
 #     ports:
 #       - "1433:1433"
 #     environment:
-#       SA_PASSWORD: "Password_123#"
+#       SA_PASSWORD: "P@ssw0rd"
 #       ACCEPT_EULA: "Y"
 #     volumes:
 #       - sqlserver_data:/var/opt/mssql
