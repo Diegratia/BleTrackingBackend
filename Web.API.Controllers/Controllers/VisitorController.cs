@@ -773,54 +773,6 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        [HttpPost("open/create-vms")]
-        [AllowAnonymous]
-        public async Task<IActionResult> CreateVisitorVMSAsync([FromForm] VMSOpenVisitorCreateDto visitorDto)
-        {
-            if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdVisitor = await _visitorService.CreateVisitorVMSAsync(visitorDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Visitor created successfully",
-                    collection = new { data = createdVisitor },
-                    code = 201
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
 
         [AllowAnonymous]
         [HttpPut("open/{id}")]
