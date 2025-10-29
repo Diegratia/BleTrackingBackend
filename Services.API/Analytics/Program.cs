@@ -379,6 +379,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseRouting();
+app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 

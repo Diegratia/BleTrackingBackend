@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Repositories.Repository;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -15,23 +16,35 @@ namespace BusinessLogic.Services.Implementation
         private readonly AlarmTriggersRepository _alarmRepo;
         private readonly BlacklistAreaRepository _blacklistRepo;
         private readonly FloorplanMaskedAreaRepository _areaRepo;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public DashboardService(
             CardRepository cardRepo,
             FloorplanDeviceRepository deviceRepo,
             AlarmTriggersRepository alarmRepo,
             BlacklistAreaRepository blacklistRepo,
-            FloorplanMaskedAreaRepository areaRepo)
+            FloorplanMaskedAreaRepository areaRepo,
+            IHttpContextAccessor httpContextAccessor
+            )
         {
             _cardRepo = cardRepo;
             _deviceRepo = deviceRepo;
             _alarmRepo = alarmRepo;
             _blacklistRepo = blacklistRepo;
             _areaRepo = areaRepo;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<DashboardSummaryDto> GetSummaryAsync()
         {
+            var appIdString  = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+
+                Guid appId = Guid.Empty;
+                if (!string.IsNullOrEmpty(appIdString))
+                {
+                    Guid.TryParse(appIdString, out appId);
+                }
+
             var activeBeaconCount = await _cardRepo.GetCountAsync();
             var nonActiveBeaconCount = await _cardRepo.GetNonActiveCountAsync();
             var activeGatewayCount = await _deviceRepo.GetCountAsync();
@@ -46,7 +59,8 @@ namespace BusinessLogic.Services.Implementation
                 ActiveGatewayCount = activeGatewayCount,
                 BlacklistCount = blacklistCount,
                 AlarmCount = alarmCount,
-                AreaCount = areaCount
+                AreaCount = areaCount,
+                ApplicationId = appId
             };
         }
     }
