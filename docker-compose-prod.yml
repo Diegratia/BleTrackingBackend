@@ -1,6 +1,6 @@
 services:
   auth:
-    image: dev1pci2025/bletrackingbackend-auth:dev
+    image: dev1pci2025/bletrackingbackend-auth:prod
     ports:
       - "5001:5001"
     volumes:
@@ -8,7 +8,7 @@ services:
     restart: always
 
   floorplan-device:
-    image: dev1pci2025/bletrackingbackend-floorplan-device:dev
+    image: dev1pci2025/bletrackingbackend-floorplan-device:prod
     ports:
       - "5003:5003"
     volumes:
@@ -16,7 +16,7 @@ services:
     restart: always
 
   floorplan-masked-area:
-    image: dev1pci2025/bletrackingbackend-floorplan-masked-area:dev
+    image: dev1pci2025/bletrackingbackend-floorplan-masked-area:prod
     ports:
       - "5004:5004"
     volumes:
@@ -24,7 +24,7 @@ services:
     restart: always
 
   mst-floor:
-    image: dev1pci2025/bletrackingbackend-mst-floor:dev
+    image: dev1pci2025/bletrackingbackend-mst-floor:prod
     ports:
       - "5013:5013"
     volumes:
@@ -33,7 +33,7 @@ services:
     restart: always
 
   mst-floorplan:
-    image: dev1pci2025/bletrackingbackend-mst-floorplan:dev
+    image: dev1pci2025/bletrackingbackend-mst-floorplan:prod
     ports:
       - "5014:5014"
     volumes:
@@ -41,7 +41,7 @@ services:
     restart: always
 
   mst-integration:
-    image: dev1pci2025/bletrackingbackend-mst-integration:dev
+    image: dev1pci2025/bletrackingbackend-mst-integration:prod
     ports:
       - "5015:5015"
     volumes:
@@ -49,7 +49,7 @@ services:
     restart: always
 
   mst-accesscontrol:
-    image: dev1pci2025/bletrackingbackend-mst-accesscontrol:dev
+    image: dev1pci2025/bletrackingbackend-mst-accesscontrol:prod
     ports:
       - "5006:5006"
     volumes:
@@ -57,7 +57,7 @@ services:
     restart: always
 
   mst-accesscctv:
-    image: dev1pci2025/bletrackingbackend-mst-accesscctv:dev
+    image: dev1pci2025/bletrackingbackend-mst-accesscctv:prod
     ports:
       - "5005:5005"
     volumes:
@@ -65,7 +65,7 @@ services:
     restart: always
 
   mst-blereader:
-    image: dev1pci2025/bletrackingbackend-mst-blereader:dev
+    image: dev1pci2025/bletrackingbackend-mst-blereader:prod
     ports:
       - "5008:5008"
     volumes:
@@ -73,7 +73,7 @@ services:
     restart: always
 
   mst-brand:
-    image: dev1pci2025/bletrackingbackend-mst-brand:dev
+    image: dev1pci2025/bletrackingbackend-mst-brand:prod
     ports:
       - "5009:5009"
     volumes:
@@ -81,7 +81,7 @@ services:
     restart: always
 
   mst-application:
-    image: dev1pci2025/bletrackingbackend-mst-application:dev
+    image: dev1pci2025/bletrackingbackend-mst-application:prod
     ports:
       - "5007:5007"
     volumes:
@@ -89,7 +89,7 @@ services:
     restart: always
 
   visitor:
-    image: dev1pci2025/bletrackingbackend-visitor:dev
+    image: dev1pci2025/bletrackingbackend-visitor:prod
     ports:
       - "5019:5019"
     volumes:
@@ -97,7 +97,7 @@ services:
     restart: always
 
   alarm-record-tracking:
-    image: dev1pci2025/bletrackingbackend-alarm-record-tracking:dev
+    image: dev1pci2025/bletrackingbackend-alarm-record-tracking:prod
     ports:
       - "5002:5002"
     volumes:
@@ -105,7 +105,7 @@ services:
     restart: always
 
   mst-building:
-    image: dev1pci2025/bletrackingbackend-mst-building:dev
+    image: dev1pci2025/bletrackingbackend-mst-building:prod
     ports:
       - "5010:5010"
     # depends_on:
@@ -115,7 +115,7 @@ services:
     restart: always
 
   mst-department:
-    image: dev1pci2025/bletrackingbackend-mst-department:dev
+    image: dev1pci2025/bletrackingbackend-mst-department:prod
     ports:
       - "5011:5011"
     # depends_on:
@@ -125,7 +125,7 @@ services:
     restart: always
 
   mst-district:
-    image: dev1pci2025/bletrackingbackend-mst-district:dev
+    image: dev1pci2025/bletrackingbackend-mst-district:prod
     ports:
       - "5012:5012"
     # depends_on:
@@ -135,7 +135,7 @@ services:
     restart: always
 
   mst-member:
-    image: dev1pci2025/bletrackingbackend-mst-member:dev
+    image: dev1pci2025/bletrackingbackend-mst-member:prod
     ports:
       - "5016:5016"
     # depends_on:
@@ -149,7 +149,7 @@ services:
     restart: always
 
   mst-organization:
-    image: dev1pci2025/bletrackingbackend-mst-organization:dev
+    image: dev1pci2025/bletrackingbackend-mst-organization:prod
     ports:
       - "5017:5017"
     # depends_on:
@@ -159,7 +159,7 @@ services:
     restart: always
 
   tracking-transaction:
-    image: dev1pci2025/bletrackingbackend-tracking-transaction:dev
+    image: dev1pci2025/bletrackingbackend-tracking-transaction:prod
     ports:
       - "5018:5018"
     # depends_on:
@@ -170,7 +170,7 @@ services:
     restart: always
 
   blacklist-area:
-    image: dev1pci2025/bletrackingbackend-blacklist-area:dev
+    image: dev1pci2025/bletrackingbackend-blacklist-area:prod
     ports:
       - "5020:5020"
     # depends_on:
@@ -182,7 +182,7 @@ services:
     restart: always
 
   ble-reader-node:
-    image: dev1pci2025/bletrackingbackend-ble-reader-node:dev
+    image: dev1pci2025/bletrackingbackend-ble-reader-node:prod
     ports:
       - "5021:5021"
     # depends_on:
@@ -193,7 +193,7 @@ services:
     restart: always
 
   mst-engine:
-    image: dev1pci2025/bletrackingbackend-mst-engine:dev
+    image: dev1pci2025/bletrackingbackend-mst-engine:prod
     ports:
       - "5022:5022"
     # depends_on:
@@ -204,7 +204,7 @@ services:
     restart: always
 
   card-record:
-    image: dev1pci2025/bletrackingbackend-card-record:dev
+    image: dev1pci2025/bletrackingbackend-card-record:prod
     ports:
       - "5024:5024"
     volumes:
@@ -212,14 +212,14 @@ services:
     restart: always
 
   trx-visitor:
-    image: dev1pci2025/bletrackingbackend-trx-visitor:dev
+    image: dev1pci2025/bletrackingbackend-trx-visitor:prod
     ports:
       - "5025:5025"
     volumes:
       - ./.env:/app/.env
     restart: always
   monitoring-config:
-    image: dev1pci2025/bletrackingbackend-monitoring-config:dev
+    image: dev1pci2025/bletrackingbackend-monitoring-config:prod
     ports:
       - "5029:5029"
     volumes:
@@ -227,7 +227,7 @@ services:
     restart: always
 
   geofence:
-    image: dev1pci2025/bletrackingbackend-geofence:dev
+    image: dev1pci2025/bletrackingbackend-geofence:prod
     ports:
       - "5030:5030"
     volumes:
@@ -235,7 +235,7 @@ services:
     restart: always
 
   card:
-    image: dev1pci2025/bletrackingbackend-card:dev
+    image: dev1pci2025/bletrackingbackend-card:prod
     ports:
       - "5026:5026"
     volumes:
@@ -243,7 +243,7 @@ services:
     restart: always
 
   card-access:
-    image: dev1pci2025/bletrackingbackend-card-access:dev
+    image: dev1pci2025/bletrackingbackend-card-access:prod
     ports:
       - "5028:5028"
     volumes:
@@ -251,7 +251,7 @@ services:
     restart: always
 
   alarm-triggers:
-    image: dev1pci2025/bletrackingbackend-alarm-triggers:dev
+    image: dev1pci2025/bletrackingbackend-alarm-triggers:prod
     ports:
       - "5027:5027"
     volumes:
@@ -259,7 +259,7 @@ services:
     restart: always
 
   analytics:
-    image: dev1pci2025/bletrackingbackend-analytics:dev
+    image: dev1pci2025/bletrackingbackend-analytics:prod
     ports:
       - "5031:5031"
     volumes:
@@ -267,7 +267,7 @@ services:
     restart: always
 
   nginx:
-    image: dev1pci2025/bletrackingbackend-nginx:dev
+    image: dev1pci2025/bletrackingbackend-nginx:prod
     ports:
       - "5000:5000"
     volumes:
@@ -275,7 +275,7 @@ services:
     restart: always
 
   gateway-health-api:
-    image: dev1pci2025/bletrackingbackend-gateway-health-api:dev
+    image: dev1pci2025/bletrackingbackend-gateway-health-api:prod
     restart: always
     expose:
       - "8080" # hanya visible untuk Nginx di dalam jaringan Docker

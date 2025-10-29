@@ -16,7 +16,7 @@ using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
-    Env.Load("./.env");
+    Env.Load("/app/.env");
 }
 catch (Exception ex)
 {
