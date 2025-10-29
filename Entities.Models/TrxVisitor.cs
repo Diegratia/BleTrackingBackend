@@ -14,7 +14,7 @@ namespace Entities.Models
   [Index(nameof(Status))]
   [Index(nameof(VisitorId), nameof(Status))]
   [Index(nameof(VisitorPeriodStart))]
-  [Index(nameof(VisitorId), nameof(VisitorPeriodStart), nameof(VisitorPeriodEnd), IsUnique = true)]
+  [Index(nameof(VisitorId), nameof(VisitorPeriodStart), nameof(VisitorPeriodEnd))]
   public class TrxVisitor : BaseModelWithTime, IApplicationEntity
   {
     [Column("checked_in_at")]
@@ -130,6 +130,9 @@ namespace Entities.Models
   
     [Column("agenda")]
     public string? Agenda { get; set; }
+
+    [Column("extended_visitor_time")]
+    public int? ExtendedVisitorTime { get; set; }
 
     public FloorplanMaskedArea? MaskedArea { get; set; }
     public MstApplication Application { get; set; }

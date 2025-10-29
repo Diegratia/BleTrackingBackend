@@ -38,7 +38,8 @@ namespace Helpers.Consumer
     {
         Active,
         Expired,
-        Cancelled
+        Cancelled,
+        Extended
     }
 
     public enum IdentityType

@@ -13,7 +13,7 @@ namespace BusinessLogic.Services.Interface
         Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id);
         Task<IEnumerable<TrxVisitorDto>> GetAllTrxVisitorsAsync();
         Task<IEnumerable<TrxVisitorDtoz>> GetAllTrxVisitorsAsyncMinimal();
-         Task<IEnumerable<OpenTrxVisitorDto>> OpenGetAllTrxVisitorsAsync();
+        Task<IEnumerable<OpenTrxVisitorDto>> OpenGetAllTrxVisitorsAsync();
         Task UpdateTrxVisitorAsync(Guid id, TrxVisitorUpdateDto updateDto);
         // Task DeleteTrxVisitorAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
@@ -28,6 +28,8 @@ namespace BusinessLogic.Services.Interface
         Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto);
         Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto);
         Task UnblockVisitorAsync(Guid trxVisitorId);
+        Task CheckoutWithVisitorIdAsync(Guid visitorId);
         Task<TrxVisitorDto> GetTrxVisitorByPublicIdAsync(Guid id);
+        Task ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto);
     }
 }

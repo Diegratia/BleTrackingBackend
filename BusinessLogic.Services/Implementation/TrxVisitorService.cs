@@ -301,6 +301,69 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
+       public async Task CheckoutWithVisitorIdAsync(Guid visitorId)
+{
+    var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+    // Cari transaksi aktif berdasarkan VisitorId
+    var trx = await _repository.GetAllQueryable()
+        .Where(t => t.VisitorId == visitorId && 
+                    (t.Status == VisitorStatus.Checkin || 
+                     t.Status == VisitorStatus.Block || 
+                     t.Status == VisitorStatus.Unblock))
+        .OrderByDescending(t => t.CheckedInAt)
+        .FirstOrDefaultAsync();
+
+    if (trx == null)
+        throw new Exception("No active transaction found for this visitor.");
+
+    if (!trx.VisitorId.HasValue)
+        throw new InvalidOperationException("VisitorId is null.");
+
+    using IDbContextTransaction transaction = await _repository.BeginTransactionAsync();
+    try
+    {
+        trx.CheckedOutAt = DateTime.UtcNow;
+        trx.CheckoutBy = username;
+        trx.Status = VisitorStatus.Checkout;
+        trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
+        trx.UpdatedAt = DateTime.UtcNow;
+        trx.UpdatedBy = username;
+
+        await _repository.UpdateAsync(trx);
+
+        // Update visitor info
+        var visitor = await _visitorRepository.GetByIdAsync(visitorId);
+        if (visitor == null)
+            throw new KeyNotFoundException("Visitor not found.");
+
+        visitor.VisitorGroupCode = null;
+        visitor.VisitorNumber = null;
+        visitor.VisitorCode = null;
+
+        await _visitorRepository.UpdateAsync(visitor);
+
+        // Checkout kartu yang masih aktif
+        var cardRecord = await _cardRecordRepository.GetAllQueryable()
+            .Where(cr => cr.VisitorId == visitorId && cr.CheckoutAt == null && cr.Status == 1)
+            .OrderByDescending(cr => cr.CheckinAt)
+            .FirstOrDefaultAsync();
+
+        if (cardRecord != null)
+        {
+            await _cardRecordService.CheckoutCard(cardRecord.Id);
+        }
+
+        await transaction.CommitAsync();
+    }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
+
+
             public async Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -381,6 +444,7 @@ namespace BusinessLogic.Services.Implementation
                 searchableColumns,
                 validSortColumns,
                 enumColumns);
+                
 
             return await filterService.FilterAsync(request);
         }
@@ -433,6 +497,25 @@ namespace BusinessLogic.Services.Implementation
                 enumColumns);
 
             return await filterService.FilterAsync(request);
+        }
+
+        public async Task ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto)
+        {
+                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+                var trx = await _repository.OpenGetByTrxIdAsync(trxVisitorId);
+                // var trx = await _repository.GetByIdAsync(trxVisitorId);
+
+                if (trx == null)
+                throw new Exception("No active session found");
+                var additionalTime = TimeSpan.FromMinutes(dto.ExtendedVisitorTime);
+                trx.ExtendedVisitorTime += dto.ExtendedVisitorTime;
+                trx.VisitorPeriodEnd = trx.VisitorPeriodEnd.Value.Add(additionalTime);
+                
+                // trx.VisitorActiveStatus = VisitorActiveStatus.Extended;
+            trx.UpdatedAt = DateTime.UtcNow;
+                trx.UpdatedBy = username;
+                _mapper.Map(dto, trx);
+                await _repository.UpdateAsync(trx);
         }
 
         public async Task<byte[]> ExportPdfAsync()

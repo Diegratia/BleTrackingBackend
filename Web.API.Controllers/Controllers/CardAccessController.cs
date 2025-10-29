@@ -256,5 +256,43 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("assign-cardaccess")]
+        public async Task<IActionResult> AssignCardAccessToCardAsync([FromBody] CardAssignAccessDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _cardAccessService.AssignCardAccessToCardAsync(dto);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    msg = "Card Access Assigned successfully",
+                    collection = new { data = (object)null },
+                    code = 201
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
     }
 }
