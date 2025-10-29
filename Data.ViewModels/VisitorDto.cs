@@ -37,7 +37,6 @@ namespace Data.ViewModels
         public string? UpdatedBy { get; set; }
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
-
         public CardDto Card { get; set; }
     }
     

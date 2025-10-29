@@ -72,6 +72,14 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+            public async Task<Visitor?> OpenGetByVisitorIdAsync(Guid visitorId)
+        {
+            return await GetAllQueryableRaw().Include(x => x.TrxVisitors)
+                .Where(v => v.Id == visitorId)
+                .FirstOrDefaultAsync();
+        }
+
+
         public async Task UpdateAsync(Visitor visitor)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
