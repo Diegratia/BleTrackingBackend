@@ -144,10 +144,23 @@ builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
+
+
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
+
+builder.Services.AddScoped<IGeofenceService, GeofenceService>();
+builder.Services.AddScoped<IBoundaryService, BoundaryService>();
+builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
+builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+
+builder.Services.AddScoped<GeofenceRepository>();
+builder.Services.AddScoped<StayOnAreaRepository>();
+builder.Services.AddScoped<OverpopulatingRepository>();
+builder.Services.AddScoped<BoundaryRepository>();
+
 
 
 

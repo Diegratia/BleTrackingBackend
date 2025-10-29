@@ -146,6 +146,16 @@ builder.Services.AddScoped<MstFloorplanRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 
+builder.Services.AddScoped<IGeofenceService, GeofenceService>();
+builder.Services.AddScoped<IBoundaryService, BoundaryService>();
+builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
+builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+
+builder.Services.AddScoped<GeofenceRepository>();
+builder.Services.AddScoped<StayOnAreaRepository>();
+builder.Services.AddScoped<OverpopulatingRepository>();
+builder.Services.AddScoped<BoundaryRepository>();
+
 var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "5010" ??
            builder.Configuration["Ports:MstBuildingService"];
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
