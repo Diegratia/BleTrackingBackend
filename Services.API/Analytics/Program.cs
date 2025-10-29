@@ -244,6 +244,7 @@ using Data.ViewModels;
 using BusinessLogic.Services.Extension.Analytics;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
+using Repositories.Repository;
 
 try
 {
@@ -335,9 +336,16 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
 builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>(); 
 builder.Services.AddScoped<AlarmAnalyticsRepository>();
 builder.Services.AddScoped<TrackingAnalyticsRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
+builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<FloorplanDeviceRepository>();
+builder.Services.AddScoped<AlarmTriggersRepository>();
+builder.Services.AddScoped<BlacklistAreaRepository>();
+builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));
 
