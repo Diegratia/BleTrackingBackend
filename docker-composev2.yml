@@ -51,7 +51,7 @@ services:
     ports:
       - "5014:5014"
     volumes:
-      - ./Uploads/FloorplanImages:/app/Uploads/FloorplanImages
+      - floorplan_images:/app/Uploads/FloorplanImages
       - ./.env:/app/.env
     restart: always
 
@@ -129,7 +129,7 @@ services:
     ports:
       - "5019:5019"
     volumes:
-      - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
+      - visitor_face_images:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -152,7 +152,7 @@ services:
     ports:
       - "5010:5010"
     volumes:
-      - ./Uploads/BuildingImages:/app/Uploads/BuildingImages
+      - building_images:/app/Uploads/BuildingImages
       - ./.env:/app/.env
     restart: always
 
@@ -186,7 +186,7 @@ services:
     ports:
       - "5016:5016"
     volumes:
-      - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
+      - member_face_images:/app/Uploads/MemberFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -239,7 +239,7 @@ services:
     ports:
       - "5020:5020"
     volumes:
-      - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
+      - visitor_face_images:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -404,3 +404,8 @@ services:
 
 # volumes:
 #   sqlserver_data:
+volumes:
+  floorplan_images:
+  visitor_face_images:
+  member_face_images:
+  building_images:
