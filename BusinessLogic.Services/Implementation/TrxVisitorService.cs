@@ -512,9 +512,9 @@ namespace BusinessLogic.Services.Implementation
                 trx.VisitorPeriodEnd = trx.VisitorPeriodEnd.Value.Add(additionalTime);
                 
                 // trx.VisitorActiveStatus = VisitorActiveStatus.Extended;
-            trx.UpdatedAt = DateTime.UtcNow;
+                trx.UpdatedAt = DateTime.UtcNow;
                 trx.UpdatedBy = username;
-                _mapper.Map(dto, trx);
+                trx.ExtendedVisitorTime = dto.ExtendedVisitorTime;
                 await _repository.UpdateAsync(trx);
         }
 

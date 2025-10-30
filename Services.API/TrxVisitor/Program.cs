@@ -12,6 +12,9 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Data.ViewModels.Validators;
 // using Helpers.Consumer.Mqtt;
 
 try
@@ -47,6 +50,12 @@ builder.Services.AddDbContext<BleTrackingDbContext>(options =>
                          "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 // builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<VisitorExtendedValidator>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
