@@ -15,10 +15,10 @@ namespace Data.ViewModels
             public List<Guid?> MaskedAreaIds { get; set; } = new();
             public List<Guid?> TimeGroupIds { get; set; } = new();
 
-            // 🔹 Tambahan opsional
-            public Guid? BuildingId { get; set; }
-            public Guid? FloorId { get; set; }
-            public Guid? FloorplanId { get; set; }
+                // 🔹 Tambahan opsional
+            public List<Guid>? BuildingId { get; set; }
+            public List<Guid>? FloorId { get; set; }
+            public List<Guid>? FloorplanId { get; set; }
         }
 
 
@@ -30,10 +30,9 @@ namespace Data.ViewModels
         public List<Guid?> MaskedAreaIds { get; set; } = new();
         public List<Guid?> TimeGroupIds { get; set; } = new();
 
-                    // 🔹 Tambahan opsional
-            public Guid? BuildingId { get; set; }
-            public Guid? FloorId { get; set; }
-            public Guid? FloorplanId { get; set; }
+        public List<Guid>? BuildingId { get; set; }
+        public List<Guid>? FloorId { get; set; }
+        public List<Guid>? FloorplanId { get; set; }
 
     }
 
@@ -59,9 +58,9 @@ namespace Data.ViewModels
         public Guid CardId { get; set; }
 
         // Bisa kirim salah satu dari bawah ini
-        public Guid? BuildingId { get; set; }
-        public Guid? FloorId { get; set; }
-        public Guid? FloorplanId { get; set; }
+        public List<Guid>? BuildingId { get; set; }
+        public List<Guid>? FloorId { get; set; }
+        public List<Guid>? FloorplanId { get; set; }
 
         // manual CardAccessIds (optional)
         public List<Guid>? CardAccessIds { get; set; } = new();

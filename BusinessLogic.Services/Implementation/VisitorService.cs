@@ -1822,8 +1822,6 @@ public class VisitorService : IVisitorService
         // }
 
 
-
-
         public async Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;

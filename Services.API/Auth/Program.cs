@@ -1,21 +1,19 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Repositories.DbContexts;
-using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
+using Microsoft.Extensions.FileProviders;
+using BusinessLogic.Services.Interface;
 using Repositories.Repository;
+using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-// using BusinessLogic.Services.Extension;
-// using BusinessLogic.Services.Extension.RootExtension;
-using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.RootExtension;
-// using BusinessLogic.Services.Extension.RootExtension;
+
 
 try
 {
@@ -48,7 +46,7 @@ builder.Services.AddValidatorExtensions();
 builder.Services.AddDbContextExtension(builder.Configuration);
 
 // Konfigurasi AutoMapper
-builder.Services.AddAutoMapper(typeof(AuthProfile));
+builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.AuthProfile));
 
 // Konfigurasi Autentikasi JWT
 builder.Services.AddJwtAuthExtension(builder.Configuration);

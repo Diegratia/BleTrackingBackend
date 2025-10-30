@@ -125,36 +125,87 @@ namespace Repositories.Repository
             entity.Status = 0;
             await _context.SaveChangesAsync();
         }
-        
-        public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
-            Guid? buildingId,
-            Guid? floorId,
-            Guid? floorplanId)
-        {
-            var query = _context.CardAccessMaskedAreas.AsQueryable();
 
-            if (floorplanId.HasValue)
+        public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
+            List<Guid>? buildingIds,
+            List<Guid>? floorIds,
+            List<Guid>? floorplanIds)
+        {
+            var query = _context.CardAccesses
+                .Include(ca => ca.CardAccessMaskedAreas)
+                    .ThenInclude(cam => cam.MaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
+                            .ThenInclude(f => f.Building)
+                .Where(ca => ca.Status != 0);
+
+            // 🔹 Filter by building
+            if (buildingIds != null && buildingIds.Any())
             {
-                query = query.Where(cam => cam.MaskedArea.FloorplanId == floorplanId.Value);
+                query = query.Where(ca =>
+                    ca.CardAccessMaskedAreas.Any(cam =>
+                        cam.MaskedArea.Floorplan.Floor.Building != null &&
+                        buildingIds.Contains(cam.MaskedArea.Floorplan.Floor.Building.Id)
+                    ));
             }
-            else if (floorId.HasValue)
+
+            // 🔹 Filter by floor
+            if (floorIds != null && floorIds.Any())
             {
-                query = query.Where(cam => cam.MaskedArea.Floorplan.FloorId == floorId.Value);
+                query = query.Where(ca =>
+                    ca.CardAccessMaskedAreas.Any(cam =>
+                        cam.MaskedArea.Floorplan.Floor != null &&
+                        floorIds.Contains(cam.MaskedArea.Floorplan.Floor.Id)
+                    ));
             }
-            else if (buildingId.HasValue)
+
+            // 🔹 Filter by floorplan
+            if (floorplanIds != null && floorplanIds.Any())
             {
-                query = query.Where(cam => cam.MaskedArea.Floorplan.Floor.BuildingId == buildingId.Value);
-            }
-            else
-            {
-                return new List<Guid>(); // no filter
+                query = query.Where(ca =>
+                    ca.CardAccessMaskedAreas.Any(cam =>
+                        cam.MaskedArea.Floorplan != null &&
+                        floorplanIds.Contains(cam.MaskedArea.Floorplan.Id)
+                    ));
             }
 
             return await query
-                .Select(cam => cam.CardAccessId)
+                .Select(ca => ca.Id)
                 .Distinct()
                 .ToListAsync();
         }
+
+        
+        // non list overload
+        // public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
+        //     Guid? buildingId,
+        //     Guid? floorId,
+        //     Guid? floorplanId)
+        // {
+        //     var query = _context.CardAccessMaskedAreas.AsQueryable();
+
+        //     if (floorplanId.HasValue)
+        //     {
+        //         query = query.Where(cam => cam.MaskedArea.FloorplanId == floorplanId.Value);
+        //     }
+        //     else if (floorId.HasValue)
+        //     {
+        //         query = query.Where(cam => cam.MaskedArea.Floorplan.FloorId == floorId.Value);
+        //     }
+        //     else if (buildingId.HasValue)
+        //     {
+        //         query = query.Where(cam => cam.MaskedArea.Floorplan.Floor.BuildingId == buildingId.Value);
+        //     }
+        //     else
+        //     {
+        //         return new List<Guid>(); // no filter
+        //     }
+
+        //     return await query
+        //         .Select(cam => cam.CardAccessId)
+        //         .Distinct()
+        //         .ToListAsync();
+        // }
 
     }
 }

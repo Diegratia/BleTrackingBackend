@@ -16,7 +16,7 @@ namespace Repositories.Repository
         {
         }
 
-         public async Task<int> GetCountAsync()
+        public async Task<int> GetCountAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -135,36 +135,81 @@ namespace Repositories.Repository
                 .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
                 .ToListAsync();
         }
+        
+                public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
+            List<Guid>? buildingIds = null,
+            List<Guid>? floorIds = null,
+            List<Guid>?  floorplanIds = null)
+        {
+            var query = _context.FloorplanMaskedAreas
+                .Include(m => m.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
+                        .ThenInclude(f => f.Building)
+                .AsQueryable();
+
+            // 🔹 Filter by floorplan
+            if (floorplanIds?.Any() == true)
+            {
+                query = query.Where(m => floorplanIds.Contains(m.FloorplanId));
+            }
+
+            // 🔹 Filter by floor
+            if (floorIds?.Any() == true)
+            {
+                query = query.Where(m => floorIds.Contains(m.Floorplan.FloorId));
+            }
+
+            // 🔹 Filter by building
+            if (buildingIds?.Any() == true)
+            {
+                query = query.Where(m => buildingIds.Contains(m.Floorplan.Floor.BuildingId));
+            }
+
+            // 🔹 Jika semua parameter kosong, return kosong agar tidak load semua area
+            if ((buildingIds == null || !buildingIds.Any()) &&
+                (floorIds == null || !floorIds.Any()) &&
+                (floorplanIds == null || !floorplanIds.Any()))
+            {
+                return new List<Guid>();
+            }
+
+            return await query
+                .Select(m => m.Id)
+                .Distinct()
+                .ToListAsync();
+        }
+
     
-        public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
-        Guid? buildingId,
-        Guid? floorId,
-        Guid? floorplanId)
-    {
-        var query = _context.FloorplanMaskedAreas.AsQueryable();
+    // single input
+        //     public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
+        //     Guid? buildingId,
+        //     Guid? floorId,
+        //     Guid? floorplanId)
+        // {
+        //     var query = _context.FloorplanMaskedAreas.AsQueryable();
 
-        if (floorplanId.HasValue)
-        {
-            query = query.Where(m => m.FloorplanId == floorplanId.Value);
-        }
-        else if (floorId.HasValue)
-        {
-            query = query.Where(m => m.Floorplan.FloorId == floorId.Value);
-        }
-        else if (buildingId.HasValue)
-        {
-            query = query.Where(m => m.Floorplan.Floor.BuildingId == buildingId.Value);
-        }
-        else
-        {
-            return new List<Guid>(); // No filter
-        }
+        //     if (floorplanId.HasValue)
+        //     {
+        //         query = query.Where(m => m.FloorplanId == floorplanId.Value);
+        //     }
+        //     else if (floorId.HasValue)
+        //     {
+        //         query = query.Where(m => m.Floorplan.FloorId == floorId.Value);
+        //     }
+        //     else if (buildingId.HasValue)
+        //     {
+        //         query = query.Where(m => m.Floorplan.Floor.BuildingId == buildingId.Value);
+        //     }
+        //     else
+        //     {
+        //         return new List<Guid>(); // No filter
+        //     }
 
-        return await query
-            .Select(m => m.Id)
-            .Distinct()
-            .ToListAsync();
-    }
+        //     return await query
+        //         .Select(m => m.Id)
+        //         .Distinct()
+        //         .ToListAsync();
+        // }
 
     }
 }
