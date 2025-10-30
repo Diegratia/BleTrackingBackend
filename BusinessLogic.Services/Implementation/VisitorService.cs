@@ -3433,7 +3433,7 @@ public class VisitorService : IVisitorService
                 // letakkan di bawah ini
                 if (!string.IsNullOrEmpty(faceImagePath))
                     visitor.FaceImage = faceImagePath;
-                    Console.WriteLine($"FaceImage: {faceImagePath}");
+                    // Console.WriteLine($"FaceImage: {faceImagePath}");
 
                 visitor.UploadFr = uploadFr ?? visitor.UploadFr;
                 visitor.UploadFrError = uploadFrError;

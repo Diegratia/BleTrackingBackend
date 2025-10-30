@@ -23,9 +23,9 @@ namespace Repositories.Repository.Analytics
         // get wib table name
         private static string GetTableNameByDate(DateTime utcDate)
         {
-            // var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            // var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-            var wibDate = utcDate.AddHours(7);
+            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var wibDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+            // var wibDate = utcDate.AddHours(7);
             return $"tracking_transaction_{wibDate:yyyyMMdd}";
         }
 
