@@ -12,8 +12,9 @@ using DotNetEnv;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 // using BusinessLogic.Services.Extension;
-using BusinessLogic.Services.Extension.RootExtension;
+// using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Extension;
+using BusinessLogic.Services.Extension.RootExtension;
 // using BusinessLogic.Services.Extension.RootExtension;
 
 try
@@ -39,9 +40,10 @@ builder.Configuration
 // Konfigurasi Controllers
 builder.Services.AddControllers();
 
-    // Registrasi otomatis validasi FluentValidation
-    // Scan semua validator di assembly yang mengandung BrandValidator
+// Registrasi otomatis validasi FluentValidation
+// Scan semua validator di assembly yang mengandung BrandValidator
 builder.Services.AddValidatorExtensions();
+builder.Services.AddJwtAuthExtension();
 
 // Konfigurasi DbContext
 builder.Services.AddDbContextExtension(builder.Configuration);
