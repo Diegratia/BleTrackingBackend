@@ -92,5 +92,11 @@ namespace Web.API.Controllers.Controllers.Analytics
             var result = await _service.GetCardSummaryAsync(request);
             return Ok(result);
         }
+        [HttpPost("area-accessed")]
+        public async Task<IActionResult> GetAreaAccessed([FromBody] TrackingAnalyticsRequestRM request)
+        {
+            var result = await _service.GetAreaAccessedSummaryAsync(request);
+            return Ok(result);
+        }
     }
 }

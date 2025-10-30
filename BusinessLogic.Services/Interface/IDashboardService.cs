@@ -9,5 +9,6 @@ namespace BusinessLogic.Services.Interface
     public interface IDashboardService
     {
         Task<DashboardSummaryDto> GetSummaryAsync();
+        Task<ResponseSingle<CardUsageCountDto>> GetCardStatsAsync();
     }
 }

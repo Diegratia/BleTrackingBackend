@@ -42,6 +42,21 @@ namespace Data.ViewModels.AlarmAnalytics
         public int TotalRecords { get; set; }
     }
 
+        public class TrackingPermissionCountDto
+    {
+        public int WithPermission { get; set; }
+        public int WithoutPermission { get; set; }
+        public int TotalRecords { get; set; }
+        
+    }
+
+        public class TrackingAccessPermissionSummaryDto
+    {
+        public int AccessedAreaTotal { get; set; }
+        public int WithPermission { get; set; }
+        public int WithoutPermission { get; set; }
+    }
+
     public class TrackingDailySummaryDto
     {
         public DateTime Date { get; set; }

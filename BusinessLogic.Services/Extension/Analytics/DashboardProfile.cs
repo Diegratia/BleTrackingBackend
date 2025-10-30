@@ -7,9 +7,9 @@ using Data.ViewModels.AlarmAnalytics;
 
 namespace BusinessLogic.Services.Extension.Analytics
 {
-    public class TrackingAnalyticsProfile : Profile
+    public class DashboardProfile : Profile
     {
-        public TrackingAnalyticsProfile()
+        public DashboardProfile()
         {
             // Mapping dari entity utama ke DTO (untuk log/detail alarm analytics)
             CreateMap<TrackingAnalyticsRequestDto, TrackingAnalyticsRequestRM>();
@@ -18,13 +18,7 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
-            CreateMap<TrackingAreaSummaryRM, TrackingAreaSummaryDto>();
-            CreateMap<TrackingVisitorSummaryRM, TrackingVisitorSummaryDto>();
-            CreateMap<TrackingBuildingSummaryRM, TrackingBuildingSummaryDto>();
-            CreateMap<TrackingDailySummaryRM, TrackingDailySummaryDto>();
-            CreateMap<TrackingReaderSummaryRM, TrackingReaderSummaryDto>();
-            CreateMap<TrackingPermissionCountRM, TrackingPermissionCountDto>();
-            CreateMap<TrackingAccessPermissionSummaryRM, TrackingAccessPermissionSummaryDto>();
+            CreateMap<CardUsageCountRM, CardUsageCountDto>();
             
         }
     }

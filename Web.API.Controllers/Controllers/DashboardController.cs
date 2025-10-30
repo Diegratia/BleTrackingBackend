@@ -20,5 +20,11 @@ namespace Web.API.Controllers.Controllers
             var data = await _service.GetSummaryAsync();
             return Ok(data);
         }
+        [HttpGet("count-card")]
+        public async Task<IActionResult> GetCardStatsAsync()
+        {
+            var data = await _service.GetCardStatsAsync();
+            return Ok(data);
+        }
     }
 }

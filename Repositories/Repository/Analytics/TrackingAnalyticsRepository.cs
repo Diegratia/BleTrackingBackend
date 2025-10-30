@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Helpers.Consumer;
 
 namespace Repositories.Repository.Analytics
 {
@@ -89,10 +90,49 @@ namespace Repositories.Repository.Analytics
 
             return data;
         }
+        
+         // count area accessed sum
+        public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsRequestRM request)
+    {
+        var range = GetTimeRange(request.TimeRange);
+        var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+        var to = range?.to ?? request.To ?? DateTime.UtcNow;
+        var tableName = GetTableNameByDate(DateTime.UtcNow);
+
+        var query = _context.Set<TrackingTransaction>()
+            .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+            .AsNoTracking()
+            .Include(t => t.FloorplanMaskedArea)
+            .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+        query = ApplyFilters(query, request);
+
+        // Ambil area unik yang dikunjungi
+        var data = await query
+            .Select(t => new
+            {
+                t.FloorplanMaskedAreaId,
+                RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus
+            })
+            .Distinct()
+            .ToListAsync();
+
+        var totalWithPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.NonRestrict);
+        var totalWithoutPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.Restrict);
+
+        return new TrackingAccessPermissionSummaryRM
+        {
+            AccessedAreaTotal = data.Count,
+            WithPermission = totalWithPermission,
+            WithoutPermission = totalWithoutPermission
+        };
+    }
+
+
 
 
         // daily sum
-            public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
@@ -419,6 +459,8 @@ namespace Repositories.Repository.Analytics
 
             return grouped;
         }
+
+        
 
 
 

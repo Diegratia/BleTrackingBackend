@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
 
 namespace Repositories.Repository
 {
@@ -48,6 +49,43 @@ namespace Repositories.Repository
                 .Where(c => c.StatusCard != 0 && c.IsUsed == true);
 
             // Apply application filter jika perlu (gemstone: ApplyApplicationIdFilter menerima IQueryable<Card>)
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+        public async Task<CardUsageCountRM> CardUsageCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
+
+
+            var visitorUse = await q.Where(c => c.VisitorId != null).CountAsync();
+            var memberUse = await q.Where(c => c.MemberId != null).CountAsync();
+            var totalCard = await q.CountAsync();
+            var totalUse = visitorUse + memberUse;
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return new CardUsageCountRM
+            {
+                VisitorCardCount = visitorUse,
+                MemberCardCount = memberUse,
+                TotalCardCount = totalCard,
+                TotalCardUse = totalUse
+            };
+        }
+
+         public async Task<int> GetCountEachIdAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q.CountAsync();

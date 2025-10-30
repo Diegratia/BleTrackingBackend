@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Repositories.DbContexts;
+using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -20,11 +21,13 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly IMqttClientService _mqttClientService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger _logger;
 
-        public EngineMqttListener(IMqttClientService mqttClientService, IServiceScopeFactory scopeFactory)
+        public EngineMqttListener(IMqttClientService mqttClientService, IServiceScopeFactory scopeFactory, ILogger logger)
         {
             _mqttClientService = mqttClientService;
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+            _logger = logger ?? throw new ArgumentNullException();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
