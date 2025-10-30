@@ -3322,7 +3322,10 @@ public class VisitorService : IVisitorService
                     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
                     Directory.CreateDirectory(uploadDir);
 
-                    var fileName = $"{Guid.NewGuid()}_{dto.FaceImage.FileName}";
+                    var fileExtension = Path.GetExtension(dto.FaceImage.FileName)?.ToLower() ?? ".jpg";
+                    var fileName = $"{Guid.NewGuid()}_{fileExtension}";         
+
+
                     var filePath = Path.Combine(uploadDir, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
@@ -3344,7 +3347,6 @@ public class VisitorService : IVisitorService
             }
 
                 // ===== Buat/siapkan akun USER kalau belum ada (tanpa claims) =====
-              
 
                 // Ambil applicationId dari querystring
                 string? appIdStr =
@@ -3425,8 +3427,16 @@ public class VisitorService : IVisitorService
             using var transaction = await _trxVisitorRepository.BeginTransactionAsync();
             try
             { 
+
                 _mapper.Map(dto, visitor);
 
+                // letakkan di bawah ini
+                if (!string.IsNullOrEmpty(faceImagePath))
+                    visitor.FaceImage = faceImagePath;
+                    Console.WriteLine($"FaceImage: {faceImagePath}");
+
+                visitor.UploadFr = uploadFr ?? visitor.UploadFr;
+                visitor.UploadFrError = uploadFrError;
                 visitor.UpdatedAt = DateTime.UtcNow;
                 visitor.UpdatedBy = "VisitorForm";
 
