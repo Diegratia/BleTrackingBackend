@@ -20,6 +20,7 @@ using System.Threading.RateLimiting;
 using BusinessLogic.Services.Extension.RootExtension;
 
 
+
 try
     {
         Env.Load("/app/.env");
@@ -30,6 +31,7 @@ try
     }
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Logging.AddConsole();
 
     builder.Services.AddCors(options =>
     {

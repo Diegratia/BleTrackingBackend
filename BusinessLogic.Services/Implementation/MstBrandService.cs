@@ -15,17 +15,20 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Logging;
 namespace BusinessLogic.Services.Implementation
 {
     public class MstBrandService : IMstBrandService
     {
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<MstBrandService> _logger;
 
-        public MstBrandService(MstBrandRepository repository, IMapper mapper)
+        public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger)
         {
             _repository = repository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<MstBrandDto> GetByIdAsync(Guid id)

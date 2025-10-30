@@ -46,7 +46,7 @@ for %%S in (
     geofence
     analytics
     gateway-health-api
-    nginx
+    nginxdock
 ) do (
     set LOCAL_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:prod
     set NEW_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:%VERSION%
