@@ -43,7 +43,6 @@ builder.Services.AddControllers();
 // Registrasi otomatis validasi FluentValidation
 // Scan semua validator di assembly yang mengandung BrandValidator
 builder.Services.AddValidatorExtensions();
-builder.Services.AddJwtAuthExtension();
 
 // Konfigurasi DbContext
 builder.Services.AddDbContextExtension(builder.Configuration);

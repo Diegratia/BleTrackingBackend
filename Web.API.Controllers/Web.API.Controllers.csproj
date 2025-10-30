@@ -10,7 +10,7 @@
 <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
     <PackageReference Include="Bogus" />
-    <PackageReference Include="BCrypt.Net" />
+    <!-- <PackageReference Include="BCrypt.Net" /> -->
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />

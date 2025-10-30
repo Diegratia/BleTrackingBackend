@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Repositories.DbContexts;
 using Microsoft.AspNetCore.Http;
 
-namespace BusinessLogic.Services.Extension
+namespace BusinessLogic.Services.Extension.RootExtension
 {
     public static class HealthCheckExtensions
     {
