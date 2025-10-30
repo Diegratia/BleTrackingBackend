@@ -58,12 +58,10 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var q = _context.Cards
                 .AsNoTracking()
-                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+                .Where(c => c.StatusCard != 0);
 
-
-
-            var visitorUse = await q.Where(c => c.VisitorId != null).CountAsync();
-            var memberUse = await q.Where(c => c.MemberId != null).CountAsync();
+            var visitorUse = await q.Where(c => c.VisitorId != null && c.IsUsed == true).CountAsync();
+            var memberUse = await q.Where(c => c.MemberId != null && c.IsUsed == true).CountAsync();
             var totalCard = await q.CountAsync();
             var totalUse = visitorUse + memberUse;
 
