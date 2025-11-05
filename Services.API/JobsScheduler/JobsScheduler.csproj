@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Quartz.AspNetCore" />
     <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
   </ItemGroup>
 
     <ItemGroup>

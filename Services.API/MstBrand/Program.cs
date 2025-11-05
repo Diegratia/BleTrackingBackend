@@ -32,6 +32,8 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
     builder.Logging.AddConsole();
+    builder.Host.UseWindowsService();
+
 
     builder.Services.AddCors(options =>
     {
@@ -59,7 +61,7 @@ try
 
 
     builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
     builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 

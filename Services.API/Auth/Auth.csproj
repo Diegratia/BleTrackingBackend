@@ -11,6 +11,7 @@
   <PackageReference Include="FluentValidation" />
   <PackageReference Include="FluentValidation.AspNetCore" />
   <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+  <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
   <PackageReference Include="Microsoft.IdentityModel.Tokens" />
   <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
@@ -27,5 +28,11 @@
 		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
+  <ItemGroup>
+  <Content Include="../../.env" CopyToOutputDirectory="Always">
+    <Link>.env</Link>
+  </Content>
+  <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
 
 </Project>

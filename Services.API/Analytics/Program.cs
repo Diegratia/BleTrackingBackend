@@ -47,7 +47,7 @@
 
 // builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 //     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-//                          "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+//                          "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 // builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -253,7 +253,7 @@ try
 catch { }
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Host.UseWindowsService();
 // === CORS ===
 builder.Services.AddCors(o => o.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
@@ -265,7 +265,7 @@ builder.Configuration
 // === DB Context (Read-only) ===
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
+    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
     options.UseSqlServer(conn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
