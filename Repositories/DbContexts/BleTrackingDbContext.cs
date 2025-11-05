@@ -415,7 +415,7 @@ namespace Repositories.DbContexts
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Floorplan)
-                    .WithMany()
+                    .WithMany(m => m.FloorplanMaskedAreas)
                     .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
 
