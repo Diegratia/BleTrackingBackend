@@ -20,4 +20,20 @@
       <!-- Properties="Configuration=Release;PublishDir=publish\" /> -->
   </Target> 
 
+    <Target Name="PublishAllService">
+    <Message Text="🚀 Publishing all Services.API projects into root publish folder..." Importance="High" />
+
+    <!-- Pastikan folder publish ada -->
+    <MakeDir Directories="publish" />
+
+    <!-- Jalankan publish untuk semua service -->
+    <MSBuild
+      Projects="@(ServiceProjects)"
+      Targets="Publish"
+      Properties="Configuration=Release;
+                  PublishDir=$(MSBuildProjectDirectory)\publish\;
+                  DeleteExistingFiles=true;
+                  OverwriteReadOnlyFiles=true;" />
+  </Target>
+
 </Project>
