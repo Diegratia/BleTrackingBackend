@@ -165,6 +165,7 @@ namespace Repositories.Repository
                 TrxStatus = v.TrxStatus,
                 VisitorId = v.VisitorId,
                 ApplicationId = v.ApplicationId,
+                VisitorActiveStatus = v.VisitorActiveStatus.ToString(),
                 Member = v.Member == null ? null : new MstMemberDto
                 {
                     Id = v.Member.Id,

@@ -15,6 +15,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Repositories.Repository.RepoModel;
+using BusinessLogic.Services.Extension.RootExtension;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -276,6 +278,60 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
         
+                public async Task<object> ProjectionFilterAsync(DataTablesRequest request)
+            {
+                var (data, total, filtered) = await _repository.GetPagedResultAsync(
+                    request.Filters,
+                     request.DateFilters.ToRepositoryDateFilters(),
+                     request.TimeReport,  
+                    request.SortColumn ?? "UpdatedAt",
+                    request.SortDir,
+                    request.Start,
+                    request.Length
+                );
+
+                return new
+                {
+                    draw = request.Draw,
+                    recordsTotal = total,
+                    recordsFiltered = filtered,
+                    data
+                };
+            }
+
+
+
+    //     public async Task<object> ProjectionFilterAsync(DataTablesRequest request)
+    //     {
+    //         var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+    // {
+    //     { "DeviceStatus", typeof(DeviceStatus)},
+    //     { "Type", typeof(DeviceType)},
+    // };
+
+    //         var query = _repository.GetProjectionQueryableManual();
+
+    //         var searchableColumns = new[]
+    //         {
+    //     "Name", "Floorplan.Name", "AccessCctv.Name", "Reader.Name",
+    //     "AccessControl.Name", "FloorplanMaskedArea.Name"
+    // };
+
+    //         var validSortColumns = new[]
+    //         {
+    //     "Name", "Floorplan.Name", "AccessCctv.Name", "Reader.Name",
+    //     "AccessControl.Name", "FloorplanMaskedArea.Name",
+    //     "CreatedAt", "UpdatedAt", "RestrictedStatus", "Status"
+    // };
+
+    //         var filterService = new MinimalGenericDataTableService<FloorplanDeviceRM>(
+    //             query, _mapper, searchableColumns, validSortColumns, enumColumns
+    //         );
+
+    //         return await filterService.FilterAsync(request);
+    //     }
+
+        
         public async Task<byte[]> ExportPdfAsync()
         {
             var devices = await _repository.GetAllExportAsync();
@@ -391,7 +447,6 @@ namespace BusinessLogic.Services.Implementation
             }
 
             worksheet.Columns().AdjustToContents();
-
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();

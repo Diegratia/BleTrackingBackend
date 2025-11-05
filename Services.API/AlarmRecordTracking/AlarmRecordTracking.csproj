@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Bogus" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt"  />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
@@ -24,9 +25,15 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-    <ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
+  	<ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
+		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
+  <ItemGroup>
+  <Content Include="../../.env" CopyToOutputDirectory="Always">
+    <Link>.env</Link>
+  </Content>
+  <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
 
 </Project>

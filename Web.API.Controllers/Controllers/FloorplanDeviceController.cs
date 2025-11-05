@@ -289,7 +289,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _service.FilterAsync(request);
+                var result = await _service.ProjectionFilterAsync(request);
                 return Ok(new
                 {
                     success = true,

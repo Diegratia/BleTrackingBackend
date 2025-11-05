@@ -7,15 +7,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
+// using Microsoft.Extensions.Caching.Memory;
 
 namespace Repositories.Repository
 {
-    public class FloorplanDeviceRepository : BaseRepository
+     public class FloorplanDeviceRepository : BaseProjectionRepository<FloorplanDevice, FloorplanDeviceRM>
     {
-        public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
-            : base(context, httpContextAccessor)
-        {
-        }
+        // private readonly IMemoryCache _cache;
+        // private const string CacheKey = "FloorplanDevice:All";
+        public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor accessor)
+            : base(context, accessor) { }
 
             public async Task<int> GetCountAsync()
         {
@@ -117,6 +119,101 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+        protected override IQueryable<FloorplanDeviceRM> Project(IQueryable<FloorplanDevice> query)
+        {
+            return query
+                .AsNoTracking()
+                .Select(t => new FloorplanDeviceRM
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Type = t.Type.ToString(),
+                    DeviceStatus = t.DeviceStatus.ToString(),
+                    PosX = t.PosX,
+                    PosY = t.PosY,
+                    PosPxX = t.PosPxX,
+                    PosPxY = t.PosPxY,
+                    ReaderId = t.ReaderId,
+                    FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+                    AccessCctvId = t.AccessCctvId,
+                    AccessControlId = t.AccessControlId,
+                    FloorplanId = t.FloorplanId,
+                    UpdatedAt = t.UpdatedAt,
+                    CreatedAt = t.CreatedAt,
+                    ApplicationId = t.ApplicationId,
+                    Floorplan = t.Floorplan == null ? null : new MinimalFloorplanRM
+                    {
+                        Id = t.Floorplan.Id,
+                        Name = t.Floorplan.Name,
+                    },
+                    Reader = t.Reader == null ? null : new MinimalBleReaderRM
+                    {
+                        Id = t.Reader.Id,
+                        Name = t.Reader.Name,
+                        Ip = t.Reader.Ip,
+                        Gmac = t.Reader.Gmac,
+                        BrandId = t.Reader.BrandId,
+                    },
+                    FloorplanMaskedArea = t.FloorplanMaskedArea == null ? null : new MinimalMaskedAreaRM
+                    {
+                        Id = t.FloorplanMaskedArea.Id,
+                        Name = t.FloorplanMaskedArea.Name,
+                        AreaShape = t.FloorplanMaskedArea.AreaShape,
+                        FloorplanId = t.FloorplanMaskedArea.FloorplanId,
+                        ColorArea = t.FloorplanMaskedArea.ColorArea,
+                        RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus.ToString(),
+                    },
+                });
+        }
+
+        // Custom filtering (enum-safe, guid-safe)
+        // protected override IQueryable<FloorplanDevice> ApplyEntityFilters(
+        //     IQueryable<FloorplanDevice> query,
+        //     Dictionary<string, object> filters)
+        // {
+        //     query = base.ApplyEntityFilters(query, filters); // default filter (Status, AppId, dll.)
+
+        //     foreach (var f in filters)
+        //     {
+        //         var key = f.Key.ToLower();
+        //         var val = f.Value?.ToString()?.Trim();
+
+        //         if (string.IsNullOrEmpty(val)) continue;
+
+        //         switch (key.ToLowerInvariant())
+        //         {
+        //             case "devicestatus":
+        //                 if (Enum.TryParse<DeviceStatus>(val, true, out var status))
+        //                     query = query.Where(x => x.DeviceStatus == status);
+        //                 break;
+        //             case "floorplanid":
+        //                 if (Guid.TryParse(val, out var fid))
+        //                     query = query.Where(x => x.FloorplanId == fid);
+        //                 break;
+        //             case "readerid":
+        //                 if (Guid.TryParse(val, out var rid))
+        //                     query = query.Where(x => x.ReaderId == rid);
+        //                 break;
+        //             case "type":
+        //                 if (Enum.TryParse<DeviceType>(val, true, out var type))
+        //                     query = query.Where(x => x.Type == type);
+        //                 break;
+        //             case "accesscctvid":
+        //                 if (Guid.TryParse(val, out var aid))
+        //                     query = query.Where(x => x.ReaderId == aid);
+        //                 break;
+        //             case "accesscontrolid":
+        //                 if (Guid.TryParse(val, out var cid))
+        //                     query = query.Where(x => x.ReaderId == cid);
+        //                 break;
+        //             case "floorplanmaskedarea":
+        //                 if (Guid.TryParse(val, out var areaId))
+        //                     query = query.Where(x => x.FloorplanMaskedAreaId == areaId);
+        //                 break;
+        //         }
+        //     }
+        //     return query;
+        // }
 
         public async Task<IEnumerable<FloorplanDevice>> GetAllExportAsync()
         {

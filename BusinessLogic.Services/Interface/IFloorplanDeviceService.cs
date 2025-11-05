@@ -16,7 +16,8 @@ namespace BusinessLogic.Services.Interface
         Task UpdateAsync(Guid Id, FloorplanDeviceUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> ProjectionFilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
     }
