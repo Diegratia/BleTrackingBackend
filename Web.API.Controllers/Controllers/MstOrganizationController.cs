@@ -373,7 +373,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/MstOrganization
         [AllowAnonymous]
-        [HttpPost]
+        [HttpPost("open/create")]
         public async Task<IActionResult> OpenCreate([FromBody] MstOrganizationCreateDto mstOrganizationDto)
         {
             if (!ModelState.IsValid)
