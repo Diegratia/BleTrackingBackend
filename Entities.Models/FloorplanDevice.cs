@@ -23,17 +23,14 @@ namespace Entities.Models
         [Column("floorplan_id")]
         public Guid FloorplanId { get; set; }
 
-        [Required]
         [Column("access_cctv_id")]
-        public Guid AccessCctvId { get; set; }
+        public Guid? AccessCctvId { get; set; }
 
-        [Required]
         [Column("ble_reader_id")]
-        public Guid ReaderId { get; set; }
+        public Guid? ReaderId { get; set; }
 
-        [Required]
         [Column("access_control_id")]
-        public Guid AccessControlId { get; set; }
+        public Guid? AccessControlId { get; set; }
 
         [Required]
         [Column("pos_x")]
@@ -67,9 +64,9 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
 
         public MstFloorplan Floorplan { get; set; }
-        public MstAccessCctv AccessCctv { get; set; }
-        public MstBleReader Reader { get; set; }
-        public MstAccessControl AccessControl { get; set; }
+        public MstAccessCctv? AccessCctv { get; set; }
+        public MstBleReader? Reader { get; set; }
+        public MstAccessControl? AccessControl { get; set; }
         public FloorplanMaskedArea FloorplanMaskedArea { get; set; }
         public MstApplication Application { get; set; }
     }

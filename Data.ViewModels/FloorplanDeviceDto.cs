@@ -9,9 +9,9 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Type { get; set; }
-        public Guid FloorplanId { get; set; }
-        public Guid AccessCctvId { get; set; }
-        public Guid ReaderId { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? AccessCctvId { get; set; }
+        public Guid? ReaderId { get; set; }
         public Guid AccessControlId { get; set; }
         // public Guid ApplicationId { get; set; }
         public float PosX { get; set; }
@@ -42,9 +42,9 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Type { get; set; }
-        public Guid FloorplanId { get; set; }
-        public Guid AccessCctvId { get; set; }
-        public Guid ReaderId { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? AccessCctvId { get; set; }
+        public Guid? ReaderId { get; set; }
         public Guid AccessControlId { get; set; }
         // public Guid ApplicationId { get; set; }
         public float PosX { get; set; }
@@ -71,9 +71,9 @@ namespace Data.ViewModels
     {
         public string? Name { get; set; }
         public string? Type { get; set; }
-        public Guid AccessCctvId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid AccessControlId { get; set; }
+        public Guid? AccessCctvId { get; set; }
+        public Guid? ReaderId { get; set; }
+        public Guid? AccessControlId { get; set; }
         public Guid FloorplanId { get; set; }
         public float PosX { get; set; }
         public float PosY { get; set; }
@@ -89,9 +89,9 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Type { get; set; }
         public Guid FloorplanId { get; set; }
-        public Guid AccessCctvId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid AccessControlId { get; set; }
+        public Guid? AccessCctvId { get; set; }
+        public Guid? ReaderId { get; set; }
+        public Guid? AccessControlId { get; set; }
         public float PosX { get; set; }
         public float PosY { get; set; }
         public float PosPxX { get; set; }

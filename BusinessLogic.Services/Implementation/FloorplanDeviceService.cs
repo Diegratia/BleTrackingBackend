@@ -23,14 +23,25 @@ namespace BusinessLogic.Services.Implementation
     public class FloorplanDeviceService : IFloorplanDeviceService
     {
         private readonly FloorplanDeviceRepository _repository;
+        private readonly MstBleReaderRepository _mstBleReaderRepository;
+        private readonly MstAccessCctvRepository _mstAccessCctvRepository;
+        private readonly MstAccessControlRepository _mstAccessControlRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FloorplanDeviceService(FloorplanDeviceRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public FloorplanDeviceService(FloorplanDeviceRepository repository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        MstBleReaderRepository mstBleReaderRepository,
+        MstAccessCctvRepository mstAccessCctvRepository,
+        MstAccessControlRepository mstAccessControlRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _mstBleReaderRepository = mstBleReaderRepository;
+            _mstAccessCctvRepository = mstAccessCctvRepository;
+            _mstAccessControlRepository = mstAccessControlRepository;
         }
 
         public async Task<FloorplanDeviceRM> GetByIdAsync(Guid id)
@@ -49,122 +60,367 @@ namespace BusinessLogic.Services.Implementation
             var devices = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenFloorplanDeviceDto>>(devices);
         }
+        
 
-        public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
+        // ===========================================================
+    // 🔹 Helper reusable
+    // ===========================================================
+    private async Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username)
+    {
+        if (readerId.HasValue)
         {
-            // Validasi semua foreign key
-            var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
-            if (floorplan == null)
+            var reader = await _repository.GetReaderByIdAsync(readerId.Value);
+            reader.IsAssigned = isAssigned;
+            reader.UpdatedBy = username;
+            reader.UpdatedAt = DateTime.UtcNow;
+            await _mstBleReaderRepository.UpdateAsync(reader);
+        }
+
+        if (cctvId.HasValue)
+        {
+            var cctv = await _repository.GetAccessCctvByIdAsync(cctvId.Value);
+            cctv.IsAssigned = isAssigned;
+            cctv.UpdatedBy = username;
+            cctv.UpdatedAt = DateTime.UtcNow;
+            await _mstAccessCctvRepository.UpdateAsync(cctv);
+        }
+
+        if (controlId.HasValue)
+        {
+            var control = await _repository.GetAccessControlByIdAsync(controlId.Value);
+            control.IsAssigned = isAssigned;
+            control.UpdatedBy = username;
+            control.UpdatedAt = DateTime.UtcNow;
+            await _mstAccessControlRepository.UpdateAsync(control);
+        }
+    }
+
+    // ===========================================================
+    // 🔹 CREATE
+    // ===========================================================
+    public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        using var transaction = await _repository.BeginTransactionAsync();
+        try
+        {
+            // Validasi foreign key
+            if (await _repository.GetFloorplanByIdAsync(dto.FloorplanId) == null)
                 throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
 
-            var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
-            if (accessCctv == null)
-                throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
-
-            var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
-            if (reader == null)
+            if (dto.ReaderId.HasValue && await _repository.GetReaderByIdAsync(dto.ReaderId.Value) == null)
                 throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
 
-            var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
-            if (accessControl == null)
-                throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
+            if (dto.AccessCctvId.HasValue && await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId.Value) == null)
+                throw new ArgumentException($"Access CCTV with ID {dto.AccessCctvId} not found.");
 
-            var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
-            if (floorplanMaskedArea == null)
+            if (dto.AccessControlId.HasValue && await _repository.GetAccessControlByIdAsync(dto.AccessControlId.Value) == null)
+                throw new ArgumentException($"Access Control with ID {dto.AccessControlId} not found.");
+
+            if (dto.FloorplanMaskedAreaId != null && await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId) == null)
                 throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
 
-            // var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
-            // if (application == null)
-            //     throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
-
             var device = _mapper.Map<FloorplanDevice>(dto);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
             device.CreatedBy = username;
             device.CreatedAt = DateTime.UtcNow;
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 
+            await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
+
             await _repository.AddAsync(device);
+            await transaction.CommitAsync();
+
             return _mapper.Map<FloorplanDeviceDto>(device);
         }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
 
-        public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
+    // ===========================================================
+    // 🔹 UPDATE
+    // ===========================================================
+    public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        using var transaction = await _repository.BeginTransactionAsync();
+        try
         {
             var device = await _repository.GetByIdAsync(id);
             if (device == null)
                 throw new KeyNotFoundException("FloorplanDevice not found");
 
-            // Validasi foreign key jika berubah
-            if (device.FloorplanId != dto.FloorplanId)
+            // Jika ada perubahan device, unassign lama dan assign baru
+            if (device.ReaderId != dto.ReaderId ||
+                device.AccessCctvId != dto.AccessCctvId ||
+                device.AccessControlId != dto.AccessControlId)
             {
-                var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
-                if (floorplan == null)
-                    throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
-                device.FloorplanId = dto.FloorplanId;
+                await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+                await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
             }
 
-            if (device.AccessCctvId != dto.AccessCctvId)
-            {
-                var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
-                if (accessCctv == null)
-                    throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
-                device.AccessCctvId = dto.AccessCctvId;
-            }
-
-            if (device.ReaderId != dto.ReaderId)
-            {
-                var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
-                if (reader == null)
-                    throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
-                device.ReaderId = dto.ReaderId;
-            }
-
-            if (device.AccessControlId != dto.AccessControlId)
-            {
-                var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
-                if (accessControl == null)
-                    throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
-                device.AccessControlId = dto.AccessControlId;
-            }
-
-            if (device.FloorplanMaskedAreaId != dto.FloorplanMaskedAreaId)
-            {
-                var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
-                if (floorplanMaskedArea == null)
-                    throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
-                device.FloorplanMaskedAreaId = dto.FloorplanMaskedAreaId;
-            }
-
-            // if (device.ApplicationId != dto.ApplicationId)
-            // {
-            //     var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
-            //     if (application == null)
-            //         throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
-            //     device.ApplicationId = dto.ApplicationId;
-            // }
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
+            _mapper.Map(dto, device);
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 
-            _mapper.Map(dto, device);
-
             await _repository.UpdateAsync(device);
+            await transaction.CommitAsync();
         }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
 
-        public async Task DeleteAsync(Guid id)
+    // ===========================================================
+    // 🔹 DELETE (Soft Delete)
+    // ===========================================================
+    public async Task DeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        using var transaction = await _repository.BeginTransactionAsync();
+        try
         {
             var device = await _repository.GetByIdAsync(id);
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            if (device == null)
+                throw new KeyNotFoundException("FloorplanDevice not found");
+
+            await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 
             await _repository.SoftDeleteAsync(id);
+            await transaction.CommitAsync();
         }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
 
-          public async Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file)
+        // public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
+        // {
+        //     // Validasi semua foreign key
+        //     var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
+        //     if (floorplan == null)
+        //         throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
+
+        //     var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
+        //     if (accessCctv == null)
+        //         throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
+
+        //     var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
+        //     if (reader == null)
+        //         throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
+
+        //     var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
+        //     if (accessControl == null)
+        //         throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
+
+        //     var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
+        //     if (floorplanMaskedArea == null)
+        //         throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
+
+        //     // var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
+        //     // if (application == null)
+        //     //     throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
+
+        //     var device = _mapper.Map<FloorplanDevice>(dto);
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     device.CreatedBy = username;
+        //     device.CreatedAt = DateTime.UtcNow;
+        //     device.UpdatedBy = username;
+        //     device.UpdatedAt = DateTime.UtcNow;
+        //     if (dto.ReaderId != null)
+        //     {
+        //         reader.IsAssigned = true;
+        //         reader.UpdatedAt = DateTime.UtcNow;
+        //         reader.UpdatedBy = username;
+        //         await _mstBleReaderRepository.UpdateAsync(reader);
+        //     }
+        //     if (dto.AccessCctvId != null)
+        //     {
+        //         accessCctv.IsAssigned = true;
+        //         accessCctv.UpdatedAt = DateTime.Now;
+        //         accessCctv.UpdatedBy = username;
+        //         await _mstAccessCctvRepository.UpdateAsync(accessCctv);
+        //     }
+        //     if (dto.AccessControlId != null)
+        //     {
+        //         accessControl.IsAssigned = true;
+        //         accessControl.UpdatedAt = DateTime.Now;
+        //         accessControl.UpdatedBy = username;
+        //         await _mstAccessControlRepository.UpdateAsync(accessControl);
+        //     }
+
+        //     await _repository.AddAsync(device);
+        //     return _mapper.Map<FloorplanDeviceDto>(device);
+        // }
+
+        // public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
+        // {
+        //     var device = await _repository.GetByIdAsync(id);
+        //     var accessCctv = await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId);
+        //     var reader = await _repository.GetReaderByIdAsync(dto.ReaderId);
+        //     var accessControl = await _repository.GetAccessControlByIdAsync(dto.AccessControlId);
+        //     if (device == null)
+        //         throw new KeyNotFoundException("FloorplanDevice not found");
+
+        //     // Validasi foreign key jika berubah
+        //     if (device.FloorplanId != dto.FloorplanId)
+        //     {
+        //         var floorplan = await _repository.GetFloorplanByIdAsync(dto.FloorplanId);
+        //         if (floorplan == null)
+        //             throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
+        //         device.FloorplanId = dto.FloorplanId;
+        //     }
+
+        //     if (device.AccessCctvId != dto.AccessCctvId)
+        //     {
+        //         if (accessCctv == null)
+        //             throw new ArgumentException($"AccessCctv with ID {dto.AccessCctvId} not found.");
+        //         device.AccessCctvId = dto.AccessCctvId;
+        //     }
+
+        //     if (device.ReaderId != dto.ReaderId)
+        //     {
+        //         if (reader == null)
+        //             throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
+        //         device.ReaderId = dto.ReaderId;
+        //     }
+
+        //     if (device.AccessControlId != dto.AccessControlId)
+        //     {
+        //         if (accessControl == null)
+        //             throw new ArgumentException($"AccessControl with ID {dto.AccessControlId} not found.");
+        //         device.AccessControlId = dto.AccessControlId;
+        //     }
+
+        //     if (device.FloorplanMaskedAreaId != dto.FloorplanMaskedAreaId)
+        //     {
+        //         var floorplanMaskedArea = await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId);
+        //         if (floorplanMaskedArea == null)
+        //             throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
+        //         device.FloorplanMaskedAreaId = dto.FloorplanMaskedAreaId;
+        //     }
+
+        //     // if (device.ApplicationId != dto.ApplicationId)
+        //     // {
+        //     //     var application = await _repository.GetApplicationByIdAsync(dto.ApplicationId);
+        //     //     if (application == null)
+        //     //         throw new ArgumentException($"Application with ID {dto.ApplicationId} not found.");
+        //     //     device.ApplicationId = dto.ApplicationId;
+        //     // }
+
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+
+        //     // release device lama jika berubah
+        //     if (device.ReaderId != dto.ReaderId)
+        //     {
+        //         if (device.ReaderId != null)
+        //         {
+        //             var oldReader = await _repository.GetReaderByIdAsync(device.ReaderId);
+        //             oldReader.IsAssigned = false;
+        //             await _mstBleReaderRepository.UpdateAsync(oldReader);
+        //         }
+
+        //         if (dto.ReaderId != null)
+        //         {
+        //             reader.IsAssigned = true;
+        //             await _mstBleReaderRepository.UpdateAsync(reader);
+        //         }
+
+        //         device.ReaderId = dto.ReaderId;
+        //     }
+
+        //     if (device.AccessCctvId != dto.AccessCctvId)
+        //     {
+        //         if (device.AccessCctvId != null)
+        //         {
+        //             var oldCctv = await _repository.GetAccessCctvByIdAsync(device.AccessCctvId);
+        //             oldCctv.IsAssigned = false;
+        //             await _mstAccessCctvRepository.UpdateAsync(oldCctv);
+        //         }
+
+        //         if (dto.AccessCctvId != null)
+        //         {
+        //             accessCctv.IsAssigned = true;
+        //             await _mstAccessCctvRepository.UpdateAsync(accessCctv);
+        //         }
+
+        //         device.AccessCctvId = dto.AccessCctvId;
+        //     }
+
+        //     if (device.AccessControlId != dto.AccessControlId)
+        //     {
+        //         if (device.AccessControlId != null)
+        //         {
+        //             var oldAccess = await _repository.GetAccessControlByIdAsync(device.AccessControlId);
+        //             oldAccess.IsAssigned = false;
+        //            await _mstAccessControlRepository.UpdateAsync(oldAccess);
+        //         }
+
+        //         if (dto.AccessControlId != null)
+        //         {
+        //             accessControl.IsAssigned = true;
+        //             await _mstAccessControlRepository.UpdateAsync(accessControl);
+        //         }
+
+        //         device.AccessControlId = dto.AccessControlId;
+        //     }
+
+        //     device.UpdatedBy = username;
+        //     device.UpdatedAt = DateTime.UtcNow;
+
+        //     _mapper.Map(dto, device);
+
+        //     await _repository.UpdateAsync(device);
+        // }
+
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var device = await _repository.GetByIdAsync(id);
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     if (device.ReaderId != null)
+        //     {
+        //         var reader = await _repository.GetReaderByIdAsync(device.ReaderId);
+        //         reader.IsAssigned = false;
+        //         await _mstBleReaderRepository.UpdateAsync(reader);
+        //     }
+
+        //     if (device.AccessCctvId != null)
+        //     {
+        //         var accessCctv = await _repository.GetAccessCctvByIdAsync(device.AccessCctvId);
+        //         accessCctv.IsAssigned = false;
+        //         await _mstAccessCctvRepository.UpdateAsync(accessCctv);
+        //     }
+
+        //     if (device.AccessControlId != null)
+        //     {
+        //         var accessControl = await _repository.GetAccessControlByIdAsync(device.AccessControlId);
+        //         accessControl.IsAssigned = false;
+        //         await _mstAccessControlRepository.UpdateAsync(accessControl);
+        //     }
+
+        //     device.UpdatedBy = username;
+        //     device.UpdatedAt = DateTime.UtcNow;
+
+        //     await _repository.SoftDeleteAsync(id);
+        // }
+
+        public async Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file)
         {
             var devices = new List<FloorplanDevice>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -175,7 +431,7 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 
