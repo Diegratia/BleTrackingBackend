@@ -12,7 +12,6 @@ namespace Repositories.Repository.RepoModel
         public Guid Id { get; set; }
         public Guid BrandId { get; set; }
         public string? Name { get; set; }
-        public string? Ip { get; set; }
-        public string? Gmac { get; set; }
+        public string? Channel { get; set; }
     }
 }

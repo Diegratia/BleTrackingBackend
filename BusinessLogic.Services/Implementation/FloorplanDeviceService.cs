@@ -33,19 +33,18 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<FloorplanDeviceDto> GetByIdAsync(Guid id)
+        public async Task<FloorplanDeviceRM> GetByIdAsync(Guid id)
         {
-            var device = await _repository.GetByIdAsync(id);
-            return device == null ? null : _mapper.Map<FloorplanDeviceDto>(device);
+            var device = await _repository.GetByIdProjectedAsync(id);
+            return device == null ? null : _mapper.Map<FloorplanDeviceRM>(device);
         }
 
-        public async Task<IEnumerable<FloorplanDeviceDto>> GetAllAsync()
+        public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
         {
             var devices = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
+            return _mapper.Map<IEnumerable<FloorplanDeviceRM>>(devices);
         }
-
-             public async Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync()
+            public async Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync()
         {
             var devices = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenFloorplanDeviceDto>>(devices);

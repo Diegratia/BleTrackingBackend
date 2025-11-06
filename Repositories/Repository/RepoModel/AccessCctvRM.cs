@@ -6,7 +6,7 @@ using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace Repositories.Repository.RepoModel
 {
-    public class MinimalAccessCctvRM : BaseModelDto
+    public class MinimalAccessCctvRM 
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }

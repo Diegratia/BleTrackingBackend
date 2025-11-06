@@ -23,6 +23,9 @@ namespace Entities.Models
         [Column("type")]
         public string? Type { get; set; }
 
+        [Column("is_assigned")]
+        public bool? IsAssigned { get; set; } = false;
+
         [Column("description")]
         public string? Description { get; set; }
 

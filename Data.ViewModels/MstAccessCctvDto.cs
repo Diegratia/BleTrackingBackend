@@ -9,6 +9,7 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Rtsp { get; set; }
+        public bool? IsAssigned { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }

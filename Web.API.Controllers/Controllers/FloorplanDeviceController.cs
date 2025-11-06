@@ -49,7 +49,6 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-
         
 
         // GET: api/FloorplanDevice/{id}

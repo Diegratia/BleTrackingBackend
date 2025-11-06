@@ -11,6 +11,7 @@ namespace Data.ViewModels
         public string? Type { get; set; }
         public string? Description { get; set; }
         public string? Channel { get; set; }
+        public bool? IsAssigned { get; set; }
         public string DoorId { get; set; }
         public string? Raw { get; set; }
         public Guid? IntegrationId { get; set; }
