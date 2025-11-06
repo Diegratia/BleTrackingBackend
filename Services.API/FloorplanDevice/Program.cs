@@ -156,6 +156,9 @@ builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanDeviceRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
+builder.Services.AddScoped<MstAccessCctvRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
 
 var port = Environment.GetEnvironmentVariable("FLOORPLAN_DEVICE_PORT") ?? "5003" ??
            builder.Configuration["Ports:FloorplanDeviceService"];
