@@ -36,8 +36,6 @@ namespace BusinessLogic.Services.JobsScheduler
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{tableName}' AND xtype='U')
                     CREATE TABLE [dbo].[{tableName}] (
                         [id] [uniqueidentifier] NOT NULL,
-                        [created_at] [datetime2](7) NOT NULL,
-                        [updated_at] [datetime2](7) NULL,
                         [trans_time] [datetime2](7) NULL,
                         [reader_id] [uniqueidentifier] NULL,
                         [card_id] [uniqueidentifier] NULL,
