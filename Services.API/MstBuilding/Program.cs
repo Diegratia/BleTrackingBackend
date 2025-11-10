@@ -237,15 +237,24 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "BuildingImages");
 Directory.CreateDirectory(uploadsPath);
-
 
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/BuildingImages"
 });
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+// Directory.CreateDirectory(uploadsPath);
+
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/BuildingImages"
+// });
 
 
 // // app.UseHttpsRedirection();
