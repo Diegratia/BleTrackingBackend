@@ -78,7 +78,11 @@ namespace BusinessLogic.Services.Implementation
                 if (createDto.Image.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 var fileExtension = Path.GetExtension(createDto.Image.FileName)?.ToLower() ?? ".jpg";
@@ -127,12 +131,17 @@ namespace BusinessLogic.Services.Implementation
                 if (updateDto.Image.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 if (!string.IsNullOrEmpty(building.Image))
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, building.Image.TrimStart('/'));
                     if (File.Exists(oldFilePath))
                     {
                         try
