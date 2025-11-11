@@ -1,17 +1,54 @@
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using BusinessLogic.Services.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
 builder.Services.AddHttpClient();
 builder.Services.AddLogging();
-builder.Services.AddHostedService<HealthWarmupService>(); 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var app = builder.Build();
+
+// ====================================
+// WARMUP LANGSUNG DI SINI (NO CLASS)
+// ====================================
+_ = Task.Run(async () =>
+{
+    try
+    {
+        var client = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
+        var config = app.Services.GetRequiredService<IConfiguration>();
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+        var services = config.GetSection("HealthCheck:Services")
+                            .Get<Dictionary<string, string>>() ?? new();
+
+        logger.LogInformation("Starting warmup for {Count} services...", services.Count);
+
+        var tasks = services.Select(async kvp =>
+        {
+            try
+            {
+                var response = await client.GetAsync(kvp.Value);
+                logger.LogInformation("Warmup {Name} ({Url}) -> {Status}", kvp.Key, kvp.Value, (int)response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Warmup failed: {Name} ({Url})", kvp.Key, kvp.Value);
+            }
+        });
+
+        await Task.WhenAll(tasks);
+        logger.LogInformation("Warmup completed!");
+    }
+    catch (Exception ex)
+    {
+        app.Services.GetRequiredService<ILogger<Program>>().LogError(ex, "Warmup failed critically");
+    }
+});
+// ====================================
 
 app.MapGet("/hc", async (IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, IConfiguration config) =>
 {
@@ -65,4 +102,3 @@ app.MapGet("/hc", async (IHttpClientFactory httpClientFactory, ILoggerFactory lo
 });
 
 app.Run("http://0.0.0.0:8080");
-

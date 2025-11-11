@@ -20,8 +20,4 @@
   </Content>
   <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
 </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-  </ItemGroup>
-
 </Project>
