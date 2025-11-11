@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation.AspNetCore;
+using FluentValidation;
 
 try
 {
@@ -61,9 +63,16 @@ builder.Configuration
 
 builder.Services.AddControllers();
 
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBleReaderCreateValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<MstBleReaderUpdateValidator>();
+
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection")));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
