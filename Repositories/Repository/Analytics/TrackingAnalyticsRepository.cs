@@ -263,11 +263,11 @@ namespace Repositories.Repository.Analytics
     var query = _context.Set<TrackingTransaction>()
         .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
         .AsNoTracking()
-        .Include(t => t.Card)
-            .ThenInclude(c => c.Visitor)
-        .Include(t => t.Card)
-            .ThenInclude(c => c.Member)
-        .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
+        // .Include(t => t.Card)
+        //     .ThenInclude(c => c.Visitor)
+        // .Include(t => t.Card)
+        //     .ThenInclude(c => c.Member)
+        // .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
         .Where(t => t.TransTime >= from && t.TransTime <= to);
 
     // filter opsional
