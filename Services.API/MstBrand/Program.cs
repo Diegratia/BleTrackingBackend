@@ -273,7 +273,7 @@ catch (Exception ex)
             c.RoutePrefix = string.Empty; 
         });
     }
-    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout", 120);
 
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
