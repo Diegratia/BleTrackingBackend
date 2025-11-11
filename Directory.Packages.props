@@ -29,12 +29,12 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="MQTTnet" Version="4.3.3.952" />
     <PackageVersion Include="Common.Logging" Version="3.4.1" />
     <PackageVersion Include="Common.Logging.Core" Version="3.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.17" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
 </Project>

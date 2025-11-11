@@ -379,6 +379,8 @@ services:
       dockerfile: Services.API/GatewayHealthApi/Dockerfile
     image: dev1pci2025/bletrackingbackend-gateway-health-api:dev
     restart: always
+    volumes:
+      - ./appsettings.json:/app/appsettings.json
     expose:
       - "8080" # hanya visible untuk Nginx di dalam jaringan Docker
     networks:

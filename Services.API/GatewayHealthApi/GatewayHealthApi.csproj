@@ -14,5 +14,14 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
+<ItemGroup>
+  <Content Include="../../.env" CopyToOutputDirectory="Always">
+    <Link>.env</Link>
+  </Content>
+  <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
+  </ItemGroup>
 
 </Project>

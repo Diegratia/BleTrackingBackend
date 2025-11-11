@@ -1,12 +1,14 @@
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using BusinessLogic.Services.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
 builder.Services.AddHttpClient();
 builder.Services.AddLogging();
+builder.Services.AddHostedService<HealthWarmupService>(); 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var app = builder.Build();
