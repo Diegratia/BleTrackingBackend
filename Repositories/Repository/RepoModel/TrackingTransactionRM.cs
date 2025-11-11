@@ -78,10 +78,22 @@ namespace Repositories.Repository.RepoModel
         public Guid? MemberId { get; set; }
         public string? MemberName { get; set; }
 
-        public int TotalRecords { get; set; }
+        // public int TotalRecords { get; set; }
 
         public DateTime? EnterTime { get; set; }
         public DateTime? ExitTime { get; set; }
+
+        // Lokasi terakhir
+        public Guid? BuildingId { get; set; }
+        public string? BuildingName { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? FloorName { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public string? FloorplanName { get; set; }
+        public Guid? MaskedAreaId { get; set; }
+        public string? MaskedAreaName { get; set; }
+        public float? LastX { get; set; }
+        public float? LastY { get; set; }
     }
 
 
