@@ -63,8 +63,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -240,15 +239,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 // Buat direktori Uploads/FloorplanImages jika belum ada
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorplanImages");
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorplanImages");
+// Directory.CreateDirectory(uploadsPath);
+
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "FloorplanImages");
 Directory.CreateDirectory(uploadsPath);
 
-// // Sajikan file statis di /Uploads/FloorplanImages/
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/FloorplanImages"
 });
+
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/FloorplanImages"
+// });
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();

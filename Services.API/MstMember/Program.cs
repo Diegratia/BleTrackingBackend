@@ -63,8 +63,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -231,7 +230,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/MemberFaceImages");
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "MemberFaceImages");
 Directory.CreateDirectory(uploadsPath);
 
 app.UseStaticFiles(new StaticFileOptions
@@ -239,6 +239,14 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/MemberFaceImages"
 });
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/MemberFaceImages");
+// Directory.CreateDirectory(uploadsPath);
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/MemberFaceImages"
+// });
 // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();
