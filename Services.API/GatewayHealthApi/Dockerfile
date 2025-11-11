@@ -4,6 +4,7 @@ WORKDIR /src
 COPY Directory.Packages.props ./
 COPY global.json ./
 COPY Services.API/GatewayHealthApi/*.csproj .
+COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
 RUN dotnet restore
 
 COPY Services.API/GatewayHealthApi/. .
