@@ -102,6 +102,21 @@ namespace Repositories.Repository
             return await q.CountAsync();
         }
 
+
+            public async Task<IEnumerable<Card>> GetUnUsedCardAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+            q.WithActiveRelations();
+
+            return await q.ToListAsync();
+        }
+
         
        
 
