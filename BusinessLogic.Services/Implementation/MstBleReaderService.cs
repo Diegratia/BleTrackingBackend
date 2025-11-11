@@ -49,6 +49,11 @@ namespace BusinessLogic.Services.Implementation
             var bleReaders = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
         }
+        public async Task<IEnumerable<MstBleReaderDto>> GetAllUnassignedAsync()
+        {
+            var bleReaders = await _repository.GetAllUnassignedAsync();
+            return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
+        }
 
                 public async Task<IEnumerable<OpenMstBleReaderDto>> OpenGetAllAsync()
         {
