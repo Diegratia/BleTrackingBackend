@@ -15,9 +15,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 <ItemGroup>
-  <Content Include="../../.env" CopyToOutputDirectory="Always">
+  <!-- <Content Include="../../.env" CopyToOutputDirectory="Always">
     <Link>.env</Link>
-  </Content>
+  </Content> -->
   <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
 </ItemGroup>
 </Project>
