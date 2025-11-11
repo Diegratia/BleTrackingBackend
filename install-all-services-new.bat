@@ -17,7 +17,7 @@ echo.
 
 if not exist "%PUBLISH_PATH%" (
     echo [ERROR] Folder publish tidak ditemukan di %PUBLISH_PATH%.
-    echo Jalankan: dotnet msbuild BuildAndPublishAll.proj -t:PublishAll
+    echo Jalankan: dotnet msbuild build-all.targets -t:PublishAll
     echo.
     pause
     exit /b
