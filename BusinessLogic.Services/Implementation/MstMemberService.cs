@@ -118,7 +118,10 @@ namespace BusinessLogic.Services.Implementation
                         throw new ArgumentException("File size exceeds 5 MB limit.");
 
                     // Folder penyimpanan
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "MemberFaceImages");
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "MemberFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                    var basePath = AppContext.BaseDirectory;
+                    var uploadDir = Path.Combine(basePath, "Uploads", "MemberFaceImages");
                     Directory.CreateDirectory(uploadDir);
 
                     // Buat nama file unik

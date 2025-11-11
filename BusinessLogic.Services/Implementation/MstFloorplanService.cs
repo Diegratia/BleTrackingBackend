@@ -101,8 +101,11 @@ namespace BusinessLogic.Services.Implementation
                 if (createDto.FloorplanImage.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "FloorplanImages");
                 Directory.CreateDirectory(uploadDir);
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                // Directory.CreateDirectory(uploadDir);
 
                 var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
@@ -150,12 +153,16 @@ namespace BusinessLogic.Services.Implementation
                 if (updateDto.FloorplanImage.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 50 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "FloorplanImages");
                 Directory.CreateDirectory(uploadDir);
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
+                // Directory.CreateDirectory(uploadDir);
 
                 if (!string.IsNullOrEmpty(floorplan.FloorplanImage))
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floorplan.FloorplanImage.TrimStart('/'));
+                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, floorplan.FloorplanImage.TrimStart('/'));
+                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floorplan.FloorplanImage.TrimStart('/'));
                     if (File.Exists(oldFilePath))
                     {
                         try

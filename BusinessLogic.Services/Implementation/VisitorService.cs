@@ -874,8 +874,12 @@ public class VisitorService : IVisitorService
                         if (createDto.FaceImage.Length > MaxFileSize)
                             throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        var basePath = AppContext.BaseDirectory;
+                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
                         Directory.CreateDirectory(uploadDir);
+
+                        // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        // Directory.CreateDirectory(uploadDir);
 
                         var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
                         var filePath = Path.Combine(uploadDir, fileName);
@@ -1119,11 +1123,15 @@ public class VisitorService : IVisitorService
 
                             if (createDto.FaceImage.Length > MaxFileSize)
                                 throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                                
+                            var basePath = AppContext.BaseDirectory;
+                            var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
                             Directory.CreateDirectory(uploadDir);
 
-                            var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
+                            // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        // Directory.CreateDirectory(uploadDir);
+
+                        var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
                             var filePath = Path.Combine(uploadDir, fileName);
 
                             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -1864,8 +1872,11 @@ public class VisitorService : IVisitorService
                     if (updateDto.FaceImage.Length > MaxFileSize)
                         throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                    Directory.CreateDirectory(uploadDir);
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                        var basePath = AppContext.BaseDirectory;
+                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
+                        Directory.CreateDirectory(uploadDir);
 
                     var fileName = $"{Guid.NewGuid()}_{updateDto.FaceImage.FileName}";
                     var filePath = Path.Combine(uploadDir, fileName);
@@ -3319,7 +3330,10 @@ public class VisitorService : IVisitorService
                     if (dto.FaceImage.Length > maxFileSize)
                         throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                    var basePath = AppContext.BaseDirectory;
+                    var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
                     Directory.CreateDirectory(uploadDir);
 
                     var fileExtension = Path.GetExtension(dto.FaceImage.FileName)?.ToLower() ?? ".jpg";
