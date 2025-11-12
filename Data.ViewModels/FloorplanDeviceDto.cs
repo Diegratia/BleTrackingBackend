@@ -31,7 +31,7 @@ namespace Data.ViewModels
         public MstBleReaderDto Reader { get; set; }
         public MstAccessControlDto AccessControl { get; set; }
         public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
-        
+
     }
 
     public class OpenFloorplanDeviceDto : BaseModelDto
@@ -64,10 +64,10 @@ namespace Data.ViewModels
         // public MstBleReaderDto Reader { get; set; }
         // public MstAccessControlDto AccessControl { get; set; }
         // public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
-        
+
     }
 
-     public class FloorplanDeviceCreateDto : BaseModelDto
+    public class FloorplanDeviceCreateDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Type { get; set; }
@@ -84,7 +84,7 @@ namespace Data.ViewModels
         public string? DeviceStatus { get; set; }
     }
 
-     public class FloorplanDeviceUpdateDto 
+    public class FloorplanDeviceUpdateDto
     {
         public string? Name { get; set; }
         public string? Type { get; set; }
@@ -98,5 +98,11 @@ namespace Data.ViewModels
         public float PosPxY { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public string? DeviceStatus { get; set; }
+    }
+    
+        public class ReaderSummaryDto
+    {
+            public Guid Id { get; set; }
+            public String? Name { get; set; }
     }
 }

@@ -9,11 +9,17 @@ namespace Repositories.Repository.RepoModel
     public class MinimalMaskedAreaRM
     {
         public Guid Id { get; set; }
-        public Guid FloorplanId { get; set;}
+        public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
         public string Name { get; set; }
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
     }
+    
+            public class AreaSummaryRM
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
 }

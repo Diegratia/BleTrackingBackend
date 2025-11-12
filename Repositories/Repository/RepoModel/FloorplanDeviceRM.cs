@@ -31,4 +31,10 @@ namespace Repositories.Repository.RepoModel
         public MinimalAccessControlRM? AccessControl { get; set; }
         public MinimalMaskedAreaRM? FloorplanMaskedArea { get; set; }
     }
+
+        public class FloorplanDeviceRM2
+    {
+            public Guid Id { get; set; }
+            public String? Name { get; set; }
+    }
 }

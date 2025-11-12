@@ -31,10 +31,10 @@ namespace Data.ViewModels
         public string? InvestigatedBy { get; set; }
         public string? InvestigatedResult { get; set; }
         public Guid ApplicationId { get; set; }
-        
-        public MstFloorplanDto Floorplan{ get; set; }
+
+        public MstFloorplanDto Floorplan { get; set; }
     }
-    
+
     public class AlarmTriggersOpenDto : BaseModelDto
     {
         [JsonPropertyName("alarm_trigger_id")]
@@ -65,9 +65,15 @@ namespace Data.ViewModels
         public string? InvestigatedResult { get; set; }
         public Guid ApplicationId { get; set; }
     }
-    
-        public class AlarmTriggersUpdateDto
+
+    public class AlarmTriggersUpdateDto
     {
         public string? ActionStatus { get; set; }
+    }
+    
+        public class AlarmTriggersSummary
+    {
+            public Guid Id { get; set; }
+            public string BeaconId { get; set; }
     }
 }

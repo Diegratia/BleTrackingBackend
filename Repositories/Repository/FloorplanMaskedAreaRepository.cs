@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Repository.RepoModel;
 
 namespace Repositories.Repository
 {
@@ -14,6 +15,27 @@ namespace Repositories.Repository
         public FloorplanMaskedAreaRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+        }
+
+        public async Task<List<AreaSummaryRM>> GetTopAreasAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.FloorplanMaskedAreas
+                .AsNoTracking()
+                .Where(c => c.Status != 0);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new AreaSummaryRM
+                {
+                    Id = x.Id,
+                    Name = x.Name ?? "Unknown Area",
+                })
+                .ToListAsync();
         }
 
         public async Task<int> GetCountAsync()

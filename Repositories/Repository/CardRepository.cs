@@ -38,6 +38,50 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync() ?? null;
         }
+
+        public async Task<List<CardDashboardRM>> GetTopUnUsedCardAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new CardDashboardRM
+                {
+                    Id = x.Id,
+                    Dmac = x.Dmac ?? "Unknown Card",
+                    CardNumber = x.CardNumber ?? "Unknown Card",
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<CardDashboardRM>> GetTopUsedCardAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new CardDashboardRM
+                {
+                    Id = x.Id,
+                    Dmac = x.Dmac ?? "Unknown Card",
+                    CardNumber = x.CardNumber ?? "Unknown Card",
+                })
+                .ToListAsync();
+        }
         
        public async Task<int> GetCountAsync()
         {

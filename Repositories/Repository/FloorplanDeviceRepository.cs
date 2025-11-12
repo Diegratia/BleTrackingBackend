@@ -33,6 +33,28 @@ namespace Repositories.Repository
             return await q.CountAsync();
         }
 
+        public async Task<List<FloorplanDeviceRM2>> GetTopReadersAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.FloorplanDevices
+                .AsNoTracking()
+                .Where(c => c.Status != 0 && c.DeviceStatus == DeviceStatus.Active && c.Type == DeviceType.BleReader);
+
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new FloorplanDeviceRM2
+                {
+                    Id = x.Id,
+                    Name = x.Name ?? "Unknown Reader", 
+                })
+                .ToListAsync();
+        }
+
         public async Task<FloorplanDevice> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()

@@ -179,9 +179,17 @@ namespace Data.ViewModels
         public Guid? CardGroupId { get; set; }
         public int? StatusCard { get; set; }
     }
-    
-    public class CardAssignDto 
+
+    public class CardAssignDto
     {
         public Guid? MemberId { get; set; }
+    }
+
+    public class CardDashboardDto
+    {
+        public Guid Id { get; set; }
+        public string Dmac { get; set; }
+        public string CardNumber { get; set; }
+
     }
 }

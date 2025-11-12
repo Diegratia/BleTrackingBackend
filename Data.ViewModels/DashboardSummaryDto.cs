@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels.Dto.Helpers.MinimalDto;
 
+
 namespace Data.ViewModels
 {
     public class DashboardSummaryDto : BaseModelDto
@@ -14,6 +15,12 @@ namespace Data.ViewModels
         public int AreaCount { get; set; }
         public int BlacklistCount { get; set; }
         public int AlarmCount { get; set; }
+        public List<CardDashboardDto> TopActiveBeacon { get; set; } = new List<CardDashboardDto>();
+        public List<CardDashboardDto> TopNonActiveBeacon { get; set; } = new List<CardDashboardDto>();
+        public List<ReaderSummaryDto> TopReaders { get; set; } = new List<ReaderSummaryDto>();
+        public List<AreaSummaryDto> TopAreas { get; set; } = new List<AreaSummaryDto>();
+        public List<BlacklistSummaryDto> TopBlacklist { get; set; } = new List<BlacklistSummaryDto>();
+        public List<AlarmTriggersSummary> TopTriggers { get; set; } = new List<AlarmTriggersSummary>();
     }
 
     public class CardUsageCountDto 
