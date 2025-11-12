@@ -29,7 +29,7 @@ namespace BusinessLogic.Services.JobsScheduler
             try
             {
                 _logger.LogInformation("Starting CreateDailyTrackingTableJob at {Time:UTC}", DateTime.UtcNow);
-                await _context.Database.OpenConnectionAsync();
+                // await _context.Database.OpenConnectionAsync();
                 _logger.LogInformation("Database connection successful at {Time:UTC}", DateTime.UtcNow);
 
                 var sql = $@"
