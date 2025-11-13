@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
     <PackageReference Include="Bogus" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <!-- <PackageReference Include="BCrypt.Net" /> -->
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />

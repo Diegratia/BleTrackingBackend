@@ -18,6 +18,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using BusinessLogic.Services.Extension.RootExtension;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 
 
@@ -69,7 +70,17 @@ catch (Exception ex)
         .AddEnvironmentVariables();
 
     builder.Services.AddControllers();
-builder.Services.AddMemoryCache();
+    
+    var redisHost = builder.Configuration.GetValue<string>("Redis:Host");
+    var redisPassword = builder.Configuration.GetValue<string>("Redis:Password");
+    var redisInstance = builder.Configuration.GetValue<string>("Redis:InstanceName");
+
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = $"{redisHost},password={redisPassword}";
+        options.InstanceName = redisInstance;
+    });
+
     
     // Registrasi otomatis validasi FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
