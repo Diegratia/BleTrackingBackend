@@ -14,40 +14,110 @@ var app = builder.Build();
 // ====================================
 // WARMUP LANGSUNG DI SINI (NO CLASS)
 // ====================================
-_ = Task.Run(async () =>
+app.Lifetime.ApplicationStarted.Register(() =>
 {
-    try
+    _ = Task.Run(async () =>
     {
-        var client = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
-        var config = app.Services.GetRequiredService<IConfiguration>();
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        var sp = app.Services;
+        var logger = sp.GetRequiredService<ILogger<Program>>();
+        var config = sp.GetRequiredService<IConfiguration>();
+        var client = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
 
-        var services = config.GetSection("HealthCheck:Services")
-                            .Get<Dictionary<string, string>>() ?? new();
-
-        logger.LogInformation("Starting warmup for {Count} services...", services.Count);
-
-        var tasks = services.Select(async kvp =>
+        try
         {
-            try
-            {
-                var response = await client.GetAsync(kvp.Value);
-                logger.LogInformation("Warmup {Name} ({Url}) -> {Status}", kvp.Key, kvp.Value, (int)response.StatusCode);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Warmup failed: {Name} ({Url})", kvp.Key, kvp.Value);
-            }
-        });
+            // === Tambahkan token dan API key ke header ===
+            var jwtToken = config.GetValue<string>("HealthCheck:WarmupToken");
+            var apiKey = config.GetValue<string>("HealthCheck:X-BIOPEOPLETRACKING-API-KEY");
 
-        await Task.WhenAll(tasks);
-        logger.LogInformation("Warmup completed!");
-    }
-    catch (Exception ex)
-    {
-        app.Services.GetRequiredService<ILogger<Program>>().LogError(ex, "Warmup failed critically");
-    }
+            if (!string.IsNullOrWhiteSpace(jwtToken))
+                client.DefaultRequestHeaders.Add("Authorization", jwtToken.Trim());
+
+            if (!string.IsNullOrWhiteSpace(apiKey))
+                client.DefaultRequestHeaders.Add("X-BIOPEOPLETRACKING-API-KEY", apiKey.Trim());
+
+            // === 1️⃣ HEALTH WARMUP ===
+            var healthUrls = config.GetSection("HealthCheck:Services").Get<Dictionary<string, string>>() ?? new();
+            logger.LogInformation("Starting health warmup for {Count} services...", healthUrls.Count);
+
+            var healthTasks = healthUrls.Select(async kvp =>
+            {
+                try
+                {
+                    var response = await client.GetAsync(kvp.Value);
+                    logger.LogInformation("HC {Name} ({Url}) -> {Status}", kvp.Key, kvp.Value, (int)response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "HC failed: {Name} ({Url})", kvp.Key, kvp.Value);
+                }
+            });
+
+            await Task.WhenAll(healthTasks);
+            logger.LogInformation("Health warmup completed!");
+
+            // === 2️⃣ CACHE WARMUP (GetAll) ===
+            var warmupEndpoints = config.GetSection("HealthCheck:WarmupEndpoints").Get<Dictionary<string, string>>() ?? new();
+            logger.LogInformation("Starting cache warmup for {Count} endpoints...", warmupEndpoints.Count);
+
+            var warmupTasks = warmupEndpoints.Select(async kvp =>
+            {
+                try
+                {
+                    var response = await client.GetAsync(kvp.Value);
+                    logger.LogInformation("Cache warmup {Name} ({Url}) -> {Status}", kvp.Key, kvp.Value, (int)response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Cache warmup failed: {Name} ({Url})", kvp.Key, kvp.Value);
+                }
+            });
+
+            await Task.WhenAll(warmupTasks);
+            logger.LogInformation("✅ Cache warmup completed!");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "🔥 Warmup process failed critically");
+        }
+    });
 });
+
+
+// kalau pakai ini bisa jadi sebelum api redi sudah warmup
+// _ = Task.Run(async () =>
+// {
+//     try
+//     {
+//         var client = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
+//         var config = app.Services.GetRequiredService<IConfiguration>();
+//         var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+//         var services = config.GetSection("HealthCheck:Services")
+//                             .Get<Dictionary<string, string>>() ?? new();
+
+//         logger.LogInformation("Starting warmup for {Count} services...", services.Count);
+
+//         var tasks = services.Select(async kvp =>
+//         {
+//             try
+//             {
+//                 var response = await client.GetAsync(kvp.Value);
+//                 logger.LogInformation("Warmup {Name} ({Url}) -> {Status}", kvp.Key, kvp.Value, (int)response.StatusCode);
+//             }
+//             catch (Exception ex)
+//             {
+//                 logger.LogWarning(ex, "Warmup failed: {Name} ({Url})", kvp.Key, kvp.Value);
+//             }
+//         });
+
+//         await Task.WhenAll(tasks);
+//         logger.LogInformation("Warmup completed!");
+//     }
+//     catch (Exception ex)
+//     {
+//         app.Services.GetRequiredService<ILogger<Program>>().LogError(ex, "Warmup failed critically");
+//     }
+// });
 // ====================================
 
 app.MapGet("/hc", async (IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, IConfiguration config) =>
