@@ -16,6 +16,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -25,12 +26,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstDistrictRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _cache;
 
-        public MstDistrictService(MstDistrictRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+
+        public MstDistrictService(MstDistrictRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cache = cache;
         }
 
         public async Task<MstDistrictDto> GetByIdAsync(Guid id)
@@ -41,8 +45,17 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstDistrictDto>> GetAllAsync()
         {
+            const string cacheKey = "MstDistrictService_GetAll";
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDistrictDto> cachedData))
+                return cachedData;
             var districts = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
+            var mapped = _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            _cache.Set(cacheKey, mapped, cacheOptions);
+            return mapped;
         }
 
         public async Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync()
@@ -65,6 +78,7 @@ namespace BusinessLogic.Services.Implementation
             district.Status = 1;
 
             var createdDistrict = await _repository.AddAsync(district);
+            _cache.Remove("MstDistrictService_GetAll");
             return _mapper.Map<MstDistrictDto>(createdDistrict);
         }
 
@@ -83,6 +97,7 @@ namespace BusinessLogic.Services.Implementation
                 district.UpdatedAt = DateTime.UtcNow;
                 district.Status = 1;
                 await _repository.AddAsync(district);
+                _cache.Remove("MstDistrictService_GetAll");
                 result.Add(_mapper.Map<MstDistrictDto>(district));
             }
             return result;
@@ -97,7 +112,7 @@ namespace BusinessLogic.Services.Implementation
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
             _mapper.Map(updateDto, district);
-
+            _cache.Remove("MstDistrictService_GetAll");
             await _repository.UpdateAsync(district);
         }
 
@@ -107,6 +122,7 @@ namespace BusinessLogic.Services.Implementation
             var district = await _repository.GetByIdAsync(id);
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
+            _cache.Remove("MstDistrictService_GetAll");
             await _repository.DeleteAsync(id);
         }
 

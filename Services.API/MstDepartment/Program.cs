@@ -43,6 +43,7 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Services.AddMemoryCache();
 
 
 builder.Services.AddCors(options =>

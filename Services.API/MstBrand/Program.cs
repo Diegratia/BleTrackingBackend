@@ -69,8 +69,10 @@ catch (Exception ex)
         .AddEnvironmentVariables();
 
     builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
+    
     // Registrasi otomatis validasi FluentValidation
-    builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddFluentValidationClientsideAdapters();
 
     // Scan semua validator di assembly yang mengandung BrandValidator

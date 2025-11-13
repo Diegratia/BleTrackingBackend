@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
 
+
 namespace Entities.Models
 {
     public class MstBuilding : BaseModelWithTime, IApplicationEntity
