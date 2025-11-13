@@ -53,12 +53,8 @@ namespace BusinessLogic.Services.Implementation
             var cached = await _cache.GetStringAsync(cacheKey);
             if (cached is not null)
             {
-                _logger.LogDebug("cache brand success");
                 return JsonSerializer.Deserialize<IEnumerable<MstBrandDto>>(cached)!;
             }
-
-            _logger.LogDebug("db hit brand");
-
 
             var brands = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstBrandDto>>(brands);
