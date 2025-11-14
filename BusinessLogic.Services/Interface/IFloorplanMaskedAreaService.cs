@@ -17,8 +17,9 @@ namespace BusinessLogic.Services.Interface
         Task DeleteAsync(Guid id);
         Task SoftDeleteAsync(Guid id);
         Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+        Task RemoveGroupAsync();
     }
 }

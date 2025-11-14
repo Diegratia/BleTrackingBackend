@@ -80,10 +80,10 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Overpopulating not found");
             }
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            overpopulating.Status = 0;
-            overpopulating.IsActive = 0;
             overpopulating.UpdatedBy = username;
             overpopulating.UpdatedAt = DateTime.UtcNow;
+            overpopulating.Status = 0;
+            overpopulating.IsActive = 0;
             await _repository.DeleteAsync(id);
         }
 

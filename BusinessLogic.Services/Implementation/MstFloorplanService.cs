@@ -16,10 +16,15 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstFloorplanService : IMstFloorplanService
+    public class MstFloorplanService : BaseService, IMstFloorplanService
     {
         private readonly MstFloorplanRepository _repository;
         private readonly IMapper _mapper;
@@ -37,6 +42,9 @@ namespace BusinessLogic.Services.Implementation
         private readonly BoundaryRepository _boundaryRepository;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
+        private readonly ILogger<MstFloorplan> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
@@ -52,7 +60,11 @@ namespace BusinessLogic.Services.Implementation
             IOverpopulatingService overpopulatingService,
             IBoundaryService boundaryService,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<MstFloorplan> logger,
+            IDistributedCache cache,
+            IConnectionMultiplexer redis
+            ) : base(httpContextAccessor)
         {
             _repository = repository;
             _floorplanDeviceRepository = floorplanDeviceRepository;
@@ -68,6 +80,23 @@ namespace BusinessLogic.Services.Implementation
             _boundaryService = boundaryService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _cache = cache;
+            _redis = redis.GetDatabase();
+        }
+
+        private string Key(string key) 
+            => $"cache:mstfloorplan:{AppId}:{key}";
+        private string GroupKey 
+            => $"cache:mstfloorplan:group:{AppId}";
+        
+            public async Task RemoveGroupAsync()
+        {
+            var keys = await _redis.SetMembersAsync(GroupKey);
+            foreach (var k in keys)
+                await _cache.RemoveAsync(k!);
+
+            await _redis.KeyDeleteAsync(GroupKey);
         }
 
         public async Task<MstFloorplanDto> GetByIdAsync(Guid id)
@@ -78,10 +107,32 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstFloorplanDto>> GetAllAsync()
         {
-            var floorplans = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
-        }
+            var cacheKey = Key("getall");
 
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (cached != null)
+            {
+                _logger.LogInformation($"Cache hit: {cacheKey}");
+                return JsonSerializer.Deserialize<IEnumerable<MstFloorplanDto>>(cached)!;
+            }
+
+            _logger.LogInformation($"Cache miss: {cacheKey}");
+
+            var data = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<MstFloorplanDto>>(data);
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(mapped),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+
+            await _redis.SetAddAsync(GroupKey, cacheKey);
+
+            return mapped;
+        }
                 public async Task<IEnumerable<OpenMstFloorplanDto>> OpenGetAllAsync()
         {
             var floorplans = await _repository.GetAllAsync();
@@ -135,6 +186,7 @@ namespace BusinessLogic.Services.Implementation
             floorplan.UpdatedAt = DateTime.UtcNow;
 
             var createdFloorplan = await _repository.AddAsync(floorplan);
+            await RemoveGroupAsync();
             return _mapper.Map<MstFloorplanDto>(createdFloorplan);
         }
 
@@ -145,7 +197,7 @@ namespace BusinessLogic.Services.Implementation
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-                if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
+            if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
             {
                 if (string.IsNullOrEmpty(updateDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorplanImage.ContentType))
                     throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
@@ -200,6 +252,7 @@ namespace BusinessLogic.Services.Implementation
             floorplan.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, floorplan);
+            await RemoveGroupAsync();
             await _repository.UpdateAsync(floorplan);
         }
 
@@ -266,6 +319,8 @@ namespace BusinessLogic.Services.Implementation
                 var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
                 var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
                 var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+                //redis cache
+                await _maskedAreaService.RemoveGroupAsync();
                 foreach (var maskedArea in maskedAreas)
                 {
                     await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
@@ -289,6 +344,7 @@ namespace BusinessLogic.Services.Implementation
                 floorplan.UpdatedBy = username;
                 floorplan.UpdatedAt = DateTime.UtcNow;
                 floorplan.Status = 0;
+                await RemoveGroupAsync();
                 await _repository.DeleteAsync(id);
             });
         }

@@ -17,10 +17,15 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Extension.RootExtension;
+using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class FloorplanDeviceService : IFloorplanDeviceService
+    public class FloorplanDeviceService : BaseService, IFloorplanDeviceService
     {
         private readonly FloorplanDeviceRepository _repository;
         private readonly MstBleReaderRepository _mstBleReaderRepository;
@@ -28,13 +33,20 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstAccessControlRepository _mstAccessControlRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<FloorplanDevice> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
 
         public FloorplanDeviceService(FloorplanDeviceRepository repository,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         MstBleReaderRepository mstBleReaderRepository,
         MstAccessCctvRepository mstAccessCctvRepository,
-        MstAccessControlRepository mstAccessControlRepository)
+        MstAccessControlRepository mstAccessControlRepository,
+        ILogger<FloorplanDevice> logger,
+        IDistributedCache cache,
+        IConnectionMultiplexer redis
+        ):base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
@@ -42,6 +54,23 @@ namespace BusinessLogic.Services.Implementation
             _mstBleReaderRepository = mstBleReaderRepository;
             _mstAccessCctvRepository = mstAccessCctvRepository;
             _mstAccessControlRepository = mstAccessControlRepository;
+            _logger = logger;
+            _redis = redis.GetDatabase();
+            _cache = cache;
+        }
+
+         private string Key(string key) 
+            => $"cache:floorplandevice:{AppId}:{key}";
+        private string GroupKey 
+            => $"cache:floorplandevice:group:{AppId}";
+        
+            public async Task RemoveGroupAsync()
+        {
+            var keys = await _redis.SetMembersAsync(GroupKey);
+            foreach (var k in keys)
+                await _cache.RemoveAsync(k!);
+
+            await _redis.KeyDeleteAsync(GroupKey);
         }
 
         public async Task<FloorplanDeviceRM> GetByIdAsync(Guid id)
@@ -50,10 +79,31 @@ namespace BusinessLogic.Services.Implementation
             return device == null ? null : _mapper.Map<FloorplanDeviceRM>(device);
         }
 
-        public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
+    public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
         {
-            var devices = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<FloorplanDeviceRM>>(devices);
+            var cacheKey = Key("getall");
+
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (cached != null)
+            {
+                _logger.LogInformation($"Cache hit: {cacheKey}");
+                return JsonSerializer.Deserialize<IEnumerable<FloorplanDeviceRM>>(cached)!;
+            }
+
+            var data = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<FloorplanDeviceRM>>(data);
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(mapped),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+
+            await _redis.SetAddAsync(GroupKey, cacheKey);
+
+            return mapped;
         }
             public async Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync()
         {
@@ -128,7 +178,7 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedAt = DateTime.UtcNow;
 
             await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
-
+            await RemoveGroupAsync();
             await _repository.AddAsync(device);
             await transaction.CommitAsync();
 
@@ -168,6 +218,7 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 
+            await RemoveGroupAsync();
             await _repository.UpdateAsync(device);
             await transaction.CommitAsync();
         }
@@ -196,6 +247,8 @@ namespace BusinessLogic.Services.Implementation
 
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
+
+            await RemoveGroupAsync();
 
             await _repository.SoftDeleteAsync(id);
             await transaction.CommitAsync();

@@ -21,5 +21,6 @@ namespace BusinessLogic.Services.Interface
         Task<object> ProjectionFilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+        Task RemoveGroupAsync();
     }
 }

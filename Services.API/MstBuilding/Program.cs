@@ -13,6 +13,8 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using BusinessLogic.Services.Extension.RootExtension;
+// using Microsoft.Extensions.Caching.StackExchangeRedis;
+using StackExchange.Redis;
 
 
 try
@@ -46,7 +48,7 @@ catch (Exception ex)
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
-
+builder.Services.AddMemoryCache();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -112,19 +114,37 @@ builder.Services.AddAuthorization(options =>
     });
     options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
 {
-policy.RequireAssertion(context =>
-    context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
+    policy.RequireAssertion(context =>
+        context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
 });
     options.AddPolicy("RequireAll", policy =>
      {
          policy.RequireAssertion(context =>
-             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary") || context.User.IsInRole("Secondary"));
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary") || context.User.IsInRole("Secondary"));
      });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
 
-builder.Services.AddMemoryCache();
+
+
+var redisHost = builder.Configuration.GetValue<string>("Redis:Host");
+var redisPassword = builder.Configuration.GetValue<string>("Redis:Password");
+var redisInstance = builder.Configuration.GetValue<string>("Redis:InstanceName");
+
+// Distributed Cache for ASP.NET (IDistributedCache)
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.InstanceName = redisInstance;
+});
+
+// Low-level Redis for SET/GET members via IConnectionMultiplexer
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
+);
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -241,6 +261,7 @@ app.UseCors("AllowAll");
 var basePath = AppContext.BaseDirectory;
 var uploadsPath = Path.Combine(basePath, "Uploads", "BuildingImages");
 Directory.CreateDirectory(uploadsPath);
+
 
 app.UseStaticFiles(new StaticFileOptions
 {

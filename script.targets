@@ -12,7 +12,7 @@
   </Target>
 
   <!-- 🚀 Target publish masing-masing ke foldernya sendiri -->
-  <Target Name="PublishAll">
+  <!-- <Target Name="PublishAll">
     <Message Text="🚀 Publishing all Services.API projects (per-folder)..." Importance="High" />
     <MSBuild
       Projects="@(ServiceProjects)"
@@ -23,7 +23,7 @@
                   SelfContained=true;
                   DeleteExistingFiles=true;
                   OverwriteReadOnlyFiles=true;" />
-  </Target>
+  </Target> -->
 
   <!-- 🧩 Target publish semua ke folder root publish tunggal -->
   <Target Name="PublishAllService">

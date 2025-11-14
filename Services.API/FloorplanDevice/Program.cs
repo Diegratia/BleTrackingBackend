@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using StackExchange.Redis;
+
 
 try
 {
@@ -43,7 +45,25 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
-// builder.Services.AddMemoryCache();
+
+var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST")
+                ?? builder.Configuration.GetValue<string>("Redis:Host");
+
+var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD")
+                    ?? builder.Configuration.GetValue<string>("Redis:Password");
+
+var redisInstance = Environment.GetEnvironmentVariable("REDIS_INSTANCE")
+                        ?? builder.Configuration.GetValue<string>("Redis:InstanceName");
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.InstanceName = redisInstance;
+});
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
+);
 
 
 builder.Services.AddCors(options =>

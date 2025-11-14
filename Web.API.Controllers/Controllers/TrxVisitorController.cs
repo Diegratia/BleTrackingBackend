@@ -85,7 +85,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "TrxVisitor blacklist area not found",
+                        msg = "TrxVisitor not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -122,7 +122,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "TrxVisitor blacklist area not found",
+                        msg = "TrxVisitor not found",
                         collection = new { data = (object)null },
                         code = 404
                     });

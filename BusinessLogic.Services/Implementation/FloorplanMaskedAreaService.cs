@@ -17,17 +17,24 @@ using QuestPDF.Drawing;
 using Helpers.Consumer;
 using Helpers.Consumer.Mqtt;
 using Microsoft.EntityFrameworkCore;
-// using Microsoft.Extensions.Caching.Memory;
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
+using DocumentFormat.OpenXml.Math;
 
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class FloorplanMaskedAreaService : IFloorplanMaskedAreaService
+    public class FloorplanMaskedAreaService : BaseService, IFloorplanMaskedAreaService
     {
         private readonly FloorplanMaskedAreaRepository _repository;
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<FloorplanMaskedArea> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
         // private readonly IMemoryCache _cache;
 
 
@@ -39,18 +46,35 @@ namespace BusinessLogic.Services.Implementation
             FloorplanMaskedAreaRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            FloorplanDeviceRepository floorplanDeviceRepository
-            // IMemoryCache cache
+            FloorplanDeviceRepository floorplanDeviceRepository,
+            ILogger<FloorplanMaskedArea> logger,
+            IDistributedCache cache,
+            IConnectionMultiplexer redis
             // IMqttPublisher mqttPublisher
-            )
+            ):base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorplanDeviceRepository = floorplanDeviceRepository;
-            // _cache = cache;
-            
+            _logger = logger;
+            _cache = cache;
+            _redis = redis.GetDatabase();
             // _mqttPublisher = mqttPublisher;
+        }
+
+            private string Key(string key) 
+            => $"cache:area:{AppId}:{key}";
+            private string GroupKey 
+            => $"cache:area:group:{AppId}";
+        
+            public async Task RemoveGroupAsync()
+        {
+            var keys = await _redis.SetMembersAsync(GroupKey);
+            foreach (var k in keys)
+                await _cache.RemoveAsync(k!);
+
+            await _redis.KeyDeleteAsync(GroupKey);
         }
 
         public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
@@ -59,20 +83,31 @@ namespace BusinessLogic.Services.Implementation
             return area == null ? null : _mapper.Map<FloorplanMaskedAreaDto>(area);
         }
 
-        public async Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync()
+    public async Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync()
         {
-            // const string cacheKey = "FloorplanMaskedAreaService_GetAll";
-            // if (_cache.TryGetValue(cacheKey, out IEnumerable<FloorplanMaskedAreaDto> cachedData))
-            //     return cachedData;
+            var cacheKey = Key("getall");
 
-            var areas = await _repository.GetAllAsync();
-            // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
-            var mapped = _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(areas);
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (cached != null)
+            {
+                _logger.LogInformation($"Cache hit: {cacheKey}");
+                return JsonSerializer.Deserialize<IEnumerable<FloorplanMaskedAreaDto>>(cached)!;
+            }
+            _logger.LogInformation($"Cache miss: {cacheKey}");
 
-            // var cacheOptions = new MemoryCacheEntryOptions()
-                // .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            var data = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(data);
 
-            // _cache.Set(cacheKey, mapped, cacheOptions);
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(mapped),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+
+            await _redis.SetAddAsync(GroupKey, cacheKey);
+
             return mapped;
         }
 
@@ -100,7 +135,7 @@ namespace BusinessLogic.Services.Implementation
 
 
             await _repository.AddAsync(area);
-            // _cache.Remove("FloorplanMaskedAreaService_GetAll");
+            await RemoveGroupAsync();
             // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
             return _mapper.Map<FloorplanMaskedAreaDto>(area);
         }
@@ -121,6 +156,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, area);
             // _cache.Remove("FloorplanMaskedAreaService_GetAll");
+            await RemoveGroupAsync();
             await _repository.UpdateAsync(area);
             // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
         }
@@ -133,10 +169,10 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedBy = username;
             area.UpdatedAt = DateTime.UtcNow;
             area.Status = 0;
+            await RemoveGroupAsync();
             await _repository.SoftDeleteAsync(id);
             // await _mqttPublisher.PublishAsync("engine/refresh/all", "");
         }
-        
 
         public async Task SoftDeleteAsync(Guid id)
         {
@@ -151,6 +187,7 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedBy = username;
                 area.UpdatedAt = DateTime.UtcNow;
                 area.Status = 0;
+                await RemoveGroupAsync();
                 await _repository.SoftDeleteAsync(id);
                 // _cache.Remove("FloorplanMaskedAreaService_GetAll");
 
@@ -163,7 +200,6 @@ namespace BusinessLogic.Services.Implementation
                     floorplandevice.UpdatedBy = username;
                     floorplandevice.UpdatedAt = DateTime.UtcNow;
                     floorplandevice.Status = 0;
-                    // _cache.Remove("FloorplanDeviceService_GetAll");
                     await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
                 }
             });

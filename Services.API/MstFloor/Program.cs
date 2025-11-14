@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using StackExchange.Redis;
 
 try
 {
@@ -62,7 +63,21 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
-builder.Services.AddMemoryCache();
+
+var redisHost = builder.Configuration.GetValue<string>("Redis:Host");
+var redisPassword = builder.Configuration.GetValue<string>("Redis:Password");
+var redisInstance = builder.Configuration.GetValue<string>("Redis:InstanceName");
+
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.InstanceName = redisInstance;
+});
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
+);
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));

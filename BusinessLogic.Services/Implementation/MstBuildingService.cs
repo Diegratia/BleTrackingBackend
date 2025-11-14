@@ -20,12 +20,15 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
 
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstBuildingService : IMstBuildingService
+    public class MstBuildingService : BaseService, IMstBuildingService
     {
         private readonly MstBuildingRepository _repository;
         private readonly IMstFloorService _floorService;
@@ -34,7 +37,10 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
-        private readonly IMemoryCache _cache;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
+        private readonly ILogger<MstBuilding>_logger;
+
 
         public MstBuildingService(
             MstBuildingRepository repository,
@@ -42,15 +48,33 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor,
             IMstFloorService floorService,
             MstFloorRepository floorRepository,
-            IMemoryCache memoryCache
-            )
+            IDistributedCache cache,
+            IConnectionMultiplexer redis,
+            ILogger<MstBuilding> logger
+            ): base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorService = floorService;
             _floorRepository = floorRepository;
-            _cache = memoryCache;
+            _cache = cache;
+            _redis = redis.GetDatabase();
+            _logger = logger;
+        }
+
+        private string Key(string key) 
+            => $"cache:mstbuilding:{AppId}:{key}";
+        private string GroupKey 
+            => $"cache:mstbuilding:group:{AppId}";
+
+        private async Task RemoveGroupAsync()
+        {
+            var keys = await _redis.SetMembersAsync(GroupKey);
+            foreach (var k in keys)
+                await _cache.RemoveAsync(k!);
+
+            await _redis.KeyDeleteAsync(GroupKey);
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -59,30 +83,33 @@ namespace BusinessLogic.Services.Implementation
             return building == null ? null : _mapper.Map<MstBuildingDto>(building);
         }
 
-        public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
+            public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
         {
-            const string cacheKey = "MstBuildingService_GetAll";
-            // var sw = System.Diagnostics.Stopwatch.StartNew();
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstBuildingDto> cachedData))
+            var cacheKey = Key("getall");
+
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (cached != null)
             {
-                // sw.Stop();
-                // Console.WriteLine($"[CACHE HIT] Elapsed: {sw.ElapsedMilliseconds} ms");
-                // Console.WriteLine("🔥 [CACHE HIT] MstBuildingService_GetAll");
-                return cachedData;
+                _logger.LogInformation($"Cache hit: {cacheKey}");
+                return JsonSerializer.Deserialize<IEnumerable<MstBuildingDto>>(cached)!;
             }
 
-            // Console.WriteLine("💾 [CACHE MISS] Fetching from database...");
-            var buildings = await _repository.GetAllAsync();
-            // sw.Stop();
-            // Console.WriteLine($"[CACHE MISS] DB fetch time: {sw.ElapsedMilliseconds} ms");
-            var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+            var data = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(data);
 
-            var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(mapped),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
 
-            _cache.Set(cacheKey, mapped, cacheOptions);
+            await _redis.SetAddAsync(GroupKey, cacheKey);
+
             return mapped;
         }
+
 
             public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
         {
@@ -127,7 +154,7 @@ namespace BusinessLogic.Services.Implementation
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
             }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
             building.CreatedAt = DateTime.UtcNow;
@@ -136,13 +163,13 @@ namespace BusinessLogic.Services.Implementation
             building.Status = 1;
 
             var createdBuilding = await _repository.AddAsync(building);
-            _cache.Remove("MstBuildingService_GetAll");
+            await RemoveGroupAsync();
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
         public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
                 throw new KeyNotFoundException("Building not found");
@@ -203,7 +230,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(building);
-            _cache.Remove("MstBuildingService_GetAll");
+            await RemoveGroupAsync();
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -219,13 +246,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
     {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        var username = UsernameFormToken;
         var building = await _repository.GetByIdAsync(id);
         if (building == null)
             throw new KeyNotFoundException("building not found");
 
         await _repository.ExecuteInTransactionAsync(async () =>
         {
+            await _floorService.RemoveGroupAsync();
             var floors = await _floorRepository.GetByBuildingIdAsync(id);
             foreach (var floor in floors)
             {
@@ -234,7 +262,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedBy = username;
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
-            _cache.Remove("MstBuildingService_GetAll");
+            await RemoveGroupAsync();
             await _repository.DeleteAsync(id);
         });
     }
@@ -243,7 +271,7 @@ namespace BusinessLogic.Services.Implementation
          public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {
             var buildings = new List<MstBuilding>();
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
 
             using var stream = file.OpenReadStream();

@@ -25,6 +25,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Common.Logging.Core" />
     <PackageReference Include="Common.Logging" />
+    <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2095,9 +2095,9 @@ public class VisitorService : IVisitorService
             // newTrx.IsMember = isMember;
 
 
-            // var invitationUrl = $"http://192.168.1.10:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            // var invitationUrl = $"http://192.168.1.116:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
             var invitationUrl = $"{_invitationBaseUrl }/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
-            // var memberInvitationUrl = $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
+            // var memberInvitationUrl = $"http://192.168.1.116:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             // var memberId = newTrx.PurposePerson ?? Guid.Empty;
@@ -2264,7 +2264,7 @@ public class VisitorService : IVisitorService
         //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //         var invitationUrl =
-        //             $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //             $"http://192.168.1.116:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -2387,7 +2387,7 @@ public class VisitorService : IVisitorService
         //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
 
-        //         var invitationUrl = $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //         var invitationUrl = $"http://192.168.1.116:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -2497,7 +2497,7 @@ public class VisitorService : IVisitorService
         //     var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
 
         //     // Buat link
-        //     var baseUrl = "http://192.168.1.10:85/visitor-info";
+        //     var baseUrl = "http://192.168.1.116:3000/visitor-info";
         //     var invitationUrl = isMember == 1
         //         ? $"{baseUrl}?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}"
         //         : $"{baseUrl}?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitorId}&trxVisitorId={newTrx.Id}";
@@ -2652,7 +2652,7 @@ public class VisitorService : IVisitorService
         //             var buildingNameMember   = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //             var memberInvitationUrl =
-        //                 $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
+        //                 $"http://192.168.1.116:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
 
         //             await _emailService.SendMemberInvitationEmailAsync(
         //                 invitedMember.Email,
@@ -2744,7 +2744,7 @@ public class VisitorService : IVisitorService
         //         var buildingName   = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //         var invitationUrl =
-        //             $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //             $"http://192.168.1.116:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -3526,7 +3526,7 @@ public class VisitorService : IVisitorService
             // var applicationIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("ApplicationId")?.Value;
             // // karena AllowAnonymous, mungkin null — pakai applicationId dari trx
             // var appId = applicationIdClaim ?? (savedTrx?.ApplicationId.ToString() ?? "");
-            // var invitationUrl = $"http://192.168.1.10:85/visitor-form?code={savedTrx?.InvitationCode}&applicationId={appId}&visitorId={visitor.Id}&trxVisitorId={savedTrx?.Id}";
+            // var invitationUrl = $"http://192.168.1.116:3000/visitor-form?code={savedTrx?.InvitationCode}&applicationId={appId}&visitorId={visitor.Id}&trxVisitorId={savedTrx?.Id}";
 
             // 7) Kirim EMAIL (2 pihak)
 
