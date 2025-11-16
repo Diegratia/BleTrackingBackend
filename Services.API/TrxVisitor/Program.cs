@@ -15,6 +15,8 @@ using DotNetEnv;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using Data.ViewModels.Validators;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 // using Helpers.Consumer.Mqtt;
 
 try
@@ -47,6 +49,7 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 builder.Services.AddCors(options =>
 {
@@ -170,7 +173,7 @@ builder.Services.AddAutoMapper(typeof(TrxVisitorProfile));
 
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
-// builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 

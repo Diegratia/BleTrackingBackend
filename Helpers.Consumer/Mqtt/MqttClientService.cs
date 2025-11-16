@@ -3,6 +3,7 @@ using MQTTnet.Client;
 using MQTTnet.Protocol;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Helpers.Consumer.Mqtt
 {
@@ -10,91 +11,110 @@ namespace Helpers.Consumer.Mqtt
     {
         private readonly IMqttClient _mqttClient;
         private readonly MqttClientOptions _options;
+        private readonly ILogger<MqttClientService> _logger;
+
         public event Func<string, string, Task>? OnMessageReceived;
 
-        public MqttClientService(IConfiguration config)
+        public MqttClientService(IConfiguration config, ILogger<MqttClientService> logger)
         {
+            _logger = logger;
             _mqttClient = new MqttFactory().CreateMqttClient();
 
-            var host = config["Mqtt:Host"] ?? "192.168.1.116";
-            var port = int.Parse(config["Mqtt:Port"] ?? "1888");
-            var username = config["Mqtt:Username"] ?? "bio_mqtt";
-            var password = config["Mqtt:Password"] ?? "P@ssw0rd";
-            var clientId = (config["Mqtt:ClientId"] ?? "Tracking-People-Backend") + "-" + Guid.NewGuid();
+            var host = config["Mqtt:Host"]??"localhost";
+            var port = int.Parse(config["Mqtt:Port"]??"1888");
+            var username = config["Mqtt:Username"]??"bio_mqtt";
+            var password = config["Mqtt:Password"]??"P@ssw0rd";
 
             _options = new MqttClientOptionsBuilder()
-                .WithClientId(clientId)
+                .WithClientId("PEOPLE-TRACKING-API" + Guid.NewGuid())
                 .WithTcpServer(host, port)
                 .WithCredentials(username, password)
                 .Build();
 
             _mqttClient.ApplicationMessageReceivedAsync += HandleMessageAsync;
+
             _mqttClient.ConnectedAsync += async e =>
             {
-                Console.WriteLine($"Connected to MQTT broker {host}:{port}");
-                await _mqttClient.SubscribeAsync("engine/#"); // <== tambahkan ini
+                _logger.LogInformation("[MQTT] Connected, subscribing engine/#");
+                await _mqttClient.SubscribeAsync("engine/#");
             };
 
             _mqttClient.DisconnectedAsync += async e =>
             {
-                Console.WriteLine("Disconnected from MQTT broker. Retrying...");
-                while (!_mqttClient.IsConnected)
-                {
-                    await Task.Delay(5000);
-                    try
-                    {
-                        await _mqttClient.ConnectAsync(_options);
-                        Console.WriteLine("Reconnected to MQTT broker.");
-                        await _mqttClient.SubscribeAsync("engine/#"); // <== tambahkan ini juga
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Reconnect failed: {ex.Message}");
-                    }
-                }
+                _logger.LogWarning("[MQTT] Disconnected");
             };
 
+            _ = TryConnectStartupAsync();
         }
 
-        private async Task EnsureConnectedAsync()
+        public bool IsConnected() => _mqttClient.IsConnected;
+
+        private async Task TryConnectStartupAsync()
         {
-            if (!_mqttClient.IsConnected)
+            try
+            {
                 await _mqttClient.ConnectAsync(_options);
+                _logger.LogInformation("[MQTT] Startup connect OK");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"[MQTT] Startup connect failed: {ex.Message}");
+            }
         }
 
-        public async Task PublishAsync(string topic, string payload, bool retain = false, int qos = 1)
+        public async Task TryReconnect()
         {
-            await EnsureConnectedAsync();
-
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(Encoding.UTF8.GetBytes(payload))
-                .WithRetainFlag(retain)
-                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
-                .Build();
-
-            await _mqttClient.PublishAsync(message);
-            Console.WriteLine($" Published to {topic}");
+            try
+            {
+                await _mqttClient.ConnectAsync(_options);
+                _logger.LogInformation("[MQTT] Reconnected");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"[MQTT] Reconnect failed: {ex.Message}");
+            }
         }
 
         public async Task SubscribeAsync(string topic, int qos = 1)
         {
-            await EnsureConnectedAsync();
+            if (!IsConnected())
+            {
+                _logger.LogWarning($"[MQTT] offline, cannot subscribe {topic}");
+                return;
+            }
 
             await _mqttClient.SubscribeAsync(
                 new MqttTopicFilterBuilder()
                     .WithTopic(topic)
-                    .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
+                    .WithQualityOfServiceLevel((MQTTnet.Protocol.MqttQualityOfServiceLevel)qos)
                     .Build()
             );
-            Console.WriteLine($"Subscribed to {topic}");
+
+            _logger.LogInformation($"[MQTT] Subscribed: {topic}");
+        }
+
+        public async Task PublishAsync(string topic, string payload)
+        {
+            if (!IsConnected())
+            {
+                _logger.LogWarning($"[MQTT] offline, skip publish {topic}");
+                return;
+            }
+
+            await _mqttClient.PublishAsync(
+                new MqttApplicationMessageBuilder()
+                    .WithTopic(topic)
+                    .WithPayload(payload)
+                    .Build()
+            );
+
+            _logger.LogInformation($"[MQTT] Published: {topic}");
         }
 
         private async Task HandleMessageAsync(MqttApplicationMessageReceivedEventArgs e)
         {
             var topic = e.ApplicationMessage.Topic;
             var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
-            Console.WriteLine($"Received {topic} → {payload}");
 
             if (OnMessageReceived != null)
                 await OnMessageReceived.Invoke(topic, payload);
@@ -104,6 +124,6 @@ namespace Helpers.Consumer.Mqtt
         {
             _mqttClient?.Dispose();
         }
-        
     }
+
 }

@@ -21,6 +21,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -36,6 +37,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<FloorplanDevice> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
+        private readonly IMqttClientService _mqttClient;
+        private bool cacheDisabled = false;
 
         public FloorplanDeviceService(FloorplanDeviceRepository repository,
         IMapper mapper,
@@ -45,8 +48,9 @@ namespace BusinessLogic.Services.Implementation
         MstAccessControlRepository mstAccessControlRepository,
         ILogger<FloorplanDevice> logger,
         IDistributedCache cache,
-        IConnectionMultiplexer redis
-        ):base(httpContextAccessor)
+        IConnectionMultiplexer redis,
+        IMqttClientService mqttClient
+        ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
@@ -55,22 +59,50 @@ namespace BusinessLogic.Services.Implementation
             _mstAccessCctvRepository = mstAccessCctvRepository;
             _mstAccessControlRepository = mstAccessControlRepository;
             _logger = logger;
-            _redis = redis.GetDatabase();
+            _redis = redis?.GetDatabase();
             _cache = cache;
+            _mqttClient = mqttClient;
+        }
+        
+        private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
+
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-         private string Key(string key) 
+        private string Key(string key)
             => $"cache:floorplandevice:{AppId}:{key}";
         private string GroupKey 
             => $"cache:floorplandevice:group:{AppId}";
         
-            public async Task RemoveGroupAsync()
+        public async Task RemoveGroupAsync()
         {
-            var keys = await _redis.SetMembersAsync(GroupKey);
-            foreach (var k in keys)
-                await _cache.RemoveAsync(k!);
+            if (!IsRedisAlive()) return;
 
-            await _redis.KeyDeleteAsync(GroupKey);
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;  
+            }
         }
 
         public async Task<FloorplanDeviceRM> GetByIdAsync(Guid id)
@@ -79,30 +111,52 @@ namespace BusinessLogic.Services.Implementation
             return device == null ? null : _mapper.Map<FloorplanDeviceRM>(device);
         }
 
-    public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
+        public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
         {
             var cacheKey = Key("getall");
 
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (cached != null)
+            if (IsRedisAlive())
             {
-                _logger.LogInformation($"Cache hit: {cacheKey}");
-                return JsonSerializer.Deserialize<IEnumerable<FloorplanDeviceRM>>(cached)!;
-            }
-
-            var data = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<FloorplanDeviceRM>>(data);
-
-            await _cache.SetStringAsync(
-                cacheKey,
-                JsonSerializer.Serialize(mapped),
-                new DistributedCacheEntryOptions
+                try
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                });
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<FloorplanDeviceRM>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
+            }
+            _logger.LogInformation($"Cache miss: {cacheKey}");
 
-            await _redis.SetAddAsync(GroupKey, cacheKey);
+            var floors = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<FloorplanDeviceRM>>(floors);
 
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(mapped),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
+
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
             return mapped;
         }
             public async Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync()
@@ -112,7 +166,7 @@ namespace BusinessLogic.Services.Implementation
         }
         
 
-        // ===========================================================
+    // ===========================================================
     // 🔹 Helper reusable
     // ===========================================================
     private async Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username)
@@ -179,6 +233,7 @@ namespace BusinessLogic.Services.Implementation
 
             await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.AddAsync(device);
             await transaction.CommitAsync();
 
@@ -219,6 +274,7 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedAt = DateTime.UtcNow;
 
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.UpdateAsync(device);
             await transaction.CommitAsync();
         }
@@ -249,7 +305,7 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedAt = DateTime.UtcNow;
 
             await RemoveGroupAsync();
-
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.SoftDeleteAsync(id);
             await transaction.CommitAsync();
         }

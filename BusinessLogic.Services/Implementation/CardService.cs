@@ -22,6 +22,8 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
+using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -32,14 +34,25 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly MstMemberRepository _mstMemberRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<Card> _logger;
+        private readonly IMqttClientService _mqttClient;
 
-        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, MstMemberRepository mstMemberRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardService(CardRepository repository,
+        CardAccessRepository cardAccessRepository,
+        MstMemberRepository mstMemberRepository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<Card> logger,
+        IMqttClientService mqttClient
+        )
         {
             _repository = repository;
             _cardAccessRepository = cardAccessRepository;
             _mstMemberRepository = mstMemberRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _mqttClient = mqttClient;
         }
 
         public async Task<CardDto> GetByIdAsync(Guid id)
@@ -69,7 +82,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<CardDto>>(cards);
         }
         
-                public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
         {
             var cards = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenCardDto>>(cards);
@@ -147,6 +160,7 @@ namespace BusinessLogic.Services.Implementation
 
             var createdCard = await _repository.AddAsync(card);
             card.QRCode = createdCard.CardNumber;
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");
             return _mapper.Map<CardDto>(createdCard);
         }
         
@@ -205,6 +219,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
                 var result = await _repository.AddAsync(entity);
+                await _mqttClient.PublishAsync("engine/refresh/card-related","");
                 return _mapper.Map<CardMinimalsDto>(result);  
         }
 
@@ -229,7 +244,7 @@ namespace BusinessLogic.Services.Implementation
 
         //         await _repository.UpdateAsync(Card);
         // }
-        
+
         public async Task UpdatesAsync(Guid id, CardEditDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -288,6 +303,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");      
         }
 
         public async Task UpdateAccessAsync(Guid id, CardAccessEdit dto)
@@ -382,6 +398,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");
         }
 
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
@@ -449,8 +466,8 @@ namespace BusinessLogic.Services.Implementation
                 var card = new Card
                 {
                     Id = Guid.NewGuid(),
-                    RegisteredMaskedAreaId = maskedAreaId,
-                    Name = row.Cell(2).GetValue<string>(),
+                    RegisteredMaskedAreaId = maskedAreaId ?? null,
+                    Name = row.Cell(2).GetValue<string>() ?? null,
                     Remarks = row.Cell(3).GetValue<string>() ?? null,
                     CardType = (CardType)Enum.Parse(typeof(CardType), row.Cell(4).GetValue<string>(), ignoreCase: true),
                     CardNumber = row.Cell(5).GetValue<string>() ?? null,
@@ -473,7 +490,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _repository.AddAsync(card);
             }
-
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");
             return _mapper.Map<IEnumerable<CardDto>>(cards);
         }
 

@@ -214,64 +214,64 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPost("import")]
-        public async Task<IActionResult> Import([FromForm] IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        // [HttpPost("import")]
+        // public async Task<IActionResult> Import([FromForm] IFormFile file)
+        // {
+        //     if (file == null || file.Length == 0)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "No file uploaded or file is empty",
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        //     if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Only .xlsx files are allowed",
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var maskedAreas = await _service.ImportAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Masked Area imported successfully",
-                    collection = new { data = maskedAreas },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var maskedAreas = await _service.ImportAsync(file);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Masked Area imported successfully",
+        //             collection = new { data = maskedAreas },
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)

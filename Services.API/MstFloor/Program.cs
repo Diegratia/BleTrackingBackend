@@ -13,6 +13,8 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using StackExchange.Redis;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -64,20 +66,43 @@ builder.Configuration
 
 builder.Services.AddControllers();
 
-var redisHost = builder.Configuration.GetValue<string>("Redis:Host");
-var redisPassword = builder.Configuration.GetValue<string>("Redis:Password");
-var redisInstance = builder.Configuration.GetValue<string>("Redis:InstanceName");
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
 
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
+
+    AbortOnConnectFail = false,
+
+    ConnectTimeout = 50,   
+    SyncTimeout   = 50,    
+    AsyncTimeout  = 50,    
+
+    ConnectRetry = 0,       
+    ReconnectRetryPolicy = new LinearRetry(50),
+
+    KeepAlive = 5,
+
+    // PENTING → nonaktifkan connect backoff
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.ConfigurationOptions = redisConfig;
     options.InstanceName = redisInstance;
 });
+builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddHostedService<RedisRecoveryService>();
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
-);
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
@@ -190,6 +215,9 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+
+
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();

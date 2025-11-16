@@ -15,6 +15,8 @@ using DotNetEnv;
 using BusinessLogic.Services.Extension.RootExtension;
 // using Microsoft.Extensions.Caching.StackExchangeRedis;
 using StackExchange.Redis;
+using BusinessLogic.Services.Background;
+using Helpers.Consumer.Mqtt;
 
 
 try
@@ -128,22 +130,40 @@ builder.Services.AddAuthorization(options =>
 
 
 
-var redisHost = builder.Configuration.GetValue<string>("Redis:Host");
-var redisPassword = builder.Configuration.GetValue<string>("Redis:Password");
-var redisInstance = builder.Configuration.GetValue<string>("Redis:InstanceName");
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
 
-// Distributed Cache for ASP.NET (IDistributedCache)
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
+
+    AbortOnConnectFail = false,
+
+    ConnectTimeout = 50,   
+    SyncTimeout   = 50,    
+    AsyncTimeout  = 50,       
+    ReconnectRetryPolicy = new LinearRetry(50),
+
+    KeepAlive = 5,
+
+    // PENTING → nonaktifkan connect backoff
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.ConfigurationOptions = redisConfig;
     options.InstanceName = redisInstance;
 });
-
-// Low-level Redis for SET/GET members via IConnectionMultiplexer
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
-);
-
+builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddHostedService<RedisRecoveryService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -192,6 +212,8 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();

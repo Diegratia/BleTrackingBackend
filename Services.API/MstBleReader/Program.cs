@@ -148,7 +148,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddMemoryCache();
 
 // builder.Services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
 

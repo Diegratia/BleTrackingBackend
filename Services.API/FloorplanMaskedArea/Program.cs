@@ -14,6 +14,7 @@ using Repositories.Seeding;
 using DotNetEnv;
 using Helpers.Consumer.Mqtt;
 using StackExchange.Redis;
+using BusinessLogic.Services.Background;
 
 
 try
@@ -47,24 +48,39 @@ catch (Exception ex)
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
-var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST")
-                ?? builder.Configuration.GetValue<string>("Redis:Host");
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
 
-var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD")
-                    ?? builder.Configuration.GetValue<string>("Redis:Password");
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
 
-var redisInstance = Environment.GetEnvironmentVariable("REDIS_INSTANCE")
-                        ?? builder.Configuration.GetValue<string>("Redis:InstanceName");
+    AbortOnConnectFail = false,
+    ConnectTimeout = 20,   
+    SyncTimeout   = 20,    
+    AsyncTimeout  = 20,    
+    // ConnectRetry = 0,       
+    ReconnectRetryPolicy = new LinearRetry(20),
+    KeepAlive = 5,
+
+    // PENTING → nonaktifkan connect backoff
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
+builder.Services.AddHostedService<RedisRecoveryService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.ConfigurationOptions = redisConfig;
     options.InstanceName = redisInstance;
 });
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
-);
 
 
 builder.Services.AddCors(options =>

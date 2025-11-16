@@ -24,6 +24,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -37,10 +38,11 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
+         private readonly IMqttClientService _mqttClient;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly ILogger<MstBuilding>_logger;
-
+        private bool cacheDisabled = false;
 
         public MstBuildingService(
             MstBuildingRepository repository,
@@ -59,22 +61,49 @@ namespace BusinessLogic.Services.Implementation
             _floorService = floorService;
             _floorRepository = floorRepository;
             _cache = cache;
-            _redis = redis.GetDatabase();
+            _redis = redis?.GetDatabase();
             _logger = logger;
         }
+        
+         private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
 
-        private string Key(string key) 
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string Key(string key)
             => $"cache:mstbuilding:{AppId}:{key}";
         private string GroupKey 
             => $"cache:mstbuilding:group:{AppId}";
 
-        private async Task RemoveGroupAsync()
+ public async Task RemoveGroupAsync()
         {
-            var keys = await _redis.SetMembersAsync(GroupKey);
-            foreach (var k in keys)
-                await _cache.RemoveAsync(k!);
+            if (!IsRedisAlive()) return;
 
-            await _redis.KeyDeleteAsync(GroupKey);
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;  
+            }
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -87,26 +116,48 @@ namespace BusinessLogic.Services.Implementation
         {
             var cacheKey = Key("getall");
 
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (cached != null)
+            if (IsRedisAlive())
             {
-                _logger.LogInformation($"Cache hit: {cacheKey}");
-                return JsonSerializer.Deserialize<IEnumerable<MstBuildingDto>>(cached)!;
+                try
+                {
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<MstBuildingDto>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
             }
+            _logger.LogInformation($"Cache miss: {cacheKey}");
 
             var data = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(data);
 
-            await _cache.SetStringAsync(
-                cacheKey,
-                JsonSerializer.Serialize(mapped),
-                new DistributedCacheEntryOptions
+          if (IsRedisAlive())
+            {
+                try
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                });
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(mapped),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
 
-            await _redis.SetAddAsync(GroupKey, cacheKey);
-
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
             return mapped;
         }
 
@@ -164,6 +215,7 @@ namespace BusinessLogic.Services.Implementation
 
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
@@ -231,6 +283,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(building);
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -263,6 +316,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.DeleteAsync(id);
         });
     }

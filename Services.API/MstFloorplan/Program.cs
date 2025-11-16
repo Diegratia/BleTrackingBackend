@@ -13,6 +13,8 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using StackExchange.Redis;
+using BusinessLogic.Services.Background;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -45,24 +47,41 @@ catch (Exception ex)
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
-var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST")
-                ?? builder.Configuration.GetValue<string>("Redis:Host");
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
 
-var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD")
-                    ?? builder.Configuration.GetValue<string>("Redis:Password");
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
 
-var redisInstance = Environment.GetEnvironmentVariable("REDIS_INSTANCE")
-                        ?? builder.Configuration.GetValue<string>("Redis:InstanceName");
+    AbortOnConnectFail = false,
+
+    ConnectTimeout = 50,   
+    SyncTimeout   = 50,    
+    AsyncTimeout  = 50,    
+
+    ConnectRetry = 0,       
+    ReconnectRetryPolicy = new LinearRetry(50),
+
+    KeepAlive = 5,
+
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = $"{redisHost},password={redisPassword}";
+    options.ConfigurationOptions = redisConfig;
     options.InstanceName = redisInstance;
 });
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect($"{redisHost},abortConnect=false,password={redisPassword}")
-);
+builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddHostedService<RedisRecoveryService>();
 
 
 builder.Services.AddCors(options =>
@@ -178,6 +197,7 @@ builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
 
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();

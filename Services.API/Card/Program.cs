@@ -11,6 +11,8 @@ using Repositories.Repository;
 using DotNetEnv;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -42,6 +44,7 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 builder.Services.AddCors(options =>
 {
@@ -159,6 +162,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(CardProfile));
 // Registrasi Services
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRepository>();

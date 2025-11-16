@@ -21,6 +21,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -45,6 +46,9 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<MstFloorplan> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
+        private readonly IMqttClientService _mqttClient;
+        private bool cacheDisabled = false;
+
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
@@ -63,7 +67,8 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor,
             ILogger<MstFloorplan> logger,
             IDistributedCache cache,
-            IConnectionMultiplexer redis
+            IConnectionMultiplexer redis,
+            IMqttClientService mqttClient
             ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -82,21 +87,49 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _cache = cache;
-            _redis = redis.GetDatabase();
+            _redis = redis?.GetDatabase();
+            _mqttClient = mqttClient;
+        }
+        
+        private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
+
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        private string Key(string key) 
+        private string Key(string key)
             => $"cache:mstfloorplan:{AppId}:{key}";
         private string GroupKey 
             => $"cache:mstfloorplan:group:{AppId}";
         
-            public async Task RemoveGroupAsync()
+        public async Task RemoveGroupAsync()
         {
-            var keys = await _redis.SetMembersAsync(GroupKey);
-            foreach (var k in keys)
-                await _cache.RemoveAsync(k!);
+            if (!IsRedisAlive()) return;
 
-            await _redis.KeyDeleteAsync(GroupKey);
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;  
+            }
         }
 
         public async Task<MstFloorplanDto> GetByIdAsync(Guid id)
@@ -109,28 +142,48 @@ namespace BusinessLogic.Services.Implementation
         {
             var cacheKey = Key("getall");
 
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (cached != null)
+            if (IsRedisAlive())
             {
-                _logger.LogInformation($"Cache hit: {cacheKey}");
-                return JsonSerializer.Deserialize<IEnumerable<MstFloorplanDto>>(cached)!;
+                try
+                {
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<MstFloorplanDto>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
             }
-
             _logger.LogInformation($"Cache miss: {cacheKey}");
 
-            var data = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstFloorplanDto>>(data);
+            var floors = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<MstFloorplanDto>>(floors);
 
-            await _cache.SetStringAsync(
-                cacheKey,
-                JsonSerializer.Serialize(mapped),
-                new DistributedCacheEntryOptions
+            if (IsRedisAlive())
+            {
+                try
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                });
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(mapped),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
 
-            await _redis.SetAddAsync(GroupKey, cacheKey);
-
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
             return mapped;
         }
                 public async Task<IEnumerable<OpenMstFloorplanDto>> OpenGetAllAsync()
@@ -187,6 +240,7 @@ namespace BusinessLogic.Services.Implementation
 
             var createdFloorplan = await _repository.AddAsync(floorplan);
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstFloorplanDto>(createdFloorplan);
         }
 
@@ -253,6 +307,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, floorplan);
             await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.UpdateAsync(floorplan);
         }
 
@@ -344,6 +399,7 @@ namespace BusinessLogic.Services.Implementation
                 floorplan.UpdatedBy = username;
                 floorplan.UpdatedAt = DateTime.UtcNow;
                 floorplan.Status = 0;
+                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
                 await RemoveGroupAsync();
                 await _repository.DeleteAsync(id);
             });

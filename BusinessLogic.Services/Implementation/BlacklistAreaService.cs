@@ -14,6 +14,8 @@ using QuestPDF.Drawing;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Helpers.Consumer.DtoHelpers;
+using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -22,12 +24,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly BlacklistAreaRepository _repository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
+        private readonly ILogger<BlacklistAreaService> _logger;
+        private readonly IMqttClientService _mqttClient;
 
-        public BlacklistAreaService(BlacklistAreaRepository repository, IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public BlacklistAreaService(BlacklistAreaRepository repository,
+        IHttpContextAccessor httpContextAccessor,
+         IMapper mapper,
+         IMqttClientService mqttClient,
+         ILogger<BlacklistAreaService> logger
+         )
         {
             _repository = repository;
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
+            _mqttClient = mqttClient;
+            _logger = logger;
         }
 
         public async Task<BlacklistAreaDto> CreateBlacklistAreaAsync(BlacklistAreaCreateDto dto)
@@ -70,6 +81,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.AddRangeAsync(entities);
+            await _mqttClient.PublishAsync("engine/refresh/blacklist","");
             return _mapper.Map<IEnumerable<BlacklistAreaDto>>(entities);
         }
 
@@ -114,7 +126,9 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(blacklistArea);
                 result.Add(_mapper.Map<BlacklistAreaDto>(blacklistArea));
             }
+            await _mqttClient.PublishAsync("engine/refresh/blacklist","");
             return result;
+            
         }
 
         public async Task<BlacklistAreaDto> GetBlacklistAreaByIdAsync(Guid id)
@@ -149,6 +163,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(dto, entity);
             await _repository.UpdateAsync(entity);
+            await _mqttClient.PublishAsync("engine/refresh/blacklist","");
         }
 
         public async Task DeleteBlacklistAreaAsync(Guid id)
@@ -162,6 +177,7 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _repository.DeleteAsync(entity);
+            await _mqttClient.PublishAsync("engine/refresh/blacklist","");
         }
 
          public async Task<object> FilterAsync(DataTablesRequest request)

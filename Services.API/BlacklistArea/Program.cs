@@ -13,6 +13,8 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Background;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -44,6 +46,7 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Services.AddHostedService<MqttRecoveryService>();
 // Konfigurasi CORS
 builder.Services.AddCorsExtension();
 
@@ -83,6 +86,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(BlacklistAreaProfile));
 
 builder.Services.AddScoped<IBlacklistAreaService, BlacklistAreaService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();

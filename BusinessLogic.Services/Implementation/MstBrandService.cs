@@ -16,8 +16,6 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
 namespace BusinessLogic.Services.Implementation
@@ -28,16 +26,13 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<MstBrandService> _logger;
-        // private readonly IMemoryCache _cache;
-        private readonly IDistributedCache _cache;
 
 
-        public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger, IDistributedCache cache)
+        public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
-            _cache = cache;
         }
 
         public async Task<MstBrandDto> GetByIdAsync(Guid id)
@@ -49,24 +44,9 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<MstBrandDto>> GetAllAsync()
 
         {
-            const string cacheKey = "MstBrandService_GetAll";
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (cached is not null)
-            {
-                return JsonSerializer.Deserialize<IEnumerable<MstBrandDto>>(cached)!;
-            }
 
             var brands = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstBrandDto>>(brands);
-            
-            await _cache.SetStringAsync(
-            cacheKey,
-            JsonSerializer.Serialize(mapped),
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-            }
-    );
 
             return mapped;
         }
@@ -83,7 +63,6 @@ namespace BusinessLogic.Services.Implementation
             brand.Status = 1;
 
             await _repository.AddAsync(brand);
-            await _cache.RemoveAsync("MstBrandService_GetAll");
             return _mapper.Map<MstBrandDto>(brand);
         }
 
@@ -93,7 +72,6 @@ namespace BusinessLogic.Services.Implementation
             brand.Status = 1;
 
             await _repository.RawAddAsync(brand);
-            await _cache.RemoveAsync("MstBrandService_GetAll");
             return _mapper.Map<MstBrandDto>(brand);
         }
 
@@ -103,7 +81,6 @@ namespace BusinessLogic.Services.Implementation
             if (brand == null)
                 throw new KeyNotFoundException("Brand not found");
             _mapper.Map(updateDto, brand);
-            await _cache.RemoveAsync("MstBrandService_GetAll");
             await _repository.UpdateAsync(brand);
         }
 
@@ -114,7 +91,6 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Brand not found");
 
             brand.Status = 0;
-            await _cache.RemoveAsync("MstBrandService_GetAll");
             await _repository.DeleteAsync(id);
         }
 

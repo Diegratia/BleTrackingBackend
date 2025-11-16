@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Background;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -43,6 +45,7 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -154,6 +157,7 @@ builder.Services.AddAutoMapper(typeof(AlarmCategorySettingsProfile));
 // Registrasi Services
 builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
 builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<AlarmTriggersRepository>();
