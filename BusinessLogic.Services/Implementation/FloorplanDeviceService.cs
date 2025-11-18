@@ -232,11 +232,10 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedAt = DateTime.UtcNow;
 
             await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.AddAsync(device);
             await transaction.CommitAsync();
-
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<FloorplanDeviceDto>(device);
         }
         catch
@@ -273,10 +272,10 @@ namespace BusinessLogic.Services.Implementation
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
 
+            await transaction.CommitAsync();
+            await _repository.UpdateAsync(device);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _repository.UpdateAsync(device);
-            await transaction.CommitAsync();
         }
         catch
         {
@@ -303,11 +302,12 @@ namespace BusinessLogic.Services.Implementation
 
             device.UpdatedBy = username;
             device.UpdatedAt = DateTime.UtcNow;
+            device.Status = 0;
 
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.SoftDeleteAsync(id);
             await transaction.CommitAsync();
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
         catch
         {
