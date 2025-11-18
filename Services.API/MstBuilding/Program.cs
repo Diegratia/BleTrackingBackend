@@ -17,6 +17,8 @@ using BusinessLogic.Services.Extension.RootExtension;
 using StackExchange.Redis;
 using BusinessLogic.Services.Background;
 using Helpers.Consumer.Mqtt;
+using Serilog;
+using Serilog.Events;
 
 
 try
@@ -47,8 +49,56 @@ catch (Exception ex)
 }
 
 
+// =============================
+//  SERILOG UNIVERSAL SETUP
+// =============================
+try
+{
+    var serviceName = AppDomain.CurrentDomain.FriendlyName
+        .Replace(".dll", "")
+        .Replace(".exe", "")
+        .ToLower();
+
+    bool isDocker = Directory.Exists("/app");
+    bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
+
+    string logDir;
+
+    if (isDocker)
+        logDir = "/app/logs";
+    else
+        logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+
+    Directory.CreateDirectory(logDir);
+
+   string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
+
+
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console()  // penting untuk Docker
+        .WriteTo.File(
+            logFile,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14,
+            shared: true,
+            restrictedToMinimumLevel: LogEventLevel.Information
+        )
+        .CreateLogger();
+
+    Console.WriteLine($"Serilog initialized → Directory: {logDir}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Serilog initialization failed: {ex.Message}");
+}
+
+
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddCors(options =>
