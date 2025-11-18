@@ -20,10 +20,10 @@ namespace Helpers.Consumer.Mqtt
             _logger = logger;
             _mqttClient = new MqttFactory().CreateMqttClient();
 
-            var host = config["Mqtt:Host"]??"localhost";
-            var port = int.Parse(config["Mqtt:Port"]??"1888");
-            var username = config["Mqtt:Username"]??"bio_mqtt";
-            var password = config["Mqtt:Password"]??"P@ssw0rd";
+            var host = config["Mqtt:Host"]??Environment.GetEnvironmentVariable("MQTT_HOST");;
+            var port = int.Parse(config["Mqtt:Port"]?? Environment.GetEnvironmentVariable("MQTT_PORT"));
+            var username = config["Mqtt:Username"]?? Environment.GetEnvironmentVariable("MQTT_USERNAME");
+            var password = config["Mqtt:Password"]?? Environment.GetEnvironmentVariable("MQTT_PASSWORD");
 
             _options = new MqttClientOptionsBuilder()
                 .WithClientId("PEOPLE-TRACKING-API" + Guid.NewGuid())
