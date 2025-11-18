@@ -41,7 +41,7 @@ namespace BusinessLogic.Services.Extension
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<MstMemberDto, MstMember>();
-            CreateMap<MemberBlockDto, MstMember>()
+            CreateMap<BlacklistReasonDto, MstMember>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore());
 

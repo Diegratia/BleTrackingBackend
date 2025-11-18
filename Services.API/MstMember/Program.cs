@@ -12,6 +12,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -43,6 +45,8 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
+
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 
 builder.Services.AddCors(options =>
@@ -158,6 +162,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstMemberProfile));
 
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
+builder.Services.AddScoped<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<CardRepository>();
 
 

@@ -93,23 +93,31 @@ namespace Helpers.Consumer.Mqtt
             _logger.LogInformation($"[MQTT] Subscribed: {topic}");
         }
 
-        public async Task PublishAsync(string topic, string payload)
-        {
-            if (!IsConnected())
+            public async Task PublishAsync(string topic, string payload)
             {
-                _logger.LogWarning($"[MQTT] offline, skip publish {topic}");
-                return;
+                try
+                {
+                    if (!IsConnected())
+                    {
+                        _logger.LogWarning($"[MQTT] offline, skip publish {topic}");
+                        return;
+                    }
+
+                    await _mqttClient.PublishAsync(
+                        new MqttApplicationMessageBuilder()
+                            .WithTopic(topic)
+                            .WithPayload(payload)
+                            .Build()
+                    );
+
+                    _logger.LogInformation($"[MQTT] Published: {topic}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"[MQTT] Failed to publish topic: {topic}");
+                }
             }
 
-            await _mqttClient.PublishAsync(
-                new MqttApplicationMessageBuilder()
-                    .WithTopic(topic)
-                    .WithPayload(payload)
-                    .Build()
-            );
-
-            _logger.LogInformation($"[MQTT] Published: {topic}");
-        }
 
         private async Task HandleMessageAsync(MqttApplicationMessageReceivedEventArgs e)
         {

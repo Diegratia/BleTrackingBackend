@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -40,6 +41,8 @@ namespace BusinessLogic.Services.Extension
             CreateMap<Visitor, OpenVisitorDto>();
             CreateMap<TrxVisitorCreateDto, TrxVisitor>();
             CreateMap<CreateInvitationDto, TrxVisitor>();
+
+            CreateMap<BlacklistReasonDto, Visitor>();
             
             CreateMap<TrxVisitor, TrxVisitorDto>();
             // CreateMap<VisitorUpdateDto, Visitor>();
@@ -53,10 +56,12 @@ namespace BusinessLogic.Services.Extension
             CreateMap<VisitorInvitationDto, TrxVisitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.VisitorId, opt => opt.Ignore())
+
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<VisitorInvitationDto, Visitor>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.FaceImage, opt => opt.Ignore())
+                .ForMember(dest => dest.IdentityType, opt => opt.MapFrom(src => Enum.Parse<IdentityType>(src.IdentityType, true)))
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));// karena ini file, tidak bisa di-map langsung
         }
         
