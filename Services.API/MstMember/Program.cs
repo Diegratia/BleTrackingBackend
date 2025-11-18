@@ -162,7 +162,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstMemberProfile));
 
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
-builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<CardRepository>();
 
 

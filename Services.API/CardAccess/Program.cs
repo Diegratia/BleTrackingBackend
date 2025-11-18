@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -158,6 +159,7 @@ builder.Services.AddScoped<ITimeBlockService, TimeBlockService>();
 builder.Services.AddScoped<ICardGroupService, CardGroupService>();
 builder.Services.AddScoped<ICardAccessService, CardAccessService>();
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 // builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories
