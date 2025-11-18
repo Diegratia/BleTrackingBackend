@@ -2286,6 +2286,10 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("blacklist_at");
 
+                    b.Property<string>("BlacklistReason")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("blacklist_reason");
+
                     b.Property<string>("BleCardNumber")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")

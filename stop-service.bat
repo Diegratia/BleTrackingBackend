@@ -1,7 +1,7 @@
 @echo off
 setlocal
 for %%S in (
-    BleTracking_MstApplication
+    BleTracking_CardAccess
 ) do (
     echo Menghapus service %%S ...
     sc stop "%%S" >nul 2>&1

@@ -1,20 +1,37 @@
-services:
-  dozzle:
-    image: amir20/dozzle:latest
-    container_name: dozzle
-    restart: unless-stopped
-    ports:
-      - "9999:8080"             
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - DOZZLE_TAILSIZE=500      
+version: "3.9"
 
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
-    container_name: uptime-kuma
-    restart: unless-stopped
+services:
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
     ports:
-      - "3001:3001"             
+      - "3100:3100"
     volumes:
-      - ./uptime-kuma-data:/app/data
+      - loki-data:/loki
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: always
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail
+    volumes:
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro # baca docker json logs
+      - /var/log:/var/log:ro # opsional host logs (linux)
+      - C:/Migrasi/Logs:/logs/win:ro # jika pakai Docker Desktop on Windows
+    command: -config.file=/etc/promtail/config.yml
+    restart: always
+
+  grafana:
+    image: grafana/grafana:9.5.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  loki-data:
+  grafana-storage:

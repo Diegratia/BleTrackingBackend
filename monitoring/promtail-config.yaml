@@ -1,0 +1,37 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # 1) baca Docker container json logs (recommended)
+  - job_name: docker_containers
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker-stdout
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+  # 2) baca file logs yang ditulis Serilog di container ke /app/logs/*.txt
+  - job_name: dotnet_file_logs_container
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: dotnet-file
+          __path__: /app/logs/*.txt
+
+  # 3) optional: baca file logs dari host Windows (jika anda mount C:/Migrasi/Logs => /logs/win)
+  - job_name: windows_service_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: windows-file
+          __path__: /logs/win/**/*.txt
