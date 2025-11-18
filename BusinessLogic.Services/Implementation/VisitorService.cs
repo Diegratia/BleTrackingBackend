@@ -730,7 +730,7 @@ public class VisitorService : IVisitorService
 
             _mapper.Map(dto, visitor);
             await _visitorRepository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
             return _mapper.Map<VisitorDto>(visitor);
         }
 
@@ -746,7 +746,7 @@ public class VisitorService : IVisitorService
             visitor.IsBlacklist = false;
 
             await _visitorRepository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
         }
 
         // konfirmasi email visitor

@@ -225,7 +225,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var card = await _context.Cards.FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != 1);
+            var card = await _context.Cards.FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != 0);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 

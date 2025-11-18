@@ -399,9 +399,9 @@ namespace BusinessLogic.Services.Implementation
                 floorplan.UpdatedBy = username;
                 floorplan.UpdatedAt = DateTime.UtcNow;
                 floorplan.Status = 0;
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-                await RemoveGroupAsync();
                 await _repository.DeleteAsync(id);
+                await RemoveGroupAsync();
+                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             });
         }
 

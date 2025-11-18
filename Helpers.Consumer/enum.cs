@@ -44,7 +44,7 @@ namespace Helpers.Consumer
 
     public enum IdentityType
     {
-        NIK,
+        SIM,
         KTP,
         Passport
     }

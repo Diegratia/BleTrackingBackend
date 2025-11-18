@@ -240,7 +240,6 @@ namespace BusinessLogic.Services.Implementation
 
             await RemoveGroupAsync();
             await _repository.SoftDeleteAsync(id);
-
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 

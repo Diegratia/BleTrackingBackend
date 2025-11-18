@@ -12,6 +12,7 @@ namespace Helpers.Consumer.Mqtt
         private readonly IMqttClient _mqttClient;
         private readonly MqttClientOptions _options;
         private readonly ILogger<MqttClientService> _logger;
+        private static readonly string _clientId = "PEOPLE-TRACKING-API-" + Guid.NewGuid();
 
         public event Func<string, string, Task>? OnMessageReceived;
 
@@ -26,7 +27,7 @@ namespace Helpers.Consumer.Mqtt
             var password = config["Mqtt:Password"]?? Environment.GetEnvironmentVariable("MQTT_PASSWORD");
 
             _options = new MqttClientOptionsBuilder()
-                .WithClientId("PEOPLE-TRACKING-API" + Guid.NewGuid())
+                .WithClientId(_clientId)
                 .WithTcpServer(host, port)
                 .WithCredentials(username, password)
                 .Build();

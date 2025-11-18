@@ -184,7 +184,7 @@ namespace BusinessLogic.Services.Implementation
                 await _cardRepository.UpdateAsync(card);
 
                 await transaction.CommitAsync();
-                await _mqttClient.PublishAsync("engine/refresh/member-related", "");
+                await _mqttClient.PublishAsync("engine/refresh/card-related", "");
 
             }
             catch
@@ -248,7 +248,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.UpdateAsync(member);
 
                 await transaction.CommitAsync();
-                await _mqttClient.PublishAsync("engine/refresh/member-related", "");
+                await _mqttClient.PublishAsync("engine/refresh/card-related", "");
 
 
             }
@@ -270,7 +270,7 @@ namespace BusinessLogic.Services.Implementation
             member.UpdatedAt = DateTime.UtcNow;
             member.Status = 0;
             await _repository.DeleteAsync(id);
-            await _mqttClient.PublishAsync("engine/refresh/member-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
 
         }
 
@@ -286,7 +286,7 @@ namespace BusinessLogic.Services.Implementation
             Member.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(Member);
-            await _mqttClient.PublishAsync("engine/refresh/member-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
             return _mapper.Map<MstMemberDto>(Member);
         }
 
@@ -302,7 +302,7 @@ namespace BusinessLogic.Services.Implementation
             visitor.IsBlacklist = false;
 
             await _repository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/member-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

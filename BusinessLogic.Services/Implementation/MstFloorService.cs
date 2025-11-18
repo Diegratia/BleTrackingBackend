@@ -298,10 +298,9 @@ namespace BusinessLogic.Services.Implementation
             floor.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, floor);
+            await _repository.UpdateAsync(floor);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _repository.UpdateAsync(floor);
-
         }
 
         // public async Task DeleteAsync(Guid id)
@@ -382,8 +381,8 @@ namespace BusinessLogic.Services.Implementation
             floor.UpdatedAt = DateTime.UtcNow;
             floor.Status = 0;
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.SoftDeleteAsync(id);
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         });
     }
 
