@@ -310,7 +310,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPut("{id}/blacklist")]
+        [HttpPost("{id}/blacklist")]
         public async Task<IActionResult> VisitorBlacklist(Guid id, [FromBody] BlacklistReasonDto visitorDto)
         {
             if (!ModelState.IsValid )
@@ -368,7 +368,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPut("{id}/unblacklist")]
+        [HttpPost("{id}/unblacklist")]
         public async Task<IActionResult> VisitorUnBlacklist(Guid id)
         {
             if (!ModelState.IsValid )

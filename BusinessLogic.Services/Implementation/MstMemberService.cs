@@ -281,7 +281,8 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(dto, Member);
             Member.UpdatedBy = username;
-            Member.BlacklistAt = Member.IsBlacklist == true ? DateTime.UtcNow : null;
+            Member.BlacklistAt = DateTime.UtcNow;
+            Member.IsBlacklist = true;
             Member.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(Member);

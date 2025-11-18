@@ -29,6 +29,8 @@ namespace Data.ViewModels
         public string? HeadMember2 { get; set; }
         public bool? IsBlacklist { get; set; }
         public DateTime? BlacklistAt { get; set; }
+        public string? BlacklistReason { get; set; }
+
         
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
@@ -70,6 +72,8 @@ namespace Data.ViewModels
         public string? HeadMember2 { get; set; }
         public bool? IsBlacklist { get; set; }
         public DateTime? BlacklistAt { get; set; }
+        public string? BlacklistReason { get; set; }
+
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
         public string CreatedBy { get; set; }

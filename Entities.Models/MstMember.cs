@@ -82,6 +82,9 @@ namespace Entities.Models
         [Column("is_blacklist")]
         public bool? IsBlacklist { get; set; }
 
+        [Column("blacklist_reason")]
+    public string? BlacklistReason { get; set; }
+
         [Column("blacklist_at")]
         public DateTime? BlacklistAt { get; set; }
 
