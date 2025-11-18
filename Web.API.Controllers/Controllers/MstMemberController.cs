@@ -150,7 +150,7 @@ namespace Web.API.Controllers.Controllers
                 return Ok(new
                 {
                     success = true,
-                    msg = "Member Block successfully",
+                    msg = "Member Blacklisted successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });
