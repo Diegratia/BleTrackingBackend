@@ -52,6 +52,9 @@ catch (Exception ex)
 // =============================
 //  SERILOG UNIVERSAL SETUP
 // =============================
+Console.WriteLine("=== SERILOG TEST ===");
+Log.Information("Serilog is working - this should go to FILE and CONSOLE");
+Console.WriteLine("=== SERILOG TEST END ===");
 try
 {
     var serviceName = AppDomain.CurrentDomain.FriendlyName
@@ -71,18 +74,26 @@ try
 
     Directory.CreateDirectory(logDir);
 
-   string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
+    string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
 
 
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
+        // .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        // .MinimumLevel.Override("System", LogEventLevel.Warning)
         .Enrich.FromLogContext()
-        .WriteTo.Console()  // penting untuk Docker
+        .Enrich.WithProperty("Service", serviceName) 
+        .WriteTo.Console(
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}"
+        )
         .WriteTo.File(
             logFile,
             rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 14,
+            retainedFileCountLimit: 14, // keep 14 hari
+            fileSizeLimitBytes: 10 * 1024 * 1024, 
+            rollOnFileSizeLimit: true,   
             shared: true,
+                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  // ✅ SAMA dengan console
             restrictedToMinimumLevel: LogEventLevel.Information
         )
         .CreateLogger();
@@ -281,11 +292,12 @@ builder.WebHost.UseUrls($"http://{host}:{port}");
         app.MapGet("/hc", async (IServiceProvider sp) =>
     {
         var db = sp.GetRequiredService<BleTrackingDbContext>();
-        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+        // var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
 
         try
         {
             await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+             Log.Information("Health check passed - Database connected");
             return Results.Ok(new
             {
                 code = 200,
@@ -298,7 +310,7 @@ builder.WebHost.UseUrls($"http://{host}:{port}");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Health check failed");
+             Log.Error(ex, "Health check failed - Database unreachable");
             return Results.Problem("Database unreachable", statusCode: 500);
         }
     })

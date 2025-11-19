@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   loki:
     image: grafana/loki:2.9.4
@@ -17,11 +15,11 @@ services:
     container_name: promtail
     volumes:
       - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro # baca docker json logs
-      - /var/log:/var/log:ro # opsional host logs (linux)
-      - C:/Migrasi/Logs:/logs/win:ro # jika pakai Docker Desktop on Windows
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # ✅ TAMBAH INI
+      - C:/Migrasi/Projects/Projects/BleTrackingBackend/publish:/logs/publish:ro # ✅ TAMBAH INI
     command: -config.file=/etc/promtail/config.yml
-    restart: always
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:9.5.0
