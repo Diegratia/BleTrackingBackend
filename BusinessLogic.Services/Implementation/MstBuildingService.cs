@@ -215,7 +215,7 @@ namespace BusinessLogic.Services.Implementation
 
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
@@ -283,7 +283,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(building);
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(building);
         }
 
