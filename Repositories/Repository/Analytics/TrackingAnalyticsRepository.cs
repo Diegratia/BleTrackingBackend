@@ -293,7 +293,8 @@ namespace Repositories.Repository.Analytics
             FloorId = t.FloorplanMaskedArea.Floorplan.Floor.Id,
             FloorName = t.FloorplanMaskedArea.Floorplan.Floor.Name,
             BuildingId = t.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
-            BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name
+            BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name,
+            t.FloorplanMaskedArea.Floorplan.FloorplanImage,
         })
         .ToListAsync();
 
@@ -335,6 +336,7 @@ namespace Repositories.Repository.Analytics
                 FloorName = last.FloorName,
                 FloorplanId = last.FloorplanId,
                 FloorplanName = last.FloorplanName,
+                FloorplanImage = last.FloorplanImage,
                 MaskedAreaId = last.MaskedAreaId,
                 MaskedAreaName = last.MaskedAreaName,
                 LastX = (float)Math.Round(last.CoordinateX ?? 0),

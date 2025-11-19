@@ -118,6 +118,7 @@ public class VisitorSessionSummaryRM
         // Lokasi terakhir
         public Guid? BuildingId { get; set; }
         public string? BuildingName { get; set; }
+        public string? FloorplanImage { get; set; }
         public Guid? FloorId { get; set; }
         public string? FloorName { get; set; }
         public Guid? FloorplanId { get; set; }
