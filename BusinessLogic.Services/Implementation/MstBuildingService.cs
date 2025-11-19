@@ -316,7 +316,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             await _repository.DeleteAsync(id);
         });
     }

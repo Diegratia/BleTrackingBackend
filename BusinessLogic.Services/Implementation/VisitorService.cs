@@ -698,11 +698,11 @@ public class VisitorService : IVisitorService
             }
 
             // Cek jika email sudah digunakan user lain
-            if (!string.IsNullOrWhiteSpace(updateDto.Email) &&
-                await _userRepository.EmailExistsAsync(updateDto.Email.ToLower()))
-            {
-                throw new InvalidOperationException("Email is already registered.");
-            }
+            // if (!string.IsNullOrWhiteSpace(updateDto.Email) &&
+            //     await _userRepository.EmailExistsAsync(updateDto.Email.ToLower()))
+            // {
+            //     throw new InvalidOperationException("Email is already registered.");
+            // }
 
             visitor.UpdatedBy = username ?? "System";
             visitor.UpdatedAt = DateTime.UtcNow;
