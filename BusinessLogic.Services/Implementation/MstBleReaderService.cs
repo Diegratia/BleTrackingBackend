@@ -81,7 +81,25 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBleReaderDto>(createdBleReader);
         }
 
+            public async Task<List<MstBleReaderDto>> CreateBatchAsync(List<MstBleReaderCreateDto> createDto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var result = new List<MstBleReaderDto>();
+            foreach (var dto in createDto)
+            {
+                var bleReader = _mapper.Map<MstBleReader>(dto);
+                bleReader.Id = Guid.NewGuid();
+                bleReader.CreatedBy = username;
+                bleReader.UpdatedBy = username;
+                bleReader.CreatedAt = DateTime.UtcNow;
+                bleReader.UpdatedAt = DateTime.UtcNow;
+                bleReader.Status = 1;
 
+                await _repository.AddAsync(bleReader);
+                result.Add(_mapper.Map<MstBleReaderDto>(bleReader));
+                }
+            return result;
+        }
 
         public async Task UpdateAsync(Guid id, MstBleReaderUpdateDto updateDto)
         {
