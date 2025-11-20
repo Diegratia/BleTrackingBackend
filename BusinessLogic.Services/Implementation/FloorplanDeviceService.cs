@@ -199,121 +199,121 @@ namespace BusinessLogic.Services.Implementation
         }
     }
 
-    // ===========================================================
-    // 🔹 CREATE
-    // ===========================================================
-    public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-        using var transaction = await _repository.BeginTransactionAsync();
-        try
+        // ===========================================================
+        // 🔹 CREATE
+        // ===========================================================
+        public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
         {
-            // Validasi foreign key
-            if (await _repository.GetFloorplanByIdAsync(dto.FloorplanId) == null)
-                throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            if (dto.ReaderId.HasValue && await _repository.GetReaderByIdAsync(dto.ReaderId.Value) == null)
-                throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
-
-            if (dto.AccessCctvId.HasValue && await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId.Value) == null)
-                throw new ArgumentException($"Access CCTV with ID {dto.AccessCctvId} not found.");
-
-            if (dto.AccessControlId.HasValue && await _repository.GetAccessControlByIdAsync(dto.AccessControlId.Value) == null)
-                throw new ArgumentException($"Access Control with ID {dto.AccessControlId} not found.");
-
-            if (dto.FloorplanMaskedAreaId != null && await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId) == null)
-                throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
-
-            var device = _mapper.Map<FloorplanDevice>(dto);
-            device.CreatedBy = username;
-            device.CreatedAt = DateTime.UtcNow;
-            device.UpdatedBy = username;
-            device.UpdatedAt = DateTime.UtcNow;
-
-            await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
-            await _repository.AddAsync(device);
-            await transaction.CommitAsync();
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            return _mapper.Map<FloorplanDeviceDto>(device);
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-    }
-
-    // ===========================================================
-    // 🔹 UPDATE
-    // ===========================================================
-    public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-        using var transaction = await _repository.BeginTransactionAsync();
-        try
-        {
-            var device = await _repository.GetByIdAsync(id);
-            if (device == null)
-                throw new KeyNotFoundException("FloorplanDevice not found");
-
-            // Jika ada perubahan device, unassign lama dan assign baru
-            if (device.ReaderId != dto.ReaderId ||
-                device.AccessCctvId != dto.AccessCctvId ||
-                device.AccessControlId != dto.AccessControlId)
+            using var transaction = await _repository.BeginTransactionAsync();
+            try
             {
-                await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+                // Validasi foreign key
+                if (await _repository.GetFloorplanByIdAsync(dto.FloorplanId) == null)
+                    throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
+
+                if (dto.ReaderId.HasValue && await _repository.GetReaderByIdAsync(dto.ReaderId.Value) == null)
+                    throw new ArgumentException($"Reader with ID {dto.ReaderId} not found.");
+
+                if (dto.AccessCctvId.HasValue && await _repository.GetAccessCctvByIdAsync(dto.AccessCctvId.Value) == null)
+                    throw new ArgumentException($"Access CCTV with ID {dto.AccessCctvId} not found.");
+
+                if (dto.AccessControlId.HasValue && await _repository.GetAccessControlByIdAsync(dto.AccessControlId.Value) == null)
+                    throw new ArgumentException($"Access Control with ID {dto.AccessControlId} not found.");
+
+                if (dto.FloorplanMaskedAreaId != null && await _repository.GetFloorplanMaskedAreaByIdAsync(dto.FloorplanMaskedAreaId) == null)
+                    throw new ArgumentException($"FloorplanMaskedArea with ID {dto.FloorplanMaskedAreaId} not found.");
+
+                var device = _mapper.Map<FloorplanDevice>(dto);
+                device.CreatedBy = username;
+                device.CreatedAt = DateTime.UtcNow;
+                device.UpdatedBy = username;
+                device.UpdatedAt = DateTime.UtcNow;
+
                 await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
+                await _repository.AddAsync(device);
+                await transaction.CommitAsync();
+                return _mapper.Map<FloorplanDeviceDto>(device);
             }
-
-            _mapper.Map(dto, device);
-            device.UpdatedBy = username;
-            device.UpdatedAt = DateTime.UtcNow;
-
-            await transaction.CommitAsync();
-            await _repository.UpdateAsync(device);
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
     }
 
-    // ===========================================================
-    // 🔹 DELETE (Soft Delete)
-    // ===========================================================
-    public async Task DeleteAsync(Guid id)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-        using var transaction = await _repository.BeginTransactionAsync();
-        try
+        // ===========================================================
+        // 🔹 UPDATE
+        // ===========================================================
+        public async Task UpdateAsync(Guid id, FloorplanDeviceUpdateDto dto)
         {
-            var device = await _repository.GetByIdAsync(id);
-            if (device == null)
-                throw new KeyNotFoundException("FloorplanDevice not found");
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+            using var transaction = await _repository.BeginTransactionAsync();
+            try
+            {
+                var device = await _repository.GetByIdAsync(id);
+                if (device == null)
+                    throw new KeyNotFoundException("FloorplanDevice not found");
 
-            device.UpdatedBy = username;
-            device.UpdatedAt = DateTime.UtcNow;
-            device.Status = 0;
+                // Jika ada perubahan device, unassign lama dan assign baru
+                if (device.ReaderId != dto.ReaderId ||
+                    device.AccessCctvId != dto.AccessCctvId ||
+                    device.AccessControlId != dto.AccessControlId)
+                {
+                    await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+                    await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
+                }
 
-            await _repository.SoftDeleteAsync(id);
-            await transaction.CommitAsync();
+                _mapper.Map(dto, device);
+                device.UpdatedBy = username;
+                device.UpdatedAt = DateTime.UtcNow;
+
+                await transaction.CommitAsync();
+                await _repository.UpdateAsync(device);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        }
-        catch
+    }
+
+        // ===========================================================
+        // 🔹 DELETE (Soft Delete)
+        // ===========================================================
+        public async Task DeleteAsync(Guid id)
         {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            using var transaction = await _repository.BeginTransactionAsync();
+            try
+            {
+                var device = await _repository.GetByIdAsync(id);
+                if (device == null)
+                    throw new KeyNotFoundException("FloorplanDevice not found");
+
+                await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+
+                device.UpdatedBy = username;
+                device.UpdatedAt = DateTime.UtcNow;
+                device.Status = 0;
+
+                await _repository.SoftDeleteAsync(id);
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
     }
 
         // public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)

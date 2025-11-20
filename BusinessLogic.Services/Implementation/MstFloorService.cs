@@ -361,29 +361,29 @@ namespace BusinessLogic.Services.Implementation
         //         throw;
         //     }
         // }
-        
-    public async Task DeleteAsync(Guid id)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        var floor = await _repository.GetByIdAsync(id);
-        if (floor == null)
-            throw new KeyNotFoundException("Floor not found");
 
-        await _repository.ExecuteInTransactionAsync(async () =>
+        public async Task DeleteAsync(Guid id)
         {
-            var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-            await _floorplanService.RemoveGroupAsync();
-            foreach (var floorplan in floorplans)
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floor = await _repository.GetByIdAsync(id);
+            if (floor == null)
+                throw new KeyNotFoundException("Floor not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
             {
-                await _floorplanService.DeleteAsync(floorplan.Id);
-            }
-            floor.UpdatedBy = username;
-            floor.UpdatedAt = DateTime.UtcNow;
-            floor.Status = 0;
+                var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+                foreach (var floorplan in floorplans)
+                {
+                    await _floorplanService.DeleteAsync(floorplan.Id);
+                }
+                floor.UpdatedBy = username;
+                floor.UpdatedAt = DateTime.UtcNow;
+                floor.Status = 0;
+                await _repository.SoftDeleteAsync(id);
+            });
             await RemoveGroupAsync();
-            await _repository.SoftDeleteAsync(id);
+            await _floorplanService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        });
     }
 
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)

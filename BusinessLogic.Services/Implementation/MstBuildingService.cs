@@ -52,7 +52,8 @@ namespace BusinessLogic.Services.Implementation
             MstFloorRepository floorRepository,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            ILogger<MstBuilding> logger
+            ILogger<MstBuilding> logger,
+            IMqttClientService mqttClient
             ): base(httpContextAccessor)
         {
             _repository = repository;
@@ -62,6 +63,7 @@ namespace BusinessLogic.Services.Implementation
             _floorRepository = floorRepository;
             _cache = cache;
             _redis = redis?.GetDatabase();
+            _mqttClient = mqttClient;
             _logger = logger;
         }
         
@@ -215,7 +217,7 @@ namespace BusinessLogic.Services.Implementation
 
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
-            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
@@ -283,7 +285,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(building);
             await RemoveGroupAsync();
-            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -298,31 +300,32 @@ namespace BusinessLogic.Services.Implementation
         // }
 
         public async Task DeleteAsync(Guid id)
-    {
-        var username = UsernameFormToken;
-        var building = await _repository.GetByIdAsync(id);
-        if (building == null)
-            throw new KeyNotFoundException("building not found");
-
-        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            await _floorService.RemoveGroupAsync();
-            var floors = await _floorRepository.GetByBuildingIdAsync(id);
-            foreach (var floor in floors)
+            var username = UsernameFormToken;
+            var building = await _repository.GetByIdAsync(id);
+            if (building == null)
+                throw new KeyNotFoundException("building not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
             {
-                await _floorService.DeleteAsync(floor.Id);
-            }
-            building.UpdatedBy = username;
-            building.UpdatedAt = DateTime.UtcNow;
-            building.Status = 0;
+                var floors = await _floorRepository.GetByBuildingIdAsync(id);
+                foreach (var floor in floors)
+                {
+                    await _floorService.DeleteAsync(floor.Id);
+                }
+                building.UpdatedBy = username;
+                building.UpdatedAt = DateTime.UtcNow;
+                building.Status = 0;
+                await _repository.DeleteAsync(id);
+            });
+            await _floorService.RemoveGroupAsync();
             await RemoveGroupAsync();
-            // await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _repository.DeleteAsync(id);
-        });
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        
     }
         
 
-         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {
             var buildings = new List<MstBuilding>();
             var username = UsernameFormToken;

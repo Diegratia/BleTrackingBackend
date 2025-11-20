@@ -306,9 +306,9 @@ namespace BusinessLogic.Services.Implementation
             floorplan.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, floorplan);
+            await _repository.UpdateAsync(floorplan);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _repository.UpdateAsync(floorplan);
         }
 
         // public async Task DeleteAsync(Guid id)
@@ -360,49 +360,49 @@ namespace BusinessLogic.Services.Implementation
         //     });
         // }
 
-           public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = await _repository.GetByIdAsync(id);
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-                await _repository.ExecuteInTransactionAsync(async () =>
+            await _repository.ExecuteInTransactionAsync(async () =>
+        {
+            var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+            var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+            var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+            var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+            var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            //redis cache
+            foreach (var maskedArea in maskedAreas)
             {
-                var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
-                var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
-                var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
-                var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
-                var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
-                //redis cache
-                await _maskedAreaService.RemoveGroupAsync();
-                foreach (var maskedArea in maskedAreas)
-                {
-                    await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
-                }
-                foreach (var geofence in geofences)
-                {
-                    await _geofenceService.DeleteAsync(geofence.Id);
-                }
-                foreach (var stayOnArea in stayOnAreas)
-                {
-                    await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
-                }
-                foreach (var boundary in boundaries)
-                {
-                    await _boundaryService.DeleteAsync(boundary.Id);
-                }
-                foreach (var overpopulating in overpopulatings)
-                {
-                    await _overpopulatingService.DeleteAsync(overpopulating.Id);
-                }
-                floorplan.UpdatedBy = username;
-                floorplan.UpdatedAt = DateTime.UtcNow;
-                floorplan.Status = 0;
-                await _repository.DeleteAsync(id);
-                await RemoveGroupAsync();
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            });
+                await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+            }
+            foreach (var geofence in geofences)
+            {
+                await _geofenceService.DeleteAsync(geofence.Id);
+            }
+            foreach (var stayOnArea in stayOnAreas)
+            {
+                await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
+            }
+            foreach (var boundary in boundaries)
+            {
+                await _boundaryService.DeleteAsync(boundary.Id);
+            }
+            foreach (var overpopulating in overpopulatings)
+            {
+                await _overpopulatingService.DeleteAsync(overpopulating.Id);
+            }
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+            floorplan.Status = 0;
+            await _repository.DeleteAsync(id);
+        });
+            await RemoveGroupAsync();
+            await _maskedAreaService.RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
