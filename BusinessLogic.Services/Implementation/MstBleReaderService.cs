@@ -141,6 +141,7 @@ namespace BusinessLogic.Services.Implementation
                     Name = row.Cell(2).GetValue<string>(),
                     Ip = row.Cell(3).GetValue<string>(), 
                     Gmac = row.Cell(4).GetValue<string>(),
+                    IsAssigned = false,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,

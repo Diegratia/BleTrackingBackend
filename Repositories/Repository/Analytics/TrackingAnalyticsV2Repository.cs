@@ -22,7 +22,6 @@ namespace Repositories.Repository.Analytics
             _context = context;
         }
 
-        // === GET TIME RANGE (sama seperti V1) ===
         private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
         {
             if (string.IsNullOrWhiteSpace(timeReport)) return null;
@@ -75,6 +74,7 @@ namespace Repositories.Repository.Analytics
             public Guid? FloorId { get; set; }
             public string? FloorName { get; set; }
             public Guid? FloorplanId { get; set; }
+            public string? FloorplanImage { get; set; }
             public string? FloorplanName { get; set; }
             public DateTime TransTimeUtc { get; set; }
             public Guid? PersonId => VisitorId;
@@ -269,6 +269,7 @@ namespace Repositories.Repository.Analytics
                     FloorId = rec.FloorId,
                     FloorName = rec.FloorName,
                     FloorplanId = rec.FloorplanId,
+                    FloorplanImage = rec.FloorplanImage,
                     FloorplanName = rec.FloorplanName,
                     EnterTime = enterWib,
                 };

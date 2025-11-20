@@ -31,8 +31,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseChecker", "Services.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MstBleReader", "Services.API\MstBleReader\MstBleReader.csproj", "{E0AD7E21-4DA7-4518-B353-812F06494758}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlacklistArea", "Services.API\BlacklistArea\BlacklistArea.csproj", "{3F36F499-E93B-484E-9711-C85C34B47C55}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BleReaderNode", "Services.API\BleReaderNode\BleReaderNode.csproj", "{1C54141A-CBD2-443B-B353-55DED316EB85}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Card", "Services.API\Card\Card.csproj", "{B1E2EC2D-9624-4882-8E45-593EB33F3611}"

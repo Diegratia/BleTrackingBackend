@@ -19,7 +19,6 @@ namespace Data.ViewModels
         public List<CardDashboardDto> TopNonActiveBeacon { get; set; } = new List<CardDashboardDto>();
         public List<ReaderSummaryDto> TopReaders { get; set; } = new List<ReaderSummaryDto>();
         public List<AreaSummaryDto> TopAreas { get; set; } = new List<AreaSummaryDto>();
-        public List<BlacklistSummaryDto> TopBlacklist { get; set; } = new List<BlacklistSummaryDto>();
         public List<AlarmTriggersSummary> TopTriggers { get; set; } = new List<AlarmTriggersSummary>();
     }
 

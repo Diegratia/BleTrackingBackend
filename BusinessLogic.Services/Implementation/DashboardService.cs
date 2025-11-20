@@ -18,7 +18,6 @@ namespace BusinessLogic.Services.Implementation
         private readonly CardRepository _cardRepo;
         private readonly FloorplanDeviceRepository _deviceRepo;
         private readonly AlarmTriggersRepository _alarmRepo;
-        private readonly BlacklistAreaRepository _blacklistRepo;
         private readonly FloorplanMaskedAreaRepository _areaRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
@@ -29,7 +28,6 @@ namespace BusinessLogic.Services.Implementation
             CardRepository cardRepo,
             FloorplanDeviceRepository deviceRepo,
             AlarmTriggersRepository alarmRepo,
-            BlacklistAreaRepository blacklistRepo,
             FloorplanMaskedAreaRepository areaRepo,
             IHttpContextAccessor httpContextAccessor,
             ILogger<DashboardService> logger,
@@ -39,7 +37,6 @@ namespace BusinessLogic.Services.Implementation
             _cardRepo = cardRepo;
             _deviceRepo = deviceRepo;
             _alarmRepo = alarmRepo;
-            _blacklistRepo = blacklistRepo;
             _areaRepo = areaRepo;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
@@ -79,13 +76,6 @@ namespace BusinessLogic.Services.Implementation
                         Id = rm.Id,
                         Name = rm.Name,
             }).ToList();
-            var blacklistCount = await _blacklistRepo.GetCountAsync();
-            var topBlacklistRM = await _blacklistRepo.GetTopBlacklistAsync(5);
-            var topBlacklistDto = topBlacklistRM.Select(rm => new BlacklistSummaryDto
-                {
-                        Id = rm.Id,
-                        BlacklistPersonName = rm.BlacklistPersonName,
-            }).ToList();
             var alarmCount = await _alarmRepo.GetCountAsync();
             var topTriggersRM = await _alarmRepo.GetTopTriggersAsync(5);
             var topTriggersDto = topTriggersRM.Select(rm => new AlarmTriggersSummary
@@ -108,8 +98,6 @@ namespace BusinessLogic.Services.Implementation
                 TopNonActiveBeacon = topNonActiveBeaconDto,
                 ActiveGatewayCount = activeGatewayCount,
                 TopReaders = topReadersDto,
-                BlacklistCount = blacklistCount,
-                TopBlacklist = topBlacklistDto,
                 AlarmCount = alarmCount,
                 TopTriggers = topTriggersDto, 
                 AreaCount = areaCount, // TOTAL semua area

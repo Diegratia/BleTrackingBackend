@@ -35,7 +35,6 @@ for %%S in (
     mst-member
     mst-organization
     tracking-transaction
-    blacklist-area
     ble-reader-node
     mst-engine
     card-record

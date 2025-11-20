@@ -874,32 +874,6 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 17. BlacklistArea
-            if (!context.BlacklistAreas.Any())
-            {
-                var blacklistFaker = new Faker<BlacklistArea>()
-                    .RuleFor(v => v.Id, f => Guid.NewGuid())
-                    .RuleFor(v => v.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
-                        .Where(a => a.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(a => a.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.VisitorId, f => context.Visitors
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(v => v.Status, f => 1);
-
-                var blacklists = blacklistFaker.Generate(2);
-                context.BlacklistAreas.AddRange(blacklists);
-                context.SaveChanges();
-            }
-
             // 18. AlarmRecordTracking
             // if (!context.AlarmRecordTrackings.Any())
             // {

@@ -366,7 +366,6 @@ builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
-builder.Services.AddScoped<BlacklistAreaRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));

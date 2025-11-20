@@ -56,6 +56,7 @@ public class VisitorSessionSummaryRM
     public string? FloorName { get; set; }
     public Guid? FloorplanId { get; set; }
     public string? FloorplanName { get; set; }
+    public string? FloorplanImage { get; set; }
     public Guid? AreaId { get; set; }
     public string? AreaName { get; set; }
     // public Guid? PersonId { get; set; }

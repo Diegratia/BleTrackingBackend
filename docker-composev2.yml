@@ -231,18 +231,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
-  blacklist-area:
-    build:
-      context: .
-      dockerfile: Services.API/BlacklistArea/Dockerfile
-    image: dev1pci2025/bletrackingbackend-blacklist-area:prod
-    ports:
-      - "5020:5020"
-    volumes:
-      - visitor_face_images:/app/Uploads/visitorFaceImages
-      - ./.env:/app/.env
-    restart: always
-
   ble-reader-node:
     build:
       context: .

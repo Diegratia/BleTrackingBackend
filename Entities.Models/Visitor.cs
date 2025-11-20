@@ -93,7 +93,6 @@ namespace Entities.Models
         // public MstDepartment Department { get; set; }
         // public MstDistrict District { get; set; }
         public MstApplication Application { get; set; }
-        public ICollection<BlacklistArea> BlacklistAreas { get; set; } = new List<BlacklistArea>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
         public ICollection<TrxVisitor> TrxVisitors { get; set; } = new List<TrxVisitor>();
