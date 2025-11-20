@@ -10,6 +10,7 @@
     <ItemGroup>
       <PackageReference Include="FluentValidation" />
       <FrameworkReference Include="Microsoft.AspNetCore.App" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" />
     </ItemGroup>
 
     <ItemGroup>

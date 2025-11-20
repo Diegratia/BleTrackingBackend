@@ -25,6 +25,7 @@ using System.Text.Json;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
+using DataView;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -111,7 +112,11 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
         {
             var building = await _repository.GetByIdAsync(id);
-            return building == null ? null : _mapper.Map<MstBuildingDto>(building);
+            if (building == null)
+                throw new NotFoundException($"Building {id} not found");
+            if (building.Status == 0)
+                throw new BusinessException("Building is inactive", "BUILDING_INACTIVE");
+            return _mapper.Map<MstBuildingDto>(building);
         }
 
             public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
@@ -176,10 +181,10 @@ namespace BusinessLogic.Services.Implementation
             if (createDto.Image != null && createDto.Image.Length > 0)
             {
                 if (string.IsNullOrEmpty(createDto.Image.ContentType) || !_allowedImageTypes.Contains(createDto.Image.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (createDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 5 MB limit.");
+                    throw new BusinessException("File size exceeds 5 MB limit.");
 
                 // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 // Directory.CreateDirectory(uploadDir);
@@ -201,7 +206,7 @@ namespace BusinessLogic.Services.Implementation
                 }
                 catch (IOException ex)
                 {
-                    throw new IOException("Failed to save image file.", ex);
+                    throw new BusinessException("Failed to save image file", ex, "FILE_SAVE_ERROR");
                 }
 
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
@@ -226,15 +231,15 @@ namespace BusinessLogic.Services.Implementation
             var username = UsernameFormToken;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
-                throw new KeyNotFoundException("Building not found");
+                throw new NotFoundException("Building not found");
 
             if (updateDto.Image != null && updateDto.Image.Length > 0)
             {
                 if (string.IsNullOrEmpty(updateDto.Image.ContentType) || !_allowedImageTypes.Contains(updateDto.Image.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (updateDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 5 MB limit.");
+                    throw new BusinessException("File size exceeds 5 MB limit.");
 
                 // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
                 // Directory.CreateDirectory(uploadDir);
@@ -255,7 +260,7 @@ namespace BusinessLogic.Services.Implementation
                         }
                         catch (IOException ex)
                         {
-                            throw new IOException("Failed to delete old image file.", ex);
+                            throw new BusinessException("Failed to delete old image file.", ex, "FILE_DELETE_ERROR");
                         }
                     }
                 }
@@ -273,7 +278,7 @@ namespace BusinessLogic.Services.Implementation
                 }
                 catch (IOException ex)
                 {
-                    throw new IOException("Failed to save image file.", ex);
+                    throw new BusinessException("Failed to save image file.", ex, "FILE_SAVE_ERROR");
                 }
 
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
@@ -304,7 +309,7 @@ namespace BusinessLogic.Services.Implementation
             var username = UsernameFormToken;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
-                throw new KeyNotFoundException("building not found");
+                throw new NotFoundException("building not found");
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {

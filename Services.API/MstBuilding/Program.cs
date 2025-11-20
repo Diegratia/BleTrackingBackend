@@ -19,6 +19,7 @@ using BusinessLogic.Services.Background;
 using Helpers.Consumer.Mqtt;
 using Serilog;
 using Serilog.Events;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 
 try
@@ -376,6 +377,7 @@ app.UseStaticFiles(new StaticFileOptions
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
     app.UseRouting();
+    app.UseMiddleware<CustomExceptionMiddleware>(); 
     app.UseApiKeyAuthentication();
     app.UseAuthentication();
     app.UseAuthorization(); 
