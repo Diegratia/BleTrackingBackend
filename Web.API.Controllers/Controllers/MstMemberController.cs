@@ -170,7 +170,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
         [HttpPost("{id}/unblacklist")]
-        public async Task<IActionResult> UnBlacklistMember(Guid id, [FromBody] BlacklistReasonDto dto)
+        public async Task<IActionResult> UnBlacklistMember(Guid id)
         {
             if (!ModelState.IsValid)
             {
@@ -185,11 +185,11 @@ namespace Web.API.Controllers.Controllers
             }
              try
             {
-                await _mstMemberService.MemberBlacklistAsync(id, dto);
+                await _mstMemberService.UnBlacklistMemberAsync(id);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Member Blacklist successfully",
+                    msg = "Member Unblacklist successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });
