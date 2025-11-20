@@ -458,6 +458,13 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.BrandId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ReaderType)
+                    .HasColumnName("reader_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ReaderType)Enum.Parse(typeof(ReaderType), v, true)
+                    );
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)

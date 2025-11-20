@@ -42,6 +42,7 @@ namespace Entities.Models
         [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
+        public ReaderType? ReaderType { get; set; }
 
         public MstApplication Application { get; set; }
         public MstBrand Brand { get; set; }

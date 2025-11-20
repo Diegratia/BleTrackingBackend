@@ -10,6 +10,12 @@ namespace Helpers.Consumer
         Government
     }
 
+    public enum ReaderType
+    {
+        Indoor,
+        Outdoor
+    }
+
     public enum ApplicationType
     {
         Empty,
