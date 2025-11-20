@@ -137,11 +137,10 @@ namespace BusinessLogic.Services.Implementation
                 var bleReader = new MstBleReader
                 {
                     Id = Guid.NewGuid(),
-                    BrandId = brandId,
+                    BrandId = brandId ,
                     Name = row.Cell(2).GetValue<string>(),
                     Ip = row.Cell(3).GetValue<string>(), 
                     Gmac = row.Cell(4).GetValue<string>(),
-                    // EngineReaderId = row.Cell(5).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -151,7 +150,7 @@ namespace BusinessLogic.Services.Implementation
 
                 bleReaders.Add(bleReader);
                 rowNumber++;
-            }
+            }   
 
             // Simpan ke database
             foreach (var bleReader in bleReaders)
@@ -180,6 +179,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportPdfAsync()
         {
+            QuestPDF.Settings.License = LicenseType.Community;
             var bleReaders = await _repository.GetAllExportAsync();
 
             var document = QuestPDF.Fluent.Document.Create(container =>
@@ -204,7 +204,6 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
                         });
 
                         table.Header(header =>
@@ -224,7 +223,6 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(bleReader.Name);
                             table.Cell().Element(CellStyle).Text(bleReader.Ip);
                             table.Cell().Element(CellStyle).Text(bleReader.Gmac);
-                            // table.Cell().Element(CellStyle).Text(bleReader.EngineReaderId);
                             table.Cell().Element(CellStyle).Text(bleReader.Status.ToString());
                         }
 
