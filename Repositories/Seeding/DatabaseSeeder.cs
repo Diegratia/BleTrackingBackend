@@ -226,7 +226,7 @@ namespace Repositories.Seeding
 
                 var brand = new MstBrand
                 {
-                    Id = Guid.NewGuid(),
+                    Id = new Guid("824264AF-036F-4AB1-8179-469F1BCC8813"),
                     Name = "Bio - Initial",
                     Tag = "People Tracking Tag",
                     ApplicationId = context.MstApplications
