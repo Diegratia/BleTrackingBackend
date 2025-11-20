@@ -48,10 +48,25 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+        
+
+        public async Task<int> GetBlacklistedCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.MstMembers
+                .AsNoTracking()
+                .Where(c => c.Status != 0 && c.IsBlacklist == true);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+
 
         public async Task<MstMember?> GetByIdAsync(Guid id)
         {
-            
+
             return await GetAllQueryable()
             .Where(x => x.Id == id && x.Status != 0)
             .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Member not found");

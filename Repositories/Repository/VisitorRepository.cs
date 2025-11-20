@@ -37,6 +37,20 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+
+        public async Task<int> GetBlacklistedCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Visitors
+                .AsNoTracking()
+                .Where(c => c.Status != 0 && c.IsBlacklist == true);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+
         public async Task<Visitor?> GetByIdPublicDuplicateAsync(string email, string identityId, string personId, Guid id)
         {
             return await _context.Visitors

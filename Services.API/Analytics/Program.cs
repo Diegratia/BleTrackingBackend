@@ -364,6 +364,8 @@ builder.Services.AddScoped<AlarmAnalyticsRepository>();
 builder.Services.AddScoped<TrackingAnalyticsRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<VisitorRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();

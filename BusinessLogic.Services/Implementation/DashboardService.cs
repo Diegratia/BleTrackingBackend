@@ -19,16 +19,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly FloorplanDeviceRepository _deviceRepo;
         private readonly AlarmTriggersRepository _alarmRepo;
         private readonly FloorplanMaskedAreaRepository _areaRepo;
+        private readonly VisitorRepository _visitorRepo;
+        private readonly MstMemberRepository _memberRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         
-
 
         public DashboardService(
             CardRepository cardRepo,
             FloorplanDeviceRepository deviceRepo,
             AlarmTriggersRepository alarmRepo,
             FloorplanMaskedAreaRepository areaRepo,
+            VisitorRepository visitorRepo,
+            MstMemberRepository memberRepo,
             IHttpContextAccessor httpContextAccessor,
             ILogger<DashboardService> logger,
             IMapper mapper
@@ -38,6 +41,8 @@ namespace BusinessLogic.Services.Implementation
             _deviceRepo = deviceRepo;
             _alarmRepo = alarmRepo;
             _areaRepo = areaRepo;
+            _visitorRepo = visitorRepo;
+            _memberRepo = memberRepo;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _mapper = mapper;
@@ -90,6 +95,8 @@ namespace BusinessLogic.Services.Implementation
                         Id = rm.Id,
                         Name = rm.Name,
                     }).ToList();
+            var visitorBlacklistCount = await _visitorRepo.GetBlacklistedCountAsync();
+            var memberBlacklistCount = await _memberRepo.GetBlacklistedCountAsync();
             return new DashboardSummaryDto
             {
                 ActiveBeaconCount = activeBeaconCount,
@@ -99,9 +106,10 @@ namespace BusinessLogic.Services.Implementation
                 ActiveGatewayCount = activeGatewayCount,
                 TopReaders = topReadersDto,
                 AlarmCount = alarmCount,
-                TopTriggers = topTriggersDto, 
+                TopTriggers = topTriggersDto,
                 AreaCount = areaCount, // TOTAL semua area
                 TopAreas = topAreasDto,
+                BlacklistedCount = visitorBlacklistCount + memberBlacklistCount,
                 ApplicationId = appId
             };
         }
