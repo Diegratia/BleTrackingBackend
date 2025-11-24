@@ -19,6 +19,7 @@ namespace Repositories.Repository.RepoModel
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string? DeviceStatus { get; set; }
