@@ -48,6 +48,9 @@ namespace Entities.Models
         [Column("pos_px_y")]
         public float PosPxY { get; set; }
 
+        [Column("path")]
+        public string? path { get; set; }
+
         [Required]
         [Column("floorplan_masked_area_id")]
         public Guid FloorplanMaskedAreaId { get; set; }
