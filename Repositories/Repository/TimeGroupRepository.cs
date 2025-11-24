@@ -20,9 +20,11 @@ namespace Repositories.Repository
 
             public async Task<TimeGroup?> GetByIdAsync(Guid id)
             {
-                return await GetAllQueryable()
-                    .Where(tg => tg.Id == id && tg.Status != 0)
-                    .FirstOrDefaultAsync();
+                return await _context.TimeGroups
+                    .Include(t => t.TimeBlocks)
+                    .Include(t => t.CardAccessTimeGroups)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+
             }
 
             public async Task<IEnumerable<TimeGroup>> GetAllAsync()
@@ -62,8 +64,8 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(entity.ApplicationId);
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
-            // _context.TimeGroups.Update(entity); // Optional
-                        foreach (var entry in _context.ChangeTracker.Entries())
+            _context.TimeGroups.Update(entity); // Optional
+                foreach (var entry in _context.ChangeTracker.Entries())
             {
                 Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
             }
@@ -140,6 +142,24 @@ namespace Repositories.Repository
                     .ToList()
             });
         }
+        
+public void RemoveTimeBlock(TimeBlock block)
+{
+    if (block == null) return;
+
+    var entry = _context.Entry(block);
+
+    if (entry.State == EntityState.Detached)
+        _context.TimeBlocks.Attach(block);
+
+    _context.TimeBlocks.Remove(block);
+}
+
+public void AddTimeBlock(TimeBlock block)
+{
+    _context.TimeBlocks.Add(block);
+}
+
 
 
          public IQueryable<CardAccessMinimalDto> MinimalGetAllQueryableDto()
@@ -154,27 +174,27 @@ namespace Repositories.Repository
             .Where(ca => ca.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            
-            return query.Select(ca => new CardAccessMinimalDto
-                {
-                    Id = ca.Id,
-                    Name = ca.Name,
-                    AccessNumber = ca.AccessNumber ?? 0,
-                    AccessScope = ca.AccessScope.ToString(),
-                    Remarks = ca.Remarks,
-                    UpdatedAt = ca.UpdatedAt,
-                    ApplicationId = ca.ApplicationId,
 
-                    MaskedAreaIds = ca.CardAccessMaskedAreas
+            return query.Select(ca => new CardAccessMinimalDto
+            {
+                Id = ca.Id,
+                Name = ca.Name,
+                AccessNumber = ca.AccessNumber ?? 0,
+                AccessScope = ca.AccessScope.ToString(),
+                Remarks = ca.Remarks,
+                UpdatedAt = ca.UpdatedAt,
+                ApplicationId = ca.ApplicationId,
+
+                MaskedAreaIds = ca.CardAccessMaskedAreas
                         .Select(x => (Guid?)x.MaskedAreaId)
                         .ToList(),
 
-                    TimeGroupIds = ca.CardAccessTimeGroups
+                TimeGroupIds = ca.CardAccessTimeGroups
                         .Select(x => (Guid?)x.TimeGroupId)
                         .ToList()
-                });
+            });
 
-            
+
         }
 
         public async Task<IEnumerable<TimeGroup>> GetAllExportAsync()
