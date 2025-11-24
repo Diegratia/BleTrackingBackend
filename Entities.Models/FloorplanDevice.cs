@@ -49,7 +49,7 @@ namespace Entities.Models
         public float PosPxY { get; set; }
 
         [Column("path")]
-        public string? path { get; set; }
+        public string? Path { get; set; }
 
         [Required]
         [Column("floorplan_masked_area_id")]
