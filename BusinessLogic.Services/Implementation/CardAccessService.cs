@@ -203,6 +203,25 @@ namespace BusinessLogic.Services.Implementation
             var dtos = _mapper.Map<List<CardAccessDto>>(entities);
 
             foreach (var dto in dtos)
+        {
+                var entity = entities.First(e => e.Id == dto.Id);
+                dto.MaskedAreaIds = entity.CardAccessMaskedAreas
+                    .Select(x => (Guid?)x.MaskedAreaId)
+                    .ToList();
+                dto.TimeGroupIds = entity.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.TimeGroupId)
+                    .ToList();
+            }
+
+            return dtos;
+        }
+
+        public async Task<IEnumerable<CardAccessOpenDto>> OpenGetAllAsync()
+        {
+            var entities = await _repository.GetAllAsync();
+            var dtos = _mapper.Map<List<CardAccessOpenDto>>(entities);
+
+            foreach (var dto in dtos)
             {
                 var entity = entities.First(e => e.Id == dto.Id);
                 dto.MaskedAreaIds = entity.CardAccessMaskedAreas

@@ -300,7 +300,7 @@ namespace Web.API.Controllers.Controllers
         {
             try
             {
-                var cardRecords = await _cardAccessService.GetAllAsync();
+                var cardRecords = await _cardAccessService.OpenGetAllAsync();
                 return Ok(new
                 {
                     success = true,
