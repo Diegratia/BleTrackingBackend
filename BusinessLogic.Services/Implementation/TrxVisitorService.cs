@@ -157,6 +157,7 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var trx = await _repository.GetByIdAsync(dto.TrxVisitorId);
+            var card = await _cardRepository.GetByIdAsync(dto.CardId);
 
             if (trx == null)
                 throw new Exception("No active session found");
@@ -187,6 +188,7 @@ namespace BusinessLogic.Services.Implementation
                 trx.VisitorActiveStatus = VisitorActiveStatus.Active;
                 trx.UpdatedAt = DateTime.UtcNow;
                 trx.UpdatedBy = username;
+                trx.CardNumber = card?.CardNumber;
 
                 await _repository.UpdateAsync(trx);
 

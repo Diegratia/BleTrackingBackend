@@ -98,6 +98,9 @@ namespace Entities.Models
     [Column("invitation_token_expired_at")]
     public DateTime? InvitationTokenExpiredAt { get; set; }
 
+    [Column("card_number")]
+    public string? CardNumber { get; set; }
+
     [ForeignKey(nameof(MaskedArea))]
     [Column("masked_area_id")]
     public Guid? MaskedAreaId { get; set; }

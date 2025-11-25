@@ -491,6 +491,7 @@ public class VisitorService : IVisitorService
                 newTrx.VisitorNumber = $"VIS{DateTime.UtcNow.Ticks}";
                 newTrx.VisitorCode = $"V{DateTime.UtcNow.Ticks}{Guid.NewGuid():N}".Substring(0, 6);
                 newTrx.InvitationCreatedAt = DateTime.UtcNow;
+                newTrx.CardNumber = cardByCardNumber.CardNumber; // new
                 newTrx.TrxStatus = 1;
                 newTrx.CheckedInAt = DateTime.UtcNow;
                 newTrx.CheckinBy = username;
