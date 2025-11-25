@@ -37,6 +37,7 @@ namespace Data.ViewModels
         public string? VisitorNumber { get; set; }
         public string? VisitorCode { get; set; }
         public string? MemberIdentity { get; set; }
+        public string? CardNumber { get; set;}
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
         public string? PersonType { get; set; }

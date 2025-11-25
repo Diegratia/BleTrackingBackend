@@ -434,7 +434,7 @@ namespace BusinessLogic.Services.Implementation
             // visitorCard.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
