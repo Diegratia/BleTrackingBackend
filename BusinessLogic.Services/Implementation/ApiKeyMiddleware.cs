@@ -64,16 +64,37 @@ public static class ApiKeyMiddlewareExtensions
 
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
+        // var integration = await dbContext.MstIntegrations
+        //     .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue
+        //     && i.Status != 0
+        //     && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
             var integration = await dbContext.MstIntegrations
-                .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
+            .Include(i => i.Application)
+            .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && 
+                                    i.Status != 0 && 
+                                    i.ApiTypeAuth == ApiTypeAuth.ApiKey);
 
             if (integration == null)
-            {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
-                return;
-            }
+        {
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
+            return;
+        }
+
+        // application expired
+        if (integration.Application == null || integration.Application.ApplicationExpired < DateTime.UtcNow)
+        {
+            var expiredAt = integration.Application?.ApplicationExpired
+                .ToString("yyyy-MM-ddTHH:mm:ssZ")?? "Unknown";
+
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(
+                $"{{\"success\": false, \"msg\": \"Application license expired at {expiredAt}\", \"collection\": {{ \"data\": null }}, \"code\": 403}}"
+            );
+            return;
+        }
 
             context.Items["MstIntegration"] = integration;
 
