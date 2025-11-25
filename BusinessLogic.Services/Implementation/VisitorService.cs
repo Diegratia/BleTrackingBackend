@@ -334,7 +334,7 @@ public class VisitorService : IVisitorService
         }
         
         //VMS Latest + CardAccessIds
-        public async Task<VisitorDto> CreateVisitorVMSAsync(VMSOpenVisitorCreateDto createDto)
+        public async Task<OpenVisitorDto> CreateVisitorVMSAsync(VMSOpenVisitorCreateDto createDto)
             {
                 if (createDto == null)
                     throw new ArgumentNullException(nameof(createDto));
@@ -614,9 +614,10 @@ public class VisitorService : IVisitorService
                 if (isNewVisitor)
                     await _emailService.SendConfirmationEmailAsync(visitor.Email, visitor.Name, confirmationCode);
 
-                var result = _mapper.Map<VisitorDto>(visitor);
+                var result = _mapper.Map<OpenVisitorDto>(visitor);
+                result.TrxVisitorId = newTrx.Id;
                 if (result == null)
-                    throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
+                throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
                     
                 await _mqttClient.PublishAsync("engine/refresh/card-related", "");
                 await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
