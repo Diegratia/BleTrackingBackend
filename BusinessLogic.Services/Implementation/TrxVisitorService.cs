@@ -449,7 +449,7 @@ namespace BusinessLogic.Services.Implementation
                 { "IdentityType", typeof(IdentityType) }
             };
 
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
             var validSortColumns = new[] { "InvitationCreatedAt", "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
@@ -462,6 +462,8 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+        
+        
         
            public async Task<object> MinimalFilterAsync(DataTablesRequest request)
         {
@@ -476,23 +478,23 @@ namespace BusinessLogic.Services.Implementation
             };
 
             var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
-              var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
+            var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
+              query,
+              _mapper,
+              searchableColumns,
+              validSortColumns,
+              enumColumns);
 
             return await filterService.FilterAsync(request);
         }
 
-          public async Task<object> FilterRawAsync(DataTablesRequest request)
+        public async Task<object> FilterRawAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryableRaw();
 
-             var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
@@ -500,10 +502,10 @@ namespace BusinessLogic.Services.Implementation
                 { "IdentityType", typeof(IdentityType) }
             };
 
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
             var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
-            var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
+            var filterService = new GenericDataTableService<TrxVisitor, OpenTrxVisitorDto>(
                 query,
                 _mapper,
                 searchableColumns,

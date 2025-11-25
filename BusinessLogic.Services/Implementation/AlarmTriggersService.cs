@@ -115,7 +115,7 @@ namespace BusinessLogic.Services.Implementation
                     alarmTrigger.WaitingBy = username;
                     alarmTrigger.WaitingTimestamp = DateTime.UtcNow;
                 }
-                   else if (dto.ActionStatus == "done")
+                else if (dto.ActionStatus == "done")
                 {
                     alarmTrigger.IsActive = false;
                     alarmTrigger.DoneBy = username;
