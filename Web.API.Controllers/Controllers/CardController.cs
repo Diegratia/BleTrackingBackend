@@ -781,7 +781,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("open/unused")]
+        [HttpGet("open-unused")]
         public async Task<IActionResult> OpenGetAllUnUsedAsync()
         {
             try
