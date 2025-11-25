@@ -166,6 +166,7 @@ namespace Repositories.Repository
                     FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
                     AccessCctvId = t.AccessCctvId.Value,
                     AccessControlId = t.AccessControlId.Value,
+                    Path = t.Path,
                     FloorplanId = t.FloorplanId,
                     UpdatedAt = t.UpdatedAt,
                     CreatedAt = t.CreatedAt,
