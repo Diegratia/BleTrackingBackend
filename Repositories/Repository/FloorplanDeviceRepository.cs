@@ -309,6 +309,7 @@ public IQueryable<FloorplanDeviceRM> GetAllProjectedQueryable()
         AccessControlId = t.AccessControlId.Value,
         FloorplanId = t.FloorplanId,
         FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+        Path = t.Path,
         UpdatedAt = t.UpdatedAt,
         CreatedAt = t.CreatedAt,
         ApplicationId = t.ApplicationId,
