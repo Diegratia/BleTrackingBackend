@@ -21,12 +21,14 @@ public static class ApiKeyMiddlewareExtensions
         private readonly IServiceProvider _serviceProvider;
         private const string KeyField = "X-BIOPEOPLETRACKING-API-KEY";
         private const string QueryParamKey = "apiKey";
+        // private static readonly DateTime StaticExpiredDate = new DateTime(2025, 11, 01, 0, 0, 0, DateTimeKind.Utc);
+
 
         public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
-        {
-            _next = next;
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+    {
+        _next = next;
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
 
         public async Task InvokeAsync(HttpContext context)
         {
@@ -95,6 +97,20 @@ public static class ApiKeyMiddlewareExtensions
             );
             return;
         }
+
+        // static expired 
+        // if (DateTime.UtcNow > StaticExpiredDate)
+        // {
+        //     var expiredAt = StaticExpiredDate.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+        //     context.Response.StatusCode = 403;
+        //     context.Response.ContentType = "application/json";
+        //     await context.Response.WriteAsync(
+        //         $"{{\"success\": false, \"msg\": \"Application license expired at {expiredAt}\", \"collection\": {{ \"data\": null }}, \"code\": 403}}"
+        //     );
+
+        //     return;
+        // }
 
             context.Items["MstIntegration"] = integration;
 
