@@ -210,7 +210,6 @@ namespace BusinessLogic.Services.Implementation
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                // Validasi foreign key
                 if (await _repository.GetFloorplanByIdAsync(dto.FloorplanId) == null)
                     throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
 

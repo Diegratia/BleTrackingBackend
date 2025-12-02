@@ -21,7 +21,7 @@ public static class ApiKeyMiddlewareExtensions
         private readonly IServiceProvider _serviceProvider;
         private const string KeyField = "X-BIOPEOPLETRACKING-API-KEY";
         private const string QueryParamKey = "apiKey";
-        // private static readonly DateTime StaticExpiredDate = new DateTime(2025, 11, 01, 0, 0, 0, DateTimeKind.Utc);
+        // private static readonly DateTime StaticExpiredDate = new DateTime(2025, 12, 30, 0, 0, 0, DateTimeKind.Utc);
 
 
         public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)

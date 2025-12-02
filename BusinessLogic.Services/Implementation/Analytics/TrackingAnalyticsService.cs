@@ -33,7 +33,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 var data = await _repository.GetAreaSummaryAsync(request);
                 var dto = _mapper.Map<List<TrackingAreaSummaryDto>>(data);
-                return ResponseCollection<TrackingAreaSummaryDto>.Ok(dto, "Incident area summary retrieved successfully");
+                return ResponseCollection<TrackingAreaSummaryDto>.Ok(dto, "Area summary retrieved successfully");
             }
             catch (Exception ex)
             {
