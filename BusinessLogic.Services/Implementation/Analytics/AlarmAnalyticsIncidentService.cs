@@ -101,5 +101,19 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return ResponseCollection<AlarmBuildingSummaryDto>.Error($"Internal server error: {ex.Message}");
             }
         }
+        public async Task<ResponseCollection<AlarmHourlyStatusSummaryDto>> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        {
+            try
+            {
+                var data = await _repository.GetHourlyStatusSummaryAsync(request);
+                var dto = _mapper.Map<List<AlarmHourlyStatusSummaryDto>>(data);
+                return ResponseCollection<AlarmHourlyStatusSummaryDto>.Ok(dto, "Incident Daily(24 Hours) summary retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting incident Daily(24 Hours) summary");
+                return ResponseCollection<AlarmHourlyStatusSummaryDto>.Error($"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

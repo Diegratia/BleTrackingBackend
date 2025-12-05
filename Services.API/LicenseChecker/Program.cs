@@ -9,10 +9,8 @@ class Program
 {
     static void Main(string[] args)
     {
-        // Setup DI container manual
         var services = new ServiceCollection();
 
-        // Koneksi langsung, bisa diganti ambil dari appsettings.json kalau mau
         services.AddDbContext<BleTrackingDbContext>(options =>
             options.UseSqlServer( "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
         var serviceProvider = services.BuildServiceProvider();
@@ -26,7 +24,6 @@ class Program
 
             Console.WriteLine($"You entered: {userInput}");
 
-            // Cari integration dengan ApiKeyValue cocok dan status masih 0 (belum aktif)
         var integration = context.MstIntegrations
           .IgnoreQueryFilters()
           .FirstOrDefault(i => i.ApiKeyValue == userInput);
@@ -55,7 +52,6 @@ class Program
             }
 
 
-            // Jika valid → aktifkan
             integration.Status = 1;
             context.SaveChanges();
 

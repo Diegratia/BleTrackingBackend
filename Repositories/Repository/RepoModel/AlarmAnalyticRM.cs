@@ -7,7 +7,7 @@ namespace Repositories.Repository.RepoModel
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
-         public string? TimeRange { get; set; }  // ← tambahkan ini
+        public string? TimeRange { get; set; }  // ← tambahkan ini
         public Guid? FloorplanMaskedAreaId { get; set; }
         public string? OperatorName { get; set; }
         public Guid? VisitorId { get; set; }
@@ -20,6 +20,7 @@ namespace Repositories.Repository.RepoModel
     {
         public Guid? AreaId { get; set; }
         public string AreaName { get; set; } = string.Empty;
+        public string AlarmStatus { get; set; } = string.Empty;
         public int Total { get; set; }
     }
 
@@ -48,4 +49,13 @@ namespace Repositories.Repository.RepoModel
         public string Status { get; set; } = string.Empty;
         public int Total { get; set; }
     }
+    
+        public class AlarmHourlyStatusSummaryRM
+    {
+        public int Hour { get; set; }
+        public string HourLabel { get; set; } = string.Empty;
+        public Dictionary<string, int> Status { get; set; } = new();
+        // public int Total { get; set; }
+    }
+
 }

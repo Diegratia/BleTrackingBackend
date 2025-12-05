@@ -562,9 +562,93 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-        
+                public async Task<TrackingHierarchyRM> GetHierarchySummaryAsync(TrackingAnalyticsRequestRM request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var to = range?.to ?? request.To ?? DateTime.UtcNow;
 
+            var tableName = GetTableNameByDate(DateTime.UtcNow);
 
+            var query = _context.Set<TrackingTransaction>()
+                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+                .AsNoTracking()
+                .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+            // Optional: filter only for detail mode
+            query = ApplyFilters(query, request);
+
+            var raw = await query
+                .Select(t => new
+                {
+                    BuildingId = t.FloorplanMaskedArea.Floorplan.Floor.Building.Id.ToString(),
+                    BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name,
+                    FloorId = t.FloorplanMaskedArea.Floorplan.Floor.Id.ToString(),
+                    FloorName = t.FloorplanMaskedArea.Floorplan.Floor.Name,
+                    FloorplanId = t.FloorplanMaskedArea.Floorplan.Id.ToString(),
+                    FloorplanName = t.FloorplanMaskedArea.Floorplan.Name,
+                    AreaId = t.FloorplanMaskedAreaId.ToString(),
+                    AreaName = t.FloorplanMaskedArea.Name
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var result = new TrackingHierarchyRM();
+
+            foreach (var row in raw)
+            {
+                // ========= BUILDING =========
+                if (!result.Buildings.TryGetValue(row.BuildingId, out var buildingNode))
+                {
+                    buildingNode = new TrackingBuildingNode
+                    {
+                        Id = row.BuildingId,
+                        Name = row.BuildingName
+                    };
+                    result.Buildings[row.BuildingId] = buildingNode;
+                }
+                buildingNode.Count++;
+
+                // ========= FLOOR =========
+                if (!buildingNode.Floors.TryGetValue(row.FloorId, out var floorNode))
+                {
+                    floorNode = new TrackingFloorNode
+                    {
+                        Id = row.FloorId,
+                        Name = row.FloorName
+                    };
+                    buildingNode.Floors[row.FloorId] = floorNode;
+                }
+                floorNode.Count++;
+
+                // ========= FLOORPLAN =========
+                if (!floorNode.Floorplans.TryGetValue(row.FloorplanId, out var floorplanNode))
+                {
+                    floorplanNode = new TrackingFloorplanNode
+                    {
+                        Id = row.FloorplanId,
+                        Name = row.FloorplanName
+                    };
+                    floorNode.Floorplans[row.FloorplanId] = floorplanNode;
+                }
+                floorplanNode.Count++;
+
+                // ========= AREA =========
+                if (!floorplanNode.Areas.TryGetValue(row.AreaId, out var areaNode))
+                {
+                    areaNode = new TrackingAreaNode
+                    {
+                        Id = row.AreaId,
+                        Name = row.AreaName
+                    };
+                    floorplanNode.Areas[row.AreaId] = areaNode;
+                }
+                areaNode.Count++;
+            }
+
+            return result;
+        }
 
 
         // helpers filter

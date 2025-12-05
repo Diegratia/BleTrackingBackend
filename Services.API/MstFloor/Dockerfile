@@ -13,7 +13,7 @@ WORKDIR /app
   COPY Repositories/Repositories.csproj Repositories/
   COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-WORKDIR /app/Services.API/MstFloor
+# WORKDIR /app/Services.API/MstFloor
 RUN dotnet restore
 
 WORKDIR /app

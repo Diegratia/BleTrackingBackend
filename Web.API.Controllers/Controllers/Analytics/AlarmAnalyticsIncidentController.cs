@@ -69,5 +69,11 @@ namespace Web.API.Controllers.Controllers.Analytics
             var response = await _service.GetBuildingSummaryAsync(request);
             return Ok(response);
         }
+        [HttpPost("hourly")]
+        public async Task<IActionResult> GetHourlyStatusSummaryAsync([FromBody] AlarmAnalyticsRequestRM request)
+        {
+            var response = await _service.GetHourlyStatusSummaryAsync(request);
+            return Ok(response);
+        }
     }
 }

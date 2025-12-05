@@ -1,4 +1,4 @@
-  <Project DefaultTargets="BuildAll;PublishAll" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="BuildAll;PublishAll" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <!-- 🧭 Temukan semua project di folder Services.API -->
     <ItemGroup>
