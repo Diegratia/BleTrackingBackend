@@ -13,7 +13,6 @@ namespace Data.ViewModels
         public int NonActiveBeaconCount { get; set; }
         public int ActiveGatewayCount { get; set; }
         public int AreaCount { get; set; }
-        public int BlacklistCount { get; set; }
         public int AlarmCount { get; set; }
         public int BlacklistedCount { get; set; }
         public List<CardDashboardDto> TopActiveBeacon { get; set; } = new List<CardDashboardDto>();
