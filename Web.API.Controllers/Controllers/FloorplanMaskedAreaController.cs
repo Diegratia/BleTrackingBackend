@@ -129,7 +129,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/FloorplanMaskedArea/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto FloorplanMaskedAreaDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -145,7 +145,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _service.UpdateAsync(id, FloorplanMaskedAreaDto);
+                await _service.UpdateAsync(id, dto);
                 return Ok(new
                 {
                     success = true,

@@ -108,7 +108,6 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           // "colorArea" = "colorarea" = "ColorArea" → semua masuk
         options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; // extra field → 400
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 // builder.Services.AddMemoryCache();
 
