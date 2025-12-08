@@ -18,6 +18,7 @@ using BusinessLogic.Services.Background;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using Data.ViewModels.Validators;
+using System.Text.Json.Serialization;
 
 
 try
@@ -101,14 +102,21 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddControllers();
+// builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           // "colorArea" = "colorarea" = "ColorArea" → semua masuk
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; // extra field → 400
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 // builder.Services.AddMemoryCache();
 
-    builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddFluentValidationClientsideAdapters();
 
     builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaCreateValidator>();
-    // builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaUpdateValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaUpdateValidator>();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??

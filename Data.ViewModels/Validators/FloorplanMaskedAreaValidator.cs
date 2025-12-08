@@ -15,8 +15,8 @@ namespace Data.ViewModels.Validators
             RuleFor(maskedArea => maskedArea.FloorId)
                 .NotEmpty().WithMessage("Floor Id is required.");
             RuleFor(maskedArea => maskedArea.Name)
-                .NotEmpty().WithMessage("Name is required.")
-                .MaximumLength(255).WithMessage("Name cannot exceed 255 characters.");
+                .MaximumLength(255).WithMessage("Name tidak boleh lebih dari 255 karakter")
+                .When(x => x.Name != null);
             RuleFor(maskedArea => maskedArea.AreaShape)
                 .NotEmpty().WithMessage("AreaShape is required.");
             RuleFor(maskedArea => maskedArea.RestrictedStatus)
@@ -28,24 +28,13 @@ namespace Data.ViewModels.Validators
 
     }
     
-    // public class FloorplanMaskedAreaUpdateValidator : AbstractValidator<FloorplanMaskedAreaUpdateDto>
-    // {
-    //     public FloorplanMaskedAreaUpdateValidator()
-    //     {
-    //         RuleFor(maskedArea => maskedArea.FloorplanId)
-    //             .NotEmpty().WithMessage("Floorplan Id is required.");
-    //         RuleFor(maskedArea => maskedArea.FloorId)
-    //             .NotEmpty().WithMessage("Floor Id is required.");
-    //         RuleFor(maskedArea => maskedArea.Name)
-    //             .NotEmpty().WithMessage("Name is required.")
-    //             .MaximumLength(255).WithMessage("Name cannot exceed 255 characters.");
-    //         RuleFor(maskedArea => maskedArea.AreaShape)
-    //             .NotEmpty().WithMessage("AreaShape is required.");
-    //         RuleFor(maskedArea => maskedArea.RestrictedStatus)
-    //             .NotEmpty().WithMessage("RestrictedStatus is required.");
-    //         RuleFor(maskedArea => maskedArea.AllowFloorChange)
-    //             .NotEmpty().WithMessage("AllowFloorChange is required.");
-    //     }
-    // }
+    public class FloorplanMaskedAreaUpdateValidator : AbstractValidator<FloorplanMaskedAreaUpdateDto>
+{
+    public FloorplanMaskedAreaUpdateValidator()
+    {
+        RuleFor(x => x.Name)
+            .MaximumLength(255).When(x => x.Name != null);
+    }
+}
 }
 
