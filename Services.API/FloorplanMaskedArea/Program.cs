@@ -15,6 +15,9 @@ using DotNetEnv;
 using Helpers.Consumer.Mqtt;
 using StackExchange.Redis;
 using BusinessLogic.Services.Background;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Data.ViewModels.Validators;
 
 
 try
@@ -100,6 +103,12 @@ builder.Configuration
 
 builder.Services.AddControllers();
 // builder.Services.AddMemoryCache();
+
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaCreateValidator>();
+    // builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaUpdateValidator>();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
