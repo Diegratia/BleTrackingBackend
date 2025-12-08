@@ -15,6 +15,7 @@ namespace Repositories.Repository.RepoModel
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
+        public bool AllowFloorChange { get; set; } = false;
     }
     
             public class AreaSummaryRM
