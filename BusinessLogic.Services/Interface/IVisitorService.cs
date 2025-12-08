@@ -32,6 +32,7 @@ namespace BusinessLogic.Services.Interface
         Task AcceptInvitationAsync(Guid id);
         // Task<VisitorDto> CreateVisitorVMSAsync(VMSOpenVisitorCreateDto createDto);
         Task<VisitorDto> BlacklistVisitorAsync(Guid id, BlacklistReasonDto dto);
-        Task UnBlacklistVisitorAsync(Guid id) ;
+        Task UnBlacklistVisitorAsync(Guid id);
+        Task<IEnumerable<VisitorLookUpDto>> GetAllLookUpAsync();
     }
 }

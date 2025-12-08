@@ -49,6 +49,33 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        // GET: api/MstMember
+        [HttpGet("lookup")]
+        public async Task<IActionResult> GetAllLookUpAsync()
+        {
+            try
+            {
+                var members = await _mstMemberService.GetAllLookUpAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Members retrieved successfully",
+                    collection = new { data = members },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember/{id}

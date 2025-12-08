@@ -131,6 +131,30 @@ namespace Repositories.Repository
 
             return await q.CountAsync();
         }
+
+          public async Task<List<MstMemberLookUpRM>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstMembers
+            .AsNoTracking()
+            .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+
+            var projected = query.Select(t => new MstMemberLookUpRM
+            {
+                Id = t.Id,
+                Name = t.Name,
+                PersonId = t.PersonId,
+                CardNumber = t.CardNumber,
+                OrganizationId = t.OrganizationId,
+                DepartmentId = t.DepartmentId,
+                DistrictId = t.DistrictId,
+                OrganizationName = t.Organization.Name,
+                DepartmentName = t.Department.Name,
+                DistrictName = t.District.Name,
+                ApplicationId = t.ApplicationId
+            }); 
+            return await projected.ToListAsync();
+        }
         
 
 

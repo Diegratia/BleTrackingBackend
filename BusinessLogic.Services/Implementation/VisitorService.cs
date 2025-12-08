@@ -1672,6 +1672,11 @@ public class VisitorService : IVisitorService
             var visitors = await _visitorRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<VisitorDto>>(visitors);
         }
+        public async Task<IEnumerable<VisitorLookUpDto>> GetAllLookUpAsync()
+        {
+            var visitors = await _visitorRepository.GetAllLookUpAsync();
+            return _mapper.Map<IEnumerable<VisitorLookUpDto>>(visitors);
+        }
 
         public async Task<IEnumerable<OpenVisitorDto>> OpenGetAllVisitorsAsync()
         {

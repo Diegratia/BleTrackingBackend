@@ -13,7 +13,7 @@ WORKDIR /app
   COPY Repositories/Repositories.csproj Repositories/
   COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-WORKDIR /app/Services.API/MstEngine
+# WORKDIR /app/Services.API/MstEngine
 RUN dotnet restore Services.API/MstEngine/MstEngine.csproj
 
 WORKDIR /app

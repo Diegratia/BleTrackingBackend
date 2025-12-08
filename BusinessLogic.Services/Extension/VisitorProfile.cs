@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -39,6 +40,7 @@ namespace BusinessLogic.Services.Extension
 
             CreateMap<Visitor, VisitorDto>();
             CreateMap<Visitor, OpenVisitorDto>();
+            CreateMap<VisitorLookUpRM, VisitorLookUpDto>();
             CreateMap<TrxVisitorCreateDto, TrxVisitor>();
             CreateMap<CreateInvitationDto, TrxVisitor>();
 

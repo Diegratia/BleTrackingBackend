@@ -80,6 +80,19 @@ namespace Data.ViewModels
         // public CardDto Card { get; set; }
     }
 
+    public class VisitorLookUpDto : BaseModelDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string? PersonId { get; set; }
+        public string? IdentityId { get; set; }
+        public string? IdentityType { get; set; }
+        public string? CardNumber { get; set; }
+        public string? OrganiaztionName { get; set; }
+        public string? DistrictName { get; set; }
+        public string? DepartmentName { get; set; }
+    }
+
     public class VisitorCreateDto : TrxVisitorCreateDto
     {
         public string? PersonId { get; set; }
