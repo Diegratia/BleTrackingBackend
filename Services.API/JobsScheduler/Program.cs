@@ -18,7 +18,7 @@ catch (Exception ex)
 }
 
 var builder = Host.CreateDefaultBuilder(args);
-// builder.Host.UseWindowsService();
+builder.UseWindowsService();
 
 builder.ConfigureServices((hostContext, services) =>
 {
