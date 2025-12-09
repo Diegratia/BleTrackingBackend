@@ -257,6 +257,9 @@ namespace BusinessLogic.Services.Implementation
             var area = await _repository.GetByIdAsync(id);
             if (area == null)
                 throw new KeyNotFoundException("Area not found");
+            var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+            if (devices == null)
+                    throw new KeyNotFoundException("FloorplanDevice not found");
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {
@@ -264,12 +267,7 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedBy = username;
                 area.UpdatedAt = DateTime.UtcNow;
 
-                await RemoveGroupAsync();
                 await _repository.SoftDeleteAsync(id);
-                var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
-                if (devices == null)
-                    throw new KeyNotFoundException("FloorplanDevice not found");
-
                 foreach (var d in devices)
                 {
                     // d.Status = 0;
@@ -277,9 +275,9 @@ namespace BusinessLogic.Services.Implementation
                     // d.UpdatedAt = DateTime.UtcNow;
                     await _floorplanDeviceService.DeleteAsync(d.Id);
                 }
-
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             });
+                await RemoveGroupAsync();
+                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
 
