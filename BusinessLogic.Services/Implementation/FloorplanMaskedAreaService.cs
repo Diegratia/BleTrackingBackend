@@ -26,7 +26,7 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly FloorplanMaskedAreaRepository _repository;
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
-        private readonly FloorplanDeviceService _floorplanDeviceService;
+        private readonly IFloorplanDeviceService _floorplanDeviceService;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<FloorplanMaskedArea> _logger;
@@ -40,6 +40,7 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             FloorplanDeviceRepository floorplanDeviceRepository,
+            IFloorplanDeviceService floorplanDeviceService,
             ILogger<FloorplanMaskedArea> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
@@ -50,6 +51,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorplanDeviceRepository = floorplanDeviceRepository;
+            _floorplanDeviceService = floorplanDeviceService;
             _logger = logger;
             _cache = cache;
             _redis = redis?.GetDatabase();
@@ -265,6 +267,8 @@ namespace BusinessLogic.Services.Implementation
                 await RemoveGroupAsync();
                 await _repository.SoftDeleteAsync(id);
                 var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+                if (devices == null)
+                    throw new KeyNotFoundException("FloorplanDevice not found");
 
                 foreach (var d in devices)
                 {
