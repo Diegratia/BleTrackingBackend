@@ -213,12 +213,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(FloorplanMaskedAreaProfile));
 // Registrasi Services
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
+builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+
 
 // builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 // builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
+builder.Services.AddScoped<MstAccessCctvRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
