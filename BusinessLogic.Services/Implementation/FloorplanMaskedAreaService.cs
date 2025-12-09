@@ -26,6 +26,7 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly FloorplanMaskedAreaRepository _repository;
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly FloorplanDeviceService _floorplanDeviceService;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<FloorplanMaskedArea> _logger;
@@ -227,21 +228,21 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // DELETE
         // ============================================================
-        public async Task DeleteAsync(Guid id)
-        {
-            var area = await _repository.GetByIdAsync(id);
-            if (area == null) throw new KeyNotFoundException("Area not found");
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null) throw new KeyNotFoundException("Area not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
-            area.Status = 0;
-            area.UpdatedBy = username;
-            area.UpdatedAt = DateTime.UtcNow;
+        //     area.Status = 0;
+        //     area.UpdatedBy = username;
+        //     area.UpdatedAt = DateTime.UtcNow;
 
-            await RemoveGroupAsync();
-            await _repository.SoftDeleteAsync(id);
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        }
+        //     await RemoveGroupAsync();
+        //     await _repository.SoftDeleteAsync(id);
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
 
 
         // ============================================================
@@ -263,16 +264,14 @@ namespace BusinessLogic.Services.Implementation
 
                 await RemoveGroupAsync();
                 await _repository.SoftDeleteAsync(id);
-
                 var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
 
                 foreach (var d in devices)
                 {
-                    d.Status = 0;
-                    d.UpdatedBy = username;
-                    d.UpdatedAt = DateTime.UtcNow;
-
-                    await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
+                    // d.Status = 0;
+                    // d.UpdatedBy = username;
+                    // d.UpdatedAt = DateTime.UtcNow;
+                    await _floorplanDeviceService.DeleteAsync(d.Id);
                 }
 
                 await _mqttClient.PublishAsync("engine/refresh/area-related", "");
