@@ -257,9 +257,8 @@ namespace BusinessLogic.Services.Implementation
             var area = await _repository.GetByIdAsync(id);
             if (area == null)
                 throw new KeyNotFoundException("Area not found");
-            var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
-            if (devices == null)
-                    throw new KeyNotFoundException("FloorplanDevice not found");
+
+            List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {
@@ -268,17 +267,34 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedAt = DateTime.UtcNow;
 
                 await _repository.SoftDeleteAsync(id);
+
+                var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+
                 foreach (var d in devices)
                 {
-                    // d.Status = 0;
-                    // d.UpdatedBy = username;
-                    // d.UpdatedAt = DateTime.UtcNow;
-                    await _floorplanDeviceService.DeleteAsync(d.Id);
+                    // kumpulkan assignment dulu (tidak memanggil service!)
+                    deviceAssignments.Add((d.ReaderId, d.AccessCctvId, d.AccessControlId));
+
+                    d.Status = 0;
+                    d.UpdatedBy = username;
+                    d.UpdatedAt = DateTime.UtcNow;
+
+                    await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
                 }
             });
-                await RemoveGroupAsync();
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+
+            // 🔥 setelah transaction selesai, baru panggil service lain
+            foreach (var a in deviceAssignments)
+            {
+                await _floorplanDeviceService.SetDeviceAssignmentAsync(
+                    a.readerId, a.cctvId, a.accessId, 
+                    false, username);
+            }
+
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
+
 
 
         // ============================================================

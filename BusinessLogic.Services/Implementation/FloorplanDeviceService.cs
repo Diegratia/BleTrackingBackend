@@ -169,7 +169,7 @@ namespace BusinessLogic.Services.Implementation
     // ===========================================================
     // 🔹 Helper reusable
     // ===========================================================
-    private async Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username)
+    public async Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username)
     {
         if (readerId.HasValue)
         {
