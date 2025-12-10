@@ -289,6 +289,8 @@ namespace BusinessLogic.Services.Implementation
 
                 // Update member
                 _mapper.Map(updateDto, member);
+                member.BleCardNumber = card.Dmac;
+                member.CardNumber = card.CardNumber;
                 member.UpdatedBy = username;
                 member.UpdatedAt = DateTime.UtcNow;
 
@@ -296,7 +298,6 @@ namespace BusinessLogic.Services.Implementation
 
                 await transaction.CommitAsync();
                 await _mqttClient.PublishAsync("engine/refresh/card-related", "");
-
 
             }
             catch
