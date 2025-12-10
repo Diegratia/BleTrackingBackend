@@ -465,12 +465,12 @@ namespace Web.API.Controllers.Controllers
                     code = 204
                 });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Card not found",
+                    msg = ex.Message,
                     collection = new { data = (object)null },
                     code = 404
                 });
