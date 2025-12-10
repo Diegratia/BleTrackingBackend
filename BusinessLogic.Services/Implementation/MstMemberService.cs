@@ -217,6 +217,48 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
+             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
+            {
+                try
+                {
+                    if (!_allowedImageTypes.Contains(updateDto.FaceImage.ContentType))
+                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+
+                    if (updateDto.FaceImage.Length > MaxFileSize)
+                        throw new ArgumentException("File size exceeds 5 MB limit.");
+
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                        var basePath = AppContext.BaseDirectory;
+                        var uploadDir = Path.Combine(basePath, "Uploads", "MemberFaceImages");
+                        Directory.CreateDirectory(uploadDir);
+
+                    var fileName = $"{Guid.NewGuid()}_{updateDto.FaceImage.FileName}";
+                    var filePath = Path.Combine(uploadDir, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await updateDto.FaceImage.CopyToAsync(stream);
+                    }
+
+                    member.FaceImage = $"/Uploads/MemberFaceImages/{fileName}";
+                    member.UploadFr = 1;
+                    member.UploadFrError = "Upload successful";
+                }
+                catch (Exception ex)
+                {
+                    member.UploadFr = 2;
+                    member.UploadFrError = ex.Message;
+                    member.FaceImage = "";
+                }
+            }
+            else
+            {
+                member.UploadFr = 0;
+                member.UploadFrError = "No file uploaded";
+                member.FaceImage = "";
+            }
+
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
