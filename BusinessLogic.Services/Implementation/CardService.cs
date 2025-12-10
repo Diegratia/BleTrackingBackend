@@ -361,12 +361,57 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(entity);
         }
+        
+         public async Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var entity = await _repository.GetAllQueryable()
+                .Include(cg => cg.CardCardAccesses)
+                .FirstOrDefaultAsync(cg => cg.CardNumber == cardNumber);
+            if (entity == null)
+                throw new KeyNotFoundException("Card not found with card number " + cardNumber);
+
+            entity.UpdatedBy = username;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            //update cardaccess - join table
+            var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
+            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+            // var toRemove = entity.CardCardAccesses
+            //     .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
+            //     .ToList();
+
+            // foreach (var remove in toRemove)
+            // {
+            //     entity.CardCardAccesses.Remove(remove);
+            // }
+
+            // // Tambah yang baru
+                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+                foreach (var addId in toAdd)
+                {
+                    var access = await _cardAccessRepository.GetByIdAsync(addId);
+                    if (access == null)
+                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+
+                    entity.CardCardAccesses.Add(new CardCardAccess
+                    {
+                        CardId = entity.Id,
+                        CardAccessId = addId,
+                        ApplicationId = entity.ApplicationId
+                    });
+                }
+
+            await _repository.UpdateAsync(entity);
+        }
 
         public async Task UpdateAsync(Guid id, CardUpdateDto updateDto)
         {
             var card = await _repository.GetByIdAsync(id);
             if (card == null)
-                throw new KeyNotFoundException("Card not found");
+                throw new KeyNotFoundException("Card not found2");
 
             var existingCard = await _repository.GetAllQueryable()
             .Where(b => b.Id != id)
@@ -404,7 +449,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");
+            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
         }
 
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
