@@ -7,6 +7,8 @@ namespace Data.ViewModels
     {
         public Guid Id { get; set; }
         public string? BeaconId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
         public Guid? FloorplanId { get; set; }
         public float? PosX { get; set; }
         public float? PosY { get; set; }
@@ -31,8 +33,9 @@ namespace Data.ViewModels
         public string? InvestigatedBy { get; set; }
         public string? InvestigatedResult { get; set; }
         public Guid ApplicationId { get; set; }
-
         public MstFloorplanDto Floorplan { get; set; }
+        public VisitorDto Visitor { get; set; }
+        public MstMemberDto Member { get; set; } 
     }
 
     public class AlarmTriggersOpenDto : BaseModelDto

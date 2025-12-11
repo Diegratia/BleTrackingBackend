@@ -614,6 +614,21 @@ namespace Repositories.DbContexts
                 entity.HasOne(d => d.AccessCctv).WithMany().HasForeignKey(d => d.AccessCctvId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(d => d.Reader).WithMany().HasForeignKey(d => d.ReaderId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(d => d.AccessControl).WithMany().HasForeignKey(d => d.AccessControlId).OnDelete(DeleteBehavior.NoAction);
+                // entity.HasOne(d => d.Reader)
+                //     .WithOne(r => r.FloorplanDevices)
+                //     .HasForeignKey<FloorplanDevice>(d => d.ReaderId)
+                //     .OnDelete(DeleteBehavior.NoAction);
+                //     // ⭐ CCTV = ONE-TO-ONE
+                //     entity.HasOne(d => d.AccessCctv)
+                //         .WithOne(c => c.FloorplanDevice)
+                //         .HasForeignKey<FloorplanDevice>(d => d.AccessCctvId)
+                //         .OnDelete(DeleteBehavior.NoAction);
+
+                //     // ⭐ ACCESS CONTROL = ONE-TO-ONE
+                //     entity.HasOne(d => d.AccessControl)
+                //         .WithOne(ac => ac.FloorplanDevice)
+                //         .HasForeignKey<FloorplanDevice>(d => d.AccessControlId)
+                //         .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(d => d.FloorplanMaskedArea).WithMany().HasForeignKey(d => d.FloorplanMaskedAreaId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(d => d.Application).WithMany().HasForeignKey(d => d.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 
@@ -824,6 +839,8 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.MemberId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
@@ -848,6 +865,14 @@ namespace Repositories.DbContexts
                 entity.HasOne(a => a.Floorplan)
                     .WithMany()
                     .HasForeignKey(a => a.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(a => a.Visitor)
+                    .WithMany()
+                    .HasForeignKey(a => a.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(a => a.Member)
+                    .WithMany()
+                    .HasForeignKey(a => a.MemberId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
