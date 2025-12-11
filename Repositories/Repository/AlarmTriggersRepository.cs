@@ -110,6 +110,8 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.AlarmTriggers
+            .Include(b => b.Visitor)
+            .Include(b => b.Member)
             .Include(b => b.Floorplan);
 
             // query = query.WithActiveRelations();

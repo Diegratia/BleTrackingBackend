@@ -316,6 +316,11 @@ namespace Repositories.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("is_in_restricted_area");
 
+                    b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
                     b.Property<float?>("PosX")
                         .HasColumnType("real")
                         .HasColumnName("pos_x");
@@ -337,6 +342,11 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("trigger_time");
 
+                    b.Property<Guid?>("VisitorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
                     b.Property<string>("WaitingBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("waiting_by");
@@ -350,6 +360,10 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorplanId");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("VisitorId");
 
                     b.ToTable("alarm_triggers", (string)null);
                 });
@@ -3412,9 +3426,23 @@ namespace Repositories.Migrations
                         .HasForeignKey("FloorplanId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Application");
 
                     b.Navigation("Floorplan");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
