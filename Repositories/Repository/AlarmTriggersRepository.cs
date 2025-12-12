@@ -55,6 +55,7 @@ namespace Repositories.Repository
                     VisitorFaceImage = b.Visitor.FaceImage,
                     MemberFaceImage = b.Member.FaceImage, 
                     PersonImage = b.Visitor.FaceImage ?? b.Member.FaceImage,
+                    CardNumber = b.Visitor.CardNumber ?? b.Member.CardNumber,
                     // FloorplanId = b.FloorplanId,
                     // PosX = b.PosX,
                     // PosY = b.PosY,
