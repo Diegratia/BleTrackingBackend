@@ -52,6 +52,9 @@ namespace Repositories.Repository
                     MemberName = b.MemberId.HasValue
                         ? b.Member.Name
                         : null,
+                    VisitorFaceImage = b.Visitor.FaceImage,
+                    MemberFaceImage = b.Member.FaceImage, 
+                    PersonImage = b.Visitor.FaceImage ?? b.Member.FaceImage,
                     // FloorplanId = b.FloorplanId,
                     // PosX = b.PosX,
                     // PosY = b.PosY,

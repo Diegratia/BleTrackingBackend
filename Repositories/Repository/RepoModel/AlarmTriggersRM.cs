@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Entities.Models;
 
 namespace Repositories.Repository.RepoModel
 {
@@ -22,6 +23,9 @@ namespace Repositories.Repository.RepoModel
         public Guid? PersonGuid => VisitorId ?? MemberId;
         public string? PersonName => VisitorName ?? MemberName;
         public string? PersonType => VisitorId.HasValue ? "Visitor" : "Member";
+        public string? VisitorFaceImage { get; set; } 
+        public string? MemberFaceImage { get; set; } 
+        public string? PersonImage { get; set; }
         // public Guid? FloorplanId { get; set; }
         // public float? PosX { get; set; }
         // public float? PosY { get; set; }
