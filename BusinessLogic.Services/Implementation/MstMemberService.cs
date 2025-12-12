@@ -156,7 +156,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     member.UploadFr = 2; // Gagal
                     member.UploadFrError = ex.Message;
-                    member.FaceImage = null;
+                    member.FaceImage = null; // Tidak ada file
                 }
             }
             else
