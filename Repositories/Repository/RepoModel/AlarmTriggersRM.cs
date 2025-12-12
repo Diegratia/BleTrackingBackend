@@ -18,8 +18,8 @@ namespace Repositories.Repository.RepoModel
         public string? BeaconId { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
-        public string VisitorName { get; set; }
-        public string MemberName { get; set; }
+        public string? VisitorName { get; set; }
+        public string? MemberName { get; set; }
         public Guid? PersonGuid => VisitorId ?? MemberId;
         public string? PersonName => VisitorName ?? MemberName;
         public string? PersonType => VisitorId.HasValue ? "Visitor" : "Member";
