@@ -249,14 +249,14 @@ namespace BusinessLogic.Services.Implementation
                 {
                     member.UploadFr = 2;
                     member.UploadFrError = ex.Message;
-                    member.FaceImage = "";
+                    member.FaceImage = null;
                 }
             }
             else
             {
                 member.UploadFr = 0;
                 member.UploadFrError = "No file uploaded";
-                member.FaceImage = "";
+                member.FaceImage = null;
             }
 
             using var transaction = await _repository.BeginTransactionAsync();
