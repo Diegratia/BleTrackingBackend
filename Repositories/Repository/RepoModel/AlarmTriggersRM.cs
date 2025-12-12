@@ -26,6 +26,7 @@ namespace Repositories.Repository.RepoModel
         public string? VisitorFaceImage { get; set; } 
         public string? MemberFaceImage { get; set; } 
         public string? PersonImage { get; set; }
+        public string? CardNumber { get; set; }
         // public Guid? FloorplanId { get; set; }
         // public float? PosX { get; set; }
         // public float? PosY { get; set; }
