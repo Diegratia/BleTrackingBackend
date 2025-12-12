@@ -16,7 +16,7 @@ namespace Data.ViewModels
             {
                 Success = true,
                 Msg = message,
-                Data = data
+                Data = data,
             };
         }
 

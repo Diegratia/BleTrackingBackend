@@ -56,5 +56,6 @@ namespace Entities.Models
         public MstBrand Brand { get; set; }
         public MstIntegration Integration { get; set; }
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        // public FloorplanDevice FloorplanDevices { get; set; }
     }
 }

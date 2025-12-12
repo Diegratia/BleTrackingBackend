@@ -25,7 +25,7 @@ namespace Entities.Models
         [StringLength(255)]
         [Column("gmac")]
         public string? Gmac { get; set; }
-        
+
         [Column("is_assigned")]
         public bool? IsAssigned { get; set; } = false;
 
@@ -51,5 +51,7 @@ namespace Entities.Models
         public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        // public FloorplanDevice FloorplanDevices { get; set; }
+        
     }
 }
