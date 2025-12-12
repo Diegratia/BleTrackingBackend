@@ -24,6 +24,63 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync();
         }
 
+        public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(b => b.IsActive == true && 
+                        b.Alarm.HasValue && 
+                        (b.VisitorId.HasValue || b.MemberId.HasValue));
+
+            if (!isSystemAdmin)
+            {
+                query = query.Where(b => b.ApplicationId == applicationId);
+            }
+
+            var result = await query
+                .Select(b => new AlarmTriggersLookUp
+                {
+                    Id = b.Id,
+                    BeaconId = b.BeaconId,
+                    VisitorId = b.VisitorId,
+                    MemberId = b.MemberId,
+                    VisitorName = b.VisitorId.HasValue 
+                        ? b.Visitor.Name 
+                        : null,
+                    MemberName = b.MemberId.HasValue
+                        ? b.Member.Name
+                        : null,
+                    // FloorplanId = b.FloorplanId,
+                    // PosX = b.PosX,
+                    // PosY = b.PosY,
+                    TriggerTime = b.TriggerTime,
+                    // AlarmRecordStatus = b.Alarm.HasValue ? b.Alarm.ToString() : null,
+                    // AlarmColor = b.AlarmColor,
+                    // ActionStatus = b.Action.HasValue ? b.Action.ToString() : null,
+                    // IsActive = b.IsActive,
+                    // IdleTimestamp = b.IdleTimestamp,
+                    // DoneTimestamp = b.DoneTimestamp,
+                    // CancelTimestamp = b.CancelTimestamp,
+                    // WaitingTimestamp = b.WaitingTimestamp,
+                    // InvestigatedTimestamp = b.InvestigatedTimestamp,
+                    // InvestigatedDoneAt = b.InvestigatedDoneAt,
+                    // IdleBy = b.IdleBy,
+                    // DoneBy = b.DoneBy,
+                    // CancelBy = b.CancelBy,
+                    // WaitingBy = b.WaitingBy,
+                    // InvestigatedBy = b.InvestigatedBy,
+                    // InvestigatedResult = b.InvestigatedResult,
+                    ApplicationId = b.ApplicationId
+                })
+                .OrderByDescending(b => b.TriggerTime)
+                .ToListAsync();
+
+            return result;
+        }
+        
+
            public async Task<AlarmTriggers?> GetByIdAsync(Guid id)
         {
 
@@ -81,6 +138,8 @@ namespace Repositories.Repository
             .Where(b => b.BeaconId == beaconId && b.IsActive != false)
             .ToListAsync();
         }
+
+        
 
             public async Task UpdateAsync(AlarmTriggers alarmTriggers)
         {

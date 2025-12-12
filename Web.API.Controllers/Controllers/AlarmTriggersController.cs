@@ -73,6 +73,31 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [HttpGet("lookup")]
+        public async Task<IActionResult> GetAllLookUp()
+        {
+            try
+            {
+                var alarms = await _service.GetAllLookUpAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Alarm Triggers retrieved successfully",
+                    collection = new { data = alarms },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] AlarmTriggersUpdateDto dto)

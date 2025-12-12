@@ -35,7 +35,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
         public MstFloorplanDto Floorplan { get; set; }
         public VisitorDto Visitor { get; set; }
-        public MstMemberDto Member { get; set; } 
+        public MstMemberDto Member { get; set; }
     }
 
     public class AlarmTriggersOpenDto : BaseModelDto
@@ -73,10 +73,11 @@ namespace Data.ViewModels
     {
         public string? ActionStatus { get; set; }
     }
-    
-        public class AlarmTriggersSummary
+
+    public class AlarmTriggersSummary
     {
-            public Guid Id { get; set; }
-            public string BeaconId { get; set; }
+        public Guid Id { get; set; }
+        public string BeaconId { get; set; }
     }
+    
 }
