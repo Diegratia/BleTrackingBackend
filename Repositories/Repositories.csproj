@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" />
+    <PackageReference Include="Dapper" />
     <PackageReference Include="Microsoft.AspNetCore.Http" />
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
