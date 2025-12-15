@@ -249,7 +249,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     member.UploadFr = 2;
                     member.UploadFrError = ex.Message;
-                    member.FaceImage = null;
+                    // member.FaceImage = null;
                 }
             }
             else
