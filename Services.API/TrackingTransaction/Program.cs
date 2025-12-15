@@ -12,6 +12,9 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Implementation.Analytics;
+using BusinessLogic.Services.Interface.Analytics;
+using Repositories.Repository.Analytics;
 
 try
 {
@@ -157,14 +160,13 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(TrackingTransactionProfile));
 
 builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
+builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
+builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
 
-
-// builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
-// builder.Services.AddScoped<IVisitorService, VisitorService>();
-// builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
-// builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 
 builder.Services.AddScoped<TrackingTransactionRepository>();
+builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
+builder.Services.AddScoped<TrackingReportPresetRepository>();
 
 
 
