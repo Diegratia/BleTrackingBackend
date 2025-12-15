@@ -24,6 +24,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
             CreateMap<TrackingTransactionWithAlarm, TrackingTransactionWithAlarmDto>();
+            CreateMap<TrackingReportPreset, PresetDto>();
 
             CreateMap<TrackingTransaction, TrackingTransactionRM>()
                 .ForMember(dest => dest.ReaderName,
