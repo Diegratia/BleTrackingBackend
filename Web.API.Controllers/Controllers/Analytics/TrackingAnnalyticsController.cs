@@ -5,6 +5,7 @@ using Data.ViewModels;
 using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Interface.Analytics;
+using System.Net.Mime;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
@@ -87,7 +88,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             var result = await _service.GetHeatmapDataAsync(request);
             return Ok(result);
         }
-        
+
         [HttpPost("card-summary")]
         public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
         {
@@ -112,6 +113,66 @@ namespace Web.API.Controllers.Controllers.Analytics
         {
             var result = await _service.GetAreaAccessedSummaryAsyncV2(request);
             return Ok(result);
+        }
+        
+        [HttpGet("export/pdf")]
+        public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsRequestRM request)
+        {
+            try
+            {
+                var pdfBytes = await _serviceV2.ExportVisitorSessionSummaryToPdfAsync(request);
+                
+                // Generate filename berdasarkan filter
+                string fileName = GenerateExportFileName(request, "pdf");
+                
+                return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error generating PDF: {ex.Message}");
+            }
+        }
+
+        [HttpGet("export/excel")]
+        public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsRequestRM request)
+        {
+            try
+            {
+                var excelBytes = await _serviceV2.ExportVisitorSessionSummaryToExcelAsync(request);
+
+                // Generate filename berdasarkan filter
+                string fileName = GenerateExportFileName(request, "xlsx");
+
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error generating Excel: {ex.Message}");
+            }
+        }
+
+        private string GenerateExportFileName(TrackingAnalyticsRequestRM request, string extension)
+        {
+            var parts = new List<string> { "VisitorSessions" };
+            
+            if (!string.IsNullOrEmpty(request.TimeRange))
+            {
+                parts.Add(request.TimeRange);
+            }
+            
+            if (request.From.HasValue)
+            {
+                parts.Add(request.From.Value.ToString("yyyyMMdd"));
+            }
+            
+            if (request.To.HasValue)
+            {
+                parts.Add(request.To.Value.ToString("yyyyMMdd"));
+            }
+            
+            return $"{string.Join("_", parts)}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.{extension}";
         }
     }
 }
