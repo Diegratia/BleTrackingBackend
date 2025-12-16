@@ -79,9 +79,9 @@ namespace Web.API.Controllers.Controllers.Analytics
             {
                 var preset = await _presetService.GetByIdAsync(id);
                 if (preset == null)
-                    return NotFound();
+                    return NotFound(ApiResponse.NotFound("Preset not found"));
 
-                return Ok(preset);
+                return Ok(ApiResponse.Success("Preset retrieved successfully", preset));
             }
             catch (Exception ex)
             {
@@ -109,7 +109,7 @@ namespace Web.API.Controllers.Controllers.Analytics
                 }
 
                 var preset = await _presetService.SavePresetAsync(request);
-                return Ok(preset);
+                return Ok(ApiResponse.Success("Preset saved successfully", preset));
             }
             catch (Exception ex)
             {
@@ -139,7 +139,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(ApiResponse.NotFound("Preset not found"));
             }
             catch (Exception ex)
             {
