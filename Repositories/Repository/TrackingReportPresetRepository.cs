@@ -55,7 +55,7 @@ namespace Repositories.Repository.Analytics
             if (!isSystemAdmin && applicationId.HasValue)
             {
                 // Jika perlu set ApplicationId
-                // preset.ApplicationId = applicationId.Value;
+                preset.ApplicationId = applicationId.Value;
             }
 
             _context.TrackingReportPresets.Add(preset);
@@ -90,7 +90,7 @@ namespace Repositories.Repository.Analytics
             var preset = await query.FirstOrDefaultAsync();
             if (preset == null) return false;
 
-            preset.Status = 1;
+            preset.Status = 0;
             preset.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;

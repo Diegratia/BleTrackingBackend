@@ -7,6 +7,7 @@ using System;
 using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Implementation.Analytics;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
@@ -32,7 +33,16 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPost("apply/{presetId}")]
         public async Task<IActionResult> ApplyPresetForVisitorSession(Guid presetId)
         {
+                    if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
             try
+
             {
                 var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId);
                 return Ok(result);
@@ -52,14 +62,13 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
             {
                 var presets = await _presetService.GetAllAsync();
-                return Ok(presets);
+                return Ok(ApiResponse.Success("Presets retrieved successfully", presets));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
         // ==============================================
         // 3. GET BY ID
         // ==============================================
@@ -80,6 +89,8 @@ namespace Web.API.Controllers.Controllers.Analytics
             }
         }
 
+          
+
         // ==============================================
         // 4. SAVE PRESET
         // ==============================================
@@ -89,7 +100,13 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
             {
                 if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+                    return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+                }
 
                 var preset = await _presetService.SavePresetAsync(request);
                 return Ok(preset);
@@ -109,10 +126,16 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
             {
                 if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+                {
+                    var errors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+                    return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+                }
 
                 var preset = await _presetService.UpdateAsync(id, request);
-                return Ok(preset);
+                return Ok(ApiResponse.Success("Preset updated successfully", request));
             }
             catch (KeyNotFoundException)
             {
@@ -134,13 +157,19 @@ namespace Web.API.Controllers.Controllers.Analytics
             {
                 var success = await _presetService.DeleteAsync(id);
                 if (!success)
-                    return NotFound();
+                    return NotFound(ApiResponse.NotFound("Preset not found"));
 
-                return Ok(new { message = "Preset deleted successfully" });
+                return Ok(ApiResponse.NoContent("Building deleted successfully"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Failed to generate Excel: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
             }
         }
 

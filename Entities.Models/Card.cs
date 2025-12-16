@@ -18,6 +18,8 @@ namespace Entities.Models
 
         [Column("type")]
         public CardType? CardType { get; set; }
+        [Column("card_status")]
+        public CardStatus? CardStatus { get; set; }
 
         [Column("card_number")]
         public string? CardNumber { get; set; }
@@ -26,7 +28,7 @@ namespace Entities.Models
         public string? QRCode { get; set; }
 
         [Column("dmac")]
-        public string? Dmac { get; set; } 
+        public string? Dmac { get; set; }
 
         [Column("is_multi_masked_area")]
         public bool? IsMultiMaskedArea { get; set; }
@@ -39,14 +41,18 @@ namespace Entities.Models
         [Column("is_used")]
         public bool? IsUsed { get; set; } = false;
 
-        // [Column("is_swap")]
-        // public bool? IsSwap { get; set; } = false;
+        //WIP
+        // [Column("is_swapped")]
+        // public bool? IsSwapped { get; set; } = false;
 
-        // [Column("is_block")]
-        // public bool? IsBlock { get; set; }
+        // [Column("swapped_with_card_id")]
+        // public Guid? SwappedWithCardId { get; set; }
 
-        // [Column("block_at")]
-        // public DateTime? BlockAt { get; set; }
+        // [Column("swapped_at")]
+        // public DateTime? SwappedAt { get; set; }
+
+        // [Column("current_swap_transaction_id")]
+        // public Guid? CurrentSwapTransactionId { get; set; }
 
         [Column("last_used_by")]
         public string? LastUsed { get; set; }
@@ -88,6 +94,8 @@ namespace Entities.Models
         public ICollection<CardCardAccess?> CardCardAccesses { get; set; } = new List<CardCardAccess?>();
         [NotMapped]
         public ICollection<CardAccess> CardAccesses => CardCardAccesses.Select(cga => cga.CardAccess).ToList();
+        // public Card? SwappedWithCard { get; set; }
+        // public CardSwapTransaction? CurrentSwapTransaction { get; set; }
     }
 }
 
