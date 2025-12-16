@@ -211,14 +211,6 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
-    deploy:
-      mode: replicated
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-        delay: 10s # delay 10 detik sebelum restart lagi
-        max_attempts: 5
-        window: 60s # failure tolerance selama 1 menit
 
   jobs-scheduler:
     build:
