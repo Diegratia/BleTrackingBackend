@@ -21,6 +21,21 @@ namespace Entities.Models
         [StringLength(20)]
         public string TimeRange { get; set; } // "daily", "weekly", "monthly", "custom"
 
+        [Column("building_id")]
+        public Guid? BuildingId { get; set; }
+        [Column("floor_id")]
+        public Guid? FloorId { get; set; }
+
+        [Column("floorplan_id")]
+        public Guid? FloorplanId { get; set; }
+
+        [Column("area_id")]
+        public Guid? AreaId { get; set; }
+        [Column("visitor_id")]
+        public Guid? VisitorId { get; set; }
+        [Column("member_id")]
+        public Guid? MemberId { get; set; }
+
         // Untuk custom preset
         [Column("custom_from_date")]
         public DateTime? CustomFromDate { get; set; }
