@@ -2,6 +2,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Repository.RepoModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,10 +92,139 @@ namespace Repositories.Repository
                 return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
             }
 
+            
+
 
         public async Task<IEnumerable<AlarmRecordTracking>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();
+        }
+
+        public async Task<List<AlarmRecordLog>> GetAlarmLogsAsync(
+            TrackingAnalyticsRequestRM request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var to = range?.to ?? request.To ?? DateTime.UtcNow;
+
+            var baseQuery = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Include(x => x.Visitor)
+                .Include(x => x.Member)
+                .Include(x => x.FloorplanMaskedArea)
+                .Include(x => x.AlarmTriggers)
+                .Where(x => x.Timestamp >= from && x.Timestamp <= to);
+
+            baseQuery = ApplyFilters(baseQuery, request);
+
+            // 🔥 STEP 1: Group per Visitor + Status
+            var grouped = await baseQuery
+                .GroupBy(x => new
+                {
+                    x.VisitorId,
+                    Status = x.Action != null
+                        ? x.Action.ToString()
+                        : x.Alarm != null
+                            ? x.Alarm.ToString()
+                            : "Unknown"
+                })
+                .Select(g => g
+                    .OrderByDescending(x => x.Timestamp)
+                    .First())
+                .ToListAsync();
+
+            // 🔥 STEP 2: Mapping ke Read Model
+            return grouped
+                .OrderByDescending(x => x.Timestamp)
+                .Select(x => new AlarmRecordLog
+                {
+                    Visitor = x.Visitor?.Name ?? "-",
+                    Area = x.FloorplanMaskedArea?.Name ?? "-",
+
+                    TriggeredAt = x.Timestamp,
+                    DoneAt = x.DoneTimestamp,
+
+                    Status = x.Action != null
+                        ? x.Action.ToString() 
+                        : x.Alarm?.ToString() ?? "-",
+
+                    Host = x.Member?.Name ?? "-",
+
+                    Category = x.AlarmTriggers?.Alarm.ToString() ?? "-"
+                })
+                .ToList();
+        }
+
+         private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+            {
+                if (string.IsNullOrWhiteSpace(timeReport)) return null;
+
+                var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+
+                return timeReport.Trim().ToLower() switch
+                {
+                    "daily" =>
+                    (
+                        TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
+                        TimeZoneInfo.ConvertTimeToUtc(
+                            wibNow.Date.AddDays(1).AddTicks(-1),
+                            wibZone
+                        )
+                    ),
+
+                    "weekly" =>
+                    (
+                        TimeZoneInfo.ConvertTimeToUtc(
+                            wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
+                            wibZone
+                        ),
+                        TimeZoneInfo.ConvertTimeToUtc(
+                            wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
+                                .AddDays(1).AddTicks(-1),
+                            wibZone
+                        )
+                    ),
+
+                    "monthly" =>
+                    (
+                        TimeZoneInfo.ConvertTimeToUtc(
+                            new DateTime(wibNow.Year, wibNow.Month, 1),
+                            wibZone
+                        ),
+                        TimeZoneInfo.ConvertTimeToUtc(
+                            new DateTime(wibNow.Year, wibNow.Month,
+                                DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
+                            .AddDays(1).AddTicks(-1),
+                            wibZone
+                        )
+                    ),
+
+                    _ => null
+                };
+            }
+
+        private IQueryable<AlarmRecordTracking> ApplyFilters(
+            IQueryable<AlarmRecordTracking> query,
+            TrackingAnalyticsRequestRM request)
+        {
+            if (request.BuildingId.HasValue)
+                query = query.Where(x =>
+                    x.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);
+
+            if (request.FloorId.HasValue)
+                query = query.Where(x =>
+                    x.FloorplanMaskedArea.Floorplan.Floor.Id == request.FloorId);
+
+            if (request.AreaId.HasValue)
+                query = query.Where(x =>
+                    x.FloorplanMaskedAreaId == request.AreaId);
+
+            if (request.VisitorId.HasValue)
+                query = query.Where(x =>
+                    x.VisitorId == request.VisitorId);
+
+            return query;
         }
 
         // public async Task DeleteAsync(AlarmRecordTracking entity)
