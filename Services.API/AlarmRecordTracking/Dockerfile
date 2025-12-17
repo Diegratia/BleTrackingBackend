@@ -13,8 +13,9 @@ WORKDIR /app
   COPY Repositories/Repositories.csproj Repositories/
   COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-WORKDIR /app/Services.API/AlarmRecordTracking
-RUN dotnet restore
+# WORKDIR /app/Services.API/AlarmRecordTracking
+# RUN dotnet restore
+RUN dotnet restore Services.API/AlarmRecordTracking/AlarmRecordTracking.csproj
 
 WORKDIR /app
 COPY . .
