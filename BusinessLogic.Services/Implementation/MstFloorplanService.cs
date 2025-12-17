@@ -30,7 +30,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorplanRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        // private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
         private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
         private readonly IFloorplanMaskedAreaService _maskedAreaService;
         private readonly IGeofenceService _geofenceService;
@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
 
         public MstFloorplanService(
             MstFloorplanRepository repository,
-            FloorplanDeviceRepository floorplanDeviceRepository,
+            // FloorplanDeviceRepository floorplanDeviceRepository,
             FloorplanMaskedAreaRepository maskedAreaRepository,
             IFloorplanMaskedAreaService maskedAreaService,
             GeofenceRepository geofenceRepository,
@@ -72,7 +72,7 @@ namespace BusinessLogic.Services.Implementation
             ) : base(httpContextAccessor)
         {
             _repository = repository;
-            _floorplanDeviceRepository = floorplanDeviceRepository;
+            // _floorplanDeviceRepository = floorplanDeviceRepository;
             _maskedAreaRepository = maskedAreaRepository;
             _geofenceRepository = geofenceRepository;
             _stayOnAreaRepository = stayOnAreaRepository;

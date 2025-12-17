@@ -359,6 +359,8 @@ builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsInciden
 builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>(); 
 builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
+builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
+
 builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
 builder.Services.AddScoped<AlarmAnalyticsRepository>();
 builder.Services.AddScoped<TrackingAnalyticsRepository>();
@@ -369,6 +371,7 @@ builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<TrackingReportPresetRepository>();
 
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));
