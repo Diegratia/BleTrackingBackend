@@ -110,8 +110,8 @@ namespace Helpers.Consumer
     {
         Male,
         Female,
-        Other
-        // RatherNotSay
+        // Otther
+        RatherNotSay
     }
 
     public enum StatusEmployee
