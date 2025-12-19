@@ -37,9 +37,9 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("alarm_color");
 
-                    b.Property<int?>("AlarmCooldown")
+                    b.Property<int?>("NotifyIntervalSec")
                         .HasColumnType("int")
-                        .HasColumnName("alarm_cooldown");
+                        .HasColumnName("notify_interval_sec");
 
                     b.Property<string>("AlarmLevelPriority")
                         .HasColumnType("nvarchar(255)")

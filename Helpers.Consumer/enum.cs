@@ -162,9 +162,9 @@ namespace Helpers.Consumer
 
     public enum ActionStatus
     {
-        Idle,
-        Done,
-        NoAction,
+        Idle, // default
+        Done, // sudah selesai
+        NoAction, // tidak ada tindakan
         Waiting, // satpam habis menunggu giliran
         Investigated, // 5 menit
         PostponeInvestigated // 1 minggu 

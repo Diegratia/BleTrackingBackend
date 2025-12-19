@@ -18,7 +18,7 @@ namespace Repositories.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
-                name: "alarm_cooldown",
+                name: "notify_interval_sec",
                 table: "alarm_category_settings",
                 type: "int",
                 nullable: true);
@@ -32,7 +32,7 @@ namespace Repositories.Migrations
                 table: "alarm_triggers");
 
             migrationBuilder.DropColumn(
-                name: "alarm_cooldown",
+                name: "notify_interval_sec",
                 table: "alarm_category_settings");
         }
     }

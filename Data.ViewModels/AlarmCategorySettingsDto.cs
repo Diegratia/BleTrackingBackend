@@ -13,7 +13,7 @@ namespace Data.ViewModels
         public string? Remarks { get; set; }
         public string? AlarmColor { get; set; }
         public string? AlarmLevelPriority { get; set; }
-        public int? AlarmCooldown { get; set; } 
+        public int? NotifyIntervalSec { get; set; } 
         public int? IsEnabled { get; set; }
     }
     // public class AlarmCategorySettingsCreateDto : BaseModelDto
@@ -22,7 +22,7 @@ namespace Data.ViewModels
     //     public string? AlarmCategory { get; set; }
     //     public string? Remarks { get; set; }
     //     public string? AlarmLevelPriority { get; set; }
-    //     public int? AlarmCooldown { get; set; } 
+    //     public int? NotifyIntervalSec { get; set; } 
     //     public int? IsEnabled { get; set; } = 0;
     // }
     public class AlarmCategorySettingsUpdateDto
@@ -30,7 +30,7 @@ namespace Data.ViewModels
         public string? AlarmColor { get; set; }
         public string? Remarks { get; set; }
         public string? AlarmLevelPriority { get; set; }
-        public int? AlarmCooldown { get; set; } 
+        public int? NotifyIntervalSec { get; set; } 
         public int? IsEnabled { get; set; }
     }
 }
