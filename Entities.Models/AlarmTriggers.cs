@@ -43,7 +43,7 @@
                 public Guid? MemberId { get; set; }
 
                 [Column("trigger_time")]
-                public DateTime? TriggerTime { get; set; }
+                public DateTime? TriggerTime { get; set; } // first trigger times
                 [Column("alarm_color")]
                 public string? AlarmColor { get; set; }
 
@@ -97,6 +97,9 @@
 
                 [Column("last_seen_at")]
                 public DateTime? LastSeenAt { get; set; }
+
+                [Column("last_notified_at")]
+                public DateTime? LastNotifiedAt { get; set; }
 
                 [Required]
                 [ForeignKey("Application")]

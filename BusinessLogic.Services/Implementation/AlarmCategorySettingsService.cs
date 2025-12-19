@@ -64,21 +64,21 @@ namespace BusinessLogic.Services.Implementation
         //     return _mapper.Map<IEnumerable<OpenMstDistrictDto>>(categories);
         // }
 
-        public async Task<AlarmCategorySettingsDto> CreateAsync(AlarmCategorySettingsCreateDto createDto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var category = _mapper.Map<AlarmCategorySettings>(createDto);
+        // public async Task<AlarmCategorySettingsDto> CreateAsync(AlarmCategorySettingsCreateDto createDto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var category = _mapper.Map<AlarmCategorySettings>(createDto);
 
-            category.Id = Guid.NewGuid();
+        //     category.Id = Guid.NewGuid();
 
-            category.CreatedBy = username;
-            category.UpdatedBy = username;
-            category.CreatedAt = DateTime.UtcNow;
-            category.UpdatedAt = DateTime.UtcNow;
+        //     category.CreatedBy = username;
+        //     category.UpdatedBy = username;
+        //     category.CreatedAt = DateTime.UtcNow;
+        //     category.UpdatedAt = DateTime.UtcNow;
 
-            var createdCategory = await _repository.AddAsync(category);
-            return _mapper.Map<AlarmCategorySettingsDto>(createdCategory);
-        }
+        //     var createdCategory = await _repository.AddAsync(category);
+        //     return _mapper.Map<AlarmCategorySettingsDto>(createdCategory);
+        // }
 
 
         public async Task UpdateAsync(Guid id, AlarmCategorySettingsUpdateDto updateDto)

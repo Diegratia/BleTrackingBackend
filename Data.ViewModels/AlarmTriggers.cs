@@ -26,6 +26,9 @@ namespace Data.ViewModels
         public DateTime? WaitingTimestamp { get; set; }
         public DateTime? InvestigatedTimestamp { get; set; }
         public DateTime? InvestigatedDoneAt { get; set; }
+        public DateTime? ActionUpdatedAt { get; set; }
+        public DateTime? LastSeenAt { get; set; }
+        public DateTime? LastNotifiedAt { get; set; }
         public string? IdleBy { get; set; }
         public string? DoneBy { get; set; }
         public string? CancelBy { get; set; }

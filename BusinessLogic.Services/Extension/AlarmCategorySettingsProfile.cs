@@ -13,9 +13,9 @@ namespace BusinessLogic.Services.Extension
         public AlarmCategorySettingsProfile()
         {
             CreateMap<AlarmCategorySettings, AlarmCategorySettingsDto>();
-            CreateMap<AlarmCategorySettingsCreateDto, AlarmCategorySettings>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.AlarmLevelPriority, opt => opt.MapFrom(src => Enum.Parse<AlarmLevelPriority>(src.AlarmLevelPriority, true)));
+            // CreateMap<AlarmCategorySettingsCreateDto, AlarmCategorySettings>()
+            //     .ForMember(dest => dest.Id, opt => opt.Ignore())
+            //     .ForMember(dest => dest.AlarmLevelPriority, opt => opt.MapFrom(src => Enum.Parse<AlarmLevelPriority>(src.AlarmLevelPriority, true)));
 
             CreateMap<AlarmCategorySettingsUpdateDto, AlarmCategorySettings>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

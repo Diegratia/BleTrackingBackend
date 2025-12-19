@@ -86,43 +86,43 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/MstDistrict
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] AlarmCategorySettingsCreateDto dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost]
+        // public async Task<IActionResult> Create([FromBody] AlarmCategorySettingsCreateDto dto)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var createdCategory = await _alarmCategorySettingsService.CreateAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Alarm Category created successfully",
-                    collection = new { data = createdCategory },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var createdCategory = await _alarmCategorySettingsService.CreateAsync(dto);
+        //         return StatusCode(201, new
+        //         {
+        //             success = true,
+        //             msg = "Alarm Category created successfully",
+        //             collection = new { data = createdCategory },
+        //             code = 201
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         // PUT: api/MstDistrict/{id}
         [HttpPut("{id}")]
