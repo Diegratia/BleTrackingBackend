@@ -694,6 +694,58 @@ namespace Repositories.Seeding
             //     context.SaveChanges();
             // }
 
+             // // 14. MstSecurity
+            if (!context.MstSecurities.Any(m => m.Status != 0))
+            {
+                var securityFaker = new Faker<MstSecurity>()
+                    .RuleFor(m => m.Id, f => Guid.NewGuid())
+                    .RuleFor(m => m.PersonId, f => "SEC" + f.Random.Number(1000, 9999))
+                    .RuleFor(m => m.OrganizationId, f => context.MstOrganizations
+                        .Where(o => o.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(m => m.DepartmentId, f => context.MstDepartments
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(m => m.DistrictId, f => context.MstDistricts
+                        .Where(d => d.Status != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(m => m.IdentityId, f => "ID" + f.Random.Number(100, 999))
+                    .RuleFor(m => m.CardNumber, f => "CARD" + f.Random.Number(1000, 9999))
+                    .RuleFor(m => m.BleCardNumber, f => "BLE" + f.Random.Number(100, 999))
+                    .RuleFor(m => m.Name, f => f.Name.FullName())
+                    .RuleFor(m => m.Phone, f => f.Phone.PhoneNumber())
+                    .RuleFor(m => m.Email, f => f.Internet.Email())
+                    .RuleFor(m => m.Gender, f => f.PickRandom<Gender>())
+                    .RuleFor(m => m.Address, f => f.Address.FullAddress())
+                    .RuleFor(m => m.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
+                    .RuleFor(m => m.UploadFr, f => f.Random.Int(0, 2))
+                    .RuleFor(m => m.UploadFrError, f => f.Random.Bool() ? "" : "Upload failed")
+                    .RuleFor(m => m.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(yearsToGoBack: 30, refDate: DateTime.Today.AddYears(-18))))
+                    .RuleFor(m => m.JoinDate, f => DateOnly.FromDateTime(DateTime.Today))
+                    .RuleFor(m => m.ExitDate, f => DateOnly.MaxValue)
+                    .RuleFor(m => m.ApplicationId, f => context.MstApplications
+                        .Where(a => a.ApplicationStatus != 0)
+                        .OrderBy(r => Guid.NewGuid())
+                        .First()
+                        .Id)
+                    .RuleFor(m => m.StatusEmployee, f => f.PickRandom<StatusEmployee>())
+                    .RuleFor(m => m.CreatedBy, f => "System")
+                    .RuleFor(m => m.CreatedAt, f => DateTime.UtcNow)
+                    .RuleFor(m => m.UpdatedBy, f => "System")
+                    .RuleFor(m => m.UpdatedAt, f => DateTime.UtcNow)
+                    .RuleFor(m => m.Status, f => 1);
+
+                var securities = securityFaker.Generate(5);
+                context.MstSecurities.AddRange(securities);
+                context.SaveChanges();
+            }
+
             // // 15. Visitor
             // if (!context.Visitors.Any())
             // {
@@ -1141,33 +1193,33 @@ namespace Repositories.Seeding
             // }
 
             // 26. Settings
-            if (!context.TrackingReportPresets.Any())
-            {
-                var presets = Enumerable.Range(1, 3)
-                    .Select(i => new TrackingReportPreset
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = $"Preset {i}",
-                        TimeRange = i % 3 == 0 ? "Daily" : i % 3 == 1 ? "Weekly" : "Monthly",
-                        ApplicationId = context.MstApplications
-                            .Where(a => a.ApplicationStatus != 0)
-                            .OrderBy(r => Guid.NewGuid())
-                            .First()
-                            .Id,
-                        CustomFromDate = null,
-                        CustomToDate = null,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = "System",
-                        UpdatedAt = DateTime.UtcNow,
-                        UpdatedBy = "System",
+            // if (!context.TrackingReportPresets.Any())
+            // {
+            //     var presets = Enumerable.Range(1, 3)
+            //         .Select(i => new TrackingReportPreset
+            //         {
+            //             Id = Guid.NewGuid(),
+            //             Name = $"Preset {i}",
+            //             TimeRange = i % 3 == 0 ? "Daily" : i % 3 == 1 ? "Weekly" : "Monthly",
+            //             ApplicationId = context.MstApplications
+            //                 .Where(a => a.ApplicationStatus != 0)
+            //                 .OrderBy(r => Guid.NewGuid())
+            //                 .First()
+            //                 .Id,
+            //             CustomFromDate = null,
+            //             CustomToDate = null,
+            //             CreatedAt = DateTime.UtcNow,
+            //             CreatedBy = "System",
+            //             UpdatedAt = DateTime.UtcNow,
+            //             UpdatedBy = "System",
 
-                        Status = 1,
-                    })
-                    .ToList();
+            //             Status = 1,
+            //         })
+            //         .ToList();
 
-                context.TrackingReportPresets.AddRange(presets);
-                context.SaveChanges();
-            }
+            //     context.TrackingReportPresets.AddRange(presets);
+            //     context.SaveChanges();
+            // }
         
 
                // 22. MstLogEngine

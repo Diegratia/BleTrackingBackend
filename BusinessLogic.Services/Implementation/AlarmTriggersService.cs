@@ -45,6 +45,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var action = dto.ActionStatus?.Trim().ToLowerInvariant();
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var alarmTriggers = await _repository.GetByIdAsync(id);
@@ -53,33 +54,44 @@ namespace BusinessLogic.Services.Implementation
 
                             if (alarmTriggers.IsActive == false)
                                 throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} has been deleted.");
-            if (dto.ActionStatus == "postponeinvestigated")
+            if (action == "postponeinvestigated")
             {
                 alarmTriggers.IsActive = true;
                 alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
             }
-            else if (dto.ActionStatus == "investigated")
-            {
-                alarmTriggers.IsActive = true;
-                alarmTriggers.InvestigatedBy = username;
-                alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-            else if (dto.ActionStatus == "noaction")
+         else if (action== "investigated")
+        {
+            if (!dto.AssignedSecurityId.HasValue)
+                throw new NullReferenceException("Security must be assigned when investigated.");
+
+            if (alarmTriggers.SecurityId != null)
+                throw new NullReferenceException("Alarm already assigned to a security.");
+
+            var security = await _repository.GetSecurityByIdAsync(dto.AssignedSecurityId.Value);
+            if (security == null)
+                throw new NullReferenceException("Assigned security not found.");
+
+            alarmTriggers.IsActive = true;
+            alarmTriggers.SecurityId = security.Id;
+            alarmTriggers.InvestigatedBy = username;
+            alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
+            alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+        }
+            else if (action == "noaction")
             {
                 alarmTriggers.IsActive = false;
                 alarmTriggers.CancelBy = username;
                 alarmTriggers.CancelTimestamp = DateTime.UtcNow;
                 alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
             }
-            else if (dto.ActionStatus == "waiting")
+            else if (action == "waiting")
             {
                 alarmTriggers.IsActive = false;
                 alarmTriggers.WaitingBy = username;
                 alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
                 alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
             }
-            else if (dto.ActionStatus == "done")
+            else if (action == "done")
             {
                 alarmTriggers.IsActive = false;
                 alarmTriggers.DoneBy = username;
@@ -87,7 +99,7 @@ namespace BusinessLogic.Services.Implementation
                 alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
             }
                     
-                            _mapper.Map(dto, alarmTriggers);
+            _mapper.Map(dto, alarmTriggers);
             await _repository.UpdateAsync(alarmTriggers);
         }
         

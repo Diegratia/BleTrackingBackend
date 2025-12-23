@@ -14,7 +14,7 @@ namespace BusinessLogic.Services.Extension
         public FloorplanDeviceProfile()
         {
             CreateMap<FloorplanDeviceCreateDto, FloorplanDevice>()
-                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<DeviceType>(src.Type, true)))
                 .ForMember(dest => dest.DeviceStatus, opt => opt.MapFrom(src => Enum.Parse<DeviceStatus>(src.DeviceStatus, true)))

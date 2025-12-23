@@ -20,26 +20,27 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstMemberService : BaseService, IMstMemberService
+    public class MstSecurityService : BaseService, IMstSecurityService
     {
-        private readonly MstMemberRepository _repository;
+        private readonly MstSecurityRepository _repository;
         private readonly CardRepository _cardRepository;
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Max 5 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<MstMemberService> _logger;
+        private readonly ILogger<MstSecurityService> _logger;
         private readonly IMqttClientService _mqttClient;
         private readonly IFileStorageService _fileStorageService;
 
-        public MstMemberService(MstMemberRepository repository,
+        public MstSecurityService(MstSecurityRepository repository,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         CardRepository cardRepository,
-        ILogger<MstMemberService> logger,
+        ILogger<MstSecurityService> logger,
         IMqttClientService mqttClient,
         IFileStorageService fileStorageService
         ) : base(httpContextAccessor)
@@ -53,56 +54,60 @@ namespace BusinessLogic.Services.Implementation
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<IEnumerable<MstMemberDto>> GetAllMembersAsync()
+        public async Task<IEnumerable<MstSecurityDto>> GetAllSecuritiesAsync()
         {
-            var members = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+            var securities = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<MstSecurityDto>>(securities);
         }
-        public async Task<IEnumerable<MstMemberLookUpDto>> GetAllLookUpAsync()
+        public async Task<IEnumerable<MstSecurityLookUpDto>> GetAllLookUpAsync()
         {
-            var members = await _repository.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<MstMemberLookUpDto>>(members);
-        }
-
-        public async Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync()
-        {
-            var members = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstMemberDto>>(members);
+            var securities = await _repository.GetAllLookUpAsync();
+            return _mapper.Map<IEnumerable<MstSecurityLookUpDto>>(securities);
         }
 
-        public async Task<MstMemberDto> GetMemberByIdAsync(Guid id)
+        public async Task<IEnumerable<OpenMstSecurityDto>> OpenGetAllSecuritiesAsync()
         {
-            var member = await _repository.GetByIdAsync(id);
-            return member == null ? null : _mapper.Map<MstMemberDto>(member);
+            var securities = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OpenMstSecurityDto>>(securities);
         }
 
-        public async Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto)
+        public async Task<MstSecurityDto> GetSecurityByIdAsync(Guid id)
+        {
+            var security = await _repository.GetByIdAsync(id);
+            if (security == null)
+                throw new NotFoundException($"Security {id} not found");
+            if (security.Status == 0)
+                throw new BusinessException("Security is inactive", "BUILDING_INACTIVE");
+            return security == null ? null : _mapper.Map<MstSecurityDto>(security);
+        }
+
+        public async Task<MstSecurityDto> CreateSecurityAsync(MstSecurityCreateDto createDto)
         {
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
             var username = UsernameFormToken;
             var card = await _cardRepository.GetByIdAsync(createDto.CardId.Value);
             if (card == null)
-                throw new InvalidOperationException("Card not found.");
+                throw new NotFoundException($"Card {createDto.CardId} not found.");
 
-            var existingMember = await _repository.GetAllQueryable()
+            var existingSecurity = await _repository.GetAllQueryable()
             .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
                                      b.IdentityId == createDto.IdentityId ||
                                      b.PersonId == createDto.PersonId);
 
-            if (existingMember != null)
+            if (existingSecurity != null)
             {
-                if (existingMember.Email == createDto.Email)
-                    throw new ArgumentException($"Member with Email {createDto.Email} already exists.");
-                if (existingMember.IdentityId == createDto.IdentityId)
-                    throw new ArgumentException($"Member with IdentityId {createDto.IdentityId} already exists.");
-                if (existingMember.PersonId == createDto.PersonId)
-                    throw new ArgumentException($"Member with PersonId {createDto.PersonId} already exists.");
+                if (existingSecurity.Email == createDto.Email)
+                    throw new BusinessException($"Security with Email {createDto.Email} already exists.");
+                if (existingSecurity.IdentityId == createDto.IdentityId)
+                    throw new BusinessException($"Security with IdentityId {createDto.IdentityId} already exists.");
+                if (existingSecurity.PersonId == createDto.PersonId)
+                    throw new BusinessException($"Security with PersonId {createDto.PersonId} already exists.");
             }
 
 
             if (card.IsUsed == true)
-                throw new InvalidOperationException("Card already checked in by another visitor.");
+                throw new BusinessException("Card already checked in by another visitor.");
             // if (card == null)
             //     throw new InvalidOperationException("Card not found.");
 
@@ -119,7 +124,7 @@ namespace BusinessLogic.Services.Implementation
             // if (district == null)
             //     throw new ArgumentException($"District with ID {createDto.DistrictId} not found.");
 
-            var member = _mapper.Map<MstMember>(createDto);
+            var security = _mapper.Map<MstSecurity>(createDto);
 
             // Tangani upload gambar
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
@@ -127,46 +132,46 @@ namespace BusinessLogic.Services.Implementation
                 try
                 {
                     
-                    member.FaceImage = await _fileStorageService
-                        .SaveImageAsync(createDto.FaceImage, "MemberFaceImages", MaxFileSize);
+                    security.FaceImage = await _fileStorageService
+                        .SaveImageAsync(createDto.FaceImage, "SecurityFaceImages", MaxFileSize);
                     
 
-                        member.UploadFr = 1; // Sukses
-                        member.UploadFrError = "Upload successful";
+                        security.UploadFr = 1; // Sukses
+                        security.UploadFrError = "Upload successful";
                 }
                     catch (Exception ex)
                     {
-                        member.UploadFr = 2; // Gagal
-                        member.UploadFrError = ex.Message;
-                        member.FaceImage = null;
+                        security.UploadFr = 2; // Gagal
+                        security.UploadFrError = ex.Message;
+                        security.FaceImage = null;
                     }
             }
             else
             {
-                member.UploadFr = 0; 
-                member.UploadFrError = "No file uploaded";
-                member.FaceImage = null;
+                security.UploadFr = 0; 
+                security.UploadFrError = "No file uploaded";
+                security.FaceImage = null;
             }
 
-            member.Id = Guid.NewGuid();
-            member.Status = 1;
-            member.CreatedBy = username;
-            member.CreatedAt = DateTime.UtcNow;
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
-            member.BleCardNumber = card.Dmac;
-            member.CardNumber = card.CardNumber;
+            security.Id = Guid.NewGuid();
+            security.Status = 1;
+            security.CreatedBy = username;
+            security.CreatedAt = DateTime.UtcNow;
+            security.UpdatedBy = username;
+            security.UpdatedAt = DateTime.UtcNow;
+            security.BleCardNumber = card.Dmac;
+            security.CardNumber = card.CardNumber;
 
-            // member.JoinDate = createDto.JoinDate;
-            // member.BirthDate = createDto.BirthDate;
+            // security.JoinDate = createDto.JoinDate;
+            // security.BirthDate = createDto.BirthDate;
 
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                await _repository.AddAsync(member);
+                await _repository.AddAsync(security);
                 card.IsUsed = true;
-                card.LastUsed = member.Name;
-                card.MemberId = member.Id;
+                card.LastUsed = security.Name;
+                card.SecurityId = security.Id;
                 card.CheckinAt = DateTime.UtcNow;
                 await _cardRepository.UpdateAsync(card);
 
@@ -180,22 +185,22 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstMemberDto>(member);
+            return _mapper.Map<MstSecurityDto>(security);
         }
 
-        public async Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto)
+        public async Task<MstSecurityDto> UpdateSecurityAsync(Guid id, MstSecurityUpdateDto updateDto)
         {
             // if (updateDto == null)
             //     throw new ArgumentNullException(nameof(updateDto));
 
-            var member = await _repository.GetByIdAsync(id);
-            if (member == null)
-                throw new KeyNotFoundException($"Member with ID {id} not found or has been deleted.");
+            var security = await _repository.GetByIdAsync(id);
+            if (security == null)
+                throw new NotFoundException($"Security with ID {id} not found or has been deleted.");
 
             var cardId = updateDto.CardId ?? Guid.Empty;
             var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdAsync(cardId) : null;
             if (updateDto.CardId.HasValue && card == null)
-                throw new KeyNotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
+                throw new NotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -203,25 +208,25 @@ namespace BusinessLogic.Services.Implementation
             {
                 try
                 {
-                     await _fileStorageService.DeleteAsync(member.FaceImage);
+                     await _fileStorageService.DeleteAsync(security.FaceImage);
 
-                    member.FaceImage = await _fileStorageService
-                        .SaveImageAsync(updateDto.FaceImage, "MemberFaceImages", MaxFileSize);
-                    member.UploadFr = 1;
-                    member.UploadFrError = "Upload successful";
+                    security.FaceImage = await _fileStorageService
+                        .SaveImageAsync(updateDto.FaceImage, "SecurityFaceImages", MaxFileSize);
+                    security.UploadFr = 1;
+                    security.UploadFrError = "Upload successful";
                 }
                 catch (Exception ex)
                 {
-                    member.UploadFr = 2;
-                    member.UploadFrError = ex.Message;
-                    // member.FaceImage = null;
+                    security.UploadFr = 2;
+                    security.UploadFrError = ex.Message;
+                    // security.FaceImage = null;
                 }
             }
             else
             {
-                member.UploadFr = 0;
-                member.UploadFrError = "No file uploaded";
-                // member.FaceImage = null;
+                security.UploadFr = 0;
+                security.UploadFrError = "No file uploaded";
+                // security.FaceImage = null;
             }
 
             using var transaction = await _repository.BeginTransactionAsync();
@@ -229,12 +234,12 @@ namespace BusinessLogic.Services.Implementation
             {
                 // Reset card lama (jika beda dengan card baru)
                 var oldCard = await _cardRepository.GetAllQueryable()
-                    .FirstOrDefaultAsync(c => c.MemberId == member.Id && c.StatusCard != 0);
+                    .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
 
                 if (oldCard != null && oldCard.Id != cardId)
                 {
                     oldCard.IsUsed = false;
-                    oldCard.MemberId = null;
+                    oldCard.SecurityId = null;
                     oldCard.CheckinAt = null;
                     await _cardRepository.UpdateAsync(oldCard);
                 }
@@ -242,24 +247,26 @@ namespace BusinessLogic.Services.Implementation
                 // Assign card baru
                 if (updateDto.CardId.HasValue)
                 {
-                    if (card!.MemberId.HasValue && card.MemberId != member.Id)
-                        throw new InvalidOperationException("This card is already assigned to another member.");
+                    if (card!.SecurityId.HasValue && card.SecurityId != security.Id)
+                        throw new BusinessException("This card is already assigned to another security.");
 
                     card.IsUsed = true;
-                    card.LastUsed = member.Name;
-                    card.MemberId = member.Id;
+                    card.LastUsed = security.Name;
+                    card.SecurityId = security.Id;
                     card.CheckinAt = DateTime.UtcNow;
                     await _cardRepository.UpdateAsync(card);
                 }
 
-                // Update member
-                _mapper.Map(updateDto, member);
-                member.BleCardNumber = card.Dmac;
-                member.CardNumber = card.CardNumber;
-                member.UpdatedBy = username;
-                member.UpdatedAt = DateTime.UtcNow;
+                // Update security
+                _mapper.Map(updateDto, security);
+                security.BleCardNumber = card.Dmac;
+                security.CardNumber = card.CardNumber;
+                security.UpdatedBy = username;
+                security.UpdatedAt = DateTime.UtcNow;
 
-                await _repository.UpdateAsync(member);
+                
+
+                await _repository.UpdateAsync(security);
 
                 await transaction.CommitAsync();
                 await _mqttClient.PublishAsync("engine/refresh/card-related", "");
@@ -271,52 +278,65 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstMemberDto>(member);
+            return _mapper.Map<MstSecurityDto>(security);
         }
 
 
-        public async Task DeleteMemberAsync(Guid id)
+        public async Task DeleteSecurityAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var member = await _repository.GetByIdAsync(id);
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
-            member.Status = 0;
+            var security = await _repository.GetByIdAsync(id);
+            security.UpdatedBy = username;
+            security.UpdatedAt = DateTime.UtcNow;
+            security.Status = 0;
+            security.CardNumber = null;
+            security.BleCardNumber = null;
+
+            var oldCard = await _cardRepository.GetAllQueryable()
+                    .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
+                    oldCard.IsUsed = false;
+                    oldCard.SecurityId = null;
+                    oldCard.CheckinAt = null;
+                    await _cardRepository.UpdateAsync(oldCard);
+
+
             await _repository.DeleteAsync(id);
             await _mqttClient.PublishAsync("engine/refresh/card-related", "");
 
         }
 
-        public async Task<MstMemberDto> MemberBlacklistAsync(Guid id, BlacklistReasonDto dto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var Member = await _repository.GetByIdAsync(id);
+        
 
-            _mapper.Map(dto, Member);
-            Member.UpdatedBy = username;
-            Member.BlacklistAt = DateTime.UtcNow;
-            Member.IsBlacklist = true;
-            Member.UpdatedAt = DateTime.UtcNow;
+        // public async Task<MstSecurityDto> SecurityBlacklistAsync(Guid id, BlacklistReasonDto dto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var Security = await _repository.GetByIdAsync(id);
 
-            await _repository.UpdateAsync(Member);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
-            return _mapper.Map<MstMemberDto>(Member);
-        }
+        //     _mapper.Map(dto, Security);
+        //     Security.UpdatedBy = username;
+        //     Security.BlacklistAt = DateTime.UtcNow;
+        //     Security.IsBlacklist = true;
+        //     Security.UpdatedAt = DateTime.UtcNow;
 
-        public async Task UnBlacklistMemberAsync(Guid id)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var member = await _repository.GetByIdAsync(id);
-            if (member == null)
-                throw new KeyNotFoundException($"Member with ID {id} not found.");
+        //     await _repository.UpdateAsync(Security);
+        //     await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+        //     return _mapper.Map<MstSecurityDto>(Security);
+        // }
 
-            member.UpdatedBy = username ?? "System";
-            member.UpdatedAt = DateTime.UtcNow;
-            member.IsBlacklist = false;
+        // public async Task UnBlacklistSecurityAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var security = await _repository.GetByIdAsync(id);
+        //     if (security == null)
+        //         throw new KeyNotFoundException($"Security with ID {id} not found.");
 
-            await _repository.UpdateAsync(member);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
-        }
+        //     security.UpdatedBy = username ?? "System";
+        //     security.UpdatedAt = DateTime.UtcNow;
+        //     security.IsBlacklist = false;
+
+        //     await _repository.UpdateAsync(security);
+        //     await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+        // }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
@@ -325,13 +345,13 @@ namespace BusinessLogic.Services.Implementation
             var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Gender", typeof(Gender) },
-                // { "IdentityType", typeof(IdentityType) }
+                { "IdentityType", typeof(IdentityType) }
             };
 
             var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2", "Status", "Brand.Name", "CardNumber" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadSecurity1", "HeadSecurity2", "Status", "Brand.Name", "CardNumber" };
 
-            var filterService = new GenericDataTableService<MstMember, MstMemberDto>(
+            var filterService = new GenericDataTableService<MstSecurity, MstSecurityDto>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -344,7 +364,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var members = await _repository.GetAllAsync();
+            var securities = await _repository.GetAllAsync();
 
             var document = Document.Create(container =>
             {
@@ -356,7 +376,7 @@ namespace BusinessLogic.Services.Implementation
                     page.DefaultTextStyle(x => x.FontSize(10));
 
                     page.Header()
-                        .Text("Master Member Report")
+                        .Text("Master Security Report")
                         .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
 
                     page.Content().Table(table =>
@@ -412,8 +432,8 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("BirthDate").SemiBold();
                             header.Cell().Element(CellStyle).Text("JoinDate").SemiBold();
                             header.Cell().Element(CellStyle).Text("ExitDate").SemiBold();
-                            header.Cell().Element(CellStyle).Text("HeadMember1").SemiBold();
-                            header.Cell().Element(CellStyle).Text("HeadMember2").SemiBold();
+                            header.Cell().Element(CellStyle).Text("HeadSecurity1").SemiBold();
+                            header.Cell().Element(CellStyle).Text("HeadSecurity2").SemiBold();
                             header.Cell().Element(CellStyle).Text("StatusEmployee").SemiBold();
                             header.Cell().Element(CellStyle).Text("CreatedBy").SemiBold();
                             header.Cell().Element(CellStyle).Text("CreatedAt").SemiBold();
@@ -424,29 +444,29 @@ namespace BusinessLogic.Services.Implementation
 
                         // Table body
                         int index = 1;
-                        foreach (var member in members)
+                        foreach (var security in securities)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(member.PersonId);
-                            table.Cell().Element(CellStyle).Text(member.Organization.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(member.Department.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(member.District.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(member.IdentityId);
-                            table.Cell().Element(CellStyle).Text(member.CardNumber);
-                            table.Cell().Element(CellStyle).Text(member.Name);
-                            table.Cell().Element(CellStyle).Text(member.Phone);
-                            table.Cell().Element(CellStyle).Text(member.Email);
-                            table.Cell().Element(CellStyle).Text(member.Gender.ToString() ?? "-");
-                            table.Cell().Element(CellStyle).Text(member.Address);
-                            table.Cell().Element(CellStyle).Text(member.FaceImage);
-                            table.Cell().Element(CellStyle).Text(member.UploadFr.ToString());
-                            table.Cell().Element(CellStyle).Text(member.UploadFrError);
-                            table.Cell().Element(CellStyle).Text(member.BirthDate?.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.JoinDate?.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.ExitDate?.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.HeadMember1);
-                            table.Cell().Element(CellStyle).Text(member.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(member.CreatedBy ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.PersonId);
+                            table.Cell().Element(CellStyle).Text(security.Organization.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Department.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.District.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.IdentityId);
+                            table.Cell().Element(CellStyle).Text(security.CardNumber);
+                            table.Cell().Element(CellStyle).Text(security.Name);
+                            table.Cell().Element(CellStyle).Text(security.Phone);
+                            table.Cell().Element(CellStyle).Text(security.Email);
+                            table.Cell().Element(CellStyle).Text(security.Gender.ToString() ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Address);
+                            table.Cell().Element(CellStyle).Text(security.FaceImage);
+                            table.Cell().Element(CellStyle).Text(security.UploadFr.ToString());
+                            table.Cell().Element(CellStyle).Text(security.UploadFrError);
+                            table.Cell().Element(CellStyle).Text(security.BirthDate?.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(security.JoinDate?.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(security.ExitDate?.ToString("yyyy-MM-dd"));
+                            // table.Cell().Element(CellStyle).Text(security.HeadSecurity1);
+                            table.Cell().Element(CellStyle).Text(security.CreatedAt.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(security.CreatedBy ?? "-");
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -471,10 +491,10 @@ namespace BusinessLogic.Services.Implementation
         }
         public async Task<byte[]> ExportExcelAsync()
         {
-            var members = await _repository.GetAllExportAsync();
+            var securities = await _repository.GetAllExportAsync();
 
             using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Members");
+            var worksheet = workbook.Worksheets.Add("Securities");
 
 
             // Header
@@ -496,8 +516,8 @@ namespace BusinessLogic.Services.Implementation
             worksheet.Cell(1, 16).Value = "BirthDate";
             worksheet.Cell(1, 17).Value = "JoinDate";
             worksheet.Cell(1, 18).Value = "ExitDate";
-            worksheet.Cell(1, 19).Value = "HeadMember1";
-            worksheet.Cell(1, 20).Value = "HeadMember2";
+            worksheet.Cell(1, 19).Value = "HeadSecurity1";
+            worksheet.Cell(1, 20).Value = "HeadSecurity2";
             worksheet.Cell(1, 21).Value = "StatusEmployee";
             worksheet.Cell(1, 22).Value = "CreatedBy";
             worksheet.Cell(1, 23).Value = "CreatedAt";
@@ -508,34 +528,34 @@ namespace BusinessLogic.Services.Implementation
             int row = 2;
             int no = 1;
 
-            foreach (var member in members)
+            foreach (var security in securities)
             {
                 worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = member.PersonId;
-                worksheet.Cell(row, 3).Value = member.Organization?.Name ?? "-";
-                worksheet.Cell(row, 4).Value = member.Department?.Name ?? "-";
-                worksheet.Cell(row, 5).Value = member.District?.Name ?? "-";
-                worksheet.Cell(row, 6).Value = member.IdentityId;
-                worksheet.Cell(row, 7).Value = member.CardNumber;
-                worksheet.Cell(row, 8).Value = member.Name;
-                worksheet.Cell(row, 9).Value = member.Phone;
-                worksheet.Cell(row, 10).Value = member.Email;
-                worksheet.Cell(row, 11).Value = member.Gender.ToString() ?? "-";
-                worksheet.Cell(row, 12).Value = member.Address;
-                worksheet.Cell(row, 13).Value = member.FaceImage;
-                worksheet.Cell(row, 14).Value = member.UploadFr;
-                worksheet.Cell(row, 15).Value = member.UploadFrError;
-                worksheet.Cell(row, 16).Value = member.BirthDate?.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 17).Value = member.JoinDate?.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 18).Value = member.ExitDate?.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 19).Value = member.HeadMember1;
-                worksheet.Cell(row, 20).Value = member.HeadMember2;
-                worksheet.Cell(row, 21).Value = member.StatusEmployee.ToString() ?? "-";
-                worksheet.Cell(row, 22).Value = member.CreatedBy ?? "-";
-                worksheet.Cell(row, 23).Value = member.CreatedAt.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 24).Value = member.UpdatedBy ?? "-";
-                worksheet.Cell(row, 25).Value = member.UpdatedAt.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 26).Value = member.Status == 1 ? "Active" : "Inactive";
+                worksheet.Cell(row, 2).Value = security.PersonId;
+                worksheet.Cell(row, 3).Value = security.Organization?.Name ?? "-";
+                worksheet.Cell(row, 4).Value = security.Department?.Name ?? "-";
+                worksheet.Cell(row, 5).Value = security.District?.Name ?? "-";
+                worksheet.Cell(row, 6).Value = security.IdentityId;
+                worksheet.Cell(row, 7).Value = security.CardNumber;
+                worksheet.Cell(row, 8).Value = security.Name;
+                worksheet.Cell(row, 9).Value = security.Phone;
+                worksheet.Cell(row, 10).Value = security.Email;
+                worksheet.Cell(row, 11).Value = security.Gender.ToString() ?? "-";
+                worksheet.Cell(row, 12).Value = security.Address;
+                worksheet.Cell(row, 13).Value = security.FaceImage;
+                worksheet.Cell(row, 14).Value = security.UploadFr;
+                worksheet.Cell(row, 15).Value = security.UploadFrError;
+                worksheet.Cell(row, 16).Value = security.BirthDate?.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 17).Value = security.JoinDate?.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 18).Value = security.ExitDate?.ToString("yyyy-MM-dd");
+                // worksheet.Cell(row, 19).Value = security.HeadSecurity1;
+                // worksheet.Cell(row, 20).Value = security.HeadSecurity2;
+                worksheet.Cell(row, 21).Value = security.StatusEmployee.ToString() ?? "-";
+                worksheet.Cell(row, 22).Value = security.CreatedBy ?? "-";
+                worksheet.Cell(row, 23).Value = security.CreatedAt.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 24).Value = security.UpdatedBy ?? "-";
+                worksheet.Cell(row, 25).Value = security.UpdatedAt.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 26).Value = security.Status == 1 ? "Active" : "Inactive";
                 row++;
             }
 
@@ -546,9 +566,9 @@ namespace BusinessLogic.Services.Implementation
             return stream.ToArray();
         }
 
-        public async Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstSecurityDto>> ImportAsync(IFormFile file)
         {
-            var members = new List<MstMember>();
+            var securities = new List<MstSecurity>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             using var stream = file.OpenReadStream();
@@ -584,7 +604,7 @@ namespace BusinessLogic.Services.Implementation
                 if (district == null)
                     throw new ArgumentException($"districtId {districtId} not found at row {rowNumber}");
 
-                var member = new MstMember
+                var security = new MstSecurity
                 {
                     Id = Guid.NewGuid(),
                     OrganizationId = organizationId,
@@ -601,16 +621,16 @@ namespace BusinessLogic.Services.Implementation
                     Status = 1
                 };
 
-                members.Add(member);
+                securities.Add(security);
                 rowNumber++;
             }
 
-            foreach (var member in members)
+            foreach (var security in securities)
             {
-                await _repository.AddAsync(member);
+                await _repository.AddAsync(security);
             }
 
-            return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+            return _mapper.Map<IEnumerable<MstSecurityDto>>(securities);
         }
 
 

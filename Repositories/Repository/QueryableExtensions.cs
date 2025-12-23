@@ -76,6 +76,19 @@ namespace Repositories.Repository
                 m.Organization != null &&
                 m.Organization.Status != 0);
         }
+        public static IQueryable<MstSecurity> WithActiveRelations(this IQueryable<MstSecurity> query)
+        {
+            return query.Where(m =>
+                m.Status != 0 &&
+                m.Application != null &&
+                m.Application.ApplicationStatus != 0 &&
+                m.Department != null &&
+                m.Department.Status != 0 &&
+                m.District != null &&
+                m.District.Status != 0 &&
+                m.Organization != null &&
+                m.Organization.Status != 0);
+        }
 
         public static IQueryable<MstBleReader> WithActiveRelations(this IQueryable<MstBleReader> query)
         {

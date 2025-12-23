@@ -22,7 +22,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
                 .Where(d => d.Id == id && d.Status != 0);
-
             query = query.WithActiveRelations();
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);

@@ -66,6 +66,10 @@ namespace Entities.Models
         [ForeignKey(nameof(Member))]
         [Column("member_id")]
         public Guid? MemberId { get; set; }
+        [AllowNull]
+        [ForeignKey(nameof(Security))]
+        [Column("security_id")]
+        public Guid? SecurityId { get; set; }
 
         [Column("checkin_at")]
         public DateTime? CheckinAt { get; set; }
@@ -87,6 +91,7 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         public MstMember Member { get; set; }
+        public MstSecurity Security { get; set; }
         public Visitor Visitor { get; set; }
         public FloorplanMaskedArea RegisteredMaskedArea { get; set; }
         public CardGroup CardGroup { get; set; }

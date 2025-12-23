@@ -26,6 +26,7 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using DataView;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -37,7 +38,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstFloorRepository _floorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+        private readonly IFileStorageService _fileStorageService;
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
          private readonly IMqttClientService _mqttClient;
         private readonly IDistributedCache _cache;
@@ -54,8 +55,9 @@ namespace BusinessLogic.Services.Implementation
             IDistributedCache cache,
             IConnectionMultiplexer redis,
             ILogger<MstBuilding> logger,
-            IMqttClientService mqttClient
-            ): base(httpContextAccessor)
+            IMqttClientService mqttClient,
+            IFileStorageService fileStorageService
+            ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
@@ -66,6 +68,7 @@ namespace BusinessLogic.Services.Implementation
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
             _logger = logger;
+            _fileStorageService = fileStorageService;
         }
         
          private bool IsRedisAlive()
@@ -178,38 +181,10 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstBuildingDto> CreateAsync(MstBuildingCreateDto createDto)
         {
             var building = _mapper.Map<MstBuilding>(createDto);
-            if (createDto.Image != null && createDto.Image.Length > 0)
+            if (createDto.Image != null)
             {
-                if (string.IsNullOrEmpty(createDto.Image.ContentType) || !_allowedImageTypes.Contains(createDto.Image.ContentType))
-                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
-
-                if (createDto.Image.Length > MaxFileSize)
-                    throw new BusinessException("File size exceeds 5 MB limit.");
-
-                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
-                // Directory.CreateDirectory(uploadDir);
-
-                var basePath = AppContext.BaseDirectory;
-                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
-                Directory.CreateDirectory(uploadDir);
-
-                var fileExtension = Path.GetExtension(createDto.Image.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
-
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.Image.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new BusinessException("Failed to save image file", ex, "FILE_SAVE_ERROR");
-                }
-
-                building.Image = $"/Uploads/BuildingImages/{fileName}";
+                building.Image = await _fileStorageService
+                    .SaveImageAsync(createDto.Image, "BuildingImages", MaxFileSize);
             }
 
             var username = UsernameFormToken;
@@ -233,55 +208,14 @@ namespace BusinessLogic.Services.Implementation
             if (building == null)
                 throw new NotFoundException("Building not found");
 
-            if (updateDto.Image != null && updateDto.Image.Length > 0)
+                if (updateDto.Image != null)
             {
-                if (string.IsNullOrEmpty(updateDto.Image.ContentType) || !_allowedImageTypes.Contains(updateDto.Image.ContentType))
-                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
+                // hapus image lama
+                await _fileStorageService.DeleteAsync(building.Image);
 
-                if (updateDto.Image.Length > MaxFileSize)
-                    throw new BusinessException("File size exceeds 5 MB limit.");
-
-                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
-                // Directory.CreateDirectory(uploadDir);
-
-                var basePath = AppContext.BaseDirectory;
-                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
-                Directory.CreateDirectory(uploadDir);
-
-                if (!string.IsNullOrEmpty(building.Image))
-                {
-                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
-                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, building.Image.TrimStart('/'));
-                    if (File.Exists(oldFilePath))
-                    {
-                        try
-                        {
-                            File.Delete(oldFilePath);
-                        }
-                        catch (IOException ex)
-                        {
-                            throw new BusinessException("Failed to delete old image file.", ex, "FILE_DELETE_ERROR");
-                        }
-                    }
-                }
-
-                var fileExtension = Path.GetExtension(updateDto.Image.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
-
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.Image.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new BusinessException("Failed to save image file.", ex, "FILE_SAVE_ERROR");
-                }
-
-                building.Image = $"/Uploads/BuildingImages/{fileName}";
+                // simpan image baru
+                building.Image = await _fileStorageService
+                    .SaveImageAsync(updateDto.Image, "BuildingImages", MaxFileSize);
             }
 
             _mapper.Map(updateDto, building);
@@ -293,16 +227,6 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(building);
         }
-
-        // public async Task DeleteAsync(Guid id)
-        // {
-        //     var building = await _repository.GetByIdAsync(id);
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     building.UpdatedBy = username;
-        //     building.UpdatedAt = DateTime.UtcNow;
-        //     building.Status = 0;
-        //     await _repository.DeleteAsync(id);
-        // }
 
         public async Task DeleteAsync(Guid id)
         {

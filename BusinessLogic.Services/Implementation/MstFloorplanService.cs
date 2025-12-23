@@ -22,6 +22,7 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -41,13 +42,13 @@ namespace BusinessLogic.Services.Implementation
         private readonly StayOnAreaRepository _stayOnAreaRepository;
         private readonly OverpopulatingRepository _overpopulatingRepository;
         private readonly BoundaryRepository _boundaryRepository;
-        private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
         private readonly ILogger<MstFloorplan> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
         private bool cacheDisabled = false;
+        private IFileStorageService _fileStorageService;
 
 
         public MstFloorplanService(
@@ -68,7 +69,9 @@ namespace BusinessLogic.Services.Implementation
             ILogger<MstFloorplan> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            IMqttClientService mqttClient
+            IMqttClientService mqttClient,
+            IFileStorageService fileStorageService
+
             ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -89,6 +92,7 @@ namespace BusinessLogic.Services.Implementation
             _cache = cache;
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
+            _fileStorageService = fileStorageService;
         }
         
         private bool IsRedisAlive()
@@ -197,39 +201,11 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
 
-            if (createDto.FloorplanImage != null && createDto.FloorplanImage.Length > 0)
+            if (createDto.FloorplanImage != null)
             {
-                if (string.IsNullOrEmpty(createDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorplanImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                if (createDto.FloorplanImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 50 MB limit.");
-
-                var basePath = AppContext.BaseDirectory;
-                var uploadDir = Path.Combine(basePath, "Uploads", "FloorplanImages");
-                Directory.CreateDirectory(uploadDir);
-                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
-                // Directory.CreateDirectory(uploadDir);
-
-                var fileExtension = Path.GetExtension(createDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
-
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createDto.FloorplanImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
-
-                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+                floorplan.FloorplanImage = await _fileStorageService
+                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize);
             }
-
 
             floorplan.Id = Guid.NewGuid();
             floorplan.Status = 1;
@@ -251,56 +227,13 @@ namespace BusinessLogic.Services.Implementation
             if (floorplan == null)
                 throw new KeyNotFoundException("Floorplan not found");
 
-            if (updateDto.FloorplanImage != null && updateDto.FloorplanImage.Length > 0)
+            if (updateDto.FloorplanImage != null)
             {
-                if (string.IsNullOrEmpty(updateDto.FloorplanImage.ContentType) || !_allowedImageTypes.Contains(updateDto.FloorplanImage.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+                await _fileStorageService.DeleteAsync(floorplan.FloorplanImage);
 
-                if (updateDto.FloorplanImage.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 50 MB limit.");
-
-                var basePath = AppContext.BaseDirectory;
-                var uploadDir = Path.Combine(basePath, "Uploads", "FloorplanImages");
-                Directory.CreateDirectory(uploadDir);
-                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorplanImages");
-                // Directory.CreateDirectory(uploadDir);
-
-                if (!string.IsNullOrEmpty(floorplan.FloorplanImage))
-                {
-                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, floorplan.FloorplanImage.TrimStart('/'));
-                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), floorplan.FloorplanImage.TrimStart('/'));
-                    if (File.Exists(oldFilePath))
-                    {
-                        try
-                        {
-                            File.Delete(oldFilePath);
-                        }
-                        catch (IOException ex)
-                        {
-                            throw new IOException("Failed to delete old image file.", ex);
-                        }
-                    }
-                }
-
-                var fileExtension = Path.GetExtension(updateDto.FloorplanImage.FileName)?.ToLower() ?? ".jpg";
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadDir, fileName);
-
-                try
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.FloorplanImage.CopyToAsync(stream);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    throw new IOException("Failed to save image file.", ex);
-                }
-
-                floorplan.FloorplanImage = $"/Uploads/FloorplanImages/{fileName}";
+                floorplan.FloorplanImage = await _fileStorageService
+                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize);
             }
-
 
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;
@@ -310,55 +243,6 @@ namespace BusinessLogic.Services.Implementation
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
-
-        // public async Task DeleteAsync(Guid id)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var floorplan = await _repository.GetByIdAsync(id);
-        //     if (floorplan == null)
-        //         throw new KeyNotFoundException("Floorplan not found");
-
-        //     floorplan.UpdatedBy = username;
-        //     floorplan.UpdatedAt = DateTime.UtcNow;
-        //     floorplan.Status = 0;
-        //     await _repository.DeleteAsync(id);
-        // }
-
-        //    public async Task DeleteAsync(Guid id)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var floorplan = await _repository.GetByIdAsync(id);
-        //     if (floorplan == null)
-        //         throw new KeyNotFoundException("Floorplan not found");
-
-        //     await _repository.ExecuteInTransactionAsync(async () =>
-        //     {
-        //         // Soft delete parent
-        //         floorplan.UpdatedBy = username;
-        //         floorplan.UpdatedAt = DateTime.UtcNow;
-        //         floorplan.Status = 0;
-        //         await _repository.DeleteAsync(id);
-
-        //         // Soft delete child entities via their repositories
-        //         var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
-        //         foreach (var maskedArea in maskedAreas)
-        //         {
-        //             maskedArea.UpdatedBy = username;
-        //             maskedArea.UpdatedAt = DateTime.UtcNow;
-        //             maskedArea.Status = 0;
-        //             await _maskedAreaRepository.SoftDeleteAsync(maskedArea.Id);
-        //         }
-
-        //         var floorplandevices = await _floorplanDeviceRepository.GetByFloorplanIdAsync(id);
-        //         foreach (var floorplandevice in floorplandevices)
-        //         {
-        //             floorplandevice.UpdatedBy = username;
-        //             floorplandevice.UpdatedAt = DateTime.UtcNow;
-        //             floorplandevice.Status = 0;
-        //             await _floorplanDeviceRepository.SoftDeleteAsync(floorplandevice.Id);
-        //         }
-        //     });
-        // }
 
         public async Task DeleteAsync(Guid id)
         {

@@ -172,6 +172,7 @@ namespace Repositories.Repository
                 .Include(b => b.RegisteredMaskedArea)
                 .Include(b => b.Member)
                 .Include(b => b.Visitor)
+                .Include(b => b.Security)
                 .Include(b => b.CardGroup)
                 // .Include(b => b.Application)
                 .Include(b => b.CardCardAccesses)
