@@ -68,6 +68,22 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequestDto dto)
+        {
+            await _authService.LogoutAsync(dto.RefreshToken);
+
+            return Ok(new
+            {
+                success = true,
+                msg = "Logout successful",
+                collection = new { data = (object)null },
+                code = 200
+            });
+        }
+
+
         
 
         [AllowAnonymous]

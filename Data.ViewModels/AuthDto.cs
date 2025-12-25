@@ -34,6 +34,12 @@ namespace Data.ViewModels
         public string StatusActive { get; set; }
     }
 
+        public class LogoutRequestDto
+    {
+        public string? RefreshToken { get; set; }
+    }
+
+
     // public class RegisterDto
     // {
     //     public string Username { get; set; }
