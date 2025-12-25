@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
 using Repositories.Repository.RepoModel;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -50,10 +51,10 @@ namespace BusinessLogic.Services.Implementation
 
             var alarmTriggers = await _repository.GetByIdAsync(id);
             if (alarmTriggers == null)
-                    throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} not found.");
+                    throw new NotFoundException($"alarmTriggers with Id {id} not found.");
 
-                            if (alarmTriggers.IsActive == false)
-                                throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} has been deleted.");
+            if (alarmTriggers.IsActive == false)
+                throw new BusinessException("Alarm is no longer active.");
             if (action == "postponeinvestigated")
             {
                 alarmTriggers.IsActive = true;
@@ -62,14 +63,14 @@ namespace BusinessLogic.Services.Implementation
          else if (action== "investigated")
         {
             if (!dto.AssignedSecurityId.HasValue)
-                throw new NullReferenceException("Security must be assigned when investigated.");
+                throw new BusinessException("Security must be assigned when investigated.");
 
             if (alarmTriggers.SecurityId != null)
-                throw new NullReferenceException("Alarm already assigned to a security.");
+                throw new BusinessException("Alarm already assigned to a security.");
 
             var security = await _repository.GetSecurityByIdAsync(dto.AssignedSecurityId.Value);
             if (security == null)
-                throw new NullReferenceException("Assigned security not found.");
+                throw new BusinessException("Assigned security not found.");
 
             alarmTriggers.IsActive = true;
             alarmTriggers.SecurityId = security.Id;
@@ -93,12 +94,17 @@ namespace BusinessLogic.Services.Implementation
             }
             else if (action == "done")
             {
+            if (string.IsNullOrWhiteSpace(dto.InvestigatedResult))
+                throw new BusinessException("Investigated result must be provided before marking alarm as done.");
+
+            if (!string.IsNullOrWhiteSpace(alarmTriggers.InvestigatedResult))
+                throw new BusinessException("Alarm has already been completed.");
+                alarmTriggers.InvestigatedResult = dto.InvestigatedResult;
                 alarmTriggers.IsActive = false;
                 alarmTriggers.DoneBy = username;
                 alarmTriggers.DoneTimestamp = DateTime.UtcNow;
                 alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-                    
+            }      
             _mapper.Map(dto, alarmTriggers);
             await _repository.UpdateAsync(alarmTriggers);
         }
