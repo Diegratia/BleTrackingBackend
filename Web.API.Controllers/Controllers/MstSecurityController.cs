@@ -104,7 +104,7 @@ namespace Web.API.Controllers.Controllers
                 }
 
                 var security = await _MstSecurityService.UpdateSecurityAsync(id, updateDto);
-                return Ok(ApiResponse.Success("Security updated successfully", updateDto));
+                return Ok(ApiResponse.Success("Security updated successfully", security));
         }
 
 
