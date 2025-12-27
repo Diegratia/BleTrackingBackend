@@ -37,39 +37,39 @@ namespace Repositories.Repository.RepoModel
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }
         public Guid? ReaderId { get; set; }
-        
+
     }
 
     // RepoModel/VisitorSessionSummaryRM.cs
-public class VisitorSessionSummaryRM
-{
-    public Guid? VisitorId { get; set; }
-    public string? VisitorName { get; set; }
-    // public Guid? MemberId { get; set; }
-    // public string? MemberName { get; set; }
-    public Guid? CardId { get; set; }
-    public string? CardName { get; set; }
+    public class VisitorSessionSummaryRM
+    {
+        public Guid? VisitorId { get; set; }
+        public string? VisitorName { get; set; }
+        // public Guid? MemberId { get; set; }
+        // public string? MemberName { get; set; }
+        public Guid? CardId { get; set; }
+        public string? CardName { get; set; }
 
-    public Guid? BuildingId { get; set; }
-    public string? BuildingName { get; set; }
-    public Guid? FloorId { get; set; }
-    public string? FloorName { get; set; }
-    public Guid? FloorplanId { get; set; }
-    public string? FloorplanName { get; set; }
-    public string? FloorplanImage { get; set; }
-    public Guid? AreaId { get; set; }
-    public string? AreaName { get; set; }
-    // public Guid? PersonId { get; set; }
-    // public string? PersonName { get; set; }
-    public string? PersonType { get; set; }  // "Visitor" atau "Employee"
+        public Guid? BuildingId { get; set; }
+        public string? BuildingName { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? FloorName { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public string? FloorplanName { get; set; }
+        public string? FloorplanImage { get; set; }
+        public Guid? AreaId { get; set; }
+        public string? AreaName { get; set; }
+        // public Guid? PersonId { get; set; }
+        // public string? PersonName { get; set; }
+        public string? PersonType { get; set; }  // "Visitor" atau "Employee"
 
-    public DateTime EnterTime { get; set; }     // WIB
-    public DateTime? ExitTime { get; set; }     // WIB (null = masih di dalam)
-    public int? DurationInMinutes { get; set; } // Exit - Enter
+        public DateTime EnterTime { get; set; }     // WIB
+        public DateTime? ExitTime { get; set; }     // WIB (null = masih di dalam)
+        public int? DurationInMinutes { get; set; } // Exit - Enter
 
-    public string? Status { get; set; }         // Checkin / Block / dll
-    public string? HostName { get; set; }
-}
+        public string? Status { get; set; }         // Checkin / Block / dll
+        public string? HostName { get; set; }
+    }
 
     public class TrackingAreaSummaryRM
     {
@@ -178,7 +178,7 @@ public class VisitorSessionSummaryRM
         public float Y { get; set; }
         public int Count { get; set; }
     }
-    
+
     public class TrackingAccessPermissionSummaryRM
     {
         public int AccessedAreaTotal { get; set; }
@@ -204,6 +204,45 @@ public class VisitorSessionSummaryRM
         public string AreaName { get; set; }
 
     }
+
+
+    //count hell
+            public class TrackingHierarchyRM
+        {
+            public Dictionary<string, TrackingBuildingNode> Buildings { get; set; } = new();
+        }
+
+        public class TrackingBuildingNode
+        {
+            public string Id { get; set; } = "";
+            public string Name { get; set; } = "";
+            public int Count { get; set; }
+            public Dictionary<string, TrackingFloorNode> Floors { get; set; } = new();
+        }
+
+        public class TrackingFloorNode
+        {
+            public string Id { get; set; } = "";
+            public string Name { get; set; } = "";
+            public int Count { get; set; }
+            public Dictionary<string, TrackingFloorplanNode> Floorplans { get; set; } = new();
+        }
+
+        public class TrackingFloorplanNode
+        {
+            public string Id { get; set; } = "";
+            public string Name { get; set; } = "";
+            public int Count { get; set; }
+            public Dictionary<string, TrackingAreaNode> Areas { get; set; } = new();
+        }
+
+        public class TrackingAreaNode
+        {
+            public string Id { get; set; } = "";
+            public string Name { get; set; } = "";
+            public int Count { get; set; }
+        }
+
 
 
 

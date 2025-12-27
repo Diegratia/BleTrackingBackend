@@ -13,8 +13,9 @@ WORKDIR /app
   COPY Repositories/Repositories.csproj Repositories/
   COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-WORKDIR /app/Services.API/FloorplanDevice
-RUN dotnet restore
+# WORKDIR /app/Services.API/FloorplanDevice
+# RUN dotnet restore
+RUN dotnet restore Services.API/FloorplanDevice/FloorplanDevice.csproj
 
 WORKDIR /app
 COPY . .

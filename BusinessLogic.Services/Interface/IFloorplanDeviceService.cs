@@ -19,6 +19,7 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<object> ProjectionFilterAsync(DataTablesRequest request);
+        Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task RemoveGroupAsync();

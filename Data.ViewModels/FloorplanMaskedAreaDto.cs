@@ -13,6 +13,7 @@ namespace Data.ViewModels
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
+        public bool? AllowFloorChange { get; set; }
         // public string EngineAreaId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -48,6 +49,7 @@ namespace Data.ViewModels
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
+        public bool? AllowFloorChange { get; set; }
         // public string EngineAreaId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -58,7 +60,7 @@ namespace Data.ViewModels
         // public MstFloorplanDto Floorplan { get; set; }
     }
 
-     public class FloorplanMaskedAreaCreateDto : BaseModelDto
+    public class FloorplanMaskedAreaCreateDto : BaseModelDto
     {
         public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
@@ -66,20 +68,22 @@ namespace Data.ViewModels
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
+        public bool AllowFloorChange { get; set; } = false;
         // public string EngineAreaId { get; set; }
         // public long WideArea { get; set; }
         // public long PositionPxX { get; set; }
         // public long PositionPxY { get; set; }
     }
 
-     public class FloorplanMaskedAreaUpdateDto 
+    public class FloorplanMaskedAreaUpdateDto
     {
         public Guid FloorplanId { get; set; }
         public Guid FloorId { get; set; }
-        public string Name { get; set; }   
+        public string Name { get; set; }
         public string AreaShape { get; set; }
         public string ColorArea { get; set; }
         public string RestrictedStatus { get; set; }
+        public bool? AllowFloorChange { get; set; }
         // public string EngineAreaId { get; set; }
         // public long WideArea { get; set; }
         // public long PositionPxX { get; set; }

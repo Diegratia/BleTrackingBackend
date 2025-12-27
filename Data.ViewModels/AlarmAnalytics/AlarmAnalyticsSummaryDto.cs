@@ -4,6 +4,7 @@ namespace Data.ViewModels.AlarmAnalytics
     {
         public Guid? AreaId { get; set; }
         public string AreaName { get; set; } = string.Empty;
+        public string AlarmStatus { get; set; } = string.Empty;
         public int Total { get; set; }
     }
 
@@ -32,4 +33,20 @@ namespace Data.ViewModels.AlarmAnalytics
         public string Status { get; set; } = string.Empty;
         public int Total { get; set; }
     }
+
+    public class AlarmHourlySummaryRM
+    {
+        public int Hour { get; set; } // 0–23
+        public int Total { get; set; }
+        public string? Status { get; set; }
+    }
+
+     public class AlarmHourlyStatusSummaryDto
+    {
+        public int Hour { get; set; }
+        public string HourLabel { get; set; } = string.Empty;
+        public Dictionary<string, int> Status { get; set; } = new();
+        // public int Total { get; set; }
+    }
+
 }

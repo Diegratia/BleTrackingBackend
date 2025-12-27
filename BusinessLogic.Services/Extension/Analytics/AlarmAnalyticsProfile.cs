@@ -28,7 +28,7 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<AlarmBuildingSummaryRM, AlarmBuildingSummaryDto>();
             CreateMap<AlarmDailySummaryRM, AlarmDailySummaryDto>();
             CreateMap<AlarmStatusSummaryRM, AlarmStatusSummaryDto>();
-            
+            CreateMap<AlarmHourlyStatusSummaryRM, AlarmHourlyStatusSummaryDto>();
         }
     }
 }

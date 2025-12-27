@@ -39,6 +39,9 @@ namespace Entities.Models
         [Column("is_used")]
         public bool? IsUsed { get; set; } = false;
 
+        // [Column("is_swap")]
+        // public bool? IsSwap { get; set; } = false;
+
         // [Column("is_block")]
         // public bool? IsBlock { get; set; }
 

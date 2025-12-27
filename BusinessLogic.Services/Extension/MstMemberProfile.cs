@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -43,6 +44,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<MstMemberDto, MstMember>();
             CreateMap<BlacklistReasonDto, MstMember>();
 
+            CreateMap<MstMemberLookUpRM, MstMemberLookUpDto>();
             CreateMap<MstOrganization, MstOrganizationDto>();
             CreateMap<MstDistrict, MstDistrictDto>();
             CreateMap<MstDepartment, MstDepartmentDto>();

@@ -26,6 +26,7 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly FloorplanMaskedAreaRepository _repository;
         private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly IFloorplanDeviceService _floorplanDeviceService;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<FloorplanMaskedArea> _logger;
@@ -39,6 +40,7 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             FloorplanDeviceRepository floorplanDeviceRepository,
+            IFloorplanDeviceService floorplanDeviceService,
             ILogger<FloorplanMaskedArea> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
@@ -49,6 +51,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorplanDeviceRepository = floorplanDeviceRepository;
+            _floorplanDeviceService = floorplanDeviceService;
             _logger = logger;
             _cache = cache;
             _redis = redis?.GetDatabase();
@@ -227,21 +230,21 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // DELETE
         // ============================================================
-        public async Task DeleteAsync(Guid id)
-        {
-            var area = await _repository.GetByIdAsync(id);
-            if (area == null) throw new KeyNotFoundException("Area not found");
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null) throw new KeyNotFoundException("Area not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
-            area.Status = 0;
-            area.UpdatedBy = username;
-            area.UpdatedAt = DateTime.UtcNow;
+        //     area.Status = 0;
+        //     area.UpdatedBy = username;
+        //     area.UpdatedAt = DateTime.UtcNow;
 
-            await RemoveGroupAsync();
-            await _repository.SoftDeleteAsync(id);
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        }
+        //     await RemoveGroupAsync();
+        //     await _repository.SoftDeleteAsync(id);
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
 
 
         // ============================================================
@@ -255,29 +258,43 @@ namespace BusinessLogic.Services.Implementation
             if (area == null)
                 throw new KeyNotFoundException("Area not found");
 
+            List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
+
             await _repository.ExecuteInTransactionAsync(async () =>
             {
                 area.Status = 0;
                 area.UpdatedBy = username;
                 area.UpdatedAt = DateTime.UtcNow;
 
-                await RemoveGroupAsync();
                 await _repository.SoftDeleteAsync(id);
 
                 var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
 
                 foreach (var d in devices)
                 {
+                    // kumpulkan assignment dulu (tidak memanggil service!)
+                    deviceAssignments.Add((d.ReaderId, d.AccessCctvId, d.AccessControlId));
+
                     d.Status = 0;
                     d.UpdatedBy = username;
                     d.UpdatedAt = DateTime.UtcNow;
 
                     await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
                 }
-
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             });
+
+            // 🔥 setelah transaction selesai, baru panggil service lain
+            foreach (var a in deviceAssignments)
+            {
+                await _floorplanDeviceService.SetDeviceAssignmentAsync(
+                    a.readerId, a.cctvId, a.accessId, 
+                    false, username);
+            }
+
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
+
 
 
         // ============================================================

@@ -247,6 +247,33 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        // GET: api/Visitor/lookup
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [HttpGet("lookup")]
+        public async Task<IActionResult> GetAllLookUp()
+        {
+            try
+            {
+                var visitors = await _visitorService.GetAllLookUpAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor retrieved successfully",
+                    collection = new { data = visitors },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         
 

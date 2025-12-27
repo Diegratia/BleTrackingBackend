@@ -24,8 +24,8 @@ namespace Repositories.Repository.Analytics
         // total alarm per area
         public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-
+            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var (from, to) = (range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7), range?.to ?? request.To ?? DateTime.UtcNow);
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
                 .Include(a => a.FloorplanMaskedArea)
@@ -38,14 +38,21 @@ namespace Repositories.Repository.Analytics
                 {
                     a.AlarmTriggersId,
                     a.FloorplanMaskedAreaId,
-                    AreaName = a.FloorplanMaskedArea.Name
+                    AreaName = a.FloorplanMaskedArea.Name,
+                    AlarmStatus = a.Alarm
                 })
                 .Distinct()
-                .GroupBy(x => new { x.FloorplanMaskedAreaId, x.AreaName })
+                .GroupBy(x => new
+                {
+                    x.FloorplanMaskedAreaId,
+                    x.AreaName,
+                    x.AlarmStatus
+                })
                 .Select(g => new AlarmAreaSummaryRM
                 {
                     AreaId = g.Key.FloorplanMaskedAreaId,
-                    AreaName = g.Key.AreaName,
+                    AreaName = g.Key.AreaName ?? "Unknown",
+                    AlarmStatus = g.Key.AlarmStatus.ToString() ?? "Unknown",
                     Total = g.Count()
                 })
                 .ToListAsync();
@@ -95,9 +102,10 @@ namespace Repositories.Repository.Analytics
         // alarm per status
         public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
+            var range = GetTimeRange(request.TimeRange ?? "weekly");
             var (from, to) = (
-                request.From ?? DateTime.UtcNow.AddDays(-7),
-                request.To ?? DateTime.UtcNow
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
             );
 
             var query = _context.AlarmRecordTrackings
@@ -209,6 +217,79 @@ namespace Repositories.Repository.Analytics
                 .ToList();
             return grouped;
         }
+
+       public async Task<List<AlarmHourlyStatusSummaryRM>> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+{
+    // Range penuh 1 hari
+    var date = request.From?.Date ?? DateTime.UtcNow.Date;
+
+    var from = date;                              // 00:00
+    var to = date.AddDays(1).AddTicks(-1);        // 23:59:59.9999999
+
+    var query = _context.AlarmRecordTrackings
+        .AsNoTracking()
+        .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+    query = ApplyFilters(query, request);
+
+    // STEP 1: Ambil *alarm pertama* dari setiap AlarmTriggersId dalam 1 hari
+    var incidents = await query
+        .GroupBy(a => a.AlarmTriggersId)
+        .Select(g => new
+        {
+            AlarmTriggersId = g.Key,
+            FirstTimestamp = g.Min(x => x.Timestamp),   // ambil jam pertama
+            Status = g.OrderBy(x => x.Timestamp)
+                      .First().Alarm.ToString() ?? "Unknown"
+        })
+        .ToListAsync();
+
+    // STEP 2: Konversi ke hour
+    var flattened = incidents
+        .Select(x => new
+        {
+            Hour = x.FirstTimestamp.Value.Hour,
+            x.Status
+        })
+        .ToList();
+
+    // STEP 3: Grouping by hour + status
+    var groupedHours = flattened
+        .GroupBy(x => x.Hour)
+        .ToDictionary(
+            g => g.Key,
+            g => new AlarmHourlyStatusSummaryRM
+            {
+                Hour = g.Key,
+                HourLabel = g.Key.ToString("00") + ".00",
+                Status = g.GroupBy(x => x.Status)
+                            .ToDictionary(
+                                s => s.Key,
+                                s => s.Count()
+                            )
+            }
+        );
+
+    // STEP 4: Pastikan output 24 hours lengkap
+    var fullDay = Enumerable.Range(0, 24)
+        .Select(hour =>
+            groupedHours.ContainsKey(hour)
+                ? groupedHours[hour]
+                : new AlarmHourlyStatusSummaryRM
+                {
+                    Hour = hour,
+                    HourLabel = hour.ToString("00") + ".00",
+                    Status = new Dictionary<string, int>()
+                }
+        )
+        .OrderBy(x => x.Hour)
+        .ToList();
+
+    return fullDay;
+}
+
+
+
         //    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
         //         {
         //             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);

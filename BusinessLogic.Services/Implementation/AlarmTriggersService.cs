@@ -9,6 +9,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.ComponentModel.DataAnnotations;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -29,6 +30,11 @@ namespace BusinessLogic.Services.Implementation
         {
             var alarmTriggers = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<AlarmTriggersDto>>(alarmTriggers);
+        }
+        public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
+        {
+            var alarmTriggers = await _repository.GetAllLookUpAsync();
+            return _mapper.Map<IEnumerable<AlarmTriggersLookUp>>(alarmTriggers);
         }
         public async Task<IEnumerable<AlarmTriggersOpenDto>> OpenGetAllAsync()
         {
@@ -132,7 +138,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryable();
 
-            var searchableColumns = new[] { "Floorplan.Name", "Beacon.Id" };
+            var searchableColumns = new[] { "Floorplan.Name", "BeaconId", "Visitor.Name", "Member.Name" };
             var validSortColumns = new[] { "TriggerTime","IdleTimestamp","Floorplan.Name", "Beacon.Id", "Alarm", "Action", "IsActive" };
 
             var filterService = new GenericDataTableService<AlarmTriggers, AlarmTriggersDto>(

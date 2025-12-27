@@ -389,6 +389,54 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [AllowAnonymous]
+        [HttpPut("open/card-access/{cardNumber}")]
+        public async Task<IActionResult> UpdateAccessByVMSAsync(string cardNumber, [FromBody] CardAccessEdit CardDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _service.UpdateAccessByVMSAsync(cardNumber, CardDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card updated successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = ex.Message, 
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
 
         [HttpPut("{id}")]
@@ -417,12 +465,12 @@ namespace Web.API.Controllers.Controllers
                     code = 204
                 });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new
                 {
                     success = false,
-                    msg = "Card not found",
+                    msg = ex.Message,
                     collection = new { data = (object)null },
                     code = 404
                 });

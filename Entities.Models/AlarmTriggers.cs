@@ -37,6 +37,11 @@ namespace Entities.Models
         [Column("second_distance")]
         public float? SecondDistance { get; set; }
 
+        [Column("visitor_id")]
+        public Guid? VisitorId { get; set; }
+        [Column("member_id")]
+        public Guid? MemberId { get; set; }
+
         [Column("trigger_time")]
         public DateTime? TriggerTime { get; set; }
         [Column("alarm_color")]
@@ -93,7 +98,8 @@ namespace Entities.Models
         public Guid ApplicationId { get; set; }
 
         public MstApplication Application { get; set; }
-
         public MstFloorplan Floorplan { get; set; }
+        public Visitor Visitor { get; set; }
+        public MstMember Member { get; set; } 
     }
 }

@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageVersion Include="Bogus" Version="35.6.2" />
+    <PackageVersion Include="Dapper" Version="2.1.66" />
     <PackageVersion Include="FluentValidation" Version="12.0.0" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
@@ -25,12 +26,12 @@
     <!-- <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />stb
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" /> -->
-<PackageVersion Include="Serilog.AspNetCore" Version="8.0.2" />
-<PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.0" />
-<PackageVersion Include="Serilog.Sinks.Console" Version="5.0.1" />
-<PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
-<PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-<PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.1" />
     <PackageVersion Include="StackExchange.Redis" Version="2.9.32" />
     <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.6" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.6.0" />

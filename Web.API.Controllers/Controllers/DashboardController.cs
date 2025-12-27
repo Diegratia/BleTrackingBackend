@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.API.Controllers.Controllers
@@ -25,6 +26,13 @@ namespace Web.API.Controllers.Controllers
         {
             var data = await _service.GetCardStatsAsync();
             return Ok(data);
+        }
+        [HttpGet("blacklist-logs")]
+        public async Task<IActionResult> Blacklistlogs()
+        {
+            var data = await _service.GetBlacklistLogsAsync();
+            // return Ok(data);
+            return Ok(ApiResponse.Success("Blacklist Logs retrieved successfully", data));
         }
     }
 }

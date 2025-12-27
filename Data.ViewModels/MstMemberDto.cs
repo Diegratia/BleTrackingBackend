@@ -44,6 +44,20 @@ namespace Data.ViewModels
         public MstDistrictDto? District { get; set; }
     }
 
+    public class MstMemberLookUpDto : BaseModelDto
+    {
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? PersonId { get; set; }
+        public string? CardNumber { get; set; }
+        public Guid? OrganizationId { get; set; }
+        public Guid? DepartmentId { get; set; }
+        public Guid? DistrictId { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? DistrictName { get; set; }
+    }
+
      public class OpenMstMemberDto : BaseModelDto
     {
         public long Generate { get; set; }

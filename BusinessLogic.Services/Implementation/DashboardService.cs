@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.RepoModel;
 using AutoMapper;
+using Azure;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -23,7 +24,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstMemberRepository _memberRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
-        
+
 
         public DashboardService(
             CardRepository cardRepo,
@@ -62,10 +63,10 @@ namespace BusinessLogic.Services.Implementation
             var nonActiveBeaconCount = await _cardRepo.GetNonActiveCountAsync();
             var topNonActiveBeaconRM = await _cardRepo.GetTopUnUsedCardAsync(5);
             var topNonActiveBeaconDto = topNonActiveBeaconRM.Select(rm => new CardDashboardDto
-                {
-                        Id = rm.Id,
-                        Dmac = rm.Dmac,
-                        CardNumber = rm.CardNumber,
+            {
+                Id = rm.Id,
+                Dmac = rm.Dmac,
+                CardNumber = rm.CardNumber,
             }).ToList();
             var topActiveBeaconRM = await _cardRepo.GetTopUsedCardAsync(5);
             var topActiveBeaconDto = topActiveBeaconRM.Select(rm => new CardDashboardDto
@@ -77,24 +78,24 @@ namespace BusinessLogic.Services.Implementation
             var activeGatewayCount = await _deviceRepo.GetCountAsync();
             var topReadersRM = await _deviceRepo.GetTopReadersAsync();
             var topReadersDto = topReadersRM.Select(rm => new ReaderSummaryDto
-                {
-                        Id = rm.Id,
-                        Name = rm.Name,
+            {
+                Id = rm.Id,
+                Name = rm.Name,
             }).ToList();
             var alarmCount = await _alarmRepo.GetCountAsync();
             var topTriggersRM = await _alarmRepo.GetTopTriggersAsync(5);
             var topTriggersDto = topTriggersRM.Select(rm => new AlarmTriggersSummary
-                {
-                        Id = rm.Id,
-                        BeaconId = rm.BeaconId,
+            {
+                Id = rm.Id,
+                BeaconId = rm.BeaconId,
             }).ToList();
             var areaCount = await _areaRepo.GetCountAsync(); // TOTAL COUNT
             var topAreasRM = await _areaRepo.GetTopAreasAsync(5);
             var topAreasDto = topAreasRM.Select(rm => new AreaSummaryDto
-                    {
-                        Id = rm.Id,
-                        Name = rm.Name,
-                    }).ToList();
+            {
+                Id = rm.Id,
+                Name = rm.Name,
+            }).ToList();
             var visitorBlacklistCount = await _visitorRepo.GetBlacklistedCountAsync();
             var memberBlacklistCount = await _memberRepo.GetBlacklistedCountAsync();
             return new DashboardSummaryDto
@@ -113,28 +114,28 @@ namespace BusinessLogic.Services.Implementation
                 ApplicationId = appId
             };
         }
-        
+
         public async Task<ResponseSingle<List<AreaSummaryDto>>> GetTopAreasAsync(int topCount = 5)
-    {
-        try
         {
-            var dataRM = await _areaRepo.GetTopAreasAsync(topCount);
-            
-            // Manual mapping
-            var dataDto = dataRM.Select(rm => new AreaSummaryDto
+            try
             {
-                Id = rm.Id,
-                Name = rm.Name,
-            }).ToList();
-            return ResponseSingle<List<AreaSummaryDto>>.Ok(dataDto, $"Success get top {topCount} areas");
+                var dataRM = await _areaRepo.GetTopAreasAsync(topCount);
+
+                // Manual mapping
+                var dataDto = dataRM.Select(rm => new AreaSummaryDto
+                {
+                    Id = rm.Id,
+                    Name = rm.Name,
+                }).ToList();
+                return ResponseSingle<List<AreaSummaryDto>>.Ok(dataDto, $"Success get top {topCount} areas");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting top areas");
+                return ResponseSingle<List<AreaSummaryDto>>.Error($"Internal error: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting top areas");
-            return ResponseSingle<List<AreaSummaryDto>>.Error($"Internal error: {ex.Message}");
-        }
-    }
-        
+
         public async Task<ResponseSingle<CardUsageCountDto>> GetCardStatsAsync()
         {
             var appIdString = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
@@ -155,6 +156,12 @@ namespace BusinessLogic.Services.Implementation
                 _logger.LogError(ex, "Error getting area count");
                 return ResponseSingle<CardUsageCountDto>.Error($"Internal error: {ex.Message}");
             }
+        }
+
+        public async Task<List<BlacklistLogRM>> GetBlacklistLogsAsync()
+        {
+            var logs = await _memberRepo.GetBlacklistLogsAsync(); 
+            return logs;
         }
     }
 

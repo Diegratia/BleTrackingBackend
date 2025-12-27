@@ -129,7 +129,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/FloorplanMaskedArea/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto FloorplanMaskedAreaDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -145,7 +145,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                await _service.UpdateAsync(id, FloorplanMaskedAreaDto);
+                await _service.UpdateAsync(id, dto);
                 return Ok(new
                 {
                     success = true,
@@ -571,42 +571,42 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [AllowAnonymous]
-        // DELETE: api/FloorplanMaskedArea/{id}
-        [HttpDelete("open/{id}")]
-        public async Task<IActionResult> OpenDelete(Guid id)
-        {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Area not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [AllowAnonymous]
+        // // DELETE: api/FloorplanMaskedArea/{id}
+        // [HttpDelete("open/{id}")]
+        // public async Task<IActionResult> OpenDelete(Guid id)
+        // {
+        //     try
+        //     {
+        //         await _service.DeleteAsync(id);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Area deleted successfully",
+        //             collection = new { data = (object)null },
+        //             code = 204
+        //         });
+        //     }
+        //     catch (KeyNotFoundException)
+        //     {
+        //         return NotFound(new
+        //         {
+        //             success = false,
+        //             msg = "Area not found",
+        //             collection = new { data = (object)null },
+        //             code = 404
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
     }
 }

@@ -37,5 +37,6 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
+        // public FloorplanDevice FloorplanDevices { get; set; }
     }
 }

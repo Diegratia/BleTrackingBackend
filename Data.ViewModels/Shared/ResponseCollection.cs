@@ -5,7 +5,7 @@ namespace Data.ViewModels
     public class ResponseCollection<T>
     {
         public bool Success { get; set; } = true;
-        public string Message { get; set; } = "OK";
+        public string Msg { get; set; } = "OK";
         public IEnumerable<T>? Data { get; set; }
         public int? TotalRecords { get; set; }
         public int? FilteredRecords { get; set; }
@@ -15,8 +15,8 @@ namespace Data.ViewModels
             return new ResponseCollection<T>
             {
                 Success = true,
-                Message = message,
-                Data = data
+                Msg = message,
+                Data = data,
             };
         }
 
@@ -25,23 +25,22 @@ namespace Data.ViewModels
             return new ResponseCollection<T>
             {
                 Success = false,
-                Message = message,
+                Msg = message,
                 Data = null
             };
         }
-
     }
     public class ResponseSingle<T>
         {
             public bool Success { get; set; }
-            public string Message { get; set; } = "";
+            public string Msg { get; set; } = "";
             public T? Data { get; set; }
             public int Code { get; set; }
 
             public static ResponseSingle<T> Ok(T data, string message = "Success", int code = 200) =>
-                new ResponseSingle<T> { Success = true, Message = message, Data = data, Code = code };
+                new ResponseSingle<T> { Success = true, Msg = message, Data = data, Code = code };
 
             public static ResponseSingle<T> Error(string message, int code = 500) =>
-                new ResponseSingle<T> { Success = false, Message = message, Code = code };
+                new ResponseSingle<T> { Success = false, Msg = message, Code = code };
         }
 }

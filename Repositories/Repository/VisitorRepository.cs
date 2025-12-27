@@ -2,6 +2,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Repository.RepoModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,29 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().AsNoTracking().ToListAsync();
         }
+
+        public async Task<List<VisitorLookUpRM>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.Visitors
+            .AsNoTracking()
+            .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+
+            var projected = query.Select(t => new VisitorLookUpRM
+            {
+                Id = t.Id,
+                Name = t.Name,
+                PersonId = t.PersonId,
+                IdentityId = t.IdentityId,
+                IdentityType = t.IdentityType.ToString(),
+                CardNumber = t.CardNumber,
+                OrganizationName = t.OrganizationName,
+                DepartmentName = t.DepartmentName,
+                DistrictName = t.DistrictName
+            }); 
+            return await projected.ToListAsync();
+        }
+        
 
         public async Task<Visitor?> GetByIdAsync(Guid id)
         {

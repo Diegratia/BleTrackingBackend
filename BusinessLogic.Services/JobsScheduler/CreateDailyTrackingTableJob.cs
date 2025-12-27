@@ -25,7 +25,6 @@ namespace BusinessLogic.Services.JobsScheduler
             var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
             var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             var tableName = $"tracking_transaction_{wibNow:yyyyMMdd}";
-
             try
             {
                 _logger.LogInformation("Starting CreateDailyTrackingTableJob at {Time:UTC}", DateTime.UtcNow);

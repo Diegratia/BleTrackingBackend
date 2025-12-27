@@ -19,13 +19,14 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<OpenCardDto>> OpenGetAllAsync();
         Task<CardDto> CreateAsync(CardCreateDto createDto);
         Task UpdatesAsync(Guid id, CardEditDto dto);
-        Task UpdateAccessAsync(Guid id, CardAccessEdit dto) ;
+        Task UpdateAccessAsync(Guid id, CardAccessEdit dto);
         Task<CardMinimalsDto> CreatesAsync(CardAddDto dto);
         Task UpdateAsync(Guid id, CardUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
-         Task<IEnumerable<CardDto>> ImportAsync(IFormFile file);
+        Task<IEnumerable<CardDto>> ImportAsync(IFormFile file);
+         Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto);
     }
 }

@@ -35,6 +35,9 @@ namespace Entities.Models
         [Column("restricted_status")]
         public RestrictedStatus RestrictedStatus { get; set; }
 
+        [Column("allow_floor_change")]
+        public bool AllowFloorChange { get; set; } = false;
+
         // [Required]
         // [StringLength(255)]
         // [Column("engine_area_id")]

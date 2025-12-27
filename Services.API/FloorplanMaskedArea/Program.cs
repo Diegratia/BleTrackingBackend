@@ -15,6 +15,10 @@ using DotNetEnv;
 using Helpers.Consumer.Mqtt;
 using StackExchange.Redis;
 using BusinessLogic.Services.Background;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Data.ViewModels.Validators;
+using System.Text.Json.Serialization;
 
 
 try
@@ -98,8 +102,20 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddControllers();
+// builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           // "colorArea" = "colorarea" = "ColorArea" → semua masuk
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; // extra field → 400
+    });
 // builder.Services.AddMemoryCache();
+
+builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaCreateValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<FloorplanMaskedAreaUpdateValidator>();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
@@ -197,12 +213,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(FloorplanMaskedAreaProfile));
 // Registrasi Services
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
+builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+
 
 // builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 // builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
+builder.Services.AddScoped<MstAccessCctvRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();

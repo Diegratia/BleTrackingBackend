@@ -146,12 +146,27 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return ResponseCollection<TrackingCardSummaryRM>.Error($"Internal server error: {ex.Message}");
             }
         }
-        
-            public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request)
+
+        public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request)
         {
             try
             {
                 var data = await _repository.GetAccessPermissionSummaryAsync(request);
+                var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
+                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting area count");
+                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
+            }
+        }
+        
+         public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request)
+        {
+            try
+            {
+                var data = await _repository.GetAccessPermissionSummaryAsyncV2(request);
                 var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
                 return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
             }

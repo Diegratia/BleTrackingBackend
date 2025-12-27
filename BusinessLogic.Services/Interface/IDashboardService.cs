@@ -12,5 +12,6 @@ namespace BusinessLogic.Services.Interface
         Task<DashboardSummaryDto> GetSummaryAsync();
         Task<ResponseSingle<CardUsageCountDto>> GetCardStatsAsync();
         Task<ResponseSingle<List<AreaSummaryDto>>> GetTopAreasAsync(int topCount = 5);
+        Task<List<BlacklistLogRM>> GetBlacklistLogsAsync();
     }
 }

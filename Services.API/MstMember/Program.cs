@@ -49,15 +49,24 @@ builder.Host.UseWindowsService();
 builder.Services.AddHostedService<MqttRecoveryService>();
 
 
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin() 
-              .AllowAnyMethod() 
-              .AllowAnyHeader(); 
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
+
+// // TAMBAHKAN INI: Konfigurasi routing untuk lowercase URLs dan case-insensitive
+// builder.Services.AddRouting(options =>
+// {
+//     options.LowercaseUrls = true; // Semua URL otomatis lowercase
+//     options.LowercaseQueryStrings = true; // Opsional: query string juga lowercase
+// });
+
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)

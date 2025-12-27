@@ -16,5 +16,6 @@ public interface ITrackingAnalyticsService
     Task<ResponseCollection<TrackingHeatmapRM>> GetHeatmapDataAsync(TrackingAnalyticsRequestRM request);
     Task<ResponseCollection<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request);
     Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request);
+    Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request);
     }
 

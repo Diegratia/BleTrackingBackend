@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251208071933_FloorTransisition")]
+    partial class FloorTransisition
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -316,11 +319,6 @@ namespace Repositories.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("is_in_restricted_area");
 
-                    b.Property<Guid?>("MemberId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("member_id");
-
                     b.Property<float?>("PosX")
                         .HasColumnType("real")
                         .HasColumnName("pos_x");
@@ -342,11 +340,6 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("trigger_time");
 
-                    b.Property<Guid?>("VisitorId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("visitor_id");
-
                     b.Property<string>("WaitingBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("waiting_by");
@@ -360,10 +353,6 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("FloorplanId");
-
-                    b.HasIndex("MemberId");
-
-                    b.HasIndex("VisitorId");
 
                     b.ToTable("alarm_triggers", (string)null);
                 });
@@ -2932,6 +2921,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
+                    b.Property<int?>("ExtendedVisitorTime")
+                        .HasColumnType("int")
+                        .HasColumnName("extended_visitor_time");
+
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("invitation_code");
@@ -3053,9 +3046,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VisitorId", "Status");
 
-                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
-                        .IsUnique()
-                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
@@ -3424,23 +3415,9 @@ namespace Repositories.Migrations
                         .HasForeignKey("FloorplanId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("Entities.Models.MstMember", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("Entities.Models.Visitor", "Visitor")
-                        .WithMany()
-                        .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.Navigation("Application");
 
                     b.Navigation("Floorplan");
-
-                    b.Navigation("Member");
-
-                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
