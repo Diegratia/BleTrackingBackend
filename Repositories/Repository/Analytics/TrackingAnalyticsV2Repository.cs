@@ -289,31 +289,58 @@
                     .ToList();
             }
 
-            private VisitorSessionSummaryRM MapToSession(SessionRaw rec, DateTime enterWib)
+        public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsRequestRM request)
+        {
+            var sessions = await GetVisitorSessionSummaryAsync(request);
+            
+            return sessions.Select(s => new VisitorSessionSummaryExportRM
             {
-                return new VisitorSessionSummaryRM
-                {
-                    // PersonId = rec.PersonId,
-                    // PersonName = rec.PersonName,
-                    PersonType = rec.PersonType,
+                // Properti yang sama dengan VisitorSessionSummaryRM
+                VisitorId = s.VisitorId,
+                VisitorName = s.VisitorName,
+                PersonType = s.PersonType,
+                AreaName = s.AreaName,
+                BuildingName = s.BuildingName,
+                FloorName = s.FloorName,
+                FloorplanName = s.FloorplanName,
+                EnterTime = s.EnterTime,
+                ExitTime = s.ExitTime,
+                DurationInMinutes = s.DurationInMinutes,
+                
+                // Format khusus untuk export
+                EnterTimeFormatted = s.EnterTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                ExitTimeFormatted = s.ExitTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Still Active",
+                DurationFormatted = s.DurationInMinutes.HasValue ? 
+                    $"{s.DurationInMinutes.Value} minutes" : "N/A",
+                Status = s.ExitTime.HasValue ? "Completed" : "Active"
+            }).ToList();
+        }
 
-                    VisitorId = rec.VisitorId,
-                    VisitorName = rec.VisitorName,
-                    // MemberId = rec.MemberId,
-                    // MemberName = rec.MemberName,
+        private VisitorSessionSummaryRM MapToSession(SessionRaw rec, DateTime enterWib)
+        {
+            return new VisitorSessionSummaryRM
+            {
+                // PersonId = rec.PersonId,
+                // PersonName = rec.PersonName,
+                PersonType = rec.PersonType,
 
-                    AreaId = rec.AreaId,
-                    AreaName = rec.AreaName,
-                    BuildingId = rec.BuildingId,
-                    BuildingName = rec.BuildingName,
-                    FloorId = rec.FloorId,
-                    FloorName = rec.FloorName,
-                    FloorplanId = rec.FloorplanId,
-                    FloorplanImage = rec.FloorplanImage,
-                    FloorplanName = rec.FloorplanName,
-                    EnterTime = enterWib,
-                };
-            }
+                VisitorId = rec.VisitorId,
+                VisitorName = rec.VisitorName,
+                // MemberId = rec.MemberId,
+                // MemberName = rec.MemberName,
+
+                AreaId = rec.AreaId,
+                AreaName = rec.AreaName,
+                BuildingId = rec.BuildingId,
+                BuildingName = rec.BuildingName,
+                FloorId = rec.FloorId,
+                FloorName = rec.FloorName,
+                FloorplanId = rec.FloorplanId,
+                FloorplanImage = rec.FloorplanImage,
+                FloorplanName = rec.FloorplanName,
+                EnterTime = enterWib,
+            };
+        }
                 
             private bool TableExists(string tableName)
             {

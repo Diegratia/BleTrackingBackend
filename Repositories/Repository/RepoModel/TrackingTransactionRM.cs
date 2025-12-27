@@ -38,6 +38,29 @@ namespace Repositories.Repository.RepoModel
         public Guid? MemberId { get; set; }
         public Guid? ReaderId { get; set; }
 
+        public string? ReportTitle { get; set; }
+         public string? ExportType { get; set; }
+
+    }
+
+    public class VisitorSessionSummaryExportRM
+    {
+        public Guid? VisitorId { get; set; }
+        public string? VisitorName { get; set; }
+        public string? PersonType { get; set; }
+        public string? AreaName { get; set; }
+        public string? BuildingName { get; set; }
+        public string? FloorName { get; set; }
+        public string? FloorplanName { get; set; }
+        public DateTime EnterTime { get; set; }
+        public DateTime? ExitTime { get; set; }
+        public int? DurationInMinutes { get; set; }
+        
+        // Format khusus export
+        public string EnterTimeFormatted { get; set; }
+        public string ExitTimeFormatted { get; set; }
+        public string DurationFormatted { get; set; }
+        public string Status { get; set; }
     }
 
     // RepoModel/VisitorSessionSummaryRM.cs

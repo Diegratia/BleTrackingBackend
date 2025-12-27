@@ -50,9 +50,19 @@ namespace Helpers.Consumer
 
     public enum IdentityType
     {
-        SIM,
+        DriverLicense,
         KTP,
-        Passport
+        Passport,
+        CardAccess,
+        Face,
+        NDA,
+        Other,
+    }
+
+        public enum SwapType
+    {
+        EnterArea,  
+        ExitArea 
     }
 
     public enum PersonType
@@ -72,6 +82,14 @@ namespace Helpers.Consumer
         Rfid,
         Ble,
         RfidBle
+    }
+    public enum CardStatus
+    {
+        Available,
+        Used,
+        Lost,
+        Damaged,
+        Swapped
     }
 
     public enum IntegrationType

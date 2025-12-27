@@ -217,7 +217,7 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
-             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
+            if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {
                 try
                 {
@@ -249,14 +249,14 @@ namespace BusinessLogic.Services.Implementation
                 {
                     member.UploadFr = 2;
                     member.UploadFrError = ex.Message;
-                    member.FaceImage = "";
+                    // member.FaceImage = null;
                 }
             }
             else
             {
                 member.UploadFr = 0;
                 member.UploadFrError = "No file uploaded";
-                member.FaceImage = "";
+                // member.FaceImage = null;
             }
 
             using var transaction = await _repository.BeginTransactionAsync();
