@@ -85,7 +85,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "TrxVisitor blacklist area not found",
+                        msg = "TrxVisitor not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -122,7 +122,7 @@ namespace Web.API.Controllers.Controllers
                     return NotFound(new
                     {
                         success = false,
-                        msg = "TrxVisitor blacklist area not found",
+                        msg = "TrxVisitor not found",
                         collection = new { data = (object)null },
                         code = 404
                     });
@@ -556,13 +556,24 @@ namespace Web.API.Controllers.Controllers
         [HttpPost("{trxVisitorId}/extend")]
         public async Task<IActionResult> ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
             try
             {
                 await _trxVisitorService.ExtendedVisitorTime(trxVisitorId, dto);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Visitor Extend successfully",
+                    msg = $"Extended by {dto.ExtendedVisitorTime} minutes." ,
                     collection = new { data = (object)null },
                     code = 200
                 });

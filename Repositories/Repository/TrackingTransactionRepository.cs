@@ -26,9 +26,13 @@ namespace Repositories.Repository
 
         private string GetCurrentTableName()
         {
-            var wibNow = DateTime.UtcNow.AddHours(7);
-            return $"tracking_transaction_{wibNow:yyyyMMdd}";
+            // var wibNow = DateTime.UtcNow.AddHours(7);
+            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            // var wibDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+            return $"tracking_transaction_{wibZone:yyyyMMdd}";
         }
+
+        
 
 
         public async Task<TrackingTransaction?> GetByIdAsync(Guid id)

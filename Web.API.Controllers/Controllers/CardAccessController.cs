@@ -294,5 +294,32 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpGet("open")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            try
+            {
+                var cardRecords = await _cardAccessService.GetAllAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Card Access retrieved successfully",
+                    collection = new { data = cardRecords },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
     }
 }

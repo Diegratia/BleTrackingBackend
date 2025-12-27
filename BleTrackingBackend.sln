@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BleTrackingBackend", "BleTrackingBackend.csproj", "{78FC4B94-D49C-47B3-BE34-9D53971DE7C8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessLogic.Services", "BusinessLogic.Services\BusinessLogic.Services.csproj", "{1F709E3C-A0E8-4518-9DFF-B41F96701C92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data.ViewModels", "Data.ViewModels\Data.ViewModels.csproj", "{E56707F5-9A30-40CD-BF03-F93C986B7B3F}"
@@ -33,8 +31,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseChecker", "Services.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MstBleReader", "Services.API\MstBleReader\MstBleReader.csproj", "{E0AD7E21-4DA7-4518-B353-812F06494758}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.API.Controllers", "Web.API.Controllers\Web.API.Controllers.csproj", "{44EAE69C-D20E-436B-A7E4-257E64709BFE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlacklistArea", "Services.API\BlacklistArea\BlacklistArea.csproj", "{3F36F499-E93B-484E-9711-C85C34B47C55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BleReaderNode", "Services.API\BleReaderNode\BleReaderNode.csproj", "{1C54141A-CBD2-443B-B353-55DED316EB85}"
@@ -44,8 +40,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardAccess", "Services.API\CardAccess\CardAccess.csproj", "{F661141F-C372-42E2-A1A5-8D2C005FEBDA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardRecord", "Services.API\CardRecord\CardRecord.csproj", "{2B5CD9A5-58E6-4D98-9544-BF79B146944D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtAlarm", "Services.API\ExtAlarm\ExtAlarm.csproj", "{24E9E1FA-BD3C-4893-9B84-D2C0E5749845}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorplanDevice", "Services.API\FloorplanDevice\FloorplanDevice.csproj", "{174BA3C4-3EBD-4F61-9369-70D70D7CEEBC}"
 EndProject
@@ -87,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrxVisitor", "Services.API\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Visitor", "Services.API\Visitor\Visitor.csproj", "{4ACCF466-9B44-4C98-B03A-40540046AC0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.API.Controllers", "Web.API.Controllers\Web.API.Controllers.csproj", "{3ED588B9-4119-4836-92A9-1FC62A12F1C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,10 +92,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{78FC4B94-D49C-47B3-BE34-9D53971DE7C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{78FC4B94-D49C-47B3-BE34-9D53971DE7C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{78FC4B94-D49C-47B3-BE34-9D53971DE7C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{78FC4B94-D49C-47B3-BE34-9D53971DE7C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1F709E3C-A0E8-4518-9DFF-B41F96701C92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1F709E3C-A0E8-4518-9DFF-B41F96701C92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F709E3C-A0E8-4518-9DFF-B41F96701C92}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -152,10 +144,6 @@ Global
 		{E0AD7E21-4DA7-4518-B353-812F06494758}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0AD7E21-4DA7-4518-B353-812F06494758}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0AD7E21-4DA7-4518-B353-812F06494758}.Release|Any CPU.Build.0 = Release|Any CPU
-		{44EAE69C-D20E-436B-A7E4-257E64709BFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{44EAE69C-D20E-436B-A7E4-257E64709BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{44EAE69C-D20E-436B-A7E4-257E64709BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44EAE69C-D20E-436B-A7E4-257E64709BFE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F36F499-E93B-484E-9711-C85C34B47C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F36F499-E93B-484E-9711-C85C34B47C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F36F499-E93B-484E-9711-C85C34B47C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -176,10 +164,6 @@ Global
 		{2B5CD9A5-58E6-4D98-9544-BF79B146944D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B5CD9A5-58E6-4D98-9544-BF79B146944D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B5CD9A5-58E6-4D98-9544-BF79B146944D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{24E9E1FA-BD3C-4893-9B84-D2C0E5749845}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24E9E1FA-BD3C-4893-9B84-D2C0E5749845}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24E9E1FA-BD3C-4893-9B84-D2C0E5749845}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24E9E1FA-BD3C-4893-9B84-D2C0E5749845}.Release|Any CPU.Build.0 = Release|Any CPU
 		{174BA3C4-3EBD-4F61-9369-70D70D7CEEBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{174BA3C4-3EBD-4F61-9369-70D70D7CEEBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{174BA3C4-3EBD-4F61-9369-70D70D7CEEBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -260,6 +244,10 @@ Global
 		{4ACCF466-9B44-4C98-B03A-40540046AC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ACCF466-9B44-4C98-B03A-40540046AC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4ACCF466-9B44-4C98-B03A-40540046AC0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ED588B9-4119-4836-92A9-1FC62A12F1C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ED588B9-4119-4836-92A9-1FC62A12F1C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ED588B9-4119-4836-92A9-1FC62A12F1C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ED588B9-4119-4836-92A9-1FC62A12F1C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8D44518A-24C9-45E1-9AB8-5F1E3F2BC0E9} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
@@ -275,7 +263,6 @@ Global
 		{B1E2EC2D-9624-4882-8E45-593EB33F3611} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
 		{F661141F-C372-42E2-A1A5-8D2C005FEBDA} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
 		{2B5CD9A5-58E6-4D98-9544-BF79B146944D} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
-		{24E9E1FA-BD3C-4893-9B84-D2C0E5749845} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
 		{174BA3C4-3EBD-4F61-9369-70D70D7CEEBC} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
 		{B770CC9B-8EED-4835-818D-CE95689F4CE9} = {F3699C47-A428-4BE2-B353-69DA94A7E711}
 		{7116CB65-3F8C-4ABE-A313-04CF1DBC39C3} = {F3699C47-A428-4BE2-B353-69DA94A7E711}

@@ -66,7 +66,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.Boundarys
+            var query = _context.Overpopulatings
                 .Where(d => d.Id == id && d.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -74,7 +74,7 @@ namespace Repositories.Repository
             var overpopulating = await query.FirstOrDefaultAsync();
 
             if (overpopulating == null)
-                return;
+                throw new KeyNotFoundException("Overpopulating not found");
 
             await _context.SaveChangesAsync();
         }

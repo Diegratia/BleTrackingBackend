@@ -226,7 +226,7 @@ namespace Repositories.Seeding
 
                 var brand = new MstBrand
                 {
-                    Id = Guid.NewGuid(),
+                    Id = new Guid("824264AF-036F-4AB1-8179-469F1BCC8813"),
                     Name = "Bio - Initial",
                     Tag = "People Tracking Tag",
                     ApplicationId = context.MstApplications
@@ -400,7 +400,7 @@ namespace Repositories.Seeding
                     // .RuleFor(i => i.ApiTypeAuth, f => f.PickRandom<ApiTypeAuth>())
                     .RuleFor(i => i.ApiTypeAuth, f => ApiTypeAuth.ApiKey)
                     .RuleFor(i => i.ApiUrl, f => f.Internet.Url())
-                    .RuleFor(i => i.ApiUrl, f => "http://192.168.1.116:5000")
+                    .RuleFor(i => i.ApiUrl, f => "http://localhost:5000")
                     .RuleFor(i => i.ApiAuthUsername, f => f.Internet.UserName())
                     .RuleFor(i => i.ApiAuthPasswd, f => f.Internet.Password())
                     // .RuleFor(i => i.ApiKeyField, f => "Key" + f.Random.Word())

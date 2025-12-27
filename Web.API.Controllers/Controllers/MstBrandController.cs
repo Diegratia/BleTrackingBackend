@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -15,10 +16,12 @@ namespace Web.API.Controllers.Controllers
     public class MstBrandController : ControllerBase
     {
         private readonly IMstBrandService _mstBrandService;
+        private readonly ILogger<MstBrandService> _logger;
 
-        public MstBrandController(IMstBrandService mstBrandService)
+        public MstBrandController(IMstBrandService mstBrandService, ILogger<MstBrandService> logger)
         {
             _mstBrandService = mstBrandService;
+            _logger = logger;
         }
 
         // GET: api/MstBrand

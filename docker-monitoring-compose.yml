@@ -1,20 +1,35 @@
 services:
-  dozzle:
-    image: amir20/dozzle:latest
-    container_name: dozzle
-    restart: unless-stopped
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
     ports:
-      - "9999:8080"             
+      - "3100:3100"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - DOZZLE_TAILSIZE=500      
+      - loki-data:/loki
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: always
 
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
-    container_name: uptime-kuma
-    restart: unless-stopped
-    ports:
-      - "3001:3001"             
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail
     volumes:
-      - ./uptime-kuma-data:/app/data
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # ✅ TAMBAH INI
+      - C:/Migrasi/Projects/Projects/BleTrackingBackend/publish:/logs/publish:ro # ✅ TAMBAH INI
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:9.5.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  loki-data:
+  grafana-storage:

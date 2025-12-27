@@ -26,7 +26,7 @@ namespace Entities.Models
         public string? QRCode { get; set; }
 
         [Column("dmac")]
-        public string? Dmac { get; set; }
+        public string? Dmac { get; set; } 
 
         [Column("is_multi_masked_area")]
         public bool? IsMultiMaskedArea { get; set; }
@@ -37,7 +37,7 @@ namespace Entities.Models
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua area.
 
         [Column("is_used")]
-        public bool? IsUsed { get; set; }
+        public bool? IsUsed { get; set; } = false;
 
         // [Column("is_block")]
         // public bool? IsBlock { get; set; }

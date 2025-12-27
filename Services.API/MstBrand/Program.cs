@@ -20,16 +20,38 @@ using System.Threading.RateLimiting;
 using BusinessLogic.Services.Extension.RootExtension;
 
 
+
 try
+{
+    var possiblePaths = new[]
     {
-        Env.Load("/app/.env");
-    }
-    catch (Exception ex)
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
     {
-        Console.WriteLine($"Failed to load .env file: {ex.Message}");
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
     }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load .env file: {ex.Message}");
+}
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Logging.AddConsole();
+    builder.Host.UseWindowsService();
+
 
     builder.Services.AddCors(options =>
     {
@@ -47,8 +69,9 @@ try
         .AddEnvironmentVariables();
 
     builder.Services.AddControllers();
+    
     // Registrasi otomatis validasi FluentValidation
-    builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddFluentValidationClientsideAdapters();
 
     // Scan semua validator di assembly yang mengandung BrandValidator
@@ -57,7 +80,7 @@ try
 
 
     builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
 
     builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 
@@ -251,7 +274,7 @@ try
             c.RoutePrefix = string.Empty; 
         });
     }
-    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout");
+    var timeoutInSeconds = builder.Configuration.GetValue<int>("RequestTimeout", 120);
 
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();

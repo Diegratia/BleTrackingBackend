@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
 
 namespace Repositories.Repository
 {
@@ -37,6 +38,50 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync() ?? null;
         }
+
+        public async Task<List<CardDashboardRM>> GetTopUnUsedCardAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new CardDashboardRM
+                {
+                    Id = x.Id,
+                    Dmac = x.Dmac ?? "Unknown Card",
+                    CardNumber = x.CardNumber ?? "Unknown Card",
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<CardDashboardRM>> GetTopUsedCardAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new CardDashboardRM
+                {
+                    Id = x.Id,
+                    Dmac = x.Dmac ?? "Unknown Card",
+                    CardNumber = x.CardNumber ?? "Unknown Card",
+                })
+                .ToListAsync();
+        }
         
        public async Task<int> GetCountAsync()
         {
@@ -48,6 +93,41 @@ namespace Repositories.Repository
                 .Where(c => c.StatusCard != 0 && c.IsUsed == true);
 
             // Apply application filter jika perlu (gemstone: ApplyApplicationIdFilter menerima IQueryable<Card>)
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+        public async Task<CardUsageCountRM> CardUsageCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0);
+
+            var visitorUse = await q.Where(c => c.VisitorId != null && c.IsUsed == true).CountAsync();
+            var memberUse = await q.Where(c => c.MemberId != null && c.IsUsed == true).CountAsync();
+            var totalCard = await q.CountAsync();
+            var totalUse = visitorUse + memberUse;
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return new CardUsageCountRM
+            {
+                VisitorCardCount = visitorUse,
+                MemberCardCount = memberUse,
+                TotalCardCount = totalCard,
+                TotalCardUse = totalUse
+            };
+        }
+
+         public async Task<int> GetCountEachIdAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q.CountAsync();
@@ -64,6 +144,21 @@ namespace Repositories.Repository
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q.CountAsync();
+        }
+
+
+            public async Task<IEnumerable<Card>> GetUnUsedCardAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+            q.WithActiveRelations();
+
+            return await q.ToListAsync();
         }
 
         
@@ -130,7 +225,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var card = await _context.Cards.FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != 1);
+            var card = await _context.Cards.FirstOrDefaultAsync(b => b.Id == id && b.StatusCard != 0);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 

@@ -12,18 +12,42 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 // using Helpers.Consumer.Mqtt;
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
+builder.Services.AddHostedService<MqttRecoveryService>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -43,8 +67,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -150,7 +173,7 @@ builder.Services.AddScoped<VisitorRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
-// builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<TrxVisitorRepository>();
 
 
@@ -226,7 +249,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/visitorFaceImages");
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/visitorFaceImages");
+// Directory.CreateDirectory(uploadsPath);
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/visitorFaceImages"
+// });
+
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "visitorFaceImages");
 Directory.CreateDirectory(uploadsPath);
 
 app.UseStaticFiles(new StaticFileOptions

@@ -13,19 +13,106 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using BusinessLogic.Services.Extension.RootExtension;
+// using Microsoft.Extensions.Caching.StackExchangeRedis;
+using StackExchange.Redis;
+using BusinessLogic.Services.Background;
+using Helpers.Consumer.Mqtt;
+using Serilog;
+using Serilog.Events;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
-var builder = WebApplication.CreateBuilder(args);
 
+// =============================
+//  SERILOG UNIVERSAL SETUP
+// =============================
+Console.WriteLine("=== SERILOG TEST ===");
+Log.Information("Serilog is working - this should go to FILE and CONSOLE");
+Console.WriteLine("=== SERILOG TEST END ===");
+try
+{
+    var serviceName = AppDomain.CurrentDomain.FriendlyName
+        .Replace(".dll", "")
+        .Replace(".exe", "")
+        .ToLower();
+
+    bool isDocker = Directory.Exists("/app");
+    bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
+
+    string logDir;
+
+    if (isDocker)
+        logDir = "/app/logs";
+    else
+        logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+
+    Directory.CreateDirectory(logDir);
+
+    string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
+
+
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        // .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        // .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Service", serviceName) 
+        .WriteTo.Console(
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}"
+        )
+        .WriteTo.File(
+            logFile,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14, // keep 14 hari
+            fileSizeLimitBytes: 10 * 1024 * 1024, 
+            rollOnFileSizeLimit: true,   
+            shared: true,
+                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  // ✅ SAMA dengan console
+            restrictedToMinimumLevel: LogEventLevel.Information
+        )
+        .CreateLogger();
+
+    Console.WriteLine($"Serilog initialized → Directory: {logDir}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Serilog initialization failed: {ex.Message}");
+}
+
+
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
+
+builder.Services.AddMemoryCache();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -44,7 +131,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection")));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -89,19 +176,56 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAssertion(context =>
             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
     });
-            options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
+{
+    policy.RequireAssertion(context =>
+        context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
+});
+    options.AddPolicy("RequireAll", policy =>
+     {
+         policy.RequireAssertion(context =>
+            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary") || context.User.IsInRole("Secondary"));
+     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
+
+
+
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
+
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
+
+    AbortOnConnectFail = false,
+
+    ConnectTimeout = 50,   
+    SyncTimeout   = 50,    
+    AsyncTimeout  = 50,       
+    ReconnectRetryPolicy = new LinearRetry(50),
+
+    KeepAlive = 5,
+
+    // PENTING → nonaktifkan connect backoff
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.ConfigurationOptions = redisConfig;
+    options.InstanceName = redisInstance;
+});
+builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddHostedService<RedisRecoveryService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -150,6 +274,8 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
@@ -167,11 +293,12 @@ builder.WebHost.UseUrls($"http://{host}:{port}");
         app.MapGet("/hc", async (IServiceProvider sp) =>
     {
         var db = sp.GetRequiredService<BleTrackingDbContext>();
-        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+        // var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
 
         try
         {
             await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+             Log.Information("Health check passed - Database connected");
             return Results.Ok(new
             {
                 code = 200,
@@ -184,7 +311,7 @@ builder.WebHost.UseUrls($"http://{host}:{port}");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Health check failed");
+             Log.Error(ex, "Health check failed - Database unreachable");
             return Results.Problem("Database unreachable", statusCode: 500);
         }
     })
@@ -216,7 +343,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "BuildingImages");
 Directory.CreateDirectory(uploadsPath);
 
 
@@ -225,6 +353,15 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/BuildingImages"
 });
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+// Directory.CreateDirectory(uploadsPath);
+
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/BuildingImages"
+// });
 
 
 // // app.UseHttpsRedirection();
@@ -240,6 +377,7 @@ app.UseStaticFiles(new StaticFileOptions
     app.UseCors("AllowAll");
     // app.UseHttpsRedirection();
     app.UseRouting();
+    app.UseMiddleware<CustomExceptionMiddleware>(); 
     app.UseApiKeyAuthentication();
     app.UseAuthentication();
     app.UseAuthorization(); 

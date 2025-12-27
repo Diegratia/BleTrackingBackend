@@ -15,17 +15,24 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
 namespace BusinessLogic.Services.Implementation
+
 {
     public class MstBrandService : IMstBrandService
     {
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<MstBrandService> _logger;
 
-        public MstBrandService(MstBrandRepository repository, IMapper mapper)
+
+        public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger)
         {
             _repository = repository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<MstBrandDto> GetByIdAsync(Guid id)
@@ -35,13 +42,13 @@ namespace BusinessLogic.Services.Implementation
         }
 
         public async Task<IEnumerable<MstBrandDto>> GetAllAsync()
-
         {
             var brands = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstBrandDto>>(brands);
+            var mapped = _mapper.Map<IEnumerable<MstBrandDto>>(brands);
+            return mapped;
         }
-        public async Task<IEnumerable<OpenMstBrandDto>> OpenGetAllAsync()
 
+        public async Task<IEnumerable<OpenMstBrandDto>> OpenGetAllAsync()
         {
             var brands = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstBrandDto>>(brands);
@@ -71,7 +78,6 @@ namespace BusinessLogic.Services.Implementation
             if (brand == null)
                 throw new KeyNotFoundException("Brand not found");
             _mapper.Map(updateDto, brand);
-
             await _repository.UpdateAsync(brand);
         }
 
@@ -100,7 +106,7 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
-        
+
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = LicenseType.Community;

@@ -22,6 +22,12 @@ namespace Data.ViewModels
         public MstFloorDto Floor { get; set; }
         public MstFloorplanDto Floorplan { get; set; }
     }
+
+        public class AreaSummaryDto
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+        }
     
 
     public class FloorplanMaskedAreaMinimalDto : BaseModelDto

@@ -64,5 +64,11 @@ namespace Data.ViewModels
         public Guid? MemberId { get; set; }
         public List<BlacklistAreaCreateDto> BlacklistAreas { get; set; }
     }
+
+            public class BlacklistSummaryDto
+    {
+            public Guid Id { get; set; }
+            public String? BlacklistPersonName { get; set; }
+    }
     
 }

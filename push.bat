@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set VERSION=prod
+set VERSION=dev
 
 set DOCKER_USER=dev1pci2025
 set PROJECT=bletrackingbackend
@@ -46,9 +46,9 @@ for %%S in (
     geofence
     analytics
     gateway-health-api
-    nginx
+    nginxdock
 ) do (
-    set LOCAL_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:prod
+    set LOCAL_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:dev
     set NEW_IMAGE=%DOCKER_USER%/%PROJECT%-%%S:%VERSION%
 
     echo 🏷️ Menandai %%S menjadi tag %VERSION% ...

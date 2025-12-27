@@ -41,6 +41,11 @@ namespace BusinessLogic.Services.Implementation
             var accessCctvs = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstAccessCctvDto>>(accessCctvs);
         }
+        public async Task<IEnumerable<MstAccessCctvDto>> GetAllUnassignedAsync()
+        {
+            var accessCctvs = await _repository.GetAllUnassignedAsync();
+            return _mapper.Map<IEnumerable<MstAccessCctvDto>>(accessCctvs);
+        }
         public async Task<IEnumerable<OpenMstAccessCctvDto>> OpenGetAllAsync()
         {
             var accessCctvs = await _repository.GetAllAsync();
@@ -84,9 +89,12 @@ namespace BusinessLogic.Services.Implementation
             {
                 throw new KeyNotFoundException("Access CCTV not found");
             }
+            // if(accessCctv.IsAssigned == true)
+            //     throw new ValidationException("Access CCTV is still in use by floorplan device");
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             accessCctv.UpdatedBy = username;
             accessCctv.UpdatedAt = DateTime.UtcNow;
+            accessCctv.Status = 0;
             await _repository.SoftDeleteAsync(id);
         }
 

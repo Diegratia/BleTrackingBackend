@@ -1,29 +1,52 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Repositories.DbContexts;
-using BusinessLogic.Services.Interface;
-using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Extension;
+using BusinessLogic.Services.Implementation;
+using Microsoft.Extensions.FileProviders;
+using BusinessLogic.Services.Interface;
 using Repositories.Repository;
+using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
-using FluentValidation;
-using FluentValidation.AspNetCore;
+using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
+
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Konfigurasi CORS
 builder.Services.AddCorsExtension();
@@ -37,15 +60,15 @@ builder.Configuration
 // Konfigurasi Controllers
 builder.Services.AddControllers();
 
-    // Registrasi otomatis validasi FluentValidation
-    // Scan semua validator di assembly yang mengandung BrandValidator
+// Registrasi otomatis validasi FluentValidation
+// Scan semua validator di assembly yang mengandung BrandValidator
 builder.Services.AddValidatorExtensions();
 
 // Konfigurasi DbContext
 builder.Services.AddDbContextExtension(builder.Configuration);
 
 // Konfigurasi AutoMapper
-builder.Services.AddAutoMapper(typeof(AuthProfile));
+builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.AuthProfile));
 
 // Konfigurasi Autentikasi JWT
 builder.Services.AddJwtAuthExtension(builder.Configuration);
@@ -72,6 +95,8 @@ builder.Services.AddScoped<RefreshTokenRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Konfigurasi port dan host
 builder.UseDefaultHostExtension("AUTH_PORT", "5001");
+builder.Host.UseWindowsService();
+
 
 var app = builder.Build();
 
@@ -105,6 +130,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 // // app.UseHttpsRedirection();
+
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();

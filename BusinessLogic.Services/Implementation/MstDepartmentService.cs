@@ -15,6 +15,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
+
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -23,12 +25,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstDepartmentRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _cache;
 
-        public MstDepartmentService(MstDepartmentRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+
+        public MstDepartmentService(MstDepartmentRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cache = cache;
         }
 
         public async Task<MstDepartmentDto> GetByIdAsync(Guid id)
@@ -39,8 +44,17 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstDepartmentDto>> GetAllAsync()
         {
+            const string cacheKey = "MstDepartmentService_GetAll";
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDepartmentDto> cachedData))
+                return cachedData;
             var departments = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
+            var mapped = _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            _cache.Set(cacheKey, mapped, cacheOptions);
+            return mapped;
         }
 
         public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
@@ -67,6 +81,7 @@ namespace BusinessLogic.Services.Implementation
             department.Status = 1;
 
             var createdDepartment = await _repository.AddAsync(department);
+            _cache.Remove("MstDepartmentService_GetAll");
             return _mapper.Map<MstDepartmentDto>(createdDepartment);
         }
 
@@ -80,7 +95,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, department);
             department.UpdatedBy = username;
             department.UpdatedAt = DateTime.UtcNow;
-
+            _cache.Remove("MstDepartmentService_GetAll");
             await _repository.UpdateAsync(department);
         }
 
@@ -90,6 +105,7 @@ namespace BusinessLogic.Services.Implementation
             var department = await _repository.GetByIdAsync(id);
             department.UpdatedBy = username;
             department.UpdatedAt = DateTime.UtcNow;
+            _cache.Remove("MstDepartmentService_GetAll");
             await _repository.DeleteAsync(id);
         }
 

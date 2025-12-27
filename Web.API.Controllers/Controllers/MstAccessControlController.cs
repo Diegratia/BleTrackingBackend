@@ -22,6 +22,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstAccessControl
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -32,6 +33,32 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Access Controls retrieved successfully",
+                    collection = new { data = accessControls },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [HttpGet("unassigned")]
+        public async Task<IActionResult> GetAllUnassignedAsync()
+        {
+            try
+            {
+                var accessControls = await _mstAccessControlService.GetAllUnassignedAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Unassigned Access Controls retrieved successfully",
                     collection = new { data = accessControls },
                     code = 200
                 });

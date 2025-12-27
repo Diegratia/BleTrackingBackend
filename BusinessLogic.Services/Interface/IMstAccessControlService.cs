@@ -10,6 +10,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<MstAccessControlDto> GetByIdAsync(Guid id);
         Task<IEnumerable<MstAccessControlDto>> GetAllAsync();
+        Task<IEnumerable<MstAccessControlDto>> GetAllUnassignedAsync();
         Task<IEnumerable<OpenMstAccessControlDto>> OpenGetAllAsync();
         Task<MstAccessControlDto> CreateAsync(MstAccessControlCreateDto createDto);
         Task UpdateAsync(Guid id, MstAccessControlUpdateDto updateDto);

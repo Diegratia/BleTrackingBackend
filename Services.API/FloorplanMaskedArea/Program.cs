@@ -13,17 +13,75 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using Helpers.Consumer.Mqtt;
+using StackExchange.Redis;
+using BusinessLogic.Services.Background;
+
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
+
+var redisHost = builder.Configuration["Redis:Host"] ?? Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPassword = builder.Configuration["Redis:Password"] ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+var redisInstance = builder.Configuration["Redis:InstanceName"] ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
+
+var redisConfig = new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}" },
+    Password = redisPassword,
+
+    AbortOnConnectFail = false,
+    ConnectTimeout = 20,   
+    SyncTimeout   = 20,    
+    AsyncTimeout  = 20,    
+    // ConnectRetry = 0,       
+    ReconnectRetryPolicy = new LinearRetry(20),
+    KeepAlive = 5,
+
+    // PENTING → nonaktifkan connect backoff
+    BacklogPolicy = BacklogPolicy.FailFast
+};
+
+
+var mux = ConnectionMultiplexer.Connect(redisConfig);
+builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
+builder.Services.AddHostedService<RedisRecoveryService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.ConfigurationOptions = redisConfig;
+    options.InstanceName = redisInstance;
+});
+
+
 
 builder.Services.AddCors(options =>
 {
@@ -41,10 +99,11 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
+// builder.Services.AddMemoryCache();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

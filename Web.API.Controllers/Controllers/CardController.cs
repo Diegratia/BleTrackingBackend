@@ -72,6 +72,31 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [HttpGet("unused")]
+        public async Task<IActionResult> GetAllUnUsedAsync()
+        {
+            try
+            {
+                var cards = await _service.GetAllUnUsedAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = " Unused Card retrieved successfully",
+                    collection = new { data = cards },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         // GET: api/MstBleReader/{id}
         [HttpGet("v2/{id}")]

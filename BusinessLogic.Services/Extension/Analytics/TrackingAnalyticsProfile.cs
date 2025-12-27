@@ -23,6 +23,8 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<TrackingBuildingSummaryRM, TrackingBuildingSummaryDto>();
             CreateMap<TrackingDailySummaryRM, TrackingDailySummaryDto>();
             CreateMap<TrackingReaderSummaryRM, TrackingReaderSummaryDto>();
+            CreateMap<TrackingPermissionCountRM, TrackingPermissionCountDto>();
+            CreateMap<TrackingAccessPermissionSummaryRM, TrackingAccessPermissionSummaryDto>();
             
         }
     }

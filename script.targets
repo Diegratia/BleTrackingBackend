@@ -1,0 +1,63 @@
+  <Project DefaultTargets="BuildAll;PublishAll" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- 🧭 Temukan semua project di folder Services.API -->
+    <ItemGroup>
+      <ServiceProjects Include="Services.API\**\*.csproj" />
+    </ItemGroup>
+
+    <!-- 🏗️ Target build semua service -->
+    <Target Name="BuildAll">
+      <Message Text="🔨 Building all Services.API projects..." Importance="High" />
+      <MSBuild Projects="@(ServiceProjects)" Targets="Build" />
+    </Target>
+
+    <!-- 🚀 Target publish masing-masing ke foldernya sendiri -->
+    <!-- <Target Name="PublishAll">
+      <Message Text="🚀 Publishing all Services.API projects (per-folder)..." Importance="High" />
+      <MSBuild
+        Projects="@(ServiceProjects)"
+        Targets="Publish"
+        Properties="Configuration=Release;
+                    PublishDir=publish\%(Filename)\;
+                    RuntimeIdentifier=win-x64;
+                    SelfContained=true;
+                    DeleteExistingFiles=true;
+                    OverwriteReadOnlyFiles=true;" />
+    </Target> -->
+
+    <Target Name="RestoreAll">
+      <Message Text="📦 Restoring all NuGet packages..." Importance="High" />
+      <MSBuild Projects="@(ServiceProjects)" Targets="Restore" />
+    </Target>
+
+    <!-- 🧩 Target publish semua ke folder root publish tunggal -->
+    <Target Name="PublishAllService">
+      <Message Text="🚀 Publishing all Services.API projects into ROOT publish folder..." Importance="High" />
+
+      <!-- Pastikan folder publish ada -->
+      <MakeDir Directories='$(MSBuildProjectDirectory)\publish' />
+
+      <!-- Jalankan publish untuk semua service -->
+      <MSBuild
+        Projects="@(ServiceProjects)"
+        Targets="Publish"
+        Properties="Configuration=Release;
+                    PublishDir=$(MSBuildProjectDirectory)\publish;
+                    RuntimeIdentifier=win-x64;
+                    SelfContained=true;
+                    DeleteExistingFiles=true;
+                    OverwriteReadOnlyFiles=true;" />
+    </Target>
+
+  </Project>
+
+
+
+
+
+
+
+
+
+
+

@@ -27,8 +27,10 @@ namespace Data.ViewModels
         public DateOnly? ExitDate { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime? BlockAt { get; set; }
+        public bool? IsBlacklist { get; set; }
+        public DateTime? BlacklistAt { get; set; }
+        public string? BlacklistReason { get; set; }
+
         
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
@@ -68,8 +70,10 @@ namespace Data.ViewModels
         public DateOnly? ExitDate { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
-        public bool? IsBlock { get; set; }
-        public DateTime? BlockAt { get; set; }
+        public bool? IsBlacklist { get; set; }
+        public DateTime? BlacklistAt { get; set; }
+        public string? BlacklistReason { get; set; }
+
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
         public string CreatedBy { get; set; }
@@ -82,10 +86,6 @@ namespace Data.ViewModels
         // public MstDistrictDto? District { get; set; }
     }
 
-    public class MemberBlockDto
-    {
-        public bool? IsBlock { get; set; }
-    }
 
      public class MstMemberCreateDto : BaseModelDto
     {
@@ -133,7 +133,6 @@ namespace Data.ViewModels
         public Guid? CardId { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
-        public bool? IsBlock { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 }

@@ -14,10 +14,12 @@ namespace Web.API.Controllers.Controllers.Analytics
     public class TrackingAnalyticsController : ControllerBase
     {
         private readonly ITrackingAnalyticsService _service;
+        private readonly ITrackingAnalyticsV2Service _serviceV2;
 
-        public TrackingAnalyticsController(ITrackingAnalyticsService service)
+        public TrackingAnalyticsController(ITrackingAnalyticsService service, ITrackingAnalyticsV2Service serviceV2)
         {
             _service = service;
+            _serviceV2 = serviceV2;
         }
 
         // ===================================================================
@@ -90,6 +92,19 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
         {
             var result = await _service.GetCardSummaryAsync(request);
+            return Ok(result);
+        }
+
+        [HttpPost("visitor-session")]
+        public async Task<IActionResult> GetVisitorSessionSummaryAsync([FromBody] TrackingAnalyticsRequestRM request)
+        {
+            var result = await _serviceV2.GetVisitorSessionSummaryAsync(request);
+            return Ok(result);
+        }
+        [HttpPost("area-accessed")]
+        public async Task<IActionResult> GetAreaAccessed([FromBody] TrackingAnalyticsRequestRM request)
+        {
+            var result = await _service.GetAreaAccessedSummaryAsync(request);
             return Ok(result);
         }
     }

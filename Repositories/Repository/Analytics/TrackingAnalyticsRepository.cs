@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Helpers.Consumer;
 
 namespace Repositories.Repository.Analytics
 {
@@ -23,9 +24,9 @@ namespace Repositories.Repository.Analytics
         // get wib table name
         private static string GetTableNameByDate(DateTime utcDate)
         {
-            // var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            // var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-            var wibDate = utcDate.AddHours(7);
+            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var wibDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+            // var wibDate = utcDate.AddHours(7);
             return $"tracking_transaction_{wibDate:yyyyMMdd}";
         }
 
@@ -89,10 +90,49 @@ namespace Repositories.Repository.Analytics
 
             return data;
         }
+        
+         // count area accessed sum
+        public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsRequestRM request)
+    {
+        var range = GetTimeRange(request.TimeRange);
+        var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+        var to = range?.to ?? request.To ?? DateTime.UtcNow;
+        var tableName = GetTableNameByDate(DateTime.UtcNow);
+
+        var query = _context.Set<TrackingTransaction>()
+            .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+            .AsNoTracking()
+            .Include(t => t.FloorplanMaskedArea)
+            .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+        query = ApplyFilters(query, request);
+
+        // Ambil area unik yang dikunjungi
+        var data = await query
+            .Select(t => new
+            {
+                t.FloorplanMaskedAreaId,
+                RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus
+            })
+            .Distinct()
+            .ToListAsync();
+
+        var totalWithPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.NonRestrict);
+        var totalWithoutPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.Restrict);
+
+        return new TrackingAccessPermissionSummaryRM
+        {
+            AccessedAreaTotal = data.Count,
+            WithPermission = totalWithPermission,
+            WithoutPermission = totalWithoutPermission
+        };
+    }
+
+
 
 
         // daily sum
-            public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
@@ -166,72 +206,74 @@ namespace Repositories.Repository.Analytics
 
 
         // visitor sum
-       public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsRequestRM request)
-{
-    var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-    var tableName = GetTableNameByDate(DateTime.UtcNow);
-
-    var query = _context.Set<TrackingTransaction>()
-        .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-        .AsNoTracking()
-        .Include(t => t.Card.Visitor)
-        .Include(t => t.Card.Member)
-        .Where(t => t.TransTime >= from && t.TransTime <= to);
-
-    query = ApplyFilters(query, request);
-
-    var incidents = await query
-        .Select(t => new
+        public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsRequestRM request)
         {
-            t.CardId,
-            t.Card.VisitorId,
-            VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
-            t.Card.MemberId,
-            MemberName = t.Card.Member != null ? t.Card.Member.Name : null
-        })
-        .Distinct()
-        .ToListAsync();
+            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-    var grouped = incidents
-        .GroupBy(x => new { x.VisitorId, x.VisitorName, x.MemberId, x.MemberName })
-        .Select(g => new TrackingVisitorSummaryRM
-        {
-            VisitorId = g.Key.VisitorId,
-            VisitorName = g.Key.VisitorName,
-            MemberId = g.Key.MemberId,
-            MemberName = g.Key.MemberName,
-            TotalRecords = g.Count()
-        })
-        .OrderByDescending(x => x.TotalRecords)
-        .ToList();
+            var query = _context.Set<TrackingTransaction>()
+                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+                .AsNoTracking()
+                .Include(t => t.Card.Visitor)
+                .Include(t => t.Card.Member)
+                .Where(t => t.TransTime >= from && t.TransTime <= to);
 
-    return grouped;
-}
+            query = ApplyFilters(query, request);
+
+            var incidents = await query
+                .Select(t => new
+                {
+                    t.CardId,
+                    t.Card.VisitorId,
+                    VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
+                    t.Card.MemberId,
+                    MemberName = t.Card.Member != null ? t.Card.Member.Name : null
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var grouped = incidents
+                .GroupBy(x => new { x.VisitorId, x.VisitorName, x.MemberId, x.MemberName })
+                .Select(g => new TrackingVisitorSummaryRM
+                {
+                    VisitorId = g.Key.VisitorId,
+                    VisitorName = g.Key.VisitorName,
+                    MemberId = g.Key.MemberId,
+                    MemberName = g.Key.MemberName,
+                    TotalRecords = g.Count()
+                })
+                .OrderByDescending(x => x.TotalRecords)
+                .ToList();
+
+            return grouped;
+        }
 
 
-        // card sum
-       public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
+        // card sum - tracking-sum - latest tracking
+        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
 {
     var (from, to) = (
         request.From ?? DateTime.UtcNow.AddDays(-7),
         request.To ?? DateTime.UtcNow
     );
 
-    var tableName = GetTableNameByDate(DateTime.UtcNow); // WIB-based table name
+    var tableName = GetTableNameByDate(DateTime.UtcNow);
 
+    // Query dasar
     var query = _context.Set<TrackingTransaction>()
         .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
         .AsNoTracking()
-        .Include(t => t.Card)
-            .ThenInclude(c => c.Visitor)
-        .Include(t => t.Card)
-            .ThenInclude(c => c.Member)
+        // .Include(t => t.Card)
+        //     .ThenInclude(c => c.Visitor)
+        // .Include(t => t.Card)
+        //     .ThenInclude(c => c.Member)
+        // .Include(t => t.FloorplanMaskedArea.Floorplan.Floor.Building)
         .Where(t => t.TransTime >= from && t.TransTime <= to);
 
-    // Apply optional filters (building, floor, area, etc.)
+    // filter opsional
     query = ApplyFilters(query, request);
 
-    // 🔹 Ambil hanya field yang dibutuhkan untuk efisiensi
+    // Ambil field yang dibutuhkan
     var raw = await query
         .Select(t => new
         {
@@ -241,14 +283,25 @@ namespace Repositories.Repository.Analytics
             VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
             t.Card.MemberId,
             MemberName = t.Card.Member != null ? t.Card.Member.Name : null,
-            t.TransTime
+            t.TransTime,
+            t.CoordinateX,
+            t.CoordinateY,
+            MaskedAreaId = t.FloorplanMaskedArea.Id,
+            MaskedAreaName = t.FloorplanMaskedArea.Name,
+            FloorplanId = t.FloorplanMaskedArea.Floorplan.Id,
+            FloorplanName = t.FloorplanMaskedArea.Floorplan.Name,
+            FloorId = t.FloorplanMaskedArea.Floorplan.Floor.Id,
+            FloorName = t.FloorplanMaskedArea.Floorplan.Floor.Name,
+            BuildingId = t.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
+            BuildingName = t.FloorplanMaskedArea.Floorplan.Floor.Building.Name,
+            t.FloorplanMaskedArea.Floorplan.FloorplanImage,
         })
         .ToListAsync();
 
     if (raw.Count == 0)
         return new List<TrackingCardSummaryRM>();
 
-    // 🔹 DISTINCT Card agar 1 Card dihitung 1x per visitor/member (hapus spam MQTT)
+    // Group per Card
     var grouped = raw
         .GroupBy(x => new
         {
@@ -259,64 +312,153 @@ namespace Repositories.Repository.Analytics
             x.MemberId,
             x.MemberName
         })
-        .Select(g => new TrackingCardSummaryRM
+        .Select(g =>
         {
-            CardId = g.Key.CardId,
-            CardName = g.Key.CardName,
-            VisitorId = g.Key.VisitorId,
-            VisitorName = g.Key.VisitorName,
-            MemberId = g.Key.MemberId,
-            MemberName = g.Key.MemberName,
-            TotalRecords = g.Count(),
-            EnterTime = g.Min(x => x.TransTime), // waktu pertama muncul
-            ExitTime = g.Max(x => x.TransTime)   // waktu terakhir muncul
+            var first = g.OrderBy(x => x.TransTime).First();
+            var last = g.OrderByDescending(x => x.TransTime).First(); // posisi terakhir
+
+            return new TrackingCardSummaryRM
+            {
+                CardId = g.Key.CardId,
+                CardName = g.Key.CardName,
+                VisitorId = g.Key.VisitorId,
+                VisitorName = g.Key.VisitorName,
+                MemberId = g.Key.MemberId,
+                MemberName = g.Key.MemberName,
+                // TotalRecords = g.Count(),
+                EnterTime = first.TransTime,
+                ExitTime = last.TransTime,
+
+                // Lokasi terakhir
+                BuildingId = last.BuildingId,
+                BuildingName = last.BuildingName,
+                FloorId = last.FloorId,
+                FloorName = last.FloorName,
+                FloorplanId = last.FloorplanId,
+                FloorplanName = last.FloorplanName,
+                FloorplanImage = last.FloorplanImage,
+                MaskedAreaId = last.MaskedAreaId,
+                MaskedAreaName = last.MaskedAreaName,
+                LastX = (float)Math.Round(last.CoordinateX ?? 0),
+                LastY = (float)Math.Round(last.CoordinateY ?? 0)
+            };
         })
-        .OrderByDescending(x => x.TotalRecords)
+        .OrderByDescending(x => x.ExitTime)
         .ToList();
 
     return grouped;
 }
 
 
-        // ===========================================================
-        // 5️⃣ Reader Summary
-        // ===========================================================
-        public async Task<List<TrackingReaderSummaryRM>> GetReaderSummaryAsync(TrackingAnalyticsRequestRM request)
-        {
-            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-            var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking()
-                .Include(t => t.Reader)
-                .Where(t => t.TransTime >= from && t.TransTime <= to);
+        // card sum
+        //        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
+        // {
+        //     var (from, to) = (
+        //         request.From ?? DateTime.UtcNow.AddDays(-7),
+        //         request.To ?? DateTime.UtcNow
+        //     );
 
-            query = ApplyFilters(query, request);
+        //     var tableName = GetTableNameByDate(DateTime.UtcNow); // WIB-based table name
 
-            var data = await query
-                .Select(t => new
+        //     var query = _context.Set<TrackingTransaction>()
+        //         .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+        //         .AsNoTracking()
+        //         .Include(t => t.Card)
+        //             .ThenInclude(c => c.Visitor)
+        //         .Include(t => t.Card)
+        //             .ThenInclude(c => c.Member)
+        //         .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+        //     // Apply optional filters (building, floor, area, etc.)
+        //     query = ApplyFilters(query, request);
+
+        //     // 🔹 Ambil hanya field yang dibutuhkan untuk efisiensi
+        //     var raw = await query
+        //         .Select(t => new
+        //         {
+        //             t.CardId,
+        //             CardName = t.Card.Name,
+        //             t.Card.VisitorId,
+        //             VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
+        //             t.Card.MemberId,
+        //             MemberName = t.Card.Member != null ? t.Card.Member.Name : null,
+        //             t.TransTime
+        //         })
+        //         .ToListAsync();
+
+        //     if (raw.Count == 0)
+        //         return new List<TrackingCardSummaryRM>();
+
+        //     // 🔹 DISTINCT Card agar 1 Card dihitung 1x per visitor/member (hapus spam MQTT)
+        //     var grouped = raw
+        //         .GroupBy(x => new
+        //         {
+        //             x.CardId,
+        //             x.CardName,
+        //             x.VisitorId,
+        //             x.VisitorName,
+        //             x.MemberId,
+        //             x.MemberName
+        //         })
+        //         .Select(g => new TrackingCardSummaryRM
+        //         {
+        //             CardId = g.Key.CardId,
+        //             CardName = g.Key.CardName,
+        //             VisitorId = g.Key.VisitorId,
+        //             VisitorName = g.Key.VisitorName,
+        //             MemberId = g.Key.MemberId,
+        //             MemberName = g.Key.MemberName,
+        //             TotalRecords = g.Count(),
+        //             EnterTime = g.Min(x => x.TransTime), // waktu pertama muncul
+        //             ExitTime = g.Max(x => x.TransTime)   // waktu terakhir muncul
+        //         })
+        //         .OrderByDescending(x => x.TotalRecords)
+        //         .ToList();
+
+        //     return grouped;
+        // }
+
+
+        //         // ===========================================================
+        //         // 5️⃣ Reader Summary
+        //         // ===========================================================
+                public async Task<List<TrackingReaderSummaryRM>> GetReaderSummaryAsync(TrackingAnalyticsRequestRM request)
                 {
-                    t.ReaderId,
-                    ReaderName = t.Reader.Name,
-                    t.CardId
-                })
-                .Distinct()
-                .GroupBy(x => new { x.ReaderId, x.ReaderName })
-                .Select(g => new TrackingReaderSummaryRM
-                {
-                    ReaderId = g.Key.ReaderId,
-                    ReaderName = g.Key.ReaderName,
-                    TotalRecords = g.Count() // Total card unik yang pernah dibaca reader itu
-                })
-                .OrderByDescending(x => x.TotalRecords)
-                .ToListAsync();
+                    var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+                    var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-            return data;
-        }
+                    var query = _context.Set<TrackingTransaction>()
+                        .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+                        .AsNoTracking()
+                        .Include(t => t.Reader)
+                        .Where(t => t.TransTime >= from && t.TransTime <= to);
+
+                    query = ApplyFilters(query, request);
+
+                    var data = await query
+                        .Select(t => new
+                        {
+                            t.ReaderId,
+                            ReaderName = t.Reader.Name,
+                            t.CardId
+                        })
+                        .Distinct()
+                        .GroupBy(x => new { x.ReaderId, x.ReaderName })
+                        .Select(g => new TrackingReaderSummaryRM
+                        {
+                            ReaderId = g.Key.ReaderId,
+                            ReaderName = g.Key.ReaderName,
+                            TotalRecords = g.Count() // Total card unik yang pernah dibaca reader itu
+                        })
+                        .OrderByDescending(x => x.TotalRecords)
+                        .ToListAsync();
+
+                    return data;
+                }
 
 
-                public async Task<List<TrackingMovementRM>> GetTrackingMovementByCardIdAsync(Guid cardId)
+        public async Task<List<TrackingMovementRM>> GetTrackingMovementByCardIdAsync(Guid cardId)
         {
             var tableName = GetTableNameByDate(DateTime.UtcNow); // WIB-based table name
 
@@ -419,6 +561,8 @@ namespace Repositories.Repository.Analytics
 
             return grouped;
         }
+
+        
 
 
 

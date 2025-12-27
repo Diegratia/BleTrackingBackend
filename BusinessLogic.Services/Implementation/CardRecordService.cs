@@ -19,6 +19,8 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
 using Helpers.Consumer;
+using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -30,14 +32,28 @@ namespace BusinessLogic.Services.Implementation
         // private readonly TrxVisitorRepository _trxVisitorRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<CardRecord> _logger;
+        private readonly IMqttClientService _mqttClient;
 
-        public CardRecordService( CardRecordRepository repository, CardRepository cardRepository, VisitorRepository visitorRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardRecordService
+        (
+            CardRecordRepository repository,
+            CardRepository cardRepository,
+            VisitorRepository visitorRepository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            IMqttClientService mqttClient,
+            ILogger<CardRecord> logger
+        )
         {
             _repository = repository;
             _cardRepository = cardRepository;
             _visitorRepository = visitorRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _mqttClient = mqttClient;
+
         }
 
         public async Task<CardRecordDto> GetByIdAsync(Guid id)
@@ -92,12 +108,12 @@ namespace BusinessLogic.Services.Implementation
             await _cardRepository.UpdateAsync(card);
             await _visitorRepository.UpdateAsync(visitor);
             var createdCardRecord = await _repository.AddAsync(cardRecord);
-
+            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
             return _mapper.Map<CardRecordDto>(createdCardRecord);
         }
 
 
-            public async Task CheckoutCard(Guid id)
+        public async Task CheckoutCard(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -134,6 +150,7 @@ namespace BusinessLogic.Services.Implementation
             await _cardRepository.UpdateAsync(card);
             await _visitorRepository.UpdateAsync(visitor);
             await _repository.UpdateAsync(cardRecord);
+            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
         }
 
         

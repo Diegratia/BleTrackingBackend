@@ -20,11 +20,17 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
+using DataView;
 
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstBuildingService : IMstBuildingService
+    public class MstBuildingService : BaseService, IMstBuildingService
     {
         private readonly MstBuildingRepository _repository;
         private readonly IMstFloorService _floorService;
@@ -33,33 +39,135 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
+         private readonly IMqttClientService _mqttClient;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
+        private readonly ILogger<MstBuilding>_logger;
+        private bool cacheDisabled = false;
 
         public MstBuildingService(
             MstBuildingRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IMstFloorService floorService,
-            MstFloorRepository floorRepository
-            )
+            MstFloorRepository floorRepository,
+            IDistributedCache cache,
+            IConnectionMultiplexer redis,
+            ILogger<MstBuilding> logger,
+            IMqttClientService mqttClient
+            ): base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _floorService = floorService;
             _floorRepository = floorRepository;
+            _cache = cache;
+            _redis = redis?.GetDatabase();
+            _mqttClient = mqttClient;
+            _logger = logger;
+        }
+        
+         private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
+
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string Key(string key)
+            => $"cache:mstbuilding:{AppId}:{key}";
+        private string GroupKey 
+            => $"cache:mstbuilding:group:{AppId}";
+
+ public async Task RemoveGroupAsync()
+        {
+            if (!IsRedisAlive()) return;
+
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;  
+            }
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
         {
             var building = await _repository.GetByIdAsync(id);
-            return building == null ? null : _mapper.Map<MstBuildingDto>(building);
+            if (building == null)
+                throw new NotFoundException($"Building {id} not found");
+            if (building.Status == 0)
+                throw new BusinessException("Building is inactive", "BUILDING_INACTIVE");
+            return _mapper.Map<MstBuildingDto>(building);
         }
 
-        public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
+            public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
         {
-            var buildings = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+            var cacheKey = Key("getall");
+
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<MstBuildingDto>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
+            }
+            _logger.LogInformation($"Cache miss: {cacheKey}");
+
+            var data = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(data);
+
+          if (IsRedisAlive())
+            {
+                try
+                {
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(mapped),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
+
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
+            return mapped;
         }
+
 
             public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
         {
@@ -73,12 +181,16 @@ namespace BusinessLogic.Services.Implementation
             if (createDto.Image != null && createDto.Image.Length > 0)
             {
                 if (string.IsNullOrEmpty(createDto.Image.ContentType) || !_allowedImageTypes.Contains(createDto.Image.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (createDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 5 MB limit.");
+                    throw new BusinessException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 var fileExtension = Path.GetExtension(createDto.Image.FileName)?.ToLower() ?? ".jpg";
@@ -94,13 +206,13 @@ namespace BusinessLogic.Services.Implementation
                 }
                 catch (IOException ex)
                 {
-                    throw new IOException("Failed to save image file.", ex);
+                    throw new BusinessException("Failed to save image file", ex, "FILE_SAVE_ERROR");
                 }
 
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
             }
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             building.Id = Guid.NewGuid();
             building.CreatedBy = username;
             building.CreatedAt = DateTime.UtcNow;
@@ -109,30 +221,37 @@ namespace BusinessLogic.Services.Implementation
             building.Status = 1;
 
             var createdBuilding = await _repository.AddAsync(building);
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
         public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             var building = await _repository.GetByIdAsync(id);
             if (building == null)
-                throw new KeyNotFoundException("Building not found");
+                throw new NotFoundException("Building not found");
 
             if (updateDto.Image != null && updateDto.Image.Length > 0)
             {
                 if (string.IsNullOrEmpty(updateDto.Image.ContentType) || !_allowedImageTypes.Contains(updateDto.Image.ContentType))
-                    throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+                    throw new BusinessException("Only image files (jpg, png, jpeg) are allowed.");
 
                 if (updateDto.Image.Length > MaxFileSize)
-                    throw new ArgumentException("File size exceeds 5 MB limit.");
+                    throw new BusinessException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 if (!string.IsNullOrEmpty(building.Image))
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, building.Image.TrimStart('/'));
                     if (File.Exists(oldFilePath))
                     {
                         try
@@ -141,7 +260,7 @@ namespace BusinessLogic.Services.Implementation
                         }
                         catch (IOException ex)
                         {
-                            throw new IOException("Failed to delete old image file.", ex);
+                            throw new BusinessException("Failed to delete old image file.", ex, "FILE_DELETE_ERROR");
                         }
                     }
                 }
@@ -159,7 +278,7 @@ namespace BusinessLogic.Services.Implementation
                 }
                 catch (IOException ex)
                 {
-                    throw new IOException("Failed to save image file.", ex);
+                    throw new BusinessException("Failed to save image file.", ex, "FILE_SAVE_ERROR");
                 }
 
                 building.Image = $"/Uploads/BuildingImages/{fileName}";
@@ -170,7 +289,8 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(building);
-            
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -185,31 +305,35 @@ namespace BusinessLogic.Services.Implementation
         // }
 
         public async Task DeleteAsync(Guid id)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        var building = await _repository.GetByIdAsync(id);
-        if (building == null)
-            throw new KeyNotFoundException("building not found");
-
-        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            var floors = await _floorRepository.GetByBuildingIdAsync(id);
-            foreach (var floor in floors)
+            var username = UsernameFormToken;
+            var building = await _repository.GetByIdAsync(id);
+            if (building == null)
+                throw new NotFoundException("building not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
             {
-                await _floorService.DeleteAsync(floor.Id);
-            }
-            building.UpdatedBy = username;
-            building.UpdatedAt = DateTime.UtcNow;
-            building.Status = 0;
-            await _repository.DeleteAsync(id);
-        });
+                var floors = await _floorRepository.GetByBuildingIdAsync(id);
+                foreach (var floor in floors)
+                {
+                    await _floorService.DeleteAsync(floor.Id);
+                }
+                building.UpdatedBy = username;
+                building.UpdatedAt = DateTime.UtcNow;
+                building.Status = 0;
+                await _repository.DeleteAsync(id);
+            });
+            await _floorService.RemoveGroupAsync();
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        
     }
         
 
-         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {
             var buildings = new List<MstBuilding>();
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var username = UsernameFormToken;
             var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
 
             using var stream = file.OpenReadStream();

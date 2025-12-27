@@ -17,6 +17,8 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Repositories;
+using Microsoft.Extensions.Logging;
+using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -26,12 +28,22 @@ namespace BusinessLogic.Services.Implementation
         private readonly AlarmCategorySettingsRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<AlarmCategorySettings> _logger;
+        private readonly IMqttClientService _mqttClient;
 
-        public AlarmCategorySettingsService(AlarmCategorySettingsRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public AlarmCategorySettingsService(AlarmCategorySettingsRepository repository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<AlarmCategorySettings> logger,
+        IMqttClientService mqttClient
+
+        )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _mqttClient = mqttClient;
         }
 
         public async Task<AlarmCategorySettingsDto> GetByIdAsync(Guid id)
@@ -77,10 +89,10 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Category not found");
             category.UpdatedAt = DateTime.UtcNow;
             category.UpdatedBy = username;
-            
-            _mapper.Map(updateDto, category);
 
+            _mapper.Map(updateDto, category);
             await _repository.UpdateAsync(category);
+            await _mqttClient.PublishAsync("engine/refresh/alarm-related", "");
         }
 
         public async Task DeleteAsync(Guid id)

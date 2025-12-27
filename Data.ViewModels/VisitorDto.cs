@@ -27,6 +27,8 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
+        public bool? IsBlacklist { get; set; }
+        public string? BlacklistReason { get; set; }
         public string? FaceImage { get; set; }
         public Guid? CardId { get; set; }
         public int? UploadFr { get; set; } = 0;
@@ -40,8 +42,8 @@ namespace Data.ViewModels
 
         public CardDto Card { get; set; }
     }
-    
-     public class OpenVisitorDto : BaseModelDto
+
+    public class OpenVisitorDto : BaseModelDto
     {
         public long Generate { get; set; }
 
@@ -62,6 +64,8 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
         public string? DepartmentName { get; set; }
         public bool? IsVip { get; set; }
+        public bool? IsBlacklist { get; set; }
+        public string? BlacklistReason { get; set; }
         public string? FaceImage { get; set; }
         public Guid? CardId { get; set; }
         public int? UploadFr { get; set; } = 0;
@@ -99,7 +103,7 @@ namespace Data.ViewModels
 
         public Guid ApplicationId { get; set; }
     }
-    
+
 
 
     //  public class OpenVisitorCreateDto : TrxVisitorCreateDto
@@ -127,7 +131,7 @@ namespace Data.ViewModels
     // }
 
 
-     public class VMSOpenVisitorCreateDto : TrxVisitorCreateDto
+    public class VMSOpenVisitorCreateDto : TrxVisitorCreateDto
     {
         public string? PersonId { get; set; }
         public string? IdentityId { get; set; }
@@ -149,7 +153,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
 
     }
-    
+
 
     public class VisitorUpdateDto
     {
@@ -262,7 +266,7 @@ namespace Data.ViewModels
         public string? InvitationCode { get; set; } // <- ini penting untuk akses
     }
 
-     public class VisitorMinimalDto : BaseModelDto
+    public class VisitorMinimalDto : BaseModelDto
     {
         public Guid Id { get; set; }
         public string? PersonId { get; set; }
@@ -278,5 +282,10 @@ namespace Data.ViewModels
         [FromQuery]
         public string? InvitationCode { get; set; }
 
+    }
+
+        public class BlacklistReasonDto
+    {
+        public string? BlacklistReason { get; set; }
     }
 }

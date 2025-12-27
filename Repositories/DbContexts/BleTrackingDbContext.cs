@@ -415,7 +415,7 @@ namespace Repositories.DbContexts
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Floorplan)
-                    .WithMany()
+                    .WithMany(m => m.FloorplanMaskedAreas)
                     .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
 
@@ -636,9 +636,9 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.Type).HasConversion(v => v.ToString().ToLower(), v => (DeviceType)Enum.Parse(typeof(DeviceType), v, true));
                 entity.Property(e => e.FloorplanId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.AccessCctvId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.AccessControlId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.AccessCctvId).HasMaxLength(36);
+                entity.Property(e => e.ReaderId).HasMaxLength(36);
+                entity.Property(e => e.AccessControlId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.DeviceStatus).HasConversion(v => v.ToString().ToLower(), v => (DeviceStatus)Enum.Parse(typeof(DeviceStatus), v, true));

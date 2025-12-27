@@ -130,8 +130,8 @@ namespace Web.API.Controllers.Controllers
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
-        [HttpPut("block/{id}")]
-        public async Task<IActionResult> BlockMember(Guid id, [FromBody] MemberBlockDto dto)
+        [HttpPost("{id}/blacklist")]
+        public async Task<IActionResult> BlacklistMember(Guid id, [FromBody] BlacklistReasonDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -146,11 +146,50 @@ namespace Web.API.Controllers.Controllers
             }
              try
             {
-                await _mstMemberService.BlockCardAsync(id, dto);
+                await _mstMemberService.MemberBlacklistAsync(id, dto);
                 return Ok(new
                 {
                     success = true,
-                    msg = "Member Block successfully",
+                    msg = "Member Blacklisted successfully",
+                    collection = new { data = (object)null },
+                    code = 204
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        // POST: api/MstMember
+        [HttpPost("{id}/unblacklist")]
+        public async Task<IActionResult> UnBlacklistMember(Guid id, [FromBody] BlacklistReasonDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+             try
+            {
+                await _mstMemberService.MemberBlacklistAsync(id, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Member Blacklist successfully",
                     collection = new { data = (object)null },
                     code = 204
                 });

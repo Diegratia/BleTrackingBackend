@@ -17,7 +17,7 @@ namespace Repositories.Repository
             {
             }
 
-            public async Task<MstBuilding> GetByIdAsync(Guid id)
+            public async Task<MstBuilding?> GetByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
@@ -26,7 +26,7 @@ namespace Repositories.Repository
             query = query.WithActiveRelations();
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Building not found");
+            return await query.FirstOrDefaultAsync();
         }
 
           public async Task DeleteAsync(Guid id)

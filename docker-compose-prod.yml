@@ -37,6 +37,7 @@ services:
     ports:
       - "5014:5014"
     volumes:
+      - floorplan_images:/app/Uploads/FloorplanImages
       - ./.env:/app/.env
     restart: always
 
@@ -93,6 +94,7 @@ services:
     ports:
       - "5019:5019"
     volumes:
+      - visitor_face_images:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -111,6 +113,7 @@ services:
     # depends_on:
     #   - mst-application
     volumes:
+      - building_images:/app/Uploads/BuildingImages
       - ./.env:/app/.env
     restart: always
 
@@ -144,7 +147,7 @@ services:
     #   - mst-department
     #   - mst-district
     volumes:
-      - ./Uploads/MemberFaceImages:/app/Uploads/MemberFaceImages
+      - member_face_images:/app/Uploads/MemberFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -247,7 +250,7 @@ services:
     ports:
       - "5028:5028"
     volumes:
-      - ./.env:/app/.envc
+      - ./.env:/app/.env
     restart: always
 
   alarm-triggers:
@@ -279,3 +282,9 @@ services:
     restart: always
     expose:
       - "8080" # hanya visible untuk Nginx di dalam jaringan Docker
+
+volumes:
+  floorplan_images:
+  visitor_face_images:
+  member_face_images:
+  building_images:

@@ -993,12 +993,12 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AccessCctvId")
+                    b.Property<Guid?>("AccessCctvId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("access_cctv_id");
 
-                    b.Property<Guid>("AccessControlId")
+                    b.Property<Guid?>("AccessControlId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("access_control_id");
@@ -1074,7 +1074,7 @@ namespace Repositories.Migrations
                         .HasColumnType("real")
                         .HasColumnName("pos_y");
 
-                    b.Property<Guid>("ReaderId")
+                    b.Property<Guid?>("ReaderId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ble_reader_id");
@@ -1170,9 +1170,6 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("MstFloorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MstFloorplanId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -1206,8 +1203,6 @@ namespace Repositories.Migrations
                     b.HasIndex("FloorplanId");
 
                     b.HasIndex("MstFloorId");
-
-                    b.HasIndex("MstFloorplanId");
 
                     b.ToTable("floorplan_masked_area", (string)null);
                 });
@@ -1363,6 +1358,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
 
+                    b.Property<bool?>("IsAssigned")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_assigned");
+
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1449,6 +1448,10 @@ namespace Repositories.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("integration_id");
+
+                    b.Property<bool?>("IsAssigned")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_assigned");
 
                     b.Property<Guid?>("MstApplicationId")
                         .HasColumnType("uniqueidentifier");
@@ -1643,6 +1646,10 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ip");
+
+                    b.Property<bool?>("IsAssigned")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_assigned");
 
                     b.Property<string>("Name")
                         .HasMaxLength(255)
@@ -2275,14 +2282,18 @@ namespace Repositories.Migrations
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
 
+                    b.Property<DateTime?>("BlacklistAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("blacklist_at");
+
+                    b.Property<string>("BlacklistReason")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("blacklist_reason");
+
                     b.Property<string>("BleCardNumber")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ble_card_number");
-
-                    b.Property<DateTime?>("BlockAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("block_at");
 
                     b.Property<string>("CardNumber")
                         .HasMaxLength(255)
@@ -2340,9 +2351,9 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
 
-                    b.Property<bool?>("IsBlock")
+                    b.Property<bool?>("IsBlacklist")
                         .HasColumnType("bit")
-                        .HasColumnName("is_block");
+                        .HasColumnName("is_blacklist");
 
                     b.Property<DateOnly?>("JoinDate")
                         .HasColumnType("date")
@@ -3255,6 +3266,10 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<string>("BlacklistReason")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("blacklist_reason");
+
                     b.Property<string>("BleCardNumber")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -3303,6 +3318,10 @@ namespace Repositories.Migrations
                     b.Property<string>("IdentityType")
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_type");
+
+                    b.Property<bool?>("IsBlacklist")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_blacklist");
 
                     b.Property<bool?>("IsVip")
                         .HasColumnType("bit")
@@ -3706,14 +3725,12 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstAccessCctv", "AccessCctv")
                         .WithMany()
                         .HasForeignKey("AccessCctvId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstAccessControl", "AccessControl")
                         .WithMany()
                         .HasForeignKey("AccessControlId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.MstApplication", "Application")
                         .WithMany()
@@ -3756,8 +3773,7 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstBleReader", "Reader")
                         .WithMany()
                         .HasForeignKey("ReaderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("AccessCctv");
 
@@ -3787,7 +3803,7 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
-                        .WithMany()
+                        .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("FloorplanId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -3795,10 +3811,6 @@ namespace Repositories.Migrations
                     b.HasOne("Entities.Models.MstFloor", null)
                         .WithMany("FloorplanMaskedAreas")
                         .HasForeignKey("MstFloorId");
-
-                    b.HasOne("Entities.Models.MstFloorplan", null)
-                        .WithMany("FloorplanMaskedAreas")
-                        .HasForeignKey("MstFloorplanId");
 
                     b.Navigation("Application");
 

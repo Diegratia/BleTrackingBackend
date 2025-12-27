@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Repositories.DbContexts;
+using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -20,11 +21,16 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly IMqttClientService _mqttClientService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<EngineMqttListener> _logger;
 
-        public EngineMqttListener(IMqttClientService mqttClientService, IServiceScopeFactory scopeFactory)
+        public EngineMqttListener(
+            IMqttClientService mqttClientService,
+            IServiceScopeFactory scopeFactory,
+            ILogger<EngineMqttListener> logger)
         {
             _mqttClientService = mqttClientService;
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,7 +48,7 @@ namespace BusinessLogic.Services.Implementation
 
                 if (string.IsNullOrEmpty(status))
                 {
-                    Console.WriteLine($" No 'status' field found in payload for {engineId}");
+                    _logger.LogWarning("No 'status' field found in payload for {engineId}", engineId);
                     return;
                 }
 
@@ -76,16 +82,16 @@ namespace BusinessLogic.Services.Implementation
                         break;
 
                     default:
-                        Console.WriteLine($"Unknown engine status value: {status}");
+                        _logger.LogWarning("Unknown engine status value: {status}", status);
                         return;
                 }
 
                 await engineService.UpdateEngineByIdAsync(engineId, dto);
-                Console.WriteLine($"[{status}] updated {engineId}");
+                _logger.LogInformation("[{status}] updated {engineId}", status, engineId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing MQTT message: {ex}");
+                _logger.LogError(ex, "Error processing MQTT message");
             }
         };
             // Keep service alive

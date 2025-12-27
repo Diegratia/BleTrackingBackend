@@ -1,29 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <OutputType>Library</OutputType> 
+    <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>false</IsPackable>
+    <NoBuild>true</NoBuild>
   </PropertyGroup>
-
-    <!-- Layer shared -->
   <ItemGroup>
-    <ProjectReference Include="BusinessLogic.Services\BusinessLogic.Services.csproj" />
-    <ProjectReference Include="Data.ViewModels\Data.ViewModels.csproj" />
-    <ProjectReference Include="Entities.Models\Entities.Models.csproj" />
-    <ProjectReference Include="Repositories\Repositories.csproj" />
-    <ProjectReference Include="Helpers.Consumer\Helpers.Consumer.csproj" />
-    <ProjectReference Include="Web.API.Controllers\Web.API.Controllers.csproj" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Settings.Configuration" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Common.Logging.Core" />
-    <PackageReference Include="Common.Logging" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Semua API dan scheduler -->
-    <ProjectReference Include="Services.API\**\*.csproj" />
-  </ItemGroup>
-
 </Project>

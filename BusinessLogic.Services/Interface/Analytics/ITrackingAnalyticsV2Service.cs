@@ -1,0 +1,12 @@
+// File: BusinessLogic/Services/Interface/Analytics/ITrackingAnalyticsV2Service.cs
+using Data.ViewModels;
+using Repositories.Repository.RepoModel;
+using System.Threading.Tasks;
+
+namespace BusinessLogic.Services.Interface.Analytics
+{
+    public interface ITrackingAnalyticsV2Service
+    {
+        Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request);
+    }
+}

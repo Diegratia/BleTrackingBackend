@@ -79,11 +79,14 @@ namespace Entities.Models
         [Column("head_member2")]
         public string? HeadMember2 { get; set; }
 
-        [Column("is_block")]
-        public bool? IsBlock { get; set; }
+        [Column("is_blacklist")]
+        public bool? IsBlacklist { get; set; }
 
-        [Column("block_at")]
-        public DateTime? BlockAt { get; set; }
+        [Column("blacklist_reason")]
+    public string? BlacklistReason { get; set; }
+
+        [Column("blacklist_at")]
+        public DateTime? BlacklistAt { get; set; }
 
         [Required]
         [Column("application_id")]

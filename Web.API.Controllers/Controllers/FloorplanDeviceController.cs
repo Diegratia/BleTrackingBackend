@@ -49,7 +49,6 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-
         
 
         // GET: api/FloorplanDevice/{id}
@@ -289,7 +288,7 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var result = await _service.FilterAsync(request);
+                var result = await _service.ProjectionFilterAsync(request);
                 return Ok(new
                 {
                     success = true,
@@ -558,53 +557,53 @@ namespace Web.API.Controllers.Controllers
             }
         }
         
-        [AllowAnonymous]
-        [HttpPost("open/{filter}")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [AllowAnonymous]
+        // [HttpPost("open/{filter}")]
+        // public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan Devices filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var result = await _service.FilterAsync(request);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Floorplan Devices filtered successfully",
+        //             collection = result,
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
     }
 }

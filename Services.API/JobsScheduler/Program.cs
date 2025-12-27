@@ -18,6 +18,7 @@ catch (Exception ex)
 }
 
 var builder = Host.CreateDefaultBuilder(args);
+// builder.Host.UseWindowsService();
 
 builder.ConfigureServices((hostContext, services) =>
 {
@@ -27,7 +28,7 @@ builder.ConfigureServices((hostContext, services) =>
     // Tambahkan DbContext
     services.AddDbContext<BleTrackingDbContext>(options =>
         options.UseSqlServer(Environment.GetEnvironmentVariable("BleTrackingDbConnection") ??
-                            "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                            "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
     // Tambahkan Quartz
     BusinessLogic.Services.Jobs.QuartzConfig.AddQuartzServices(services);

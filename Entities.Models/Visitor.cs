@@ -68,6 +68,12 @@ namespace Entities.Models
         [Column("is_vip")]
         public bool? IsVip { get; set; }
 
+        [Column("is_blacklist")]
+        public bool? IsBlacklist { get; set; }
+
+        [Column("blacklist_reason")]
+        public string? BlacklistReason { get; set; }
+
         [Column("status")]
         public int Status { get; set; } = 1;
 
