@@ -122,7 +122,7 @@ namespace BusinessLogic.Services.Implementation
                     ApiUrl = "bio-peopletracking.com",
                     ApiAuthUsername = $"bio-peopletracking-{createdApplication.Id}",
                     ApiAuthPasswd = RandomApiKeyGenerator(8),
-                    ApiKeyField = "X-BIO-PEOPLETRACKING-API-KEY",
+                    ApiKeyField = "X-BIOPEOPLETRACKING-API-KEY",
                     ApiKeyValue = RandomApiKeyGenerator(32),
                     ApplicationId = createdApplication.Id,
                 };

@@ -18,6 +18,9 @@ namespace Entities.Models
 
         [Column("alarm_color")]
         public string? AlarmColor { get; set; }
+
+        [Column("notify_interval_sec")]
+        public int? NotifyIntervalSec { get; set; } // in seconds
         
         [Column("is_enabled")]
         public int? IsEnabled { get; set; } = 0;
