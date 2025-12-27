@@ -20,6 +20,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -33,13 +34,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
+        private readonly IMemoryCache _cache;
 
         public MstBuildingService(
             MstBuildingRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IMstFloorService floorService,
-            MstFloorRepository floorRepository
+            MstFloorRepository floorRepository,
+            IMemoryCache memoryCache
             )
         {
             _repository = repository;
@@ -47,6 +50,7 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
             _floorService = floorService;
             _floorRepository = floorRepository;
+            _cache = memoryCache;
         }
 
         public async Task<MstBuildingDto> GetByIdAsync(Guid id)
@@ -57,8 +61,27 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
         {
+            const string cacheKey = "MstBuildingService_GetAll";
+            // var sw = System.Diagnostics.Stopwatch.StartNew();
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstBuildingDto> cachedData))
+            {
+                // sw.Stop();
+                // Console.WriteLine($"[CACHE HIT] Elapsed: {sw.ElapsedMilliseconds} ms");
+                // Console.WriteLine("🔥 [CACHE HIT] MstBuildingService_GetAll");
+                return cachedData;
+            }
+
+            // Console.WriteLine("💾 [CACHE MISS] Fetching from database...");
             var buildings = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+            // sw.Stop();
+            // Console.WriteLine($"[CACHE MISS] DB fetch time: {sw.ElapsedMilliseconds} ms");
+            var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            _cache.Set(cacheKey, mapped, cacheOptions);
+            return mapped;
         }
 
             public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
@@ -78,7 +101,11 @@ namespace BusinessLogic.Services.Implementation
                 if (createDto.Image.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 var fileExtension = Path.GetExtension(createDto.Image.FileName)?.ToLower() ?? ".jpg";
@@ -109,6 +136,7 @@ namespace BusinessLogic.Services.Implementation
             building.Status = 1;
 
             var createdBuilding = await _repository.AddAsync(building);
+            _cache.Remove("MstBuildingService_GetAll");
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
@@ -127,12 +155,17 @@ namespace BusinessLogic.Services.Implementation
                 if (updateDto.Image.Length > MaxFileSize)
                     throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "BuildingImages");
+                // Directory.CreateDirectory(uploadDir);
+
+                var basePath = AppContext.BaseDirectory;
+                var uploadDir = Path.Combine(basePath, "Uploads", "BuildingImages");
                 Directory.CreateDirectory(uploadDir);
 
                 if (!string.IsNullOrEmpty(building.Image))
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    // var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), building.Image.TrimStart('/'));
+                    var oldFilePath = Path.Combine(AppContext.BaseDirectory, building.Image.TrimStart('/'));
                     if (File.Exists(oldFilePath))
                     {
                         try
@@ -170,7 +203,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(building);
-            
+            _cache.Remove("MstBuildingService_GetAll");
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -201,6 +234,7 @@ namespace BusinessLogic.Services.Implementation
             building.UpdatedBy = username;
             building.UpdatedAt = DateTime.UtcNow;
             building.Status = 0;
+            _cache.Remove("MstBuildingService_GetAll");
             await _repository.DeleteAsync(id);
         });
     }

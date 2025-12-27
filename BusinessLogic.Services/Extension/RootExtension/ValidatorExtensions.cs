@@ -2,7 +2,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BusinessLogic.Services.Extension
+namespace BusinessLogic.Services.Extension.RootExtension
 {
     public static class ValidatorExtensions
     {

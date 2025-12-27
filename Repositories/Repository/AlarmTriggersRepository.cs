@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace Repositories.Repository
 {
@@ -42,6 +43,27 @@ namespace Repositories.Repository
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q.CountAsync();
+        }
+
+         public async Task<List<AlarmTriggersRM>> GetTopTriggersAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(c => c.IsActive == true && c.DoneTimestamp == null && c.Action != ActionStatus.Done && c.Action != ActionStatus.NoAction);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.TriggerTime) 
+                .Take(topCount)
+                .Select(x => new AlarmTriggersRM
+                {
+                    Id = x.Id,
+                    BeaconId = x.BeaconId ?? "Unknown Card",
+                })
+                .ToListAsync();
         }
 
         //     public async Task<AlarmTriggers?> GetByDmacAsync(string beaconId)

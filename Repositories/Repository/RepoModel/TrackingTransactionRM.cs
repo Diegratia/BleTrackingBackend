@@ -35,8 +35,40 @@ namespace Repositories.Repository.RepoModel
         public Guid? AreaId { get; set; }
         public Guid? CardId { get; set; }
         public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
         public Guid? ReaderId { get; set; }
+        
     }
+
+    // RepoModel/VisitorSessionSummaryRM.cs
+public class VisitorSessionSummaryRM
+{
+    public Guid? VisitorId { get; set; }
+    public string? VisitorName { get; set; }
+    // public Guid? MemberId { get; set; }
+    // public string? MemberName { get; set; }
+    public Guid? CardId { get; set; }
+    public string? CardName { get; set; }
+
+    public Guid? BuildingId { get; set; }
+    public string? BuildingName { get; set; }
+    public Guid? FloorId { get; set; }
+    public string? FloorName { get; set; }
+    public Guid? FloorplanId { get; set; }
+    public string? FloorplanName { get; set; }
+    public Guid? AreaId { get; set; }
+    public string? AreaName { get; set; }
+    // public Guid? PersonId { get; set; }
+    // public string? PersonName { get; set; }
+    public string? PersonType { get; set; }  // "Visitor" atau "Employee"
+
+    public DateTime EnterTime { get; set; }     // WIB
+    public DateTime? ExitTime { get; set; }     // WIB (null = masih di dalam)
+    public int? DurationInMinutes { get; set; } // Exit - Enter
+
+    public string? Status { get; set; }         // Checkin / Block / dll
+    public string? HostName { get; set; }
+}
 
     public class TrackingAreaSummaryRM
     {
@@ -78,10 +110,22 @@ namespace Repositories.Repository.RepoModel
         public Guid? MemberId { get; set; }
         public string? MemberName { get; set; }
 
-        public int TotalRecords { get; set; }
+        // public int TotalRecords { get; set; }
 
         public DateTime? EnterTime { get; set; }
         public DateTime? ExitTime { get; set; }
+
+        // Lokasi terakhir
+        public Guid? BuildingId { get; set; }
+        public string? BuildingName { get; set; }
+        public Guid? FloorId { get; set; }
+        public string? FloorName { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public string? FloorplanName { get; set; }
+        public Guid? MaskedAreaId { get; set; }
+        public string? MaskedAreaName { get; set; }
+        public float? LastX { get; set; }
+        public float? LastY { get; set; }
     }
 
 
@@ -123,14 +167,40 @@ namespace Repositories.Repository.RepoModel
         public override int GetHashCode()
             => HashCode.Combine(X, Y);
     }
-    
-        public class TrackingHeatmapRM
+
+    public class TrackingHeatmapRM
     {
         public Guid FloorplanId { get; set; }
         public Guid? MaskedAreaId { get; set; }
         public float X { get; set; }
         public float Y { get; set; }
         public int Count { get; set; }
+    }
+    
+    public class TrackingAccessPermissionSummaryRM
+    {
+        public int AccessedAreaTotal { get; set; }
+        public int WithPermission { get; set; }
+        public int WithoutPermission { get; set; }
+    }
+
+    public class CardUsageCountRM
+    {
+        public int TotalCardCount { get; set; }
+        public int VisitorCardCount { get; set; }
+        public int MemberCardCount { get; set; }
+        public int TotalCardUse { get; set; }
+    }
+
+
+    public class TrackingPermissionCountRM
+    {
+        public Guid? AreaId { get; set; }
+        public int WithPermission { get; set; }
+        public int WithoutPermission { get; set; }
+        public int TotalRecords { get; set; }
+        public string AreaName { get; set; }
+
     }
 
 

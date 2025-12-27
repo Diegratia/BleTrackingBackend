@@ -4,6 +4,7 @@ using Helpers.Consumer.DtoHelpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Repository.RepoModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,27 @@ namespace Repositories.Repository
             return totalUnique;
         }
 
+         public async Task<List<BlacklistRM>> GetTopBlacklistAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.BlacklistAreas
+                .AsNoTracking()
+                .Where(c => c.Status != 0);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new BlacklistRM
+                {
+                    Id = x.Id,
+                    BlacklistPersonName = x.Visitor.Name ?? x.Member.Name ?? "Unknown Person", 
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<BlacklistArea>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();
@@ -62,7 +84,6 @@ namespace Repositories.Repository
                 .Include(v => v.Visitor)
                 .Include(v => v.Member)
                 .Where(v => v.Id == id && v.Status != 0);
-
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 

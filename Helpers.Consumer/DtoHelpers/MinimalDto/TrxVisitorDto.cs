@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Helpers.Consumer;
 using Helpers.Consumer.DtoHelpers.MinimalDto;
 // using Microsoft.AspNetCore.Http;
 // using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,7 @@ namespace Data.ViewModels.Dto.Helpers.MinimalDto
         public string? BlockBy { get; set; }
         public string? BlockReason { get; set; }
         public string? Status { get; set; }
+        public string VisitorActiveStatus { get; set; }
         public DateTime? InvitationCreatedAt { get; set; }
         public string? VehiclePlateNumber { get; set; }
         public string? Remarks { get; set; }

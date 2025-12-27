@@ -17,14 +17,35 @@ using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
+
 
 builder.Services.AddCors(options =>
 {
@@ -44,7 +65,7 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection")));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -89,20 +110,21 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAssertion(context =>
             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
     });
-            options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
+    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
+{
+policy.RequireAssertion(context =>
+    context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
+});
+    options.AddPolicy("RequireAll", policy =>
+     {
+         policy.RequireAssertion(context =>
+             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary") || context.User.IsInRole("Secondary"));
+     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
 
+builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -216,15 +238,24 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "BuildingImages");
 Directory.CreateDirectory(uploadsPath);
-
 
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/BuildingImages"
 });
+// var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/BuildingImages");
+// Directory.CreateDirectory(uploadsPath);
+
+
+// app.UseStaticFiles(new StaticFileOptions
+// {
+//     FileProvider = new PhysicalFileProvider(uploadsPath),
+//     RequestPath = "/Uploads/BuildingImages"
+// });
 
 
 // // app.UseHttpsRedirection();

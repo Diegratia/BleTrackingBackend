@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace BusinessLogic.Services.Extension
+namespace BusinessLogic.Services.Extension.RootExtension
 {
     public static class AuthExtensions
     {

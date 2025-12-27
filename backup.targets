@@ -1,0 +1,42 @@
+
+<!-- <Project DefaultTargets="BuildAll;PublishAll" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- 🧭 Temukan semua project di folder Services.API -->
+  <ItemGroup>
+    <ServiceProjects Include="Services.API\**\*.csproj" />
+  </ItemGroup>
+
+  <!-- 🏗️ Target build semua service -->
+  <Target Name="BuildAll">
+    <Message Text="🔨 Building all Services.API projects..." Importance="High" />
+    <MSBuild Projects="@(ServiceProjects)" Targets="Build" />
+  </Target>
+
+   <Target Name="PublishAll">
+    <Message Text="🚀 Publishing all Services.API projects..." Importance="High" />
+    <MSBuild
+      Projects="@(ServiceProjects)"
+      Targets="Publish"
+      Properties="Configuration=Release;PublishDir=publish\%(Filename)\" />
+      <!-- Properties="Configuration=Release;PublishDir=publish\" /> -->
+  </Target> 
+
+    <Target Name="PublishAllService">
+    <Message Text="🚀 Publishing all Services.API projects into root publish folder..." Importance="High" />
+
+    <!-- Pastikan folder publish ada -->
+    <MakeDir Directories="publish" />
+
+    <!-- Jalankan publish untuk semua service -->
+    <MSBuild
+      Projects="@(ServiceProjects)"
+      Targets="Publish"
+      Properties="Configuration=Release;
+	  Runtime=win-x64;
+	  SelfContained=true;
+		PublishDir=$(MSBuildProjectDirectory)\publish\;
+    DeleteExistingFiles=true;
+    OverwriteReadOnlyFiles=true;" />
+  </Target>
+
+</Project> -->

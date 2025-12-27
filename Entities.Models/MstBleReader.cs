@@ -25,6 +25,9 @@ namespace Entities.Models
         [StringLength(255)]
         [Column("gmac")]
         public string? Gmac { get; set; }
+        
+        [Column("is_assigned")]
+        public bool? IsAssigned { get; set; } = false;
 
         // [Required]
         // [StringLength(255)]

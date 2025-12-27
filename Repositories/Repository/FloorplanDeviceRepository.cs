@@ -7,15 +7,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using System.Linq;
+using Repositories.Repository.RepoModel;
+// using Microsoft.Extensions.Caching.Memory;
 
 namespace Repositories.Repository
 {
-    public class FloorplanDeviceRepository : BaseRepository
+     public class FloorplanDeviceRepository : BaseProjectionRepository<FloorplanDevice, FloorplanDeviceRM>
     {
-        public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
-            : base(context, httpContextAccessor)
-        {
-        }
+        // private readonly IMemoryCache _cache;
+        // private const string CacheKey = "FloorplanDevice:All";
+        public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor accessor)
+            : base(context, accessor) { }
 
             public async Task<int> GetCountAsync()
         {
@@ -30,17 +33,44 @@ namespace Repositories.Repository
             return await q.CountAsync();
         }
 
+        public async Task<List<FloorplanDeviceRM2>> GetTopReadersAsync(int topCount = 5)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.FloorplanDevices
+                .AsNoTracking()
+                .Where(c => c.Status != 0 && c.DeviceStatus == DeviceStatus.Active && c.Type == DeviceType.BleReader);
+
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q
+                .OrderByDescending(x => x.UpdatedAt) 
+                .Take(topCount)
+                .Select(x => new FloorplanDeviceRM2
+                {
+                    Id = x.Id,
+                    Name = x.Name ?? "Unknown Reader", 
+                })
+                .ToListAsync();
+        }
+
         public async Task<FloorplanDevice> GetByIdAsync(Guid id)
         {
-
             return await GetAllQueryable()
             .Where(fd => fd.Id == id && fd.Status != 0)
             .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("FloorplanDevice not found");
         }
-
-        public async Task<IEnumerable<FloorplanDevice>> GetAllAsync()
+        public async Task<FloorplanDeviceRM> GetByIdProjectedAsync(Guid id)
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllProjectedQueryable()
+            .Where(fd => fd.Id == id)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("FloorplanDevice not found");
+        }
+
+        public async Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync()
+        {
+            return await GetAllProjectedQueryable().ToListAsync();
         }
 
         public async Task<FloorplanDevice> AddAsync(FloorplanDevice device)
@@ -100,6 +130,7 @@ namespace Repositories.Repository
 
             await _context.SaveChangesAsync();
         }
+        
 
         public IQueryable<FloorplanDevice> GetAllQueryable()
         {
@@ -117,6 +148,270 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+        protected override IQueryable<FloorplanDeviceRM> Project(IQueryable<FloorplanDevice> query)
+        {
+            return query
+                .AsNoTracking()
+                .Select(t => new FloorplanDeviceRM
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Type = t.Type.ToString(),
+                    DeviceStatus = t.DeviceStatus.ToString(),
+                    PosX = t.PosX,
+                    PosY = t.PosY,
+                    PosPxX = t.PosPxX,
+                    PosPxY = t.PosPxY,
+                    ReaderId = t.ReaderId.Value,
+                    FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+                    AccessCctvId = t.AccessCctvId.Value,
+                    AccessControlId = t.AccessControlId.Value,
+                    FloorplanId = t.FloorplanId,
+                    UpdatedAt = t.UpdatedAt,
+                    CreatedAt = t.CreatedAt,
+                    ApplicationId = t.ApplicationId,
+                    Floorplan = t.Floorplan == null ? null : new MinimalFloorplanRM
+                    {
+                        Id = t.Floorplan.Id,
+                        Name = t.Floorplan.Name,
+                    },
+                    Reader = t.Reader == null ? null : new MinimalBleReaderRM
+                    {
+                        Id = t.Reader.Id,
+                        Name = t.Reader.Name,
+                        Ip = t.Reader.Ip,
+                        Gmac = t.Reader.Gmac,
+                        BrandId = t.Reader.BrandId,
+                    },
+                    FloorplanMaskedArea = t.FloorplanMaskedArea == null ? null : new MinimalMaskedAreaRM
+                    {
+                        Id = t.FloorplanMaskedArea.Id,
+                        Name = t.FloorplanMaskedArea.Name,
+                        AreaShape = t.FloorplanMaskedArea.AreaShape,
+                        FloorplanId = t.FloorplanMaskedArea.FloorplanId,
+                        ColorArea = t.FloorplanMaskedArea.ColorArea,
+                        RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus.ToString(),
+                    },
+                });
+        }
+
+        // public async Task<List<FloorplanDeviceRM>> GetAllProjectedAsync()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+        //     // 🔹 Query dasar FloorplanDevice
+        //     var query = _context.FloorplanDevices
+        //         .AsNoTracking()
+        //         // .Include(fd => fd.FloorplanMaskedArea)
+        //         // .Include(fd => fd.Floorplan)
+        //         // .Include(fd => fd.AccessControl)
+        //         // .Include(fd => fd.AccessCctv)
+        //         // .Include(fd => fd.Reader)
+        //         .Where(fd => fd.Status != 0);
+
+        //     // 🔹 Terapkan filter ApplicationId kalau ada multi-tenant
+        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+        //     // 🔹 Projection efisien ke RM
+        //     var projected = await query.Select(t => new FloorplanDeviceRM
+        //     {
+        //         Id = t.Id,
+        //         Name = t.Name,
+        //         Type = t.Type.ToString(),
+        //         DeviceStatus = t.DeviceStatus.ToString(),
+        //         PosX = t.PosX,
+        //         PosY = t.PosY,
+        //         PosPxX = t.PosPxX,
+        //         PosPxY = t.PosPxY,
+        //         ReaderId = t.ReaderId,
+        //         AccessCctvId = t.AccessCctvId,
+        //         AccessControlId = t.AccessControlId,
+        //         FloorplanId = t.FloorplanId,
+        //         FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+        //         UpdatedAt = t.UpdatedAt,
+        //         CreatedAt = t.CreatedAt,
+        //         ApplicationId = t.ApplicationId,
+
+        //         // 🔸 Floorplan
+        //         Floorplan = t.Floorplan == null ? null : new MinimalFloorplanRM
+        //         {
+        //             Id = t.Floorplan.Id,
+        //             Name = t.Floorplan.Name,
+        //         },
+
+        //         // 🔸 Reader
+        //         Reader = t.Reader == null ? null : new MinimalBleReaderRM
+        //         {
+        //             Id = t.Reader.Id,
+        //             Name = t.Reader.Name,
+        //             Ip = t.Reader.Ip,
+        //             Gmac = t.Reader.Gmac,
+        //             BrandId = t.Reader.BrandId,
+        //         },
+
+        //         // 🔸 Access CCTV
+        //         AccessCctv = t.AccessCctv == null ? null : new MinimalAccessCctvRM
+        //         {
+        //             Id = t.AccessCctv.Id,
+        //             Name = t.AccessCctv.Name,
+        //             Rtsp = t.AccessCctv.Rtsp,
+        //             IntegrationId = t.AccessCctv.IntegrationId
+        //         },
+
+        //         // 🔸 Access Control
+        //         AccessControl = t.AccessControl == null ? null : new MinimalAccessControlRM
+        //         {
+        //             Id = t.AccessControl.Id,
+        //             Name = t.AccessControl.Name,
+        //         },
+
+        //         // 🔸 Masked Area
+        //         FloorplanMaskedArea = t.FloorplanMaskedArea == null ? null : new MinimalMaskedAreaRM
+        //         {
+        //             Id = t.FloorplanMaskedArea.Id,
+        //             Name = t.FloorplanMaskedArea.Name,
+        //             ColorArea = t.FloorplanMaskedArea.ColorArea,
+        //             AreaShape = t.FloorplanMaskedArea.AreaShape,
+        //             FloorplanId = t.FloorplanMaskedArea.FloorplanId,
+        //             RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus.ToString(),
+        //         },
+        //     }).ToListAsync();
+
+        //     return projected;
+        // }
+
+
+public IQueryable<FloorplanDeviceRM> GetAllProjectedQueryable()
+{
+    var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+    // 🔹 Query dasar FloorplanDevice
+    var query = _context.FloorplanDevices
+        .AsNoTracking()
+        .Where(fd => fd.Status != 0);
+
+    // 🔹 Terapkan filter ApplicationId kalau ada multi-tenant
+    query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+    // 🔹 Projection efisien ke RM (tanpa eksekusi dulu)
+    var projected = query.Select(t => new FloorplanDeviceRM
+    {
+        Id = t.Id,
+        Name = t.Name,
+        Type = t.Type.ToString(),
+        DeviceStatus = t.DeviceStatus.ToString(),
+        PosX = t.PosX,
+        PosY = t.PosY,
+        PosPxX = t.PosPxX,
+        PosPxY = t.PosPxY,
+        ReaderId = t.ReaderId.Value,
+        AccessCctvId = t.AccessCctvId.Value,
+        AccessControlId = t.AccessControlId.Value,
+        FloorplanId = t.FloorplanId,
+        FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+        UpdatedAt = t.UpdatedAt,
+        CreatedAt = t.CreatedAt,
+        ApplicationId = t.ApplicationId,
+
+        Floorplan = t.Floorplan == null ? null : new MinimalFloorplanRM
+        {
+            Id = t.Floorplan.Id,
+            Name = t.Floorplan.Name,
+        },
+
+        Reader = t.Reader == null ? null : new MinimalBleReaderRM
+        {
+            Id = t.Reader.Id,
+            Name = t.Reader.Name,
+            Ip = t.Reader.Ip,
+            Gmac = t.Reader.Gmac,
+            BrandId = t.Reader.BrandId,
+        },
+
+        AccessCctv = t.AccessCctv == null ? null : new MinimalAccessCctvRM
+        {
+            Id = t.AccessCctv.Id,
+            Name = t.AccessCctv.Name,
+            Rtsp = t.AccessCctv.Rtsp,
+            IntegrationId = t.AccessCctv.IntegrationId
+        },
+
+        AccessControl = t.AccessControl == null ? null : new MinimalAccessControlRM
+        {
+            Id = t.AccessControl.Id,
+            Name = t.AccessControl.Name,
+            BrandId = t.AccessControl.BrandId.Value,
+            Channel = t.AccessControl.Channel,
+
+        },
+
+        FloorplanMaskedArea = t.FloorplanMaskedArea == null ? null : new MinimalMaskedAreaRM
+        {
+            Id = t.FloorplanMaskedArea.Id,
+            Name = t.FloorplanMaskedArea.Name,
+            ColorArea = t.FloorplanMaskedArea.ColorArea,
+            AreaShape = t.FloorplanMaskedArea.AreaShape,
+            FloorplanId = t.FloorplanMaskedArea.FloorplanId,
+            FloorId = t.FloorplanMaskedArea.FloorId,    
+            RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus.ToString(),
+        },
+    });
+
+    return projected;
+}
+
+
+
+
+
+        // Custom filtering (enum-safe, guid-safe)
+        // protected override IQueryable<FloorplanDevice> ApplyEntityFilters(
+        //     IQueryable<FloorplanDevice> query,
+        //     Dictionary<string, object> filters)
+        // {
+        //     query = base.ApplyEntityFilters(query, filters); // default filter (Status, AppId, dll.)
+
+        //     foreach (var f in filters)
+        //     {
+        //         var key = f.Key.ToLower();
+        //         var val = f.Value?.ToString()?.Trim();
+
+        //         if (string.IsNullOrEmpty(val)) continue;
+
+        //         switch (key.ToLowerInvariant())
+        //         {
+        //             case "devicestatus":
+        //                 if (Enum.TryParse<DeviceStatus>(val, true, out var status))
+        //                     query = query.Where(x => x.DeviceStatus == status);
+        //                 break;
+        //             case "floorplanid":
+        //                 if (Guid.TryParse(val, out var fid))
+        //                     query = query.Where(x => x.FloorplanId == fid);
+        //                 break;
+        //             case "readerid":
+        //                 if (Guid.TryParse(val, out var rid))
+        //                     query = query.Where(x => x.ReaderId == rid);
+        //                 break;
+        //             case "type":
+        //                 if (Enum.TryParse<DeviceType>(val, true, out var type))
+        //                     query = query.Where(x => x.Type == type);
+        //                 break;
+        //             case "accesscctvid":
+        //                 if (Guid.TryParse(val, out var aid))
+        //                     query = query.Where(x => x.ReaderId == aid);
+        //                 break;
+        //             case "accesscontrolid":
+        //                 if (Guid.TryParse(val, out var cid))
+        //                     query = query.Where(x => x.ReaderId == cid);
+        //                 break;
+        //             case "floorplanmaskedarea":
+        //                 if (Guid.TryParse(val, out var areaId))
+        //                     query = query.Where(x => x.FloorplanMaskedAreaId == areaId);
+        //                 break;
+        //         }
+        //     }
+        //     return query;
+        // }
 
         public async Task<IEnumerable<FloorplanDevice>> GetAllExportAsync()
         {

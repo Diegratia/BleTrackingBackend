@@ -29,15 +29,13 @@ namespace BusinessLogic.Services.JobsScheduler
             try
             {
                 _logger.LogInformation("Starting CreateDailyTrackingTableJob at {Time:UTC}", DateTime.UtcNow);
-                await _context.Database.OpenConnectionAsync();
+                // await _context.Database.OpenConnectionAsync();
                 _logger.LogInformation("Database connection successful at {Time:UTC}", DateTime.UtcNow);
 
                 var sql = $@"
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{tableName}' AND xtype='U')
                     CREATE TABLE [dbo].[{tableName}] (
                         [id] [uniqueidentifier] NOT NULL,
-                        [created_at] [datetime2](7) NOT NULL,
-                        [updated_at] [datetime2](7) NULL,
                         [trans_time] [datetime2](7) NULL,
                         [reader_id] [uniqueidentifier] NULL,
                         [card_id] [uniqueidentifier] NULL,

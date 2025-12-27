@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,123 +12,73 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
+// Konfigurasi CORS
+builder.Services.AddCorsExtension();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin() 
-              .AllowAnyMethod() 
-              .AllowAnyHeader(); 
-    });
-});
-
+// Konfigurasi sumber konfigurasi
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+// Konfigurasi Controllers
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+// Registrasi otomatis validasi FluentValidation
+// Scan semua validator di assembly yang mengandung BrandValidator
+builder.Services.AddValidatorExtensions();
 
+// Konfigurasi DbContext
+builder.Services.AddDbContextExtension(builder.Configuration);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-    });
+// Konfigurasi AutoMapper
+builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.AuthProfile));
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireRole("System"));
-    options.AddPolicy("RequirePrimaryRole", policy =>
-        policy.RequireRole("Primary"));
-    options.AddPolicy("RequireSuperAdminRole", policy =>
-        policy.RequireRole("SuperAdmin"));
+// Konfigurasi Autentikasi JWT
+builder.Services.AddJwtAuthExtension(builder.Configuration);
 
-    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
-    });
+// Konfigurasi Otorisasi
+builder.Services.AddAuthorizationPolicies();
 
-    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
-    });
-    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
-    options.AddPolicy("RequireUserCreatedRole", policy =>
-        policy.RequireRole("UserCreated"));
-});
+// Konfigurasi Swagger
+builder.Services.AddSwaggerExtension();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
+// Konfigurasi IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
+// Registrasi Services
 
 builder.Services.AddAutoMapper(typeof(BlacklistAreaProfile));
 
@@ -139,43 +88,14 @@ builder.Services.AddScoped<IBlacklistAreaService, BlacklistAreaService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 builder.Services.AddScoped<BlacklistAreaRepository>();
+// Konfigurasi port dan host
+builder.UseDefaultHostExtension("BLACKLIST_AREA_PORT", "5020");
 
+var app = builder.Build();
 
+app.UseHealthCheckExtension();
 
-var port = Environment.GetEnvironmentVariable("VISITOR_BLACKLIST_AREA_PORT") ??
-           builder.Configuration["Ports:BlacklistAreaService"] ?? "5020";
-var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-var host = env == "Production" ? "0.0.0.0" : "localhost";
-builder.WebHost.UseUrls($"http://{host}:{port}");
-
-    var app = builder.Build();
-
-        app.MapGet("/hc", async (IServiceProvider sp) =>
-    {
-        var db = sp.GetRequiredService<BleTrackingDbContext>();
-        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
-
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
-            return Results.Ok(new
-            {
-                code = 200,
-                msg = "Healthy",
-                details = new
-                {
-                    database = "Connected"
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Health check failed");
-            return Results.Problem("Database unreachable", statusCode: 500);
-        }
-    })
-    .AllowAnonymous();
-
+// Inisialisasi Database (opsional: migrasi atau seeding)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
@@ -197,89 +117,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = "";
     });
 }
 
 app.UseCors("AllowAll");
-// app.UseHttpsRedirection();
+// // app.UseHttpsRedirection();
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

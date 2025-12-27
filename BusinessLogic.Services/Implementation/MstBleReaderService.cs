@@ -20,6 +20,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
+
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -28,13 +30,16 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstBleReaderRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _cache;
+
         // private readonly IHttpClientFactory _httpClientFactory;
 
-        public MstBleReaderService(MstBleReaderRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstBleReaderService(MstBleReaderRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cache = cache;
             // _httpClientFactory = httpClientFactory;
         }
 
@@ -46,7 +51,20 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstBleReaderDto>> GetAllAsync()
         {
+            const string cacheKey = "MstBleReaderService_GetAll";
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstBleReaderDto> cachedData))
+                return cachedData;
             var bleReaders = await _repository.GetAllAsync();
+            var mapped = _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                _cache.Set(cacheKey, mapped, cacheOptions);
+            return mapped;
+        }
+        public async Task<IEnumerable<MstBleReaderDto>> GetAllUnassignedAsync()
+        {
+            var bleReaders = await _repository.GetAllUnassignedAsync();
             return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
         }
 
@@ -69,6 +87,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.Status = 1;
 
             var createdBleReader = await _repository.AddAsync(bleReader);
+            _cache.Remove("MstBleReaderService_GetAll");
             return _mapper.Map<MstBleReaderDto>(createdBleReader);
         }
 
@@ -86,6 +105,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.UpdatedBy = username ?? "";
             bleReader.UpdatedAt = DateTime.UtcNow;
 
+            _cache.Remove("MstBleReaderService_GetAll");
             await _repository.UpdateAsync(bleReader);
         }
 
@@ -100,6 +120,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.UpdatedAt = DateTime.UtcNow;
             bleReader.Status = 0;
 
+            _cache.Remove("MstBleReaderService_GetAll");
             await _repository.DeleteAsync(id);
         }
 

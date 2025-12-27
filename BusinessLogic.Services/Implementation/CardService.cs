@@ -63,6 +63,11 @@ namespace BusinessLogic.Services.Implementation
             var cards = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<CardMinimalsDto>>(cards);
         }
+        public async Task<IEnumerable<CardDto>> GetAllUnUsedAsync()
+        {
+            var cards = await _repository.GetUnUsedCardAsync();
+            return _mapper.Map<IEnumerable<CardDto>>(cards);
+        }
         
                 public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
         {
@@ -133,6 +138,7 @@ namespace BusinessLogic.Services.Implementation
 
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
+            card.IsUsed = false;
 
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";

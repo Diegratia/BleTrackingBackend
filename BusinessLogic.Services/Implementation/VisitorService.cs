@@ -19,6 +19,7 @@ using Helpers.Consumer;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using AutoMapper.Execution;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -40,6 +41,7 @@ public class VisitorService : IVisitorService
     private readonly IEmailService _emailService;
     private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+    private readonly string _invitationBaseUrl;
 
         public VisitorService(
             IMapper mapper,
@@ -54,7 +56,8 @@ public class VisitorService : IVisitorService
             ICardRecordService cardRecordService,
             CardRecordRepository cardRecordRepository,
             CardAccessRepository cardAccessRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            IConfiguration configuration)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -69,7 +72,9 @@ public class VisitorService : IVisitorService
             _cardRecordService = cardRecordService ?? throw new ArgumentNullException();
             _cardAccessRepository = cardAccessRepository ?? throw new ArgumentNullException(nameof(cardAccessRepository));
             _mstmemberRepository = mstmemberRepository ?? throw new ArgumentNullException(nameof(mstmemberRepository));
-    }
+            _invitationBaseUrl = configuration["InvitationBaseUrl"] ?? "null";
+        }
+    
 
 
         //     public async Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto)
@@ -874,8 +879,12 @@ public class VisitorService : IVisitorService
                         if (createDto.FaceImage.Length > MaxFileSize)
                             throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        var basePath = AppContext.BaseDirectory;
+                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
                         Directory.CreateDirectory(uploadDir);
+
+                        // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                        // Directory.CreateDirectory(uploadDir);
 
                         var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
                         var filePath = Path.Combine(uploadDir, fileName);
@@ -1233,8 +1242,6 @@ public class VisitorService : IVisitorService
         // }
 
 
-
-
         public async Task<VisitorDto> UpdateVisitorAsync(Guid id, VisitorUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
@@ -1277,8 +1284,11 @@ public class VisitorService : IVisitorService
                     if (updateDto.FaceImage.Length > MaxFileSize)
                         throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                    Directory.CreateDirectory(uploadDir);
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                        var basePath = AppContext.BaseDirectory;
+                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
+                        Directory.CreateDirectory(uploadDir);
 
                     var fileName = $"{Guid.NewGuid()}_{updateDto.FaceImage.FileName}";
                     var filePath = Path.Combine(uploadDir, fileName);
@@ -1492,9 +1502,9 @@ public class VisitorService : IVisitorService
             // newTrx.IsMember = isMember;
 
 
-            // var invitationUrl = $"http://192.168.1.116:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
-            var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
-            // var memberInvitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
+            // var invitationUrl = $"http://192.168.1.10:5000/api/Visitor/fill-invitation-form?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            var invitationUrl = $"{_invitationBaseUrl }/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+            // var memberInvitationUrl = $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}";
 
             await _trxVisitorRepository.AddAsync(newTrx);
             // var memberId = newTrx.PurposePerson ?? Guid.Empty;
@@ -1661,7 +1671,7 @@ public class VisitorService : IVisitorService
         //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //         var invitationUrl =
-        //             $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //             $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -1784,7 +1794,7 @@ public class VisitorService : IVisitorService
         //         var buildingName = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
 
-        //         var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //         var invitationUrl = $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -1894,7 +1904,7 @@ public class VisitorService : IVisitorService
         //     var visitorPeriodEnd = newTrx.VisitorPeriodEnd?.ToString("yyyy-MM-dd") ?? "Unknown";
 
         //     // Buat link
-        //     var baseUrl = "http://192.168.1.173:3000/visitor-info";
+        //     var baseUrl = "http://192.168.1.10:85/visitor-info";
         //     var invitationUrl = isMember == 1
         //         ? $"{baseUrl}?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}"
         //         : $"{baseUrl}?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitorId}&trxVisitorId={newTrx.Id}";
@@ -2049,7 +2059,7 @@ public class VisitorService : IVisitorService
         //             var buildingNameMember   = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //             var memberInvitationUrl =
-        //                 $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
+        //                 $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
 
         //             await _emailService.SendMemberInvitationEmailAsync(
         //                 invitedMember.Email,
@@ -2141,7 +2151,7 @@ public class VisitorService : IVisitorService
         //         var buildingName   = await _trxVisitorRepository.GetBuildingNameByTrxIdAsync(newTrx.Id) ?? "";
 
         //         var invitationUrl =
-        //             $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+        //             $"http://192.168.1.10:85/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
         //         await _emailService.SendVisitorInvitationEmailAsync(
         //             visitor.Email,
@@ -2292,7 +2302,7 @@ public class VisitorService : IVisitorService
                         var timeTextMember = startMemberTime + " - " + endMemberTime;
                         var locationMember = buildingNameMember + " - " + floorNameMember + " - " + maskedAreaMemberName;
 
-                        var memberInvitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
+                        var memberInvitationUrl = $"{_invitationBaseUrl}/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&trxVisitorId={newTrx.Id}&memberId={invitedMember.Id}&purposePersonId={loggedInMember.Id}";
 
                         await _emailService.SendMemberInvitationEmailAsync(
                             invitedMember.Email,
@@ -2445,7 +2455,7 @@ public class VisitorService : IVisitorService
 
                     var location = buildingName + " - " + floorName + " - " + maskedAreaName;
 
-                    var invitationUrl = $"http://192.168.1.173:3000/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
+                    var invitationUrl = $"{_invitationBaseUrl}/visitor-info?code={confirmationCode}&applicationId={applicationIdClaim}&visitorId={visitor.Id}&trxVisitorId={newTrx.Id}";
 
                     await _emailService.SendVisitorInvitationEmailAsync(
                         visitor.Email,
@@ -2732,10 +2742,16 @@ public class VisitorService : IVisitorService
                     if (dto.FaceImage.Length > maxFileSize)
                         throw new ArgumentException("File size exceeds 5 MB limit.");
 
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
+                    // Directory.CreateDirectory(uploadDir);
+                    var basePath = AppContext.BaseDirectory;
+                    var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
                     Directory.CreateDirectory(uploadDir);
 
-                    var fileName = $"{Guid.NewGuid()}_{dto.FaceImage.FileName}";
+                    var fileExtension = Path.GetExtension(dto.FaceImage.FileName)?.ToLower() ?? ".jpg";
+                    var fileName = $"{Guid.NewGuid()}_{fileExtension}";         
+
+
                     var filePath = Path.Combine(uploadDir, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
@@ -2757,7 +2773,6 @@ public class VisitorService : IVisitorService
             }
 
                 // ===== Buat/siapkan akun USER kalau belum ada (tanpa claims) =====
-              
 
                 // Ambil applicationId dari querystring
                 string? appIdStr =
@@ -2838,8 +2853,16 @@ public class VisitorService : IVisitorService
             using var transaction = await _trxVisitorRepository.BeginTransactionAsync();
             try
             { 
+
                 _mapper.Map(dto, visitor);
 
+                // letakkan di bawah ini
+                if (!string.IsNullOrEmpty(faceImagePath))
+                    visitor.FaceImage = faceImagePath;
+                    // Console.WriteLine($"FaceImage: {faceImagePath}");
+
+                visitor.UploadFr = uploadFr ?? visitor.UploadFr;
+                visitor.UploadFrError = uploadFrError;
                 visitor.UpdatedAt = DateTime.UtcNow;
                 visitor.UpdatedBy = "VisitorForm";
 
@@ -2910,7 +2933,7 @@ public class VisitorService : IVisitorService
             // var applicationIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("ApplicationId")?.Value;
             // // karena AllowAnonymous, mungkin null — pakai applicationId dari trx
             // var appId = applicationIdClaim ?? (savedTrx?.ApplicationId.ToString() ?? "");
-            // var invitationUrl = $"http://192.168.1.173:3000/visitor-form?code={savedTrx?.InvitationCode}&applicationId={appId}&visitorId={visitor.Id}&trxVisitorId={savedTrx?.Id}";
+            // var invitationUrl = $"http://192.168.1.10:85/visitor-form?code={savedTrx?.InvitationCode}&applicationId={appId}&visitorId={visitor.Id}&trxVisitorId={savedTrx?.Id}";
 
             // 7) Kirim EMAIL (2 pihak)
 

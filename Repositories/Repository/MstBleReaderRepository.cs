@@ -27,6 +27,10 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+        public async Task<IEnumerable<MstBleReader>> GetAllUnassignedAsync()
+        {
+            return await GetAllUnassignedQueryable().ToListAsync();
+        }
 
         public async Task<MstBleReader> AddAsync(MstBleReader reader)
         {
@@ -101,6 +105,19 @@ namespace Repositories.Repository
             var query = _context.MstBleReaders
                 .Include(r => r.Brand)
                 .Where(r => r.Status != 0);
+
+            query = query.WithActiveRelations();
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        public IQueryable<MstBleReader> GetAllUnassignedQueryable()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstBleReaders
+                .Include(r => r.Brand)
+                .Where(r => r.IsAssigned == false && r.Status != 0);
 
             query = query.WithActiveRelations();
 

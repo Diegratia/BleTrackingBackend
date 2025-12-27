@@ -12,18 +12,41 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Data.ViewModels.Validators;
 // using Helpers.Consumer.Mqtt;
 
 try
 {
-    Env.Load("/app/.env");
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
+        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
+        "/app/.env"                                                   // path dalam Docker container
+    };
+
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+
+    if (envFile != null)
+    {
+        Console.WriteLine($"Loading env file: {envFile}");
+        Env.Load(envFile);
+    }
+    else
+    {
+        Console.WriteLine("No .env file found — skipping load");
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
 
 builder.Services.AddCors(options =>
 {
@@ -43,10 +66,15 @@ builder.Configuration
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection")));
 // builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+    // Registrasi otomatis validasi FluentValidation
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+
+    // Scan semua validator di assembly yang mengandung BrandValidator
+    builder.Services.AddValidatorsFromAssemblyContaining<VisitorExtendedValidator>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IDashboardService
     {
         Task<DashboardSummaryDto> GetSummaryAsync();
+        Task<ResponseSingle<CardUsageCountDto>> GetCardStatsAsync();
+        Task<ResponseSingle<List<AreaSummaryDto>>> GetTopAreasAsync(int topCount = 5);
     }
 }

@@ -14,6 +14,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
+
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -22,18 +24,30 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstOrganizationRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _cache;
 
-        public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+
+        public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _cache = cache;
         }
 
         public async Task<IEnumerable<MstOrganizationDto>> GetAllOrganizationsAsync()
         {
+            const string cacheKey = "MstOrganizationService_GetAll";
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstOrganizationDto> cachedData))
+                return cachedData;
             var organizations = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
+            var mapped = _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            _cache.Set(cacheKey, mapped, cacheOptions);
+            return mapped;
         }
 
         public async Task<IEnumerable<OpenMstOrganizationDto>> OpenGetAllOrganizationsAsync()
@@ -62,6 +76,8 @@ namespace BusinessLogic.Services.Implementation
             organization.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(organization);
+            _cache.Remove("MstOrganizationService_GetAll");
+
             return _mapper.Map<MstOrganizationDto>(organization);
         }
 
@@ -78,6 +94,7 @@ namespace BusinessLogic.Services.Implementation
             organization.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(dto, organization);
 
+            _cache.Remove("MstOrganizationService_GetAll");
             await _repository.UpdateAsync(organization);
         }
 
@@ -91,7 +108,7 @@ namespace BusinessLogic.Services.Implementation
             organization.Status = 0;
             organization.UpdatedBy = username;
             organization.UpdatedAt = DateTime.UtcNow;
-
+            _cache.Remove("MstOrganizationService_GetAll");
             await _repository.DeleteAsync(id);
         }
 

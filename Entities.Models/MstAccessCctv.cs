@@ -26,6 +26,9 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        [Column("is_assigned")]
+        public bool? IsAssigned { get; set; } = false;
+
         [Required]
         [Column("status")]
         public int? Status { get; set; } = 1;

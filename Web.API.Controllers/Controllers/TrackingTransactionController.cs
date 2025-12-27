@@ -98,31 +98,31 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/TrackingTransaction
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            try
-            {
-                var transactions = await _trackingTransactionService.GetAllTrackingTransactionsAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Tracking transactions retrieved successfully",
-                    collection = new { data = transactions },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [HttpGet]
+        // public async Task<IActionResult> GetAll()
+        // {
+        //     try
+        //     {
+        //         var transactions = await _trackingTransactionService.GetAllTrackingTransactionsAsync();
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Tracking transactions retrieved successfully",
+        //             collection = new { data = transactions },
+        //             code = 200
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpPost("with-alarm/filter")]
         public async Task<IActionResult> FilterWithAlarm([FromBody] DataTablesRequest request)
@@ -220,53 +220,53 @@ namespace Web.API.Controllers.Controllers
         //     }
         // }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost("{filter}")]
+        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var result = await _trackingTransactionService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Tracking transactions filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var result = await _trackingTransactionService.FilterAsync(request);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Tracking transactions filtered successfully",
+        //             collection = result,
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
@@ -314,52 +314,52 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
         
-        [HttpPost("open/{filter}")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost("open/{filter}")]
+        // public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var result = await _trackingTransactionService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Tracking transactions filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var result = await _trackingTransactionService.FilterAsync(request);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Tracking transactions filtered successfully",
+        //             collection = result,
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
     }
 }

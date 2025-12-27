@@ -48,6 +48,32 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpGet("unassigned")]
+        public async Task<IActionResult> GetAllUnassignedAsync()
+        {
+            try
+            {
+                var accessCctvs = await _mstAccessCctvService.GetAllUnassignedAsync();
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Unassigned Access CCTVs retrieved successfully",
+                    collection = new { data = accessCctvs },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
         // GET: api/MstAccessCctv/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)

@@ -21,31 +21,31 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            try
-            {
-                var alarms = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm retrieved successfully",
-                    collection = new { data = alarms },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        // [HttpGet]
+        // public async Task<IActionResult> GetAll()
+        // {
+        //     try
+        //     {
+        //         var alarms = await _service.GetAllAsync();
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Alarm retrieved successfully",
+        //             collection = new { data = alarms },
+        //             code = 200
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -83,53 +83,53 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost("{filter}")]
+        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm Record Tracking filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var result = await _service.FilterAsync(request);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Alarm Record Tracking filtered successfully",
+        //             collection = result,
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]

@@ -29,5 +29,19 @@ namespace Data.ViewModels
                 Data = null
             };
         }
+
     }
+    public class ResponseSingle<T>
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = "";
+            public T? Data { get; set; }
+            public int Code { get; set; }
+
+            public static ResponseSingle<T> Ok(T data, string message = "Success", int code = 200) =>
+                new ResponseSingle<T> { Success = true, Message = message, Data = data, Code = code };
+
+            public static ResponseSingle<T> Error(string message, int code = 500) =>
+                new ResponseSingle<T> { Success = false, Message = message, Code = code };
+        }
 }

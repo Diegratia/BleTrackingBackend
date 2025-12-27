@@ -20,6 +20,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Microsoft.Extensions.Caching.Memory;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -34,6 +35,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
         private readonly MstFloorplanRepository _floorplanRepository;
         private readonly IMstFloorplanService _floorplanService;
+        private readonly IMemoryCache _cache;
 
         public MstFloorService(
                                         MstFloorRepository repository,
@@ -41,7 +43,8 @@ namespace BusinessLogic.Services.Implementation
                                         IHttpContextAccessor httpContextAccessor,
                                         FloorplanMaskedAreaRepository maskedAreaRepository,
                                         MstFloorplanRepository floorplanRepository,
-                                        IMstFloorplanService floorplanService)
+                                        IMstFloorplanService floorplanService,
+                                        IMemoryCache cache)
         {
             _repository = repository;
             _mapper = mapper;
@@ -49,6 +52,7 @@ namespace BusinessLogic.Services.Implementation
             _maskedAreaRepository = maskedAreaRepository;
             _floorplanRepository = floorplanRepository;
             _floorplanService = floorplanService;
+            _cache = cache;
         }
 
         public async Task<MstFloorDto> GetByIdAsync(Guid id)

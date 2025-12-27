@@ -22,15 +22,15 @@ public class CardUpdateDtoValidator : AbstractValidator<CardUpdateDto>
     public CardUpdateDtoValidator()
     {
         RuleFor(card => card.CardNumber)
-            .NotEmpty().WithMessage("Name cannot be empty.")
+            .NotEmpty().WithMessage("Card Number cannot be empty.")
             .When(x => x.CardNumber != null);
 
         RuleFor(card => card.Dmac)
-            .NotEmpty().WithMessage("Tag cannot be empty.")
+            .NotEmpty().WithMessage("Dmac cannot be empty.")
             .When(x => x.Dmac != null);
 
         RuleFor(card => card.CardType)
-            .NotEmpty().WithMessage("Tag cannot be empty.")
+            .NotEmpty().WithMessage("Type cannot be empty.")
             .When(x => x.Dmac != null);
     }
 }
