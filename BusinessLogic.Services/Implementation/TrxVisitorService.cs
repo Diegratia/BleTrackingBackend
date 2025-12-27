@@ -157,6 +157,7 @@ namespace BusinessLogic.Services.Implementation
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var trx = await _repository.GetByIdAsync(dto.TrxVisitorId);
+            var card = await _cardRepository.GetByIdAsync(dto.CardId);
 
             if (trx == null)
                 throw new Exception("No active session found");
@@ -187,6 +188,7 @@ namespace BusinessLogic.Services.Implementation
                 trx.VisitorActiveStatus = VisitorActiveStatus.Active;
                 trx.UpdatedAt = DateTime.UtcNow;
                 trx.UpdatedBy = username;
+                trx.CardNumber = card?.CardNumber;
 
                 await _repository.UpdateAsync(trx);
 
@@ -432,7 +434,7 @@ namespace BusinessLogic.Services.Implementation
             // visitorCard.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -447,7 +449,7 @@ namespace BusinessLogic.Services.Implementation
                 { "IdentityType", typeof(IdentityType) }
             };
 
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
             var validSortColumns = new[] { "InvitationCreatedAt", "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
             var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
@@ -460,6 +462,8 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+        
+        
         
            public async Task<object> MinimalFilterAsync(DataTablesRequest request)
         {
@@ -474,23 +478,23 @@ namespace BusinessLogic.Services.Implementation
             };
 
             var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
+            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
-              var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
+            var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
+              query,
+              _mapper,
+              searchableColumns,
+              validSortColumns,
+              enumColumns);
 
             return await filterService.FilterAsync(request);
         }
 
-          public async Task<object> FilterRawAsync(DataTablesRequest request)
+        public async Task<object> FilterRawAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryableRaw();
 
-            var enumColumns = new Dictionary<string, Type>
+            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
@@ -498,10 +502,10 @@ namespace BusinessLogic.Services.Implementation
                 { "IdentityType", typeof(IdentityType) }
             };
 
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
+            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
             var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
 
-            var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
+            var filterService = new GenericDataTableService<TrxVisitor, OpenTrxVisitorDto>(
                 query,
                 _mapper,
                 searchableColumns,

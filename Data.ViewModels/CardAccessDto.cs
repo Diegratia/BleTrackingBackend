@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Helpers.Consumer;
 
@@ -46,6 +47,18 @@ namespace Data.ViewModels
         public List<Guid?> MaskedAreaIds { get; set; } = new();
         public List<Guid?> TimeGroupIds { get; set; } = new();
     }
+    
+    public class CardAccessOpenDto : BaseModelDto
+    {
+        [JsonPropertyName("card_access_id")]
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public int? AccessNumber { get; set; }
+        public string? AccessScope { get; set; }
+        public string? Remarks { get; set; }
+        public List<Guid?> MaskedAreaIds { get; set; } = new();
+        public List<Guid?> TimeGroupIds { get; set; } = new();
+    }
 
     // public class CardAssignAccessDto : BaseModelDto
     // {
@@ -53,7 +66,7 @@ namespace Data.ViewModels
     //     public List<Guid> CardAccessIds { get; set; } = new();
     // }
 
-        public class    CardAssignAccessDto : BaseModelDto
+    public class CardAssignAccessDto : BaseModelDto
     {
         public Guid CardId { get; set; }
 

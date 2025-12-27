@@ -43,6 +43,9 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        [Column("reader_type")]
+        public ReaderType? ReaderType { get; set; }
+
         public MstApplication Application { get; set; }
         public MstBrand Brand { get; set; }
         public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();

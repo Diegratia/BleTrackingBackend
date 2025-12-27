@@ -37,6 +37,7 @@ namespace Data.ViewModels
         public string? VisitorNumber { get; set; }
         public string? VisitorCode { get; set; }
         public string? MemberIdentity { get; set; }
+        public string? CardNumber { get; set;}
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
         public string? PersonType { get; set; }
@@ -69,6 +70,7 @@ namespace Data.ViewModels
         public DateTime? VisitorPeriodEnd { get; set; }
         public bool? IsInvitationAccepted { get; set; }
         public string? InvitationCode { get; set; }
+        public string? CardNumber { get; set;}
         public int TrxStatus { get; set; }
         public Guid? MaskedAreaId { get; set; }
         public Guid? ParkingId { get; set; }

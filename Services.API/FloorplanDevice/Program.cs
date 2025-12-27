@@ -68,12 +68,21 @@ var redisConfig = new ConfigurationOptions
 
     KeepAlive = 5,
 
+    // ConnectTimeout = 5000,   // WAS 50 → fatal
+    // SyncTimeout = 5000,   // WAS 50 → fatal
+    // AsyncTimeout = 5000,   // WAS 50 → fatal
 
-    BacklogPolicy = BacklogPolicy.FailFast
+    // ConnectRetry = 3,
+    // ReconnectRetryPolicy = new LinearRetry(500), // WAS 50 → fatal
+    BacklogPolicy = BacklogPolicy.FailFast,
+    
+    
 };
 
 
 var mux = ConnectionMultiplexer.Connect(redisConfig);
+
+
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
 

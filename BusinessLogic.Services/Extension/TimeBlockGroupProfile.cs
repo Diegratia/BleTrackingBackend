@@ -15,9 +15,14 @@ namespace BusinessLogic.Services.Extension
             // TimeGroup
             CreateMap<TimeGroup, TimeGroupDto>();
             CreateMap<TimeGroupCreateDto, TimeGroup>();
+            // CreateMap<TimeGroupUpdateDto, TimeGroup>()
+            //     // .ForMember(dest => dest.Id, opt => opt.Ignore())
+            //     .ForMember(dest => dest.Generate, opt => opt.Ignore())
             CreateMap<TimeGroupUpdateDto, TimeGroup>()
-                // .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Generate, opt => opt.Ignore())
+            .ForMember(dest => dest.TimeBlocks, opt => opt.Ignore())      // 🔥 FIX WAJIB
+            .ForMember(dest => dest.CardAccessTimeGroups, opt => opt.Ignore())  // optional
+            .ForMember(dest => dest.Generate, opt => opt.Ignore());
+
             ;
 
             // TimeBlock

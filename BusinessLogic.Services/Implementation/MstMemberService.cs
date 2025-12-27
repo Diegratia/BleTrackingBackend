@@ -293,15 +293,15 @@ namespace BusinessLogic.Services.Implementation
         public async Task UnBlacklistMemberAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var visitor = await _repository.GetByIdAsync(id);
-            if (visitor == null)
-                throw new KeyNotFoundException($"Visitor with ID {id} not found.");
+            var member = await _repository.GetByIdAsync(id);
+            if (member == null)
+                throw new KeyNotFoundException($"Member with ID {id} not found.");
 
-            visitor.UpdatedBy = username ?? "System";
-            visitor.UpdatedAt = DateTime.UtcNow;
-            visitor.IsBlacklist = false;
+            member.UpdatedBy = username ?? "System";
+            member.UpdatedAt = DateTime.UtcNow;
+            member.IsBlacklist = false;
 
-            await _repository.UpdateAsync(visitor);
+            await _repository.UpdateAsync(member);
             await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
         }
 

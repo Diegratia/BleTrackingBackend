@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251120050426_DeleteBlacklistArea")]
+    partial class DeleteBlacklistArea
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -984,10 +987,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<string>("Path")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("path");
-
                     b.Property<float>("PosPxX")
                         .HasColumnType("real")
                         .HasColumnName("pos_px_x");
@@ -1585,10 +1584,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
-
-                    b.Property<string>("ReaderType")
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("reader_type");
 
                     b.Property<int?>("Status")
                         .IsRequired()
@@ -2869,10 +2864,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("block_reason");
 
-                    b.Property<string>("CardNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("card_number");
-
                     b.Property<DateTime?>("CheckedInAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("checked_in_at");
@@ -2913,6 +2904,10 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
+
+                    b.Property<int?>("ExtendedVisitorTime")
+                        .HasColumnType("int")
+                        .HasColumnName("extended_visitor_time");
 
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
@@ -3035,9 +3030,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VisitorId", "Status");
 
-                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
-                        .IsUnique()
-                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd");
 
                     b.ToTable("trx_visitor", (string)null);
                 });

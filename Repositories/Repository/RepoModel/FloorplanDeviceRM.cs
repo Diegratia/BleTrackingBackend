@@ -12,13 +12,14 @@ namespace Repositories.Repository.RepoModel
         public string? Name { get; set; }
         public string? Type { get; set; }
         public Guid FloorplanId { get; set; }
-        public Guid AccessCctvId { get; set; }
-        public Guid ReaderId { get; set; }
-        public Guid AccessControlId { get; set; }
+        public Guid? AccessCctvId { get; set; }
+        public Guid? ReaderId { get; set; }
+        public Guid? AccessControlId { get; set; }
         public float PosX { get; set; }
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public Guid ApplicationId { get; set; }
         public string? DeviceStatus { get; set; }

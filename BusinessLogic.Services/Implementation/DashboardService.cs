@@ -18,19 +18,20 @@ namespace BusinessLogic.Services.Implementation
         private readonly CardRepository _cardRepo;
         private readonly FloorplanDeviceRepository _deviceRepo;
         private readonly AlarmTriggersRepository _alarmRepo;
-        private readonly BlacklistAreaRepository _blacklistRepo;
         private readonly FloorplanMaskedAreaRepository _areaRepo;
+        private readonly VisitorRepository _visitorRepo;
+        private readonly MstMemberRepository _memberRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         
-
 
         public DashboardService(
             CardRepository cardRepo,
             FloorplanDeviceRepository deviceRepo,
             AlarmTriggersRepository alarmRepo,
-            BlacklistAreaRepository blacklistRepo,
             FloorplanMaskedAreaRepository areaRepo,
+            VisitorRepository visitorRepo,
+            MstMemberRepository memberRepo,
             IHttpContextAccessor httpContextAccessor,
             ILogger<DashboardService> logger,
             IMapper mapper
@@ -39,8 +40,9 @@ namespace BusinessLogic.Services.Implementation
             _cardRepo = cardRepo;
             _deviceRepo = deviceRepo;
             _alarmRepo = alarmRepo;
-            _blacklistRepo = blacklistRepo;
             _areaRepo = areaRepo;
+            _visitorRepo = visitorRepo;
+            _memberRepo = memberRepo;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _mapper = mapper;
@@ -79,13 +81,6 @@ namespace BusinessLogic.Services.Implementation
                         Id = rm.Id,
                         Name = rm.Name,
             }).ToList();
-            var blacklistCount = await _blacklistRepo.GetCountAsync();
-            var topBlacklistRM = await _blacklistRepo.GetTopBlacklistAsync(5);
-            var topBlacklistDto = topBlacklistRM.Select(rm => new BlacklistSummaryDto
-                {
-                        Id = rm.Id,
-                        BlacklistPersonName = rm.BlacklistPersonName,
-            }).ToList();
             var alarmCount = await _alarmRepo.GetCountAsync();
             var topTriggersRM = await _alarmRepo.GetTopTriggersAsync(5);
             var topTriggersDto = topTriggersRM.Select(rm => new AlarmTriggersSummary
@@ -100,6 +95,8 @@ namespace BusinessLogic.Services.Implementation
                         Id = rm.Id,
                         Name = rm.Name,
                     }).ToList();
+            var visitorBlacklistCount = await _visitorRepo.GetBlacklistedCountAsync();
+            var memberBlacklistCount = await _memberRepo.GetBlacklistedCountAsync();
             return new DashboardSummaryDto
             {
                 ActiveBeaconCount = activeBeaconCount,
@@ -108,12 +105,11 @@ namespace BusinessLogic.Services.Implementation
                 TopNonActiveBeacon = topNonActiveBeaconDto,
                 ActiveGatewayCount = activeGatewayCount,
                 TopReaders = topReadersDto,
-                BlacklistCount = blacklistCount,
-                TopBlacklist = topBlacklistDto,
                 AlarmCount = alarmCount,
-                TopTriggers = topTriggersDto, 
+                TopTriggers = topTriggersDto,
                 AreaCount = areaCount, // TOTAL semua area
                 TopAreas = topAreasDto,
+                BlacklistedCount = visitorBlacklistCount + memberBlacklistCount,
                 ApplicationId = appId
             };
         }

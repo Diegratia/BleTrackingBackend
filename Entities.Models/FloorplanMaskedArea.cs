@@ -62,7 +62,6 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public MstFloor Floor { get; set; }
         public MstFloorplan Floorplan { get; set; }
-        public ICollection<BlacklistArea> BlacklistAreas { get; set; } = new List<BlacklistArea>();
         public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();

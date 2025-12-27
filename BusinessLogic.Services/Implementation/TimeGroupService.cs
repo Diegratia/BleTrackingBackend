@@ -216,104 +216,187 @@ namespace BusinessLogic.Services.Implementation
         //     await _repository.UpdateAsync(entity);
         // }
 
-public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+        // public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var appIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
+
+        //     // ambil entity tracked via repo
+        //     var entity = await _repository.GetByIdAsync(id);
+        //     if (entity == null)
+        //         throw new KeyNotFoundException("TimeGroup not found");
+
+        //     // update scalar
+        //     entity.Name = dto.Name ?? entity.Name;
+        //     entity.Description = dto.Description ?? entity.Description;
+        //     entity.UpdatedBy = username;
+        //     entity.UpdatedAt = DateTime.UtcNow;
+
+        //     if (appIdClaim != null)
+        //         entity.ApplicationId = Guid.Parse(appIdClaim.Value);
+        //     if (entity.ApplicationId == Guid.Empty)
+        //         throw new ArgumentException("ApplicationId cannot be empty.");
+
+        //     // sync timeblocks
+        //     var dtoIds = dto.TimeBlocks
+        //         .Where(b => b.Id.HasValue && b.Id.Value != Guid.Empty)
+        //         .Select(b => b.Id!.Value)
+        //         .ToList();
+
+        //     foreach (var blockDto in dto.TimeBlocks)
+        //     {
+        //         if (blockDto.Id.HasValue && blockDto.Id.Value != Guid.Empty)
+        //         {
+        //             // update existing
+        //             var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id.Value);
+        //             if (existing != null)
+        //             {
+        //                 existing.DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true);
+        //                 existing.StartTime = blockDto.StartTime;
+        //                 existing.EndTime = blockDto.EndTime;
+        //                 existing.UpdatedAt = DateTime.UtcNow;
+        //                 existing.UpdatedBy = username;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             // add new ✅ tracked otomatis karena parent tracked
+        //             entity.TimeBlocks.Add(new TimeBlock
+        //             {
+        //                 Id = Guid.NewGuid(),
+        //                 DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true),
+        //                 StartTime = blockDto.StartTime,
+        //                 EndTime = blockDto.EndTime,
+        //                 TimeGroupId = entity.Id,
+        //                 ApplicationId = entity.ApplicationId,
+        //                 Status = 1,
+        //                 CreatedBy = username,
+        //                 CreatedAt = DateTime.UtcNow,
+        //                 UpdatedBy = username,
+        //                 UpdatedAt = DateTime.UtcNow
+        //             });
+        //         }
+        //     }
+
+        //     // remove lama
+        //     var toRemove = entity.TimeBlocks
+        //         .Where(b => !dtoIds.Contains(b.Id))
+        //         .ToList();
+        //     foreach (var remove in toRemove)
+        //     {
+        //         entity.TimeBlocks.Remove(remove);
+        //     }
+
+        //     // sync cardAccess
+        //     if (dto.CardAccessIds != null)
+        //     {
+        //         var newIds = dto.CardAccessIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
+        //         var existingIds = entity.CardAccessTimeGroups.Select(c => c.CardAccessId).ToList();
+
+        //         // remove
+        //         var toRemoveAccess = entity.CardAccessTimeGroups
+        //             .Where(c => !newIds.Contains(c.CardAccessId))
+        //             .ToList();
+        //         foreach (var rem in toRemoveAccess)
+        //             entity.CardAccessTimeGroups.Remove(rem);
+
+        //         // add
+        //         var toAddAccess = newIds.Except(existingIds).ToList();
+        //         foreach (var add in toAddAccess)
+        //         {
+        //             entity.CardAccessTimeGroups.Add(new CardAccessTimeGroups
+        //             {
+        //                 TimeGroupId = entity.Id,
+        //                 CardAccessId = add,
+        //                 ApplicationId = entity.ApplicationId
+        //             });
+        //         }
+        //     }
+
+        //     // commit via repo
+        //     await _repository.UpdateAsync(entity);
+        // }
+
+        public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
 {
     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
     var appIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
 
-    // ambil entity tracked via repo
+    // 1. Load tracked entity (WITH TimeBlocks)
     var entity = await _repository.GetByIdAsync(id);
     if (entity == null)
         throw new KeyNotFoundException("TimeGroup not found");
 
-    // update scalar
-    entity.Name = dto.Name ?? entity.Name;
-    entity.Description = dto.Description ?? entity.Description;
-    entity.UpdatedBy = username;
+    // 2. Update scalar fields
+    entity.Name = dto.Name;
+    entity.Description = dto.Description;
     entity.UpdatedAt = DateTime.UtcNow;
+    entity.UpdatedBy = username;
 
     if (appIdClaim != null)
         entity.ApplicationId = Guid.Parse(appIdClaim.Value);
-    if (entity.ApplicationId == Guid.Empty)
-        throw new ArgumentException("ApplicationId cannot be empty.");
 
-    // sync timeblocks
-    var dtoIds = dto.TimeBlocks
-        .Where(b => b.Id.HasValue && b.Id.Value != Guid.Empty)
-        .Select(b => b.Id!.Value)
-        .ToList();
-
-    foreach (var blockDto in dto.TimeBlocks)
+    // ============================================================
+    // 3. DELETE ALL OLD TIMEBLOCK (remove from ChangeTracker)
+    // ============================================================
+    foreach (var oldBlock in entity.TimeBlocks.ToList())
     {
-        if (blockDto.Id.HasValue && blockDto.Id.Value != Guid.Empty)
-        {
-            // update existing
-            var existing = entity.TimeBlocks.FirstOrDefault(b => b.Id == blockDto.Id.Value);
-            if (existing != null)
-            {
-                existing.DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true);
-                existing.StartTime = blockDto.StartTime;
-                existing.EndTime = blockDto.EndTime;
-                existing.UpdatedAt = DateTime.UtcNow;
-                existing.UpdatedBy = username;
-            }
-        }
-        else
-        {
-            // add new ✅ tracked otomatis karena parent tracked
-            entity.TimeBlocks.Add(new TimeBlock
-            {
-                Id = Guid.NewGuid(),
-                DayOfWeek = Enum.Parse<DayOfWeek>(blockDto.DayOfWeek, true),
-                StartTime = blockDto.StartTime,
-                EndTime = blockDto.EndTime,
-                TimeGroupId = entity.Id,
-                ApplicationId = entity.ApplicationId,
-                Status = 1,
-                CreatedBy = username,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedBy = username,
-                UpdatedAt = DateTime.UtcNow
-            });
-        }
+        _repository.RemoveTimeBlock(oldBlock);   // state = Deleted
     }
 
-    // remove lama
-    var toRemove = entity.TimeBlocks
-        .Where(b => !dtoIds.Contains(b.Id))
-        .ToList();
-    foreach (var remove in toRemove)
+    // Now clear navigation
+    entity.TimeBlocks.Clear();
+
+    // ============================================================
+    // 4. ADD NEW TIMEBLOCKS
+    // ============================================================
+    foreach (var tb in dto.TimeBlocks)
     {
-        entity.TimeBlocks.Remove(remove);
+        var newBlock = new TimeBlock
+        {
+            Id = Guid.NewGuid(),
+            DayOfWeek = !string.IsNullOrEmpty(tb.DayOfWeek)
+                ? Enum.Parse<DayOfWeek>(tb.DayOfWeek, true)
+                : (DayOfWeek?)null,
+            StartTime = tb.StartTime,
+            EndTime = tb.EndTime,
+            Status = 1,
+            ApplicationId = entity.ApplicationId,
+            TimeGroupId = entity.Id,
+            CreatedBy = username,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedBy = username,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Make EF recognize as Added
+        _repository.AddTimeBlock(newBlock);
+
+        // Add to navigation so FK relationship stays intact
+        entity.TimeBlocks.Add(newBlock);
     }
 
-    // sync cardAccess
+    // ============================================================
+    // 5. CARD ACCESS — replace
+    // ============================================================
+    entity.CardAccessTimeGroups.Clear();
+
     if (dto.CardAccessIds != null)
     {
-        var newIds = dto.CardAccessIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
-        var existingIds = entity.CardAccessTimeGroups.Select(c => c.CardAccessId).ToList();
-
-        // remove
-        var toRemoveAccess = entity.CardAccessTimeGroups
-            .Where(c => !newIds.Contains(c.CardAccessId))
-            .ToList();
-        foreach (var rem in toRemoveAccess)
-            entity.CardAccessTimeGroups.Remove(rem);
-
-        // add
-        var toAddAccess = newIds.Except(existingIds).ToList();
-        foreach (var add in toAddAccess)
+        foreach (var idAccess in dto.CardAccessIds.Where(x => x.HasValue))
         {
             entity.CardAccessTimeGroups.Add(new CardAccessTimeGroups
             {
                 TimeGroupId = entity.Id,
-                CardAccessId = add,
+                CardAccessId = idAccess.Value,
                 ApplicationId = entity.ApplicationId
             });
         }
     }
 
-    // commit via repo
+    // ============================================================
+    // 6. SAVE (NO Update(entity) inside repo)
+    // ============================================================
     await _repository.UpdateAsync(entity);
 }
 
@@ -325,19 +408,19 @@ public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) 
+            if (entity == null)
                 throw new KeyNotFoundException("TimeGroup not found");
-              foreach (var block in entity.TimeBlocks)
-                {
-                    block.Status = 0;
-                    block.TimeGroupId = entity.Id;
-                    block.CreatedBy = username;
-                    block.UpdatedBy = username;
-                    block.CreatedAt = DateTime.UtcNow;
-                    block.UpdatedAt = DateTime.UtcNow;
-                }
-            
-            
+            foreach (var block in entity.TimeBlocks)
+            {
+                block.Status = 0;
+                block.TimeGroupId = entity.Id;
+                block.CreatedBy = username;
+                block.UpdatedBy = username;
+                block.CreatedAt = DateTime.UtcNow;
+                block.UpdatedAt = DateTime.UtcNow;
+            }
+
+
             entity.Status = 0;
             entity.UpdatedBy = username;
             entity.UpdatedAt = DateTime.UtcNow;

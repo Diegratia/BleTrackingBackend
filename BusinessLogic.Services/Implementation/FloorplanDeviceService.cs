@@ -205,11 +205,11 @@ namespace BusinessLogic.Services.Implementation
         public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                // Validasi foreign key
                 if (await _repository.GetFloorplanByIdAsync(dto.FloorplanId) == null)
                     throw new ArgumentException($"Floorplan with ID {dto.FloorplanId} not found.");
 
@@ -235,15 +235,14 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(device);
                 await transaction.CommitAsync();
                 return _mapper.Map<FloorplanDeviceDto>(device);
-            }
+            } 
             catch
             {
                 await transaction.RollbackAsync();
                 throw;
             }
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
     }
+    
 
         // ===========================================================
         // 🔹 UPDATE
@@ -282,7 +281,7 @@ namespace BusinessLogic.Services.Implementation
             }
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-    }
+        }
 
         // ===========================================================
         // 🔹 DELETE (Soft Delete)

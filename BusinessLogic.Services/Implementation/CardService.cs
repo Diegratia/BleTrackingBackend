@@ -81,6 +81,12 @@ namespace BusinessLogic.Services.Implementation
             var cards = await _repository.GetUnUsedCardAsync();
             return _mapper.Map<IEnumerable<CardDto>>(cards);
         }
+
+        public async Task<IEnumerable<OpenCardDto>> OpenGetAllUnUsedAsync()
+        {
+            var cards = await _repository.GetUnUsedCardAsync();
+            return _mapper.Map<IEnumerable<OpenCardDto>>(cards);
+        }
         
         public async Task<IEnumerable<OpenCardDto>> OpenGetAllAsync()
         {

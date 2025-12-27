@@ -22,7 +22,6 @@ namespace Repositories.DbContexts
         public DbSet<MstFloor> MstFloors { get; set; }
         public DbSet<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; }
         public DbSet<Visitor> Visitors { get; set; }
-        public DbSet<BlacklistArea> BlacklistAreas { get; set; }
         public DbSet<MstBleReader> MstBleReaders { get; set; }
         public DbSet<TrackingTransaction> TrackingTransactions { get; set; }
         public DbSet<AlarmRecordTracking> AlarmRecordTrackings { get; set; }
@@ -75,7 +74,6 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MstFloor>().ToTable("mst_floor");
             modelBuilder.Entity<FloorplanMaskedArea>().ToTable("floorplan_masked_area");
             modelBuilder.Entity<Visitor>().ToTable("visitor");
-            modelBuilder.Entity<BlacklistArea>().ToTable("blacklist_area");
             modelBuilder.Entity<MstBleReader>().ToTable("mst_ble_reader");
             modelBuilder.Entity<TrackingTransaction>().ToTable("tracking_transaction");
             modelBuilder.Entity<AlarmRecordTracking>().ToTable("alarm_record_tracking");
@@ -345,10 +343,6 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                entity.HasMany(m => m.BlacklistAreas)
-                    .WithOne(m => m.Member)
-                    .HasForeignKey(m => m.MemberId)
-                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.Organization)
                     .WithMany()
@@ -459,46 +453,18 @@ namespace Repositories.DbContexts
                 entity.HasIndex(v => v.Email);
             });
 
-            // BlacklistArea
-            modelBuilder.Entity<BlacklistArea>(entity =>
-            {
-                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.VisitorId).HasMaxLength(36);
-                entity.Property(e => e.MemberId).HasMaxLength(36);
-
-                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.HasOne(m => m.Application)
-                    .WithMany()
-                    .HasForeignKey(m => m.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.FloorplanMaskedArea)
-                    .WithMany()
-                    .HasForeignKey(v => v.FloorplanMaskedAreaId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(v => v.Visitor)
-                    .WithMany()
-                    .HasForeignKey(v => v.VisitorId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Member)
-                    .WithMany(m => m.BlacklistAreas)
-                    .HasForeignKey(m => m.MemberId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.Property(m => m.Status)
-                    .HasDefaultValue(1);
-                
-                
-            });
-
             // MstBleReader
             modelBuilder.Entity<MstBleReader>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.BrandId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ReaderType)
+                    .HasColumnName("reader_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ReaderType)Enum.Parse(typeof(ReaderType), v, true)
+                    );
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)

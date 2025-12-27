@@ -76,7 +76,8 @@ namespace Data.ViewModels
         public string? UpdatedBy { get; set; }
         public Guid ApplicationId { get; set; }
         public string Status { get; set; }
-
+        [JsonPropertyName("trx_visitor_id")]
+        public Guid TrxVisitorId { get; set; }
         // public CardDto Card { get; set; }
     }
 

@@ -172,18 +172,6 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  blacklist-area:
-    image: dev1pci2025/bletrackingbackend-blacklist-area:prod
-    ports:
-      - "5020:5020"
-    # depends_on:
-    #   - floorplan-masked-area
-    #   - visitor
-    volumes:
-      - ./Uploads/visitorFaceImages:/app/Uploads/visitorFaceImages
-      - ./.env:/app/.env
-    restart: always
-
   ble-reader-node:
     image: dev1pci2025/bletrackingbackend-ble-reader-node:prod
     ports:

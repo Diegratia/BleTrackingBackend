@@ -18,6 +18,7 @@ namespace Data.ViewModels
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -31,7 +32,6 @@ namespace Data.ViewModels
         public MstBleReaderDto Reader { get; set; }
         public MstAccessControlDto AccessControl { get; set; }
         public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
-
     }
 
     public class OpenFloorplanDeviceDto : BaseModelDto
@@ -51,6 +51,7 @@ namespace Data.ViewModels
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -79,6 +80,7 @@ namespace Data.ViewModels
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         // public Guid ApplicationId { get; set; }
         public string? DeviceStatus { get; set; }
@@ -96,6 +98,7 @@ namespace Data.ViewModels
         public float PosY { get; set; }
         public float PosPxX { get; set; }
         public float PosPxY { get; set; }
+        public string? Path { get; set; }
         public Guid FloorplanMaskedAreaId { get; set; }
         public string? DeviceStatus { get; set; }
     }

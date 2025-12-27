@@ -21,12 +21,14 @@ public static class ApiKeyMiddlewareExtensions
         private readonly IServiceProvider _serviceProvider;
         private const string KeyField = "X-BIOPEOPLETRACKING-API-KEY";
         private const string QueryParamKey = "apiKey";
+        // private static readonly DateTime StaticExpiredDate = new DateTime(2025, 12, 30, 0, 0, 0, DateTimeKind.Utc);
+
 
         public ApiKeyMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
-        {
-            _next = next;
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+    {
+        _next = next;
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
 
         public async Task InvokeAsync(HttpContext context)
         {
@@ -64,16 +66,51 @@ public static class ApiKeyMiddlewareExtensions
 
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
+        // var integration = await dbContext.MstIntegrations
+        //     .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue
+        //     && i.Status != 0
+        //     && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
             var integration = await dbContext.MstIntegrations
-                .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && i.Status != 0 && i.ApiTypeAuth == ApiTypeAuth.ApiKey);
+            .Include(i => i.Application)
+            .FirstOrDefaultAsync(i => i.ApiKeyValue == apiKeyValue && 
+                                    i.Status != 0 && 
+                                    i.ApiTypeAuth == ApiTypeAuth.ApiKey);
 
             if (integration == null)
-            {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
-                return;
-            }
+        {
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"success\": false, \"msg\": \"Invalid API Key\", \"collection\": { \"data\": null }, \"code\": 401}");
+            return;
+        }
+
+        // application expired
+        if (integration.Application == null || integration.Application.ApplicationExpired < DateTime.UtcNow)
+        {
+            var expiredAt = integration.Application?.ApplicationExpired
+                .ToString("yyyy-MM-ddTHH:mm:ssZ")?? "Unknown";
+
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(
+                $"{{\"success\": false, \"msg\": \"Application license expired at {expiredAt}\", \"collection\": {{ \"data\": null }}, \"code\": 403}}"
+            );
+            return;
+        }
+
+        // static expired 
+        // if (DateTime.UtcNow > StaticExpiredDate)
+        // {
+        //     var expiredAt = StaticExpiredDate.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+        //     context.Response.StatusCode = 403;
+        //     context.Response.ContentType = "application/json";
+        //     await context.Response.WriteAsync(
+        //         $"{{\"success\": false, \"msg\": \"Application license expired at {expiredAt}\", \"collection\": {{ \"data\": null }}, \"code\": 403}}"
+        //     );
+
+        //     return;
+        // }
 
             context.Items["MstIntegration"] = integration;
 
