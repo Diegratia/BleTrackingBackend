@@ -25,7 +25,11 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AlarmRecordTrackingService(AlarmRecordTrackingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public AlarmRecordTrackingService(
+            AlarmRecordTrackingRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor
+            )
         {
             _repository = repository;
             _mapper = mapper;
@@ -43,22 +47,31 @@ namespace BusinessLogic.Services.Implementation
             var alarms = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<AlarmRecordTrackingDto>>(alarms);
         }
+        
+    public async Task<List<AlarmTriggerLogFlatRM>> GetAlarmTriggerLogsAsync(
+        AlarmAnalyticsRequestRM request)
+        {
+            var data = await _repository
+                .GetAlarmTriggerLogsAsync(request);
+
+            return data;
+        }
 
             public async Task<object> FilterAsync(DataTablesRequest request)
-            {
-                var query = _repository.GetAllQueryable();
+        {
+            var query = _repository.GetAllQueryable();
 
-                var searchableColumns = new[] { "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name"  }; 
-                var validSortColumns = new[] {  "Timestamp", "IdleTimestamp", "DoneTimestamp", "CancelTimestamp", "WaitingTimestamp", "InvestigatedTimestamp", "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "Action", "AlarmRecordStatus", "FloorplanMaskedArea.Id" };
+            var searchableColumns = new[] { "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name" };
+            var validSortColumns = new[] { "Timestamp", "IdleTimestamp", "DoneTimestamp", "CancelTimestamp", "WaitingTimestamp", "InvestigatedTimestamp", "Reader.Name", "Visitor.Name", "FloorplanMaskedArea.Name", "Action", "AlarmRecordStatus", "FloorplanMaskedArea.Id" };
 
-                var filterService = new GenericDataTableService<AlarmRecordTracking, AlarmRecordTrackingDto>(
-                    query,
-                    _mapper,
-                    searchableColumns,
-                    validSortColumns);
-                
-                return await filterService.FilterAsync(request);
-            }
+            var filterService = new GenericDataTableService<AlarmRecordTracking, AlarmRecordTrackingDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+
+            return await filterService.FilterAsync(request);
+        }
 
          public async Task<byte[]> ExportPdfAsync()
         {

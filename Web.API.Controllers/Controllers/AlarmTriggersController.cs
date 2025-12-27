@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -23,80 +24,26 @@ namespace Web.API.Controllers.Controllers
 
         [HttpGet("open")]
         [AllowAnonymous]
+
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var alarms = await _service.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm Triggers retrieved successfully",
-                    collection = new { data = alarms },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var alarms = await _service.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Alarm Triggers retrieved successfully", alarms));
         }
 
          [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
+        
                 var alarms = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm Triggers retrieved successfully",
-                    collection = new { data = alarms },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+                return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
         }
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUp()
         {
-            try
-            {
-                var alarms = await _service.GetAllLookUpAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm Triggers retrieved successfully",
-                    collection = new { data = alarms },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var alarms = await _service.GetAllLookUpAsync();
+                return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
         }
 
         [HttpPut("{id}")]
@@ -104,47 +51,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Trigger updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Card not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Alarm updated successfully"));
         }
 
         [HttpPut("tag/{beaconId}")]
@@ -194,53 +109,14 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        
+
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Alarm Trigger filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+            var result = await _service.FilterAsync(request);
+            return Ok(ApiResponse.Paginated("Alarm Triggers filtered successfully", result));
         }
     }
 }

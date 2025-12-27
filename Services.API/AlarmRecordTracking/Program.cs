@@ -158,10 +158,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(AlarmRecordTrackingProfile));
 builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingService>();
+builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 // builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
+builder.Services.AddScoped<AlarmTriggersRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "5002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];

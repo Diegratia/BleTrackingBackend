@@ -84,79 +84,79 @@ namespace Repositories.Repository
         //     return result;
         // }
 
-public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
-{
-    var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-    var query = _context.AlarmTriggers
-        .AsNoTracking()
-        .Where(b => b.IsActive == true && 
-               b.Alarm.HasValue && 
-               (b.VisitorId.HasValue || b.MemberId.HasValue));
+            var query = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(b => b.IsActive == true &&
+                       b.Alarm.HasValue &&
+                       (b.VisitorId.HasValue || b.MemberId.HasValue));
 
-    if (!isSystemAdmin)
-    {
-        query = query.Where(b => b.ApplicationId == applicationId);
-    }
-
-    try
-    {
-        var allData = await query
-            .Select(b => new 
+            if (!isSystemAdmin)
             {
-                Entity = b,
-                PersonGuid = b.VisitorId ?? b.MemberId,
-                VisitorName = b.VisitorId.HasValue && b.Visitor != null ? b.Visitor.Name : null,
-                MemberName = b.MemberId.HasValue && b.Member != null ? b.Member.Name : null,
-                VisitorFaceImage = b.VisitorId.HasValue && b.Visitor != null ? b.Visitor.FaceImage : null,
-                MemberFaceImage = b.MemberId.HasValue && b.Member != null ? b.Member.FaceImage : null,
-                TriggerTime = b.TriggerTime,
-                ApplicationId = b.ApplicationId
-            })
-            .OrderByDescending(x => x.TriggerTime)
-            .ToListAsync();
+                query = query.Where(b => b.ApplicationId == applicationId);
+            }
 
-        var distinctData = allData
-            .Where(x => x.PersonGuid.HasValue) 
-            .GroupBy(x => x.PersonGuid)
-            .Select(g => g.First()) 
-            .Select(x => new AlarmTriggersLookUp
+            try
             {
-                Id = x.Entity.Id,
-                BeaconId = x.Entity.BeaconId,
-                VisitorId = x.Entity.VisitorId,
-                MemberId = x.Entity.MemberId,
-                VisitorName = x.VisitorName,
-                MemberName = x.MemberName,
-                VisitorFaceImage = x.VisitorFaceImage,
-                MemberFaceImage = x.MemberFaceImage,
-                PersonImage = x.VisitorFaceImage ?? x.MemberFaceImage,
-                TriggerTime = x.TriggerTime,
-                ApplicationId = x.ApplicationId
-            })
-            .OrderByDescending(b => b.TriggerTime)
-            .ToList();
+                var allData = await query
+                    .Select(b => new
+                    {
+                        Entity = b,
+                        PersonGuid = b.VisitorId ?? b.MemberId,
+                        VisitorName = b.VisitorId.HasValue && b.Visitor != null ? b.Visitor.Name : null,
+                        MemberName = b.MemberId.HasValue && b.Member != null ? b.Member.Name : null,
+                        VisitorFaceImage = b.VisitorId.HasValue && b.Visitor != null ? b.Visitor.FaceImage : null,
+                        MemberFaceImage = b.MemberId.HasValue && b.Member != null ? b.Member.FaceImage : null,
+                        TriggerTime = b.TriggerTime,
+                        ApplicationId = b.ApplicationId
+                    })
+                    .OrderByDescending(x => x.TriggerTime)
+                    .ToListAsync();
 
-        return distinctData;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error in GetAllLookUpAsync: {ex.Message}");
-        Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-        throw; 
-    }
-}
-        
+                var distinctData = allData
+                    .Where(x => x.PersonGuid.HasValue)
+                    .GroupBy(x => x.PersonGuid)
+                    .Select(g => g.First())
+                    .Select(x => new AlarmTriggersLookUp
+                    {
+                        Id = x.Entity.Id,
+                        BeaconId = x.Entity.BeaconId,
+                        VisitorId = x.Entity.VisitorId,
+                        MemberId = x.Entity.MemberId,
+                        VisitorName = x.VisitorName,
+                        MemberName = x.MemberName,
+                        VisitorFaceImage = x.VisitorFaceImage,
+                        MemberFaceImage = x.MemberFaceImage,
+                        PersonImage = x.VisitorFaceImage ?? x.MemberFaceImage,
+                        TriggerTime = x.TriggerTime,
+                        ApplicationId = x.ApplicationId
+                    })
+                    .OrderByDescending(b => b.TriggerTime)
+                    .ToList();
 
-           public async Task<AlarmTriggers?> GetByIdAsync(Guid id)
+                return distinctData;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAllLookUpAsync: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+
+        public async Task<AlarmTriggers?> GetByIdAsync(Guid id)
         {
 
             return await GetAllQueryable()
             .Where(b => b.Id == id && b.IsActive != false)
             .FirstOrDefaultAsync();
         }
-        
-            public async Task<int> GetCountAsync()
+
+        public async Task<int> GetCountAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -169,7 +169,7 @@ public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
             return await q.CountAsync();
         }
 
-         public async Task<List<AlarmTriggersRM>> GetTopTriggersAsync(int topCount = 5)
+        public async Task<List<AlarmTriggersRM>> GetTopTriggersAsync(int topCount = 5)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -180,7 +180,7 @@ public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q
-                .OrderByDescending(x => x.TriggerTime) 
+                .OrderByDescending(x => x.TriggerTime)
                 .Take(topCount)
                 .Select(x => new AlarmTriggersRM
                 {
@@ -206,9 +206,9 @@ public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
             .ToListAsync();
         }
 
-        
 
-            public async Task UpdateAsync(AlarmTriggers alarmTriggers)
+
+        public async Task UpdateAsync(AlarmTriggers alarmTriggers)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -217,8 +217,8 @@ public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
 
             await _context.SaveChangesAsync();
         }
-        
-            public async Task UpdateBatchAsync(IEnumerable<AlarmTriggers> alarmTriggers)
+
+        public async Task UpdateBatchAsync(IEnumerable<AlarmTriggers> alarmTriggers)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -230,19 +230,27 @@ public async Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync()
 
             await _context.SaveChangesAsync();
         }
-        
-            public IQueryable<AlarmTriggers> GetAllQueryable()
+
+        public IQueryable<AlarmTriggers> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.AlarmTriggers
             .Include(b => b.Visitor)
             .Include(b => b.Member)
+            .Include(b => b.Security)
             .Include(b => b.Floorplan);
 
             // query = query.WithActiveRelations();
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+        
+                public async Task<MstSecurity?> GetSecurityByIdAsync(Guid securityId)
+        {
+            return await _context.MstSecurities
+                .Where(x => x.Id == securityId && x.Status != 0)
+                .FirstOrDefaultAsync();
         }
     }
 }

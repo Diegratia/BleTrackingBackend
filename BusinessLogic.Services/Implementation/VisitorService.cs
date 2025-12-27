@@ -21,6 +21,7 @@ using AutoMapper.Execution;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -43,7 +44,8 @@ public class VisitorService : IVisitorService
     private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
     private readonly string _invitationBaseUrl;
-        private readonly IMqttClientService _mqttClient;
+    private readonly IMqttClientService _mqttClient;
+    private readonly IFileStorageService _fileStorageService;
 
         public VisitorService(
             IMapper mapper,
@@ -60,7 +62,8 @@ public class VisitorService : IVisitorService
             CardAccessRepository cardAccessRepository,
             IEmailService emailService,
             IConfiguration configuration,
-            IMqttClientService mqttClient)
+            IMqttClientService mqttClient,
+            IFileStorageService fileStorageService)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -77,6 +80,7 @@ public class VisitorService : IVisitorService
             _mstmemberRepository = mstmemberRepository ?? throw new ArgumentNullException(nameof(mstmemberRepository));
             _invitationBaseUrl = configuration["InvitationBaseUrl"] ?? "null";
             _mqttClient = mqttClient;
+            _fileStorageService = fileStorageService;
         }
     
 
@@ -179,28 +183,7 @@ public class VisitorService : IVisitorService
                 {
                     try
                     {
-                        if (!_allowedImageTypes.Contains(createDto.FaceImage.ContentType))
-                            throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                        if (createDto.FaceImage.Length > MaxFileSize)
-                            throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                        var basePath = AppContext.BaseDirectory;
-                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
-                        Directory.CreateDirectory(uploadDir);
-
-                        // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                        // Directory.CreateDirectory(uploadDir);
-
-                        var fileName = $"{Guid.NewGuid()}_{createDto.FaceImage.FileName}";
-                        var filePath = Path.Combine(uploadDir, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await createDto.FaceImage.CopyToAsync(stream);
-                        }
-
-                        visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+                        visitor.FaceImage = await _fileStorageService.SaveImageAsync(createDto.FaceImage, "visitorFaceImages", MaxFileSize);
                         visitor.UploadFr = 1;
                         visitor.UploadFrError = "Upload successful";
                     }
@@ -661,27 +644,8 @@ public class VisitorService : IVisitorService
             {
                 try
                 {
-                    if (!_allowedImageTypes.Contains(updateDto.FaceImage.ContentType))
-                        throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
-
-                    if (updateDto.FaceImage.Length > MaxFileSize)
-                        throw new ArgumentException("File size exceeds 5 MB limit.");
-
-                    // var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "visitorFaceImages");
-                    // Directory.CreateDirectory(uploadDir);
-                        var basePath = AppContext.BaseDirectory;
-                        var uploadDir = Path.Combine(basePath, "Uploads", "visitorFaceImages");
-                        Directory.CreateDirectory(uploadDir);
-
-                    var fileName = $"{Guid.NewGuid()}_{updateDto.FaceImage.FileName}";
-                    var filePath = Path.Combine(uploadDir, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await updateDto.FaceImage.CopyToAsync(stream);
-                    }
-
-                    visitor.FaceImage = $"/Uploads/visitorFaceImages/{fileName}";
+                    await _fileStorageService.DeleteAsync(visitor.FaceImage);
+                    visitor.FaceImage = await _fileStorageService.SaveImageAsync(updateDto.FaceImage, "visitorFaceImages", MaxFileSize);
                     visitor.UploadFr = 1;
                     visitor.UploadFrError = "Upload successful";
                 }

@@ -35,10 +35,12 @@ namespace Data.ViewModels
         public string? WaitingBy { get; set; }
         public string? InvestigatedBy { get; set; }
         public string? InvestigatedResult { get; set; }
+        public Guid? AssignedSecurityId { get; set; }
         public Guid ApplicationId { get; set; }
         public MstFloorplanDto Floorplan { get; set; }
         public VisitorDto Visitor { get; set; }
         public MstMemberDto Member { get; set; }
+        public MstSecurityDto? Security { get; set; }
     }
 
     public class AlarmTriggersOpenDto : BaseModelDto
@@ -75,6 +77,8 @@ namespace Data.ViewModels
     public class AlarmTriggersUpdateDto
     {
         public string? ActionStatus { get; set; }
+        public Guid? AssignedSecurityId { get; set; }
+        public string? InvestigatedResult { get; set; }
     }
 
     public class AlarmTriggersSummary

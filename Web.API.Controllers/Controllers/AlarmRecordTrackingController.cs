@@ -7,10 +7,11 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Repositories.Repository.RepoModel;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/alarm-logs")]
     [ApiController]
     [Authorize("RequireAllAndUserCreated")]
     public class AlarmRecordTrackingController : ControllerBase
@@ -22,7 +23,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpPost("alarm-logs")]
+        [HttpPost("log")]
         public async Task<IActionResult> GetAlarmLogsAsync(TrackingAnalyticsRequestRM request)
         {
             try
@@ -46,6 +47,14 @@ namespace Web.API.Controllers.Controllers
                     code = 500
                 });
             }
+        }
+        [HttpPost("event-log")]
+        public async Task<IActionResult> GetAlarmTriggerLogsAsync(AlarmAnalyticsRequestRM request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+            var alarms = await _service.GetAlarmTriggerLogsAsync(request);
+                return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
         }
 
         [HttpGet("{id}")]

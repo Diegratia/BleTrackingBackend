@@ -14,6 +14,7 @@ using Repositories.Seeding;
 using DotNetEnv;
 using BusinessLogic.Services.Background;
 using Helpers.Consumer.Mqtt;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 try
 {
@@ -225,6 +226,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<CustomExceptionMiddleware>(); 
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();

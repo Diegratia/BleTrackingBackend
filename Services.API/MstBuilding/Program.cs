@@ -20,6 +20,7 @@ using Helpers.Consumer.Mqtt;
 using Serilog;
 using Serilog.Events;
 using Data.ViewModels.Shared.ExceptionHelper;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 
 try
@@ -265,6 +266,7 @@ builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<MstBuildingRepository>();
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();

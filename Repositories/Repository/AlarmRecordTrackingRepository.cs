@@ -154,55 +154,113 @@ namespace Repositories.Repository
                 })
                 .ToList();
         }
+        
+        public async Task<List<AlarmTriggerLogFlatRM>> GetAlarmTriggerLogsAsync(
+            AlarmAnalyticsRequestRM request)
+        {
+            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
+            var to = range?.to ?? request.To ?? DateTime.UtcNow;
+
+            var query = _context.AlarmTriggers
+                .AsNoTracking()
+                .Include(a => a.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
+                        .ThenInclude(f => f.Building)
+                .Include(a => a.Visitor)
+                .Include(a => a.Member)
+                .Where(a => a.TriggerTime >= from && a.TriggerTime <= to);
+
+            // 🔹 PAKAI FILTER YANG SAMA POLANYA
+            query = ApplyFilters(query, request);
+
+            var result = await query
+                .OrderByDescending(a => a.TriggerTime)
+                .Select(a => new AlarmTriggerLogFlatRM
+                {
+                    VisitorId = a.VisitorId,
+                    VisitorName = a.Visitor != null ? a.Visitor.Name : null,
+
+                    BuildingId = a.Floorplan.Floor.Building.Id,
+                    BuildingName = a.Floorplan.Floor.Building.Name,
+
+                    FloorId = a.Floorplan.Floor.Id,
+                    FloorName = a.Floorplan.Floor.Name,
+
+                    FloorplanId = a.Floorplan.Id,
+                    FloorplanName = a.Floorplan.Name,
+
+                    AlarmStatus = a.Alarm.ToString(),
+                    ActionStatus = a.Action.ToString(),
+
+                    TriggeredAt = a.TriggerTime,
+                    DoneAt = a.DoneTimestamp,
+                    InvestigatedResult = a.InvestigatedResult,
+                    LastNotifiedAt = a.LastNotifiedAt,
+
+                    AssignedSecurityName = a.Security.Name,
+
+                    // IdleDurationMinutes =
+                    //     (a.LastSeenAt.Value - a.IdleTimestamp.Value).TotalMinutes,
+                    HandleDurationMinutes = a.DoneTimestamp != null && a.TriggerTime != null ?
+                                (a.DoneTimestamp.Value - a.TriggerTime.Value).TotalMinutes : null,
+
+                    IsActive = a.IsActive
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
 
          private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+        {
+            if (string.IsNullOrWhiteSpace(timeReport)) return null;
+
+            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+
+            return timeReport.Trim().ToLower() switch
             {
-                if (string.IsNullOrWhiteSpace(timeReport)) return null;
+                "daily" =>
+                (
+                    TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        wibNow.Date.AddDays(1).AddTicks(-1),
+                        wibZone
+                    )
+                ),
 
-                var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-                var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-
-                return timeReport.Trim().ToLower() switch
-                {
-                    "daily" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
+                "weekly" =>
+                (
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
+                        wibZone
                     ),
-
-                    "weekly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
-                                .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    "monthly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month, 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month,
-                                DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
                             .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
+                        wibZone
+                    )
+                ),
 
-                    _ => null
-                };
-            }
+                "monthly" =>
+                (
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        new DateTime(wibNow.Year, wibNow.Month, 1),
+                        wibZone
+                    ),
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        new DateTime(wibNow.Year, wibNow.Month,
+                            DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
+                        .AddDays(1).AddTicks(-1),
+                        wibZone
+                    )
+                ),
+
+                _ => null
+            };
+        }
 
         private IQueryable<AlarmRecordTracking> ApplyFilters(
             IQueryable<AlarmRecordTracking> query,
@@ -226,6 +284,34 @@ namespace Repositories.Repository
 
             return query;
         }
+
+                private IQueryable<AlarmTriggers> ApplyFilters(
+            IQueryable<AlarmTriggers> query,
+            AlarmAnalyticsRequestRM request)
+        {
+            if (request.BuildingId.HasValue)
+                query = query.Where(a =>
+                    a.Floorplan.Floor.Building.Id == request.BuildingId);
+
+            if (request.FloorId.HasValue)
+                query = query.Where(a =>
+                    a.Floorplan.Floor.Id == request.FloorId);
+
+            if (request.FloorplanId.HasValue)
+                query = query.Where(a =>
+                    a.FloorplanId == request.FloorplanId);
+
+            if (request.VisitorId.HasValue)
+                query = query.Where(a =>
+                    a.VisitorId == request.VisitorId);
+
+            if (request.IsActive.HasValue)
+                query = query.Where(a =>
+                    a.IsActive == request.IsActive);
+
+            return query;
+        }
+
 
         // public async Task DeleteAsync(AlarmRecordTracking entity)
         // {

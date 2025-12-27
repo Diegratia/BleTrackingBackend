@@ -32,6 +32,7 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<IEnumerable<UserDto>> GetAllIntegrationAsync();
         Task<UserDto> GetUserByIdAsync(Guid id);
+         Task LogoutAsync(string refreshToken);
         Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto dto);
         Task DeleteUserAsync(Guid id);
         Task<UserGroupDto> CreateGroupAsync(CreateUserGroupDto dto);
@@ -464,7 +465,7 @@ namespace BusinessLogic.Services.Interface
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddYears(30),
+                expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -557,23 +558,33 @@ namespace BusinessLogic.Services.Interface
             await _userGroupRepository.UpdateAsync(userGroup);
             return _mapper.Map<UserGroupDto>(userGroup);
         }
+        
+        public async Task LogoutAsync(string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return;
+
+            await _refreshTokenRepository.DeleteRefreshTokenAsync(refreshToken);
+        }
+
+
 
     public async Task DeleteGroupAsync(Guid id)
-    {
-        var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(currentUserId))
-            throw new UnauthorizedAccessException("User not authenticated");
+        {
+            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+                throw new UnauthorizedAccessException("User not authenticated");
 
-        var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
-        if (currentUser == null)
-            throw new UnauthorizedAccessException("Current user not found");
+            var currentUser = await _userRepository.GetByIdAsync(Guid.Parse(currentUserId));
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
 
-        var currentUserRole = currentUser.Group?.LevelPriority;
-        if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
-            throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Delete groups");
+            var currentUserRole = currentUser.Group?.LevelPriority;
+            if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
+                throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Delete groups");
 
-        await _userGroupRepository.DeleteAsync(id);
-    }
+            await _userGroupRepository.DeleteAsync(id);
+        }
 
         public async Task<IEnumerable<UserGroupDto>> GetAllGroupsAsync()
         {

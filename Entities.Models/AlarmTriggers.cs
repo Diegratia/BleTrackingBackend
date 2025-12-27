@@ -42,6 +42,9 @@
                 [Column("member_id")]
                 public Guid? MemberId { get; set; }
 
+                [Column("security_id")]
+                public Guid? SecurityId { get; set; }
+
                 [Column("trigger_time")]
                 public DateTime? TriggerTime { get; set; } // first trigger times
                 [Column("alarm_color")]
@@ -109,5 +112,6 @@
                 public MstFloorplan Floorplan { get; set; }
                 public Visitor Visitor { get; set; }
                 public MstMember Member { get; set; } 
+                public MstSecurity Security { get; set; } 
             }
         }

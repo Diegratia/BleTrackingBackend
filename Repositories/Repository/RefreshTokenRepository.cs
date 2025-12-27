@@ -44,5 +44,30 @@ namespace Repositories.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        // ✅ Logout by refresh token ID (optional, tapi bersih)
+        public async Task DeleteByIdAsync(Guid id)
+        {
+            var refreshToken = await _context.RefreshTokens.FindAsync(id);
+            if (refreshToken == null)
+                return;
+
+            _context.RefreshTokens.Remove(refreshToken);
+            await _context.SaveChangesAsync();
+        }
+
+        // ✅ Logout ALL devices (recommended feature)
+        public async Task DeleteAllByUserIdAsync(Guid userId)
+        {
+            var tokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId)
+                .ToListAsync();
+
+            if (!tokens.Any())
+                return;
+
+            _context.RefreshTokens.RemoveRange(tokens);
+            await _context.SaveChangesAsync();
+        }
     }
 }

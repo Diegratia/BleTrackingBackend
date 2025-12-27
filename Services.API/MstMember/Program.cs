@@ -14,6 +14,8 @@ using Repositories.Seeding;
 using DotNetEnv;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension.FileStorageService;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 try
 {
@@ -169,8 +171,11 @@ builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.AddAutoMapper(typeof(MstMemberProfile));
+builder.Services.AddAutoMapper(typeof(MstSecurityProfile));
 
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
+builder.Services.AddScoped<IMstSecurityService, MstSecurityService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<CardRepository>();
 
@@ -181,8 +186,7 @@ builder.Services.AddScoped<CardRepository>();
 // builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
 
 builder.Services.AddScoped<MstMemberRepository>();
-
-
+builder.Services.AddScoped<MstSecurityRepository>();
 
 var port = Environment.GetEnvironmentVariable("MST_MEMBER_PORT") ?? "5016" ??
            builder.Configuration["Ports:MstMemberService"];
@@ -246,12 +250,18 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 var basePath = AppContext.BaseDirectory;
 var uploadsPath = Path.Combine(basePath, "Uploads", "MemberFaceImages");
+var SecurityUploadsPath = Path.Combine(basePath, "Uploads", "SecurityFaceImages");
 Directory.CreateDirectory(uploadsPath);
 
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads/MemberFaceImages"
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(SecurityUploadsPath),
+    RequestPath = "/Uploads/SecurityFaceImages"
 });
 // var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/MemberFaceImages");
 // Directory.CreateDirectory(uploadsPath);
@@ -263,6 +273,7 @@ app.UseStaticFiles(new StaticFileOptions
 // });
 // app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<CustomExceptionMiddleware>(); 
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();

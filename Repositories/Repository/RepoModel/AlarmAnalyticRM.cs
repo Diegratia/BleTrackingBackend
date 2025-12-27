@@ -3,16 +3,38 @@ using System;
 namespace Repositories.Repository.RepoModel
 {
     // 🧾 Input request (digunakan oleh semua summary)
-    public class AlarmAnalyticsRequestRM
+    // public class AlarmAnalyticsRequestRM
+    // {
+    //     public DateTime? From { get; set; }
+    //     public DateTime? To { get; set; }
+    //     public string? TimeRange { get; set; }  // ← tambahkan ini
+    //     public Guid? FloorplanMaskedAreaId { get; set; }
+    //     public string? OperatorName { get; set; }
+    //     public Guid? VisitorId { get; set; }
+    //     public Guid? BuildingId { get; set; }
+    //     public Guid? FloorId { get; set; }
+    // }
+
+        public class AlarmAnalyticsRequestRM
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
-        public string? TimeRange { get; set; }  // ← tambahkan ini
+        public string? TimeRange { get; set; }
+        public Guid? BuildingId { get; set; }
+        public Guid? FloorplanId { get; set; }
+        public Guid? FloorId { get; set; }
+        public Guid? AreaId { get; set; }
+        public Guid? CardId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+        public Guid? ReaderId { get; set; }
         public Guid? FloorplanMaskedAreaId { get; set; }
         public string? OperatorName { get; set; }
-        public Guid? VisitorId { get; set; }
-        public Guid? BuildingId { get; set; }
-        public Guid? FloorId { get; set; }
+        public bool? IsActive { get; set; }
+
+        public string? ReportTitle { get; set; }
+        public string? ExportType { get; set; }
+
     }
 
     // 📊 Output result models (strongly typed per summary)
@@ -69,10 +91,41 @@ namespace Repositories.Repository.RepoModel
         public string Category { get; set; }
     }
     
-    public class AlarmLogResponseRM
+    public class AlarmTriggerLogFlatRM
 {
-    public List<AlarmRecordLog> Data { get; set; } = new();
+    public Guid? VisitorId { get; set; }
+    public string? VisitorName { get; set; }
+
+    public Guid? BuildingId { get; set; }
+    public string? BuildingName { get; set; }
+
+    public Guid? FloorId { get; set; }
+    public string? FloorName { get; set; }
+
+    public Guid? FloorplanId { get; set; }
+    public string? FloorplanName { get; set; }
+
+    public string? AlarmStatus { get; set; }
+    public string? ActionStatus { get; set; }
+
+    public string? InvestigatedResult { get; set; }
+
+    public DateTime? TriggeredAt { get; set; }
+    public DateTime? DoneAt { get; set; }
+    public DateTime? LastNotifiedAt { get; set; }
+
+        // public double? IdleDurationMinutes { get; set; }
+    public string? AssignedSecurityName { get; set; }
+    public double? HandleDurationMinutes { get; set; }
+
+    public bool? IsActive { get; set; }
 }
+
+    
+    public class AlarmLogResponseRM
+    {
+        public List<AlarmRecordLog> Data { get; set; } = new();
+    }
 
 
 
