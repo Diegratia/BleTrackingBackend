@@ -271,6 +271,52 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [HttpPut("assign-member/{id}")]
+        public async Task<IActionResult>  AssignToMemberAsync(Guid id, [FromBody] CardAssignDto CardDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Validation failed: " + string.Join(", ", errors),
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _service.AssignToMemberAsync(id, CardDto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Assign member successfully",
+                    code = 204
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    msg = "Card not found",
+                    collection = new { data = (object)null },
+                    code = 404
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
         [HttpPut("card-access/{id}")]
         public async Task<IActionResult> UpdateAccessAsync(Guid id, [FromBody] CardAccessEdit CardDto)
         {

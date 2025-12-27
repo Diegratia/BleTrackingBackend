@@ -133,7 +133,7 @@ namespace BusinessLogic.Services.Implementation
                     Name = row.Cell(2).GetValue<string>(),
                     Ip = row.Cell(3).GetValue<string>(), 
                     Gmac = row.Cell(4).GetValue<string>(),
-                    EngineReaderId = row.Cell(5).GetValue<string>(),
+                    // EngineReaderId = row.Cell(5).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -205,7 +205,7 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
                             header.Cell().Element(CellStyle).Text("IP").SemiBold();
                             header.Cell().Element(CellStyle).Text("GMAC").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Engine Reader ID").SemiBold();
+                            // header.Cell().Element(CellStyle).Text("Engine Reader ID").SemiBold();
                             header.Cell().Element(CellStyle).Text("Status").SemiBold();
                         });
 
@@ -216,7 +216,7 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(bleReader.Name);
                             table.Cell().Element(CellStyle).Text(bleReader.Ip);
                             table.Cell().Element(CellStyle).Text(bleReader.Gmac);
-                            table.Cell().Element(CellStyle).Text(bleReader.EngineReaderId);
+                            // table.Cell().Element(CellStyle).Text(bleReader.EngineReaderId);
                             table.Cell().Element(CellStyle).Text(bleReader.Status.ToString());
                         }
 
@@ -252,8 +252,8 @@ namespace BusinessLogic.Services.Implementation
             worksheet.Cell(1, 2).Value = "Name";
             worksheet.Cell(1, 3).Value = "IP";
             worksheet.Cell(1, 4).Value = "GMAC";
-            worksheet.Cell(1, 5).Value = "Engine Reader ID";
-            worksheet.Cell(1, 6).Value = "Status";
+            // worksheet.Cell(1, 5).Value = "Engine Reader ID";
+            worksheet.Cell(1, 5).Value = "Status";
 
             int row = 2;
             int no = 1;
@@ -264,8 +264,8 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 2).Value = bleReader.Name;
                 worksheet.Cell(row, 3).Value = bleReader.Ip;
                 worksheet.Cell(row, 4).Value = bleReader.Gmac;
-                worksheet.Cell(row, 5).Value = bleReader.EngineReaderId;
-                worksheet.Cell(row, 6).Value = bleReader.Status;
+                // worksheet.Cell(row, 5).Value = bleReader.EngineReaderId;
+                worksheet.Cell(row, 5).Value = bleReader.Status;
                 row++;
             }
 

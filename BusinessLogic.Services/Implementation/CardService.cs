@@ -30,12 +30,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly CardRepository _repository;
         private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
+        private readonly MstMemberRepository _mstMemberRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CardService(CardRepository repository, CardAccessRepository cardAccessRepository, MstMemberRepository mstMemberRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _cardAccessRepository = cardAccessRepository;
+            _mstMemberRepository = mstMemberRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -200,8 +202,29 @@ namespace BusinessLogic.Services.Implementation
                 return _mapper.Map<CardMinimalsDto>(result);  
         }
 
+        // public async Task BlockCardAsync(Guid id, CardBlockDto dto)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     var Card = await _repository.GetByIdAsync(id);
+        //     if (Card.MemberId != null)
+        //     {
+        //         Card.IsBlock = dto.IsBlock;
+        //         Card.UpdatedBy = username;
+        //         Card.BlockAt = DateTime.UtcNow;
+        //         Card.UpdatedAt = DateTime.UtcNow;
+        //     }
+        //     else if (Card.VisitorId != null)
+        //     {
+        //         Card.IsBlock = dto.IsBlock;
+        //         Card.UpdatedBy = username;
+        //         Card.BlockAt = DateTime.UtcNow;
+        //         Card.UpdatedAt = DateTime.UtcNow;
+        //     }
+
+        //         await _repository.UpdateAsync(Card);
+        // }
         
-         public async Task UpdatesAsync(Guid id, CardEditDto dto)
+        public async Task UpdatesAsync(Guid id, CardEditDto dto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -242,21 +265,21 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardCardAccesses.Remove(remove);
             }
 
-                // // Tambah yang baru
-                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-                foreach (var addId in toAdd)
-                {
-                    var access = await _cardAccessRepository.GetByIdAsync(addId);
-                    if (access == null)
-                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+            // // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
 
-                    entity.CardCardAccesses.Add(new CardCardAccess
-                    {
-                        CardId = entity.Id,
-                        CardAccessId = addId,
-                        ApplicationId = entity.ApplicationId
-                    });
-                }
+                entity.CardCardAccesses.Add(new CardCardAccess
+                {
+                    CardId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
 
             await _repository.UpdateAsync(entity);
         }
@@ -355,6 +378,27 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(card);
         }
 
+        public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var card = await _repository.GetByIdAsync(id);
+            var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId.Value);
+            if (card == null)
+                throw new KeyNotFoundException("Card not found");
+
+            if (member == null)
+                throw new KeyNotFoundException("Member not found");
+
+            card.UpdatedAt = DateTime.UtcNow;
+            card.IsUsed = true;
+            card.LastUsed = member.Name;
+            card.UpdatedBy = username;
+            member.CardNumber = card.CardNumber;
+            member.BleCardNumber = card.Dmac;
+            _mapper.Map(dto, card);
+            await _repository.UpdateAsync(card);
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             var card = await _repository.GetByIdAsync(id);
@@ -429,7 +473,7 @@ namespace BusinessLogic.Services.Implementation
 
           public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
             var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
             var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt", "IsUsed", "RegisteredMaskedAreaId", "IsMultiMaskedArea" };

@@ -32,14 +32,28 @@ namespace Helpers.Consumer.Mqtt
             _mqttClient.ConnectedAsync += async e =>
             {
                 Console.WriteLine($"Connected to MQTT broker {host}:{port}");
+                await _mqttClient.SubscribeAsync("engine/#"); // <== tambahkan ini
             };
+
             _mqttClient.DisconnectedAsync += async e =>
             {
                 Console.WriteLine("Disconnected from MQTT broker. Retrying...");
-                await Task.Delay(2000);
-                try { await _mqttClient.ConnectAsync(_options); }
-                catch (Exception ex) { Console.WriteLine($"Reconnect failed: {ex.Message}"); }
+                while (!_mqttClient.IsConnected)
+                {
+                    await Task.Delay(5000);
+                    try
+                    {
+                        await _mqttClient.ConnectAsync(_options);
+                        Console.WriteLine("Reconnected to MQTT broker.");
+                        await _mqttClient.SubscribeAsync("engine/#"); // <== tambahkan ini juga
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Reconnect failed: {ex.Message}");
+                    }
+                }
             };
+
         }
 
         private async Task EnsureConnectedAsync()

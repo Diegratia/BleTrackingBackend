@@ -14,6 +14,9 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using Helpers.Consumer;
+using Microsoft.EntityFrameworkCore;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -74,25 +77,118 @@ namespace BusinessLogic.Services.Implementation
         //     await _repository.DeleteAsync(transaction);
         // }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+            public async Task<object> FilterAsync(DataTablesRequest request)
+            {
+                // Query dari repository sudah projection manual (langsung ke RM)
+                var query = _repository.GetProjectionQueryableManual();
+
+                var searchableColumns = new[]
+                {
+                    "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName"
+                };
+
+                var validSortColumns = new[]
+                {
+                    "TransTime", "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName", "CardId", "AlarmStatus"
+                };
+
+                // 🧠 Di sini kita tidak butuh AutoMapper, karena source dan target sama (TModel == TDto)
+                var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
+                    query,
+                    _mapper, // masih bisa dikirim, tapi tidak akan dipakai
+                    searchableColumns,
+                    validSortColumns
+                );
+
+                return await filterService.FilterAsync(request);
+            }
+
+        // public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var timeRange = GetTimeRange(request.TimeReport);
+        //     var query = _repository.GetProjectionQueryable(timeRange?.from, timeRange?.to);
+
+
+        //     var searchableColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
+
+        //     var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+
+
+        //     return await filterService.FilterAsync(request);
+        // }
+
+        //  public async Task<object> FilterAsync(DataTablesRequest request)
+        // {
+        //     var query = _repository.GetAllQueryable().AsNoTracking();
+
+        //     var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
+        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
+
+        //     var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
+        //         query,
+        //         _mapper,
+        //         searchableColumns,
+        //         validSortColumns);
+
+        //     return await filterService.FilterAsync(request);
+        // }
+
+
+
+        public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllWithAlarmQueryable();
 
-            var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
-            var validSortColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name","TransTime", "CardId", "AlarmStatus" };
+            var searchableColumns = new[]
+            {
+                "Tracking.Reader.Name",
+                "Tracking.FloorplanMaskedArea.Name",
+                "Tracking.Visitor.Name",
+                "Tracking.Member.Name",
+                "AlarmRecord.Reader.Name",
+                "AlarmRecord.Action",
+                "AlarmRecord.Alarm"
+            };
 
-            var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
+            var validSortColumns = new[]
+            {
+                "Tracking.TransTime",
+                "Tracking.Reader.Name",
+                "Tracking.FloorplanMaskedArea.Name",
+                "Tracking.Visitor.Name",
+                "AlarmRecord.Timestamp",
+                "AlarmRecord.Action",
+                "AlarmRecord.Alarm"
+            };
+
+            var enumColumns = new Dictionary<string, Type>
+            {
+                { "Tracking.AlarmStatus", typeof(AlarmStatus) },
+                { "AlarmRecord.Alarm", typeof(AlarmRecordStatus) },
+                { "AlarmRecord.Action", typeof(ActionStatus) }
+            };
+
+            var filterService = new GenericDataTableService<TrackingTransactionWithAlarm, TrackingTransactionWithAlarm>(
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns
+            );
 
             return await filterService.FilterAsync(request);
         }
-        
+
+
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var trackingTransactions = await _repository.GetAllWithIncludesAsync();
 
             var document = Document.Create(container =>
@@ -176,7 +272,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync()
         {
             var trackingTransactions = await _repository.GetAllExportAsync();
 
@@ -186,7 +282,7 @@ namespace BusinessLogic.Services.Implementation
             // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "TransTime";
-            worksheet.Cell(1, 3).Value = "Reader Name"; 
+            worksheet.Cell(1, 3).Value = "Reader Name";
             worksheet.Cell(1, 4).Value = "Card Id";
             worksheet.Cell(1, 5).Value = "Coordinate X";
             worksheet.Cell(1, 6).Value = "Coordinate Y";
@@ -202,7 +298,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = trackingtransaction.TransTime;
-                worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name?? "-";
+                worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name ?? "-";
                 worksheet.Cell(row, 4).Value = trackingtransaction.Card.Dmac ?? "-";
                 worksheet.Cell(row, 5).Value = trackingtransaction.CoordinateX;
                 worksheet.Cell(row, 6).Value = trackingtransaction.CoordinateY;
@@ -219,5 +315,35 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
+        
+        private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+{
+    if (string.IsNullOrEmpty(timeReport))
+        return null;
+
+    var now = DateTime.UtcNow; // gunakan UTC agar konsisten lintas zona waktu
+
+    return timeReport.ToLower() switch
+    {
+        "daily" => (
+            now.Date,
+            now.Date.AddDays(1).AddTicks(-1)
+        ),
+        "weekly" => (
+            now.Date.AddDays(-(int)now.DayOfWeek + 1), // Senin
+            now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu
+        ),
+        "monthly" => (
+            new DateTime(now.Year, now.Month, 1),
+            new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)).AddDays(1).AddTicks(-1)
+        ),
+        "yearly" => (
+            new DateTime(now.Year, 1, 1),
+            new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
+        ),
+        _ => null // CustomDate akan diabaikan (gunakan DateFilters manual)
+    };
+}
+
     }
 }

@@ -513,7 +513,7 @@ namespace Repositories.Seeding
                     // .RuleFor(r => r.LocationY, f => f.Random.Decimal(0, 100))
                     // .RuleFor(r => r.LocationPxX, f => f.Random.Long(0, 1920))
                     // .RuleFor(r => r.LocationPxY, f => f.Random.Long(0, 1080))
-                    .RuleFor(r => r.EngineReaderId, f => "RDR" + f.Random.Number(1000, 9999))
+                    // .RuleFor(r => r.EngineReaderId, f => "RDR" + f.Random.Number(1000, 9999))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -555,7 +555,7 @@ namespace Repositories.Seeding
                                 }))
                     .RuleFor(a => a.ColorArea, f => f.Internet.Color())
                     .RuleFor(a => a.RestrictedStatus, f => f.PickRandom<RestrictedStatus>())
-                    .RuleFor(a => a.EngineAreaId, f => "ENG" + f.Random.Number(100, 999))
+                    // .RuleFor(a => a.EngineAreaId, f => "ENG" + f.Random.Number(100, 999))
                     .RuleFor(b => b.ApplicationId, f => context.MstApplications
                         .Where(a => a.ApplicationStatus != 0)
                         .OrderBy(r => Guid.NewGuid())
@@ -874,10 +874,10 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
-            // 17. VisitorBlacklistArea
-            if (!context.VisitorBlacklistAreas.Any())
+            // 17. BlacklistArea
+            if (!context.BlacklistAreas.Any())
             {
-                var blacklistFaker = new Faker<VisitorBlacklistArea>()
+                var blacklistFaker = new Faker<BlacklistArea>()
                     .RuleFor(v => v.Id, f => Guid.NewGuid())
                     .RuleFor(v => v.FloorplanMaskedAreaId, f => context.FloorplanMaskedAreas
                         .Where(a => a.Status != 0)
@@ -896,7 +896,7 @@ namespace Repositories.Seeding
                     .RuleFor(v => v.Status, f => 1);
 
                 var blacklists = blacklistFaker.Generate(2);
-                context.VisitorBlacklistAreas.AddRange(blacklists);
+                context.BlacklistAreas.AddRange(blacklists);
                 context.SaveChanges();
             }
 
@@ -1033,7 +1033,7 @@ namespace Repositories.Seeding
                 var engineFaker = new Faker<MstEngine>()
                     .RuleFor(e => e.Id, f => Guid.NewGuid())
                     .RuleFor(e => e.Name, f => "Engine " + f.Random.Word())
-                    .RuleFor(e => e.EngineId, f => "topic_" + Guid.NewGuid().ToString())
+                    .RuleFor(e => e.EngineTrackingId, f => "topic_" + Guid.NewGuid().ToString())
                     .RuleFor(e => e.Port, f => f.Random.Number(1000, 9999))
                     .RuleFor(e => e.Status, f => 1)
                     .RuleFor(e => e.IsLive, f => 1)

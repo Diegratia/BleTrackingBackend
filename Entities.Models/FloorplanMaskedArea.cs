@@ -25,7 +25,7 @@ namespace Entities.Models
 
         [Required]
         [Column("area_shape")]
-        public string AreaShape { get; set; }
+        public string AreaShape { get; set; }   
 
         [StringLength(255)]
         [Column("color_area")]
@@ -35,10 +35,10 @@ namespace Entities.Models
         [Column("restricted_status")]
         public RestrictedStatus RestrictedStatus { get; set; }
 
-        [Required]
-        [StringLength(255)]
-        [Column("engine_area_id")]
-        public string EngineAreaId { get; set; }
+        // [Required]
+        // [StringLength(255)]
+        // [Column("engine_area_id")]
+        // public string EngineAreaId { get; set; }
 
         // [Required]
         // [Column("wide_area")]
@@ -62,7 +62,7 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public MstFloor Floor { get; set; }
         public MstFloorplan Floorplan { get; set; }
-        public ICollection<VisitorBlacklistArea> BlacklistAreas { get; set; } = new List<VisitorBlacklistArea>();
+        public ICollection<BlacklistArea> BlacklistAreas { get; set; } = new List<BlacklistArea>();
         public ICollection<TrackingTransaction> TrackingTransactions { get; set; } = new List<TrackingTransaction>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();

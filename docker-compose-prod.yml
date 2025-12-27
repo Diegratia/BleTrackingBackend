@@ -169,8 +169,8 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-blacklist-area:
-    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
+  blacklist-area:
+    image: dev1pci2025/bletrackingbackend-blacklist-area:latest
     ports:
       - "5020:5020"
     # depends_on:
@@ -249,11 +249,19 @@ services:
     volumes:
       - ./.env:/app/.envc
     restart: always
-    
+
   alarm-triggers:
     image: dev1pci2025/bletrackingbackend-alarm-triggers:latest
     ports:
       - "5027:5027"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+
+  analytics:
+    image: dev1pci2025/bletrackingbackend-analytics:latest
+    ports:
+      - "5031:5031"
     volumes:
       - ./.env:/app/.env
     restart: always
@@ -265,3 +273,9 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+
+  gateway-health-api:
+    image: dev1pci2025/bletrackingbackend-gateway-health-api:latest
+    restart: always
+    expose:
+      - "8080" # hanya visible untuk Nginx di dalam jaringan Docker

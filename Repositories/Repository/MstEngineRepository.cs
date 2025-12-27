@@ -39,7 +39,7 @@ namespace Repositories.Repository
         {
 
             var query = _context.MstEngines
-                .Where(e => e.EngineId == engineId && e.Status != 0);
+                .Where(e => e.EngineTrackingId == engineId && e.Status != 0);
 
             return await query.FirstOrDefaultAsync();
         }

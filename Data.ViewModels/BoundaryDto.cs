@@ -15,7 +15,7 @@ namespace Data.ViewModels
         public string? Color { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
-        public string? EngineId { get; set; }
+        // public string? EngineId { get; set; }
         public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
         public int Status { get; set; }
@@ -28,7 +28,7 @@ namespace Data.ViewModels
         public string? Color { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
-        public string? EngineId { get; set; }
+        // public string? EngineId { get; set; }
         public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
     }
@@ -40,7 +40,7 @@ namespace Data.ViewModels
         public string? Color { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
-        public string? EngineId { get; set; }
+        // public string? EngineId { get; set; }
         public BoundaryType BoundaryType { get; set; }
         public int IsActive { get; set; }
     }

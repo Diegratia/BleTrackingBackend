@@ -78,23 +78,23 @@ namespace Data.ViewModels
         public List<CardAccessDto?> CardAccesses { get; set; } = new();
 
     }
-    
-            public class CardAddDto : BaseModelDto
-        {
-            public string? Name { get; set; }
-            public string? Remarks { get; set; }
-            public string? CardType { get; set; }
-            public string? CardNumber { get; set; }
-            public string? Dmac { get; set; }
-            public bool? IsMultiMaskedArea { get; set; }
-            public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
-            public Guid? VisitorId { get; set; }
-            public Guid? MemberId { get; set; }
-            public Guid? CardGroupId { get; set; }
-            public List<Guid?> CardAccessIds { get; set; } = new();
-        }
 
-        public class CardEditDto : BaseModelDto
+    public class CardAddDto : BaseModelDto
+    {
+        public string? Name { get; set; }
+        public string? Remarks { get; set; }
+        public string? CardType { get; set; }
+        public string? CardNumber { get; set; }
+        public string? Dmac { get; set; }
+        public bool? IsMultiMaskedArea { get; set; }
+        public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+        public Guid? CardGroupId { get; set; }
+        public List<Guid?> CardAccessIds { get; set; } = new();
+    }
+
+    public class CardEditDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Remarks { get; set; }
@@ -113,7 +113,12 @@ namespace Data.ViewModels
     {
         public List<Guid?> CardAccessIds { get; set; } = new();
     }
-    
+
+    //     public class CardBlockDto : BaseModelDto
+    // {
+    //     public bool? IsBlock { get; set; }
+    // }
+
     public class OpenCardDto : BaseModelDto
     {
         public long Generate { get; set; }
@@ -173,5 +178,10 @@ namespace Data.ViewModels
         public Guid? MemberId { get; set; }
         public Guid? CardGroupId { get; set; }
         public int? StatusCard { get; set; }
+    }
+    
+    public class CardAssignDto 
+    {
+        public Guid? MemberId { get; set; }
     }
 }

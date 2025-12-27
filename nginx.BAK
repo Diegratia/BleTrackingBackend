@@ -840,7 +840,7 @@ http {
             proxy_pass_header Authorization;
         }
 
-        location /api/VisitorBlacklistArea/ {
+        location /api/BlacklistArea/ {
             
           if ($request_method = 'OPTIONS') {
                 add_header 'Access-Control-Allow-Origin' '*';
@@ -851,7 +851,7 @@ http {
                 return 204;
             }
             # haurs tambah / diujung url
-            # rewrite /api/VisitorBlacklistArea/(.*) /$1  break;
+            # rewrite /api/BlacklistArea/(.*) /$1  break;
             proxy_pass http://visitor-blacklist-area:5020;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -864,7 +864,7 @@ http {
             proxy_pass_header Authorization;
         }
 
-          location /api/VisitorBlacklistArea/open/ {
+          location /api/BlacklistArea/open/ {
             
           if ($request_method = 'OPTIONS') {
                 add_header 'Access-Control-Allow-Origin' '*';
@@ -875,7 +875,7 @@ http {
                 return 204;
             }
             # haurs tambah / diujung url
-            # rewrite /api/VisitorBlacklistArea/(.*) /$1  break;
+            # rewrite /api/BlacklistArea/(.*) /$1  break;
             proxy_pass http://visitor-blacklist-area:5020;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;

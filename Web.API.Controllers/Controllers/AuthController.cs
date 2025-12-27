@@ -68,6 +68,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        
+
         [AllowAnonymous]
         [HttpPost("public/login/visitor")]
         public async Task<IActionResult> LoginVisitorAsync([FromBody] LoginVisitorDto dto)

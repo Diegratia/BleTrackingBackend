@@ -10,13 +10,6 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public Guid BuildingId { get; set; }
         public string? Name { get; set; }
-        // public string? FloorImage { get; set; }
-        // public float PixelX { get; set; }
-        // public float PixelY { get; set; }
-        // public float FloorX { get; set; }
-        // public float FloorY { get; set; }
-        // public float MeterPerPx { get; set; }
-        // public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
@@ -32,58 +25,29 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public Guid BuildingId { get; set; }
         public string? Name { get; set; }
-        // public string? FloorImage { get; set; }
-        // public float PixelX { get; set; }
-        // public float PixelY { get; set; }
-        // public float FloorX { get; set; }
-        // public float FloorY { get; set; }
-        // public float MeterPerPx { get; set; }
-        // public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
-        // public MstBuildingDto Building { get; set; }
     }
 
     public class MstFloorCreateDto : BaseModelDto
     {
         public Guid BuildingId { get; set; }
         public string? Name { get; set; }
-        // public IFormFile? FloorImage { get; set; }
-        // public float PixelX { get; set; }
-        // public float PixelY { get; set; }
-        // public float FloorX { get; set; }
-        // public float FloorY { get; set; }
-        // public float MeterPerPx { get; set; }
-        // public long EngineFloorId { get; set; }
     }
 
     public class MstFloorUpdateDto 
     {
         public Guid? BuildingId { get; set; }
         public string? Name { get; set; }
-        // public IFormFile? FloorImage { get; set; }
-        // public float PixelX { get; set; }
-        // public float PixelY { get; set; }
-        // public float FloorX { get; set; }
-        // public float FloorY { get; set; }
-        // public float MeterPerPx { get; set; }
-        // public long EngineFloorId { get; set; }
         public Guid? ApplicationId { get; set; }
     }
     public class MstFloorImportDto
     {
         public string BuildingId { get; set; } 
         public string? Name { get; set; }
-        // public string? FloorImage { get; set; } = "";
-        // public float PixelX { get; set; }
-        // public float PixelY { get; set; }
-        // public float FloorX { get; set; }
-        // public float FloorY { get; set; }
-        // public float MeterPerPx { get; set; }
-        // public long EngineFloorId { get; set; }
         public string CreatedBy { get; set; }
         public int? Status { get; set; } = 1;
     }

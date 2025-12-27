@@ -124,6 +124,14 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        [HttpPost("with-alarm/filter")]
+        public async Task<IActionResult> FilterWithAlarm([FromBody] DataTablesRequest request)
+        {
+            var result = await _trackingTransactionService.FilterWithAlarmAsync(request);
+            return Ok(result);
+        }
+
+
 
 
         // PUT: api/TrackingTransaction/{id}

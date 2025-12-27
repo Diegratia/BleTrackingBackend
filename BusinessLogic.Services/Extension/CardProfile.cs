@@ -50,6 +50,10 @@ namespace BusinessLogic.Services.Extension
             CreateMap<CardAccessEdit, Card>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())
            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+           
+            CreateMap<CardAssignDto, Card>()
+           .ForMember(dest => dest.Id, opt => opt.Ignore())
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
 
 

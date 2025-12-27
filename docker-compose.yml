@@ -211,11 +211,22 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  visitor-blacklist-area:
+  jobs-scheduler:
     build:
       context: .
-      dockerfile: Services.API/VisitorBlacklistArea/Dockerfile
-    image: dev1pci2025/bletrackingbackend-visitor-blacklist-area:latest
+      dockerfile: Services.API/JobsScheduler/Dockerfile
+    image: dev1pci2025/bletrackingbackend-jobs-scheduler:latest
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+  blacklist-area:
+    build:
+      context: .
+      dockerfile: Services.API/BlacklistArea/Dockerfile
+    image: dev1pci2025/bletrackingbackend-blacklist-area:latest
     ports:
       - "5020:5020"
     volumes:
@@ -321,6 +332,16 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+  analytics:
+    build:
+      context: .
+      dockerfile: Services.API/Analytics/Dockerfile
+    image: dev1pci2025/bletrackingbackend-analytics:latest
+    ports:
+      - "5031:5031"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
 
   # license-checker:
   #   build:
@@ -343,16 +364,34 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
-    ports:
-      - "5433:1433"
-    environment:
-      SA_PASSWORD: "P@ssw0rd"
-      ACCEPT_EULA: "Y"
-    volumes:
-      - sqlserver_data:/var/opt/mssql
+  gateway-health-api:
+    build:
+      context: .
+      dockerfile: Services.API/GatewayHealthApi/Dockerfile
+    container_name: gateway-health-api
+    restart: always
+    expose:
+      - "8080" # hanya visible untuk Nginx di dalam jaringan Docker
+    networks:
+      - default
 
-volumes:
-  sqlserver_data:
+  # cloudflare-tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflare-tunnel
+  #   command: tunnel --url http://host.docker.internal:5000
+  #   restart: unless-stopped
+  #   environment:
+  #     - TUNNEL_LOGLEVEL=info
+#   sqlserver:
+#     image: mcr.microsoft.com/mssql/server:2022-latest
+#     container_name: sqlserver
+#     ports:
+#       - "5433:1433"
+#     environment:
+#       SA_PASSWORD: "P@ssw0rd"
+#       ACCEPT_EULA: "Y"
+#     volumes:
+#       - sqlserver_data:/var/opt/mssql
+
+# volumes:
+#   sqlserver_data:

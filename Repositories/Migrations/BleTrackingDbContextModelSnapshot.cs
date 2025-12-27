@@ -354,6 +354,80 @@ namespace Repositories.Migrations
                     b.ToTable("alarm_triggers", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.BlacklistArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("FloorplanMaskedAreaId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_masked_area_id");
+
+                    b.Property<Guid?>("FloorplanMaskedAreaId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("MemberId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid?>("VisitorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("visitor_id");
+
+                    b.Property<Guid?>("VisitorId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorplanMaskedAreaId");
+
+                    b.HasIndex("FloorplanMaskedAreaId1");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("VisitorId");
+
+                    b.HasIndex("VisitorId1");
+
+                    b.ToTable("blacklist_area", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -463,10 +537,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
-
-                    b.Property<string>("EngineId")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("engine_id");
 
                     b.Property<Guid?>("FloorId")
                         .HasMaxLength(36)
@@ -1087,12 +1157,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("EngineAreaId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("engine_area_id");
-
                     b.Property<Guid>("FloorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -1177,10 +1241,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
-
-                    b.Property<string>("EngineId")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("engine_id");
 
                     b.Property<Guid?>("FloorId")
                         .HasMaxLength(36)
@@ -1574,12 +1634,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("EngineReaderId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("engine_reader_id");
-
                     b.Property<string>("Gmac")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -1888,10 +1942,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("EngineId")
+                    b.Property<string>("EngineTrackingId")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
-                        .HasColumnName("engine_id");
+                        .HasColumnName("engine_tracking_id");
 
                     b.Property<int?>("IsLive")
                         .HasColumnType("int")
@@ -1931,9 +1985,9 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("EngineId")
+                    b.HasIndex("EngineTrackingId")
                         .IsUnique()
-                        .HasFilter("[engine_id] IS NOT NULL");
+                        .HasFilter("[engine_tracking_id] IS NOT NULL");
 
                     b.ToTable("mst_engine", (string)null);
                 });
@@ -2023,8 +2077,9 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<long>("EngineId")
-                        .HasColumnType("bigint")
+                    b.Property<Guid?>("EngineId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("engine_id");
 
                     b.Property<Guid>("FloorId")
@@ -2092,6 +2147,8 @@ namespace Repositories.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
+
+                    b.HasIndex("EngineId");
 
                     b.HasIndex("FloorId");
 
@@ -2223,6 +2280,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("ble_card_number");
 
+                    b.Property<DateTime?>("BlockAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("block_at");
+
                     b.Property<string>("CardNumber")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -2278,6 +2339,10 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("identity_id");
+
+                    b.Property<bool?>("IsBlock")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_block");
 
                     b.Property<DateOnly?>("JoinDate")
                         .HasColumnType("date")
@@ -2467,10 +2532,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("EngineId")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("engine_id");
-
                     b.Property<Guid?>("FloorId")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
@@ -2580,10 +2641,6 @@ namespace Repositories.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
-
-                    b.Property<string>("EngineId")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("engine_id");
 
                     b.Property<Guid?>("FloorId")
                         .HasMaxLength(36)
@@ -2940,6 +2997,10 @@ namespace Repositories.Migrations
                     b.Property<Guid?>("ParkingId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("parking_id");
+
+                    b.Property<string>("PersonType")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("person_type");
 
                     b.Property<Guid?>("PurposePerson")
                         .HasMaxLength(36)
@@ -3313,73 +3374,6 @@ namespace Repositories.Migrations
                     b.ToTable("visitor", (string)null);
                 });
 
-            modelBuilder.Entity("Entities.Models.VisitorBlacklistArea", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("ApplicationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("application_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("created_by");
-
-                    b.Property<Guid>("FloorplanMaskedAreaId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floorplan_masked_area_id");
-
-                    b.Property<Guid?>("FloorplanMaskedAreaId1")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("status");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid>("VisitorId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("visitor_id");
-
-                    b.Property<Guid?>("VisitorId1")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("FloorplanMaskedAreaId");
-
-                    b.HasIndex("FloorplanMaskedAreaId1");
-
-                    b.HasIndex("VisitorId");
-
-                    b.HasIndex("VisitorId1");
-
-                    b.ToTable("visitor_blacklist_area", (string)null);
-                });
-
             modelBuilder.Entity("Entities.Models.AlarmRecordTracking", b =>
                 {
                     b.HasOne("Entities.Models.AlarmTriggers", "AlarmTriggers")
@@ -3458,6 +3452,47 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("Floorplan");
+                });
+
+            modelBuilder.Entity("Entities.Models.BlacklistArea", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
+                        .WithMany()
+                        .HasForeignKey("FloorplanMaskedAreaId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.FloorplanMaskedArea", null)
+                        .WithMany("BlacklistAreas")
+                        .HasForeignKey("FloorplanMaskedAreaId1");
+
+                    b.HasOne("Entities.Models.MstMember", "Member")
+                        .WithMany("BlacklistAreas")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.Visitor", null)
+                        .WithMany("BlacklistAreas")
+                        .HasForeignKey("VisitorId1");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("FloorplanMaskedArea");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
@@ -3972,6 +4007,11 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Entities.Models.MstEngine", "Engine")
+                        .WithMany("Floorplans")
+                        .HasForeignKey("EngineId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Entities.Models.MstFloor", "Floor")
                         .WithMany()
                         .HasForeignKey("FloorId")
@@ -3987,6 +4027,8 @@ namespace Repositories.Migrations
                         .HasForeignKey("MstFloorId");
 
                     b.Navigation("Application");
+
+                    b.Navigation("Engine");
 
                     b.Navigation("Floor");
                 });
@@ -4302,41 +4344,6 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
                 });
 
-            modelBuilder.Entity("Entities.Models.VisitorBlacklistArea", b =>
-                {
-                    b.HasOne("Entities.Models.MstApplication", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.FloorplanMaskedArea", "FloorplanMaskedArea")
-                        .WithMany()
-                        .HasForeignKey("FloorplanMaskedAreaId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.FloorplanMaskedArea", null)
-                        .WithMany("BlacklistAreas")
-                        .HasForeignKey("FloorplanMaskedAreaId1");
-
-                    b.HasOne("Entities.Models.Visitor", "Visitor")
-                        .WithMany()
-                        .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.Visitor", null)
-                        .WithMany("BlacklistAreas")
-                        .HasForeignKey("VisitorId1");
-
-                    b.Navigation("Application");
-
-                    b.Navigation("FloorplanMaskedArea");
-
-                    b.Navigation("Visitor");
-                });
-
             modelBuilder.Entity("Entities.Models.Card", b =>
                 {
                     b.Navigation("CardCardAccesses");
@@ -4425,6 +4432,11 @@ namespace Repositories.Migrations
                     b.Navigation("Members");
                 });
 
+            modelBuilder.Entity("Entities.Models.MstEngine", b =>
+                {
+                    b.Navigation("Floorplans");
+                });
+
             modelBuilder.Entity("Entities.Models.MstFloor", b =>
                 {
                     b.Navigation("FloorplanMaskedAreas");
@@ -4442,6 +4454,8 @@ namespace Repositories.Migrations
             modelBuilder.Entity("Entities.Models.MstMember", b =>
                 {
                     b.Navigation("AlarmRecordTrackings");
+
+                    b.Navigation("BlacklistAreas");
 
                     b.Navigation("CardRecords");
                 });

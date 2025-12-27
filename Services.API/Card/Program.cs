@@ -53,7 +53,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server= 192.168.1.116,4433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -146,6 +146,7 @@ builder.Services.AddScoped<ICardService, CardService>();
 // Registrasi Repositories
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<CardAccessRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
            builder.Configuration["Ports:CardService"] ?? "5026";
@@ -153,7 +154,33 @@ var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
 
-var app = builder.Build();
+    var app = builder.Build();
+
+        app.MapGet("/hc", async (IServiceProvider sp) =>
+    {
+        var db = sp.GetRequiredService<BleTrackingDbContext>();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+            return Results.Ok(new
+            {
+                code = 200,
+                msg = "Healthy",
+                details = new
+                {
+                    database = "Connected"
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Health check failed");
+            return Results.Problem("Database unreachable", statusCode: 500);
+        }
+    })
+    .AllowAnonymous();
 
 using (var scope = app.Services.CreateScope())
 {

@@ -9,11 +9,9 @@ namespace BusinessLogic.Services.Interface
     public interface ITrackingTransactionService
     {
         Task<IEnumerable<TrackingTransactionDto>> GetAllTrackingTransactionsAsync();
-        // Task<TrackingTransactionDto> CreateTrackingTransactionAsync(TrackingTransactionCreateDto dto);
         Task<TrackingTransactionDto> GetTrackingTransactionByIdAsync(Guid id);
-        // Task UpdateTrackingTransactionAsync(Guid id, TrackingTransactionUpdateDto dto);
-        // Task DeleteTrackingTransactionAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterWithAlarmAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
     }

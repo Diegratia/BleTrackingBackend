@@ -31,6 +31,8 @@ namespace Data.ViewModels
         public string? InvestigatedBy { get; set; }
         public string? InvestigatedResult { get; set; }
         public Guid ApplicationId { get; set; }
+        
+        public MstFloorplanDto Floorplan{ get; set; }
     }
     
     public class AlarmTriggersOpenDto : BaseModelDto

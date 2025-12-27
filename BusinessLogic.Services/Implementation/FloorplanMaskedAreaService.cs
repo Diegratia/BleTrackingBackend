@@ -16,6 +16,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Helpers.Consumer;
 using Helpers.Consumer.Mqtt;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -186,7 +187,6 @@ namespace BusinessLogic.Services.Implementation
                     AreaShape = row.Cell(4).GetValue<string>(),
                     ColorArea = row.Cell(5).GetValue<string>(),
                     RestrictedStatus = (RestrictedStatus)Enum.Parse(typeof(RestrictedStatus), row.Cell(6).GetValue<string>(), true),
-                    EngineAreaId = row.Cell(7).GetValue<string>(),
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -209,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
             var searchableColumns = new[] { "Name", "Floor.Name", "Floorplan.Name" };
             var validSortColumns = new[] { "Name", "Floor.Name", "Floorplan.Name", "CreatedAt", "UpdatedAt", "RestrictedStatus", "Status" };

@@ -8,6 +8,7 @@ namespace Data.ViewModels
         public string SortColumn { get; set; }
         public string SortDir { get; set; }
         public string SearchValue { get; set; }
+         public string? TimeReport { get; set; } = "weekly"; //"Daily", "Weekly", "Monthly", "Yearly", "CustomDate"
         public string Mode { get; set; } = "table"; 
         public Dictionary<string, DateRangeFilter> DateFilters { get; set; } = new Dictionary<string, DateRangeFilter>();
         public Dictionary<string, object> Filters { get; set; } = new Dictionary<string, object>();

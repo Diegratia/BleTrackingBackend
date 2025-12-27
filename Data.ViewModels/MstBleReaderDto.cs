@@ -11,7 +11,7 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Ip { get; set; }
         public string? Gmac { get; set; }
-        public string EngineReaderId { get; set; }
+        // public string EngineReaderId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
@@ -30,7 +30,7 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Ip { get; set; }
         public string? Gmac { get; set; }
-        public string EngineReaderId { get; set; }
+        // public string EngineReaderId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UpdatedBy { get; set; }
@@ -45,7 +45,7 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Ip { get; set; }
         public string Gmac { get; set; }
-        public string EngineReaderId { get; set; }
+        // public string EngineReaderId { get; set; }
     }
 
     public class MstBleReaderUpdateDto 
@@ -54,7 +54,7 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Ip { get; set; }
         public string Gmac { get; set; }
-        public string EngineReaderId { get; set; }
+        // public string EngineReaderId { get; set; }
     }
 
 }

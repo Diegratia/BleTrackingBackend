@@ -79,6 +79,12 @@ namespace Entities.Models
         [Column("head_member2")]
         public string? HeadMember2 { get; set; }
 
+        [Column("is_block")]
+        public bool? IsBlock { get; set; }
+
+        [Column("block_at")]
+        public DateTime? BlockAt { get; set; }
+
         [Required]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
@@ -94,6 +100,7 @@ namespace Entities.Models
         public MstDepartment Department { get; set; }
         public MstDistrict District { get; set; }
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<BlacklistArea> BlacklistAreas { get; set; } = new List<BlacklistArea>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
     }
 }

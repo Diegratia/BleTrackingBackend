@@ -104,7 +104,7 @@ namespace Repositories.Repository
 
             var query = _context.MstFloorplans
                 .Include(f => f.Floor)
-                // .Include(f => f.Engine)
+                .Include(f => f.Engine)
                 .Where(f => f.Status != 0);
             
             query = query.WithActiveRelations();

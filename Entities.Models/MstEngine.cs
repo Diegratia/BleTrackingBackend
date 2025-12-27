@@ -10,16 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Entities.Models
 {
-    [Index(nameof(EngineId), IsUnique = true)]
-    public class MstEngine : BaseModelOnlyIdWithTime,IApplicationEntity
+    [Index(nameof(EngineTrackingId), IsUnique = true)]
+    public class MstEngine : BaseModelOnlyIdWithTime, IApplicationEntity
     {
         [MaxLength(255)]
         [Column("name")]
         public string? Name { get; set; }
 
         [MaxLength(255)]
-        [Column("engine_id")]
-        public string? EngineId { get; set; }
+        [Column("engine_tracking_id")]
+        public string? EngineTrackingId { get; set; }
 
         [Column("port")]
         public int? Port { get; set; }
@@ -41,7 +41,7 @@ namespace Entities.Models
         [ForeignKey(nameof(Application))]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
-
         public MstApplication Application { get; set; }
+        public ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();
     }
 }

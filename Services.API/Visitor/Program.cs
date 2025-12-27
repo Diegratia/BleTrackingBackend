@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+// using Helpers.Consumer.Mqtt;
 
 try
 {
@@ -43,7 +44,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server=192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server=192.168.1.116,4433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -149,6 +150,7 @@ builder.Services.AddScoped<VisitorRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
+// builder.Services.AddScoped<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<TrxVisitorRepository>();
 
 
@@ -158,6 +160,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<CardRecordRepository>();
 builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<CardAccessRepository>();
 // builder.Services.AddScoped<RefreshTokenRepository>();
 // service email
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -169,7 +172,33 @@ var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
 
-var app = builder.Build();
+    var app = builder.Build();
+
+        app.MapGet("/hc", async (IServiceProvider sp) =>
+    {
+        var db = sp.GetRequiredService<BleTrackingDbContext>();
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+            return Results.Ok(new
+            {
+                code = 200,
+                msg = "Healthy",
+                details = new
+                {
+                    database = "Connected"
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Health check failed");
+            return Results.Problem("Database unreachable", statusCode: 500);
+        }
+    })
+    .AllowAnonymous();
 
 using (var scope = app.Services.CreateScope())
 {

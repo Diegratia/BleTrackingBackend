@@ -7,7 +7,7 @@ namespace Data.ViewModels
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
-        public string? EngineId { get; set; }
+        public string? EngineTrackingId { get; set; }
         public int? Port { get; set; }
         public int? Status { get; set; }
         public int? IsLive { get; set; }
@@ -18,7 +18,7 @@ namespace Data.ViewModels
     public class MstEngineCreateDto : BaseModelDto
     {
         public string? Name { get; set; }
-        public string? EngineId { get; set; }
+        public string? EngineTrackingId { get; set; }
         public int? Port { get; set; }
         public int? IsLive { get; set; }
         public DateTime? LastLive { get; set; }
@@ -28,7 +28,7 @@ namespace Data.ViewModels
     public class MstEngineUpdateDto
     {
         public string? Name { get; set; }
-        public string? EngineId { get; set; }
+        public string? EngineTrackingId { get; set; }
         public int? Port { get; set; }
         public int? IsLive { get; set; }
         public DateTime? LastLive { get; set; }

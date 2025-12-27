@@ -124,6 +124,9 @@ namespace Entities.Models
     
     [Column("is_member")]
     public int? IsMember { get; set; }
+
+    [Column("person_type")]
+    public PersonType? PersonType { get; set; }
   
     [Column("agenda")]
     public string? Agenda { get; set; }

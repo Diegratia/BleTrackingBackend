@@ -25,6 +25,14 @@ namespace Repositories.Repository
             .FirstOrDefaultAsync();
         }
 
+        public async Task<Card?> GetByCardNumberAsync(string CardNumber)
+        {
+
+            return await GetAllQueryable()
+            .Where(b => b.CardNumber == CardNumber && b.StatusCard != 0)
+            .FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<Card>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync() ?? null;

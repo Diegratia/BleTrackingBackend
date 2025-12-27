@@ -48,6 +48,18 @@ namespace Helpers.Consumer
         Passport
     }
 
+    public enum PersonType
+    {
+        RegulerEmployee,
+        Suspect,
+        Highthreat,
+        VIP,
+        Staff,
+        Contractor,
+        Delivery,
+        Visitor
+    }
+
     public enum CardType
     {
         Rfid,

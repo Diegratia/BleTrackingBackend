@@ -134,7 +134,7 @@ namespace Repositories.Repository
             return await GetAllQueryable()
                 .Where(t => t.VisitorId == visitorId 
                             && t.CheckedOutAt == null     
-                            && t.TrxStatus == 1)          // konsisten dengan GetAllActiveTrxAsync
+                            && t.TrxStatus == 1)          
                 .OrderByDescending(t => t.CheckedInAt)    // ambil yang paling baru di-checkin
                 .FirstOrDefaultAsync();
         }

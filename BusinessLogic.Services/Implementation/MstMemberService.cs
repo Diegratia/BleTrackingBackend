@@ -256,9 +256,23 @@ namespace BusinessLogic.Services.Implementation
             await _repository.DeleteAsync(id);
         }
 
+        public async Task<MstMemberDto> BlockCardAsync(Guid id, MemberBlockDto dto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var Member = await _repository.GetByIdAsync(id);
+
+            _mapper.Map(dto, Member);
+            Member.UpdatedBy = username;
+            Member.BlockAt = dto.IsBlock == true ? DateTime.UtcNow : null;
+            Member.UpdatedAt = DateTime.UtcNow;
+            
+            await _repository.UpdateAsync(Member);
+            return _mapper.Map<MstMemberDto>(Member);
+        }
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryable().AsNoTracking();
 
             var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
