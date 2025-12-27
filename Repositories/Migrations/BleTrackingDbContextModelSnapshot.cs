@@ -2976,10 +2976,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
-                    b.Property<int?>("ExtendedVisitorTime")
-                        .HasColumnType("int")
-                        .HasColumnName("extended_visitor_time");
-
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("invitation_code");
@@ -3101,7 +3097,9 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VisitorId", "Status");
 
-                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd");
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
+                        .IsUnique()
+                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
