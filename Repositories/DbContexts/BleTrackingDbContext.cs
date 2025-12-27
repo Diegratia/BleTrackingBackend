@@ -50,6 +50,7 @@ namespace Repositories.DbContexts
         public DbSet<StayOnArea> StayOnAreas{ get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
+        public DbSet<TrackingReportPreset> TrackingReportPresets{ get; set; }
         
         // public DbSet<MstTrackingLog> MstTrackingLogs { get; set; }
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
@@ -307,6 +308,17 @@ namespace Repositories.DbContexts
 
              // MonitoringConfig
             modelBuilder.Entity<MonitoringConfig>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.HasOne(m => m.Application)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+             // TrackingReportPreset
+            modelBuilder.Entity<TrackingReportPreset>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();

@@ -165,10 +165,9 @@ namespace Helpers.Consumer
         Idle,
         Done,
         NoAction,
-        Waiting,
-        Investigated,
-        DoneInvestigated,
-        PostponeInvestigated
+        Waiting, // satpam habis menunggu giliran
+        Investigated, // 5 menit
+        PostponeInvestigated // 1 minggu 
     }
 
     public enum DeviceType

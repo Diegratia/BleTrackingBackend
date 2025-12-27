@@ -6,6 +6,7 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Repositories.Repository.RepoModel;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -21,31 +22,31 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        // [HttpGet]
-        // public async Task<IActionResult> GetAll()
-        // {
-        //     try
-        //     {
-        //         var alarms = await _service.GetAllAsync();
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Alarm retrieved successfully",
-        //             collection = new { data = alarms },
-        //             code = 200
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+        [HttpPost("alarm-logs")]
+        public async Task<IActionResult> GetAlarmLogsAsync(TrackingAnalyticsRequestRM request)
+        {
+            try
+            {
+                var alarms = await _service.GetAlarmLogsAsync(request);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Alarm retrieved successfully",
+                    collection = new { data = alarms },
+                    code = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)

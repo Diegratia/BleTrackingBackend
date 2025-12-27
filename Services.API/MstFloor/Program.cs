@@ -203,13 +203,16 @@ builder.Services.AddAutoMapper(typeof(MstFloorProfile));
 builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
-
-
+builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
+
+builder.Services.AddScoped<MstAccessCctvRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
 
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();

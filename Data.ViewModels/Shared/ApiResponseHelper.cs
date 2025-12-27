@@ -74,7 +74,7 @@ namespace Data.ViewModels.ResponseHelper
                 return Error(message, 403);
             }
 
-            public static object InternalError(string message = "Internal server error")
+            public static object InternalError(string message = "Internal server error", object errors = null)
             {
                 return Error(message, 500);
             }

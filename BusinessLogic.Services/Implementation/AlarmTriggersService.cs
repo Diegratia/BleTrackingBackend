@@ -53,34 +53,39 @@ namespace BusinessLogic.Services.Implementation
 
                             if (alarmTriggers.IsActive == false)
                                 throw new KeyNotFoundException($"alarmTriggers with beaconId {alarmTriggers} has been deleted.");
-                            if (dto.ActionStatus == "postponeinvestigated")
-                            {
-                                alarmTriggers.IsActive = true;
-                            }
-                            else if (dto.ActionStatus == "investigated")
-                            {
-                                alarmTriggers.IsActive = true;
-                                alarmTriggers.InvestigatedBy = username;
-                                alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
-                            }
-                            else if (dto.ActionStatus == "noaction")
-                            {
-                                alarmTriggers.IsActive = false;
-                                alarmTriggers.CancelBy = username;
-                                alarmTriggers.CancelTimestamp = DateTime.UtcNow;
-                            }
-                            else if (dto.ActionStatus == "waiting")
-                            {
-                                alarmTriggers.IsActive = false;
-                                alarmTriggers.WaitingBy = username;
-                                alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
-                            }
-                            else if (dto.ActionStatus == "done")
-                            {
-                                alarmTriggers.IsActive = false;
-                                alarmTriggers.DoneBy = username;
-                                alarmTriggers.DoneTimestamp = DateTime.UtcNow;
-                            }
+            if (dto.ActionStatus == "postponeinvestigated")
+            {
+                alarmTriggers.IsActive = true;
+                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+            }
+            else if (dto.ActionStatus == "investigated")
+            {
+                alarmTriggers.IsActive = true;
+                alarmTriggers.InvestigatedBy = username;
+                alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
+                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+            }
+            else if (dto.ActionStatus == "noaction")
+            {
+                alarmTriggers.IsActive = false;
+                alarmTriggers.CancelBy = username;
+                alarmTriggers.CancelTimestamp = DateTime.UtcNow;
+                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+            }
+            else if (dto.ActionStatus == "waiting")
+            {
+                alarmTriggers.IsActive = false;
+                alarmTriggers.WaitingBy = username;
+                alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
+                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+            }
+            else if (dto.ActionStatus == "done")
+            {
+                alarmTriggers.IsActive = false;
+                alarmTriggers.DoneBy = username;
+                alarmTriggers.DoneTimestamp = DateTime.UtcNow;
+                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+            }
                     
                             _mapper.Map(dto, alarmTriggers);
             await _repository.UpdateAsync(alarmTriggers);
@@ -102,30 +107,35 @@ namespace BusinessLogic.Services.Implementation
                 if (dto.ActionStatus == "postponeinvestigated")
                 {
                     alarmTrigger.IsActive = true;
+                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
                 }
                 else if (dto.ActionStatus == "investigated")
                 {
                     alarmTrigger.IsActive = true;
                     alarmTrigger.InvestigatedBy = username;
                     alarmTrigger.InvestigatedTimestamp = DateTime.UtcNow;
+                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
                 }
                 else if (dto.ActionStatus == "noaction")
                 {
                     alarmTrigger.IsActive = false;
                     alarmTrigger.CancelBy = username;
                     alarmTrigger.CancelTimestamp = DateTime.UtcNow;
+                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
                 }
                 else if (dto.ActionStatus == "waiting")
                 {
                     alarmTrigger.IsActive = false;
                     alarmTrigger.WaitingBy = username;
                     alarmTrigger.WaitingTimestamp = DateTime.UtcNow;
+                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
                 }
                 else if (dto.ActionStatus == "done")
                 {
                     alarmTrigger.IsActive = false;
                     alarmTrigger.DoneBy = username;
                     alarmTrigger.DoneTimestamp = DateTime.UtcNow;
+                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
                 }
          
                 _mapper.Map(dto, alarmTrigger);

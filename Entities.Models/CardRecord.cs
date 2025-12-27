@@ -11,10 +11,6 @@ namespace Entities.Models
 {
     public class CardRecord : BaseModelWithTime, IApplicationEntity
     {
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; }
-
         [Column("name")]
         public string Name { get; set; }
 
@@ -67,12 +63,22 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        // [ForeignKey(nameof(CardSwapTransaction))]
+        // [Column("card_swap_transaction_id")]
+        // public Guid? CardSwapTransactionId { get; set; }
+
+        // [Column("is_swap_record")]
+        // public bool IsSwapRecord { get; set; } = false;
+
         [NotMapped]
-        public bool IsActive => CheckoutAt == null; 
+        public bool IsActive => CheckoutAt == null;
+
+
 
         public MstApplication Application { get; set; }
         public Visitor Visitor { get; set; }
         public MstMember Member { get; set; }
         public Card Card { get; set; }
+        // public CardSwapTransaction? CardSwapTransaction { get; set; }
     }
 }

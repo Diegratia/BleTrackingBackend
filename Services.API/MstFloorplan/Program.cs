@@ -195,6 +195,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(MstFloorplanProfile));
 
+builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
@@ -207,6 +208,12 @@ builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddScoped<MstFloorplanRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
+
+builder.Services.AddScoped<MstAccessCctvRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
+
+
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<BoundaryRepository>();

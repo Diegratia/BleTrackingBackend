@@ -15,6 +15,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -131,6 +132,15 @@ namespace BusinessLogic.Services.Implementation
             });
 
             return document.GeneratePdf();
+        }
+
+        public async Task<ResponseCollection<AlarmRecordLog>> GetAlarmLogsAsync(
+            TrackingAnalyticsRequestRM request)
+        {
+            var data = await _repository.GetAlarmLogsAsync(request);
+            return ResponseCollection<AlarmRecordLog>.Ok(
+                data,
+                "Alarm logs retrieved successfully");
         }
 
         public async Task<byte[]> ExportExcelAsync()

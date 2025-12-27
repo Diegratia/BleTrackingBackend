@@ -11,20 +11,24 @@ using QuestPDF.Drawing;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using System.Threading.Tasks;
+using Entities.Models;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
     public class TrackingAnalyticsV2Service : ITrackingAnalyticsV2Service
     {
+        private readonly ITrackingReportPresetService _presetService; 
         private readonly TrackingAnalyticsV2Repository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<TrackingAnalyticsV2Service> _logger;
 
         public TrackingAnalyticsV2Service(
+            ITrackingReportPresetService presetService, 
             TrackingAnalyticsV2Repository repository,
             IMapper mapper,
             ILogger<TrackingAnalyticsV2Service> logger)
         {
+            _presetService = presetService;
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
@@ -44,13 +48,32 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
             }
         }
+            public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId)
+        {
+            try
+            {
+                // 1. Get analytics request from preset
+                var analyticsRequest = await _presetService.ApplyPresetAsync(presetId);
+                
+                // 2. Use existing method to get data
+                var data = await _repository.GetVisitorSessionSummaryAsync(analyticsRequest);
+                
+                return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary from preset");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
+                return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+            }
+        }
         
-         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request)
+        
+        public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request)
         {
             try
             {
                 var sessions = await _repository.GetVisitorSessionSummaryAsync(request);
-                
+
                 // Generate judul report berdasarkan filter
                 string reportTitle = GenerateReportTitle(request);
                 string filterInfo = GenerateFilterInfo(request);
@@ -70,7 +93,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                                 column.Item()
                                     .Text(reportTitle)
                                     .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
-                                
+
                                 if (!string.IsNullOrEmpty(filterInfo))
                                 {
                                     column.Item()
@@ -78,7 +101,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                                         .Text(filterInfo)
                                         .FontSize(10).FontColor(Colors.Grey.Darken2).AlignCenter();
                                 }
-                                
+
                                 column.Item()
                                     .PaddingTop(10)
                                     .Text($"Total Sessions: {sessions.Count}")
@@ -134,7 +157,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                                 table.Cell().Element(CellStyle).Text(
                                     session.ExitTime?.ToString("yyyy-MM-dd HH:mm") ?? "Still Active");
                                 table.Cell().Element(CellStyle).Text(
-                                    session.DurationInMinutes.HasValue ? 
+                                    session.DurationInMinutes.HasValue ?
                                     $"{session.DurationInMinutes} min" : "N/A");
                                 table.Cell().Element(CellStyle).Text(
                                     session.ExitTime.HasValue ? "Completed" : "Active");

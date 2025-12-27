@@ -96,6 +96,32 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        
+        //  public IQueryable<CardUsageHistory> GetAllQueryableMinimal()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+        //     var query = _context.CardRecords
+        //         .Include(a => a.Visitor)
+        //         .Include(a => a.Card)
+        //         .Include(a => a.Member)
+        //         .Where(b => b.Status != 0)
+        //         .AsQueryable();
+
+        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+        //     return query.Select(v => new CardRecordDtoz
+        //     {
+        //         Id = v.Id,
+        //         VisitorName = v.Name,
+        //         Visitor = v.Visitor == null ? null : new VisitorDtoz
+        //         {
+        //             Id = v.Visitor.Id,
+        //             Name = v.Visitor.Name
+        //         },
+        //     });
+        // }
+
 
         public IQueryable<CardRecord> GetAllQueryable()
         {

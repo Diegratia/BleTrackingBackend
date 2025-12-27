@@ -49,13 +49,31 @@ namespace Repositories.Repository.RepoModel
         public string Status { get; set; } = string.Empty;
         public int Total { get; set; }
     }
-    
-        public class AlarmHourlyStatusSummaryRM
+
+    public class AlarmHourlyStatusSummaryRM
     {
         public int Hour { get; set; }
         public string HourLabel { get; set; } = string.Empty;
         public Dictionary<string, int> Status { get; set; } = new();
         // public int Total { get; set; }
     }
+
+    public class AlarmRecordLog
+    {
+        public string Visitor { get; set; }
+        public string Area { get; set; }
+        public DateTime? TriggeredAt { get; set; }
+        public DateTime? DoneAt { get; set; }
+        public string Status { get; set; }
+        public string Host { get; set; }
+        public string Category { get; set; }
+    }
+    
+    public class AlarmLogResponseRM
+{
+    public List<AlarmRecordLog> Data { get; set; } = new();
+}
+
+
 
 }

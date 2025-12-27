@@ -1,4 +1,5 @@
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -6,6 +7,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<AlarmRecordTrackingDto> GetByIdAsync(Guid id);
         Task<IEnumerable<AlarmRecordTrackingDto>> GetAllAsync();
+        Task<ResponseCollection<AlarmRecordLog>> GetAlarmLogsAsync(TrackingAnalyticsRequestRM request);
         // Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();

@@ -43,6 +43,22 @@ namespace Repositories.Repository.RepoModel
 
     }
 
+    public class TrackingAnalyticsPresetRequestRM
+    {
+        public Guid PresetId { get; set; }
+        
+        // Optional: override filter tertentu dari preset
+        public DateTime? From { get; set; }
+        public DateTime? To { get; set; }
+        public Guid? BuildingId { get; set; }
+        public Guid? FloorId { get; set; }
+        public Guid? AreaId { get; set; }
+        public Guid? VisitorId { get; set; }
+        public Guid? MemberId { get; set; }
+        public string? VisitorName { get; set; }
+        public string? AreaName { get; set; }
+    }
+
     public class VisitorSessionSummaryExportRM
     {
         public Guid? VisitorId { get; set; }
@@ -55,7 +71,7 @@ namespace Repositories.Repository.RepoModel
         public DateTime EnterTime { get; set; }
         public DateTime? ExitTime { get; set; }
         public int? DurationInMinutes { get; set; }
-        
+
         // Format khusus export
         public string EnterTimeFormatted { get; set; }
         public string ExitTimeFormatted { get; set; }

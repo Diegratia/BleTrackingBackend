@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215065902_AddFilterPresets")]
+    partial class AddFilterPresets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,10 +240,6 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("action");
 
-                    b.Property<DateTime?>("ActionUpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("action_updated_at");
-
                     b.Property<string>("Alarm")
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("alarm_record_status");
@@ -319,10 +318,6 @@ namespace Repositories.Migrations
                     b.Property<bool?>("IsInRestrictedArea")
                         .HasColumnType("bit")
                         .HasColumnName("is_in_restricted_area");
-
-                    b.Property<DateTime?>("LastSeenAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("last_seen_at");
 
                     b.Property<Guid?>("MemberId")
                         .HasMaxLength(36)
@@ -2788,14 +2783,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
-                    b.Property<Guid?>("AreaId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("area_id");
-
-                    b.Property<Guid?>("BuildingId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("building_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
@@ -2812,18 +2799,6 @@ namespace Repositories.Migrations
                     b.Property<DateTime?>("CustomToDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("custom_to_date");
-
-                    b.Property<Guid?>("FloorId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floor_id");
-
-                    b.Property<Guid?>("FloorplanId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("floorplan_id");
-
-                    b.Property<Guid?>("MemberId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("member_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2848,10 +2823,6 @@ namespace Repositories.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
-
-                    b.Property<Guid?>("VisitorId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("visitor_id");
 
                     b.HasKey("Id");
 
@@ -3029,6 +3000,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
+                    b.Property<int?>("ExtendedVisitorTime")
+                        .HasColumnType("int")
+                        .HasColumnName("extended_visitor_time");
+
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("invitation_code");
@@ -3150,9 +3125,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VisitorId", "Status");
 
-                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
-                        .IsUnique()
-                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd");
 
                     b.ToTable("trx_visitor", (string)null);
                 });

@@ -263,6 +263,7 @@ builder.Services.AddAutoMapper(typeof(MstBuildingProfile));
 builder.Services.AddScoped<IMstBuildingService, MstBuildingService>();
 builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
+builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<MstBuildingRepository>();
 builder.Services.AddScoped<MstFloorRepository>();
@@ -276,6 +277,9 @@ builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
+builder.Services.AddScoped<MstAccessCctvRepository>();
+builder.Services.AddScoped<MstAccessControlRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
