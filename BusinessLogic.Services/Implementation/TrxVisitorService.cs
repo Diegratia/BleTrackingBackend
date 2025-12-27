@@ -429,7 +429,7 @@ namespace BusinessLogic.Services.Implementation
 
             var enumColumns = new Dictionary<string, Type>
             {
-                { "Status", typeof(VisitorStatus)},
+                { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
                 { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
                 { "IdentityType", typeof(IdentityType) }
@@ -478,7 +478,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var query = _repository.GetAllQueryableRaw();
 
-             var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            var enumColumns = new Dictionary<string, Type>
             {
                 { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
