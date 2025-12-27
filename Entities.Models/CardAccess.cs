@@ -5,9 +5,9 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Helpers.Consumer;
-
+    
     namespace Entities.Models
-    {
+{
     public class CardAccess : BaseModelOnlyIdWithTime, IApplicationEntity
     {
         [Column("name")]
@@ -29,7 +29,7 @@
         [Column("status")]
         public int Status { get; set; } = 1;
 
-        
+
         public ICollection<CardAccessMaskedArea?> CardAccessMaskedAreas { get; set; } = new List<CardAccessMaskedArea?>();
         public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
         public MstApplication? Application { get; set; }

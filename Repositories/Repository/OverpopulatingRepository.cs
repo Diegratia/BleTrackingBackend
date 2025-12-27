@@ -25,7 +25,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<Overpopulating>> GetAllAsync()
         {
-             return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<Overpopulating> AddAsync(Overpopulating overpopulating)
@@ -89,6 +89,13 @@ namespace Repositories.Repository
             .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+        
+            public async Task<List<Overpopulating>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+            return await _context.Overpopulatings
+                .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                .ToListAsync();
         }
     }
 }

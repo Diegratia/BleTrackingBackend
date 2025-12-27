@@ -93,7 +93,7 @@ namespace BusinessLogic.Services.Implementation
                 };
 
                 // 🧠 Di sini kita tidak butuh AutoMapper, karena source dan target sama (TModel == TDto)
-                var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
+                var filterService = new GenericDataTableProjectionService<TrackingTransactionRM, TrackingTransactionRM>(
                     query,
                     _mapper, // masih bisa dikirim, tapi tidak akan dipakai
                     searchableColumns,

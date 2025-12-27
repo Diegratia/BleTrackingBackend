@@ -264,7 +264,7 @@ builder.Configuration
 // === DB Context (Read-only) ===
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,4433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
+    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection") ?? "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
     options.UseSqlServer(conn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
@@ -334,9 +334,12 @@ builder.Services.AddHttpContextAccessor();
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
+builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
 builder.Services.AddScoped<AlarmAnalyticsRepository>();
+builder.Services.AddScoped<TrackingAnalyticsRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
+builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));
 
 // === Host config ===
 var port = Environment.GetEnvironmentVariable("ANALYTICS_PORT") ??

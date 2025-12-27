@@ -21,9 +21,7 @@ namespace Repositories.Repository.Analytics
             _context = context;
         }
 
-        // ===================================================================
-        // 1️⃣ Total Alarm per Area (Incident-level)
-        // ===================================================================
+        // total alarm per area
         public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
@@ -55,9 +53,7 @@ namespace Repositories.Repository.Analytics
             return data;
         }
 
-        // ===================================================================
-        // 2️⃣ Total Alarm per Hari (Incident-level)
-        // ===================================================================
+        // alarm per day
         public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
         {
             // 🕒 Gunakan helper untuk override from-to
@@ -96,9 +92,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        // ===================================================================
-        // 3️⃣ Alarm per Status (Incident-level)
-        // ===================================================================
+        // alarm per status
         public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (
@@ -138,9 +132,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        // ===================================================================
-        // 4️⃣ Total Alarm per Visitor (Incident-level)
-        // ===================================================================
+        // alarm per visitor
         public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (
@@ -183,9 +175,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        // ===================================================================
-        // 5️⃣ Total Alarm per Building (Incident-level)
-        // ===================================================================
+        // alarm per building
         public async Task<List<AlarmBuildingSummaryRM>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
@@ -270,9 +260,7 @@ namespace Repositories.Repository.Analytics
             return query;
         }
 
-                    // =======================================
-            // 🕒 Time Range Helper (Reusable)
-            // =======================================
+            // time range
             private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
             {
                 if (string.IsNullOrWhiteSpace(timeReport))

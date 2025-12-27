@@ -257,6 +257,11 @@ namespace BusinessLogic.Services.Implementation
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
+            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "DeviceStatus", typeof(DeviceStatus)},
+                { "Type", typeof(DeviceType)},
+            };
 
             var searchableColumns = new[] { "Name", "Floorplan.Name", "AccessCctv.Name", "Reader.Name", "AccessControl.Name", "FloorplanMaskedArea.Name" };
             var validSortColumns = new[] { "Name", "Floorplan.Name", "AccessCctv.Name", "Reader.Name", "AccessControl.Name", "FloorplanMaskedArea.Name", "CreatedAt", "UpdatedAt", "RestrictedStatus", "Status" };
@@ -265,7 +270,8 @@ namespace BusinessLogic.Services.Implementation
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }

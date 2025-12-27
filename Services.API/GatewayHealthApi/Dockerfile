@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+COPY Directory.Packages.props ./
+COPY global.json ./
 COPY Services.API/GatewayHealthApi/*.csproj .
 RUN dotnet restore
 

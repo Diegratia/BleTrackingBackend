@@ -9,7 +9,8 @@ namespace BusinessLogic.Services.Interface
     public interface IVisitorService
     {
         // Task<VisitorDto> CreateVisitorAsync(VisitorCreateDto createDto);
-        Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto);
+        // Task<VisitorDto> CreateVisitorAsync(OpenVisitorCreateDto createDto);
+        Task<VisitorDto> CreateVisitorAsync(VMSOpenVisitorCreateDto createDto);
         // Task<VisitorDto> CreateVisitorWithTrxAsync(VisitorWithTrxCreateDto createDto);
         Task SendInvitationVisitorAsync(Guid id, CreateInvitationDto CreateInvitationDto);
         Task<VisitorDto> GetVisitorByIdAsync(Guid id);

@@ -3,6 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
   COPY *.sln ./
+  COPY Directory.Packages.props ./
+  COPY global.json ./
   COPY Services.API/FloorplanMaskedArea/FloorplanMaskedArea.csproj Services.API/FloorplanMaskedArea/
   COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
   COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/

@@ -159,7 +159,7 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Brand.Name" };
-            var validSortColumns = new[] { "Name", "Brand.Name", "Gmac", "Ip", "CreatedAt", "UpdatedAt", "Status" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "Brand.Name", "Gmac", "Ip", "CreatedAt", "Status" };
 
             var filterService = new GenericDataTableService<MstBleReader, MstBleReaderDto>(
                 query,

@@ -43,7 +43,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server= 192.168.1.116,5433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                         "Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -149,6 +149,8 @@ builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<CardAccessRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
+
 
 var port = Environment.GetEnvironmentVariable("CARD_ACCESS_PORT") ??
            builder.Configuration["Ports:CardAccessService"] ?? "5028";

@@ -186,9 +186,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
         }
 
-        // ===================================================================
-        // 6️⃣ Visitor Summary
-        // ===================================================================
+        // visitor sum
         public async Task<List<(Guid? VisitorId, string VisitorName, int TotalTriggered, int Done)>>
             GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
@@ -212,9 +210,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
         }
 
-        // ===================================================================
-        // 7️⃣ Time of Day Summary
-        // ===================================================================
+        // time of day
         public async Task<List<(int Hour, int Total)>> GetTimeOfDaySummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
@@ -232,9 +228,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
         }
 
-        // ===================================================================
-        // 8️⃣ Weekly Trend
-        // ===================================================================
+        // weekly trend
             public async Task<List<(DateTime Date, int Total)>> GetWeeklyTrendAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (
@@ -267,9 +261,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        // ===================================================================
-        // 9️⃣ Floor Summary
-        // ===================================================================
+            // floor sum
         public async Task<List<(Guid? FloorId, string FloorName, int Total, int Done, double? AvgResponseSeconds)>>
             GetFloorSummaryAsync(AlarmAnalyticsRequestRM request)
         {
@@ -299,9 +291,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
         }
 
-        // ===================================================================
-        // 🔟 Duration Summary
-        // ===================================================================
+        // duration sum
         public async Task<List<(string DurationRange, int Count)>> GetDurationSummaryAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.Date.AddDays(-7), request.To ?? DateTime.UtcNow);
@@ -324,10 +314,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
         }
 
-        // ===================================================================
-        // 1️⃣1️⃣ Trend by Action
-        // ===================================================================
-
+        // trend by action
         public async Task<List<(DateTime Date, string ActionStatus, int Total)>> GetTrendByActionAsync(AlarmAnalyticsRequestRM request)
         {
             var (from, to) = (

@@ -56,30 +56,27 @@ namespace Repositories.Repository
             .Where(ca => ca.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            
-            return query.Select(ca => new CardAccessMinimalDto
-                {
-                    Id = ca.Id,
-                    Name = ca.Name,
-                    AccessNumber = ca.AccessNumber ?? 0,
-                    AccessScope = ca.AccessScope.ToString(),
-                    Remarks = ca.Remarks,
-                    UpdatedAt = ca.UpdatedAt,
-                    ApplicationId = ca.ApplicationId,
 
-                    MaskedAreaIds = ca.CardAccessMaskedAreas
+            return query.Select(ca => new CardAccessMinimalDto
+            {
+                Id = ca.Id,
+                Name = ca.Name,
+                AccessNumber = ca.AccessNumber ?? 0,
+                AccessScope = ca.AccessScope.ToString(),
+                Remarks = ca.Remarks,
+                UpdatedAt = ca.UpdatedAt,
+                ApplicationId = ca.ApplicationId,
+
+                MaskedAreaIds = ca.CardAccessMaskedAreas
                         .Select(x => (Guid?)x.MaskedAreaId)
                         .ToList(),
 
-                    TimeGroupIds = ca.CardAccessTimeGroups
+                TimeGroupIds = ca.CardAccessTimeGroups
                         .Select(x => (Guid?)x.TimeGroupId)
                         .ToList()
-                });
+            });
 
-            
         }
-
-
         public async Task<CardAccess> AddAsync(CardAccess entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -128,5 +125,36 @@ namespace Repositories.Repository
             entity.Status = 0;
             await _context.SaveChangesAsync();
         }
+        
+        public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
+            Guid? buildingId,
+            Guid? floorId,
+            Guid? floorplanId)
+        {
+            var query = _context.CardAccessMaskedAreas.AsQueryable();
+
+            if (floorplanId.HasValue)
+            {
+                query = query.Where(cam => cam.MaskedArea.FloorplanId == floorplanId.Value);
+            }
+            else if (floorId.HasValue)
+            {
+                query = query.Where(cam => cam.MaskedArea.Floorplan.FloorId == floorId.Value);
+            }
+            else if (buildingId.HasValue)
+            {
+                query = query.Where(cam => cam.MaskedArea.Floorplan.Floor.BuildingId == buildingId.Value);
+            }
+            else
+            {
+                return new List<Guid>(); // no filter
+            }
+
+            return await query
+                .Select(cam => cam.CardAccessId)
+                .Distinct()
+                .ToListAsync();
+        }
+
     }
 }

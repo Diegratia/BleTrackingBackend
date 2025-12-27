@@ -25,7 +25,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<Boundary>> GetAllAsync()
         {
-             return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<Boundary> AddAsync(Boundary boundary)
@@ -90,5 +90,14 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+                public async Task<List<Boundary>> GetByFloorplanIdAsync(Guid floorplanId)
+                {
+                    return await _context.Boundarys
+                        .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                        .ToListAsync();
+                }
+        
+        
     }
 }

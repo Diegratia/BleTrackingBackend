@@ -994,7 +994,7 @@ namespace Repositories.Seeding
                     .RuleFor(d => d.DeviceStatus, f => f.PickRandom<DeviceStatus>())
                     .RuleFor(d => d.Status, f => 1);
 
-                var devices = deviceFaker.Generate(2);
+                var devices = deviceFaker.Generate(50);
                 context.FloorplanDevices.AddRange(devices);
                 context.SaveChanges();
             }

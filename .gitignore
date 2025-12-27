@@ -487,7 +487,8 @@ $RECYCLE.BIN/
 bin/
 obj/
 *.dll
-*.props
-*.targets
+# *.props
+# *.targets
 *.http
 build/
+doc

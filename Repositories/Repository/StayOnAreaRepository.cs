@@ -25,7 +25,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<StayOnArea>> GetAllAsync()
         {
-             return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().ToListAsync();
         }
 
         public async Task<StayOnArea> AddAsync(StayOnArea onarea)
@@ -90,5 +90,13 @@ namespace Repositories.Repository
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+        
+
+            public async Task<List<StayOnArea>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+             return await _context.StayOnAreas
+                        .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                        .ToListAsync();
+                }
     }
 }
