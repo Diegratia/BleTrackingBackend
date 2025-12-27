@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
+using Helpers.Consumer;
 
 namespace Repositories.Repository
 {
@@ -14,6 +15,19 @@ namespace Repositories.Repository
         public FloorplanDeviceRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+        }
+
+            public async Task<int> GetCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.FloorplanDevices
+                .AsNoTracking()
+                .Where(c => c.Status != 0 && c.DeviceStatus == DeviceStatus.Active && c.Type == DeviceType.BleReader);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
         }
 
         public async Task<FloorplanDevice> GetByIdAsync(Guid id)

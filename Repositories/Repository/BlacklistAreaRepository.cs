@@ -18,6 +18,36 @@ namespace Repositories.Repository
         {
         }
 
+            public async Task<int> GetCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.BlacklistAreas
+                .AsNoTracking()
+                .Where(c => c.Status != 0);
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+            
+            var visitorIds = await q
+                .Where(x => x.VisitorId != null)
+                .Select(x => x.VisitorId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var memberIds = await q
+                .Where(x => x.MemberId != null)
+                .Select(x => x.MemberId!.Value)
+                .Distinct()
+                .ToListAsync();
+            
+            var totalUnique = visitorIds
+                .Union(memberIds)
+                .Distinct()
+                .Count();
+            
+
+            return totalUnique;
+        }
+
         public async Task<List<BlacklistArea>> GetAllAsync()
         {
             return await GetAllQueryable().ToListAsync();

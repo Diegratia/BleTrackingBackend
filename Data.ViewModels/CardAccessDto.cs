@@ -54,7 +54,7 @@ namespace Data.ViewModels
     //     public List<Guid> CardAccessIds { get; set; } = new();
     // }
 
-        public class CardAssignAccessDto : BaseModelDto
+        public class    CardAssignAccessDto : BaseModelDto
     {
         public Guid CardId { get; set; }
 

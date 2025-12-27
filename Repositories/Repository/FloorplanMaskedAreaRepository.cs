@@ -16,6 +16,19 @@ namespace Repositories.Repository
         {
         }
 
+         public async Task<int> GetCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.FloorplanMaskedAreas
+                .AsNoTracking()
+                .Where(c => c.Status != 0);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+
         public async Task<FloorplanMaskedArea?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable().Where(a => a.Id == id && a.Status != 0).FirstOrDefaultAsync();

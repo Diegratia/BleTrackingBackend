@@ -30,6 +30,19 @@ namespace Repositories.Repository
             .Where(b => b.Id == id && b.IsActive != false)
             .FirstOrDefaultAsync();
         }
+        
+            public async Task<int> GetCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(c => c.IsActive == true && c.DoneTimestamp == null && c.Action != ActionStatus.Done && c.Action != ActionStatus.NoAction);
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
 
         //     public async Task<AlarmTriggers?> GetByDmacAsync(string beaconId)
         // {
@@ -39,7 +52,7 @@ namespace Repositories.Repository
         //     .FirstOrDefaultAsync();
         // }
 
-            public async Task<IEnumerable<AlarmTriggers>> GetByDmacAsync(string beaconId)
+        public async Task<IEnumerable<AlarmTriggers>> GetByDmacAsync(string beaconId)
         {
 
             return await GetAllQueryable()

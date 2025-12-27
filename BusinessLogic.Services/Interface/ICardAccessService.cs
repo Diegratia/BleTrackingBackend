@@ -14,5 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task<CardAccessDto?> GetByIdAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
         Task DeleteAsync(Guid id);
+        Task AssignCardAccessToCardAsync(CardAssignAccessDto dto);
     }
 }

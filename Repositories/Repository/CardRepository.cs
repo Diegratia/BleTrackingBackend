@@ -38,6 +38,35 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync() ?? null;
         }
         
+       public async Task<int> GetCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            // Query langsung tanpa include untuk performa
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && c.IsUsed == true);
+
+            // Apply application filter jika perlu (gemstone: ApplyApplicationIdFilter menerima IQueryable<Card>)
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+
+        public async Task<int> GetNonActiveCountAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var q = _context.Cards
+                .AsNoTracking()
+                .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
+
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            return await q.CountAsync();
+        }
+
+        
        
 
         public IQueryable<Card> GetAllQueryable()
@@ -53,7 +82,7 @@ namespace Repositories.Repository
                 .Include(b => b.CardCardAccesses)
                         .ThenInclude(cga => cga.CardAccess)
                 .Where(b => b.StatusCard != 0)
-                .AsSplitQuery(); 
+                .AsSplitQuery();
 
             query = query.WithActiveRelations();
 

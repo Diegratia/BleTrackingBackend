@@ -40,6 +40,7 @@ namespace Data.ViewModels
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
         public string? PersonType { get; set; }
+        public int ExtendedVisitorTime { get; set; }
         public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         public VisitorDto? Visitor { get; set; }
         public MstMemberDto? Member { get; set; }
@@ -78,7 +79,7 @@ namespace Data.ViewModels
         public string? MemberIdentity { get; set; }
         public int? IsMember { get; set; }
         public string? Agenda { get; set; }
-          public string? PersonType { get; set; }
+        public string? PersonType { get; set; }
         // public FloorplanMaskedAreaDto? Maskedarea { get; set; }
         // public VisitorDto? Visitor { get; set; }
         // public MstMemberDto? Member { get; set; }
@@ -137,5 +138,10 @@ namespace Data.ViewModels
     {
         public Guid TrxVisitorId { get; set; }
         public Guid CardId { get; set; }
+    }
+    
+    public class ExtendedTimeDto 
+    {
+        public int ExtendedVisitorTime { get; set; } // in minute
     }
 }

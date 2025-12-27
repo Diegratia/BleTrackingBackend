@@ -552,6 +552,42 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
+        [Authorize("RequireAll")]
+        [HttpPost("{trxVisitorId}/extend")]
+        public async Task<IActionResult> ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto)
+        {
+            try
+            {
+                await _trxVisitorService.ExtendedVisitorTime(trxVisitorId, dto);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor Extend successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
 
         [Authorize("RequireAll")]
         [HttpPost("{id}/blocked")]
@@ -714,6 +750,42 @@ namespace Web.API.Controllers.Controllers
             try
             {
                 await _trxVisitorService.CheckoutVisitorAsync(id);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Visitor checked out successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+        [AllowAnonymous]
+        [HttpPost("open/{visitorId}/visitor-checkout")]
+        public async Task<IActionResult> OpenCheckoutByVisitorId(Guid visitorId)
+        {
+            try
+            {
+                await _trxVisitorService.CheckoutWithVisitorIdAsync(visitorId);
                 return Ok(new
                 {
                     success = true,
