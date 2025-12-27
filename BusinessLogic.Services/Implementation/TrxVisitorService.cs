@@ -443,7 +443,7 @@ namespace BusinessLogic.Services.Implementation
 
             var enumColumns = new Dictionary<string, Type>
             {
-                { "Status", typeof(VisitorStatus)},
+                { "Status", typeof(VisitorStatus) },
                 { "Gender", typeof(Gender) },
                 { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
                 { "IdentityType", typeof(IdentityType) }

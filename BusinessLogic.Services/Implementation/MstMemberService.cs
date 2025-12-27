@@ -131,8 +131,15 @@ namespace BusinessLogic.Services.Implementation
                         .SaveImageAsync(createDto.FaceImage, "MemberFaceImages", MaxFileSize);
                     
 
-                        member.UploadFr = 1; // Sukses
-                        member.UploadFrError = "Upload successful";
+                    member.FaceImage = $"/Uploads/MemberFaceImages/{fileName}";
+                    member.UploadFr = 1; // Sukses
+                    member.UploadFrError = "Upload successful";
+                }
+                catch (Exception ex)
+                {
+                    member.UploadFr = 2; // Gagal
+                    member.UploadFrError = ex.Message;
+                    member.FaceImage = null; // Tidak ada file
                 }
                     catch (Exception ex)
                     {

@@ -95,7 +95,6 @@ namespace Data.ViewModels
         public DateTime? VisitorPeriodStart { get; set; }
         public DateTime? VisitorPeriodEnd { get; set; }
         public Guid? MaskedAreaId { get; set; }
-        public List<Guid>? CardAccessIds { get; set; } = new(); 
         public Guid? ParkingId { get; set; }
     }
 
