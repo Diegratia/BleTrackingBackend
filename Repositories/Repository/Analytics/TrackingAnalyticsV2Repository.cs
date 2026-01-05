@@ -190,107 +190,92 @@
             }
 
             // === MAIN METHOD: Get Visitor Session Summary ===
-            public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request)
+           public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(
+            TrackingAnalyticsRequestRM request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var toUtc   = range?.to   ?? request.To   ?? DateTime.UtcNow;
+
+            var tableNames = GetTableNamesInRange(fromUtc, toUtc);
+            if (!tableNames.Any())
+                return new List<VisitorSessionSummaryRM>();
+
+            var unionParts   = new List<string>();
+            var allParams    = new List<object>();
+            int paramIndex   = 0;
+
+            foreach (var table in tableNames)
             {
-                var range = GetTimeRange(request.TimeRange);
-                var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
-                var toUtc = range?.to ?? request.To ?? DateTime.UtcNow;
+                var (sql, parameters) =
+                    BuildSessionSql(table, fromUtc, toUtc, request, paramIndex);
 
-                var tableNames = GetTableNamesInRange(fromUtc, toUtc);
-                if (!tableNames.Any()) return new List<VisitorSessionSummaryRM>();
-
-                var unionParts = new List<string>();
-                var allParameters = new List<object>();
-                int paramIndex = 0;
-
-                foreach (var table in tableNames)
-                {
-                    var (sql, parameters) = BuildSessionSql(table, fromUtc, toUtc, request, paramIndex);
-                    unionParts.Add(sql);
-                    allParameters.AddRange(parameters);
-                    paramIndex += parameters.Count;
-                }
-
-                var fullSql = string.Join("\nUNION ALL\n", unionParts);
-
-                var raw = await _context.Database
-                    .SqlQueryRaw<SessionRaw>(fullSql, allParameters.ToArray())
-                    .ToListAsync();
-
-                if (!raw.Any()) return new List<VisitorSessionSummaryRM>();
-
-                // === PROSES SESSION PER VISITOR PER AREA ===
-                var sessions = new List<VisitorSessionSummaryRM>();
-                var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-
-                var grouped = raw
-                    .Where(x => x.PersonId.HasValue && x.AreaId.HasValue)
-                    .GroupBy(x => new { x.PersonId, x.AreaId })
-                    .ToList();
-
-                foreach (var group in grouped)
-                {
-                    // DI DALAM foreach (var group in grouped)
-                    var records = group.OrderBy(x => x.TransTimeUtc).ToList();
-                    VisitorSessionSummaryRM? current = null;
-                    
-                    if (records.Count < 2)
-                continue;
-
-                    foreach (var rec in records)
-                {
-                    // DI DALAM foreach (var rec in records)
-                    var wibTime = TimeZoneInfo.ConvertTimeFromUtc(rec.TransTimeUtc, wibZone);
-
-                    if (current == null)
-                    {
-                        current = MapToSession(rec, wibTime);
-                    }
-                    else
-                    {
-                        // HANYA jika pindah area
-                        if (rec.AreaId != current.AreaId)
-                        {
-                            // Akhiri sesi lama → ExitTime = transaksi terakhir di area lama
-                            current.ExitTime = wibTime.AddSeconds(-1);
-                            current.DurationInMinutes = (int)(current.ExitTime.Value - current.EnterTime).TotalMinutes;
-                            // Hanya simpan sesi jika durasi > 1 menit
-                            if (current.DurationInMinutes >= 1)
-                            {
-                                sessions.Add(current);
-                            }
-
-                            // Mulai sesi baru
-                            current = MapToSession(rec, wibTime);
-                        }
-                    }
-                }
-
-                    // Akhiri sesi terakhir
-                    if (current != null)
-                    {
-                        var lastRecord = group.Last();
-                        var lastWib = TimeZoneInfo.ConvertTimeFromUtc(lastRecord.TransTimeUtc, wibZone);
-                        var gapFromLast = (DateTime.UtcNow - lastRecord.TransTimeUtc).TotalMinutes;
-
-                        if (gapFromLast > 5)
-                        {
-                            current.ExitTime = lastWib;
-                            current.DurationInMinutes = (int)(lastWib - current.EnterTime).TotalMinutes;
-                        }
-                        else
-                        {
-                            current.ExitTime = null;
-                            current.DurationInMinutes = null;
-                        }
-                        sessions.Add(current);
-                    }
-                }
-
-                return sessions
-                    .OrderByDescending(x => x.EnterTime)
-                    .ToList();
+                unionParts.Add(sql);
+                allParams.AddRange(parameters);
+                paramIndex += parameters.Count;
             }
+
+            var fullSql = string.Join("\nUNION ALL\n", unionParts);
+
+            var raw = await _context.Database
+                .SqlQueryRaw<SessionRaw>(fullSql, allParams.ToArray())
+                .ToListAsync();
+
+            if (!raw.Any())
+                return new List<VisitorSessionSummaryRM>();
+
+            var wibZone  = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var nowWib   = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+            var sessions = new List<VisitorSessionSummaryRM>();
+
+            // === GROUP BY PERSON + AREA (DWELL SUMMARY) ===
+            var grouped = raw
+                .Where(x => x.PersonId.HasValue && x.AreaId.HasValue)
+                .GroupBy(x => new { x.PersonId, x.AreaId });
+
+            foreach (var group in grouped)
+            {
+                var records = group
+                    .OrderBy(x => x.TransTimeUtc)
+                    .ToList();
+
+                if (records.Count == 0)
+                    continue;
+
+                var first = records.First();
+                var last  = records.Last();
+
+                var enterWib = TimeZoneInfo.ConvertTimeFromUtc(
+                    first.TransTimeUtc, wibZone);
+
+                var lastWib = TimeZoneInfo.ConvertTimeFromUtc(
+                    last.TransTimeUtc, wibZone);
+
+                var session = MapToSession(first, enterWib);
+
+                // === HANYA 1 HIT → SESSION MASIH AKTIF ===
+                if (records.Count == 1)
+                {
+                    session.ExitTime = null;
+                    session.DurationInMinutes = null;
+                    sessions.Add(session);
+                    continue;
+                }
+
+                // === SESSION SELESAI ===
+                session.ExitTime = lastWib;
+                session.DurationInMinutes =
+                    (int)(lastWib - session.EnterTime).TotalMinutes;
+
+                // jangan tampilkan session 0 menit
+                if (session.DurationInMinutes >= 1)
+                    sessions.Add(session);
+            }
+
+            return sessions
+                .OrderByDescending(x => x.EnterTime)
+                .ToList();
+        }
 
         public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsRequestRM request)
         {
