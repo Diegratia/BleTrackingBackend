@@ -873,6 +873,9 @@ namespace Repositories.Repository.Analytics
             if (request.ReaderId.HasValue)
                 query = query.Where(a => a.ReaderId == request.ReaderId);
 
+            if (!string.IsNullOrEmpty(request.IdentityId))
+                query = query.Where(a => a.Visitor.IdentityId == request.IdentityId);
+
             return query;
         }
 

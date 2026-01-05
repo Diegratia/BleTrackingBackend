@@ -38,6 +38,8 @@ namespace Repositories.Repository.RepoModel
         public Guid? MemberId { get; set; }
         public Guid? ReaderId { get; set; }
 
+        //VMS req last visitor session
+        public string? IdentityId { get; set; }
         public string? ReportTitle { get; set; }
          public string? ExportType { get; set; }
 
