@@ -49,70 +49,104 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
         }
 
-        public async Task<DashboardSummaryDto> GetSummaryAsync()
+        public async Task<ResponseSingle<DashboardSummaryDto>> GetSummaryAsync()
         {
-            var appIdString = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
-
-            Guid appId = Guid.Empty;
-            if (!string.IsNullOrEmpty(appIdString))
+            try
             {
-                Guid.TryParse(appIdString, out appId);
+                var appIdString = _httpContextAccessor.HttpContext?
+                    .User.FindFirst("ApplicationId")?.Value;
+
+                Guid appId = Guid.Empty;
+                if (!string.IsNullOrEmpty(appIdString))
+                {
+                    Guid.TryParse(appIdString, out appId);
+                }
+
+                var activeBeaconCount = await _cardRepo.GetCountAsync();
+                var nonActiveBeaconCount = await _cardRepo.GetNonActiveCountAsync();
+
+                var topNonActiveBeaconDto = (await _cardRepo.GetTopUnUsedCardAsync(5))
+                    .Select(rm => new CardDashboardDto
+                    {
+                        Id = rm.Id,
+                        Dmac = rm.Dmac,
+                        CardNumber = rm.CardNumber,
+                    })
+                    .ToList();
+
+                var topActiveBeaconDto = (await _cardRepo.GetTopUsedCardAsync(5))
+                    .Select(rm => new CardDashboardDto
+                    {
+                        Id = rm.Id,
+                        Dmac = rm.Dmac,
+                        CardNumber = rm.CardNumber,
+                    })
+                    .ToList();
+
+                var activeGatewayCount = await _deviceRepo.GetCountAsync();
+
+                var topReadersDto = (await _deviceRepo.GetTopReadersAsync())
+                    .Select(rm => new ReaderSummaryDto
+                    {
+                        Id = rm.Id,
+                        Name = rm.Name,
+                    })
+                    .ToList();
+
+                var alarmCount = await _alarmRepo.GetCountAsync();
+
+                var topTriggersDto = (await _alarmRepo.GetTopTriggersAsync(5))
+                    .Select(rm => new AlarmTriggersSummary
+                    {
+                        Id = rm.Id,
+                        BeaconId = rm.BeaconId,
+                    })
+                    .ToList();
+
+                var areaCount = await _areaRepo.GetCountAsync();
+
+                var topAreasDto = (await _areaRepo.GetTopAreasAsync(5))
+                    .Select(rm => new AreaSummaryDto
+                    {
+                        Id = rm.Id,
+                        Name = rm.Name,
+                    })
+                    .ToList();
+
+                var visitorBlacklistCount = await _visitorRepo.GetBlacklistedCountAsync();
+                var memberBlacklistCount = await _memberRepo.GetBlacklistedCountAsync();
+
+                var dashboard = new DashboardSummaryDto
+                {
+                    ActiveBeaconCount = activeBeaconCount,
+                    NonActiveBeaconCount = nonActiveBeaconCount,
+                    ActiveGatewayCount = activeGatewayCount,
+                    AreaCount = areaCount,
+                    AlarmCount = alarmCount,
+                    BlacklistedCount = visitorBlacklistCount + memberBlacklistCount,
+
+                    TopActiveBeacon = topActiveBeaconDto,
+                    TopNonActiveBeacon = topNonActiveBeaconDto,
+                    TopReaders = topReadersDto,
+                    TopTriggers = topTriggersDto,
+                    TopAreas = topAreasDto,
+
+                    ApplicationId = appId
+                };
+
+                return ResponseSingle<DashboardSummaryDto>.Ok(
+                    dashboard,
+                    "Dashboard summary retrieved successfully"
+                );
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting dashboard summary");
 
-            var activeBeaconCount = await _cardRepo.GetCountAsync();
-            var nonActiveBeaconCount = await _cardRepo.GetNonActiveCountAsync();
-            var topNonActiveBeaconRM = await _cardRepo.GetTopUnUsedCardAsync(5);
-            var topNonActiveBeaconDto = topNonActiveBeaconRM.Select(rm => new CardDashboardDto
-            {
-                Id = rm.Id,
-                Dmac = rm.Dmac,
-                CardNumber = rm.CardNumber,
-            }).ToList();
-            var topActiveBeaconRM = await _cardRepo.GetTopUsedCardAsync(5);
-            var topActiveBeaconDto = topActiveBeaconRM.Select(rm => new CardDashboardDto
-            {
-                Id = rm.Id,
-                Dmac = rm.Dmac,
-                CardNumber = rm.CardNumber,
-            }).ToList();
-            var activeGatewayCount = await _deviceRepo.GetCountAsync();
-            var topReadersRM = await _deviceRepo.GetTopReadersAsync();
-            var topReadersDto = topReadersRM.Select(rm => new ReaderSummaryDto
-            {
-                Id = rm.Id,
-                Name = rm.Name,
-            }).ToList();
-            var alarmCount = await _alarmRepo.GetCountAsync();
-            var topTriggersRM = await _alarmRepo.GetTopTriggersAsync(5);
-            var topTriggersDto = topTriggersRM.Select(rm => new AlarmTriggersSummary
-            {
-                Id = rm.Id,
-                BeaconId = rm.BeaconId,
-            }).ToList();
-            var areaCount = await _areaRepo.GetCountAsync(); // TOTAL COUNT
-            var topAreasRM = await _areaRepo.GetTopAreasAsync(5);
-            var topAreasDto = topAreasRM.Select(rm => new AreaSummaryDto
-            {
-                Id = rm.Id,
-                Name = rm.Name,
-            }).ToList();
-            var visitorBlacklistCount = await _visitorRepo.GetBlacklistedCountAsync();
-            var memberBlacklistCount = await _memberRepo.GetBlacklistedCountAsync();
-            return new DashboardSummaryDto
-            {
-                ActiveBeaconCount = activeBeaconCount,
-                TopActiveBeacon = topActiveBeaconDto,
-                NonActiveBeaconCount = nonActiveBeaconCount,
-                TopNonActiveBeacon = topNonActiveBeaconDto,
-                ActiveGatewayCount = activeGatewayCount,
-                TopReaders = topReadersDto,
-                AlarmCount = alarmCount,
-                TopTriggers = topTriggersDto,
-                AreaCount = areaCount, // TOTAL semua area
-                TopAreas = topAreasDto,
-                BlacklistedCount = visitorBlacklistCount + memberBlacklistCount,
-                ApplicationId = appId
-            };
+                return ResponseSingle<DashboardSummaryDto>.Error(
+                    "Internal server error"
+                );
+            }
         }
 
         public async Task<ResponseSingle<List<AreaSummaryDto>>> GetTopAreasAsync(int topCount = 5)

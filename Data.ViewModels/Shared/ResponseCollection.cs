@@ -2,21 +2,26 @@ using System.Collections.Generic;
 
 namespace Data.ViewModels
 {
-    public class ResponseCollection<T>
+        public class ResponseCollection<T>
     {
         public bool Success { get; set; } = true;
         public string Msg { get; set; } = "OK";
-        public IEnumerable<T>? Data { get; set; }
-        public int? TotalRecords { get; set; }
-        public int? FilteredRecords { get; set; }
 
-        public static ResponseCollection<T> Ok(IEnumerable<T> data, string message = "OK")
+        // wrapper utama
+        public CollectionWrapper<T>? Collection { get; set; }
+
+        public static ResponseCollection<T> Ok(
+            IEnumerable<T> data,
+            string message = "OK")
         {
             return new ResponseCollection<T>
             {
                 Success = true,
                 Msg = message,
-                Data = data,
+                Collection = new CollectionWrapper<T>
+                {
+                    Data = data
+                }
             };
         }
 
@@ -26,21 +31,59 @@ namespace Data.ViewModels
             {
                 Success = false,
                 Msg = message,
-                Data = null
+                Collection = null
             };
         }
     }
-    public class ResponseSingle<T>
+
+    public class CollectionWrapper<T>
+    {
+        public IEnumerable<T>? Data { get; set; }
+    }
+    
+        public class ResponseSingle<T>
+    {
+        public bool Success { get; set; } = true;
+        public string Msg { get; set; } = "OK";
+
+        // wrapper utama (sama konsep dengan collection)
+        public SingleWrapper<T>? Collection { get; set; }
+
+        public int Code { get; set; } = 200;
+
+        public static ResponseSingle<T> Ok(
+            T data,
+            string message = "Success",
+            int code = 200)
         {
-            public bool Success { get; set; }
-            public string Msg { get; set; } = "";
-            public T? Data { get; set; }
-            public int Code { get; set; }
-
-            public static ResponseSingle<T> Ok(T data, string message = "Success", int code = 200) =>
-                new ResponseSingle<T> { Success = true, Msg = message, Data = data, Code = code };
-
-            public static ResponseSingle<T> Error(string message, int code = 500) =>
-                new ResponseSingle<T> { Success = false, Msg = message, Code = code };
+            return new ResponseSingle<T>
+            {
+                Success = true,
+                Msg = message,
+                Code = code,
+                Collection = new SingleWrapper<T>
+                {
+                    Data = data
+                }
+            };
         }
+
+        public static ResponseSingle<T> Error(
+            string message,
+            int code = 500)
+        {
+            return new ResponseSingle<T>
+            {
+                Success = false,
+                Msg = message,
+                Code = code,
+                Collection = null
+            };
+        }
+    }
+
+    public class SingleWrapper<T>
+    {
+        public T? Data { get; set; }
+    }
 }
