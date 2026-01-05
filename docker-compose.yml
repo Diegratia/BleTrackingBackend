@@ -187,6 +187,7 @@ services:
       - "5016:5016"
     volumes:
       - member_face_images:/app/Uploads/MemberFaceImages
+      - security_face_images:/app/Uploads/SecurityFaceImages
       - ./.env:/app/.env
     restart: always
 
@@ -389,5 +390,6 @@ services:
 volumes:
   floorplan_images:
   visitor_face_images:
+  security_face_images:
   member_face_images:
   building_images:
