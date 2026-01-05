@@ -8,6 +8,36 @@ namespace Data.ViewModels.AlarmAnalytics
         public int Total { get; set; }
     }
 
+        public class AlarmAreaChartCollectionDto
+        {
+            public AlarmAreaChartDto Chart { get; set; } = new();
+        }
+
+
+        public class AlarmAreaChartDto
+        {
+            public List<string> Labels { get; set; } = new();
+            public List<AlarmAreaChartAreaDto> Areas { get; set; } = new();
+        }
+
+
+            public class AlarmAreaChartAreaDto
+        {
+            public Guid AreaId { get; set; }
+            public string AreaName { get; set; } = string.Empty;
+            public List<AlarmAreaStatusSeriesDto> Series { get; set; } = new();
+        }
+
+        public class AlarmAreaStatusSeriesDto
+    {
+        public string Name { get; set; } = string.Empty; // Blacklist / CardAccess
+        public List<int> Data { get; set; } = new();
+    }
+
+
+
+
+
     public class AlarmVisitorSummaryDto
     {
         public Guid? VisitorId { get; set; }

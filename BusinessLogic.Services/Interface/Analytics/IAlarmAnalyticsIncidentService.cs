@@ -12,6 +12,9 @@ public interface IAlarmAnalyticsIncidentService
     Task<ResponseCollection<AlarmStatusSummaryDto>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request);
     Task<ResponseCollection<AlarmVisitorSummaryDto>> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request);
     Task<ResponseCollection<AlarmBuildingSummaryDto>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request);
+
+    Task<ResponseCollection<object>>
+            GetAreaChartSummaryAsync(AlarmAnalyticsRequestRM request);
         Task<ResponseCollection<AlarmHourlyStatusSummaryDto>> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request);
     }
 
