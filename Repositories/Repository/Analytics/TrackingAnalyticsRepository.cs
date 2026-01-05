@@ -355,8 +355,8 @@ namespace Repositories.Repository.Analytics
                     t.TransTime,
                     t.CoordinateX,
                     t.CoordinateY,
-                    MaskedAreaId = t.FloorplanMaskedArea.Id,
-                    MaskedAreaName = t.FloorplanMaskedArea.Name,
+                    AreaId = t.FloorplanMaskedArea.Id,
+                    AreaName = t.FloorplanMaskedArea.Name,
                     FloorplanId = t.FloorplanMaskedArea.Floorplan.Id,
                     FloorplanName = t.FloorplanMaskedArea.Floorplan.Name,
                     FloorId = t.FloorplanMaskedArea.Floorplan.Floor.Id,
@@ -406,8 +406,8 @@ namespace Repositories.Repository.Analytics
                         FloorplanId = last.FloorplanId,
                         FloorplanName = last.FloorplanName,
                         FloorplanImage = last.FloorplanImage,
-                        MaskedAreaId = last.MaskedAreaId,
-                        MaskedAreaName = last.MaskedAreaName,
+                        AreaId = last.AreaId,
+                        AreaName = last.AreaName,
                         LastX = (float)Math.Round(last.CoordinateX ?? 0),
                         LastY = (float)Math.Round(last.CoordinateY ?? 0)
                     };

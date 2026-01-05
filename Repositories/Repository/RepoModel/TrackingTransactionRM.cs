@@ -165,8 +165,8 @@ namespace Repositories.Repository.RepoModel
         public string? FloorName { get; set; }
         public Guid? FloorplanId { get; set; }
         public string? FloorplanName { get; set; }
-        public Guid? MaskedAreaId { get; set; }
-        public string? MaskedAreaName { get; set; }
+        public Guid? AreaId { get; set; }
+        public string? AreaName { get; set; }
         public float? LastX { get; set; }
         public float? LastY { get; set; }
     }
