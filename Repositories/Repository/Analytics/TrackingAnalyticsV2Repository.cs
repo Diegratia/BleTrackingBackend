@@ -233,35 +233,38 @@
                     // DI DALAM foreach (var group in grouped)
                     var records = group.OrderBy(x => x.TransTimeUtc).ToList();
                     VisitorSessionSummaryRM? current = null;
+                    
+                    if (records.Count < 2)
+                continue;
 
                     foreach (var rec in records)
-                    {
-                        // DI DALAM foreach (var rec in records)
-                        var wibTime = TimeZoneInfo.ConvertTimeFromUtc(rec.TransTimeUtc, wibZone);
+                {
+                    // DI DALAM foreach (var rec in records)
+                    var wibTime = TimeZoneInfo.ConvertTimeFromUtc(rec.TransTimeUtc, wibZone);
 
-                        if (current == null)
+                    if (current == null)
+                    {
+                        current = MapToSession(rec, wibTime);
+                    }
+                    else
+                    {
+                        // HANYA jika pindah area
+                        if (rec.AreaId != current.AreaId)
                         {
+                            // Akhiri sesi lama → ExitTime = transaksi terakhir di area lama
+                            current.ExitTime = wibTime.AddSeconds(-1);
+                            current.DurationInMinutes = (int)(current.ExitTime.Value - current.EnterTime).TotalMinutes;
+                            // Hanya simpan sesi jika durasi > 1 menit
+                            if (current.DurationInMinutes >= 1)
+                            {
+                                sessions.Add(current);
+                            }
+
+                            // Mulai sesi baru
                             current = MapToSession(rec, wibTime);
                         }
-                        else
-                        {
-                            // HANYA jika pindah area
-                            if (rec.AreaId != current.AreaId)
-                            {
-                                // Akhiri sesi lama → ExitTime = transaksi terakhir di area lama
-                                current.ExitTime = wibTime.AddSeconds(-1);
-                                current.DurationInMinutes = (int)(current.ExitTime.Value - current.EnterTime).TotalMinutes;
-                                // Hanya simpan sesi jika durasi > 1 menit
-                                if (current.DurationInMinutes >= 1)
-                                {
-                                    sessions.Add(current);
-                                }
-
-                                // Mulai sesi baru
-                                current = MapToSession(rec, wibTime);
-                            }
-                        }
                     }
+                }
 
                     // Akhiri sesi terakhir
                     if (current != null)

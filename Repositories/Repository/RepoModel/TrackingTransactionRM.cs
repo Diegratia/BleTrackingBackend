@@ -155,7 +155,7 @@ namespace Repositories.Repository.RepoModel
         // public int TotalRecords { get; set; }
 
         public DateTime? EnterTime { get; set; }
-        public DateTime? ExitTime { get; set; }
+        public DateTime? LastDetectedAt { get; set; }
 
         // Lokasi terakhir
         public Guid? BuildingId { get; set; }

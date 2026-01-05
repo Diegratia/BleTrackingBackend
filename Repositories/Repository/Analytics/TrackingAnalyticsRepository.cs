@@ -396,7 +396,7 @@ namespace Repositories.Repository.Analytics
                         MemberName = g.Key.MemberName,
                         // TotalRecords = g.Count(),
                         EnterTime = first.TransTime,
-                        ExitTime = last.TransTime,
+                        LastDetectedAt = last.TransTime,
 
                         // Lokasi terakhir
                         BuildingId = last.BuildingId,
@@ -412,7 +412,7 @@ namespace Repositories.Repository.Analytics
                         LastY = (float)Math.Round(last.CoordinateY ?? 0)
                     };
                 })
-                .OrderByDescending(x => x.ExitTime)
+                .OrderByDescending(x => x.LastDetectedAt)
                 .ToList();
 
             return grouped;
