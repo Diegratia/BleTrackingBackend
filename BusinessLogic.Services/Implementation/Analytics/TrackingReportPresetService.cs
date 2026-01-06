@@ -100,6 +100,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     FloorplanId = preset.FloorplanId ?? null,
                     FloorId = preset.FloorId ?? null,
                     AreaId = preset.AreaId ?? null,
+                    // PersonType = "visitor",
                     VisitorId = preset.VisitorId ?? null,
                     MemberId = preset.MemberId ?? null,
                     ReportTitle = preset.Name
