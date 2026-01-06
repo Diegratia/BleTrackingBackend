@@ -346,8 +346,10 @@ namespace Repositories.Repository.Analytics
             var raw = await query
                 .Select(t => new
                 {
+                    IdentityId = t.Visitor.IdentityId ?? t.Member.IdentityId,
                     t.CardId,
                     CardName = t.Card.Name,
+                    t.Card.CardNumber,
                     t.Card.VisitorId,
                     VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
                     t.Card.MemberId,
@@ -374,8 +376,10 @@ namespace Repositories.Repository.Analytics
             var grouped = raw
                 .GroupBy(x => new
                 {
+                    x.IdentityId,
                     x.CardId,
                     x.CardName,
+                    x.CardNumber,
                     x.VisitorId,
                     x.VisitorName,
                     x.MemberId,
@@ -388,8 +392,10 @@ namespace Repositories.Repository.Analytics
 
                     return new TrackingCardSummaryRM
                     {
+                        IdentityId = g.Key.IdentityId,
                         CardId = g.Key.CardId,
                         CardName = g.Key.CardName,
+                        CardNumber = g.Key.CardNumber,
                         VisitorId = g.Key.VisitorId,
                         VisitorName = g.Key.VisitorName,
                         MemberId = g.Key.MemberId,

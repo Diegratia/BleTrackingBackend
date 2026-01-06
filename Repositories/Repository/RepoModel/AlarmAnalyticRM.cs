@@ -31,7 +31,7 @@ namespace Repositories.Repository.RepoModel
         public Guid? FloorplanMaskedAreaId { get; set; }
         public string? OperatorName { get; set; }
         public bool? IsActive { get; set; }
-
+        public string? PersonType { get; set; }
         public string? ReportTitle { get; set; }
         public string? ExportType { get; set; }
 
@@ -93,9 +93,17 @@ namespace Repositories.Repository.RepoModel
     
     public class AlarmTriggerLogFlatRM
 {
+    public Guid? PersonId => VisitorId ?? MemberId;
+    public string? PersonName => VisitorName ?? MemberName;
+    public string PersonType =>
+                        VisitorId.HasValue ? "Visitor" :
+                        MemberId.HasValue ? "Member" :
+                        "Unknown";
+    public string? IdentityId { get; set; }
     public Guid? VisitorId { get; set; }
     public string? VisitorName { get; set; }
-
+    public Guid? MemberId { get; set; }
+    public string? MemberName { get; set; }
     public Guid? BuildingId { get; set; }
     public string? BuildingName { get; set; }
 
@@ -104,6 +112,8 @@ namespace Repositories.Repository.RepoModel
 
     public Guid? FloorplanId { get; set; }
     public string? FloorplanName { get; set; }
+    public Guid? AreaId { get; set; }
+    public string? AreaName { get; set; }
 
     public string? AlarmStatus { get; set; }
     public string? ActionStatus { get; set; }

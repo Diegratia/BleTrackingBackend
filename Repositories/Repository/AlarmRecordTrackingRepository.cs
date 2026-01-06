@@ -178,8 +178,12 @@ namespace Repositories.Repository
                 .OrderByDescending(a => a.TriggerTime)
                 .Select(a => new AlarmTriggerLogFlatRM
                 {
+                    IdentityId = a.Visitor.IdentityId ?? a.Member.IdentityId,
                     VisitorId = a.VisitorId,
                     VisitorName = a.Visitor != null ? a.Visitor.Name : null,
+
+                    MemberId = a.MemberId,
+                    MemberName = a.Member != null ? a.Member.Name : null,
 
                     BuildingId = a.Floorplan.Floor.Building.Id,
                     BuildingName = a.Floorplan.Floor.Building.Name,
@@ -282,6 +286,10 @@ namespace Repositories.Repository
                 query = query.Where(x =>
                     x.VisitorId == request.VisitorId);
 
+            if (request.MemberId.HasValue)
+                query = query.Where(x =>
+                    x.MemberId == request.MemberId);
+
             return query;
         }
 
@@ -305,10 +313,27 @@ namespace Repositories.Repository
                 query = query.Where(a =>
                     a.VisitorId == request.VisitorId);
 
+            if (request.MemberId.HasValue)
+                query = query.Where(x =>
+                    x.MemberId == request.MemberId);
+
             if (request.IsActive.HasValue)
                 query = query.Where(a =>
                     a.IsActive == request.IsActive);
+            
+            if (!string.IsNullOrWhiteSpace(request.PersonType))
+            {
+                var type = request.PersonType.Trim().ToLower();
 
+                if (type == "visitor")
+                {
+                    query = query.Where(x => x.VisitorId != null);
+                }
+                else if (type == "member")
+                {
+                    query = query.Where(x => x.MemberId != null);
+                }
+            }
             return query;
         }
 

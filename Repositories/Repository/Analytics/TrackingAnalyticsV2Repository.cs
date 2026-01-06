@@ -100,12 +100,20 @@
             // === DTO SEMENTARA (internal) ===
             internal class SessionRaw
             {
-                public Guid? VisitorId { get; set; }
-                public string? VisitorName { get; set; }
-                // public Guid? MemberId { get; set; }
-                // public string? MemberName { get; set; }
+                public Guid? PersonId => VisitorId ?? MemberId;
+                public string? PersonName => VisitorName ?? MemberName;
+                public string PersonType =>
+                    VisitorId.HasValue ? "Visitor" :
+                    MemberId.HasValue ? "Member" :
+                    "Unknown";
+                public string? IdentityId { get; set; }
                 public Guid? CardId { get; set; }
                 public string? CardName { get; set; }
+                public string? CardNumber { get; set; }
+                public Guid? VisitorId { get; set; }
+                public string? VisitorName { get; set; }
+                public Guid? MemberId { get; set; }
+                public string? MemberName { get; set; }
                 public Guid? AreaId { get; set; }
                 public string? AreaName { get; set; }
                 public Guid? BuildingId { get; set; }
@@ -116,11 +124,6 @@
                 public string? FloorplanImage { get; set; }
                 public string? FloorplanName { get; set; }
                 public DateTime TransTimeUtc { get; set; }
-                public Guid? PersonId => VisitorId;
-                // public string? PersonName => VisitorName ?? MemberName;
-
-                // BARU: Tipe orang
-                public string? PersonType => VisitorId.HasValue ? "Visitor" : "Member";
                 // public string? AlarmStatus { get; set; }
                 // public string? HostName { get; set; }
             }
@@ -134,8 +137,12 @@
             SELECT 
                 v.id AS VisitorId,
                 v.name AS VisitorName,
+                m.id AS MemberId,
+                m.name AS MemberName,
+                COALESCE(v.identity_id, m.identity_id) AS IdentityId,
                 c.id AS CardId,
                 c.name AS CardName,
+                c.card_number AS CardNumber,
                 ma.id AS AreaId,
                 ma.name AS AreaName,
                 b.id AS BuildingId,
@@ -149,6 +156,7 @@
             FROM [dbo].[{tableName}] t
             LEFT JOIN card c ON t.card_id = c.id
             LEFT JOIN visitor v ON c.visitor_id = v.id
+            LEFT JOIN mst_member m ON c.member_id = m.id
             LEFT JOIN floorplan_masked_area ma ON t.floorplan_masked_area_id = ma.id
             LEFT JOIN mst_floorplan fp ON ma.floorplan_id = fp.id
             LEFT JOIN mst_floor fl ON fp.floor_id = fl.id
@@ -182,9 +190,24 @@
                 }
                 if (request.MemberId.HasValue)
                 {
-                    sql += $" AND v.id = @p{paramIndex++}";
+                    sql += $" AND m.id = @p{paramIndex++}";
                     parameters.Add(request.MemberId.Value);
                 }
+                // filter tipe person 
+                if (!string.IsNullOrWhiteSpace(request.PersonType))
+            {
+                var type = request.PersonType.Trim().ToLower();
+
+                if (type == "visitor")
+                {
+                    sql += $" AND v.id IS NOT NULL";
+                }
+                else if (type == "member")
+                {
+                    sql += $" AND m.id IS NOT NULL";
+                }
+            }
+
 
                 return (sql, parameters);
             }
@@ -308,15 +331,17 @@
         {
             return new VisitorSessionSummaryRM
             {
-                // PersonId = rec.PersonId,
-                // PersonName = rec.PersonName,
+                PersonId = rec.PersonId,
+                PersonName = rec.PersonName,
                 PersonType = rec.PersonType,
-
                 VisitorId = rec.VisitorId,
                 VisitorName = rec.VisitorName,
-                // MemberId = rec.MemberId,
-                // MemberName = rec.MemberName,
-
+                IdentityId = rec.IdentityId,
+                MemberId = rec.MemberId,
+                MemberName = rec.MemberName,
+                CardId = rec.CardId,
+                CardName = rec.CardName,
+                CardNumber = rec.CardNumber,
                 AreaId = rec.AreaId,
                 AreaName = rec.AreaName,
                 BuildingId = rec.BuildingId,
