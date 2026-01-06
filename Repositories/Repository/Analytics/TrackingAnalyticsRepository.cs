@@ -880,7 +880,17 @@ namespace Repositories.Repository.Analytics
                 query = query.Where(a => a.ReaderId == request.ReaderId);
 
             if (!string.IsNullOrEmpty(request.IdentityId))
-                query = query.Where(a => a.Visitor.IdentityId == request.IdentityId);
+            {
+                var cardIds = _context.Set<Card>()
+                    .Where(c =>
+                        (c.Visitor != null && c.Visitor.IdentityId == request.IdentityId) ||
+                        (c.Member != null && c.Member.IdentityId == request.IdentityId)
+                    )
+                    .Select(c => c.Id);
+
+                query = query.Where(t =>
+                    t.CardId.HasValue && cardIds.Contains(t.CardId.Value));
+            }
 
             return query;
         }

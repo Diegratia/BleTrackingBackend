@@ -208,6 +208,13 @@
                 }
             }
 
+                        if (!string.IsNullOrWhiteSpace(request.IdentityId))
+            {
+                sql += $" AND (v.identity_id = @p{paramIndex} OR m.identity_id = @p{paramIndex})";
+                parameters.Add(request.IdentityId);
+                paramIndex++;
+            }
+
 
                 return (sql, parameters);
             }
