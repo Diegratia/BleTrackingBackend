@@ -133,7 +133,7 @@ services:
       - ./.env:/app/.env
     restart: always
 
-  alarm-record-tracking:
+  alarm-record:
     build:
       context: .
       dockerfile: Services.API/AlarmRecordTracking/Dockerfile
