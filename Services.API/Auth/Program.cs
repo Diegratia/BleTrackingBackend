@@ -14,6 +14,7 @@ using Repositories.Seeding;
 using DotNetEnv;
 using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 
 try
@@ -130,7 +131,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 // // app.UseHttpsRedirection();
-
+app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
