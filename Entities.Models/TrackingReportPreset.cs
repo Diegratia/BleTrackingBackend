@@ -57,5 +57,9 @@ namespace Entities.Models
             CreatedAt = DateTime.UtcNow;
             Status = 1;
         }
+
+        public bool IsCustomRange =>
+    string.Equals(TimeRange, "custom", StringComparison.OrdinalIgnoreCase);
+
     }
 }

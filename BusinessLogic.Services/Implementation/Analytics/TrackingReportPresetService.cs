@@ -32,86 +32,37 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
         }
+        
 
         // 1. APPLY PRESET - Get analytics request from preset
         public async Task<TrackingAnalyticsRequestRM> ApplyPresetAsync(Guid presetId)
         {
-            try
-            {
-       var preset = await _repository.GetByIdAsync(presetId);
-        if (preset == null)
-            throw new KeyNotFoundException($"Preset with ID {presetId} not found");
+            
+            var preset = await _repository.GetByIdAsync(presetId);
+            if (preset == null)
+                throw new KeyNotFoundException($"Preset with ID {presetId} not found");
 
-        // Gunakan SAME LOGIC dengan TrackingAnalyticsV2Repository.GetTimeRange()
-        (DateTime from, DateTime to)? dateRange = null;
-        
-        if (!string.IsNullOrWhiteSpace(preset.TimeRange))
-        {
-            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-
-            dateRange = preset.TimeRange.Trim().ToLower() switch
+            return new TrackingAnalyticsRequestRM
             {
-                "daily" => (
-                    TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
-                    TimeZoneInfo.ConvertTimeToUtc(
-                        wibNow.Date.AddDays(1).AddTicks(-1),
-                        wibZone
-                    )
-                ),
-                "weekly" => (
-                    TimeZoneInfo.ConvertTimeToUtc(
-                        wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
-                        wibZone
-                    ),
-                    TimeZoneInfo.ConvertTimeToUtc(
-                        wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
-                            .AddDays(1).AddTicks(-1),
-                        wibZone
-                    )
-                ),
-                "monthly" => (
-                    TimeZoneInfo.ConvertTimeToUtc(
-                        new DateTime(wibNow.Year, wibNow.Month, 1),
-                        wibZone
-                    ),
-                    TimeZoneInfo.ConvertTimeToUtc(
-                        new DateTime(wibNow.Year, wibNow.Month,
-                            DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
-                        .AddDays(1).AddTicks(-1),
-                        wibZone
-                    )
-                ),
-                "custom" => (
-                    preset.CustomFromDate.HasValue ? preset.CustomFromDate.Value : DateTime.UtcNow.AddDays(-1),
-                    preset.CustomToDate.HasValue ? preset.CustomToDate.Value : DateTime.UtcNow
-                ),
-                _ => null
+                TimeRange = preset.TimeRange,
+
+                // HANYA isi From/To kalau custom
+                From = preset.IsCustomRange ? preset.CustomFromDate : null,
+                To   = preset.IsCustomRange ? preset.CustomToDate   : null,
+
+                BuildingId = preset.BuildingId,
+                FloorplanId = preset.FloorplanId,
+                FloorId = preset.FloorId,
+                AreaId = preset.AreaId,
+                VisitorId = preset.VisitorId,
+                MemberId = preset.MemberId,
+
+                ReportTitle = preset.Name
+
+                // ❌ jangan set timezone di sini
             };
         }
 
-                // Convert to analytics request
-                return new TrackingAnalyticsRequestRM
-                {
-                    TimeRange = preset.TimeRange,
-                    From = preset.TimeRange == "custom" ? preset.CustomFromDate : null,
-                    To = preset.TimeRange == "custom" ? preset.CustomToDate : null,
-                    BuildingId = preset.BuildingId ?? null,
-                    FloorplanId = preset.FloorplanId ?? null,
-                    FloorId = preset.FloorId ?? null,
-                    AreaId = preset.AreaId ?? null,
-                    // PersonType = "visitor",
-                    VisitorId = preset.VisitorId ?? null,
-                    MemberId = preset.MemberId ?? null,
-                    ReportTitle = preset.Name
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error applying preset: {PresetId}", presetId);
-                throw;
-            }
-        }
 
         // 2. GET ALL PRESETS
         public async Task<List<PresetDto>> GetAllAsync()

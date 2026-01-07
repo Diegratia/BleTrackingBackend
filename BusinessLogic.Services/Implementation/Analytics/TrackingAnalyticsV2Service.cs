@@ -68,24 +68,43 @@ namespace BusinessLogic.Services.Implementation.Analytics
     }
 }
 
-            public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId)
+        //     public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId)
+        // {
+        //     try
+        //     {
+        //         // 1. Get analytics request from preset
+        //         var analyticsRequest = await _presetService.ApplyPresetAsync(presetId);
+
+        //         // 2. Use existing method to get data
+        //         var data = await _repository.GetVisitorSessionSummaryAsync(analyticsRequest);
+
+        //         return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary from preset");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
+        //         return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+        //     }
+        // }
+        
+        public async Task<ResponseCollection<VisitorSessionSummaryRM>>
+            GetVisitorSessionSummaryByPresetAsync(Guid presetId, string? timezone)
         {
             try
             {
-                // 1. Get analytics request from preset
-                var analyticsRequest = await _presetService.ApplyPresetAsync(presetId);
-                
-                // 2. Use existing method to get data
-                var data = await _repository.GetVisitorSessionSummaryAsync(analyticsRequest);
-                
-                return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary from preset");
+                var request = await _presetService.ApplyPresetAsync(presetId);
+                request.Timezone = timezone;
+
+                return await GetVisitorSessionSummaryAsync(request);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
-                return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+                return ResponseCollection<VisitorSessionSummaryRM>
+                    .Error($"Internal error: {ex.Message}");
             }
         }
+
         
         
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request)

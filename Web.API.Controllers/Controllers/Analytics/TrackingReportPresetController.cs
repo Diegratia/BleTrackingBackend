@@ -31,7 +31,9 @@ namespace Web.API.Controllers.Controllers.Analytics
         // 1. APPLY PRESET - Get visitor session data
         // ==============================================
         [HttpPost("apply/{presetId}")]
-        public async Task<IActionResult> ApplyPresetForVisitorSession(Guid presetId)
+        public async Task<IActionResult> ApplyPresetForVisitorSession(
+        Guid presetId,
+        [FromQuery] string? timezone)
         {
                     if (!ModelState.IsValid)
             {
@@ -44,7 +46,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
 
             {
-                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId);
+                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId, timezone);
                 return Ok(result);
             }
             catch (Exception ex)
