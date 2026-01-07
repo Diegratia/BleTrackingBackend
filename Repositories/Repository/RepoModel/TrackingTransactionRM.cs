@@ -161,7 +161,7 @@ namespace Repositories.Repository.RepoModel
         public Guid? MemberId { get; set; }
         public string? MemberName { get; set; }
         // public int TotalRecords { get; set; }
-        public DateTime? EnterTime { get; set; }
+        // public DateTime? EnterTime { get; set; }
         public DateTime? LastDetectedAt { get; set; }
 
         // Lokasi terakhir

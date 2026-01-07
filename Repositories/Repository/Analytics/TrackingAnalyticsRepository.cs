@@ -401,7 +401,7 @@ namespace Repositories.Repository.Analytics
                         MemberId = g.Key.MemberId,
                         MemberName = g.Key.MemberName,
                         // TotalRecords = g.Count(),
-                        EnterTime = first.TransTime,
+                        // EnterTime = first.TransTime,
                         LastDetectedAt = last.TransTime,
 
                         // Lokasi terakhir
