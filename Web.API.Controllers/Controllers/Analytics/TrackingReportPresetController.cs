@@ -33,9 +33,9 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPost("apply/{presetId}")]
         public async Task<IActionResult> ApplyPresetForVisitorSession(
         Guid presetId,
-        [FromQuery] string? timezone)
+        TrackingAnalyticsRequestRM overrideRequest)
         {
-                    if (!ModelState.IsValid)
+                if (!ModelState.IsValid)
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
@@ -46,7 +46,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
 
             {
-                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId, timezone);
+                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId,  overrideRequest);
                 return Ok(result);
             }
             catch (Exception ex)

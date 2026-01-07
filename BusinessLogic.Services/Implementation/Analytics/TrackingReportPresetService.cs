@@ -37,7 +37,6 @@ namespace BusinessLogic.Services.Implementation.Analytics
         // 1. APPLY PRESET - Get analytics request from preset
         public async Task<TrackingAnalyticsRequestRM> ApplyPresetAsync(Guid presetId)
         {
-            
             var preset = await _repository.GetByIdAsync(presetId);
             if (preset == null)
                 throw new KeyNotFoundException($"Preset with ID {presetId} not found");
@@ -45,21 +44,16 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return new TrackingAnalyticsRequestRM
             {
                 TimeRange = preset.TimeRange,
-
-                // HANYA isi From/To kalau custom
                 From = preset.IsCustomRange ? preset.CustomFromDate : null,
-                To   = preset.IsCustomRange ? preset.CustomToDate   : null,
-
+                To = preset.IsCustomRange ? preset.CustomToDate : null,
                 BuildingId = preset.BuildingId,
                 FloorplanId = preset.FloorplanId,
                 FloorId = preset.FloorId,
                 AreaId = preset.AreaId,
                 VisitorId = preset.VisitorId,
                 MemberId = preset.MemberId,
-
-                ReportTitle = preset.Name
-
-                // ❌ jangan set timezone di sini
+                ReportTitle = preset.Name,
+                // Timezone = preset.Timezone
             };
         }
 

@@ -10,6 +10,6 @@ namespace BusinessLogic.Services.Interface.Analytics
         Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request);
         Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request);
         Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsRequestRM request);
-        Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId, string? timezone);
+        Task<ResponseCollection<VisitorSessionSummaryRM>>GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsRequestRM overrideRequest);
     }
 }

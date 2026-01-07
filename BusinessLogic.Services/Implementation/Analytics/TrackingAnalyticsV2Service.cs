@@ -88,12 +88,18 @@ namespace BusinessLogic.Services.Implementation.Analytics
         // }
         
         public async Task<ResponseCollection<VisitorSessionSummaryRM>>
-            GetVisitorSessionSummaryByPresetAsync(Guid presetId, string? timezone)
+            GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsRequestRM overrideRequest)
         {
             try
             {
                 var request = await _presetService.ApplyPresetAsync(presetId);
-                request.Timezone = timezone;
+                request.Timezone = overrideRequest.Timezone;
+                if (overrideRequest.From.HasValue)
+                    request.From = overrideRequest.From;
+
+                if (overrideRequest.To.HasValue)
+                    request.To = overrideRequest.To;
+
 
                 return await GetVisitorSessionSummaryAsync(request);
             }
