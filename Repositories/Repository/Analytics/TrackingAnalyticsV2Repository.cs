@@ -254,8 +254,8 @@
             if (!raw.Any())
                 return new List<VisitorSessionSummaryRM>();
 
-            var wibZone  = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowWib   = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
+            // var wibZone  = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            // var nowWib   = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             var sessions = new List<VisitorSessionSummaryRM>();
 
             // === GROUP BY PERSON + AREA (DWELL SUMMARY) ===
@@ -275,27 +275,30 @@
                 var first = records.First();
                 var last  = records.Last();
 
-                var enterWib = TimeZoneInfo.ConvertTimeFromUtc(
-                    first.TransTimeUtc, wibZone);
 
-                var lastWib = TimeZoneInfo.ConvertTimeFromUtc(
-                    last.TransTimeUtc, wibZone);
+                // var enterWib = TimeZoneInfo.ConvertTimeFromUtc(
+                //     first.TransTimeUtc, wibZone);
 
-                var session = MapToSession(first, enterWib);
+                // var lastWib = TimeZoneInfo.ConvertTimeFromUtc(
+                //     last.TransTimeUtc, wibZone);
+
+                // var session = MapToSession(first, enterWib);
+                var session = MapToSession(first);
 
                 // === HANYA 1 HIT → SESSION MASIH AKTIF ===
                 if (records.Count == 1)
                 {
-                    session.ExitTime = null;
+                    session.ExitTime  = null;
                     session.DurationInMinutes = null;
                     sessions.Add(session);
                     continue;
                 }
 
                 // === SESSION SELESAI ===
-                session.ExitTime = lastWib;
+                // session.ExitTime  = lastWib;
+                session.ExitTime = last.TransTimeUtc;
                 session.DurationInMinutes =
-                    (int)(lastWib - session.EnterTime).TotalMinutes;
+                    (int)(session.ExitTime.Value - session.EnterTime).TotalMinutes;
 
                 // jangan tampilkan session 0 menit
                 if (session.DurationInMinutes >= 1)
@@ -321,8 +324,8 @@
                 BuildingName = s.BuildingName,
                 FloorName = s.FloorName,
                 FloorplanName = s.FloorplanName,
-                EnterTime = s.EnterTime,
-                ExitTime = s.ExitTime,
+                EnterTime  = s.EnterTime,
+                ExitTime  = s.ExitTime,
                 DurationInMinutes = s.DurationInMinutes,
                 
                 // Format khusus untuk export
@@ -334,7 +337,7 @@
             }).ToList();
         }
 
-        private VisitorSessionSummaryRM MapToSession(SessionRaw rec, DateTime enterWib)
+        private VisitorSessionSummaryRM MapToSession(SessionRaw rec)
         {
             return new VisitorSessionSummaryRM
             {
@@ -358,32 +361,30 @@
                 FloorplanId = rec.FloorplanId,
                 FloorplanImage = rec.FloorplanImage,
                 FloorplanName = rec.FloorplanName,
-                EnterTime = enterWib,
+                EnterTime = rec.TransTimeUtc
             };
         }
+
                 
             private bool TableExists(string tableName)
-            {
-                var connString = _context.Database.GetConnectionString();
+        {
+            var connString = _context.Database.GetConnectionString();
 
-                using var conn = new Microsoft.Data.SqlClient.SqlConnection(connString);
-                conn.Open();
+            using var conn = new Microsoft.Data.SqlClient.SqlConnection(connString);
+            conn.Open();
 
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
                     SELECT COUNT(*)
                     FROM INFORMATION_SCHEMA.TABLES
                     WHERE TABLE_SCHEMA = 'dbo'
                     AND TABLE_NAME = @name
                 ";
 
-                cmd.Parameters.AddWithValue("@name", tableName);
+            cmd.Parameters.AddWithValue("@name", tableName);
 
-                var result = (int)cmd.ExecuteScalar();
-                return result > 0;
-            }
-
-
-
+            var result = (int)cmd.ExecuteScalar();
+            return result > 0;
+        }
         }
     }

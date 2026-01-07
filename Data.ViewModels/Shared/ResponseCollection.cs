@@ -1,12 +1,14 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Data.ViewModels
 {
     public class ResponseCollection<T>
     {
         public bool Success { get; set; } = true;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Timezone { get; set; }
         public string Msg { get; set; } = "OK";
-
         // wrapper utama
         public CollectionWrapper<T>? Collection { get; set; }
 
@@ -16,12 +18,14 @@ namespace Data.ViewModels
         public static ResponseCollection<T> Ok(
             IEnumerable<T> data,
             string message = "OK",
+            string? timezone = null,
             int code = 200)
         {
             return new ResponseCollection<T>
             {
                 Success = true,
                 Msg = message,
+                Timezone = timezone,
                 Code = code,
                 Collection = new CollectionWrapper<T>
                 {

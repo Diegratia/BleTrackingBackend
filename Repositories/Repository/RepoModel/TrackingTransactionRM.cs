@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using Bogus.DataSets;
 
 namespace Repositories.Repository.RepoModel
@@ -42,7 +43,8 @@ namespace Repositories.Repository.RepoModel
         public string? IdentityId { get; set; }
         public string? PersonType { get; set; }
         public string? ReportTitle { get; set; }
-         public string? ExportType { get; set; }
+        public string? ExportType { get; set; }
+        public string? Timezone { get; set; } // "Asia/Jakarta", "UTC", dll
 
     }
 
@@ -71,8 +73,8 @@ namespace Repositories.Repository.RepoModel
         public string? BuildingName { get; set; }
         public string? FloorName { get; set; }
         public string? FloorplanName { get; set; }
-        public DateTime EnterTime { get; set; }
-        public DateTime? ExitTime { get; set; }
+        public DateTime EnterTime  { get; set; }
+        public DateTime? ExitTime  { get; set; }
         public int? DurationInMinutes { get; set; }
 
         // Format khusus export
@@ -105,11 +107,12 @@ namespace Repositories.Repository.RepoModel
         public string? FloorplanImage { get; set; }
         public Guid? AreaId { get; set; }
         public string? AreaName { get; set; }
-        public DateTime EnterTime { get; set; }     // WIB
-        public DateTime? ExitTime { get; set; }     // WIB (null = masih di dalam)
+        public DateTime EnterTime { get; set; }
+        public DateTime? ExitTime { get; set; }
         public int? DurationInMinutes { get; set; } // Exit - Enter
         public string? Status { get; set; }  // Checkin / Block / dll
         public string? HostName { get; set; }
+        
     }
 
     public class TrackingAreaSummaryRM
