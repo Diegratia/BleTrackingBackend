@@ -94,6 +94,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 var request = await _presetService.ApplyPresetAsync(presetId);
                 request.Timezone = overrideRequest.Timezone;
+                request.PersonType = overrideRequest.PersonType;
                 if (overrideRequest.From.HasValue)
                     request.From = overrideRequest.From;
 
