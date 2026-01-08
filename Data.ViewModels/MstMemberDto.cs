@@ -164,6 +164,7 @@ namespace Data.ViewModels
 
             public string? Gender { get; set; }
             public string? CardNumber { get; set; }
+            public string? Address { get; set; }
 
             public DateOnly? BirthDate { get; set; }
             public DateOnly? JoinDate { get; set; }

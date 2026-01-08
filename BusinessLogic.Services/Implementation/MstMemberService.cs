@@ -647,6 +647,7 @@ namespace BusinessLogic.Services.Implementation
                     existing.Name = row.Name;
                     existing.Email = row.Email;
                     existing.Phone = row.Phone;
+                    existing.Address = row.Address;
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.UpdatedBy = username;
 
@@ -674,6 +675,7 @@ namespace BusinessLogic.Services.Implementation
 
                         Gender = Enum.TryParse<Gender>(row.Gender, true, out var g) ? g : null,
                         StatusEmployee = Enum.TryParse<StatusEmployee>(row.StatusEmployee, true, out var se) ? se : null,
+                        Address = row.Address,
 
                         BirthDate = row.BirthDate,
                         JoinDate = row.JoinDate,
@@ -747,6 +749,7 @@ namespace BusinessLogic.Services.Implementation
 
         Map(x => x.Gender).Name("Gender");
         Map(x => x.StatusEmployee).Name("StatusEmployee");
+        Map(x => x.Address).Name("Address");
 
         Map(x => x.BirthDate).Name("BirthDate").Optional();
         Map(x => x.JoinDate).Name("JoinDate").Optional();
