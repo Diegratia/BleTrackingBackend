@@ -20,6 +20,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
+using CsvHelper;
+using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -34,6 +37,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<MstMemberService> _logger;
         private readonly IMqttClientService _mqttClient;
         private readonly IFileStorageService _fileStorageService;
+
 
         public MstMemberService(MstMemberRepository repository,
         IMapper mapper,
@@ -58,6 +62,7 @@ namespace BusinessLogic.Services.Implementation
             var members = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstMemberDto>>(members);
         }
+
         public async Task<IEnumerable<MstMemberLookUpDto>> GetAllLookUpAsync()
         {
             var members = await _repository.GetAllLookUpAsync();
@@ -126,24 +131,24 @@ namespace BusinessLogic.Services.Implementation
             {
                 try
                 {
-                    
+
                     member.FaceImage = await _fileStorageService
                         .SaveImageAsync(createDto.FaceImage, "MemberFaceImages", MaxFileSize);
-                    
 
-                        member.UploadFr = 1; // Sukses
-                        member.UploadFrError = "Upload successful";
+
+                    member.UploadFr = 1; // Sukses
+                    member.UploadFrError = "Upload successful";
                 }
-                    catch (Exception ex)
-                    {
-                        member.UploadFr = 2; // Gagal
-                        member.UploadFrError = ex.Message;
-                        member.FaceImage = null;
-                    }
+                catch (Exception ex)
+                {
+                    member.UploadFr = 2; // Gagal
+                    member.UploadFrError = ex.Message;
+                    member.FaceImage = null;
+                }
             }
             else
             {
-                member.UploadFr = 0; 
+                member.UploadFr = 0;
                 member.UploadFrError = "No file uploaded";
                 member.FaceImage = null;
             }
@@ -203,7 +208,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 try
                 {
-                     await _fileStorageService.DeleteAsync(member.FaceImage);
+                    await _fileStorageService.DeleteAsync(member.FaceImage);
 
                     member.FaceImage = await _fileStorageService
                         .SaveImageAsync(updateDto.FaceImage, "MemberFaceImages", MaxFileSize);
@@ -546,73 +551,244 @@ namespace BusinessLogic.Services.Implementation
             return stream.ToArray();
         }
 
-        public async Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file)
+        // public async Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file)
+        // {
+        //     var members = new List<MstMember>();
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     using var stream = file.OpenReadStream();
+        //     using var workbook = new XLWorkbook(stream);
+        //     var worksheet = workbook.Worksheets.Worksheet(1);
+        //     var rows = worksheet.RowsUsed().Skip(1); // skip header
+
+        //     int rowNumber = 2; // start dari baris ke 2
+        //     foreach (var row in rows)
+        //     {
+        //         // validasi
+        //         var organizationIdStr = row.Cell(1).GetValue<string>();
+        //         if (!Guid.TryParse(organizationIdStr, out var organizationId))
+        //             throw new ArgumentException($"Invalid Organization Id format at row {rowNumber}");
+
+        //         var organization = await _repository.GetOrganizationByIdAsync(organizationId);
+        //         if (organization == null)
+        //             throw new ArgumentException($"OrganizationId {organizationId} not found at row {rowNumber}");
+
+        //         var departmentIdStr = row.Cell(2).GetValue<string>();
+        //         if (!Guid.TryParse(departmentIdStr, out var departmentId))
+        //             throw new ArgumentException($"Invalid Department Id format at row {rowNumber}");
+
+        //         var department = await _repository.GetDepartmentByIdAsync(departmentId);
+        //         if (department == null)
+        //             throw new ArgumentException($"Department Id {departmentId} not found at row {rowNumber}");
+
+        //         var districtIdStr = row.Cell(3).GetValue<string>();
+        //         if (!Guid.TryParse(districtIdStr, out var districtId))
+        //             throw new ArgumentException($"Invalid District Id format at row {rowNumber}");
+
+        //         var district = await _repository.GetDistrictByIdAsync(districtId);
+        //         if (district == null)
+        //             throw new ArgumentException($"districtId {districtId} not found at row {rowNumber}");
+
+        //         var member = new MstMember
+        //         {
+        //             Id = Guid.NewGuid(),
+        //             OrganizationId = organizationId,
+        //             DepartmentId = departmentId,
+        //             DistrictId = districtId,
+        //             Name = row.Cell(4).GetValue<string>(),
+        //             PersonId = row.Cell(5).GetValue<string>(),
+        //             CardNumber = row.Cell(6).GetValue<string>(),
+        //             Gender = (Gender)Enum.Parse(typeof(Gender), row.Cell(7).GetValue<string>(), ignoreCase: true),
+        //             CreatedBy = username,
+        //             CreatedAt = DateTime.UtcNow,
+        //             UpdatedBy = username,
+        //             UpdatedAt = DateTime.UtcNow,
+        //             Status = 1
+        //         };
+
+        //         members.Add(member);
+        //         rowNumber++;
+        //     }
+
+        //     foreach (var member in members)
+        //     {
+        //         await _repository.AddAsync(member);
+        //     }
+
+        //     return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+        // }
+
+
+        private async Task<List<MstMember>> ImportInternalAsync(
+    IEnumerable<MstMemberImportBase> rows,
+    string username)
         {
-            var members = new List<MstMember>();
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var result = new List<MstMember>();
 
-            using var stream = file.OpenReadStream();
-            using var workbook = new XLWorkbook(stream);
-            var worksheet = workbook.Worksheets.Worksheet(1);
-            var rows = worksheet.RowsUsed().Skip(1); // skip header
-
-            int rowNumber = 2; // start dari baris ke 2
             foreach (var row in rows)
             {
-                // validasi
-                var organizationIdStr = row.Cell(1).GetValue<string>();
-                if (!Guid.TryParse(organizationIdStr, out var organizationId))
-                    throw new ArgumentException($"Invalid Organization Id format at row {rowNumber}");
-
-                var organization = await _repository.GetOrganizationByIdAsync(organizationId);
-                if (organization == null)
-                    throw new ArgumentException($"OrganizationId {organizationId} not found at row {rowNumber}");
-
-                var departmentIdStr = row.Cell(2).GetValue<string>();
-                if (!Guid.TryParse(departmentIdStr, out var departmentId))
-                    throw new ArgumentException($"Invalid Department Id format at row {rowNumber}");
-
-                var department = await _repository.GetDepartmentByIdAsync(departmentId);
-                if (department == null)
-                    throw new ArgumentException($"Department Id {departmentId} not found at row {rowNumber}");
-
-                var districtIdStr = row.Cell(3).GetValue<string>();
-                if (!Guid.TryParse(districtIdStr, out var districtId))
-                    throw new ArgumentException($"Invalid District Id format at row {rowNumber}");
-
-                var district = await _repository.GetDistrictByIdAsync(districtId);
-                if (district == null)
-                    throw new ArgumentException($"districtId {districtId} not found at row {rowNumber}");
-
-                var member = new MstMember
+                try
                 {
-                    Id = Guid.NewGuid(),
-                    OrganizationId = organizationId,
-                    DepartmentId = departmentId,
-                    DistrictId = districtId,
-                    Name = row.Cell(4).GetValue<string>(),
-                    PersonId = row.Cell(5).GetValue<string>(),
-                    CardNumber = row.Cell(6).GetValue<string>(),
-                    Gender = (Gender)Enum.Parse(typeof(Gender), row.Cell(7).GetValue<string>(), ignoreCase: true),
-                    CreatedBy = username,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = username,
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = 1
-                };
+                    // === VALIDASI RELASI ===
+                    if (await _repository.GetOrganizationByIdAsync(row.OrganizationId) == null)
+                        throw new Exception("Invalid OrganizationId");
 
-                members.Add(member);
-                rowNumber++;
+                    if (await _repository.GetDepartmentByIdAsync(row.DepartmentId) == null)
+                        throw new Exception("Invalid DepartmentId");
+
+                    if (await _repository.GetDistrictByIdAsync(row.DistrictId) == null)
+                        throw new Exception("Invalid DistrictId");;
+
+                    var existing = await _repository.GetAllQueryable()
+                    .FirstOrDefaultAsync(x => x.PersonId == row.PersonId);
+
+                if (existing != null)
+                {
+                    existing.Name = row.Name;
+                    existing.Email = row.Email;
+                    existing.Phone = row.Phone;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.UpdatedBy = username;
+
+                    await _repository.UpdateAsync(existing);
+                    continue;
+                }
+
+                    // === CARD ===
+                    // var card = await _cardRepository.GetByCardNumberAsync(row.CardNumber);
+                    // if (card == null || card.IsUsed == true)
+                    //     throw new Exception("Invalid or used card");
+
+                    var member = new MstMember
+                    {
+                        Id = Guid.NewGuid(),
+                        OrganizationId = row.OrganizationId,
+                        DepartmentId = row.DepartmentId,
+                        DistrictId = row.DistrictId,
+
+                        PersonId = row.PersonId,
+                        IdentityId = row.IdentityId,
+                        Name = row.Name,
+                        Email = row.Email,
+                        Phone = row.Phone,
+
+                        Gender = Enum.TryParse<Gender>(row.Gender, true, out var g) ? g : null,
+                        StatusEmployee = Enum.TryParse<StatusEmployee>(row.StatusEmployee, true, out var se) ? se : null,
+
+                        BirthDate = row.BirthDate,
+                        JoinDate = row.JoinDate,
+
+                        // CardNumber = card.CardNumber,
+                        // BleCardNumber = card.Dmac,
+
+                        UploadFr = 1,
+                        UploadFrError = "Imported",
+
+                        CreatedBy = username,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedBy = username,
+                        UpdatedAt = DateTime.UtcNow,
+                        Status = 1
+                    };
+
+                    using var trx = await _repository.BeginTransactionAsync();
+
+                    await _repository.AddAsync(member);
+
+                    // card.IsUsed = true;
+                    // card.MemberId = member.Id;
+                    // card.LastUsed = member.Name;
+                    // card.CheckinAt = DateTime.UtcNow;
+                    // await _cardRepository.UpdateAsync(card);
+
+                    await trx.CommitAsync();
+
+                    result.Add(member);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Import failed for {PersonId}", row.PersonId);
+                }
             }
 
-            foreach (var member in members)
+            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            return result;
+        }
+
+        public async Task<IEnumerable<MstMemberDto>> ImportCsvAsync(IFormFile file)
+        {
+            var username = UsernameFormToken;
+
+            using var reader = new StreamReader(file.OpenReadStream());
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
+            csv.Context.RegisterClassMap<MstMemberImportMap>();
+
+            var rows = csv.GetRecords<MstMemberImportBase>().ToList();
+            _logger.LogWarning("CSV IMPORT: total rows read = {Count}", rows.Count);
+
+            var members = await ImportInternalAsync(rows, username);
+            return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+        }
+
+        public sealed class MstMemberImportMap : ClassMap<MstMemberImportBase>
+{
+    public MstMemberImportMap()
+    {
+        Map(x => x.OrganizationId).Name("OrganizationId");
+        Map(x => x.DepartmentId).Name("DepartmentId");
+        Map(x => x.DistrictId).Name("DistrictId");
+
+        Map(x => x.PersonId).Name("PersonId");
+        Map(x => x.IdentityId).Name("IdentityId");
+        Map(x => x.Name).Name("Name");
+        Map(x => x.Email).Name("Email");
+        Map(x => x.Phone).Name("Phone");
+
+        Map(x => x.Gender).Name("Gender");
+        Map(x => x.StatusEmployee).Name("StatusEmployee");
+
+        Map(x => x.BirthDate).Name("BirthDate").Optional();
+        Map(x => x.JoinDate).Name("JoinDate").Optional();
+    }
+}
+
+
+        public async Task<IEnumerable<MstMemberDto>> ImportExcelAsync(IFormFile file)
+        {
+            var username = UsernameFormToken;
+            var rows = new List<MstMemberImportBase>();
+
+            using var workbook = new XLWorkbook(file.OpenReadStream());
+            var sheet = workbook.Worksheets.First();
+
+            foreach (var row in sheet.RowsUsed().Skip(1))
             {
-                await _repository.AddAsync(member);
+                rows.Add(new MstMemberImportBase
+                {
+                    OrganizationId = Guid.Parse(row.Cell(1).GetString()),
+                    DepartmentId = Guid.Parse(row.Cell(2).GetString()),
+                    DistrictId = Guid.Parse(row.Cell(3).GetString()),
+                    Name = row.Cell(4).GetString(),
+                    PersonId = row.Cell(5).GetString(),
+                    CardNumber = row.Cell(6).GetString(),
+                    Gender = row.Cell(7).GetString()
+                });
             }
 
+            var members = await ImportInternalAsync(rows, username);
             return _mapper.Map<IEnumerable<MstMemberDto>>(members);
         }
 
 
+
+
+
+
+
+
+
     }
+
+    
 }

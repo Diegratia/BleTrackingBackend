@@ -414,9 +414,127 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
+        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        // [HttpPost("import")]
+        // public async Task<IActionResult> Import([FromForm] IFormFile file)
+        // {
+        //     if (file == null || file.Length == 0)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "No file uploaded or file is empty",
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+
+        //     if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Only .xlsx files are allowed",
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+
+        //     try
+        //     {
+        //         var floors = await _mstMemberService.ImportAsync(file);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Members imported successfully",
+        //             collection = new { data = floors },
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
+
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPost("import")]
-        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        [HttpPost("import-csv")]
+        public async Task<IActionResult> ImportCsv([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "No file uploaded or file is empty",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = "Only .csv files are allowed",
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+
+            try
+            {
+                await _mstMemberService.ImportCsvAsync(file);
+                return Ok(new
+                {
+                    success = true,
+                    msg = "Members imported successfully",
+                    collection = new { data = (object)null },
+                    code = 200
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    msg = ex.Message,
+                    collection = new { data = (object)null },
+                    code = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    msg = $"Internal server error: {ex.Message}",
+                    collection = new { data = (object)null },
+                    code = 500
+                });
+            }
+        }
+
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [HttpPost("import-xlsx")]
+        public async Task<IActionResult> ImportExcel([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -442,12 +560,12 @@ namespace Web.API.Controllers.Controllers
 
             try
             {
-                var floors = await _mstMemberService.ImportAsync(file);
+                await _mstMemberService.ImportExcelAsync(file);
                 return Ok(new
                 {
                     success = true,
                     msg = "Members imported successfully",
-                    collection = new { data = floors },
+                    collection = new { data = (object)null },
                     code = 200
                 });
             }

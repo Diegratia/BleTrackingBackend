@@ -31,7 +31,7 @@ namespace Data.ViewModels
         public DateTime? BlacklistAt { get; set; }
         public string? BlacklistReason { get; set; }
 
-        
+
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
         public string CreatedBy { get; set; }
@@ -39,7 +39,7 @@ namespace Data.ViewModels
         public string UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int? Status { get; set; }
-        public MstOrganizationDto? Organization { get; set;}
+        public MstOrganizationDto? Organization { get; set; }
         public MstDepartmentDto? Department { get; set; }
         public MstDistrictDto? District { get; set; }
     }
@@ -58,7 +58,7 @@ namespace Data.ViewModels
         public string? DistrictName { get; set; }
     }
 
-     public class OpenMstMemberDto : BaseModelDto
+    public class OpenMstMemberDto : BaseModelDto
     {
         public long Generate { get; set; }
 
@@ -101,7 +101,7 @@ namespace Data.ViewModels
     }
 
 
-     public class MstMemberCreateDto : BaseModelDto
+    public class MstMemberCreateDto : BaseModelDto
     {
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }
@@ -127,7 +127,7 @@ namespace Data.ViewModels
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 
-     public class MstMemberUpdateDto 
+    public class MstMemberUpdateDto
     {
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }
@@ -149,4 +149,25 @@ namespace Data.ViewModels
         public string? HeadMember2 { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
+    
+            public class MstMemberImportBase
+        {
+            public Guid OrganizationId { get; set; }
+            public Guid DepartmentId { get; set; }
+            public Guid DistrictId { get; set; }
+
+            public string? PersonId { get; set; }
+            public string? IdentityId { get; set; }
+            public string? Name { get; set; }
+            public string? Email { get; set; }
+            public string? Phone { get; set; }
+
+            public string? Gender { get; set; }
+            public string? CardNumber { get; set; }
+
+            public DateOnly? BirthDate { get; set; }
+            public DateOnly? JoinDate { get; set; }
+            public string? StatusEmployee { get; set; }
+        }
+
 }
