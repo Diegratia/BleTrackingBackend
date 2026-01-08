@@ -11,6 +11,7 @@
     <!-- PackageReferences tanpa versi: dikontrol lewat Directory.Packages.props -->
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
     <PackageReference Include="Bogus" />
+    <PackageReference Include="CsvHelper" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.AspNetCore" />
     <PackageReference Include="Quartz" />

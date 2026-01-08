@@ -19,7 +19,9 @@ namespace BusinessLogic.Services.Interface
         Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);
         Task DeleteMemberAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
-        Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file);
+        // Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file);
+        Task<IEnumerable<MstMemberDto>> ImportCsvAsync(IFormFile file);
+        Task<IEnumerable<MstMemberDto>> ImportExcelAsync(IFormFile file);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
     }
