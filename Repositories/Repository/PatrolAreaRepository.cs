@@ -125,5 +125,18 @@ namespace Repositories.Repository
                 .Where(ma => ma.FloorId == floorId && ma.Status != 0)
                 .ToListAsync();
         }
+
+        public async Task<bool> FloorExistsAsync(Guid floorId)
+        {
+            return await _context.MstFloors
+                .AnyAsync(f => f.Id == floorId && f.Status !=0);
+        }
+
+        public async Task<bool> FloorplanExistsAsync(Guid floorplanId)
+        {
+            return await _context.MstFloorplans
+                .AnyAsync(f => f.Id == floorplanId && f.Status != 0);
+        }
+
     }
 }

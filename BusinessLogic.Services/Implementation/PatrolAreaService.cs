@@ -51,14 +51,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolAreaDto> CreateAsync(PatrolAreaCreateDto createDto)
         {
-            var floor = await _repository.GetByFloorIdAsync(createDto.FloorId.Value);
-            var floorplan = await _repository.GetByFloorplanIdAsync(createDto.FloorplanId.Value);
-            if (floorplan == null)
-                throw new NotFoundException($"Floor with id {createDto.FloorplanId} not found");
-            if (floor == null)
+            if (!await _repository.FloorExistsAsync(createDto.FloorId!.Value))
                 throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
-            var patrolArea = _mapper.Map<PatrolArea>(createDto);
 
+            if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId!.Value))
+                throw new NotFoundException($"Floorplan with id {createDto.FloorplanId} not found");
+
+
+            var patrolArea = _mapper.Map<PatrolArea>(createDto);
             SetCreateAudit(patrolArea);
             await _repository.AddAsync(patrolArea);
             return _mapper.Map<PatrolAreaDto>(patrolArea);
@@ -69,12 +69,11 @@ namespace BusinessLogic.Services.Implementation
             var patrolArea = await _repository.GetByIdAsync(id);
             if (patrolArea == null)
                 throw new NotFoundException($"PatrolArea with id {id} not found");
-            var floor = await _repository.GetByFloorIdAsync(updateDto.FloorId.Value);
-            var floorplan = await _repository.GetByFloorplanIdAsync(updateDto.FloorplanId.Value);
-            if (floorplan == null)
-                throw new NotFoundException($"Floor with id {updateDto.FloorplanId} not found");
-            if (floor == null)
+            if (!await _repository.FloorExistsAsync(updateDto.FloorId!.Value))
                 throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+
+            if (!await _repository.FloorplanExistsAsync(updateDto.FloorplanId!.Value))
+                throw new NotFoundException($"Floorplan with id {updateDto.FloorplanId} not found");
 
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             // patrolArea.UpdatedBy = username;
