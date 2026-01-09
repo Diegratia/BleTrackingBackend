@@ -79,15 +79,11 @@ builder.Services.AddAuthorizationPolicies();
 builder.Services.AddSwaggerExtension();
 
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
+builder.Services.AddScoped<IPatrolAreaService, PatrolAreaService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
-
-builder.Services.AddScoped<GeofenceRepository>();
-builder.Services.AddScoped<OverpopulatingRepository>();
-builder.Services.AddScoped<BoundaryRepository>();
-builder.Services.AddScoped<StayOnAreaRepository>();
 
 
 builder.Services.AddHttpContextAccessor();
