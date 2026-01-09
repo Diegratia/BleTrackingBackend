@@ -51,7 +51,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/PatrolArea
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] PatrolAreaCreateDto PatrolAreaDto)
+        public async Task<IActionResult> Create([FromBody] PatrolAreaCreateDto PatrolAreaDto)
         {
             if (!ModelState.IsValid)
             {
@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/PatrolArea/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromForm] PatrolAreaUpdateDto updateDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] PatrolAreaUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
             {
