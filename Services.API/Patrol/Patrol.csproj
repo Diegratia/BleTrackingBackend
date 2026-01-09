@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" /> <!-- ✅ perbaikan di sini -->
     <PackageReference Include="DotNetEnv" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Swashbuckle.AspNetCore" />

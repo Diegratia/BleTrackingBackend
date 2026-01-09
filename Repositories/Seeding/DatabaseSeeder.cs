@@ -1024,35 +1024,6 @@ namespace Repositories.Seeding
             //     context.FloorplanDevices.AddRange(devices);
             //     context.SaveChanges();
             // }
-            // // 20. BleReaderNode
-            // if (!context.BleReaderNodes.Any())
-            // {
-            //     var blereadernodeFaker = new Faker<BleReaderNode>()
-            //         .RuleFor(v => v.Id, f => Guid.NewGuid())
-            //         .RuleFor(d => d.ReaderId, f => context.MstBleReaders
-            //             .Where(r => r.Status != 0)
-            //             .OrderBy(r => Guid.NewGuid())
-            //             .Select(r => r.Id)
-            //             .FirstOrDefault())
-            //         .RuleFor(d => d.StartPos, f => f.Random.Number(0, 99).ToString())
-            //         .RuleFor(d => d.EndPos, f => f.Random.Number(0, 99).ToString())
-            //         .RuleFor(d => d.DistancePx, f => f.Random.Float(0, 100))
-            //         .RuleFor(d => d.Distance, f => f.Random.Float(0, 100))
-            //         .RuleFor(b => b.ApplicationId, f => context.MstApplications
-            //             .Where(a => a.ApplicationStatus != 0)
-            //             .OrderBy(r => Guid.NewGuid())
-            //             .Select(a => a.Id)
-            //             .FirstOrDefault())
-            //         .RuleFor(b => b.CreatedBy, f => "System")
-            //         .RuleFor(b => b.CreatedAt, f => DateTime.UtcNow)
-            //         .RuleFor(b => b.UpdatedBy, f => "System")
-            //         .RuleFor(b => b.UpdatedAt, f => DateTime.UtcNow);
-
-            //     var blereadernodes = blereadernodeFaker.Generate(2);
-            //     context.BleReaderNodes.AddRange(blereadernodes);
-            //     context.SaveChanges();
-            // }
-
             // // 21. MstEngine
             // if (!context.MstEngines.Any())
             // {

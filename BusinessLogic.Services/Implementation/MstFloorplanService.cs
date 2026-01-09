@@ -36,12 +36,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly IFloorplanMaskedAreaService _maskedAreaService;
         private readonly IGeofenceService _geofenceService;
         private readonly IStayOnAreaService _stayOnAreaService;
+        private readonly IPatrolAreaService _patrolAreaService;
         private readonly IOverpopulatingService _overpopulatingService;
         private readonly IBoundaryService _boundaryService;
         private readonly GeofenceRepository _geofenceRepository;
         private readonly StayOnAreaRepository _stayOnAreaRepository;
         private readonly OverpopulatingRepository _overpopulatingRepository;
         private readonly BoundaryRepository _boundaryRepository;
+        private readonly PatrolAreaRepository _patrolAreaRepository;
         private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
         private readonly ILogger<MstFloorplan> _logger;
         private readonly IDistributedCache _cache;
@@ -59,10 +61,12 @@ namespace BusinessLogic.Services.Implementation
             GeofenceRepository geofenceRepository,
             StayOnAreaRepository stayOnAreaRepository,
             OverpopulatingRepository overpopulatingRepository,
+            PatrolAreaRepository patrolAreaRepository,
             BoundaryRepository boundaryRepository,
             IGeofenceService geofenceService,
             IStayOnAreaService stayOnAreaService,
             IOverpopulatingService overpopulatingService,
+            IPatrolAreaService patrolAreaService,
             IBoundaryService boundaryService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
@@ -81,11 +85,13 @@ namespace BusinessLogic.Services.Implementation
             _stayOnAreaRepository = stayOnAreaRepository;
             _overpopulatingRepository = overpopulatingRepository;
             _boundaryRepository = boundaryRepository;
+            _patrolAreaRepository = patrolAreaRepository;
             _maskedAreaService = maskedAreaService;
             _geofenceService = geofenceService;
             _stayOnAreaService = stayOnAreaService;
             _overpopulatingService = overpopulatingService;
             _boundaryService = boundaryService;
+            _patrolAreaService = patrolAreaService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
@@ -258,6 +264,7 @@ namespace BusinessLogic.Services.Implementation
             var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
             var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
             var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            var patrol = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
             //redis cache
             foreach (var maskedArea in maskedAreas)
             {
@@ -278,6 +285,10 @@ namespace BusinessLogic.Services.Implementation
             foreach (var overpopulating in overpopulatings)
             {
                 await _overpopulatingService.DeleteAsync(overpopulating.Id);
+            }
+            foreach (var overpopulating in overpopulatings)
+            {
+                await _patrolAreaService.DeleteAsync(overpopulating.Id);
             }
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;

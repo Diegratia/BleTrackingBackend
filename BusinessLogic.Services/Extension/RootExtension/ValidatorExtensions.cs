@@ -1,3 +1,4 @@
+using Data.ViewModels.Validators;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ namespace BusinessLogic.Services.Extension.RootExtension
             services.AddFluentValidationAutoValidation();
             services.AddFluentValidationClientsideAdapters();
             services.AddValidatorsFromAssemblyContaining<LoginValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAreaCreateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAreaUpdateValidator>();
             return services;
         }
     }

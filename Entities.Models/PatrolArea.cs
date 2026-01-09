@@ -7,7 +7,7 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class Geofence : BaseModelWithTime, IApplicationEntity
+    public class PatrolArea : BaseModelWithTime, IApplicationEntity
     {
 
         [Column("name")]
@@ -27,7 +27,7 @@ namespace Entities.Models
         public Guid? FloorId { get; set; }
 
         [Column("is_active")]
-        public int IsActive { get; set; }
+        public int IsActive { get; set; } = 1;
 
         [Column("status")]
         public int Status { get; set; } = 1;
@@ -37,6 +37,5 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public MstFloor Floor { get; set; } //MstFloor
         public MstFloorplan Floorplan { get; set; }
-
     }
 }

@@ -29,7 +29,6 @@ namespace Repositories.DbContexts
         public DbSet<MstFloorplan> MstFloorplans { get; set; }
         public DbSet<MstBuilding> MstBuildings { get; set; }
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
-        public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
@@ -48,6 +47,7 @@ namespace Repositories.DbContexts
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
         public DbSet<Geofence> Geofences{ get; set; }
+        public DbSet<PatrolArea> PatrolAreas{ get; set; }
         public DbSet<StayOnArea> StayOnAreas{ get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
@@ -82,12 +82,12 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<AlarmRecordTracking>().ToTable("alarm_record_tracking");
             modelBuilder.Entity<MstFloorplan>().ToTable("mst_floorplan");
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
-            modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
             modelBuilder.Entity<Geofence>().ToTable("geofence");
+            modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
@@ -451,6 +451,11 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BuildingId)
                     .OnDelete(DeleteBehavior.NoAction);
+                entity.HasMany(f => f.PatrolAreas)
+                    .WithOne()
+                    .HasForeignKey(f => f.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
                     
             });
 
@@ -730,6 +735,8 @@ namespace Repositories.DbContexts
                 entity.HasOne(f => f.Engine).WithMany(f => f.Floorplans).HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Application).WithMany().HasForeignKey(f => f.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 
+                entity.HasMany(f => f.PatrolAreas).WithOne().HasForeignKey(f => f.FloorplanId).OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasIndex(f => f.Generate).IsUnique();
                 entity.HasQueryFilter(f => f.Status != 0);
 
@@ -747,30 +754,6 @@ namespace Repositories.DbContexts
 
             modelBuilder.Entity<UserGroup>()
                .ToTable("user_group");
-
-            modelBuilder.Entity<BleReaderNode>(entity =>
-            {
-                entity.ToTable("ble_reader_node");
-                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(255);
-                entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-
-                entity.HasOne(t => t.Reader)
-                     .WithMany()
-                     .HasForeignKey(t => t.ReaderId)
-                     .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Application)
-                     .WithMany()
-                     .HasForeignKey(m => m.ApplicationId)
-                     .OnDelete(DeleteBehavior.NoAction);
-
-
-                entity.HasIndex(f => f.Generate).IsUnique();
-
-            });
 
             // MstEngine
             modelBuilder.Entity<MstEngine>(entity =>
@@ -820,6 +803,28 @@ namespace Repositories.DbContexts
 
                 entity.HasOne(m => m.Floorplan)
                     .WithMany()
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+            // PatrolArea
+            modelBuilder.Entity<PatrolArea>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAreas)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(m => m.Floor)
+                    .WithMany(m => m.PatrolAreas)
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany(m => m.PatrolAreas)
                     .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

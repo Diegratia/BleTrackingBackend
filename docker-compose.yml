@@ -132,6 +132,16 @@ services:
       - visitor_face_images:/app/Uploads/visitorFaceImages
       - ./.env:/app/.env
     restart: always
+  patrol:
+    build:
+      context: .
+      dockerfile: Services.API/Patrol/Dockerfile
+    image: dev1pci2025/bletrackingbackend-patrol:dev
+    ports:
+      - "5020:5020"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
 
   alarm-record:
     build:
@@ -223,17 +233,6 @@ services:
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=devuction
-
-  ble-reader-node:
-    build:
-      context: .
-      dockerfile: Services.API/BleReaderNode/Dockerfile
-    image: dev1pci2025/bletrackingbackend-ble-reader-node:dev
-    ports:
-      - "5021:5021"
-    volumes:
-      - ./.env:/app/.env
-    restart: always
 
   mst-engine:
     build:

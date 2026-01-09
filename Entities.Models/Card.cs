@@ -53,6 +53,8 @@ namespace Entities.Models
 
         // [Column("current_swap_transaction_id")]
         // public Guid? CurrentSwapTransactionId { get; set; }
+        // [Column("is_tracking-active")]
+        // public bool? IsTrackingActive  { get; set; }
 
         [Column("last_used_by")]
         public string? LastUsed { get; set; }

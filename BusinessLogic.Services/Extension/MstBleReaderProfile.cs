@@ -26,10 +26,6 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
-            CreateMap<MstBleReaderCreateDto, BleReaderNode>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<MstBleReaderUpdateDto, MstBleReader>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ReaderType, opt => opt.MapFrom(src => Enum.Parse<ReaderType>(src.ReaderType, true)))
