@@ -119,5 +119,11 @@ namespace Repositories.Repository
                 .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
                 .ToListAsync();
         }
+        public async Task<List<PatrolArea>> GetByFloorIdAsync(Guid floorId)
+        {
+            return await _context.PatrolAreas
+                .Where(ma => ma.FloorId == floorId && ma.Status != 0)
+                .ToListAsync();
+        }
     }
 }

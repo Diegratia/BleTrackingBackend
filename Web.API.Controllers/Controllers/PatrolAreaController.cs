@@ -63,7 +63,6 @@ namespace Web.API.Controllers.Controllers
             }
             var createdSecurity = await _PatrolAreaService.CreateAsync(PatrolAreaDto);
             return StatusCode(201, ApiResponse.Created("Patrol Area created successfully", createdSecurity));
-
         }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]

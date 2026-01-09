@@ -52,6 +52,13 @@ namespace BusinessLogic.Services.Implementation
         public async Task<PatrolAreaDto> CreateAsync(PatrolAreaCreateDto createDto)
         {
             var patrolArea = _mapper.Map<PatrolArea>(createDto);
+            var floor = await _repository.GetByFloorIdAsync(createDto.FloorId.Value);
+            var floorplan = await _repository.GetByFloorplanIdAsync(createDto.FloorplanId.Value);
+
+            if (floorplan == null)
+                throw new NotFoundException($"Floor with id {createDto.FloorplanId} not found");
+            if (floor == null)
+                throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             // patrolArea.Id = Guid.NewGuid();
             // patrolArea.CreatedBy = username;
