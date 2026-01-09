@@ -29,13 +29,13 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetAll()
         {
             var patrolareas = await _PatrolAreaService.GetAllAsync();
-            return Ok(ApiResponse.Success("Securities retrieved successfully", patrolareas));
+            return Ok(ApiResponse.Success("Patrol Area retrieved successfully", patrolareas));
         }
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
         {
             var patrolareas = await _PatrolAreaService.GetAllLookUpAsync();
-            return Ok(ApiResponse.Success("Securities retrieved successfully", patrolareas));
+            return Ok(ApiResponse.Success("Patrol Area retrieved successfully", patrolareas));
         }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
@@ -44,7 +44,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var security = await _PatrolAreaService.GetByIdAsync(id);
-            return Ok(ApiResponse.Success("PatrolArea retrieved successfully", security));
+            return Ok(ApiResponse.Success("Patrol Area retrieved successfully", security));
         }
 
 
@@ -62,7 +62,7 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
             var createdSecurity = await _PatrolAreaService.CreateAsync(PatrolAreaDto);
-            return StatusCode(201, ApiResponse.Created("PatrolArea created successfully", createdSecurity));
+            return StatusCode(201, ApiResponse.Created("Patrol Area created successfully", createdSecurity));
 
         }
 
@@ -72,7 +72,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             await _PatrolAreaService.DeleteAsync(id);
-            return StatusCode(204, ApiResponse.NoContent("PatrolArea deleted successfully"));
+            return StatusCode(204, ApiResponse.NoContent("Patrol Area deleted successfully"));
         }
 
 
@@ -84,7 +84,7 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
 
             var result = await _PatrolAreaService.FilterAsync(request);
-            return Ok(ApiResponse.Paginated("Securities filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Patrol Area filtered successfully", result));
         }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
@@ -102,89 +102,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var patrolArea = await _PatrolAreaService.UpdateAsync(id, updateDto);
-            return Ok(ApiResponse.Success("PatrolArea updated successfully", patrolArea));
+            return Ok(ApiResponse.Success("Patrol Area updated successfully", patrolArea));
         }
-
-
-
-
-
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // // POST: api/PatrolArea
-        // [HttpPost("{id}/blacklist")]
-        // public async Task<IActionResult> BlacklistSecurity(Guid id, [FromBody] BlacklistReasonDto dto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //      try
-        //     {
-        //         await _PatrolAreaService.SecurityBlacklistAsync(id, dto);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "PatrolArea Blacklisted successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // // POST: api/PatrolArea
-        // [HttpPost("{id}/unblacklist")]
-        // public async Task<IActionResult> UnBlacklistSecurity(Guid id)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //      try
-        //     {
-        //         await _PatrolAreaService.UnBlacklistSecurityAsync(id);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "PatrolArea Unblacklist successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
     }
 }
