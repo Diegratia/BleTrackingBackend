@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
@@ -15,6 +16,7 @@ using DotNetEnv;
 using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
+using System.Text.Json.Serialization;
 
 
 try
@@ -59,7 +61,13 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Konfigurasi Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           // "colorArea" = "colorarea" = "ColorArea" → semua masuk
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; // extra field → 400
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Registrasi otomatis validasi FluentValidation
 builder.Services.AddValidatorExtensions();

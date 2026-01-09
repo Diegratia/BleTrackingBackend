@@ -37,6 +37,15 @@ namespace BusinessLogic.Services.Extension.RootExtension
                         c.User.IsInRole("PrimaryAdmin") ||
                         c.User.IsInRole("Primary") ||
                         c.User.IsInRole("Secondary")));
+                
+                    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
+            {
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole("System") ||
+                    context.User.IsInRole("SuperAdmin") ||
+                    context.User.IsInRole("PrimaryAdmin") ||
+                    context.User.IsInRole("Secondary"));
+            });
 
                 options.AddPolicy("RequireUserCreatedRole", p => p.RequireRole("UserCreated"));
             });
