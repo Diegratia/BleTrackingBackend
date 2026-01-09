@@ -17,6 +17,8 @@ using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
 using System.Text.Json.Serialization;
+using Serilog;
+using Serilog.Events;
 
 
 try
@@ -46,10 +48,67 @@ catch (Exception ex)
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
+// =============================
+//  SERILOG UNIVERSAL SETUP
+// =============================
+Console.WriteLine("=== SERILOG TEST ===");
+Log.Information("Serilog is working - this should go to FILE and CONSOLE");
+Console.WriteLine("=== SERILOG TEST END ===");
+try
+{
+    var serviceName = AppDomain.CurrentDomain.FriendlyName
+        .Replace(".dll", "")
+        .Replace(".exe", "")
+        .ToLower();
+
+    bool isDocker = Directory.Exists("/app");
+    bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
+
+    string logDir;
+
+    if (isDocker)
+        logDir = "/app/logs";
+    else
+        logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+
+    Directory.CreateDirectory(logDir);
+
+    string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
+
+
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        // .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        // .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Service", serviceName) 
+        .WriteTo.Console(
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}"
+        )
+        .WriteTo.File(
+            logFile,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14, // keep 14 hari
+            fileSizeLimitBytes: 10 * 1024 * 1024, 
+            rollOnFileSizeLimit: true,   
+            shared: true,
+                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  // ✅ SAMA dengan console
+            restrictedToMinimumLevel: LogEventLevel.Information
+        )
+        .CreateLogger();
+
+    Console.WriteLine($"Serilog initialized → Directory: {logDir}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Serilog initialization failed: {ex.Message}");
+}
+
 
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
 
 // Konfigurasi CORS
 builder.Services.AddCorsExtension();
@@ -131,6 +190,22 @@ app.UseCors("AllowAll");
 // // app.UseHttpsRedirection();
 app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "{Service} | {RequestMethod} {RequestPath} | {StatusCode} | {Elapsed:0.0000} ms";
+
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("Service", AppDomain.CurrentDomain.FriendlyName);
+        diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
+        diagnosticContext.Set("RequestPath", httpContext.Request.Path);
+
+        var userId = httpContext.User?.FindFirst("sub")?.Value;
+        if (!string.IsNullOrEmpty(userId))
+            diagnosticContext.Set("UserId", userId);
+    };
+});
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();

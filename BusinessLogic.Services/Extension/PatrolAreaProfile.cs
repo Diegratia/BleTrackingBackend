@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -14,6 +15,8 @@ namespace BusinessLogic.Services.Extension
         public PatrolAreaProfile()
         {
             CreateMap<PatrolArea, PatrolAreaDto>();
+            CreateMap<PatrolAreaRM, PatrolAreaDto>();
+            CreateMap<PatrolAreaLookUpRM, PatrolAreaLookUpDto>();
             CreateMap<PatrolAreaCreateDto, PatrolArea>();
             CreateMap<PatrolAreaUpdateDto, PatrolArea>();
         }

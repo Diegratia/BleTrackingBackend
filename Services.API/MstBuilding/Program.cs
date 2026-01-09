@@ -277,6 +277,7 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddScoped<IPatrolAreaService, PatrolAreaService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 builder.Services.AddScoped<MstAccessCctvRepository>();
@@ -287,6 +288,7 @@ builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
+builder.Services.AddScoped<PatrolAreaRepository>();
 
 var port = Environment.GetEnvironmentVariable("MST_BUILDING_PORT") ?? "5010" ??
            builder.Configuration["Ports:MstBuildingService"];

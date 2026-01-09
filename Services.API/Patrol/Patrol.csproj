@@ -12,6 +12,9 @@
     <PackageReference Include="Bogus" />
     <!-- <PackageReference Include="BCrypt.Net" /> -->
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
