@@ -19,8 +19,6 @@ namespace Data.ViewModels.Validators
                 .When(x => x.Name != null);
             RuleFor(patrolArea => patrolArea.AreaShape)
                 .NotEmpty().WithMessage("AreaShape is required.");
-            RuleFor(patrolArea => patrolArea.IsActive)
-                .NotEmpty().WithMessage("IsActive is required.");
         }
     }
     
