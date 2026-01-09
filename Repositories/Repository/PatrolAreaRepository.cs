@@ -34,17 +34,17 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // if (!isSystemAdmin)
-            // {
-            //     if (!applicationId.HasValue)
-            //         throw new UnauthorizedAccessException("ApplicationId not found in context");
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId not found in context");
 
-            //     patrolarea.ApplicationId = applicationId.Value;
-            // }
-            // else if (patrolarea.ApplicationId == Guid.Empty)
-            // {
-            //     throw new ArgumentException("System admin must provide a valid ApplicationId");
-            // }
+                patrolarea.ApplicationId = applicationId.Value;
+            }
+            else if (patrolarea.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System admin must provide a valid ApplicationId");
+            }
 
             await ValidateApplicationIdAsync(patrolarea.ApplicationId);
             ValidateApplicationIdForEntity(patrolarea, applicationId, isSystemAdmin);
