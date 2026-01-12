@@ -139,6 +139,27 @@ namespace BusinessLogic.Services.Implementation
             var entities = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);
         }
+            public async Task<IEnumerable<PatrolRouteDto>> GetAllLookUpAsync()
+        {
+            var entities = await _repo.GetAllLookUpAsync();
+            return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);
+        }
+
+            public async Task<object> FilterAsync(DataTablesRequest request)
+        {
+            var query = _repo.GetAllQueryable();
+
+            var searchableColumns = new[] { "Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Status", "OrderIndex", "Name" };
+
+            var filterService = new GenericDataTableService< PatrolRoute, PatrolRouteDto>(
+                query,
+                _mapper,
+                searchableColumns,
+                validSortColumns);
+
+            return await filterService.FilterAsync(request);
+        }
 
         private void SetStartEndArea(PatrolRoute route)
         {

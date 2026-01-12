@@ -40,8 +40,11 @@ namespace BusinessLogic.Services.Extension
                         .ToList()
                 ));
 
+            CreateMap<PatrolRouteRM, PatrolRouteDto>();
+            CreateMap<PatrolRouteLookUpRM, PatrolRouteDto>();
+
             // CreateMap<PatrolRouteRM, PatrolRouteDto>();
-            // CreateMap<PatrolRouteLookUpRM, PatrolRouteLookUpDto>();
+            CreateMap<PatrolRouteLookUpRM, PatrolRouteLookUpDto>();
             CreateMap<PatrolRouteCreateDto, PatrolRoute>();
             CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
         }

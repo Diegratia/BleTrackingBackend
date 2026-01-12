@@ -31,6 +31,14 @@ namespace Web.API.Controllers.Controllers
             var patrolroutes = await _PatrolRouteService.GetAllAsync();
             return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
         }
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        // GET: api/PatrolRoute
+        [HttpGet("lookup")]
+        public async Task<IActionResult> GetAllLookUpAsync()
+        {
+            var patrolroutes = await _PatrolRouteService.GetAllLookUpAsync();
+            return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
+        }
         // [HttpGet("lookup")]
         // public async Task<IActionResult> GetAllLookUpAsync()
         // {
@@ -75,16 +83,16 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
-        // [HttpPost("{filter}")]
-        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        // {
-        //     if (!ModelState.IsValid)
-        //         return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [HttpPost("{filter}")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
 
-        //     var result = await _PatrolRouteService.FilterAsync(request);
-        //     return Ok(ApiResponse.Paginated("Patrol Route filtered successfully", result));
-        // }
+            var result = await _PatrolRouteService.FilterAsync(request);
+            return Ok(ApiResponse.Paginated("Patrol Route filtered successfully", result));
+        }
 
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/PatrolRoute/{id}

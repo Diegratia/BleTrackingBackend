@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
+using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
@@ -27,6 +29,76 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
+        public IQueryable<PatrolRouteLookUpRM> MinimalGetAllQueryable()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolRoutes
+            .Include(x => x.PatrolRouteAreas)
+            .Where(ca => ca.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(ca => new PatrolRouteLookUpRM
+            {
+                Id = ca.Id,
+                Name = ca.Name,
+                Description = ca.Description,
+
+                PatrolAreaIds = ca.PatrolRouteAreas
+                        .Select(x => (Guid?)x.PatrolAreaId)
+                        .ToList()
+            });
+        }
+        public async Task<List<PatrolRouteLookUpRM>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolRoutes
+            .Include(x => x.PatrolRouteAreas)
+            .AsNoTracking()
+            .Where(ca => ca.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var projected = query.Select(ca => new PatrolRouteLookUpRM
+            {
+                Id = ca.Id,
+                Name = ca.Name,
+                Description = ca.Description,
+
+                PatrolAreaIds = ca.PatrolRouteAreas
+                        .Select(x => (Guid?)x.PatrolAreaId)
+                        .ToList()
+            });
+            return await projected.ToListAsync();
+        }
+
+        // public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
+        // {
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        //     var query = _context.MstSecurities
+        //     .AsNoTracking()
+        //     .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+
+        //     var projected = query.Select(t => new MstSecurityLookUpRM
+        //     {
+        //         Id = t.Id,
+        //         Name = t.Name,
+        //         PersonId = t.PersonId,
+        //         CardNumber = t.CardNumber,
+        //         OrganizationId = t.OrganizationId,
+        //         DepartmentId = t.DepartmentId,
+        //         DistrictId = t.DistrictId,
+        //         OrganizationName = t.Organization.Name,
+        //         DepartmentName = t.Department.Name,
+        //         DistrictName = t.District.Name,
+        //         ApplicationId = t.ApplicationId
+        //     }); 
+        //     return await projected.ToListAsync();
+        // }
+        
+
         public async Task<PatrolRoute?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()
@@ -37,6 +109,7 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+        
 
         public async Task<PatrolRoute> AddAsync(PatrolRoute entity)
         {

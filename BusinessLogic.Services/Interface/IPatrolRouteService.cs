@@ -13,5 +13,7 @@ namespace BusinessLogic.Services.Interface
         Task DeleteAsync(Guid id);
         Task<PatrolRouteDto?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolRouteDto?>> GetAllAsync();
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<IEnumerable<PatrolRouteDto>> GetAllLookUpAsync();
     }
 }

@@ -2,43 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
 
-namespace Data.ViewModels
+namespace Repositories.Repository.RepoModel
 {
-    public class PatrolRouteDto : BaseModelWithAuditDto
+   public class PatrolRouteRM 
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public List<PatrolRouteAreaDto> Areas { get; set; } = new();
+        public List<PatrolRouteAreaDtoRM> Areas { get; set; } = new();
         // public List<Guid?> PatrolAreaIds { get; set; } = new();
         // public float EstimatedDistance { get; set; }
         // public int EstimatedTime  { get; set; }
         // public Guid? StartAreaId { get; set; }
         // public Guid? EndAreaId { get; set; }
     }
-    public class PatrolRouteCreateDto : BaseModelDto 
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public List<Guid?> PatrolAreaIds { get; set; } = new();
 
-    }
-    public class PatrolRouteUpdateDto
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public List<Guid?> PatrolAreaIds { get; set; } = new();
 
-    }
-
-    public class PatrolRouteLookUpDto
+    public class PatrolRouteLookUpRM 
     {
+        public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<Guid?> PatrolAreaIds { get; set; } = new();
     }
 
-            public class PatrolRouteAreaDto
+            public class PatrolRouteAreaDtoRM
         {
             public Guid PatrolAreaId { get; set; }
             public int OrderIndex { get; set; }
@@ -49,5 +38,4 @@ namespace Data.ViewModels
             public Guid? StartAreaId { get; set; }
             public Guid? EndAreaId { get; set; }
         }
-
 }
