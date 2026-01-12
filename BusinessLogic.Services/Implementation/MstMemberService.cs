@@ -23,6 +23,7 @@ using BusinessLogic.Services.Extension.FileStorageService;
 using CsvHelper;
 using System.Globalization;
 using CsvHelper.Configuration;
+using BusinessLogic.Services.Extension.Encrypt;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -37,6 +38,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<MstMemberService> _logger;
         private readonly IMqttClientService _mqttClient;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IEncryptService _encryptService;
 
 
         public MstMemberService(MstMemberRepository repository,
@@ -45,7 +47,8 @@ namespace BusinessLogic.Services.Implementation
         CardRepository cardRepository,
         ILogger<MstMemberService> logger,
         IMqttClientService mqttClient,
-        IFileStorageService fileStorageService
+        IFileStorageService fileStorageService,
+        IEncryptService encryptService
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -55,6 +58,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _mqttClient = mqttClient;
             _fileStorageService = fileStorageService;
+            _encryptService = encryptService;
         }
 
         public async Task<IEnumerable<MstMemberDto>> GetAllMembersAsync()
@@ -152,6 +156,12 @@ namespace BusinessLogic.Services.Implementation
                 member.UploadFrError = "No file uploaded";
                 member.FaceImage = null;
             }
+
+            // member.IdentityId = _encryptService.Encrypt(createDto.IdentityId);
+            // member.Phone      = _encryptService.Encrypt(createDto.Phone);
+            // member.Email      = _encryptService.Encrypt(createDto.Email);
+            // member.Address    = _encryptService.Encrypt(createDto.Address);
+            // member.PersonId   = _encryptService.Encrypt(createDto.PersonId);
 
             member.Id = Guid.NewGuid();
             member.Status = 1;

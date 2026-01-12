@@ -16,6 +16,7 @@ using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Data.ViewModels.Shared.ExceptionHelper;
+using BusinessLogic.Services.Extension.Encrypt;
 
 try
 {
@@ -176,6 +177,7 @@ builder.Services.AddAutoMapper(typeof(MstSecurityProfile));
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
 builder.Services.AddScoped<IMstSecurityService, MstSecurityService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IEncryptService, EncryptService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<CardRepository>();
 
