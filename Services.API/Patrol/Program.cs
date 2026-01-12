@@ -126,6 +126,7 @@ builder.Services.AddControllers()
 builder.Services.AddValidatorExtensions();
 builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(PatrolAreaProfile));
+builder.Services.AddAutoMapper(typeof(PatrolRouteProfile));
 
 builder.Services.AddJwtAuthExtension(builder.Configuration);
 builder.Services.AddAuthorizationPolicies();
@@ -133,6 +134,7 @@ builder.Services.AddSwaggerExtension();
 
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IPatrolAreaService, PatrolAreaService>();
+builder.Services.AddScoped<IPatrolRouteService, PatrolRouteService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
@@ -145,6 +147,7 @@ builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 builder.Services.AddScoped<PatrolAreaRepository>();
+builder.Services.AddScoped<PatrolRouteRepository>();
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
 builder.Host.UseWindowsService();

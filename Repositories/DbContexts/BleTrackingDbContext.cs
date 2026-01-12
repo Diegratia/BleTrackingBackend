@@ -48,6 +48,9 @@ namespace Repositories.DbContexts
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
         public DbSet<Geofence> Geofences{ get; set; }
         public DbSet<PatrolArea> PatrolAreas{ get; set; }
+        public DbSet<PatrolRoute> PatrolRoutes{ get; set; }
+        public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
+        
         public DbSet<StayOnArea> StayOnAreas{ get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
@@ -88,6 +91,8 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<Card>().ToTable("card");
             modelBuilder.Entity<Geofence>().ToTable("geofence");
             modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
+            modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
+            modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
@@ -826,6 +831,45 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Floorplan)
                     .WithMany(m => m.PatrolAreas)
                     .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasMany(e => e.PatrolRouteAreas)
+                    .WithOne(e => e.PatrolArea)
+                    .HasForeignKey(e => e.PatrolAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // PatrolRoute
+            modelBuilder.Entity<PatrolRoute>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolRoutes)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasMany(e => e.PatrolRouteAreas)
+                    .WithOne(e => e.PatrolRoute)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+            });
+
+            // PatrolRouteAreas
+            modelBuilder.Entity<PatrolRouteAreas>(entity =>
+            {
+                entity.ToTable("patrol_route_areas");
+
+                entity.HasKey(e => new { e.PatrolAreaId, e.PatrolRouteId });
+
+                entity.HasOne(e => e.PatrolArea)
+                    .WithMany(e => e.PatrolRouteAreas)
+                    .HasForeignKey(e => e.PatrolAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.PatrolRoute)
+                    .WithMany(ma => ma.PatrolRouteAreas)
+                    .HasForeignKey(e => e.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

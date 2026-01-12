@@ -99,5 +99,6 @@ namespace Entities.Models
         public ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
         public ICollection<PatrolArea> PatrolAreas { get; set; } = new List<PatrolArea>();
+        public ICollection<PatrolRoute> PatrolRoutes { get; set; } = new List<PatrolRoute>();
     }
 }

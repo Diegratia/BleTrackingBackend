@@ -55,7 +55,24 @@ namespace BusinessLogic.Services.Implementation
         entity.UpdatedAt = DateTime.UtcNow;
     }
 
+    protected void SetCreateAudit(BaseModelOnlyIdWithTime entity)
+    {
+        entity.Id = Guid.NewGuid();
+        // entity.Status = 1;
+        
+        entity.CreatedBy = UsernameFormToken;
+        entity.CreatedAt = DateTime.UtcNow;
+
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
+
     protected void SetUpdateAudit(BaseModelWithTime entity)
+    {
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
+    protected void SetUpdateAudit(BaseModelOnlyIdWithTime entity)
     {
         entity.UpdatedBy = UsernameFormToken;
         entity.UpdatedAt = DateTime.UtcNow;

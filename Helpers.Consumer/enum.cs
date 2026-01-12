@@ -209,6 +209,16 @@ namespace Helpers.Consumer
         Low
     }
 
+    public enum LevelPriority
+    {
+        System,
+        SuperAdmin,
+        PrimaryAdmin,
+        Primary,
+        Secondary,
+        UserCreated
+    }
+
     public enum BoundaryType
     {
         Both, // 0

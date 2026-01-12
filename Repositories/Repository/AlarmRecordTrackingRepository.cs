@@ -1,4 +1,5 @@
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;

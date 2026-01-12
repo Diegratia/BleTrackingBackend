@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore.Storage;
+using Repositories.TenantContexts;
 
 namespace Repositories.Repository
 {
@@ -15,11 +16,16 @@ namespace Repositories.Repository
     {
         protected readonly BleTrackingDbContext _context;
         protected readonly IHttpContextAccessor _httpContextAccessor;
+        // protected readonly TenantContext _tenantContext;
 
-        protected BaseRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        protected BaseRepository(BleTrackingDbContext context,
+         IHttpContextAccessor httpContextAccessor
+        //   TenantContext tenantContext
+          )
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            // _tenantContext = tenantContext;
         }
 
         protected (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
@@ -110,6 +116,31 @@ namespace Repositories.Repository
                 }
             }
         }
+
+        /// <summary>
+        /// Query default untuk entity bertenant
+        /// </summary>
+        // protected IQueryable<T> Query<T>() where T : class, IApplicationEntity
+        // {
+        //     var query = _context.Set<T>().AsQueryable();
+
+        //     if (!_tenantContext.IsSystemAdmin)
+        //         query = query.Where(x => x.ApplicationId == _tenantContext.ApplicationId);
+
+        //     return query;
+        // }
+
+        // /// <summary>
+        // /// Dipanggil sebelum INSERT / UPDATE
+        // /// </summary>
+        // protected void PrepareForSave<T>(T entity) where T : class, IApplicationEntity
+        // {
+        //     if (!_tenantContext.IsSystemAdmin)
+        //     {
+        //         entity.ApplicationId = _tenantContext.ApplicationId!.Value;
+        //     }
+        //     // SystemAdmin: ApplicationId HARUS sudah di-set dari service
+        // }
 
 
         protected string GetUserEmail()

@@ -9,10 +9,12 @@ namespace Helpers.Consumer
 {
     public class BaseModelOnlyIdWithTime
     {
+        [Required]
         [Key]
         [Column("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        [StringLength(255)]
         [Column("created_by")]
         public string? CreatedBy { get; set; }
 
@@ -24,6 +26,8 @@ namespace Helpers.Consumer
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+        [Column("application_id")]
+        public Guid ApplicationId { get; set; }
 
         
     }

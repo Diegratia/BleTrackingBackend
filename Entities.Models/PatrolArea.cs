@@ -37,5 +37,6 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public MstFloor Floor { get; set; } //MstFloor
         public MstFloorplan Floorplan { get; set; }
+        public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
     }
 }
