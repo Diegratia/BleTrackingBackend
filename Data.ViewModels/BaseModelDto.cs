@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Data.ViewModels
@@ -12,6 +13,7 @@ namespace Data.ViewModels
 
         public class BaseModelWithAuditDto : BaseModelDto
     {
+        [JsonPropertyOrder(-10)]
         public Guid Id { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }

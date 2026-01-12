@@ -46,7 +46,6 @@ namespace Repositories.Repository
             {
                 if (!applicationId.HasValue)
                     throw new UnauthorizedAccessException("ApplicationId required.");
-
                 entity.ApplicationId = applicationId.Value;
             }
 
@@ -69,12 +68,6 @@ namespace Repositories.Repository
 
             var entity = await _context.PatrolRoutes
                 .FirstOrDefaultAsync(x => x.Id == id && x.Status != 0);
-
-            if (entity == null)
-                throw new KeyNotFoundException("PatrolRoute not found");
-
-            if (!isSystemAdmin && entity.ApplicationId != applicationId)
-                throw new UnauthorizedAccessException();
 
             entity.Status = 0;
             await _context.SaveChangesAsync();

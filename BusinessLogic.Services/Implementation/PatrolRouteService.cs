@@ -2,8 +2,10 @@ using AutoMapper;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Repositories.Repository;
 
 namespace BusinessLogic.Services.Implementation
@@ -58,7 +60,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
             var route = await _repo.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException("PatrolRoute not found");
+                ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
 
             var newAreaIds = dto.PatrolAreaIds
                 .Where(x => x.HasValue)
@@ -117,12 +119,17 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            var entity = await _repo.GetByIdAsync(id);
+            if (entity == null)
+                throw new NotFoundException($"PatrolRoute with id {id} not found");
             await _repo.DeleteAsync(id);
         }
 
         public async Task<PatrolRouteDto?> GetByIdAsync(Guid id)
         {
             var entity = await _repo.GetByIdAsync(id);
+            if (entity == null)
+                throw new NotFoundException($"PatrolRoute with id {id} not found");
             return entity == null
                 ? null
                 : _mapper.Map<PatrolRouteDto>(entity);
