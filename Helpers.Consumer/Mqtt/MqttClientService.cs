@@ -30,6 +30,8 @@ namespace Helpers.Consumer.Mqtt
                 .WithClientId(_clientId)
                 .WithTcpServer(host, port)
                 .WithCredentials(username, password)
+                .WithKeepAlivePeriod(TimeSpan.FromSeconds(20)) 
+                .WithCleanSession(true)
                 .Build();
 
             _mqttClient.ApplicationMessageReceivedAsync += HandleMessageAsync;
