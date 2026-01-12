@@ -217,6 +217,15 @@ var redisConfig = new ConfigurationOptions
 
 
 var mux = ConnectionMultiplexer.Connect(redisConfig);
+mux.ConnectionFailed += (_, e) =>
+{
+    Log.Warning("Redis connection failed: {FailureType}", e.FailureType);
+};
+
+mux.ConnectionRestored += (_, e) =>
+{
+    Log.Information("Redis connection restored");
+};
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(mux);
 
@@ -226,7 +235,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = redisInstance;
 });
 builder.Services.AddHostedService<MqttRecoveryService>();
-builder.Services.AddHostedService<RedisRecoveryService>();
+// builder.Services.AddHostedService<RedisRecoveryService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
