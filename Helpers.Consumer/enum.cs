@@ -99,6 +99,13 @@ namespace Helpers.Consumer
         Other
     }
 
+        public enum ImagePurpose
+    {
+        Photo,
+        Floorplan
+    }
+
+
     public enum ApiTypeAuth
     {
         Basic,

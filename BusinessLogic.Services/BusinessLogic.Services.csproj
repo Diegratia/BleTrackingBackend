@@ -20,6 +20,7 @@
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="System.Linq.Dynamic.Core" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />

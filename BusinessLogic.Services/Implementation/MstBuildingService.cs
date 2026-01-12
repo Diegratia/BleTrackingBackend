@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using DataView;
 using BusinessLogic.Services.Extension.FileStorageService;
+using Helpers.Consumer;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -184,7 +185,7 @@ namespace BusinessLogic.Services.Implementation
             if (createDto.Image != null)
             {
                 building.Image = await _fileStorageService
-                    .SaveImageAsync(createDto.Image, "BuildingImages", MaxFileSize);
+                    .SaveImageAsync(createDto.Image, "BuildingImages", MaxFileSize, ImagePurpose.Photo);
             }
 
             var username = UsernameFormToken;
@@ -215,7 +216,7 @@ namespace BusinessLogic.Services.Implementation
 
                 // simpan image baru
                 building.Image = await _fileStorageService
-                    .SaveImageAsync(updateDto.Image, "BuildingImages", MaxFileSize);
+                    .SaveImageAsync(updateDto.Image, "BuildingImages", MaxFileSize, ImagePurpose.Photo);
             }
 
             _mapper.Map(updateDto, building);
@@ -313,7 +314,7 @@ namespace BusinessLogic.Services.Implementation
         
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var buildings = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>

@@ -26,9 +26,9 @@ try
     var possiblePaths = new[]
     {
         Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
-        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
-        "/app/.env"                                                   // path dalam Docker container
+        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   
+        Path.Combine(AppContext.BaseDirectory, ".env"),               
+        "/app/.env"                                                 
     };
 
     var envFile = possiblePaths.FirstOrDefault(File.Exists);
@@ -48,9 +48,7 @@ catch (Exception ex)
     Console.WriteLine($"Failed to load .env file: {ex.Message}");
 }
 
-// =============================
-//  SERILOG UNIVERSAL SETUP
-// =============================
+
 Console.WriteLine("=== SERILOG TEST ===");
 Log.Information("Serilog is working - this should go to FILE and CONSOLE");
 Console.WriteLine("=== SERILOG TEST END ===");
@@ -78,8 +76,8 @@ try
 
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
-        // .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-        // .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("System", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Service", serviceName) 
         .WriteTo.Console(
@@ -88,11 +86,11 @@ try
         .WriteTo.File(
             logFile,
             rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 14, // keep 14 hari
+            retainedFileCountLimit: 14, 
             fileSizeLimitBytes: 10 * 1024 * 1024, 
             rollOnFileSizeLimit: true,   
             shared: true,
-                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  // ✅ SAMA dengan console
+                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  
             restrictedToMinimumLevel: LogEventLevel.Information
         )
         .CreateLogger();
@@ -110,25 +108,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();
 
-// Konfigurasi CORS
 builder.Services.AddCorsExtension();
 
-// Konfigurasi sumber konfigurasi
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Konfigurasi Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           // "colorArea" = "colorarea" = "ColorArea" → semua masuk
-        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; // extra field → 400
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; 
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// Registrasi otomatis validasi FluentValidation
 builder.Services.AddValidatorExtensions();
 builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(PatrolAreaProfile));

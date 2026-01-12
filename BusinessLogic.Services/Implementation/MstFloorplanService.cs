@@ -23,6 +23,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -210,7 +211,7 @@ namespace BusinessLogic.Services.Implementation
             if (createDto.FloorplanImage != null)
             {
                 floorplan.FloorplanImage = await _fileStorageService
-                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize);
+                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
             }
 
             floorplan.Id = Guid.NewGuid();
@@ -238,7 +239,7 @@ namespace BusinessLogic.Services.Implementation
                 await _fileStorageService.DeleteAsync(floorplan.FloorplanImage);
 
                 floorplan.FloorplanImage = await _fileStorageService
-                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize);
+                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
             }
 
             floorplan.UpdatedBy = username;
@@ -371,7 +372,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var floorplans = await _repository.GetAllExportAsync();
             var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 

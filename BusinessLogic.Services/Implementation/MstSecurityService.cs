@@ -133,7 +133,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     
                     security.FaceImage = await _fileStorageService
-                        .SaveImageAsync(createDto.FaceImage, "SecurityFaceImages", MaxFileSize);
+                        .SaveImageAsync(createDto.FaceImage, "SecurityFaceImages", MaxFileSize, ImagePurpose.Photo);
                     
 
                         security.UploadFr = 1; // Sukses
@@ -211,7 +211,7 @@ namespace BusinessLogic.Services.Implementation
                      await _fileStorageService.DeleteAsync(security.FaceImage);
 
                     security.FaceImage = await _fileStorageService
-                        .SaveImageAsync(updateDto.FaceImage, "SecurityFaceImages", MaxFileSize);
+                        .SaveImageAsync(updateDto.FaceImage, "SecurityFaceImages", MaxFileSize, ImagePurpose.Photo);
                     security.UploadFr = 1;
                     security.UploadFrError = "Upload successful";
                 }
