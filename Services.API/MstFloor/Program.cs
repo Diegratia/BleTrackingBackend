@@ -15,6 +15,7 @@ using DotNetEnv;
 using StackExchange.Redis;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 try
 {
@@ -204,6 +205,7 @@ builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();
