@@ -27,10 +27,14 @@ namespace BusinessLogic.Services.Extension.RootExtension
                 .ToLower();
 
             bool isDocker = Directory.Exists("/app");
+            bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
 
-            var logDir = isDocker
-                ? "/app/logs"
-                : Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+            string logDir;
+
+            if (isDocker)
+                logDir = "/app/logs";
+            else
+                logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
 
             Directory.CreateDirectory(logDir);
 
@@ -61,13 +65,44 @@ namespace BusinessLogic.Services.Extension.RootExtension
                 .CreateLogger();
 
             builder.Host.UseSerilog();
-
             Console.WriteLine($"Serilog initialized");
             Console.WriteLine($"Environment     : {envName}");
             Console.WriteLine($"MinimumLevel    : {minimumLevel}");
             Console.WriteLine($"Log Directory   : {logDir}");
-
             return builder;
+        }
+    }
+
+    public static class SerilogAppExtensions
+    {
+        /// <summary>
+        /// Logging HTTP request menggunakan Serilog
+        /// </summary>
+        public static IApplicationBuilder UseSerilogRequestLoggingExtension(
+            this IApplicationBuilder app)
+        {
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.MessageTemplate =
+                    "{Service} | {RequestMethod} {RequestPath} | {StatusCode} | {Elapsed:0.0000} ms";
+
+                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                {
+                    diagnosticContext.Set(
+                        "Service",
+                        AppDomain.CurrentDomain.FriendlyName
+                    );
+
+                    diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
+                    diagnosticContext.Set("RequestPath", httpContext.Request.Path);
+
+                    var userId = httpContext.User?.FindFirst("sub")?.Value;
+                    if (!string.IsNullOrEmpty(userId))
+                        diagnosticContext.Set("UserId", userId);
+                };
+            });
+
+            return app;
         }
     }
 }
