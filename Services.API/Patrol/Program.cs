@@ -49,62 +49,72 @@ catch (Exception ex)
 }
 
 
-Console.WriteLine("=== SERILOG TEST ===");
-Log.Information("Serilog is working - this should go to FILE and CONSOLE");
-Console.WriteLine("=== SERILOG TEST END ===");
-try
-{
-    var serviceName = AppDomain.CurrentDomain.FriendlyName
-        .Replace(".dll", "")
-        .Replace(".exe", "")
-        .ToLower();
 
-    bool isDocker = Directory.Exists("/app");
-    bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
+// Console.WriteLine("=== SERILOG TEST ===");
+// Log.Information("Serilog is working - this should go to FILE and CONSOLE");
+// Console.WriteLine("=== SERILOG TEST END ===");
+// var aspnetEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-    string logDir;
+// var minimumLevel = aspnetEnv.Equals("Development", StringComparison.OrdinalIgnoreCase)
+//     ? LogEventLevel.Information
+//     : LogEventLevel.Warning;
 
-    if (isDocker)
-        logDir = "/app/logs";
-    else
-        logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+// Console.WriteLine($"ASPNETCORE_ENVIRONMENT = {aspnetEnv}");
+// Console.WriteLine($"Serilog MinimumLevel = {minimumLevel}");
+// try
+// {
+//     var serviceName = AppDomain.CurrentDomain.FriendlyName
+//         .Replace(".dll", "")
+//         .Replace(".exe", "")
+//         .ToLower();
 
-    Directory.CreateDirectory(logDir);
+//     bool isDocker = Directory.Exists("/app");
+//     bool isWindowsService = !(Environment.UserInteractive || System.Diagnostics.Debugger.IsAttached);
 
-    string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
+//     string logDir;
+
+//     if (isDocker)
+//         logDir = "/app/logs";
+//     else
+//         logDir = Path.Combine(AppContext.BaseDirectory, $"logs_{serviceName}");
+
+//     Directory.CreateDirectory(logDir);
+
+//     string logFile = Path.Combine(logDir, $"{serviceName}-log-.txt");
 
 
-    Log.Logger = new LoggerConfiguration()
-        .MinimumLevel.Information()
-        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-        .MinimumLevel.Override("System", LogEventLevel.Warning)
-        .Enrich.FromLogContext()
-        .Enrich.WithProperty("Service", serviceName) 
-        .WriteTo.Console(
-            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}"
-        )
-        .WriteTo.File(
-            logFile,
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 14, 
-            fileSizeLimitBytes: 10 * 1024 * 1024, 
-            rollOnFileSizeLimit: true,   
-            shared: true,
-                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  
-            restrictedToMinimumLevel: LogEventLevel.Information
-        )
-        .CreateLogger();
+//     Log.Logger = new LoggerConfiguration()
+//         .MinimumLevel.Is(minimumLevel)
+//         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+//         .MinimumLevel.Override("System", LogEventLevel.Warning)
+//         .Enrich.FromLogContext()
+//         .Enrich.WithProperty("Service", serviceName) 
+//         .WriteTo.Console(
+//             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}"
+//         )
+//         .WriteTo.File(
+//             logFile,
+//             rollingInterval: RollingInterval.Day,
+//             retainedFileCountLimit: 14, 
+//             fileSizeLimitBytes: 10 * 1024 * 1024, 
+//             rollOnFileSizeLimit: true,   
+//             shared: true,
+//                  outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Level:u3} | {Service} | {Message:lj}{NewLine}{Exception}",  
+//             restrictedToMinimumLevel: LogEventLevel.Information
+//         )
+//         .CreateLogger();
 
-    Console.WriteLine($"Serilog initialized → Directory: {logDir}");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Serilog initialization failed: {ex.Message}");
-}
+//     Console.WriteLine($"Serilog initialized → Directory: {logDir}");
+// }
+// catch (Exception ex)
+// {
+//     Console.WriteLine($"Serilog initialization failed: {ex.Message}");
+// }
 
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.UseSerilogExtension();   
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();
 
@@ -123,7 +133,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-builder.Services.AddValidatorExtensions();
+builder.Services.AddValidatorExtensions();                                                                                                
 builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(PatrolAreaProfile));
 builder.Services.AddAutoMapper(typeof(PatrolRouteProfile));
