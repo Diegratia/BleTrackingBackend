@@ -84,5 +84,11 @@ namespace BusinessLogic.Services.Implementation
         entity.UpdatedBy = UsernameFormToken;
         entity.UpdatedAt = DateTime.UtcNow;
     }
+        protected void SetDeleteAudit(BaseModelOnlyIdWithTime entity)
+    {
+        // entity.Status = 0;
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
     }
 }

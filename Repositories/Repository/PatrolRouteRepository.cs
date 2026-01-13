@@ -145,5 +145,15 @@ namespace Repositories.Repository
             entity.Status = 0;
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteByRouteIdAsync(Guid routeId)
+        {
+            var items = _context.PatrolRouteAreas
+                .Where(x => x.PatrolRouteId == routeId);
+
+            _context.PatrolRouteAreas.RemoveRange(items);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

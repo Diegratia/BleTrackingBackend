@@ -122,6 +122,8 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolRoute with id {id} not found");
+            SetDeleteAudit(entity);
+            await _repo.DeleteByRouteIdAsync(id);
             await _repo.DeleteAsync(id);
         }
 
