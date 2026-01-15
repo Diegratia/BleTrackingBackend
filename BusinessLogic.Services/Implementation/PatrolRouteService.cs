@@ -13,15 +13,18 @@ namespace BusinessLogic.Services.Implementation
     public class PatrolRouteService : BaseService, IPatrolRouteService
     {
         private readonly PatrolRouteRepository _repo;
+        private TimeGroupRepository _timeGroupRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PatrolRouteService(
             PatrolRouteRepository repo,
+            TimeGroupRepository timeGroupRepository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
+            _timeGroupRepository = timeGroupRepository;
             _mapper = mapper;
         }
 
@@ -34,6 +37,20 @@ namespace BusinessLogic.Services.Implementation
                 .Select(x => x.Value)
                 .Distinct()
                 .ToList();
+
+            var TimeGroupIds = dto.TimeGroupIds
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .Distinct()
+                .ToList();
+
+            entity.PatrolRouteTimeGroups = TimeGroupIds
+                .Select(x => new PatrolRouteTimeGroups
+                {
+                    TimeGroupId = x,
+                    ApplicationId = AppId,
+                    PatrolRouteId = entity.Id,
+                }).ToList();
 
             foreach (var (areaId, index) in areaIds.Select((id, i) => (id, i)))
             {
@@ -57,10 +74,56 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<PatrolRouteDto>(entity);
         }
 
+
         public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
             var route = await _repo.GetByIdAsync(id)
                 ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
+
+            // =======================
+            // 🔹 UPDATE TIME GROUPS
+            // =======================
+            var newTimeGroupIds = dto.TimeGroupIds
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .Distinct()
+                .ToList();
+
+            // existing
+            var existingTimeGroups = route.PatrolRouteTimeGroups
+                .Where(x => x.Status != 0)
+                .ToList();
+
+            var existingTimeGroupIds = existingTimeGroups
+                .Select(x => x.TimeGroupId)
+                .ToHashSet();
+
+            // 🔸 remove yang tidak ada di request
+            var toRemove = existingTimeGroups
+                .Where(x => !newTimeGroupIds.Contains(x.TimeGroupId))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                item.Status = 0; // soft delete
+            }
+
+            // 🔸 add yang baru
+            var toAdd = newTimeGroupIds
+                .Where(id => !existingTimeGroupIds.Contains(id))
+                .ToList();
+
+            foreach (var timeGroupId in toAdd)
+            {
+                route.PatrolRouteTimeGroups.Add(new PatrolRouteTimeGroups
+                {
+                    PatrolRouteId = route.Id,
+                    TimeGroupId = timeGroupId,
+                    ApplicationId = route.ApplicationId,
+                    Status = 1,
+                });
+            }
+
 
             var newAreaIds = dto.PatrolAreaIds
                 .Where(x => x.HasValue)
@@ -182,8 +245,6 @@ namespace BusinessLogic.Services.Implementation
                 item.EndAreaId = endAreaId;
             }
         }
-
-
 
     }
 }

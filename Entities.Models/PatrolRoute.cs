@@ -17,5 +17,6 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
         public MstApplication Application { get; set; }
         public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
+        public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
     }
 }

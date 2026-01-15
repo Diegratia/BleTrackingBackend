@@ -120,6 +120,11 @@ namespace Helpers.Consumer
         // Otther
         RatherNotSay
     }
+    public enum ScheduleType
+    {
+        Shift,
+        Patrol,
+    }
 
     public enum StatusEmployee
     {

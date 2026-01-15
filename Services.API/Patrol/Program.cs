@@ -93,6 +93,7 @@ builder.Services.AddScoped<BoundaryRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 builder.Services.AddScoped<PatrolAreaRepository>();
 builder.Services.AddScoped<PatrolRouteRepository>();
+builder.Services.AddScoped<TimeGroupRepository>();
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
 builder.Host.UseWindowsService();

@@ -23,7 +23,10 @@ namespace Repositories.Repository
 
             var query = _context.PatrolRoutes
                 .Include(x => x.PatrolRouteAreas)
-                .ThenInclude(x => x.PatrolArea)
+                    .ThenInclude(x => x.PatrolArea)
+                .Include(x => x.PatrolRouteTimeGroups)
+                    .ThenInclude(x => x.TimeGroup)
+                .AsNoTracking()
                 .Where(x => x.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -35,6 +38,9 @@ namespace Repositories.Repository
 
             var query = _context.PatrolRoutes
             .Include(x => x.PatrolRouteAreas)
+            .Include(x => x.PatrolRouteTimeGroups)
+                .ThenInclude(x => x.TimeGroup)
+            .AsNoTracking()
             .Where(ca => ca.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -56,6 +62,8 @@ namespace Repositories.Repository
 
             var query = _context.PatrolRoutes
             .Include(x => x.PatrolRouteAreas)
+            .Include(x => x.PatrolRouteTimeGroups)
+                .ThenInclude(x => x.TimeGroup)
             .AsNoTracking()
             .Where(ca => ca.Status != 0);
 

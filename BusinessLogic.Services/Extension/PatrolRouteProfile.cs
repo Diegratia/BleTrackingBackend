@@ -24,7 +24,7 @@ namespace BusinessLogic.Services.Extension
             //             .ToList()
             //     ));
             CreateMap<PatrolRoute, PatrolRouteDto>()
-            .ForMember(dest => dest.Areas,
+            .ForMember(dest => dest.PatrolAreas,
                 opt => opt.MapFrom(src =>
                     src.PatrolRouteAreas
                         .OrderBy(x => x.OrderIndex)
@@ -38,7 +38,26 @@ namespace BusinessLogic.Services.Extension
                             EndAreaId = x.EndAreaId
                         })
                         .ToList()
+                ))
+            .ForMember(dest => dest.PatrolTimeGroups,
+                opt => opt.MapFrom(src =>
+                    src.PatrolRouteTimeGroups
+                        // .OrderBy(x => x.OrderIndex)
+                        .Select(x => new PatrolTimeGroupDto
+                        {
+                            TimeGroupId = x.TimeGroupId,
+                            Name = x.TimeGroup.Name,
+                            ScheduleType = x.TimeGroup.ScheduleType.ToString(),
+                        })
+                        .ToList()
                 ));
+            // .ForMember(dest => dest.TimeGroupIds,
+            //         opt => opt.MapFrom(src =>
+            //             src.PatrolRouteTimeGroups
+            //                 .Where(x => x.Status != 0)
+            //                 .Select(x => (Guid?)x.TimeGroupId)
+            //                 .ToList()
+            //         ));
 
             CreateMap<PatrolRouteRM, PatrolRouteDto>();
             CreateMap<PatrolRouteLookUpRM, PatrolRouteDto>();

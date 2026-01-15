@@ -47,10 +47,12 @@ namespace Repositories.DbContexts
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
         public DbSet<Geofence> Geofences{ get; set; }
+        //patrol
         public DbSet<PatrolArea> PatrolAreas{ get; set; }
         public DbSet<PatrolRoute> PatrolRoutes{ get; set; }
         public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
-        
+        public DbSet<PatrolRouteTimeGroups> PatrolRouteTimeGroups{ get; set; }
+        //
         public DbSet<StayOnArea> StayOnAreas{ get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
@@ -93,6 +95,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
             modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
             modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
+            modelBuilder.Entity<PatrolRouteTimeGroups>().ToTable("patrol_route_time_groups");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
@@ -852,6 +855,10 @@ namespace Repositories.DbContexts
                     .WithOne(e => e.PatrolRoute)
                     .HasForeignKey(e => e.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
+                entity.HasMany(e => e.PatrolRouteTimeGroups)
+                    .WithOne(e => e.PatrolRoutes)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
                 
             });
 
@@ -1075,6 +1082,14 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.Property(e => e.ScheduleType)
+                .HasColumnName("schedule_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ScheduleType)Enum.Parse(typeof(ScheduleType), v, true)
+                    );
 
                 entity.HasMany(e => e.CardAccessTimeGroups)
                     .WithOne(e => e.TimeGroup)
@@ -1397,6 +1412,23 @@ namespace Repositories.DbContexts
 
                 entity.HasOne(e => e.TimeGroup)
                     .WithMany(ma => ma.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+             // PatrolRouteTimeGroups (pivot PatrolRoute <-> TimeGroups)
+            modelBuilder.Entity<PatrolRouteTimeGroups>(entity =>
+            {
+                entity.ToTable("patrol_route_time_groups");
+
+                entity.HasKey(e => new { e.PatrolRouteId, e.TimeGroupId });
+
+                entity.HasOne(e => e.PatrolRoutes)
+                    .WithMany(e => e.PatrolRouteTimeGroups)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.TimeGroup)
+                    .WithMany(ma => ma.PatrolRouteTimeGroups)
                     .HasForeignKey(e => e.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

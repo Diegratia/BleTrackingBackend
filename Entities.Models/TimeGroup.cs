@@ -18,6 +18,9 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
+        [Column("schedule_type")]
+        public ScheduleType ScheduleType { get; set; }
+
         [Column("status")]
         public int Status { get; set; }
 
@@ -25,5 +28,6 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
         public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
+        public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
     }
 }
