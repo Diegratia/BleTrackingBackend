@@ -23,16 +23,20 @@ namespace BusinessLogic.Services.Implementation
         private readonly PatrolAreaRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
+
 
         public PatrolAreaService(
             PatrolAreaRepository repository,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            IAuditEmitter audit
             ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
         public async Task<PatrolAreaDto> GetByIdAsync(Guid id)
@@ -61,6 +65,12 @@ namespace BusinessLogic.Services.Implementation
             var patrolArea = _mapper.Map<PatrolArea>(createDto);
             SetCreateAudit(patrolArea);
             await _repository.AddAsync(patrolArea);
+            await _audit.Created(
+                "Patrol Area",
+                patrolArea.Id,
+                "Created patrolArea",
+                new { patrolArea.Name }
+            );
             return _mapper.Map<PatrolAreaDto>(patrolArea);
         }
 
@@ -81,6 +91,12 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(patrolArea);
             _mapper.Map(updateDto, patrolArea);
             await _repository.UpdateAsync(patrolArea);
+            await _audit.Updated(
+                "Patrol Area",
+                patrolArea.Id,
+                "Updated patrolArea",
+                new { patrolArea.Name }
+            );
             return _mapper.Map<PatrolAreaDto>(patrolArea);
         }
 
@@ -95,6 +111,12 @@ namespace BusinessLogic.Services.Implementation
             // patrolArea.UpdatedBy = username;
             // patrolArea.UpdatedAt = DateTime.UtcNow;
             SetDeleteAudit(patrolArea);
+            await _audit.Deleted(
+                "Patrol Area",
+                patrolArea.Id,
+                "Created patrolArea",
+                new { patrolArea.Name }
+            );
             await _repository.DeleteAsync(id);
         }
 

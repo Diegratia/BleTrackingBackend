@@ -19,6 +19,8 @@ using Data.ViewModels.Shared.ExceptionHelper;
 using System.Text.Json.Serialization;
 using Serilog;
 using Serilog.Events;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 
 try
@@ -68,7 +70,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-builder.Services.AddValidatorExtensions();                                                                                                
+builder.Services.AddValidatorExtensions();  
+// builder.Services.AddHostedService<MqttRecoveryService>();                                                                                              
 builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(PatrolAreaProfile));
 builder.Services.AddAutoMapper(typeof(PatrolRouteProfile));
@@ -83,6 +86,10 @@ builder.Services.AddScoped<IPatrolRouteService, PatrolRouteService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+
+
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
 
