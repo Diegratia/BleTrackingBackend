@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using BusinessLogic.Services.Implementation;
 using Bogus.DataSets;
 using Helpers.Consumer;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -58,6 +59,9 @@ namespace BusinessLogic.Services.Interface
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEmailService _emailService;
+        private readonly IAuditEmitter _audit;
+
+
 
         public AuthService(
             UserRepository userRepository,
@@ -67,6 +71,7 @@ namespace BusinessLogic.Services.Interface
             IMapper mapper,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
+            IAuditEmitter audit,
             IEmailService emailService)
         {
             _userRepository = userRepository;
@@ -77,6 +82,7 @@ namespace BusinessLogic.Services.Interface
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
             _emailService = emailService;
+            _audit = audit;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -115,6 +121,15 @@ namespace BusinessLogic.Services.Interface
             };
 
             await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
+
+            await _audit.Action(
+                "LOGIN",
+                "User login successfully",
+                new {
+                    username = user.Username,
+                    ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString()
+                }
+            );
 
             return new AuthResponseDto
             {
@@ -564,8 +579,6 @@ namespace BusinessLogic.Services.Interface
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
                 return;
-
-            await _refreshTokenRepository.DeleteRefreshTokenAsync(refreshToken);
         }
 
 
