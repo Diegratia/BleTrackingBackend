@@ -124,6 +124,7 @@ namespace BusinessLogic.Services.Interface
 
             await _audit.Action(
                 "LOGIN",
+                "User",
                 "User login successfully",
                 new {
                     username = user.Username,

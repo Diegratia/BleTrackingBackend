@@ -10,7 +10,11 @@ namespace BusinessLogic.Services.Interface
         Task Created(string entity, object id, string details, object? meta = null);
         Task Updated(string entity, object id, string details, object? meta = null);
         Task Deleted(string entity, object id, string details, object? meta = null);
-        Task Action(string name, string details, object? meta = null);
+        public Task Action(
+            string action,
+            string entity,
+            string details,
+            object? meta = null);
         Task Alarm(string details, object? meta = null);
     }
 

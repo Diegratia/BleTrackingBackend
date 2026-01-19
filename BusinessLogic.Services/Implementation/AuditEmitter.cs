@@ -62,8 +62,12 @@ namespace BusinessLogic.Services.Implementation
         public Task Deleted(string entity, object id, string details, object? meta = null)
             => Emit("DELETE", entity, details, meta);
 
-        public Task Action(string name, string details, object? meta = null)
-            => Emit("ACTION", name, details, meta);
+        public Task Action(
+            string action,
+            string entity,
+            string details,
+            object? meta = null)
+            => Emit(action, entity, details, meta);
 
         public Task Alarm(string details, object? meta = null)
             => Emit("ALARM", "System", details, meta);
