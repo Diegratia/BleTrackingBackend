@@ -50,6 +50,27 @@ namespace BusinessLogic.Services.Extension
                             ScheduleType = x.TimeGroup.ScheduleType.ToString(),
                         })
                         .ToList()
+                ))
+             .ForMember(dest => dest.PatrolAreaCount,
+                opt => opt.MapFrom(src =>
+                    src.PatrolRouteAreas.Count(x => x.status != 0)))
+
+            .ForMember(dest => dest.StartAreaName,
+                opt => opt.MapFrom(src =>
+                    src.PatrolRouteAreas
+                        .Where(x => x.status != 0)
+                        .OrderBy(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault()
+                ))
+
+            .ForMember(dest => dest.EndAreaName,
+                opt => opt.MapFrom(src =>
+                    src.PatrolRouteAreas
+                        .Where(x => x.status != 0)
+                        .OrderByDescending(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault()
                 ));
             // .ForMember(dest => dest.TimeGroupIds,
             //         opt => opt.MapFrom(src =>

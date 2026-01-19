@@ -10,14 +10,10 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public int? PatrolAreaCount { get; set; }
+        public string? StartAreaName { get; set; }
+        public string? EndAreaName { get; set; }
         public List<PatrolRouteAreaDto> PatrolAreas { get; set; } = new();
         public List<PatrolTimeGroupDto> PatrolTimeGroups { get; set; } = new();
-        // public List<Guid?> TimeGroupIds { get; set; } = new();
-        // public List<Guid?> PatrolAreaIds { get; set; } = new();
-        // public float EstimatedDistance { get; set; }
-        // public int EstimatedTime  { get; set; }
-        // public Guid? StartAreaId { get; set; }
-        // public Guid? EndAreaId { get; set; }
     }
     public class PatrolRouteCreateDto : BaseModelDto 
     {
