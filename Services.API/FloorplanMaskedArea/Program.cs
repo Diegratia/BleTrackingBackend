@@ -214,6 +214,8 @@ builder.Services.AddAutoMapper(typeof(FloorplanMaskedAreaProfile));
 // Registrasi Services
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+
 
 
 // builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();

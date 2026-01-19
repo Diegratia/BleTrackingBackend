@@ -87,7 +87,8 @@ builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
-builder.Services.AddScoped<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();

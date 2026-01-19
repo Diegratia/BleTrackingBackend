@@ -203,6 +203,7 @@ builder.Services.AddAutoMapper(typeof(FloorplanDeviceProfile));
 // Registrasi Services
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<FloorplanDeviceRepository>();

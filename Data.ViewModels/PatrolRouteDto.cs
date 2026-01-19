@@ -9,6 +9,7 @@ namespace Data.ViewModels
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public int? PatrolAreaCount { get; set; }
         public List<PatrolRouteAreaDto> PatrolAreas { get; set; } = new();
         public List<PatrolTimeGroupDto> PatrolTimeGroups { get; set; } = new();
         // public List<Guid?> TimeGroupIds { get; set; } = new();

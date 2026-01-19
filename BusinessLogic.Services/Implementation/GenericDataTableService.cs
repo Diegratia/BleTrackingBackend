@@ -159,6 +159,17 @@ namespace BusinessLogic.Services.Implementation
                     )
                     });
             }
+            else if (typeof(TModel) == typeof(PatrolRoute))
+            {
+                projectionQuery = query.Cast<PatrolRoute>()
+                    .Select(f => new
+                    {
+                    Entity = f,
+                    PatrolAreaCount = f.PatrolRouteAreas.Count(m =>
+                        m.PatrolRouteId == f.Id
+                    )
+                    });
+            }
             else
             {
                 projectionQuery = query.Select(e => new { Entity = e });

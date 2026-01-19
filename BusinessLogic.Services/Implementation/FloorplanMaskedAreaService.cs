@@ -33,6 +33,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
+        private readonly IAuditEmitter _audit;
         private bool cacheDisabled = false;
 
         public FloorplanMaskedAreaService(
@@ -44,7 +45,8 @@ namespace BusinessLogic.Services.Implementation
             ILogger<FloorplanMaskedArea> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            IMqttClientService mqttClient
+            IMqttClientService mqttClient,
+            IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -56,6 +58,7 @@ namespace BusinessLogic.Services.Implementation
             _cache = cache;
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
+            _audit = audit;
         }
 
         // Redis safety wrapper
@@ -193,6 +196,12 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(area);
+            await _audit.Created(
+                "Building Area",
+                area.Id,
+                "Created building area",
+                new { area.Name }
+            );
 
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
@@ -223,6 +232,12 @@ namespace BusinessLogic.Services.Implementation
 
             await RemoveGroupAsync();
             await _repository.UpdateAsync(area);
+            await _audit.Updated(
+                "Building Area",
+                area.Id,
+                "Updated building area",
+                new { area.Name }
+            );
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
@@ -267,6 +282,12 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedAt = DateTime.UtcNow;
 
                 await _repository.SoftDeleteAsync(id);
+                await _audit.Deleted(
+                "Building Area",
+                area.Id,
+                "Deleted building area",
+                new { area.Name }
+            );
 
                 var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
 

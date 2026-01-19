@@ -44,6 +44,7 @@ namespace BusinessLogic.Services.Implementation
          private readonly IMqttClientService _mqttClient;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
+        private readonly IAuditEmitter _audit;
         private readonly ILogger<MstBuilding>_logger;
         private bool cacheDisabled = false;
 
@@ -57,7 +58,8 @@ namespace BusinessLogic.Services.Implementation
             IConnectionMultiplexer redis,
             ILogger<MstBuilding> logger,
             IMqttClientService mqttClient,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            IAuditEmitter audit
             ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -70,6 +72,7 @@ namespace BusinessLogic.Services.Implementation
             _mqttClient = mqttClient;
             _logger = logger;
             _fileStorageService = fileStorageService;
+            _audit = audit;
         }
         
          private bool IsRedisAlive()
@@ -199,6 +202,12 @@ namespace BusinessLogic.Services.Implementation
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Created(
+                "Building Area",
+                building.Id,
+                "Created building",
+                new { building.Name }
+            );
             return _mapper.Map<MstBuildingDto>(createdBuilding);
         }
 
@@ -226,6 +235,12 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(building);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Updated(
+                "Building Area",
+                building.Id,
+                "Updated building",
+                new { building.Name }
+            );
             return _mapper.Map<MstBuildingDto>(building);
         }
 
@@ -251,6 +266,12 @@ namespace BusinessLogic.Services.Implementation
             await _floorService.RemoveGroupAsync();
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Deleted(
+                "Building Area",
+                building.Id,
+                "Deleted building",
+                new { building.Name }
+            );
         
     }
         

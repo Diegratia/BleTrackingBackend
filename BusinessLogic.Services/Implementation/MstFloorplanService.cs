@@ -52,6 +52,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMqttClientService _mqttClient;
         private bool cacheDisabled = false;
         private IFileStorageService _fileStorageService;
+        private readonly IAuditEmitter _audit;
 
 
         public MstFloorplanService(
@@ -75,7 +76,8 @@ namespace BusinessLogic.Services.Implementation
             IDistributedCache cache,
             IConnectionMultiplexer redis,
             IMqttClientService mqttClient,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            IAuditEmitter audit
 
             ) : base(httpContextAccessor)
         {
@@ -100,6 +102,7 @@ namespace BusinessLogic.Services.Implementation
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
             _fileStorageService = fileStorageService;
+            _audit = audit;
         }
         
         private bool IsRedisAlive()
@@ -224,6 +227,12 @@ namespace BusinessLogic.Services.Implementation
             var createdFloorplan = await _repository.AddAsync(floorplan);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Created(
+                "Floorplan",
+                createdFloorplan.Id,
+                "Created floorplan",
+                new { createdFloorplan.Name }
+            );
             return _mapper.Map<MstFloorplanDto>(createdFloorplan);
         }
 
@@ -247,6 +256,12 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, floorplan);
             await _repository.UpdateAsync(floorplan);
+            await _audit.Updated(
+                "Floorplan",
+                floorplan.Id,
+                "Updated floorplan",
+                new { floorplan.Name }
+            );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
@@ -295,6 +310,12 @@ namespace BusinessLogic.Services.Implementation
             floorplan.UpdatedAt = DateTime.UtcNow;
             floorplan.Status = 0;
             await _repository.DeleteAsync(id);
+            await _audit.Deleted    (
+                "Floorplan",
+                floorplan.Id,
+                "Deleted floorplan",
+                new { floorplan.Name }
+            );
         });
             await RemoveGroupAsync();
             await _maskedAreaService.RemoveGroupAsync();

@@ -22,12 +22,16 @@ namespace BusinessLogic.Services.Implementation
         private readonly StayOnAreaRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public StayOnAreaService(StayOnAreaRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public StayOnAreaService(StayOnAreaRepository repository, 
+        IMapper mapper, 
+        IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
         public async Task<StayOnAreaDto> GetByIdAsync(Guid id)
@@ -55,6 +59,12 @@ namespace BusinessLogic.Services.Implementation
             onArea.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(onArea);
+            await _audit.Created(
+                "StayOnArea",
+                onArea.Id,
+                "Created StayOnArea",
+                new { onArea.Name }
+            );
             return _mapper.Map<StayOnAreaDto>(onArea);
         }
 
@@ -69,6 +79,12 @@ namespace BusinessLogic.Services.Implementation
             onArea.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(updateDto, onArea);
+            await _audit.Updated(
+                "StayOnArea",
+                onArea.Id,
+                "Updated StayOnArea",
+                new { onArea.Name }
+            );
             await _repository.UpdateAsync(onArea);
         }
 
@@ -85,6 +101,12 @@ namespace BusinessLogic.Services.Implementation
             onArea.UpdatedBy = username;
             onArea.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "StayOnArea",
+                onArea.Id,
+                "Deleted StayOnArea",
+                new { onArea.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

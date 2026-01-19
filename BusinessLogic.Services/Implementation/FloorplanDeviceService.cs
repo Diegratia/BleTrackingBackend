@@ -39,6 +39,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
         private bool cacheDisabled = false;
+        private readonly IAuditEmitter _audit;
 
         public FloorplanDeviceService(FloorplanDeviceRepository repository,
         IMapper mapper,
@@ -49,7 +50,8 @@ namespace BusinessLogic.Services.Implementation
         ILogger<FloorplanDevice> logger,
         IDistributedCache cache,
         IConnectionMultiplexer redis,
-        IMqttClientService mqttClient
+        IMqttClientService mqttClient,
+        IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -62,6 +64,7 @@ namespace BusinessLogic.Services.Implementation
             _redis = redis?.GetDatabase();
             _cache = cache;
             _mqttClient = mqttClient;
+            _audit = audit;
         }
         
         private bool IsRedisAlive()
@@ -233,6 +236,12 @@ namespace BusinessLogic.Services.Implementation
 
                 await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
                 await _repository.AddAsync(device);
+                await _audit.Created(
+                    "Floorplan Device",
+                    device.Id,
+                    "Created floorplan device",
+                    new { device.Name }
+                );
                 await transaction.CommitAsync();
                 return _mapper.Map<FloorplanDeviceDto>(device);
             } 
@@ -273,6 +282,12 @@ namespace BusinessLogic.Services.Implementation
 
                 await transaction.CommitAsync();
                 await _repository.UpdateAsync(device);
+                await _audit.Updated(
+                    "Floorplan Device",
+                    device.Id,
+                    "Updated floorplan device",
+                    new { device.Name }
+                );
             }
             catch
             {
@@ -304,6 +319,12 @@ namespace BusinessLogic.Services.Implementation
                 device.Status = 0;
 
                 await _repository.SoftDeleteAsync(id);
+                await _audit.Deleted(
+                    "Floorplan Device",
+                    device.Id,
+                    "Deleted floorplan device",
+                    new { device.Name }
+                );
                 await transaction.CommitAsync();
             }
             catch

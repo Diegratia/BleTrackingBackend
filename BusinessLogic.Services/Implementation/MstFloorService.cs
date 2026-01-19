@@ -43,6 +43,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
+        private readonly IAuditEmitter _audit;
         private bool cacheDisabled = false;
 
 
@@ -57,7 +58,8 @@ namespace BusinessLogic.Services.Implementation
                                         ILogger<MstFloor> logger,
                                         IDistributedCache cache,
                                         IConnectionMultiplexer redis,
-                                        IMqttClientService mqttClient
+                                        IMqttClientService mqttClient,
+                                        IAuditEmitter audit
                                         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -69,6 +71,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _mqttClient = mqttClient;
             _cache = cache;
+            _audit = audit;
             _redis = redis?.GetDatabase();
         }
         
@@ -221,6 +224,12 @@ namespace BusinessLogic.Services.Implementation
             floor.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(floor);
+            await _audit.Created(
+                "Floor Area",
+                floor.Id,
+                "Created floor",
+                new { floor.Name }
+            );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
             return _mapper.Map<MstFloorDto>(floor);
@@ -301,6 +310,12 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(floor);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Updated(
+                "Floor Area",
+                floor.Id,
+                "Updated floor",
+                new { floor.Name }
+            );
         }
 
         // public async Task DeleteAsync(Guid id)
@@ -380,10 +395,17 @@ namespace BusinessLogic.Services.Implementation
                 floor.UpdatedAt = DateTime.UtcNow;
                 floor.Status = 0;
                 await _repository.SoftDeleteAsync(id);
+                    await _audit.Deleted(
+                    "Floor Area",
+                    floor.Id,
+                    "Deleted floor",
+                    new { floor.Name }
+                );
             });
             await RemoveGroupAsync();
             await _floorplanService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+
     }
 
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)
