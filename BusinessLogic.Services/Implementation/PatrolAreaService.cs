@@ -114,7 +114,7 @@ namespace BusinessLogic.Services.Implementation
             await _audit.Deleted(
                 "Patrol Area",
                 patrolArea.Id,
-                "Created patrolArea",
+                "Deleted patrolArea",
                 new { patrolArea.Name }
             );
             await _repository.DeleteAsync(id);

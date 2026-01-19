@@ -16,16 +16,20 @@ namespace BusinessLogic.Services.Implementation
         private TimeGroupRepository _timeGroupRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
+
 
         public PatrolRouteService(
             PatrolRouteRepository repo,
             TimeGroupRepository timeGroupRepository,
             IMapper mapper,
+            IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
             _timeGroupRepository = timeGroupRepository;
             _mapper = mapper;
+            _audit = audit;
         }
 
         public async Task<PatrolRouteDto> CreateAsync(PatrolRouteCreateDto dto)
@@ -71,6 +75,12 @@ namespace BusinessLogic.Services.Implementation
             SetCreateAudit(entity);
             SetStartEndArea(entity);
             await _repo.AddAsync(entity);
+            await _audit.Created(
+                "Patrol Route",
+                entity.Id,
+                "Created Patrol Route",
+                new { entity.Name }
+            );
             return _mapper.Map<PatrolRouteDto>(entity);
         }
 
@@ -176,6 +186,12 @@ namespace BusinessLogic.Services.Implementation
             SetStartEndArea(route);
             SetUpdateAudit(route);
             await _repo.UpdateAsync();
+            await _audit.Updated(
+                "Patrol Route",
+                route.Id,
+                "Updated Patrol Route",
+                new { route.Name }
+            );
             _mapper.Map(dto, route);
             return _mapper.Map<PatrolRouteDto>(route);
         }
@@ -188,6 +204,12 @@ namespace BusinessLogic.Services.Implementation
             SetDeleteAudit(entity);
             await _repo.DeleteByRouteIdAsync(id);
             await _repo.DeleteAsync(id);
+            await _audit.Deleted(
+                "Patrol Route",
+                entity.Id,
+                "Deleted Patrol Route",
+                new { entity.Name }
+            );
         }
 
         public async Task<PatrolRouteDto?> GetByIdAsync(Guid id)
