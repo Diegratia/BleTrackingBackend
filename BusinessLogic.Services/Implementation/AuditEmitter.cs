@@ -63,7 +63,7 @@ namespace BusinessLogic.Services.Implementation
             => Emit("DELETE", entity, details, meta);
 
         public Task Action(string name, string details, object? meta = null)
-            => Emit(name, "ACTION", details, meta);
+            => Emit("ACTION", name, details, meta);
 
         public Task Alarm(string details, object? meta = null)
             => Emit("ALARM", "System", details, meta);
