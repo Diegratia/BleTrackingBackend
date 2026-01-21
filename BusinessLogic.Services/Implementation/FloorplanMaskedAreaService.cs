@@ -265,55 +265,121 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // SOFT DELETE WITH CHILDREN
         // ============================================================
+        // public async Task SoftDeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null)
+        //         throw new KeyNotFoundException("Area not found");
+
+        //     List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
+
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         area.Status = 0;
+        //         area.UpdatedBy = username;
+        //         area.UpdatedAt = DateTime.UtcNow;
+
+        //         await _repository.SoftDeleteAsync(id);
+
+        //         var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+
+        //         foreach (var d in devices)
+        //         {
+        //             // kumpulkan assignment dulu (tidak memanggil service!)
+        //             deviceAssignments.Add((d.ReaderId, d.AccessCctvId, d.AccessControlId));
+
+        //             d.Status = 0;
+        //             d.UpdatedBy = username;
+        //             d.UpdatedAt = DateTime.UtcNow;
+
+        //             await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
+        //         }
+        //     });
+
+        //     // 🔥 setelah transaction selesai, baru panggil service lain
+        //     foreach (var a in deviceAssignments)
+        //     {
+        //         await _floorplanDeviceService.SetDeviceAssignmentAsync(
+        //             a.readerId, a.cctvId, a.accessId, 
+        //             false, username);
+        //     }
+        //     await _audit.Deleted(
+        //         "Masked Area",
+        //         area.Id,
+        //         "Deleted masked area",
+        //         new { area.Name }
+        //     );
+        //     await RemoveGroupAsync();
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
+
         public async Task SoftDeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?
+            .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        var area = await _repository.GetByIdAsync(id);
+        if (area == null)
+            throw new KeyNotFoundException("Masked area not found");
+
+        List<Guid> deviceIds = new();
+
+        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            area.Status = 0;
+            area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+            await _repository.SoftDeleteAsync(id);
 
-            var area = await _repository.GetByIdAsync(id);
-            if (area == null)
-                throw new KeyNotFoundException("Area not found");
-
-            List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
-
-            await _repository.ExecuteInTransactionAsync(async () =>
+            var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+            foreach (var d in devices)
             {
-                area.Status = 0;
-                area.UpdatedBy = username;
-                area.UpdatedAt = DateTime.UtcNow;
-
-                await _repository.SoftDeleteAsync(id);
-
-                var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
-
-                foreach (var d in devices)
-                {
-                    // kumpulkan assignment dulu (tidak memanggil service!)
-                    deviceAssignments.Add((d.ReaderId, d.AccessCctvId, d.AccessControlId));
-
-                    d.Status = 0;
-                    d.UpdatedBy = username;
-                    d.UpdatedAt = DateTime.UtcNow;
-
-                    await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
-                }
-            });
-
-            // 🔥 setelah transaction selesai, baru panggil service lain
-            foreach (var a in deviceAssignments)
-            {
-                await _floorplanDeviceService.SetDeviceAssignmentAsync(
-                    a.readerId, a.cctvId, a.accessId, 
-                    false, username);
+                deviceIds.Add(d.Id);
             }
-            await _audit.Deleted(
-                "Masked Area",
-                area.Id,
-                "Deleted masked area",
-                new { area.Name }
-            );
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        });
+
+        // 🔥 side effect SETELAH commit
+        foreach (var deviceId in deviceIds)
+        {
+            await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
         }
+
+        await _audit.Deleted(
+            "Masked Area",
+            area.Id,
+            "Deleted masked area",
+            new { area.Name }
+        );
+        await RemoveGroupAsync();
+        await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+    }
+
+    // ============================================================
+    // INTERNAL CASCADE DELETE
+    // ============================================================
+    internal async Task CascadeDeleteAsync(Guid id, string username)
+    {
+        var area = await _repository.GetByIdAsync(id);
+        if (area == null) return;
+
+        area.Status = 0;
+        area.UpdatedBy = username;
+        area.UpdatedAt = DateTime.UtcNow;
+
+        await _repository.SoftDeleteAsync(id);
+
+        var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+        foreach (var d in devices)
+        {
+            await _floorplanDeviceService.CascadeDeleteAsync(d.Id, username);
+        }
+
+        // ❌ NO TRANSACTION
+        // ❌ NO AUDIT
+        // ❌ NO MQTT
+    }
 
 
 
