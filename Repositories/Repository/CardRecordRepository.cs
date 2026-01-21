@@ -141,6 +141,11 @@ namespace Repositories.Repository
                             : x.Member != null
                                 ? "Member"
                                 : "Unknown",
+                        FaceImage = x.Visitor != null
+                            ? x.Visitor.FaceImage
+                            : x.Member != null
+                                ? x.Member.FaceImage
+                                : null,
                         CheckinAt = x.CheckinAt,
                         CheckoutAt = x.CheckoutAt
                     })

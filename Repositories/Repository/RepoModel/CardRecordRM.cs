@@ -27,6 +27,7 @@ namespace Repositories.Repository.RepoModel
         public string CardNumber { get; set; }
         public string UsedBy { get; set; }
         public string UsedByType { get; set; } // Visitor / Member
+        public string FaceImage { get; set; } // Visitor / Member
         public DateTime? CheckinAt { get; set; }
         public DateTime? CheckoutAt { get; set; }
     }
