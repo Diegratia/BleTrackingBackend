@@ -5,6 +5,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels;
 using Data.ViewModels.AlarmAnalytics;
+using Data.ViewModels.ResponseHelper;
 using Helpers.Consumer;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
@@ -150,13 +151,13 @@ namespace BusinessLogic.Services.Implementation.Analytics
                         // item.EnterTime =
                         //     TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
 
-                        item.LastDetectedAt  =
-                            TimezoneHelper.ConvertFromUtc(item.LastDetectedAt , tz);
+                        item.LastDetectedAt =
+                            TimezoneHelper.ConvertFromUtc(item.LastDetectedAt, tz);
                     }
                 }
 
                 return ResponseCollection<TrackingCardSummaryRM>
-                    .Ok(data, "Tracking Summary retrieved successfully",timezone: tz.Id);
+                    .Ok(data, "Tracking Summary retrieved successfully", timezone: tz.Id);
             }
             catch (Exception ex)
             {
@@ -180,8 +181,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
             }
         }
-        
-         public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request)
+
+        public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request)
         {
             try
             {
@@ -195,6 +196,80 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
             }
         }
+        
+        public async Task<object> GetAreaAccessedSummaryAsyncV3(
+    TrackingAnalyticsRequestRM request
+)
+{
+    try
+    {
+        var rows = await _repository.GetAreaAccessDailyAsync(request);
+
+        var dates = rows
+            .Select(x => x.Date.Date)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        var labels = dates
+            .Select(d => d.ToString("MMM d"))
+            .ToList();
+
+        List<int> BuildSeries(string status) =>
+            dates.Select(d =>
+                rows.FirstOrDefault(r =>
+                    r.Date.Date == d &&
+                    r.RestrictedStatus == status
+                )?.Total ?? 0
+            ).ToList();
+
+        var withPermission = BuildSeries("non-restrict");
+        var withoutPermission = BuildSeries("restrict");
+
+        var accessedArea = withPermission
+            .Zip(withoutPermission, (a, b) => a + b)
+            .ToList();
+
+        var response = new AreaAccessResponseDto
+        {
+            Summary = new AreaAccessSummaryDto
+            {
+                AccessedAreaTotal = accessedArea.Sum(),
+                WithPermission = withPermission.Sum(),
+                WithoutPermission = withoutPermission.Sum()
+            },
+            Chart = new AreaAccessChartDto
+            {
+                Labels = labels,
+                Series = new()
+                {
+                    new ChartSeriesDto
+                    {
+                        Name = "Accessed Area",
+                        Data = accessedArea
+                    },
+                    new ChartSeriesDto
+                    {
+                        Name = "With Permission",
+                        Data = withPermission
+                    },
+                    new ChartSeriesDto
+                    {
+                        Name = "Without Permission",
+                        Data = withoutPermission
+                    }
+                }
+            }
+        };
+
+        return ApiResponse.Success("Success", response);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error getting area accessed summary");
+        return ApiResponse.InternalError("Internal server error");
+    }
+}
 
 
     }

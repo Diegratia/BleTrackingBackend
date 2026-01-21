@@ -234,6 +234,13 @@ namespace Repositories.Repository.RepoModel
         public int WithoutPermission { get; set; }
     }
 
+            public class AreaAccessAggregateRow
+    {
+        public DateTime Date { get; set; }
+        public string RestrictedStatus { get; set; } // restrict / non-restrict
+        public int Total { get; set; }
+    }
+
     public class CardUsageCountRM
     {
         public int TotalCardCount { get; set; }

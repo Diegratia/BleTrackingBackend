@@ -21,8 +21,8 @@ namespace Data.ViewModels.AlarmAnalytics
         public string AlarmRecprdStatus { get; set; }
         public long? Battery { get; set; }
     }
-    
-        public class TrackingAnalyticsRequestDto
+
+    public class TrackingAnalyticsRequestDto
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
@@ -42,20 +42,28 @@ namespace Data.ViewModels.AlarmAnalytics
         public int TotalRecords { get; set; }
     }
 
-        public class TrackingPermissionCountDto
+    public class TrackingPermissionCountDto
     {
         public int WithPermission { get; set; }
         public int WithoutPermission { get; set; }
         public int TotalRecords { get; set; }
-        
+
     }
 
-        public class TrackingAccessPermissionSummaryDto
+    public class TrackingAccessPermissionSummaryDto
     {
         public int AccessedAreaTotal { get; set; }
         public int WithPermission { get; set; }
         public int WithoutPermission { get; set; }
     }
+
+    public class AreaAccessAggregateRow
+    {
+        public DateTime Date { get; set; }
+        public string RestrictedStatus { get; set; } // restrict / non-restrict
+        public int Total { get; set; }
+    }
+
 
     public class TrackingDailySummaryDto
     {
@@ -83,5 +91,31 @@ namespace Data.ViewModels.AlarmAnalytics
         public string? ReaderName { get; set; }
         public int TotalRecords { get; set; }
     }
+    
+        public class AreaAccessChartDto
+    {
+        public List<string> Labels { get; set; }
+        public List<ChartSeriesDto> Series { get; set; }
+    }
+
+    public class ChartSeriesDto
+    {
+        public string Name { get; set; }
+        public List<int> Data { get; set; }
+    }
+
+    public class AreaAccessSummaryDto
+    {
+        public int AccessedAreaTotal { get; set; }
+        public int WithPermission { get; set; }
+        public int WithoutPermission { get; set; }
+    }
+
+    public class AreaAccessResponseDto
+    {
+        public AreaAccessSummaryDto Summary { get; set; }
+        public AreaAccessChartDto Chart { get; set; }
+    }
+
 
 }

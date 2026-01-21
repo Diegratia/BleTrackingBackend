@@ -133,6 +133,52 @@ namespace Repositories.Repository.Analytics
             };
         }
 
+        public async Task<List<AreaAccessAggregateRow>> GetAreaAccessDailyAsync(
+            TrackingAnalyticsRequestRM request
+        )
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
+            var toUtc   = range?.to   ?? request.To   ?? DateTime.UtcNow;
+
+            var tableNames = GetTableNamesInRange(fromUtc, toUtc);
+            if (!tableNames.Any())
+                return new();
+
+            var unionParts = new List<string>();
+            var parameters = new List<object>();
+            int pIndex = 0;
+
+            foreach (var table in tableNames)
+            {
+                string pFrom = $"@p{pIndex++}";
+                string pTo   = $"@p{pIndex++}";
+
+                parameters.Add(fromUtc);
+                parameters.Add(toUtc);
+
+                unionParts.Add($@"
+                    SELECT 
+                        CAST(t.trans_time AS DATE)        AS [Date],
+                        a.restricted_status               AS RestrictedStatus,
+                        COUNT(DISTINCT t.floorplan_masked_area_id) AS Total
+                    FROM [dbo].[{table}] t
+                    LEFT JOIN floorplan_masked_area a 
+                        ON a.id = t.floorplan_masked_area_id
+                    WHERE t.trans_time >= {pFrom}
+                    AND t.trans_time <= {pTo}
+                    GROUP BY CAST(t.trans_time AS DATE), a.restricted_status
+                ");
+            }
+
+            var sql = string.Join("\nUNION ALL\n", unionParts);
+
+            return await _context.Database
+                .SqlQueryRaw<AreaAccessAggregateRow>(sql, parameters.ToArray())
+                .ToListAsync();
+        }
+
+
         public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsyncV2(TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);

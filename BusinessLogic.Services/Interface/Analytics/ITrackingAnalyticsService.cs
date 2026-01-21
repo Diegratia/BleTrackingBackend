@@ -17,5 +17,8 @@ public interface ITrackingAnalyticsService
     Task<ResponseCollection<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request);
     Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request);
     Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request);
+    Task<object> GetAreaAccessedSummaryAsyncV3(
+        TrackingAnalyticsRequestRM request
+    );
     }
 
