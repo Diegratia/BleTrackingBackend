@@ -427,6 +427,12 @@ namespace BusinessLogic.Services.Implementation
         floor.Status = 0;
         floor.UpdatedBy = username;
         floor.UpdatedAt = DateTime.UtcNow;
+        await _audit.Deleted(
+                    "Floor Area",
+                    floor.Id,
+                    "Deleted floor",
+                    new { floor.Name }
+                );
         await _repository.SoftDeleteAsync(id);
     }
 
