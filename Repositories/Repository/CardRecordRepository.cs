@@ -287,7 +287,7 @@ namespace Repositories.Repository
             }
 
              protected override IQueryable<CardRecordListRM> Project(
-        IQueryable<Entities.Models.CardRecord> query)
+        IQueryable<CardRecord> query)
     {
         return query
             .Include(x => x.Card)
@@ -314,6 +314,11 @@ namespace Repositories.Repository
                     : x.Member != null
                         ? "Member"
                         : "Unknown",
+                FaceImage = x.Visitor != null
+                    ? x.Visitor.FaceImage
+                    : x.Member != null
+                        ? x.Member.FaceImage
+                        : null,
                 CheckinAt = x.CheckinAt.Value,
                 CheckoutAt = x.CheckoutAt,
                 UpdatedAt = x.UpdatedAt

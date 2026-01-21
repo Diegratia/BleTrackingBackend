@@ -60,6 +60,7 @@ namespace Repositories.Repository.RepoModel
         public string? PersonName { get; set; }
         public string? IdentityId { get; set; }
         public string? PersonType { get; set; }
+        public string? FaceImage { get; set; }
         public DateTime CheckinAt { get; set; }
         public DateTime? CheckoutAt { get; set; }
 
