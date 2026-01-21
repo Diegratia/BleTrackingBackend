@@ -318,75 +318,76 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-    //     public async Task DeleteAsync(Guid id)
-    //     {
-    //         var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-    //         var floor = await _repository.GetByIdAsync(id);
-    //         if (floor == null)
-    //             throw new KeyNotFoundException("Floor not found");
-
-    //         await _repository.ExecuteInTransactionAsync(async () =>
-    //         {
-    //             var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-    //             foreach (var floorplan in floorplans)
-    //             {
-    //                 await _floorplanService.DeleteAsync(floorplan.Id);
-    //             }
-    //             floor.UpdatedBy = username;
-    //             floor.UpdatedAt = DateTime.UtcNow;
-    //             floor.Status = 0;
-    //             await _repository.SoftDeleteAsync(id);
-    //         });
-    //         await _audit.Deleted(
-    //                 "Floor Area",
-    //                 floor.Id,
-    //                 "Deleted floor",
-    //                 new { floor.Name }
-    //             );
-    //         await RemoveGroupAsync();
-    //         await _floorplanService.RemoveGroupAsync();
-    //         await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-
-    // }
         public async Task DeleteAsync(Guid id)
-    {
-        var username = _httpContextAccessor.HttpContext?.User
-            .FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-        var floor = await _repository.GetByIdAsync(id);
-        if (floor == null)
-            throw new KeyNotFoundException("Floor not found");
-
-        await _repository.ExecuteInTransactionAsync(async () =>
         {
-            var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-            foreach (var fp in floorplans)
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floor = await _repository.GetByIdAsync(id);
+            if (floor == null)
+                throw new KeyNotFoundException("Floor not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
             {
-                await _floorplanService.CascadeDeleteAsync(fp.Id); 
-            }
-
-            floor.Status = 0;
-            floor.UpdatedBy = username;
-            floor.UpdatedAt = DateTime.UtcNow;
-
-            await _repository.SoftDeleteAsync(id);
-        });
-
-            // 🔥 SATU-SATUNYA AUDIT
+                var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+                foreach (var floorplan in floorplans)
+                {
+                    await _floorplanService.DeleteAsync(floorplan.Id);
+                }
+                floor.UpdatedBy = username;
+                floor.UpdatedAt = DateTime.UtcNow;
+                floor.Status = 0;
+                await _repository.SoftDeleteAsync(id);
+            });
             await _audit.Deleted(
-                "Floor Area",
-                floor.Id,
-                "Deleted floor",
-                new { floor.Name }
-            );
+                    "Floor Area",
+                    floor.Id,
+                    "Deleted floor",
+                    new { floor.Name }
+                );
             await RemoveGroupAsync();
             await _floorplanService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-    }
+        }
+
+    // }
+    //     public async Task DeleteAsync(Guid id)
+    // {
+    //     var username = _httpContextAccessor.HttpContext?.User
+    //         .FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            //     var floor = await _repository.GetByIdAsync(id);
+            //     if (floor == null)
+            //         throw new KeyNotFoundException("Floor not found");
+
+            //     await _repository.ExecuteInTransactionAsync(async () =>
+            //     {
+            //         var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+            //         foreach (var fp in floorplans)
+            //         {
+            //             await _floorplanService.CascadeDeleteAsync(fp.Id); 
+            //         }
+
+            //         floor.Status = 0;
+            //         floor.UpdatedBy = username;
+            //         floor.UpdatedAt = DateTime.UtcNow;
+
+            //         await _repository.SoftDeleteAsync(id);
+            //     });
+
+            //         // 🔥 SATU-SATUNYA AUDIT
+            //         await _audit.Deleted(
+            //             "Floor Area",
+            //             floor.Id,
+            //             "Deleted floor",
+            //             new { floor.Name }
+            //         );
+            //         await RemoveGroupAsync();
+            //         await _floorplanService.RemoveGroupAsync();
+            //         await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            // }
 
 
             // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
-            
+
             public async Task CascadeDeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -394,14 +395,14 @@ namespace BusinessLogic.Services.Implementation
             if (floor == null)
                 throw new KeyNotFoundException("Floor not found");
             var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-                foreach (var floorplan in floorplans)
-                {
-                    await _floorplanService.CascadeDeleteAsync(floorplan.Id);
-                }
-                floor.UpdatedBy = username;
-                floor.UpdatedAt = DateTime.UtcNow;
-                floor.Status = 0;
-                await _repository.SoftDeleteAsync(id);
+            foreach (var floorplan in floorplans)
+            {
+                await _floorplanService.CascadeDeleteAsync(floorplan.Id);
+            }
+            floor.UpdatedBy = username;
+            floor.UpdatedAt = DateTime.UtcNow;
+            floor.Status = 0;
+            await _repository.SoftDeleteAsync(id);
         }
 
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)

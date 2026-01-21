@@ -256,7 +256,7 @@ namespace BusinessLogic.Services.Implementation
                 var floors = await _floorRepository.GetByBuildingIdAsync(id);
                 foreach (var floor in floors)
                 {
-                    await _floorService.CascadeDeleteAsync(floor.Id);
+                    await _floorService.DeleteAsync(floor.Id);
                 }
                 building.UpdatedBy = username;
                 building.UpdatedAt = DateTime.UtcNow;
