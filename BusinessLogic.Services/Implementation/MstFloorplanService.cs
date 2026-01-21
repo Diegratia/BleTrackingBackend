@@ -266,77 +266,77 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
-        // public async Task DeleteAsync(Guid id)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var floorplan = await _repository.GetByIdAsync(id);
-        //     if (floorplan == null)
-        //         throw new KeyNotFoundException("Floorplan not found");
-
-        //     await _repository.ExecuteInTransactionAsync(async () =>
-        // {
-        //     var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
-        //     var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
-        //     var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
-        //     var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
-        //     var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
-        //     var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
-        //     //redis cache
-        //     foreach (var maskedArea in maskedAreas)
-        //     {
-        //         await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
-        //     }
-        //     foreach (var geofence in geofences)
-        //     {
-        //         await _geofenceService.DeleteAsync(geofence.Id);
-        //     }
-        //     foreach (var stayOnArea in stayOnAreas)
-        //     {
-        //         await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
-        //     }
-        //     foreach (var boundary in boundaries)
-        //     {
-        //         await _boundaryService.DeleteAsync(boundary.Id);
-        //     }
-        //     foreach (var overpopulating in overpopulatings)
-        //     {
-        //         await _overpopulatingService.DeleteAsync(overpopulating.Id);
-        //     }
-        //     foreach (var patrolArea in patrolAreas)
-        //     {
-        //         await _patrolAreaService.DeleteAsync(patrolArea.Id);
-        //     }
-        //     floorplan.UpdatedBy = username;
-        //     floorplan.UpdatedAt = DateTime.UtcNow;
-        //     floorplan.Status = 0;
-        //     await _repository.DeleteAsync(id);
-        // });
-        //     await _audit.Deleted (
-        //         "Floorplan",
-        //         floorplan.Id,
-        //         "Deleted floorplan",
-        //         new { floorplan.Name }
-        //     );
-        //     await RemoveGroupAsync();
-        //     await _maskedAreaService.RemoveGroupAsync();
-        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        // }
-
         public async Task DeleteAsync(Guid id)
         {
-            await _repository.ExecuteInTransactionAsync(async () =>
-            {
-                await CascadeDeleteAsync(id);
-            });
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floorplan = await _repository.GetByIdAsync(id);
+            if (floorplan == null)
+                throw new KeyNotFoundException("Floorplan not found");
 
-            await _audit.Deleted(
+            await _repository.ExecuteInTransactionAsync(async () =>
+        {
+            var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+            var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+            var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+            var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+            var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
+            //redis cache
+            foreach (var maskedArea in maskedAreas)
+            {
+                await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+            }
+            foreach (var geofence in geofences)
+            {
+                await _geofenceService.DeleteAsync(geofence.Id);
+            }
+            foreach (var stayOnArea in stayOnAreas)
+            {
+                await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
+            }
+            foreach (var boundary in boundaries)
+            {
+                await _boundaryService.DeleteAsync(boundary.Id);
+            }
+            foreach (var overpopulating in overpopulatings)
+            {
+                await _overpopulatingService.DeleteAsync(overpopulating.Id);
+            }
+            foreach (var patrolArea in patrolAreas)
+            {
+                await _patrolAreaService.DeleteAsync(patrolArea.Id);
+            }
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+            floorplan.Status = 0;
+            await _repository.DeleteAsync(id);
+        });
+            await _audit.Deleted (
                 "Floorplan",
-                id,
-                "Deleted floorplan"
+                floorplan.Id,
+                "Deleted floorplan",
+                new { floorplan.Name }
             );
             await RemoveGroupAsync();
+            await _maskedAreaService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
+
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         await CascadeDeleteAsync(id);
+        //     });
+
+        //     await _audit.Deleted(
+        //         "Floorplan",
+        //         id,
+        //         "Deleted floorplan"
+        //     );
+        //     await RemoveGroupAsync();
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
 
         
         public async Task CascadeDeleteAsync(Guid id)
