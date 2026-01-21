@@ -197,9 +197,9 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(area);
             await _audit.Created(
-                "Building Area",
+                "Masked Area",
                 area.Id,
-                "Created building area",
+                "Created masked area",
                 new { area.Name }
             );
 
@@ -233,9 +233,9 @@ namespace BusinessLogic.Services.Implementation
             await RemoveGroupAsync();
             await _repository.UpdateAsync(area);
             await _audit.Updated(
-                "Building Area",
+                "Masked Area",
                 area.Id,
-                "Updated building area",
+                "Updated masked area",
                 new { area.Name }
             );
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
@@ -359,7 +359,7 @@ namespace BusinessLogic.Services.Implementation
     // ============================================================
     // INTERNAL CASCADE DELETE
     // ============================================================
-    internal async Task CascadeDeleteAsync(Guid id, string username)
+    public async Task CascadeDeleteAsync(Guid id, string username)
     {
         var area = await _repository.GetByIdAsync(id);
         if (area == null) return;

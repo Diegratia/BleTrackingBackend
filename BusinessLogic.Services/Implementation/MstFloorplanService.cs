@@ -356,7 +356,7 @@ namespace BusinessLogic.Services.Implementation
                 ma.Status = 0;
                 ma.UpdatedBy = username;
                 ma.UpdatedAt = DateTime.UtcNow;
-                await _maskedAreaRepository.SoftDeleteAsync(ma.Id);
+                await _maskedAreaService.CascadeDeleteAsync(ma.Id, username);
             }
 
             var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
