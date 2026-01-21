@@ -64,21 +64,21 @@ namespace Repositories.Repository
          // ================================
         // 1️⃣ Berapa kali kartu dipakai
         // ================================
-        public async Task<List<CardUsageSummaryRM>> GetCardUsageSummaryAsync(CardRecordRequestRM request)
+        public async Task<List<CardUsageSummaryRM>> GetCardUsageSummaryAsync()
         {
-            var from = request.From;
-            var to = request.To;
+            // var from = request.From;
+            // var to = request.To;
 
             var query = _context.CardRecords
                 .AsNoTracking()
                 .Include(x => x.Card)
                 .Where(x => x.CardId != null);
 
-            if (from.HasValue)
-                query = query.Where(x => x.Timestamp >= from);
+            // if (from.HasValue)
+            //     query = query.Where(x => x.UpdatedAt >= from);
 
-            if (to.HasValue)
-                query = query.Where(x => x.Timestamp <= to);
+            // if (to.HasValue)
+            //     query = query.Where(x => x.UpdatedAt <= to);
 
             return await query
                 .GroupBy(x => new
@@ -90,7 +90,7 @@ namespace Repositories.Repository
                 {
                     CardId = g.Key.CardId,
                     CardNumber = g.Key.CardNumber,
-                    TotalUsage = g.Count()
+                    TotalUsage = g.Count() 
                 })
                 .OrderByDescending(x => x.TotalUsage)
                 .ToListAsync();

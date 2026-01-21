@@ -257,11 +257,9 @@ namespace Web.API.Controllers.Controllers
         // 1️⃣ Berapa kali kartu dipakai
         // ============================
         [HttpGet("usage")]
-        public async Task<IActionResult> GetUsage(
-           CardRecordRequestRM request
-        )
+        public async Task<IActionResult> GetUsage()
         {
-            var result = await _cardRecordService.GetCardUsageSummaryAsync(request);
+            var result = await _cardRecordService.GetCardUsageSummaryAsync();
             return Ok(ApiResponse.Success("Card usage summary retrieved", result));
         }
 

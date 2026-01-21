@@ -214,10 +214,9 @@ namespace BusinessLogic.Services.Implementation
         // }
 
         public async Task<IEnumerable<CardUsageSummaryRM>> GetCardUsageSummaryAsync(
-        CardRecordRequestRM request
         )
         {
-            return await _repository.GetCardUsageSummaryAsync(request);
+            return await _repository.GetCardUsageSummaryAsync();
         }
 
         public async Task<IEnumerable<CardUsageHistoryRM>> GetCardUsageHistoryAsync(
