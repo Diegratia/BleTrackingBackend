@@ -396,7 +396,7 @@ namespace BusinessLogic.Services.Implementation
         device.UpdatedBy = username;
         device.UpdatedAt = DateTime.UtcNow;
 
-        await _repository.SoftDeleteAsync(id);
+        await _repository.SoftDeleteAsync(device.Id);
 
         // ❌ NO TRANSACTION
         // ❌ NO AUDIT
