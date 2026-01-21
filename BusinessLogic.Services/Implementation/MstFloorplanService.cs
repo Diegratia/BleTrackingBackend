@@ -310,13 +310,13 @@ namespace BusinessLogic.Services.Implementation
             floorplan.UpdatedAt = DateTime.UtcNow;
             floorplan.Status = 0;
             await _repository.DeleteAsync(id);
+        });
             await _audit.Deleted (
                 "Floorplan",
                 floorplan.Id,
                 "Deleted floorplan",
                 new { floorplan.Name }
             );
-        });
             await RemoveGroupAsync();
             await _maskedAreaService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");

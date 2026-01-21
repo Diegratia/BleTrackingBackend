@@ -305,10 +305,10 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
+            var device = await _repository.GetByIdAsync(id);
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                var device = await _repository.GetByIdAsync(id);
                 if (device == null)
                     throw new KeyNotFoundException("FloorplanDevice not found");
 
@@ -319,12 +319,6 @@ namespace BusinessLogic.Services.Implementation
                 device.Status = 0;
 
                 await _repository.SoftDeleteAsync(id);
-                await _audit.Deleted(
-                    "Floorplan Device",
-                    device.Id,
-                    "Deleted floorplan device",
-                    new { device.Name }
-                );
                 await transaction.CommitAsync();
             }
             catch
@@ -332,6 +326,12 @@ namespace BusinessLogic.Services.Implementation
                 await transaction.RollbackAsync();
                 throw;
             }
+            await _audit.Deleted(
+                    "Floorplan Device",
+                    device.Id,
+                    "Deleted floorplan device",
+                    new { device.Name }
+                );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
     }

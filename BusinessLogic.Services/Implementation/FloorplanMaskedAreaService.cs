@@ -282,12 +282,6 @@ namespace BusinessLogic.Services.Implementation
                 area.UpdatedAt = DateTime.UtcNow;
 
                 await _repository.SoftDeleteAsync(id);
-                await _audit.Deleted(
-                "Building Area",
-                area.Id,
-                "Deleted building area",
-                new { area.Name }
-            );
 
                 var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
 
@@ -311,7 +305,12 @@ namespace BusinessLogic.Services.Implementation
                     a.readerId, a.cctvId, a.accessId, 
                     false, username);
             }
-
+            await _audit.Deleted(
+                "Masked Area",
+                area.Id,
+                "Deleted masked area",
+                new { area.Name }
+            );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
