@@ -395,7 +395,7 @@ namespace BusinessLogic.Services.Implementation
                 floor.UpdatedAt = DateTime.UtcNow;
                 floor.Status = 0;
                 await _repository.SoftDeleteAsync(id);
-                    await _audit.Deleted(
+                await _audit.Deleted(
                     "Floor Area",
                     floor.Id,
                     "Deleted floor",

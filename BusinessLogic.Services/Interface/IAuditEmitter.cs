@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BusinessLogic.Services.Implementation;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -11,10 +12,10 @@ namespace BusinessLogic.Services.Interface
         Task Updated(string entity, object id, string details, object? meta = null);
         Task Deleted(string entity, object id, string details, object? meta = null);
         public Task Action(
-            string action,
-            string entity,
-            string details,
-            object? meta = null);
+           AuditEmitter.AuditAction action,
+           string entity,
+           string details,
+           object? meta = null);
         Task Alarm(string details, object? meta = null);
     }
 

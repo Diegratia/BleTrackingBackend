@@ -64,6 +64,19 @@ namespace BusinessLogic.Services.Implementation
         }
     }
 
+    public enum AuditAction
+{
+    LOGIN,
+    LOGOUT,
+    DOWNLOAD,
+    UPLOAD,
+    APPROVE,
+    REJECT,
+    SYNC,
+    ALARM
+}
+
+
 
         public Task Created(string entity, object id, string details, object? meta = null)
             => Emit("CREATE", entity, details, meta);
@@ -75,11 +88,11 @@ namespace BusinessLogic.Services.Implementation
             => Emit("DELETE", entity, details, meta);
 
         public Task Action(
-            string action,
+            AuditAction action,
             string entity,
             string details,
             object? meta = null)
-            => Emit(action, entity, details, meta);
+            => Emit(action.ToString(), entity, details, meta);
 
         public Task Alarm(string details, object? meta = null)
             => Emit("ALARM", "System", details, meta);

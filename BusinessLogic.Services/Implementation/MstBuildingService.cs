@@ -262,16 +262,16 @@ namespace BusinessLogic.Services.Implementation
                 building.UpdatedAt = DateTime.UtcNow;
                 building.Status = 0;
                 await _repository.DeleteAsync(id);
-            });
-            await _floorService.RemoveGroupAsync();
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _audit.Deleted(
+                await _audit.Deleted(
                 "Building Area",
                 building.Id,
                 "Deleted building",
                 new { building.Name }
             );
+            });
+            await _floorService.RemoveGroupAsync();
+            await RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         
     }
         

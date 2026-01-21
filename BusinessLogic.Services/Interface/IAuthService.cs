@@ -123,7 +123,7 @@ namespace BusinessLogic.Services.Interface
             await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
 
             await _audit.Action(
-                "LOGIN",
+                AuditEmitter.AuditAction.LOGIN,
                 "User",
                 "User login successfully",
                 new {

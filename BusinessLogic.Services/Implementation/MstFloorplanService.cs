@@ -280,7 +280,7 @@ namespace BusinessLogic.Services.Implementation
             var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
             var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
             var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
-            var patrol = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
             //redis cache
             foreach (var maskedArea in maskedAreas)
             {
@@ -302,15 +302,15 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _overpopulatingService.DeleteAsync(overpopulating.Id);
             }
-            foreach (var overpopulating in overpopulatings)
+            foreach (var patrolArea in patrolAreas)
             {
-                await _patrolAreaService.DeleteAsync(overpopulating.Id);
+                await _patrolAreaService.DeleteAsync(patrolArea.Id);
             }
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;
             floorplan.Status = 0;
             await _repository.DeleteAsync(id);
-            await _audit.Deleted    (
+            await _audit.Deleted (
                 "Floorplan",
                 floorplan.Id,
                 "Deleted floorplan",
