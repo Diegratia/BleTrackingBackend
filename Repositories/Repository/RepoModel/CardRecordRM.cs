@@ -17,6 +17,8 @@ namespace Repositories.Repository.RepoModel
     {
         public Guid? CardId { get; set; }
         public string CardNumber { get; set; }
+        public string? Status { get; set; }
+        public string? LastUsedBy { get; set; }
         public int TotalUsage { get; set; }
     }
 

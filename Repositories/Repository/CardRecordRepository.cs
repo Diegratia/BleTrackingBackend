@@ -90,6 +90,18 @@ namespace Repositories.Repository
                 {
                     CardId = g.Key.CardId,
                     CardNumber = g.Key.CardNumber,
+                    LastUsedBy = g
+                        .OrderByDescending(x => x.UpdatedAt)
+                        .Select(x => x.Visitor != null
+                            ? x.Card.Visitor.Name
+                            : x.Card.Member != null
+                                ? x.Member.Name
+                                : x.Name)
+                        .FirstOrDefault(),
+                    Status = g
+                        .OrderByDescending(x => x.UpdatedAt)
+                        .Select(x => x.CheckoutAt == null ? "Active" : "Non Active")
+                        .FirstOrDefault(),
                     TotalUsage = g.Count() 
                 })
                 .OrderByDescending(x => x.TotalUsage)

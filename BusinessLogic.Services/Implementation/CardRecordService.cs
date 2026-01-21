@@ -228,8 +228,6 @@ namespace BusinessLogic.Services.Implementation
             return await _repository.GetCardUsageHistoryAsync(request);
         }
 
-
-
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable().AsNoTracking();
