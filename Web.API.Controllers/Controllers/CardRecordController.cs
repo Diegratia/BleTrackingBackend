@@ -7,6 +7,8 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Entities.Models;
+using Repositories.Repository.RepoModel;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -159,53 +161,53 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+        // [HttpPost("{filter}")]
+        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = "Validation failed: " + string.Join(", ", errors),
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
 
-            try
-            {
-                var result = await _cardRecordService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Records filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
+        //     try
+        //     {
+        //         var result = await _cardRecordService.FilterAsync(request);
+        //         return Ok(new
+        //         {
+        //             success = true,
+        //             msg = "Card Records filtered successfully",
+        //             collection = result,
+        //             code = 200
+        //         });
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(new
+        //         {
+        //             success = false,
+        //             msg = ex.Message,
+        //             collection = new { data = (object)null },
+        //             code = 400
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             success = false,
+        //             msg = $"Internal server error: {ex.Message}",
+        //             collection = new { data = (object)null },
+        //             code = 500
+        //         });
+        //     }
+        // }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
@@ -249,6 +251,39 @@ namespace Web.API.Controllers.Controllers
                     code = 500
                 });
             }
+        }
+
+          // ============================
+        // 1️⃣ Berapa kali kartu dipakai
+        // ============================
+        [HttpGet("usage")]
+        public async Task<IActionResult> GetUsage(
+           CardRecordRequestRM request
+        )
+        {
+            var result = await _cardRecordService.GetCardUsageSummaryAsync(request);
+            return Ok(ApiResponse.Success("Card usage summary retrieved", result));
+        }
+
+        [HttpPost("filter")]
+        public async Task<IActionResult> GetFiltered( [FromBody] DataTablesRequest request
+        )
+        {
+            var result = await _cardRecordService.ProjectionFilterAsync(request);
+            return Ok(ApiResponse.Success("Card Record filtered successfully", result));
+        }
+
+        // ============================
+        // 2️⃣ Historis kartu dipakai siapa
+        // ============================
+        [HttpPost("history")]
+        public async Task<IActionResult> GetHistory(
+            [FromBody] CardRecordRequestRM request
+        )
+        {
+
+            var result = await _cardRecordService.GetCardUsageHistoryAsync(request);
+            return Ok(ApiResponse.Success("Card usage history retrieved", result));
         }
 
         [HttpPost("open/{filter}")]

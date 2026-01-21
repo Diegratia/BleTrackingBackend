@@ -28,6 +28,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
         public async Task InvokeAsync(HttpContext context)
         {
+            
             try
             {
                 await _next(context);

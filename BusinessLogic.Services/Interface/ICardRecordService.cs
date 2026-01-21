@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -14,6 +15,11 @@ namespace BusinessLogic.Services.Interface
         Task CheckoutCard(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
-        Task<byte[]> ExportExcelAsync(); 
+        Task<byte[]> ExportExcelAsync();
+        Task<IEnumerable<CardUsageSummaryRM>> GetCardUsageSummaryAsync(
+        CardRecordRequestRM request); 
+        Task<IEnumerable<CardUsageHistoryRM>> GetCardUsageHistoryAsync(
+        CardRecordRequestRM request );
+        Task<object> ProjectionFilterAsync(DataTablesRequest request);
     }
 }

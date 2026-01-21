@@ -8,14 +8,17 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
 using Data.ViewModels;
+using Repositories.Repository.RepoModel;
+using Repositories.Models;
 
 namespace Repositories.Repository
 {
-    public class CardRecordRepository : BaseRepository
+    public class CardRecordRepository : BaseProjectionRepository<CardRecord, CardRecordListRM>
     {
         public CardRecordRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+           
         }
 
         public async Task<CardRecord?> GetByIdAsync(Guid id)
@@ -56,6 +59,93 @@ namespace Repositories.Repository
         //         },
         //     });
         // }
+
+
+         // ================================
+        // 1️⃣ Berapa kali kartu dipakai
+        // ================================
+        public async Task<List<CardUsageSummaryRM>> GetCardUsageSummaryAsync(CardRecordRequestRM request)
+        {
+            var from = request.From;
+            var to = request.To;
+
+            var query = _context.CardRecords
+                .AsNoTracking()
+                .Include(x => x.Card)
+                .Where(x => x.CardId != null);
+
+            if (from.HasValue)
+                query = query.Where(x => x.Timestamp >= from);
+
+            if (to.HasValue)
+                query = query.Where(x => x.Timestamp <= to);
+
+            return await query
+                .GroupBy(x => new
+                {
+                    x.CardId,
+                    x.Card.CardNumber
+                })
+                .Select(g => new CardUsageSummaryRM
+                {
+                    CardId = g.Key.CardId,
+                    CardNumber = g.Key.CardNumber,
+                    TotalUsage = g.Count()
+                })
+                .OrderByDescending(x => x.TotalUsage)
+                .ToListAsync();
+        }
+
+        // ================================
+        // 2️⃣ Historis kartu dipakai siapa
+        // ================================
+            public async Task<List<CardUsageHistoryRM>> GetCardUsageHistoryAsync(
+                CardRecordRequestRM request
+            )
+            {
+                   // 🕒 Time range
+                var range = GetTimeRange(request.TimeRange);
+                var from = range?.from ?? request.From;
+                var to = range?.to ?? request.To;
+                var query = _context.CardRecords
+                    .AsNoTracking()
+                    .Include(x => x.Card)
+                    .Include(x => x.Visitor)
+                    .Include(x => x.Member)
+                    .Where(x => x.CardId == request.CardId);
+
+                if (from.HasValue)
+                    query = query.Where(x => x.Timestamp >= from);
+
+                if (to.HasValue)
+                    query = query.Where(x => x.Timestamp <= to);
+
+                return await query
+                    .OrderByDescending(x => x.Timestamp)
+                    .Select(x => new CardUsageHistoryRM
+                    {
+                        CardId = x.CardId,
+                        IdentityId = x.Visitor != null
+                            ? x.Visitor.IdentityId
+                            : x.Member != null
+                                ? x.Member.IdentityId
+                                : null,
+                        CardNumber = x.Card.CardNumber,
+                        UsedBy = x.Visitor != null
+                            ? x.Visitor.Name
+                            : x.Member != null
+                                ? x.Member.Name
+                                : x.Name,
+                        UsedByType = x.Visitor != null
+                            ? "Visitor"
+                            : x.Member != null
+                                ? "Member"
+                                : "Unknown",
+                        CheckinAt = x.CheckinAt,
+                        CheckoutAt = x.CheckoutAt
+                    })
+                    .ToListAsync();
+            }
 
         public async Task<IEnumerable<CardRecord>> GetAllAsync()
         {
@@ -158,5 +248,128 @@ namespace Repositories.Repository
             return await _context.Cards
                 .FirstOrDefaultAsync(a => a.Id == id && a.StatusCard != 0);
         }
+
+          private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+            {
+                if (string.IsNullOrWhiteSpace(timeReport))
+                    return null;
+
+                // Gunakan UTC agar konsisten untuk server analytics
+                var now = DateTime.UtcNow;
+
+                // Pastikan format switch case aman (lowercase)
+                return timeReport.Trim().ToLower() switch
+                {
+                    "daily" => (
+                        now.Date,
+                        now.Date.AddDays(1).AddTicks(-1)
+                    ),
+
+                    "weekly" => (
+                        now.Date.AddDays(-(int)now.DayOfWeek + 1),                // Senin awal minggu
+                        now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu akhir
+                    ),
+
+                    "monthly" => (
+                        new DateTime(now.Year, now.Month, 1),
+                        new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
+                            .AddDays(1).AddTicks(-1)
+                    ),
+
+                    "yearly" => (
+                        new DateTime(now.Year, 1, 1),
+                        new DateTime(now.Year, 12, 31)
+                            .AddDays(1).AddTicks(-1)
+                    ),
+
+                    _ => null
+                };
+            }
+
+             protected override IQueryable<CardRecordListRM> Project(
+        IQueryable<Entities.Models.CardRecord> query)
+    {
+        return query
+            .Include(x => x.Card)
+            .Include(x => x.Visitor)
+            .Include(x => x.Member)
+            .Where(x => x.CheckinAt != null)
+            .Select(x => new CardRecordListRM
+            {
+                Id = x.Id,
+                CardId = x.CardId.Value,
+                CardNumber = x.Card.CardNumber,
+                IdentityId = x.Visitor != null
+                    ? x.Visitor.IdentityId
+                    : x.Member != null
+                        ? x.Member.IdentityId
+                        : null,
+                PersonName = x.Visitor != null
+                    ? x.Visitor.Name
+                    : x.Member != null
+                        ? x.Member.Name
+                        : x.Name,
+                PersonType = x.Visitor != null
+                    ? "Visitor"
+                    : x.Member != null
+                        ? "Member"
+                        : "Unknown",
+                CheckinAt = x.CheckinAt.Value,
+                CheckoutAt = x.CheckoutAt,
+                UpdatedAt = x.UpdatedAt
+            });
+    }
+
+    // =====================================================
+    // OVERRIDE PAGED RESULT → tambah Duration & Status
+    // =====================================================
+    public override async Task<(List<CardRecordListRM> Data, long TotalRecords, long FilteredRecords)>
+        GetPagedResultAsync(
+            Dictionary<string, object> filters,
+            Dictionary<string, DateRangeFilter>? dateFilters = null,
+            string? timeReport = null,
+            string sortColumn = "TimeStamp",
+            string sortDir = "desc",
+            int start = 0,
+            int length = 10)
+    {
+        var (data, total, filtered) =
+            await base.GetPagedResultAsync(
+                filters,
+                dateFilters,
+                timeReport,
+                sortColumn,
+                sortDir,
+                start,
+                length);
+
+        var now = DateTime.UtcNow;
+
+        foreach (var row in data)
+        {
+            var end = row.CheckoutAt ?? now;
+            var duration = end - row.CheckinAt;
+
+            row.Duration = FormatDuration(duration);
+
+            if (row.CheckoutAt == null)
+                row.Status = "Active";
+            else
+                row.Status = "Checked Out";
+                    }
+
+        return (data, total, filtered);
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalMinutes < 1)
+            return $"{duration.Seconds}s";
+
+        if (duration.TotalHours < 1)
+            return $"{duration.Minutes}m {duration.Seconds}s";
+
+        return $"{(int)duration.TotalHours}h {duration.Minutes}m";
+    }
     }
 }

@@ -640,6 +640,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
         }
 
+
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();

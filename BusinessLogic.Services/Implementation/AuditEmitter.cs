@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
 using Helpers.Consumer.Mqtt;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -14,20 +15,25 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly IMqttClientService _mqtt;
         private readonly IHttpContextAccessor _http;
+        private readonly ILogger<AuditEmitter> _logger;
 
         public AuditEmitter(
             IMqttClientService mqtt,
-            IHttpContextAccessor http)
+            IHttpContextAccessor http,
+            ILogger<AuditEmitter> logger)
         {
             _mqtt = mqtt;
             _http = http;
+            _logger = logger;
         }
 
-        private async Task Emit(
-            string evt,
-            string entity,
-            string details,
-            object? meta)
+       private async Task Emit(
+        string evt,
+        string entity,
+        string details,
+        object? meta)
+    {
+        try
         {
             var user = _http.HttpContext?.User;
 
@@ -52,6 +58,12 @@ namespace BusinessLogic.Services.Implementation
                 JsonSerializer.Serialize(payload)
             );
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"[AUDIT] Publish failed: {ex.Message}");
+        }
+    }
+
 
         public Task Created(string entity, object id, string details, object? meta = null)
             => Emit("CREATE", entity, details, meta);

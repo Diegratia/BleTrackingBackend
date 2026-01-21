@@ -21,6 +21,9 @@ using Bogus.DataSets;
 using Helpers.Consumer;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
+using Repositories.Repository.RepoModel;
+using DataView;
+using BusinessLogic.Services.Extension.RootExtension;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -78,6 +81,7 @@ namespace BusinessLogic.Services.Implementation
             cardRecord.UpdatedBy = username;
             cardRecord.CreatedAt = DateTime.UtcNow;
             cardRecord.UpdatedAt = DateTime.UtcNow;
+            cardRecord.Timestamp = DateTime.UtcNow;
             cardRecord.Status = 1;
             cardRecord.CheckinBy = username;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
@@ -136,6 +140,7 @@ namespace BusinessLogic.Services.Implementation
             cardRecord.CheckoutBy = username;
             cardRecord.CheckoutMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
             cardRecord.UpdatedAt = now;
+            cardRecord.Timestamp = now;
             cardRecord.UpdatedBy = username;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Expired;
 
@@ -208,6 +213,22 @@ namespace BusinessLogic.Services.Implementation
         //     });
         // }
 
+        public async Task<IEnumerable<CardUsageSummaryRM>> GetCardUsageSummaryAsync(
+        CardRecordRequestRM request
+        )
+        {
+            return await _repository.GetCardUsageSummaryAsync(request);
+        }
+
+        public async Task<IEnumerable<CardUsageHistoryRM>> GetCardUsageHistoryAsync(
+        CardRecordRequestRM request    
+        )
+        {
+            if (!request.CardId.HasValue)
+                throw new BusinessException("CardId is required");
+            return await _repository.GetCardUsageHistoryAsync(request);
+        }
+
 
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -225,6 +246,27 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
+
+         public async Task<object> ProjectionFilterAsync(DataTablesRequest request)
+            {
+                var (data, total, filtered) = await _repository.GetPagedResultAsync(
+                    request.Filters,
+                     request.DateFilters.ToRepositoryDateFilters(),
+                     request.TimeReport,  
+                    request.SortColumn ?? "UpdatedAt" ?? "TimeStamp",
+                    request.SortDir,
+                    request.Start,
+                    request.Length
+                );
+
+                return new
+                {
+                    draw = request.Draw,
+                    recordsTotal = total,
+                    recordsFiltered = filtered,
+                    data
+                };
+            }
         
         public async Task<byte[]> ExportPdfAsync()
         {
