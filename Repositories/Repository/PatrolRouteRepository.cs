@@ -163,5 +163,20 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<IReadOnlyCollection<Guid>> GetMissingIdsAsync(
+    IEnumerable<Guid> ids
+        )
+        {
+            var idList = ids.Distinct().ToList();
+
+            var existingIds = await _context.PatrolAreas
+                .Where(x => idList.Contains(x.Id) && x.Status != 0)
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            return idList.Except(existingIds).ToList();
+        }
+
+
     }
 }
