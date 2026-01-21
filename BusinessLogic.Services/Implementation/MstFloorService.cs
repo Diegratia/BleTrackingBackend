@@ -408,6 +408,29 @@ namespace BusinessLogic.Services.Implementation
 
     }
 
+    // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
+    public async Task CascadeDeleteAsync(Guid id)
+    {
+        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        var floor = await _repository.GetByIdAsync(id);
+        if (floor == null) return;
+
+        // ❌ TANPA transaction
+        // ❌ TANPA audit
+
+        var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
+        foreach (var fp in floorplans)
+        {
+            await _floorplanRepository.DeleteAsync(fp.Id);
+        }
+
+        floor.Status = 0;
+        floor.UpdatedBy = username;
+        floor.UpdatedAt = DateTime.UtcNow;
+        await _repository.SoftDeleteAsync(id);
+    }
+
+
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)
         {
             var floors = new List<MstFloor>();

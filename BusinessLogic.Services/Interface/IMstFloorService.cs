@@ -20,5 +20,6 @@ namespace BusinessLogic.Services.Interface
         Task<object> FilterAsync(DataTablesRequest request);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+        Task CascadeDeleteAsync(Guid id);
     }
 }

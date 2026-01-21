@@ -256,7 +256,7 @@ namespace BusinessLogic.Services.Implementation
                 var floors = await _floorRepository.GetByBuildingIdAsync(id);
                 foreach (var floor in floors)
                 {
-                    await _floorService.DeleteAsync(floor.Id);
+                    await _floorService.CascadeDeleteAsync(floor.Id);
                 }
                 building.UpdatedBy = username;
                 building.UpdatedAt = DateTime.UtcNow;
@@ -274,6 +274,29 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         
     }
+
+        //     public async Task DeleteAsync(Guid id)
+        // {
+            
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         var floors = await _floorRepository.GetByBuildingIdAsync(id);
+        //         foreach (var floor in floors)
+        //         {
+        //             await _floorService.CascadeDeleteAsync(floor.Id);
+        //         }
+
+        //         await _repository.DeleteAsync(id);
+        //     });
+
+        //                 await _audit.Deleted(
+        //         "Building Area",
+        //         building.Id,
+        //         "Deleted building",
+        //         new { building.Name }
+        //     );
+        // }
+
         
 
         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
