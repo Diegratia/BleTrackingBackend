@@ -408,34 +408,25 @@ namespace BusinessLogic.Services.Implementation
 
     }
 
-    // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
-    public async Task CascadeDeleteAsync(Guid id)
-    {
-        var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        var floor = await _repository.GetByIdAsync(id);
-        if (floor == null) return;
-
-        // ❌ TANPA transaction
-        // ❌ TANPA audit
-
-        var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-        foreach (var fp in floorplans)
+            // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
+            
+             public async Task CascadeDeleteAsync(Guid id)
         {
-            await _floorplanRepository.DeleteAsync(fp.Id);
-        }
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floor = await _repository.GetByIdAsync(id);
+            if (floor == null)
+                throw new KeyNotFoundException("Floor not found");
 
-        floor.Status = 0;
-        floor.UpdatedBy = username;
-        floor.UpdatedAt = DateTime.UtcNow;
-        await _audit.Deleted(
-                    "Floor Area",
-                    floor.Id,
-                    "Deleted floor",
-                    new { floor.Name }
-                );
-        await _repository.SoftDeleteAsync(id);
+                floor.UpdatedBy = username;
+                floor.UpdatedAt = DateTime.UtcNow;
+                floor.Status = 0;
+                await _repository.SoftDeleteAsync(id);
+
+            await RemoveGroupAsync();
+            await _floorplanService.RemoveGroupAsync();
+            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+
     }
-
 
         public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)
         {
