@@ -67,12 +67,29 @@ namespace BusinessLogic.Services.Implementation
         entity.UpdatedAt = DateTime.UtcNow;
     }
 
+    protected void SetCreateAudit(BaseModelWithTimeApp entity)
+    {
+        entity.Id = Guid.NewGuid();
+        entity.Status = 1;
+        
+        entity.CreatedBy = UsernameFormToken;
+        entity.CreatedAt = DateTime.UtcNow;
+
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
+
     protected void SetUpdateAudit(BaseModelWithTime entity)
     {
         entity.UpdatedBy = UsernameFormToken;
         entity.UpdatedAt = DateTime.UtcNow;
     }
     protected void SetUpdateAudit(BaseModelOnlyIdWithTime entity)
+    {
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
+    protected void SetUpdateAudit(BaseModelWithTimeApp entity)
     {
         entity.UpdatedBy = UsernameFormToken;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -87,6 +104,12 @@ namespace BusinessLogic.Services.Implementation
         protected void SetDeleteAudit(BaseModelOnlyIdWithTime entity)
     {
         // entity.Status = 0;
+        entity.UpdatedBy = UsernameFormToken;
+        entity.UpdatedAt = DateTime.UtcNow;
+    }
+        protected void SetDeleteAudit(BaseModelWithTimeApp entity)
+    {
+        entity.Status = 0;
         entity.UpdatedBy = UsernameFormToken;
         entity.UpdatedAt = DateTime.UtcNow;
     }

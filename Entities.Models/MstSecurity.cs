@@ -80,5 +80,6 @@ namespace Entities.Models
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<AlarmTriggers> AlarmTriggers { get; set; } = new List<AlarmTriggers>();
+        public ICollection<PatrolAssignment> PatrolAssignments { get; set; } = new List<PatrolAssignment>();
     }
 }

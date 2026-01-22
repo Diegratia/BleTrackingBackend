@@ -52,8 +52,9 @@ namespace Repositories.DbContexts
         public DbSet<PatrolRoute> PatrolRoutes{ get; set; }
         public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
         public DbSet<PatrolRouteTimeGroups> PatrolRouteTimeGroups{ get; set; }
+        public DbSet<PatrolAssignment> PatrolAssignments{ get; set; }
         //
-        public DbSet<StayOnArea> StayOnAreas{ get; set; }
+        public DbSet<StayOnArea> StayOnAreas { get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
         public DbSet<TrackingReportPreset> TrackingReportPresets{ get; set; }
@@ -96,6 +97,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
             modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
             modelBuilder.Entity<PatrolRouteTimeGroups>().ToTable("patrol_route_time_groups");
+            modelBuilder.Entity<PatrolAssignment>().ToTable("patrol_assignment");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
@@ -390,6 +392,7 @@ namespace Repositories.DbContexts
                 entity.HasIndex(m => m.PersonId);
                 entity.HasIndex(m => m.Email);
             });
+            
             // MstSecurity
             modelBuilder.Entity<MstSecurity>(entity =>
             {
@@ -877,6 +880,36 @@ namespace Repositories.DbContexts
                 entity.HasOne(e => e.PatrolRoute)
                     .WithMany(ma => ma.PatrolRouteAreas)
                     .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //PatrolAssignment
+            modelBuilder.Entity<PatrolAssignment>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.SecurityGroupId).HasMaxLength(36);
+                entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
+                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.SecurityGroup)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.SecurityGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.PatrolRoute)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.TimeGroup)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

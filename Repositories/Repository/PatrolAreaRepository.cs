@@ -112,19 +112,6 @@ namespace Repositories.Repository
             }); 
             return await projected.ToListAsync();
         }
-        
-        public async Task<List<PatrolArea>> GetByFloorplanIdAsync(Guid floorplanId)
-        {
-            return await _context.PatrolAreas
-                .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
-                .ToListAsync();
-        }
-        public async Task<List<PatrolArea>> GetByFloorIdAsync(Guid floorId)
-        {
-            return await _context.PatrolAreas
-                .Where(ma => ma.FloorId == floorId && ma.Status != 0)
-                .ToListAsync();
-        }
 
         public async Task<bool> FloorExistsAsync(Guid floorId)
         {

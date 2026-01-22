@@ -7,18 +7,15 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class PatrolRoute : BaseModelOnlyIdWithTime, IApplicationEntity
+    public class SecurityGroup : BaseModelWithTimeApp, IApplicationEntity
     {
         [Column("name")]
         public string? Name { get; set; }
         [Column("description")]
         public string? Description { get; set; }
-        [Column("status")]
-        public int Status { get; set; } = 1;
-        public MstApplication Application { get; set; }
-        public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
-        public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
+        public MstApplication? Application { get; set; }
+        public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
         public ICollection<PatrolAssignment> PatrolAssignments { get; set; } = new List<PatrolAssignment>();
-
+        
     }
 }

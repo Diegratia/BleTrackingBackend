@@ -29,5 +29,7 @@ namespace Entities.Models
         public ICollection<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
         public ICollection<CardAccessTimeGroups?> CardAccessTimeGroups { get; set; } = new List<CardAccessTimeGroups?>();
         public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
+        public ICollection<PatrolAssignment> PatrolAssignments { get; set; } = new List<PatrolAssignment>();
+
     }
 }
