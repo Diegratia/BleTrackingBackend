@@ -163,13 +163,30 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IReadOnlyCollection<Guid>> GetMissingIdsAsync(
+        public async Task<IReadOnlyCollection<Guid>> GetMissingAreaIdsAsync(
     IEnumerable<Guid> ids
         )
         {
             var idList = ids.Distinct().ToList();
+                if (!idList.Any())
+                    return Array.Empty<Guid>();
 
             var existingIds = await _context.PatrolAreas
+                .Where(x => idList.Contains(x.Id) && x.Status != 0)
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            return idList.Except(existingIds).ToList();
+        }
+        public async Task<IReadOnlyCollection<Guid>> GetMissingTimeGroupIdsAsync(
+    IEnumerable<Guid> ids
+        )
+        {
+            var idList = ids.Distinct().ToList();
+                if (!idList.Any())
+                    return Array.Empty<Guid>();
+
+            var existingIds = await _context.TimeGroups
                 .Where(x => idList.Contains(x.Id) && x.Status != 0)
                 .Select(x => x.Id)
                 .ToListAsync();
