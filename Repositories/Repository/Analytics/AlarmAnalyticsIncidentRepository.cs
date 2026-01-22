@@ -64,7 +64,7 @@ namespace Repositories.Repository.Analytics
             AlarmAnalyticsRequestRM request
         )
         {
-            var range = GetTimeRange(request.TimeRange ?? "daily");
+            var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
             var to   = range?.to   ?? request.To   ?? DateTime.UtcNow;
 
