@@ -90,7 +90,10 @@ namespace Repositories.Repository.Analytics
                     AreaId = g.Key.FloorplanMaskedAreaId,
                     AreaName = g.Key.AreaName ?? "Unknown",
                     AlarmStatus = g.Key.AlarmStatus.ToString(),
-                    Total = g.Count()
+                    Total = g
+                    .Select(x => x.AlarmTriggersId)
+                    .Distinct()
+                    .Count()
                 })
                 .OrderBy(x => x.Date)
                 .ToListAsync();
