@@ -168,13 +168,13 @@ namespace Repositories.Repository
         }
 
 
-        protected (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+        protected (DateTime from, DateTime to)? GetTimeRange(string? TimeRange)
         {
-            if (string.IsNullOrWhiteSpace(timeReport))
+            if (string.IsNullOrWhiteSpace(TimeRange))
                 return null;
 
             var now = DateTime.UtcNow;
-            return timeReport.Trim().ToLower() switch
+            return TimeRange.Trim().ToLower() switch
             {
                 "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
                 "weekly" => (
