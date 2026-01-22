@@ -173,6 +173,7 @@ namespace Repositories.Repository.Analytics
                     Total = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
+                .Take(3)
                 .ToList();
 
             return grouped;
