@@ -51,7 +51,7 @@ namespace Repositories.Repository.RepoModel
     public class TrackingAnalyticsPresetRequestRM
     {
         public Guid PresetId { get; set; }
-        
+
         // Optional: override filter tertentu dari preset
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
@@ -73,8 +73,8 @@ namespace Repositories.Repository.RepoModel
         public string? BuildingName { get; set; }
         public string? FloorName { get; set; }
         public string? FloorplanName { get; set; }
-        public DateTime EnterTime  { get; set; }
-        public DateTime? ExitTime  { get; set; }
+        public DateTime EnterTime { get; set; }
+        public DateTime? ExitTime { get; set; }
         public int? DurationInMinutes { get; set; }
 
         // Format khusus export
@@ -112,7 +112,7 @@ namespace Repositories.Repository.RepoModel
         public int? DurationInMinutes { get; set; } // Exit - Enter
         public string? Status { get; set; }  // Checkin / Block / dll
         public string? HostName { get; set; }
-        
+
     }
 
     public class TrackingAreaSummaryRM
@@ -234,7 +234,7 @@ namespace Repositories.Repository.RepoModel
         public int WithoutPermission { get; set; }
     }
 
-            public class AreaAccessAggregateRow
+    public class AreaAccessAggregateRow
     {
         public DateTime Date { get; set; }
         public string RestrictedStatus { get; set; } // restrict / non-restrict
@@ -262,41 +262,55 @@ namespace Repositories.Repository.RepoModel
 
 
     //count hell
-            public class TrackingHierarchyRM
-        {
-            public Dictionary<string, TrackingBuildingNode> Buildings { get; set; } = new();
-        }
+    public class TrackingHierarchyRM
+    {
+        public Dictionary<string, TrackingBuildingNode> Buildings { get; set; } = new();
+    }
 
-        public class TrackingBuildingNode
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public int Count { get; set; }
-            public Dictionary<string, TrackingFloorNode> Floors { get; set; } = new();
-        }
+    public class TrackingBuildingNode
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+        public Dictionary<string, TrackingFloorNode> Floors { get; set; } = new();
+    }
 
-        public class TrackingFloorNode
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public int Count { get; set; }
-            public Dictionary<string, TrackingFloorplanNode> Floorplans { get; set; } = new();
-        }
+    public class TrackingFloorNode
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+        public Dictionary<string, TrackingFloorplanNode> Floorplans { get; set; } = new();
+    }
 
-        public class TrackingFloorplanNode
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public int Count { get; set; }
-            public Dictionary<string, TrackingAreaNode> Areas { get; set; } = new();
-        }
+    public class TrackingFloorplanNode
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+        public Dictionary<string, TrackingAreaNode> Areas { get; set; } = new();
+    }
 
-        public class TrackingAreaNode
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public int Count { get; set; }
-        }
+    public class TrackingAreaNode
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+      public class AreaAccessSummaryRaw
+{
+    public int TotalUniqueAreas { get; set; }
+    public int WithPermission { get; set; }
+    public int WithoutPermission { get; set; }
+}
+
+public class AreaAccessDailyRaw
+{
+    public DateTime Date { get; set; }
+    public string RestrictedStatus { get; set; }
+    public int Total { get; set; }
+}
 
 
 

@@ -102,25 +102,24 @@ namespace Web.API.Controllers.Controllers.Analytics
             var result = await _serviceV2.GetVisitorSessionSummaryAsync(request);
             return Ok(result);
         }
+        // [HttpPost("area-accessed")]
+        // public async Task<IActionResult> GetAreaAccessed([FromBody] TrackingAnalyticsRequestRM request)
+        // {
+        //     var result = await _service.GetAreaAccessedSummaryAsync(request);
+        //     return Ok(result);
+        // }
+        // [HttpPost("area-accessed-v2")]
+        // public async Task<IActionResult> GetAreaAccessedV2([FromBody] TrackingAnalyticsRequestRM request)
+        // {
+        //     var result = await _service.GetAreaAccessedSummaryAsyncV2(request);
+        //     return Ok(result);
+        // }
         [HttpPost("area-accessed")]
-        public async Task<IActionResult> GetAreaAccessed([FromBody] TrackingAnalyticsRequestRM request)
-        {
-            var result = await _service.GetAreaAccessedSummaryAsync(request);
-            return Ok(result);
-        }
-        [HttpPost("area-accessed-v2")]
-        public async Task<IActionResult> GetAreaAccessedV2([FromBody] TrackingAnalyticsRequestRM request)
-        {
-            var result = await _service.GetAreaAccessedSummaryAsyncV2(request);
-            return Ok(result);
-        }
-        [HttpPost("area-accessed-v3")]
         public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsRequestRM request)
         {
             var result = await _service.GetAreaAccessedSummaryAsyncV3(request);
             return Ok(result);
         }
-        
         [HttpGet("export/pdf")]
         public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsRequestRM request)
         {

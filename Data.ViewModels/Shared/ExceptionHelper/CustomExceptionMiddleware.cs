@@ -81,14 +81,27 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
                 case KeyNotFoundException ex:
                     statusCode = 404;
-                    result = ApiResponse.NotFound("Resource not found");  // ✅ Now available
+                    // result = ApiResponse.NotFound("Resource not found");  // ✅ Now available
+                    result = ApiResponse.NotFound(ex.Message);  // ✅ Use ex.Message
                     _logger.LogWarning(ex, "Key not found");
+                    break;
+
+                case ArgumentNullException ex:  // ✅ Add this
+                    statusCode = 400;
+                    result = ApiResponse.BadRequest($"Parameter '{ex.ParamName}' is required");
+                    _logger.LogWarning(ex, "Null argument");
                     break;
 
                 case ArgumentException ex:
                     statusCode = 400;
                     result = ApiResponse.BadRequest(ex.Message);  // ✅ Now available
                     _logger.LogWarning(ex, "Invalid argument: {Message}", ex.Message);
+                    break;
+
+                case InvalidOperationException ex:  // ✅ Add this
+                    statusCode = 400;
+                    result = ApiResponse.BadRequest(ex.Message);
+                    _logger.LogWarning(ex, "Invalid operation: {Message}", ex.Message);
                     break;
 
                 case DbUpdateException ex:
@@ -107,7 +120,11 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
             }
 
             response.StatusCode = statusCode;
-            await response.WriteAsync(JsonSerializer.Serialize(result));
+            // await response.WriteAsync(JsonSerializer.Serialize(result));
+                await response.WriteAsync(JsonSerializer.Serialize(result, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase  // ✅ Consistent naming
+            }));
         }
     }
 }

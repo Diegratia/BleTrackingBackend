@@ -286,6 +286,8 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var security = await _repository.GetByIdAsync(id);
+            if (security == null)
+                throw new NotFoundException($"Security {id} not found");
             security.UpdatedBy = username;
             security.UpdatedAt = DateTime.UtcNow;
             security.Status = 0;
@@ -294,10 +296,18 @@ namespace BusinessLogic.Services.Implementation
 
             var oldCard = await _cardRepository.GetAllQueryable()
                     .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
-                    oldCard.IsUsed = false;
-                    oldCard.SecurityId = null;
-                    oldCard.CheckinAt = null;
-                    await _cardRepository.UpdateAsync(oldCard);
+            // oldCard.IsUsed = false;
+            // oldCard.SecurityId = null;
+            // oldCard.CheckinAt = null;
+            // await _cardRepository.UpdateAsync(oldCard);
+                if (oldCard != null)
+                        {
+                            oldCard.IsUsed = false;
+                            oldCard.SecurityId = null;
+                            oldCard.CheckinAt = null;
+                            await _cardRepository.UpdateAsync(oldCard);
+                        }
+
 
 
             await _repository.DeleteAsync(id);

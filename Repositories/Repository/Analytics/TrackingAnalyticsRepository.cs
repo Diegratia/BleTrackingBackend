@@ -97,41 +97,41 @@ namespace Repositories.Repository.Analytics
         }
 
         // count area accessed sum
-        public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsRequestRM request)
-        {
-            var range = GetTimeRange(request.TimeRange);
-            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
-            var to = range?.to ?? request.To ?? DateTime.UtcNow;
-            var tableName = GetTableNameByDate(DateTime.UtcNow);
+        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsRequestRM request)
+        // {
+        //     var range = GetTimeRange(request.TimeRange);
+        //     var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+        //     var to = range?.to ?? request.To ?? DateTime.UtcNow;
+        //     var tableName = GetTableNameByDate(DateTime.UtcNow);
 
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking()
-                .Include(t => t.FloorplanMaskedArea)
-                .Where(t => t.TransTime >= from && t.TransTime <= to);
+        //     var query = _context.Set<TrackingTransaction>()
+        //         .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
+        //         .AsNoTracking()
+        //         .Include(t => t.FloorplanMaskedArea)
+        //         .Where(t => t.TransTime >= from && t.TransTime <= to);
 
-            query = ApplyFilters(query, request);
+        //     query = ApplyFilters(query, request);
 
-            // Ambil area unik yang dikunjungi
-            var data = await query
-                .Select(t => new
-                {
-                    t.FloorplanMaskedAreaId,
-                    RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus
-                })
-                .Distinct()
-                .ToListAsync();
+        //     // Ambil area unik yang dikunjungi
+        //     var data = await query
+        //         .Select(t => new
+        //         {
+        //             t.FloorplanMaskedAreaId,
+        //             RestrictedStatus = t.FloorplanMaskedArea.RestrictedStatus
+        //         })
+        //         .Distinct()
+        //         .ToListAsync();
 
-            var totalWithPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.NonRestrict);
-            var totalWithoutPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.Restrict);
+        //     var totalWithPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.NonRestrict);
+        //     var totalWithoutPermission = data.Count(x => x.RestrictedStatus == RestrictedStatus.Restrict);
 
-            return new TrackingAccessPermissionSummaryRM
-            {
-                AccessedAreaTotal = data.Count,
-                WithPermission = totalWithPermission,
-                WithoutPermission = totalWithoutPermission
-            };
-        }
+        //     return new TrackingAccessPermissionSummaryRM
+        //     {
+        //         AccessedAreaTotal = data.Count,
+        //         WithPermission = totalWithPermission,
+        //         WithoutPermission = totalWithoutPermission
+        //     };
+        // }
 
         public async Task<List<AreaAccessAggregateRow>> GetAreaAccessDailyAsync(
             TrackingAnalyticsRequestRM request
@@ -157,6 +157,10 @@ namespace Repositories.Repository.Analytics
                 parameters.Add(fromUtc);
                 parameters.Add(toUtc);
 
+                // build dynamic filters
+                var (filterSql, filterParams) = BuildSqlFilters(request, ref pIndex);
+                parameters.AddRange(filterParams);
+
                 unionParts.Add($@"
                     SELECT 
                         CAST(t.trans_time AS DATE)        AS [Date],
@@ -179,66 +183,66 @@ namespace Repositories.Repository.Analytics
         }
 
 
-        public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsyncV2(TrackingAnalyticsRequestRM request)
-        {
-            var range = GetTimeRange(request.TimeRange);
-            var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
-            var toUtc = range?.to ?? request.To ?? DateTime.UtcNow;
+        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsyncV2(TrackingAnalyticsRequestRM request)
+        // {
+        //     var range = GetTimeRange(request.TimeRange);
+        //     var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+        //     var toUtc = range?.to ?? request.To ?? DateTime.UtcNow;
 
-            var tableNames = GetTableNamesInRange(fromUtc, toUtc);
-            if (!tableNames.Any())
-                return new TrackingAccessPermissionSummaryRM();
+        //     var tableNames = GetTableNamesInRange(fromUtc, toUtc);
+        //     if (!tableNames.Any())
+        //         return new TrackingAccessPermissionSummaryRM();
 
-            var unionParts = new List<string>();
-            var parameters = new List<object>();
-            int pIndex = 0;
+        //     var unionParts = new List<string>();
+        //     var parameters = new List<object>();
+        //     int pIndex = 0;
 
-            foreach (var table in tableNames)
-            {
-                string pFrom = $"@p{pIndex++}";
-                string pTo = $"@p{pIndex++}";
+        //     foreach (var table in tableNames)
+        //     {
+        //         string pFrom = $"@p{pIndex++}";
+        //         string pTo = $"@p{pIndex++}";
 
-                parameters.Add(fromUtc);
-                parameters.Add(toUtc);
+        //         parameters.Add(fromUtc);
+        //         parameters.Add(toUtc);
 
-                unionParts.Add($@"
-                    SELECT 
-                        t.floorplan_masked_area_id AS FloorplanMaskedAreaId,
-                        a.restricted_status        AS RestrictedStatus
-                    FROM [dbo].[{table}] t
-                    LEFT JOIN floorplan_masked_area a 
-                        ON a.id = t.floorplan_masked_area_id
-                    WHERE t.trans_time >= {pFrom}
-                    AND t.trans_time <= {pTo}
-                ");
-            }
+        //         unionParts.Add($@"
+        //             SELECT 
+        //                 t.floorplan_masked_area_id AS FloorplanMaskedAreaId,
+        //                 a.restricted_status        AS RestrictedStatus
+        //             FROM [dbo].[{table}] t
+        //             LEFT JOIN floorplan_masked_area a 
+        //                 ON a.id = t.floorplan_masked_area_id
+        //             WHERE t.trans_time >= {pFrom}
+        //             AND t.trans_time <= {pTo}
+        //         ");
+        //     }
 
-            var fullSql = string.Join("\nUNION ALL\n", unionParts);
+        //     var fullSql = string.Join("\nUNION ALL\n", unionParts);
 
-            var raw = await _context.Database
-                .SqlQueryRaw<AccessRaw>(fullSql, parameters.ToArray())
-                .ToListAsync();
+        //     var raw = await _context.Database
+        //         .SqlQueryRaw<AccessRaw>(fullSql, parameters.ToArray())
+        //         .ToListAsync();
 
-            // distinct area
-            var uniqueAreas = raw
-                .Where(x => x.FloorplanMaskedAreaId.HasValue)
-                .GroupBy(x => x.FloorplanMaskedAreaId)
-                .Select(g => g.First())
-                .ToList();
+        //     // distinct area
+        //     var uniqueAreas = raw
+        //         .Where(x => x.FloorplanMaskedAreaId.HasValue)
+        //         .GroupBy(x => x.FloorplanMaskedAreaId)
+        //         .Select(g => g.First())
+        //         .ToList();
 
-            return new TrackingAccessPermissionSummaryRM
-            {
-                AccessedAreaTotal = uniqueAreas.Count,
-                WithPermission = uniqueAreas.Count(x => x.RestrictedStatus == "non-restrict"),
-                WithoutPermission = uniqueAreas.Count(x => x.RestrictedStatus == "restrict")
-            };
-        }
+        //     return new TrackingAccessPermissionSummaryRM
+        //     {
+        //         AccessedAreaTotal = uniqueAreas.Count,
+        //         WithPermission = uniqueAreas.Count(x => x.RestrictedStatus == "non-restrict"),
+        //         WithoutPermission = uniqueAreas.Count(x => x.RestrictedStatus == "restrict")
+        //     };
+        // }
 
-        public class AccessRaw
-        {
-            public Guid? FloorplanMaskedAreaId { get; set; }
-            public string RestrictedStatus { get; set; }
-        }
+        // public class AccessRaw
+        // {
+        //     public Guid? FloorplanMaskedAreaId { get; set; }
+        //     public string RestrictedStatus { get; set; }
+        // }
 
 
 
@@ -470,75 +474,6 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-
-
-        // card sum
-        //        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
-        // {
-        //     var (from, to) = (
-        //         request.From ?? DateTime.UtcNow.AddDays(-7),
-        //         request.To ?? DateTime.UtcNow
-        //     );
-
-        //     var tableName = GetTableNameByDate(DateTime.UtcNow); // WIB-based table name
-
-        //     var query = _context.Set<TrackingTransaction>()
-        //         .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-        //         .AsNoTracking()
-        //         .Include(t => t.Card)
-        //             .ThenInclude(c => c.Visitor)
-        //         .Include(t => t.Card)
-        //             .ThenInclude(c => c.Member)
-        //         .Where(t => t.TransTime >= from && t.TransTime <= to);
-
-        //     // Apply optional filters (building, floor, area, etc.)
-        //     query = ApplyFilters(query, request);
-
-        //     // 🔹 Ambil hanya field yang dibutuhkan untuk efisiensi
-        //     var raw = await query
-        //         .Select(t => new
-        //         {
-        //             t.CardId,
-        //             CardName = t.Card.Name,
-        //             t.Card.VisitorId,
-        //             VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
-        //             t.Card.MemberId,
-        //             MemberName = t.Card.Member != null ? t.Card.Member.Name : null,
-        //             t.TransTime
-        //         })
-        //         .ToListAsync();
-
-        //     if (raw.Count == 0)
-        //         return new List<TrackingCardSummaryRM>();
-
-        //     // 🔹 DISTINCT Card agar 1 Card dihitung 1x per visitor/member (hapus spam MQTT)
-        //     var grouped = raw
-        //         .GroupBy(x => new
-        //         {
-        //             x.CardId,
-        //             x.CardName,
-        //             x.VisitorId,
-        //             x.VisitorName,
-        //             x.MemberId,
-        //             x.MemberName
-        //         })
-        //         .Select(g => new TrackingCardSummaryRM
-        //         {
-        //             CardId = g.Key.CardId,
-        //             CardName = g.Key.CardName,
-        //             VisitorId = g.Key.VisitorId,
-        //             VisitorName = g.Key.VisitorName,
-        //             MemberId = g.Key.MemberId,
-        //             MemberName = g.Key.MemberName,
-        //             TotalRecords = g.Count(),
-        //             EnterTime = g.Min(x => x.TransTime), // waktu pertama muncul
-        //             ExitTime = g.Max(x => x.TransTime)   // waktu terakhir muncul
-        //         })
-        //         .OrderByDescending(x => x.TotalRecords)
-        //         .ToList();
-
-        //     return grouped;
-        // }
 
 
         //         // ===========================================================
@@ -905,6 +840,77 @@ namespace Repositories.Repository.Analytics
 
             return result;
         }
+
+
+        private (string whereSql, List<object> parameters) BuildSqlFilters(
+            TrackingAnalyticsRequestRM request,
+            ref int pIndex
+        )
+        {
+            var filters = new List<string>();
+            var parameters = new List<object>();
+
+            if (request.BuildingId.HasValue)
+            {
+                filters.Add($"b.id = @p{pIndex}");
+                parameters.Add(request.BuildingId.Value);
+                pIndex++;
+            }
+
+            if (request.FloorId.HasValue)
+            {
+                filters.Add($"f.id = @p{pIndex}");
+                parameters.Add(request.FloorId.Value);
+                pIndex++;
+            }
+
+            if (request.AreaId.HasValue)
+            {
+                filters.Add($"a.id = @p{pIndex}");
+                parameters.Add(request.AreaId.Value);
+                pIndex++;
+            }
+
+            if (request.VisitorId.HasValue)
+            {
+                filters.Add($"t.visitor_id = @p{pIndex}");
+                parameters.Add(request.VisitorId.Value);
+                pIndex++;
+            }
+
+            if (request.ReaderId.HasValue)
+            {
+                filters.Add($"t.reader_id = @p{pIndex}");
+                parameters.Add(request.ReaderId.Value);
+                pIndex++;
+            }
+
+            if (!string.IsNullOrEmpty(request.IdentityId))
+            {
+                filters.Add($@"
+                    EXISTS (
+                        SELECT 1
+                        FROM card c
+                        LEFT JOIN visitor v ON v.id = c.visitor_id
+                        LEFT JOIN member  m ON m.id = c.member_id
+                        WHERE c.id = t.card_id
+                        AND (
+                            v.identity_id = @p{pIndex}
+                            OR m.identity_id = @p{pIndex}
+                        )
+                    )
+                ");
+                parameters.Add(request.IdentityId);
+                pIndex++;
+            }
+
+            if (!filters.Any())
+                return ("", parameters);
+
+            return (" AND " + string.Join(" AND ", filters), parameters);
+        }
+
+
 
 
         // helpers filter

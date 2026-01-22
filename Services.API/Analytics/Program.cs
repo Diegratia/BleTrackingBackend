@@ -245,6 +245,7 @@ using BusinessLogic.Services.Extension.Analytics;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 try
 {
@@ -406,6 +407,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseMiddleware<CustomExceptionMiddleware>(); 
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();

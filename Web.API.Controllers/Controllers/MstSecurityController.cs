@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
+using DataView;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -74,7 +75,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
                 await _MstSecurityService.DeleteSecurityAsync(id);
-                return StatusCode(204, ApiResponse.NoContent("Security deleted successfully"));
+                return Ok(ApiResponse.Success("Security deleted successfully"));
         }
 
 
@@ -108,191 +109,38 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-
-
-
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // // POST: api/MstSecurity
-        // [HttpPost("{id}/blacklist")]
-        // public async Task<IActionResult> BlacklistSecurity(Guid id, [FromBody] BlacklistReasonDto dto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //      try
-        //     {
-        //         await _MstSecurityService.SecurityBlacklistAsync(id, dto);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Security Blacklisted successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // // POST: api/MstSecurity
-        // [HttpPost("{id}/unblacklist")]
-        // public async Task<IActionResult> UnBlacklistSecurity(Guid id)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //      try
-        //     {
-        //         await _MstSecurityService.UnBlacklistSecurityAsync(id);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Security Unblacklist successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-
-
         [HttpGet("export/pdf")]
-        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _MstSecurityService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstSecurity_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _MstSecurityService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstSecurity_Report.pdf");
         }
+
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
                 var excelBytes = await _MstSecurityService.ExportExcelAsync();
                 return File(excelBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "MstSecurity_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPost("import")]
-        public async Task<IActionResult> Import([FromForm] IFormFile file)
-        {
-            if (file == null || file.Length == 0)
+       [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+            [HttpPost("import")]
+            public async Task<IActionResult> Import([FromForm] IFormFile file)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                // ✅ Manual validation sebelum service call
+                if (file == null || file.Length == 0)
+                    throw new BusinessException("No file uploaded or file is empty");
 
-            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                    throw new BusinessException("Only .xlsx files are allowed");
 
-            try
-            {
                 var floors = await _MstSecurityService.ImportAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Securities imported successfully",
-                    collection = new { data = floors },
-                    code = 200
-                });
+                return Ok(ApiResponse.Success("Securities imported successfully", floors));
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
 
         //OPEN
 

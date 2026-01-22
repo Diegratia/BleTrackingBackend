@@ -167,109 +167,109 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request)
-        {
-            try
+        // public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsync(TrackingAnalyticsRequestRM request)
+        // {
+        //     try
+        //     {
+        //         var data = await _repository.GetAccessPermissionSummaryAsync(request);
+        //         var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
+        //         return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error getting area count");
+        //         return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
+        //     }
+        // }
+
+        // public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request)
+        // {
+        //     try
+        //     {
+        //         var data = await _repository.GetAccessPermissionSummaryAsyncV2(request);
+        //         var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
+        //         return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error getting area count");
+        //         return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
+        //     }
+        // }
+
+            public async Task<object> GetAreaAccessedSummaryAsyncV3(
+        TrackingAnalyticsRequestRM request
+    )
             {
-                var data = await _repository.GetAccessPermissionSummaryAsync(request);
-                var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
-                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting area count");
-                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
-            }
-        }
-
-        public async Task<ResponseSingle<TrackingAccessPermissionSummaryDto>> GetAreaAccessedSummaryAsyncV2(TrackingAnalyticsRequestRM request)
-        {
-            try
-            {
-                var data = await _repository.GetAccessPermissionSummaryAsyncV2(request);
-                var dto = _mapper.Map<TrackingAccessPermissionSummaryDto>(data);
-                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Ok(dto, "Success");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting area count");
-                return ResponseSingle<TrackingAccessPermissionSummaryDto>.Error($"Internal error: {ex.Message}");
-            }
-        }
-        
-        public async Task<object> GetAreaAccessedSummaryAsyncV3(
-    TrackingAnalyticsRequestRM request
-)
-{
-    try
-    {
-        var rows = await _repository.GetAreaAccessDailyAsync(request);
-
-        var dates = rows
-            .Select(x => x.Date.Date)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        var labels = dates
-            .Select(d => d.ToString("MMM d"))
-            .ToList();
-
-        List<int> BuildSeries(string status) =>
-            dates.Select(d =>
-                rows.FirstOrDefault(r =>
-                    r.Date.Date == d &&
-                    r.RestrictedStatus == status
-                )?.Total ?? 0
-            ).ToList();
-
-        var withPermission = BuildSeries("non-restrict");
-        var withoutPermission = BuildSeries("restrict");
-
-        var accessedArea = withPermission
-            .Zip(withoutPermission, (a, b) => a + b)
-            .ToList();
-
-        var response = new AreaAccessResponseDto
-        {
-            Summary = new AreaAccessSummaryDto
-            {
-                AccessedAreaTotal = accessedArea.Sum(),
-                WithPermission = withPermission.Sum(),
-                WithoutPermission = withoutPermission.Sum()
-            },
-            Chart = new AreaAccessChartDto
-            {
-                Labels = labels,
-                Series = new()
+                try
                 {
-                    new ChartSeriesDto
+                    var rows = await _repository.GetAreaAccessDailyAsync(request);
+
+                    var dates = rows
+                        .Select(x => x.Date.Date)
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToList();
+
+                    var labels = dates
+                        .Select(d => d.ToString("MMM d"))
+                        .ToList();
+
+                    List<int> BuildSeries(string status) =>
+                        dates.Select(d =>
+                            rows.FirstOrDefault(r =>
+                                r.Date.Date == d &&
+                                r.RestrictedStatus == status
+                            )?.Total ?? 0
+                        ).ToList();
+
+                    var withPermission = BuildSeries("non-restrict");
+                    var withoutPermission = BuildSeries("restrict");
+
+                    var accessedArea = withPermission
+                        .Zip(withoutPermission, (a, b) => a + b)
+                        .ToList();
+
+                    var response = new AreaAccessResponseDto
                     {
-                        Name = "Accessed Area",
-                        Data = accessedArea
-                    },
-                    new ChartSeriesDto
+                        Summary = new AreaAccessSummaryDto
+                        {
+                            AccessedAreaTotal = accessedArea.Sum(),
+                            WithPermission = withPermission.Sum(),
+                            WithoutPermission = withoutPermission.Sum()
+                        },
+                        Chart = new AreaAccessChartDto
+                        {
+                            Labels = labels,
+                            Series = new()
                     {
-                        Name = "With Permission",
-                        Data = withPermission
-                    },
-                    new ChartSeriesDto
-                    {
-                        Name = "Without Permission",
-                        Data = withoutPermission
+                        new ChartSeriesDto
+                        {
+                            Name = "Accessed Area",
+                            Data = accessedArea
+                        },
+                        new ChartSeriesDto
+                        {
+                            Name = "With Permission",
+                            Data = withPermission
+                        },
+                        new ChartSeriesDto
+                        {
+                            Name = "Without Permission",
+                            Data = withoutPermission
+                        }
                     }
+                        }
+                    };
+
+                    return ApiResponse.Success("Success", response);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error getting area accessed summary");
+                    return ApiResponse.InternalError("Internal server error");
                 }
             }
-        };
-
-        return ApiResponse.Success("Success", response);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error getting area accessed summary");
-        return ApiResponse.InternalError("Internal server error");
-    }
-}
 
 
     }

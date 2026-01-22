@@ -117,5 +117,4 @@ namespace Data.ViewModels.AlarmAnalytics
         public AreaAccessChartDto Chart { get; set; }
     }
 
-
 }
