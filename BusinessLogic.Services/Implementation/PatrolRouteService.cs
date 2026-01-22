@@ -48,25 +48,25 @@ namespace BusinessLogic.Services.Implementation
                 .Distinct()
                 .ToList();
 
-                var missingAreaIds = await _repo
-                .GetMissingIdsAsync(areaIds);
+            //     var missingAreaIds = await _repo
+            //     .GetMissingIdsAsync(areaIds);
 
-                var missingTimeGroupIds = await _repo
-                .GetMissingIdsAsync(TimeGroupIds);
+            //     var missingTimeGroupIds = await _repo
+            //     .GetMissingIdsAsync(TimeGroupIds);
 
-            if (missingAreaIds.Count > 0)
-            {
-                throw new NotFoundException(
-                    $"PatrolArea not found: {string.Join(", ", missingAreaIds)}"
-                );
-            }
+            // if (missingAreaIds.Count > 0)
+            // {
+            //     throw new NotFoundException(
+            //         $"PatrolArea not found: {string.Join(", ", missingAreaIds)}"
+            //     );
+            // }
 
-            if (missingTimeGroupIds.Count > 0)
-            {
-                throw new NotFoundException(
-                    $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}"
-                );
-            }
+            // if (missingTimeGroupIds.Count > 0)
+            // {
+            //     throw new NotFoundException(
+            //         $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}"
+            //     );
+            // }
 
             entity.PatrolRouteTimeGroups = TimeGroupIds
                 .Select(x => new PatrolRouteTimeGroups
