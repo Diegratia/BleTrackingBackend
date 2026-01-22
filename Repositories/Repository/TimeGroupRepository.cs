@@ -119,6 +119,7 @@ namespace Repositories.Repository
                 Id = tg.Id,
                 Name = tg.Name,
                 Description = tg.Description,
+                ScheduleType = tg.ScheduleType.ToString(),
                 ApplicationId = tg.ApplicationId,
                 UpdatedAt = tg.UpdatedAt,
 

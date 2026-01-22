@@ -11,6 +11,7 @@ namespace Helpers.Consumer.DtoHelpers.MinimalDto
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public string? ScheduleType { get; set; }
         public List<TimeBlockMinimalDto> TimeBlocks { get; set; } = new();
         public List<Guid?> CardAccessIds { get; set; } = new();
         public DateTime UpdatedAt { get; set; } 
