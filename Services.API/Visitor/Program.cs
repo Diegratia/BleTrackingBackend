@@ -115,8 +115,8 @@ builder.Services.AddAuthorization(options =>
     });
     options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
  {
-     policy.RequireAssertion(context =>
-         context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
+    policy.RequireAssertion(context =>
+        context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
  });
     options.AddPolicy("RequireAll", policy =>
      {

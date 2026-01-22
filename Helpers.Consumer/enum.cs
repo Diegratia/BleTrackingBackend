@@ -218,10 +218,10 @@ namespace Helpers.Consumer
     {
         System,
         SuperAdmin,
-        PrimaryAdmin,
-        Primary,
-        Secondary,
-        UserCreated
+        PrimaryAdmin, // operator or security head
+        Primary, //security
+        Secondary, // member /employee
+        UserCreated // visitor
     }
 
     public enum BoundaryType

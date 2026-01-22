@@ -273,7 +273,7 @@ namespace Web.API.Controllers.Controllers
 
         [HttpGet("users")]
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        public async Task<IActionResult> GetAll()
+            public async Task<IActionResult> GetAll()
         {
             try
             {

@@ -475,14 +475,15 @@ namespace BusinessLogic.Services.Interface
                 new Claim("groupId", user.GroupId.ToString()),
                 new Claim("ApplicationId", user.Group.ApplicationId.ToString()),
                 new Claim("groupName", user.Group.Name),
-                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString())
+                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()),
+                new Claim("level", ((int)user.Group.LevelPriority).ToString())
             };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTime.UtcNow.AddYears(1),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

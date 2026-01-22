@@ -27,7 +27,7 @@ try
 {
     var possiblePaths = new[]
     {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),        
         Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   
         Path.Combine(AppContext.BaseDirectory, ".env"),               
         "/app/.env"                                                 

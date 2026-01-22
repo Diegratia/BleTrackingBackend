@@ -20,6 +20,8 @@
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />

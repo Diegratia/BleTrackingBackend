@@ -1,4 +1,5 @@
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
@@ -142,7 +143,7 @@ namespace Repositories.Repository.Analytics
         // alarm per status
         public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var range = GetTimeRange(request.TimeRange);
             var (from, to) = (
                 range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
                 range?.to ?? request.To ?? DateTime.UtcNow
@@ -175,6 +176,19 @@ namespace Repositories.Repository.Analytics
                 .OrderByDescending(x => x.Total)
                 .Take(3)
                 .ToList();
+
+            if (grouped.Count == 0)
+            {
+                var random = new Random();
+                var statuses = Enum.GetValues(typeof(AlarmRecordStatus)).Cast<AlarmRecordStatus>().ToList();
+                var randomStatuses = statuses.OrderBy(x => random.Next()).Take(3).Select(x => x.ToString()).ToList();
+
+                grouped.AddRange(randomStatuses.Select(s => new AlarmStatusSummaryRM
+                {
+                    Status = s,
+                    Total = 0
+                }));
+            }
 
             return grouped;
         }
