@@ -22,10 +22,52 @@ namespace Repositories.Repository.Analytics
         }
 
         // total alarm per area
-        public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
+        // public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
+        // {
+        //     var range = GetTimeRange(request.TimeRange ?? "weekly");
+        //     var (from, to) = (range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7), range?.to ?? request.To ?? DateTime.UtcNow);
+        //     var query = _context.AlarmRecordTrackings
+        //         .AsNoTracking()
+        //         .Include(a => a.FloorplanMaskedArea)
+        //         .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+        //     query = ApplyFilters(query, request);
+
+        //     var data = await query
+        //         .Select(a => new
+        //         {
+        //             a.AlarmTriggersId,
+        //             a.FloorplanMaskedAreaId,
+        //             AreaName = a.FloorplanMaskedArea.Name,
+        //             AlarmStatus = a.Alarm
+        //         })
+        //         .Distinct()
+        //         .GroupBy(x => new
+        //         {
+        //             x.FloorplanMaskedAreaId,
+        //             x.AreaName,
+        //             x.AlarmStatus
+        //         })
+        //         .Select(g => new AlarmAreaSummaryRM
+        //         {
+        //             AreaId = g.Key.FloorplanMaskedAreaId,
+        //             AreaName = g.Key.AreaName ?? "Unknown",
+        //             AlarmStatus = g.Key.AlarmStatus.ToString() ?? "Unknown",
+        //             Total = g.Count()
+        //         })
+        //         .ToListAsync();
+
+        //     return data;
+        // }
+
+        public async Task<List<AlarmAreaDailyAggregateRM>> GetAreaDailySummaryAsync(
+            AlarmAnalyticsRequestRM request
+        )
         {
-            var range = GetTimeRange(request.TimeRange ?? "weekly");
-            var (from, to) = (range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7), range?.to ?? request.To ?? DateTime.UtcNow);
+            var range = GetTimeRange(request.TimeRange ?? "daily");
+            var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
+            var to   = range?.to   ?? request.To   ?? DateTime.UtcNow;
+
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
                 .Include(a => a.FloorplanMaskedArea)
@@ -33,32 +75,27 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
-            var data = await query
-                .Select(a => new
+            return await query
+                .Where(a => a.Timestamp.HasValue)  
+                .GroupBy(a => new
                 {
-                    a.AlarmTriggersId,
+                    Date = a.Timestamp.Value.Date,
                     a.FloorplanMaskedAreaId,
                     AreaName = a.FloorplanMaskedArea.Name,
                     AlarmStatus = a.Alarm
                 })
-                .Distinct()
-                .GroupBy(x => new
+                .Select(g => new AlarmAreaDailyAggregateRM
                 {
-                    x.FloorplanMaskedAreaId,
-                    x.AreaName,
-                    x.AlarmStatus
-                })
-                .Select(g => new AlarmAreaSummaryRM
-                {
+                    Date = g.Key.Date,
                     AreaId = g.Key.FloorplanMaskedAreaId,
                     AreaName = g.Key.AreaName ?? "Unknown",
-                    AlarmStatus = g.Key.AlarmStatus.ToString() ?? "Unknown",
+                    AlarmStatus = g.Key.AlarmStatus.ToString(),
                     Total = g.Count()
                 })
+                .OrderBy(x => x.Date)
                 .ToListAsync();
-
-            return data;
         }
+
 
         // alarm per day
         public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
@@ -342,42 +379,42 @@ namespace Repositories.Repository.Analytics
         }
 
             // time range
-            private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
-            {
-                if (string.IsNullOrWhiteSpace(timeReport))
-                    return null;
+//             private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+//             {
+//                 if (string.IsNullOrWhiteSpace(timeReport))
+//                     return null;
 
-                // Gunakan UTC agar konsisten untuk server analytics
-                var now = DateTime.UtcNow;
+//                 // Gunakan UTC agar konsisten untuk server analytics
+//                 var now = DateTime.UtcNow;
 
-                // Pastikan format switch case aman (lowercase)
-                return timeReport.Trim().ToLower() switch
-                {
-                    "daily" => (
-                        now.Date,
-                        now.Date.AddDays(1).AddTicks(-1)
-                    ),
+//                 // Pastikan format switch case aman (lowercase)
+//                 return timeReport.Trim().ToLower() switch
+//                 {
+//                     "daily" => (
+//                         now.Date,
+//                         now.Date.AddDays(1).AddTicks(-1)
+//                     ),
 
-                    "weekly" => (
-                        now.Date.AddDays(-(int)now.DayOfWeek + 1),                // Senin awal minggu
-                        now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu akhir
-                    ),
+//                     "weekly" => (
+//                         now.Date.AddDays(-(int)now.DayOfWeek + 1),                // Senin awal minggu
+//                         now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu akhir
+//                     ),
 
-                    "monthly" => (
-                        new DateTime(now.Year, now.Month, 1),
-                        new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
-                            .AddDays(1).AddTicks(-1)
-                    ),
+//                     "monthly" => (
+//                         new DateTime(now.Year, now.Month, 1),
+//                         new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
+//                             .AddDays(1).AddTicks(-1)
+//                     ),
 
-                    "yearly" => (
-                        new DateTime(now.Year, 1, 1),
-                        new DateTime(now.Year, 12, 31)
-                            .AddDays(1).AddTicks(-1)
-                    ),
+//                     "yearly" => (
+//                         new DateTime(now.Year, 1, 1),
+//                         new DateTime(now.Year, 12, 31)
+//                             .AddDays(1).AddTicks(-1)
+//                     ),
 
-                    _ => null
-                };
-}
+//                     _ => null
+//                 };
+// }
 
     }
     

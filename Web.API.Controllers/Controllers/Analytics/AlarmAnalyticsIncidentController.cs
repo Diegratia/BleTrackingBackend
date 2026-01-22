@@ -5,6 +5,7 @@ using Data.ViewModels;
 using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Interface.Analytics;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
@@ -23,11 +24,17 @@ namespace Web.API.Controllers.Controllers.Analytics
         // ===================================================================
         // 1️⃣ Area Summary (Incident-level)
         // ===================================================================
+        // [HttpPost("area")]
+        // public async Task<IActionResult> GetArea([FromBody] AlarmAnalyticsRequestRM request)
+        // {
+        //     var response = await _service.GetAreaSummaryAsync(request);
+        //     return Ok(response);
+        // }
         [HttpPost("area")]
         public async Task<IActionResult> GetArea([FromBody] AlarmAnalyticsRequestRM request)
         {
-            var response = await _service.GetAreaSummaryAsync(request);
-            return Ok(response);
+            var response = await _service.GetAreaSummaryChartAsync(request);
+            return Ok(ApiResponse.Success("Area Summary retrieved successfully", response));
         }
 
         // ===================================================================

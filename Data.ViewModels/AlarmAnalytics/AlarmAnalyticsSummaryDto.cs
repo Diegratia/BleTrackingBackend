@@ -41,12 +41,34 @@ namespace Data.ViewModels.AlarmAnalytics
         public string? Status { get; set; }
     }
 
-     public class AlarmHourlyStatusSummaryDto
+    public class AlarmHourlyStatusSummaryDto
     {
         public int Hour { get; set; }
         public string HourLabel { get; set; } = string.Empty;
         public Dictionary<string, int> Status { get; set; } = new();
         // public int Total { get; set; }
     }
+
+    public class AlarmAreaChartResponseDto
+{
+    public List<string> Labels { get; set; } = new();
+    public List<AlarmAreaChartDto> Areas { get; set; } = new();
+}
+
+    public class AlarmAreaChartDto
+    {
+        public Guid? AreaId { get; set; }
+        public string AreaName { get; set; } = string.Empty;
+        public List<ChartSeriesDto> Series { get; set; } = new();
+    }
+
+    // public class ChartSeriesDto
+    // {
+    //     public string Name { get; set; } = string.Empty;
+    //     public List<int> Data { get; set; } = new();
+    // }
+
+    
+
 
 }

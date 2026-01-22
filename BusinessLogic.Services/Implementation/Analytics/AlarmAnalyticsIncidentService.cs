@@ -5,6 +5,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels;
 using Data.ViewModels.AlarmAnalytics;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
@@ -27,20 +28,75 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _logger = logger;
         }
 
-        public async Task<ResponseCollection<AlarmAreaSummaryDto>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
+        // public async Task<ResponseCollection<AlarmAreaSummaryDto>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
+        // {
+        //     try
+        //     {
+        //         var data = await _repository.GetAreaSummaryAsync(request);
+        //         var dto = _mapper.Map<List<AlarmAreaSummaryDto>>(data);
+        //         return ResponseCollection<AlarmAreaSummaryDto>.Ok(dto, "Incident area summary retrieved successfully");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error getting incident area summary");
+        //         return ResponseCollection<AlarmAreaSummaryDto>.Error($"Internal server error: {ex.Message}");
+        //     }
+        // }
+
+        public async Task<object> GetAreaSummaryChartAsync(
+            AlarmAnalyticsRequestRM request
+        )
         {
-            try
+            var rows = await _repository.GetAreaDailySummaryAsync(request);
+
+            // labels (dates)
+            var dates = rows
+                .Select(r => r.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+
+            var labels = dates
+                .Select(d => d.ToString("yyyy-MM-dd"))
+                .ToList();
+
+            // group per area
+            var areas = rows
+                .GroupBy(r => new { r.AreaId, r.AreaName })
+                .Select(areaGroup =>
+                {
+                    var statuses = areaGroup
+                        .Select(x => x.AlarmStatus)
+                        .Distinct();
+
+                    var series = statuses.Select(status => new ChartSeriesDto
+                    {
+                        Name = status,
+                        Data = dates.Select(date =>
+                            areaGroup.FirstOrDefault(r =>
+                                r.Date == date &&
+                                r.AlarmStatus == status
+                            )?.Total ?? 0
+                        ).ToList()
+                    }).ToList();
+
+                    return new AlarmAreaChartDto
+                    {
+                        AreaId = areaGroup.Key.AreaId,
+                        AreaName = areaGroup.Key.AreaName,
+                        Series = series
+                    };
+                })
+                .ToList();
+
+            var result = new AlarmAreaChartResponseDto
             {
-                var data = await _repository.GetAreaSummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmAreaSummaryDto>>(data);
-                return ResponseCollection<AlarmAreaSummaryDto>.Ok(dto, "Incident area summary retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident area summary");
-                return ResponseCollection<AlarmAreaSummaryDto>.Error($"Internal server error: {ex.Message}");
-            }
+                Labels = labels,
+                Areas = areas
+            };
+            return result;
         }
+
 
         public async Task<ResponseCollection<AlarmDailySummaryDto>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
         {
