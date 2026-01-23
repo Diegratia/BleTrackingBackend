@@ -110,108 +110,110 @@ namespace BusinessLogic.Services.Implementation
                 return _mapper.Map<PatrolRouteDto>(result);
         }
 
-    public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
-{
-    PatrolRoute result = null;
-
-    await _repo.ExecuteInTransactionAsync(async () =>
-    {
-        var route = await _repo.GetByIdAsync(id)
-            ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
-
-        // =====================================================
-        // 🔹 VALIDASI TIME GROUP
-        // =====================================================
-        var newTimeGroupIds = dto.TimeGroupIds?
-            .Where(x => x.HasValue)
-            .Select(x => x.Value)
-            .Distinct()
-            .ToList() ?? new List<Guid>();
-
-        var missingTimeGroupIds =
-            await _repo.GetMissingTimeGroupIdsAsync(newTimeGroupIds);
-
-        if (missingTimeGroupIds.Count > 0)
-            throw new NotFoundException(
-                $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}");
-
-        // =====================================================
-        // 🔥 REPLACE ALL TIME GROUPS
-        // =====================================================
-        foreach (var old in route.PatrolRouteTimeGroups.ToList())
+            public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
-            _repo.RemovePatrolRouteTimeGroup(old); // state = Deleted
-        }
-        route.PatrolRouteTimeGroups.Clear();
+            PatrolRoute result = null;
 
-        foreach (var tgId in newTimeGroupIds)
-        {
-            route.PatrolRouteTimeGroups.Add(new PatrolRouteTimeGroups
+            await _repo.ExecuteInTransactionAsync(async () =>
             {
-                PatrolRouteId = route.Id,
-                TimeGroupId = tgId,
-                ApplicationId = route.ApplicationId,
-                Status = 1
+                var route = await _repo.GetByIdWithTrackingAsync(id)
+                    ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
+
+                // =====================================================
+                // 🔹 VALIDASI TIME GROUP
+                // =====================================================
+                var newTimeGroupIds = dto.TimeGroupIds?
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value)
+                    .Distinct()
+                    .ToList() ?? new List<Guid>();
+
+                var missingTimeGroupIds =
+                    await _repo.GetMissingTimeGroupIdsAsync(newTimeGroupIds);
+
+                if (missingTimeGroupIds.Count > 0)
+                    throw new NotFoundException(
+                        $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}");
+
+                // =====================================================
+                // 🔥 REPLACE ALL TIME GROUPS
+                // =====================================================
+                foreach (var old in route.PatrolRouteTimeGroups.ToList())
+                {
+                    _repo.RemovePatrolRouteTimeGroup(old); // state = Deleted
+                }
+                route.PatrolRouteTimeGroups.Clear();
+
+                foreach (var tgId in newTimeGroupIds)
+                {
+                    route.PatrolRouteTimeGroups.Add(new PatrolRouteTimeGroups
+                    {
+                        PatrolRouteId = route.Id,
+                        TimeGroupId = tgId,
+                        ApplicationId = AppId,
+                        Status = 1
+                    });
+                }
+
+                
+
+                // =====================================================
+                // 🔥 REPLACE ALL AREAS
+                // =====================================================
+                var newAreaIds = dto.PatrolAreaIds?
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value)
+                    .Distinct()
+                    .ToList() ?? new List<Guid>();
+
+                foreach (var old in route.PatrolRouteAreas.ToList())
+                {
+                    _repo.RemovePatrolRouteArea(old); // state = Deleted
+                }
+                route.PatrolRouteAreas.Clear();
+
+                for (int i = 0; i < newAreaIds.Count; i++)
+                {
+                    route.PatrolRouteAreas.Add(new PatrolRouteAreas
+                    {
+                        PatrolRouteId = route.Id,
+                        PatrolAreaId = newAreaIds[i],
+                        OrderIndex = i + 1,
+                        EstimatedDistance = 0,
+                        EstimatedTime = 0,
+                        status = 1,
+                        ApplicationId = route.ApplicationId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = UsernameFormToken,
+                        UpdatedBy = UsernameFormToken
+                    });
+                }
+
+                // =====================================================
+                // 🔹 UPDATE ROUTE (SCALAR SAJA)
+                // =====================================================
+                _mapper.Map(dto, route); // navigation di-ignore
+                SetStartEndArea(route);
+                SetUpdateAudit(route);
+
+                // 🔥 PASTIKAN EF UPDATE PARENT
+                await _repo.UpdateAsync(route);
+
+                // reload untuk response
+                result = await _repo.GetByIdAsync(route.Id)
+                    ?? throw new Exception("Failed to reload PatrolRoute after update");
             });
+
+            await _audit.Updated(
+                "Patrol Route",
+                result.Id,
+                "Updated Patrol Route",
+                new { result.Name }
+            );
+
+            return _mapper.Map<PatrolRouteDto>(result);
         }
-
-        // =====================================================
-        // 🔥 REPLACE ALL AREAS
-        // =====================================================
-        var newAreaIds = dto.PatrolAreaIds?
-            .Where(x => x.HasValue)
-            .Select(x => x.Value)
-            .Distinct()
-            .ToList() ?? new List<Guid>();
-
-        foreach (var old in route.PatrolRouteAreas.ToList())
-        {
-            _repo.RemovePatrolRouteArea(old); // state = Deleted
-        }
-        route.PatrolRouteAreas.Clear();
-
-        for (int i = 0; i < newAreaIds.Count; i++)
-        {
-            route.PatrolRouteAreas.Add(new PatrolRouteAreas
-            {
-                PatrolRouteId = route.Id,
-                PatrolAreaId = newAreaIds[i],
-                OrderIndex = i + 1,
-                EstimatedDistance = 0,
-                EstimatedTime = 0,
-                status = 1,
-                ApplicationId = route.ApplicationId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                CreatedBy = UsernameFormToken,
-                UpdatedBy = UsernameFormToken
-            });
-        }
-
-        // =====================================================
-        // 🔹 UPDATE ROUTE (SCALAR SAJA)
-        // =====================================================
-        _mapper.Map(dto, route); // navigation di-ignore
-        SetStartEndArea(route);
-        SetUpdateAudit(route);
-
-        // 🔥 PASTIKAN EF UPDATE PARENT
-        await _repo.UpdateAsync(route);
-
-        // reload untuk response
-        result = await _repo.GetByIdAsync(route.Id)
-            ?? throw new Exception("Failed to reload PatrolRoute after update");
-    });
-
-    await _audit.Updated(
-        "Patrol Route",
-        result.Id,
-        "Updated Patrol Route",
-        new { result.Name }
-    );
-
-    return _mapper.Map<PatrolRouteDto>(result);
-}
 
 
 
@@ -328,7 +330,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var entity = await _repo.GetByIdAsync(id);
+            var entity = await _repo.GetByIdWithTrackingAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolRoute with id {id} not found");
 

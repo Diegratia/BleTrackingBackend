@@ -32,6 +32,26 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
+            public IQueryable<PatrolRoute> GetAllQueryableWithTracking()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolRoutes
+                .Include(x => x.PatrolRouteAreas)
+                    .ThenInclude(x => x.PatrolArea)
+                .Include(x => x.PatrolRouteTimeGroups)
+                    .ThenInclude(x => x.TimeGroup)
+                .Where(x => x.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        public async Task<PatrolRoute?> GetByIdWithTrackingAsync(Guid id)
+    {
+        return await GetAllQueryableWithTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
         public IQueryable<PatrolRouteLookUpRM> MinimalGetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
