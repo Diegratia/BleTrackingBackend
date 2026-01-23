@@ -8,9 +8,12 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Helpers.Consumer;
 
 namespace Web.API.Controllers.Controllers
 {
+    // [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-route")]
     [ApiController]
 
@@ -23,7 +26,6 @@ namespace Web.API.Controllers.Controllers
             _PatrolRouteService = PatrolRouteService;
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/PatrolRoute
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -31,7 +33,6 @@ namespace Web.API.Controllers.Controllers
             var patrolroutes = await _PatrolRouteService.GetAllAsync();
             return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
         }
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/PatrolRoute
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
@@ -46,7 +47,6 @@ namespace Web.API.Controllers.Controllers
         //     return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
         // }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/PatrolRoute/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -56,7 +56,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/PatrolRoute
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PatrolRouteCreateDto PatrolRouteDto)
@@ -73,7 +72,6 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Patrol Route created successfully", createdSecurity));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         // DELETE: api/PatrolRoute/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -83,7 +81,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -94,7 +91,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Patrol Route filtered successfully", result));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/PatrolRoute/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PatrolRouteUpdateDto updateDto)

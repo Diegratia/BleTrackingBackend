@@ -53,6 +53,9 @@ namespace Repositories.DbContexts
         public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
         public DbSet<PatrolRouteTimeGroups> PatrolRouteTimeGroups{ get; set; }
         public DbSet<PatrolAssignment> PatrolAssignments{ get; set; }
+        public DbSet<PatrolAssignmentSecurity> PatrolAssignmentSecurities{ get; set; }
+        public DbSet<SecurityGroup> SecurityGroups{ get; set; }
+        public DbSet<SecurityGroupMember> SecurityGroupMembers{ get; set; }
         //
         public DbSet<StayOnArea> StayOnAreas { get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
@@ -98,12 +101,13 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
             modelBuilder.Entity<PatrolRouteTimeGroups>().ToTable("patrol_route_time_groups");
             modelBuilder.Entity<PatrolAssignment>().ToTable("patrol_assignment");
+            modelBuilder.Entity<PatrolAssignmentSecurity>().ToTable("patrol_assignment_security");
+            modelBuilder.Entity<SecurityGroup>().ToTable("security_group");
+            modelBuilder.Entity<SecurityGroupMember>().ToTable("security_group_member");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
             modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
-            // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
-            // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
@@ -433,6 +437,16 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.District)
                     .WithMany()
                     .HasForeignKey(m => m.DistrictId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasMany(m => m.PatrolAssignmentSecurities)
+                    .WithOne(m => m.Security)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(m => m.SecurityGroupMembers)
+                    .WithOne(m => m.Security)
+                    .HasForeignKey(m => m.SecurityId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(m => m.Status)
@@ -889,17 +903,11 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.SecurityGroupId).HasMaxLength(36);
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
                 entity.Property(e => e.TimeGroupId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.ApplicationId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.SecurityGroup)
-                    .WithMany(m => m.PatrolAssignments)
-                    .HasForeignKey(m => m.SecurityGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(m => m.PatrolRoute)
@@ -911,6 +919,74 @@ namespace Repositories.DbContexts
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.PatrolAssignmentSecurities)
+                    .WithOne(e => e.PatrolAssignment)
+                    .HasForeignKey(e => e.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+            });
+            //PatrolAssignmentSecurity
+            modelBuilder.Entity<PatrolAssignmentSecurity>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolAssignmentId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.PatrolAssignment)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //SecurityGroupMember
+            modelBuilder.Entity<SecurityGroupMember>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.SecurityGroupId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.SecurityGroup)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.SecurityGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //SecurityGroup
+            modelBuilder.Entity<SecurityGroup>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.SecurityGroups)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(m => m.SecurityGroupMembers)
+                    .WithOne(m => m.SecurityGroup)
+                    .HasForeignKey(m => m.SecurityGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
             });
 
              // Boundary

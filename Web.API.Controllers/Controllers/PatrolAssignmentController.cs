@@ -8,9 +8,12 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Helpers.Consumer;
 
 namespace Web.API.Controllers.Controllers
 {
+    // [MinLevel(LevelPriority.UserCreated)]
     [Route("api/patrol-assignment")]
     [ApiController]
     public class PatrolAssignmentController : ControllerBase

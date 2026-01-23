@@ -10,6 +10,18 @@ using Repositories.Repository.RepoModel;
 
 namespace BusinessLogic.Services.Extension
 {
+    public class PatrolAreaProfile : Profile
+    {
+        public PatrolAreaProfile()
+        {
+            CreateMap<PatrolArea, PatrolAreaDto>();
+            CreateMap<PatrolAreaRM, PatrolAreaDto>();
+            CreateMap<PatrolAreaLookUpRM, PatrolAreaLookUpDto>();
+            CreateMap<PatrolAreaCreateDto, PatrolArea>();
+            CreateMap<PatrolAreaUpdateDto, PatrolArea>();
+        }
+    }
+
     public class PatrolRouteProfile : Profile
     {
         public PatrolRouteProfile()
@@ -87,6 +99,22 @@ namespace BusinessLogic.Services.Extension
             CreateMap<PatrolRouteLookUpRM, PatrolRouteLookUpDto>();
             CreateMap<PatrolRouteCreateDto, PatrolRoute>();
             CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
+        }
+    }
+    
+    public class PatrolAssignmentProfile : Profile
+    {
+        public PatrolAssignmentProfile()
+        {
+            CreateMap<PatrolAssignmentCreateDto, PatrolAssignment>()
+                .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore());
+
+            CreateMap<PatrolAssignmentUpdateDto, PatrolAssignment>()
+                .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<PatrolAssignmentLookUpRM, PatrolAssignmentLookUpDto>();
+            CreateMap<PatrolAssignment, PatrolAssignmentDto>();
+            CreateMap<PatrolAssignmentRM, PatrolAssignmentDto>();
         }
     }
 }

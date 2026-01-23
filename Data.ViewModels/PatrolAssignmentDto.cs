@@ -11,23 +11,26 @@ namespace Data.ViewModels
         public string? Description { get; set; }
         public Guid? PatrolRouteId { get; set; }
         public string? PatrolRouteName { get; set; }
-        // public List<Guid>? SecurityIds { get; set; }
+
         public Guid? TimeGroupId { get; set; }
         public string? TimeGroupName { get; set; }
+
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+
+        // RESULT dari PatrolAssignmentSecurity
         public List<SecurityListDto>? Securities { get; set; }
     }
 
-    public class PatrolAssignmentCreateDto
+    public class PatrolAssignmentCreateDto : BaseModelDto
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Guid? PatrolRouteId { get; set; }
-        public List<Guid>? SecurityIds { get; set; }
         public Guid? TimeGroupId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public List<Guid> SecurityIds { get; set; } = new();
     }
 
     public class PatrolAssignmentUpdateDto
@@ -35,19 +38,19 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Guid? PatrolRouteId { get; set; }
-        public List<Guid>? SecurityIds { get; set; }
         public Guid? TimeGroupId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public List<Guid?> SecurityIds { get; set; } = new();
     }
 
-    public class PatrolAssignmentLookUpDto
+    public class PatrolAssignmentLookUpDto : BaseModelDto
     {
         public Guid? Id { get; set; }
         public string? Name { get; set; }
     }
 
-    public class SecurityListDto
+    public class SecurityListDto : BaseModelDto
     {
         public Guid? Id { get; set; }
         public string? Name { get; set; }
@@ -57,7 +60,4 @@ namespace Data.ViewModels
         public string? DepartmentName { get; set; }
         public string? DistrictName { get; set; }
     }
-
-    
-
 }

@@ -63,6 +63,7 @@ namespace Repositories.Repository
 
             await _context.SaveChangesAsync();
         }
+        
 
         public async Task DeleteAsync(Guid id)
         {
@@ -82,6 +83,9 @@ namespace Repositories.Repository
         }
 
 
+
+
+
         public IQueryable<PatrolAssignment> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -89,11 +93,19 @@ namespace Repositories.Repository
             var query = _context.PatrolAssignments
             .Include(d => d.TimeGroup)
             .Include(d => d.PatrolRoute)
-            .Include(d => d.Security)
+            .Include(d => d.PatrolAssignmentSecurities)
+                .ThenInclude(pas => pas.Security)
             .Where(d => d.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        public void RemovePatrolAssignmentSecurity(PatrolAssignmentSecurity entity)
+        {
+            _context.PatrolAssignmentSecurities.Remove(entity);
+        }
+
+
 
         public async Task<List<PatrolAssignmentLookUpRM>> GetAllLookUpAsync()
         {
@@ -106,17 +118,17 @@ namespace Repositories.Repository
             {
                 Id = t.Id,
                 Name = t.Name,
-            }); 
+            });
             return await projected.ToListAsync();
         }
-        
-                public async Task<IReadOnlyCollection<Guid>> GetMissingSecurityIdsAsync(
-    IEnumerable<Guid> ids
-        )
+
+        public async Task<IReadOnlyCollection<Guid>> GetMissingSecurityIdsAsync(
+IEnumerable<Guid> ids
+)
         {
             var idList = ids.Distinct().ToList();
-                if (!idList.Any())
-                    return Array.Empty<Guid>();
+            if (!idList.Any())
+                return Array.Empty<Guid>();
 
             var existingIds = await _context.MstSecurities
                 .Where(x => idList.Contains(x.Id) && x.Status != 0)
@@ -138,5 +150,14 @@ namespace Repositories.Repository
                 .AnyAsync(f => f.Id == timeGroupId && f.Status != 0);
         }
 
+        public async Task RemoveAssignmentSecurities(Guid patrolAssignmentId)
+        {
+            var rows = _context.PatrolAssignmentSecurities
+                .Where(x => x.PatrolAssignmentId == patrolAssignmentId);
+
+            _context.PatrolAssignmentSecurities.RemoveRange(rows);
+            await _context.SaveChangesAsync();
+        }
+    
     }
 }

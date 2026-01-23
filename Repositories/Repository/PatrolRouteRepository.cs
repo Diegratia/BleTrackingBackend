@@ -138,10 +138,22 @@ namespace Repositories.Repository
             return entity;
         }
 
-        public async Task UpdateAsync()
+        // public async Task UpdateAsync()
+        // {
+        //     await _context.SaveChangesAsync();
+        // }
+
+        public async Task UpdateAsync(PatrolRoute patrolRoute)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(patrolRoute.ApplicationId);
+            ValidateApplicationIdForEntity(patrolRoute, applicationId, isSystemAdmin);
+
             await _context.SaveChangesAsync();
         }
+
+        
 
         public async Task DeleteAsync(Guid id)
         {
@@ -150,7 +162,6 @@ namespace Repositories.Repository
             var entity = await _context.PatrolRoutes
                 .FirstOrDefaultAsync(x => x.Id == id && x.Status != 0);
 
-            entity.Status = 0;
             await _context.SaveChangesAsync();
         }
 
@@ -162,14 +173,34 @@ namespace Repositories.Repository
             _context.PatrolRouteAreas.RemoveRange(items);
             await _context.SaveChangesAsync();
         }
+        public async Task DeleteTimeGroupByRouteIdAsync(Guid routeId)
+        {
+            var items = _context.PatrolRouteTimeGroups
+                .Where(x => x.PatrolRouteId == routeId);
+
+            _context.PatrolRouteTimeGroups.RemoveRange(items);
+            await _context.SaveChangesAsync();
+        }
+
+        
+        
+        public void RemovePatrolRouteArea(PatrolRouteAreas entity)
+        {
+            _context.PatrolRouteAreas.Remove(entity);
+        }
+
+        public void RemovePatrolRouteTimeGroup(PatrolRouteTimeGroups entity)
+        {
+            _context.PatrolRouteTimeGroups.Remove(entity);
+        }
 
         public async Task<IReadOnlyCollection<Guid>> GetMissingAreaIdsAsync(
     IEnumerable<Guid> ids
         )
         {
             var idList = ids.Distinct().ToList();
-                if (!idList.Any())
-                    return Array.Empty<Guid>();
+            if (!idList.Any())
+                return Array.Empty<Guid>();
 
             var existingIds = await _context.PatrolAreas
                 .Where(x => idList.Contains(x.Id) && x.Status != 0)

@@ -106,7 +106,16 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
                 case DbUpdateException ex:
                     statusCode = 400;
-                    var dbMessage = _env.IsDevelopment() ? ex.InnerException?.Message : "Database operation failed";
+                   var dbMessage = "Database error";
+
+                        if (_env.IsDevelopment())
+                        {
+                            dbMessage =
+                                ex.InnerException?.InnerException?.Message ??
+                                ex.InnerException?.Message ??
+                                ex.Message;
+                        }
+
                     result = ApiResponse.BadRequest(dbMessage ?? "Database error");  // ✅ Now available
                     _logger.LogError(ex, "Database error");
                     break;

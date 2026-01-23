@@ -8,9 +8,12 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Helpers.Consumer;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-area")]
     [ApiController]
 
@@ -23,7 +26,6 @@ namespace Web.API.Controllers.Controllers
             _PatrolAreaService = PatrolAreaService;
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/PatrolArea
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -38,7 +40,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Patrol Area retrieved successfully", patrolareas));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/PatrolArea/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -48,7 +49,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/PatrolArea
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PatrolAreaCreateDto PatrolAreaDto)
@@ -65,7 +65,6 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Patrol Area created successfully", createdSecurity));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         // DELETE: api/PatrolArea/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -75,7 +74,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -86,7 +84,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Patrol Area filtered successfully", result));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+
         // PUT: api/PatrolArea/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PatrolAreaUpdateDto updateDto)

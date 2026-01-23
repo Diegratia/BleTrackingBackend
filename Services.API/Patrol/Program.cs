@@ -23,32 +23,7 @@ using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 
 
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),        
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   
-        Path.Combine(AppContext.BaseDirectory, ".env"),               
-        "/app/.env"                                                 
-    };
-
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-    if (envFile != null)
-    {
-        Console.WriteLine($"Loading env file: {envFile}");
-        Env.Load(envFile);
-    }
-    else
-    {
-        Console.WriteLine("No .env file found — skipping load");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseSerilogExtension();   
@@ -75,14 +50,16 @@ builder.Services.AddValidatorExtensions();
 builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(PatrolAreaProfile));
 builder.Services.AddAutoMapper(typeof(PatrolRouteProfile));
+builder.Services.AddAutoMapper(typeof(PatrolAssignmentProfile));
 
 builder.Services.AddJwtAuthExtension(builder.Configuration);
-builder.Services.AddAuthorizationPolicies();
+builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddSwaggerExtension();
 
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IPatrolAreaService, PatrolAreaService>();
 builder.Services.AddScoped<IPatrolRouteService, PatrolRouteService>();
+builder.Services.AddScoped<IPatrolAssignmentService, PatrolAssignmentService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
@@ -101,6 +78,7 @@ builder.Services.AddScoped<BoundaryRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 builder.Services.AddScoped<PatrolAreaRepository>();
 builder.Services.AddScoped<PatrolRouteRepository>();
+builder.Services.AddScoped<PatrolAssignmentRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");

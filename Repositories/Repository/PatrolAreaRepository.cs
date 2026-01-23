@@ -112,11 +112,18 @@ namespace Repositories.Repository
             }); 
             return await projected.ToListAsync();
         }
+        
+            public async Task<List<PatrolArea>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+            return await _context.PatrolAreas
+                .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
+                .ToListAsync();
+        }
 
         public async Task<bool> FloorExistsAsync(Guid floorId)
         {
             return await _context.MstFloors
-                .AnyAsync(f => f.Id == floorId && f.Status !=0);
+                .AnyAsync(f => f.Id == floorId && f.Status != 0);
         }
 
         public async Task<bool> FloorplanExistsAsync(Guid floorplanId)
