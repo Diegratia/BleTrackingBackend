@@ -108,14 +108,11 @@ namespace Entities.Models
         public string? Description { get; set; }
         [Column("patrol_route_id")]
         public Guid? PatrolRouteId { get; set; }
-        [Column("time_group_id")]
-        public Guid? TimeGroupId { get; set; }
         [Column("start_date")]
         public DateTime? StartDate { get; set; }
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
-        public TimeGroup? TimeGroup { get; set; }
         public MstApplication? Application { get; set; }
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
     }

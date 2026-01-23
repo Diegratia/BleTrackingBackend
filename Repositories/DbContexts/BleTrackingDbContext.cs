@@ -904,7 +904,6 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
-                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.ApplicationId)
@@ -913,11 +912,6 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.PatrolRoute)
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.PatrolRouteId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.TimeGroup)
-                    .WithMany(m => m.PatrolAssignments)
-                    .HasForeignKey(m => m.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(e => e.PatrolAssignmentSecurities)
@@ -1199,7 +1193,6 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (ScheduleType)Enum.Parse(typeof(ScheduleType), v, true)
                     );
-
                 entity.HasMany(e => e.CardAccessTimeGroups)
                     .WithOne(e => e.TimeGroup)
                     .HasForeignKey(e => e.TimeGroupId)

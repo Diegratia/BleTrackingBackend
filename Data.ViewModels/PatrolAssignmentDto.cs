@@ -12,9 +12,6 @@ namespace Data.ViewModels
         public Guid? PatrolRouteId { get; set; }
         public string? PatrolRouteName { get; set; }
 
-        public Guid? TimeGroupId { get; set; }
-        public string? TimeGroupName { get; set; }
-
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
@@ -27,7 +24,6 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Guid? PatrolRouteId { get; set; }
-        public Guid? TimeGroupId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public List<Guid> SecurityIds { get; set; } = new();
@@ -38,7 +34,6 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Guid? PatrolRouteId { get; set; }
-        public Guid? TimeGroupId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public List<Guid?> SecurityIds { get; set; } = new();

@@ -56,8 +56,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolAssignmentDto> CreateAsync(PatrolAssignmentCreateDto createDto)
         {
-            if (!await _repository.TimeGroupExistsAsync(createDto.TimeGroupId!.Value))
-                throw new NotFoundException($"TimeGroup with id {createDto.TimeGroupId} not found");
 
             if (!await _repository.PatrolRouteExistsAsync(createDto.PatrolRouteId!.Value))
                 throw new NotFoundException($"PatrolRoute with id {createDto.PatrolRouteId} not found");
@@ -107,16 +105,11 @@ namespace BusinessLogic.Services.Implementation
         {
             PatrolAssignment result = null;
 
-            await _repository.ExecuteInTransactionAsync(async () =>
-            {
-                var assignment = await _repository.GetByIdAsync(id)
+                var assignment = await _repository.GetByIdWithTrackingAsync(id)
                     ?? throw new NotFoundException(
                         $"PatrolAssignment with id {id} not found");
 
                 // ================= VALIDASI =================
-                if (dto.TimeGroupId.HasValue &&
-                    !await _repository.TimeGroupExistsAsync(dto.TimeGroupId.Value))
-                    throw new NotFoundException($"TimeGroup not found");
 
                 if (dto.PatrolRouteId.HasValue &&
                     !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
@@ -126,47 +119,54 @@ namespace BusinessLogic.Services.Implementation
                     .Where(x => x.HasValue)
                     .Select(x => x.Value)
                     .Distinct()
-                    .ToList() ?? new();
+                    .ToList() ?? new List<Guid>();
 
                 var missing =
                     await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
 
-                if (missing.Any())
+                if (missing.Count > 0)
                     throw new NotFoundException(
                         $"Security not found: {string.Join(", ", missing)}");
 
-                // ================= UPDATE SCALAR =================
-                _mapper.Map(dto, assignment);
-                SetUpdateAudit(assignment);
 
-                // ================= REPLACE SECURITY =================
-                foreach (var old in assignment.PatrolAssignmentSecurities.ToList())
-                {
-                    _repository.RemovePatrolAssignmentSecurity(old);
-                }
-                assignment.PatrolAssignmentSecurities.Clear();
 
-                foreach (var secId in newSecurityIds)
-                {
-                    assignment.PatrolAssignmentSecurities.Add(
-                        new PatrolAssignmentSecurity
-                        {
-                            PatrolAssignmentId = assignment.Id,
-                            SecurityId = secId,
-                            ApplicationId = assignment.ApplicationId,
-                            CreatedBy = UsernameFormToken,
-                            UpdatedBy = UsernameFormToken,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        });
-                }
+            // ================= REPLACE SECURITY =================
+
+            //     foreach (var old in assignment.PatrolAssignmentSecurities.ToList())
+            // {
+            //     _repository.RemovePatrolAssignmentSecurity(old);
+            // }
+            //     assignment.PatrolAssignmentSecurities.Clear();
+            await _repository.RemoveAllPatrolAssignmentSecurities(id);
+
+            _mapper.Map(dto, assignment);
+
+            foreach (var secId in newSecurityIds)
+            {
+                await _repository.AddPatrolAssignmentSecurityAsync(
+                    new PatrolAssignmentSecurity
+                    {
+                        PatrolAssignmentId = assignment.Id,
+                        SecurityId = secId,
+                        ApplicationId = assignment.ApplicationId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = UsernameFormToken,
+                        UpdatedBy = UsernameFormToken
+                    });
+            }
 
                 // 🔥 INI WAJIB (SAMA SEPERTI ROUTE)
+                
+                // ================= UPDATE SCALAR =================
+                // _mapper.Map(dto, assignment);
+                SetUpdateAudit(assignment);
                 await _repository.UpdateAsync(assignment);
 
-                result = await _repository.GetByIdAsync(assignment.Id)
-                    ?? throw new Exception("Failed reload");
-            });
+            result = await _repository.GetByIdAsync(assignment.Id)
+                ?? throw new Exception("Failed reload");
+                    
+            
 
             await _audit.Updated(
                 "Patrol Assignment",
