@@ -335,7 +335,6 @@ namespace BusinessLogic.Services.Implementation
             await _repo.ExecuteInTransactionAsync(async () =>
             {
                 SetDeleteAudit(entity);
-                entity.Status = 0;
                 await _repo.DeleteByRouteIdAsync(id);
                 await _repo.DeleteTimeGroupByRouteIdAsync(id);
                 await _repo.DeleteAsync(id);

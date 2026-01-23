@@ -77,7 +77,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             await _PatrolRouteService.DeleteAsync(id);
-            return StatusCode(204, ApiResponse.NoContent("Patrol Route deleted successfully"));
+            return StatusCode(200, ApiResponse.Success("Patrol Route deleted successfully"));
         }
 
 

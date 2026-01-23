@@ -161,7 +161,7 @@ namespace Repositories.Repository
 
             var entity = await _context.PatrolRoutes
                 .FirstOrDefaultAsync(x => x.Id == id && x.Status != 0);
-
+            entity.Status = 0;
             await _context.SaveChangesAsync();
         }
 
