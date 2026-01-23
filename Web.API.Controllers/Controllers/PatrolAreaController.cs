@@ -13,7 +13,7 @@ using Helpers.Consumer;
 
 namespace Web.API.Controllers.Controllers
 {
-    [MinLevel(LevelPriority.PrimaryAdmin)]
+    // [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-area")]
     [ApiController]
 
