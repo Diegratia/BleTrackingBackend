@@ -132,12 +132,14 @@ namespace Repositories.Repository
         //     return await q.CountAsync();
         // }
 
-          public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
+        public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
             .AsNoTracking()
             .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var projected = query.Select(t => new MstSecurityLookUpRM
             {
