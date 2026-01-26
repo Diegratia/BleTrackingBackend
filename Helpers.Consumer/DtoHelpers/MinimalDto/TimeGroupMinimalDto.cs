@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Data.ViewModels.Dto.Helpers.MinimalDto;
 
@@ -11,7 +12,8 @@ namespace Helpers.Consumer.DtoHelpers.MinimalDto
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public string? ScheduleType { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ScheduleType? ScheduleType { get; set; }
         public List<TimeBlockMinimalDto> TimeBlocks { get; set; } = new();
         public List<Guid?> CardAccessIds { get; set; } = new();
         public DateTime UpdatedAt { get; set; } 

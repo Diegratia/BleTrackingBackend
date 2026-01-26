@@ -1,73 +1,93 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
-using Helpers.Consumer;
-using Microsoft.EntityFrameworkCore;
+// using System;
+// using System.Collections.Generic;
+// using System.ComponentModel.DataAnnotations;
+// using System.ComponentModel.DataAnnotations.Schema;
+// using System.Linq;
+// using System.Threading.Tasks;
+// using Helpers.Consumer;
+// using Microsoft.EntityFrameworkCore;
 
-namespace Entities.Models
-{
-    [Index(nameof(OriginalCardId))]
-    [Index(nameof(SwappedCardId))]
-    [Index(nameof(TrxVisitorId))]
-    [Index(nameof(CreatedAt))]
-    public class CardSwapTransaction : BaseModelWithTime, IApplicationEntity
-    {
-        [ForeignKey(nameof(OriginalCard))]
-        [Column("original_card_id")]
-        public Guid OriginalCardId { get; set; }
+// namespace Entities.Models
+// {
+//     [Index(nameof(OriginalCardId))]
+//     [Index(nameof(SwappedCardId))]
+//     [Index(nameof(TrxVisitorId))]
+//     [Index(nameof(CreatedAt))]
+//     [Index(nameof(SwapChainId))]
+//     [Index(nameof(SwapSequence))]
+//     public class CardSwapTransaction : BaseModelWithTime, IApplicationEntity
+//     {
+//         [ForeignKey(nameof(OriginalCard))]
+//         [Column("original_card_id")]
+//         public Guid? OriginalCardId { get; set; }
 
-        [ForeignKey(nameof(SwappedCard))]
-        [Column("swapped_card_id")]
-        public Guid SwappedCardId { get; set; }
+//         [ForeignKey(nameof(SwappedCard))]
+//         [Column("swapped_card_id")]
+//         public Guid? SwappedCardId { get; set; }
 
-        [ForeignKey(nameof(TrxVisitor))]
-        [Column("trx_visitor_id")]
-        public Guid? TrxVisitorId { get; set; }
+//         [ForeignKey(nameof(TrxVisitor))]
+//         [Column("trx_visitor_id")]
+//         public Guid? TrxVisitorId { get; set; }
 
-        [ForeignKey(nameof(Visitor))]
-        [Column("visitor_id")]
-        public Guid VisitorId { get; set; }
+//         [ForeignKey(nameof(Visitor))]
+//         [Column("visitor_id")]
+//         public Guid VisitorId { get; set; }
 
-        [Column("swap_type")] 
-        public SwapType SwapType { get; set; }
+//         [Column("swap_type")] 
+//         public SwapType SwapType { get; set; }
 
-        [ForeignKey(nameof(MaskedArea))]
-        [Column("masked_area_id")]
-        public Guid MaskedAreaId { get; set; }
+//         [ForeignKey(nameof(MaskedArea))]
+//         [Column("masked_area_id")]
+//         public Guid MaskedAreaId { get; set; }
 
-        [Column("swap_by")]
-        public string SwapBy { get; set; }
+//         [Column("swap_by")]
+//         public string SwapBy { get; set; }
 
-        [Column("notes")]
-        public string? Notes { get; set; }
+//         [Column("notes")]
+//         public string? Notes { get; set; }
 
-        [Required]
-        [ForeignKey("Application")]
-        [Column("application_id")]
-        public Guid ApplicationId { get; set; }
+//         [Required]
+//         [ForeignKey("Application")]
+//         [Column("application_id")]
+//         public Guid ApplicationId { get; set; }
 
-        // [Column("swap_chain_id")]
-        // public Guid SwapChainId { get; set; } // semua swap dalam 1 session pakai id yang sama
+//         [Column("swap_chain_id")]
+//         public Guid SwapChainId { get; set; } // semua swap dalam 1 session pakai id yang sama
 
-        // [Column("swap_sequence")]
-        // public int SwapSequence { get; set; } = 0; // urutan swap, layer swap
+//         [Column("swap_sequence")]
+//         public int SwapSequence { get; set; } = 0; // urutan swap, layer swap
 
-        [Column("is_active")]
-        public bool IsActive { get; set; } = true; // Swap aktif terakhir = true
+//             // 🔑 identity context (WAJIB)
+//     [Column("identity_type")]
+//     public IdentityType IdentityType { get; set; }
 
-        [Column("completed_at")]
-        public DateTime? CompletedAt { get; set; } // Untuk rollback
+//     [Column("identity_value")]
+//     public string? IdentityValue { get; set; } // FREE INPUT (NIK / Badge / NDA / dll)
 
-        public Card OriginalCard { get; set; }
-        public Card SwappedCard { get; set; }
-        public TrxVisitor? TrxVisitor { get; set; }
-        public Visitor Visitor { get; set; }
-        public FloorplanMaskedArea MaskedArea { get; set; }
-        public MstApplication Application { get; set; }
-    }
+//     // optional tapi sangat disarankan
+//     [Column("identity_source")]
+//     public string? IdentitySource { get; set; } 
+//     // contoh: manual_input, security_override, gate_input, nda_form
+
+//     [Column("identity_reason")]
+//     public string? IdentityReason { get; set; }
+
+//     [Column("identity_is_registered")]
+//     public bool IdentityIsRegistered { get; set; } = false;
+
+//         [Column("is_active")]
+//         public bool IsActive { get; set; } = true; // Swap aktif terakhir = true
+
+//         [Column("completed_at")]
+//         public DateTime? CompletedAt { get; set; } // Untuk rollback
+
+//         public Card OriginalCard { get; set; }
+//         public Card SwappedCard { get; set; }
+//         public TrxVisitor? TrxVisitor { get; set; }
+//         public Visitor Visitor { get; set; }
+//         public FloorplanMaskedArea MaskedArea { get; set; }
+//         public MstApplication Application { get; set; }
+//     }
 
 
-}
+// }

@@ -173,6 +173,8 @@ namespace BusinessLogic.Services.Implementation
                                     throw new ArgumentException($"Invalid enum value for column '{filter.Key}': {stringValue}");
                                 }
                             }
+
+                            
                             else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intEnumVal))
                             {
                                 var enumValue = Enum.ToObject(enumType, intEnumVal);
@@ -185,7 +187,12 @@ namespace BusinessLogic.Services.Implementation
                         }
                         else if (jsonElement.ValueKind == JsonValueKind.String)
                         {
-                            query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString()?.ToLower());
+                            // query = query.Where($"{filter.Key} != null && {filter.Key}.ToString().ToLower().Contains(@0)", jsonElement.GetString()?.ToLower());
+                        query = query.Where(
+                        $"{filter.Key} != null && {filter.Key}.ToLower().Contains(@0)",
+                        jsonElement.GetString()?.ToLower()
+                    );
+
                         }
                         else if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt32(out var intValue))
                         {
