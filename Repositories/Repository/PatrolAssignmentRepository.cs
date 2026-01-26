@@ -99,20 +99,26 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
-
-
-
-
         public IQueryable<PatrolAssignment> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
             var query = _context.PatrolAssignments
             .Include(d => d.PatrolRoute)
             .Include(d => d.PatrolAssignmentSecurities)
                 .ThenInclude(pas => pas.Security)
             .Where(d => d.Status != 0);
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
 
+            public IQueryable<PatrolAssignment> GetAllQueryableWithoutTracking()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.PatrolAssignments
+            .Include(d => d.PatrolRoute)
+            .Include(d => d.PatrolAssignmentSecurities)
+                .ThenInclude(pas => pas.Security)
+            .AsNoTracking()
+            .Where(d => d.Status != 0);
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 

@@ -285,7 +285,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
-            var query = _repository.GetAllQueryable();
+            var query = _repository.GetAllQueryableWithoutTracking();
 
             var searchableColumns = new[] { "Name" };
             var validSortColumns = new[] { "UpdatedAt", "Name", "Status" };
