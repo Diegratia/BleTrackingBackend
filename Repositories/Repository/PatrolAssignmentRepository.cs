@@ -60,12 +60,11 @@ namespace Repositories.Repository
 
             await ValidateApplicationIdAsync(patrolassignment.ApplicationId);
             ValidateApplicationIdForEntity(patrolassignment, applicationId, isSystemAdmin);
-            // _context.Entry(patrolassignment).State = EntityState.Unchanged;
             await _context.SaveChangesAsync();
         }
-    
 
-        
+
+
 
         public async Task DeleteAsync(Guid id)
         {
@@ -85,20 +84,20 @@ namespace Repositories.Repository
         }
 
         // Di PatrolAssignmentRepository
-            public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
-            {
-                return await GetAllQueryable()
-                .AsNoTracking()  // ✅ 
+        public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
+        {
+            return await GetAllQueryable()
+            .AsNoTracking()  // ✅ 
+            .Where(a => a.Id == id && a.Status != 0)
+            .FirstOrDefaultAsync();
+        }
+
+        public async Task<PatrolAssignment?> GetByIdWithTrackingAsync(Guid id)
+        {
+            return await GetAllQueryable()
                 .Where(a => a.Id == id && a.Status != 0)
                 .FirstOrDefaultAsync();
-            }
-
-            public async Task<PatrolAssignment?> GetByIdWithTrackingAsync(Guid id)
-            {
-                return await GetAllQueryable()
-                    .Where(a => a.Id == id && a.Status != 0)
-                    .FirstOrDefaultAsync();
-            }
+        }
 
 
 
@@ -117,29 +116,29 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-    public async Task RemoveAllPatrolAssignmentSecurities(Guid assignmentId)
-{
-    await _context.PatrolAssignmentSecurities
-        .Where(x => x.PatrolAssignmentId == assignmentId)
-        .ExecuteDeleteAsync();
-}
+        public async Task RemoveAllPatrolAssignmentSecurities(Guid assignmentId)
+        {
+            await _context.PatrolAssignmentSecurities
+                .Where(x => x.PatrolAssignmentId == assignmentId)
+                .ExecuteDeleteAsync();
+        }
 
-public async Task AddPatrolAssignmentSecurityAsync(PatrolAssignmentSecurity entity)
-{
-    await _context.PatrolAssignmentSecurities.AddAsync(entity);
-}
+        public async Task AddPatrolAssignmentSecurityAsync(PatrolAssignmentSecurity entity)
+        {
+            await _context.PatrolAssignmentSecurities.AddAsync(entity);
+        }
 
-// public async Task UpdateScalarAsync(PatrolAssignment assignment)
-// {
-//     _context.PatrolAssignments.Update(assignment);
-//     await _context.SaveChangesAsync();
-// }
+        // public async Task UpdateScalarAsync(PatrolAssignment assignment)
+        // {
+        //     _context.PatrolAssignments.Update(assignment);
+        //     await _context.SaveChangesAsync();
+        // }
 
 
-            public void Attach(PatrolAssignment entity)
-{
-    _context.Attach(entity);
-}
+        public void Attach(PatrolAssignment entity)
+        {
+            _context.Attach(entity);
+        }
 
 
 
@@ -188,6 +187,29 @@ public async Task AddPatrolAssignmentSecurityAsync(PatrolAssignmentSecurity enti
             _context.PatrolAssignmentSecurities.RemoveRange(rows);
             await _context.SaveChangesAsync();
         }
+        
+
+        public async Task<IReadOnlyCollection<Guid>> GetInvalidSecurityIdsByApplicationAsync(
+    IEnumerable<Guid> securityIds,
+    Guid applicationId
+        )
+        {
+            var ids = securityIds.Distinct().ToList();
+            if (!ids.Any())
+                return Array.Empty<Guid>();
+
+            var validIds = await _context.MstSecurities
+                .Where(s =>
+                    ids.Contains(s.Id) &&
+                    s.ApplicationId == applicationId &&
+                    s.Status != 0
+                )
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            return ids.Except(validIds).ToList();
+        }
+
     
     }
 }

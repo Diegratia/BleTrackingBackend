@@ -201,6 +201,31 @@ namespace Repositories.Repository
                 _ => null
             };
         }
+
+public async Task<IReadOnlyCollection<Guid>> GetInvalidOwnershipIdsAsync<TEntity>(
+    IEnumerable<Guid> ids,
+    Guid applicationId
+)
+    where TEntity : class, IApplicationEntity
+{
+    var idList = ids.Distinct().ToList();
+    if (!idList.Any())
+        return Array.Empty<Guid>();
+
+    var validIds = await _context.Set<TEntity>()
+        .Where(e =>
+            idList.Contains(EF.Property<Guid>(e, "Id")) &&
+            e.ApplicationId == applicationId
+        )
+        .Select(e => EF.Property<Guid>(e, "Id"))
+        .ToListAsync();
+
+    return idList.Except(validIds).ToList();
+}
+
+
+
+
     }
 }
 

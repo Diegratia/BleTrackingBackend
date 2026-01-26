@@ -49,7 +49,7 @@ namespace Data.ViewModels
     {
         public Guid? Id { get; set; }
         public string? Name { get; set; }
-        public string? Code { get; set; }
+        public string? CardNumber { get; set; }
         public string? IdentityId { get; set; }
         public string? OrganizationName { get; set; }
         public string? DepartmentName { get; set; }

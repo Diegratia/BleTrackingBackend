@@ -60,6 +60,29 @@ namespace BusinessLogic.Services.Implementation
             if (!await _repository.PatrolRouteExistsAsync(createDto.PatrolRouteId!.Value))
                 throw new NotFoundException($"PatrolRoute with id {createDto.PatrolRouteId} not found");
 
+            var invalidSecurityIds =
+            await _repository.GetInvalidSecurityIdsByApplicationAsync(createDto.SecurityIds, AppId);
+            if (invalidSecurityIds.Any())
+            {
+                throw new NotFoundException(
+                    $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
+                );
+            }
+
+            // var invalidIds = await _repository.GetInvalidOwnershipIdsAsync<MstSecurity>(
+            //     createDto.SecurityIds,
+            //     AppId
+            // );
+
+            // if (invalidIds.Any())
+            // {
+            //     throw new DataView.ValidationException(new Dictionary<string, string[]>
+            //     {
+            //         ["securityIds"] = invalidIds.Select(id => $"Invalid Id: {id}").ToArray()
+            //     });
+            // }
+
+
             var missingSecurityIds = await _repository
                 .GetMissingSecurityIdsAsync(createDto.SecurityIds ?? new List<Guid>());
 
@@ -69,6 +92,7 @@ namespace BusinessLogic.Services.Implementation
                     $"Security not found: {string.Join(", ", missingSecurityIds)}"
                 );
             }
+
     
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
             SetCreateAudit(patrolAssignment);
@@ -96,18 +120,87 @@ namespace BusinessLogic.Services.Implementation
                 "Created patrolAssignment",
                 new { patrolAssignment.Name }
             );
-            return _mapper.Map<PatrolAssignmentDto>(patrolAssignment);
+            var result = await _repository.GetByIdAsync(patrolAssignment.Id);
+            return _mapper.Map<PatrolAssignmentDto>(result);
         }
 
-            public async Task<PatrolAssignmentDto> UpdateAsync(
-            Guid id,
-            PatrolAssignmentUpdateDto dto)
-        {
-            PatrolAssignment result = null;
+        //     public async Task<PatrolAssignmentDto> UpdateAsync(
+        //     Guid id,
+        //     PatrolAssignmentUpdateDto dto)
+        // {
+        //     PatrolAssignment result = null;
 
-                var assignment = await _repository.GetByIdWithTrackingAsync(id)
-                    ?? throw new NotFoundException(
-                        $"PatrolAssignment with id {id} not found");
+        //         var assignment = await _repository.GetByIdWithTrackingAsync(id)
+        //             ?? throw new NotFoundException(
+        //                 $"PatrolAssignment with id {id} not found");
+
+        //         // ================= VALIDASI =================
+
+        //         if (dto.PatrolRouteId.HasValue &&
+        //             !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
+        //             throw new NotFoundException($"PatrolRoute not found");
+
+        //         var newSecurityIds = dto.SecurityIds?
+        //             .Where(x => x.HasValue)
+        //             .Select(x => x.Value)
+        //             .Distinct()
+        //             .ToList() ?? new List<Guid>();
+
+        //         var missing =
+        //             await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
+
+        //         if (missing.Count > 0)
+        //             throw new NotFoundException(
+        //                 $"Security not found: {string.Join(", ", missing)}");
+
+
+
+        //     // ================= REPLACE SECURITY =================
+
+        //     await _repository.RemoveAllPatrolAssignmentSecurities(id);
+
+        //     _mapper.Map(dto, assignment);
+
+        //     foreach (var secId in newSecurityIds)
+        //     {
+        //         await _repository.AddPatrolAssignmentSecurityAsync(
+        //             new PatrolAssignmentSecurity
+        //             {
+        //                 PatrolAssignmentId = assignment.Id,
+        //                 SecurityId = secId,
+        //                 ApplicationId = assignment.ApplicationId,
+        //                 CreatedAt = DateTime.UtcNow,
+        //                 UpdatedAt = DateTime.UtcNow,
+        //                 CreatedBy = UsernameFormToken,
+        //                 UpdatedBy = UsernameFormToken
+        //             });
+        //     }
+
+        //         // 🔥 INI WAJIB (SAMA SEPERTI ROUTE)
+
+        //         // ================= UPDATE SCALAR =================
+        //         // _mapper.Map(dto, assignment);
+        //         SetUpdateAudit(assignment);
+        //         await _repository.UpdateAsync(assignment);
+
+        //     result = await _repository.GetByIdAsync(assignment.Id)
+        //         ?? throw new Exception("Failed reload");
+
+
+
+        //     await _audit.Updated(
+        //         "Patrol Assignment",
+        //         result.Id,
+        //         "Updated Patrol Assignment",
+        //         new { result.Name });
+
+        //     return _mapper.Map<PatrolAssignmentDto>(result);
+        // }
+        
+                public async Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
+        {
+            var assignment = await _repository.GetByIdWithTrackingAsync(id)
+                ?? throw new NotFoundException($"PatrolAssignment {id} not found");
 
                 // ================= VALIDASI =================
 
@@ -128,26 +221,26 @@ namespace BusinessLogic.Services.Implementation
                     throw new NotFoundException(
                         $"Security not found: {string.Join(", ", missing)}");
 
+            var invalidSecurityIds =
+                await _repository.GetInvalidSecurityIdsByApplicationAsync(newSecurityIds, AppId);
+                if (invalidSecurityIds.Any())
+                {
+                    throw new NotFoundException(
+                        $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
+                    );
+                }
+                
 
-
-            // ================= REPLACE SECURITY =================
-
-            //     foreach (var old in assignment.PatrolAssignmentSecurities.ToList())
-            // {
-            //     _repository.RemovePatrolAssignmentSecurity(old);
-            // }
-            //     assignment.PatrolAssignmentSecurities.Clear();
+            // 1. Replace all child (SQL-style)
             await _repository.RemoveAllPatrolAssignmentSecurities(id);
 
-            _mapper.Map(dto, assignment);
-
-            foreach (var secId in newSecurityIds)
+            foreach (var secId in dto.SecurityIds!.Distinct())
             {
                 await _repository.AddPatrolAssignmentSecurityAsync(
                     new PatrolAssignmentSecurity
                     {
                         PatrolAssignmentId = assignment.Id,
-                        SecurityId = secId,
+                        SecurityId = secId.Value,
                         ApplicationId = assignment.ApplicationId,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
@@ -156,26 +249,18 @@ namespace BusinessLogic.Services.Implementation
                     });
             }
 
-                // 🔥 INI WAJIB (SAMA SEPERTI ROUTE)
-                
-                // ================= UPDATE SCALAR =================
-                // _mapper.Map(dto, assignment);
-                SetUpdateAudit(assignment);
-                await _repository.UpdateAsync(assignment);
+            // 2. Update parent scalar only
+            _mapper.Map(dto, assignment);
+            SetUpdateAudit(assignment);
 
-            result = await _repository.GetByIdAsync(assignment.Id)
-                ?? throw new Exception("Failed reload");
-                    
-            
+            await _repository.UpdateAsync(assignment);
 
-            await _audit.Updated(
-                "Patrol Assignment",
-                result.Id,
-                "Updated Patrol Assignment",
-                new { result.Name });
+            var result = await _repository.GetByIdAsync(id);
+            await _audit.Updated("Patrol Assignment", id, "Updated", new { result!.Name });
 
             return _mapper.Map<PatrolAssignmentDto>(result);
         }
+
 
 
         public async Task DeleteAsync(Guid id)

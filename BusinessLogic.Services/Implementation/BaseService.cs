@@ -42,76 +42,77 @@ namespace BusinessLogic.Services.Implementation
                 return username;
             }
         }
-        
+
         protected void SetCreateAudit(BaseModelWithTime entity)
-    {
-        entity.Id = Guid.NewGuid();
-        // entity.Status = 1;
-        
-        entity.CreatedBy = UsernameFormToken;
-        entity.CreatedAt = DateTime.UtcNow;
+        {
+            entity.Id = Guid.NewGuid();
+            // entity.Status = 1;
 
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+            entity.CreatedBy = UsernameFormToken;
+            entity.CreatedAt = DateTime.UtcNow;
 
-    protected void SetCreateAudit(BaseModelOnlyIdWithTime entity)
-    {
-        entity.Id = Guid.NewGuid();
-        // entity.Status = 1;
-        
-        entity.CreatedBy = UsernameFormToken;
-        entity.CreatedAt = DateTime.UtcNow;
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
 
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+        protected void SetCreateAudit(BaseModelOnlyIdWithTime entity)
+        {
+            entity.Id = Guid.NewGuid();
+            // entity.Status = 1;
 
-    protected void SetCreateAudit(BaseModelWithTimeApp entity)
-    {
-        entity.Id = Guid.NewGuid();
-        entity.Status = 1;
-        
-        entity.CreatedBy = UsernameFormToken;
-        entity.CreatedAt = DateTime.UtcNow;
+            entity.CreatedBy = UsernameFormToken;
+            entity.CreatedAt = DateTime.UtcNow;
 
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
 
-    protected void SetUpdateAudit(BaseModelWithTime entity)
-    {
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
-    protected void SetUpdateAudit(BaseModelOnlyIdWithTime entity)
-    {
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
-    protected void SetUpdateAudit(BaseModelWithTimeApp entity)
-    {
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+        protected void SetCreateAudit(BaseModelWithTimeApp entity)
+        {
+            entity.Id = Guid.NewGuid();
+            entity.Status = 1;
 
-    protected void SetDeleteAudit(BaseModelWithTime entity)
-    {
-        // entity.Status = 0;
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+            entity.CreatedBy = UsernameFormToken;
+            entity.CreatedAt = DateTime.UtcNow;
+
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        protected void SetUpdateAudit(BaseModelWithTime entity)
+        {
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+        protected void SetUpdateAudit(BaseModelOnlyIdWithTime entity)
+        {
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+        protected void SetUpdateAudit(BaseModelWithTimeApp entity)
+        {
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        protected void SetDeleteAudit(BaseModelWithTime entity)
+        {
+            // entity.Status = 0;
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
         protected void SetDeleteAudit(BaseModelOnlyIdWithTime entity)
-    {
-        // entity.Status = 0;
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+        {
+            // entity.Status = 0;
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
         protected void SetDeleteAudit(BaseModelWithTimeApp entity)
-    {
-        entity.Status = 0;
-        entity.UpdatedBy = UsernameFormToken;
-        entity.UpdatedAt = DateTime.UtcNow;
-    }
+        {
+            entity.Status = 0;
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
     }
 }
