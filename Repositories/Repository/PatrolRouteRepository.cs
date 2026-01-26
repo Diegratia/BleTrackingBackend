@@ -97,6 +97,9 @@ namespace Repositories.Repository
 
                 PatrolAreaIds = ca.PatrolRouteAreas
                         .Select(x => (Guid?)x.PatrolAreaId)
+                        .ToList(),
+                TimeGroupIds = ca.PatrolRouteTimeGroups
+                        .Select(x => (Guid?)x.TimeGroupId)
                         .ToList()
             });
             return await projected.ToListAsync();

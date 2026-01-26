@@ -364,10 +364,10 @@ namespace BusinessLogic.Services.Implementation
             var entities = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);
         }
-            public async Task<IEnumerable<PatrolRouteDto>> GetAllLookUpAsync()
+            public async Task<IEnumerable<PatrolRouteLookUpDto>> GetAllLookUpAsync()
         {
             var entities = await _repo.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);
+            return _mapper.Map<IEnumerable<PatrolRouteLookUpDto>>(entities);
         }
 
             public async Task<object> FilterAsync(DataTablesRequest request)

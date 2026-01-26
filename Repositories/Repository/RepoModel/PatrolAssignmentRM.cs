@@ -10,9 +10,5 @@ namespace Repositories.Repository.RepoModel
 
     }
     
-    public class PatrolAssignmentLookUpRM
-    {
-        public Guid Id { get; set; }
-        public string? Name { get; set; }
-    }
+
 }

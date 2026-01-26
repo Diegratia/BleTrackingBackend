@@ -122,6 +122,26 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
+        public async Task<List<PatrolAssignmentLookUpRM>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolRoutes
+            .AsNoTracking()
+            .Where(ca => ca.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var projected = query.Select(ca => new PatrolAssignmentLookUpRM
+            {
+                Id = ca.Id,
+                Name = ca.Name,
+                Description = ca.Description,
+                ApplicationId = ca.ApplicationId
+            });
+            return await projected.ToListAsync();
+        }
+
         public async Task RemoveAllPatrolAssignmentSecurities(Guid assignmentId)
         {
             await _context.PatrolAssignmentSecurities
@@ -146,22 +166,6 @@ namespace Repositories.Repository
             _context.Attach(entity);
         }
 
-
-
-        public async Task<List<PatrolAssignmentLookUpRM>> GetAllLookUpAsync()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.PatrolAssignments
-            .AsNoTracking()
-            .Where(d => d.Status != 0);
-
-            var projected = query.Select(t => new PatrolAssignmentLookUpRM
-            {
-                Id = t.Id,
-                Name = t.Name,
-            });
-            return await projected.ToListAsync();
-        }
 
         public async Task<IReadOnlyCollection<Guid>> GetMissingSecurityIdsAsync(
     IEnumerable<Guid> ids

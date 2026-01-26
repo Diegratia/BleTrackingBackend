@@ -14,6 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolRouteDto?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolRouteDto?>> GetAllAsync();
         Task<object> FilterAsync(DataTablesRequest request);
-        Task<IEnumerable<PatrolRouteDto>> GetAllLookUpAsync();
+        Task<IEnumerable<PatrolRouteLookUpDto>> GetAllLookUpAsync();
     }
 }

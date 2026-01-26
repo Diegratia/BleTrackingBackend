@@ -6,7 +6,7 @@ using Data.ViewModels.Dto.Helpers.MinimalDto;
 
 namespace Repositories.Repository.RepoModel
 {
-   public class PatrolRouteRM 
+    public class PatrolRouteRM
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
@@ -19,23 +19,32 @@ namespace Repositories.Repository.RepoModel
     }
 
 
-    public class PatrolRouteLookUpRM 
+    public class PatrolRouteLookUpRM
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public List<Guid?> PatrolAreaIds { get; set; } = new();
+        public List<Guid?> TimeGroupIds { get; set; } = new();
     }
 
-            public class PatrolRouteAreaDtoRM
-        {
-            public Guid PatrolAreaId { get; set; }
-            public int OrderIndex { get; set; }
+    public class PatrolRouteAreaDtoRM
+    {
+        public Guid PatrolAreaId { get; set; }
+        public int OrderIndex { get; set; }
 
-            public float EstimatedDistance { get; set; }
-            public int EstimatedTime { get; set; }
+        public float EstimatedDistance { get; set; }
+        public int EstimatedTime { get; set; }
 
-            public Guid? StartAreaId { get; set; }
-            public Guid? EndAreaId { get; set; }
-        }
+        public Guid? StartAreaId { get; set; }
+        public Guid? EndAreaId { get; set; }
+    }
+
+    public class PatrolAssignmentLookUpRM
+    {
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public Guid ApplicationId { get; set; }
+    }
 }
