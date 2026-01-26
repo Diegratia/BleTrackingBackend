@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
 using System.Linq.Dynamic.Core;
+using Repositories.Extensions;
 
 namespace Repositories.Repository
 {
@@ -171,38 +172,38 @@ namespace Repositories.Repository
             return projected;
         }
 
-            public async Task<(List<PatrolCaseRM> Data, int Total)> FilterAsync(
+        public async Task<(List<PatrolCaseRM> Data, int Total, int Filtered)> FilterAsync(
             PatrolCaseFilter filter
         )
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = GetAllProjectedQueryable();
+            // 1. Base Query (Filtered by ApplicationId & Active Status)
+            var query = _context.PatrolCases
+                .AsNoTracking()
+                .Where(x => x.Status != 0);
 
-            // =============================
-            // SEARCH
-            // =============================
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // 2. Count Total (Before Filter)
+            var total = await query.CountAsync();
+
+            // 3. Apply Filters
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 var search = filter.Search.ToLower();
                 query = query.Where(x =>
                     x.Title.ToLower().Contains(search) ||
-                    x.Description.ToLower().Contains(search)
+                    x.Description.ToLower().Contains(search) 
                 );
             }
 
-            // =============================
-            // ENUM FILTER
-            // =============================
             if (filter.CaseType.HasValue)
                 query = query.Where(x => x.CaseType == filter.CaseType.Value);
 
             if (filter.CaseStatus.HasValue)
                 query = query.Where(x => x.CaseStatus == filter.CaseStatus.Value);
 
-            // =============================
-            // FK FILTER
-            // =============================
             if (filter.SecurityId.HasValue)
                 query = query.Where(x => x.SecurityId == filter.SecurityId.Value);
 
@@ -212,27 +213,66 @@ namespace Repositories.Repository
             if (filter.PatrolRouteId.HasValue)
                 query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId.Value);
 
-            // =============================
-            // DATE FILTER
-            // =============================
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
 
             if (filter.DateTo.HasValue)
                 query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
 
-            // =============================
-            // PAGINATION
-            // =============================
-            var total = await query.CountAsync();
+            // 4. Count Filtered
+            var filtered = await query.CountAsync();
 
-            var data = await query
-                .OrderByDescending(x => x.UpdatedAt)
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
+            // 5. Projection (Manual Select) - Include relationships here
+            var projectedQuery = query.Select(t => new PatrolCaseRM
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                CaseType = t.CaseType,
+                CaseStatus = t.CaseStatus,
+                PatrolSessionId = t.PatrolSessionId,
+                SecurityId = t.SecurityId,
+                ApprovedByHeadId = t.ApprovedByHeadId,
+                PatrolAssignmentId = t.PatrolAssignmentId,
+                PatrolRouteId = t.PatrolRouteId,
+                ApplicationId = t.ApplicationId,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+                Security = t.Security == null ? null : new MstSecurityLookUpRM
+                {
+                    Id = t.Security.Id,
+                    Name = t.Security.Name,
+                    PersonId = t.Security.PersonId,
+                    CardNumber = t.Security.CardNumber,
+                    OrganizationId = t.Security.OrganizationId,
+                    DepartmentId = t.Security.DepartmentId,
+                    DistrictId = t.Security.DistrictId,
+                    OrganizationName = t.Security.Organization.Name,
+                    DepartmentName = t.Security.Department.Name,
+                    DistrictName = t.Security.District.Name,
+                },
+                PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRM
+                {
+                    Id = t.PatrolAssignment.Id,
+                    Name = t.PatrolAssignment.Name,
+                    Description = t.PatrolAssignment.Description,
+                },
+                PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteMinimalRM
+                {
+                    Id = t.PatrolRoute.Id,
+                    Name = t.PatrolRoute.Name,
+                    Description = t.PatrolRoute.Description,
+                }
+            });
 
-            return (data, total);
+            // 6. Sorting & Paging
+            // Note: Make sure to include Repositories.Extensions namespace
+            projectedQuery = projectedQuery.ApplySorting(filter.SortColumn, filter.SortDir);
+            projectedQuery = projectedQuery.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await projectedQuery.ToListAsync();
+
+            return (data, total, filtered);
         }
 
 
