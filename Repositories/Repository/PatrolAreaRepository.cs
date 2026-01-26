@@ -100,6 +100,7 @@ namespace Repositories.Repository
             var query = _context.PatrolAreas
             .AsNoTracking()
             .Where(d => d.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var projected = query.Select(t => new PatrolAreaLookUpRM
             {

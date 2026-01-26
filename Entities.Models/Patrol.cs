@@ -53,6 +53,8 @@ namespace Entities.Models
         public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
         public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
         public ICollection<PatrolAssignment> PatrolAssignments { get; set; } = new List<PatrolAssignment>();
+        public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
 
     }
     //PatrolRouteAreas
@@ -115,7 +117,7 @@ namespace Entities.Models
         public PatrolRoute? PatrolRoute { get; set; }
         public MstApplication? Application { get; set; }
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
-    }
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();    }
     //PatrolAssignmentSecurity
     public class PatrolAssignmentSecurity : BaseModelWithTimeApp, IApplicationEntity
     {
@@ -125,6 +127,91 @@ namespace Entities.Models
         public Guid SecurityId { get; set; }
         public PatrolAssignment? PatrolAssignment { get; set; }
         public MstSecurity? Security { get; set; }
+        public MstApplication? Application { get; set; }
+    }
+    //PatrolCase
+    public class PatrolCase : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("title")]
+        public string? Title { get; set; }
+        [Column("description")]
+        public string? Description { get; set; }
+        [Column("case_type")]
+        public CaseType CaseType { get; set; }
+        [Column("case_status")]
+        public CaseStatus CaseStatus { get; set; }
+        [Column("patrol_session_id")]
+        public Guid? PatrolSessionId { get; set; }
+        [Column("security_id")]
+        public Guid? SecurityId { get; set; }
+        [Column("approved_by_head_id")]
+        public Guid? ApprovedByHeadId { get; set; }
+        [Column("patrol_assignment_id")]
+        public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
+        [Column("patrol_route_id")]
+        public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
+
+        public PatrolAssignment? PatrolAssignment { get; set; }
+        public MstSecurity? Security { get; set; }
+        public MstSecurity? ApprovedByHead { get; set; }
+        public PatrolSession? PatrolSession { get; set; }
+        public PatrolRoute? PatrolRoute { get; set; }
+        public MstApplication? Application { get; set; }
+        public ICollection<PatrolCaseAttachment> PatrolCaseAttachments { get; set; } = new List<PatrolCaseAttachment>();
+    }
+    //PatrolSession
+    public class PatrolSession : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("patrol_route_id")]
+        public Guid PatrolRouteId { get; set; } // snapshot dari engine
+        [Column("patrol_assignment_id")]
+        public Guid PatrolAssignmentId { get; set; } // snapshot dari engine
+        [Column("security_id")]
+        public Guid SecurityId { get; set; } // snapshot dari engine
+        [Column("started_at")]
+        public DateTime StartedAt { get; set; } // event action
+        [Column("ended_at")]
+        public DateTime? EndedAt { get; set; }
+        public PatrolAssignment? PatrolAssignment { get; set; }
+        public PatrolRoute? PatrolRoute { get; set; }
+        public MstSecurity? Security { get; set; }
+        public MstApplication? Application { get; set; }
+        public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolCheckpointLog> PatrolCheckpointLogs { get; set; } = new List<PatrolCheckpointLog>();
+    }
+    //PatrolCheckpointLog
+    public class PatrolCheckpointLog : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("patrol_session_id")]
+        public Guid? PatrolSessionId { get; set; }
+        [Column("patrol_area_id")]
+        public Guid? PatrolAreaId { get; set; }
+        [Column("order_index")]
+        public int? OrderIndex { get; set; }
+        [Column("arrived_at")]
+        public DateTime? ArrivedAt { get; set; }
+        [Column("left_at")]
+        public DateTime? LeftAt { get; set; }
+        [Column("distance_from_prev")]
+        public DateTime? DistanceFromPrev { get; set; }
+        public PatrolSession? PatrolSession { get; set; }
+        public PatrolArea? PatrolArea { get; set; }
+        public MstApplication? Application { get; set; }
+    }
+    //PatrolCaseAttachment
+    public class PatrolCaseAttachment : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("patrol_case_id")]
+        public Guid? PatrolCaseId { get; set; }
+        [Column("file_url")]
+        public string? FileUrl { get; set; }
+        [Column("file_type")]
+        public FileType? FileType { get; set; }
+        [Column("mime_type")]
+        public string? MimeType { get; set; }
+        [Column("uploaded_at")]
+        public DateTime? UploadedAt { get; set; }
+        public PatrolCase? PatrolCase { get; set; }
         public MstApplication? Application { get; set; }
     }
 }

@@ -104,6 +104,10 @@ namespace Entities.Models
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
         public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
         public ICollection<SecurityGroup> SecurityGroups { get; set; } = new List<SecurityGroup>();
+        public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
+        public ICollection<PatrolCheckpointLog> PatrolCheckpointLogs { get; set; } = new List<PatrolCheckpointLog>();
+        public ICollection<PatrolCaseAttachment> PatrolCaseAttachments { get; set; } = new List<PatrolCaseAttachment>();
 
         
     }

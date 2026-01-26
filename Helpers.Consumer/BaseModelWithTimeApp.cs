@@ -23,10 +23,10 @@ namespace Helpers.Consumer
         public DateTime CreatedAt { get; set; }
 
         [Column("updated_by")]
-        public string? UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; } 
 
         [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } 
 
         [Column("application_id")]
         public Guid ApplicationId { get; set; }

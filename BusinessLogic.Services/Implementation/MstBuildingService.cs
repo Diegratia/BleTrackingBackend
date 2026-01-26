@@ -272,7 +272,6 @@ namespace BusinessLogic.Services.Implementation
             await _floorService.RemoveGroupAsync();
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-        
     }
 
         //     public async Task DeleteAsync(Guid id)

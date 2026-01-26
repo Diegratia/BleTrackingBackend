@@ -82,6 +82,8 @@ namespace Entities.Models
         public ICollection<AlarmTriggers> AlarmTriggers { get; set; } = new List<AlarmTriggers>();
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
         public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
+        public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
     }
     //SecurityGroup
     public class SecurityGroup : BaseModelWithTimeApp, IApplicationEntity

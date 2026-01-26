@@ -47,4 +47,13 @@ namespace Repositories.Repository.RepoModel
         public string? Description { get; set; }
         public Guid ApplicationId { get; set; }
     }
+
+    public class PatrolRouteMinimalRM : BaseModelDto
+    {
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+    }
+
+    
 }

@@ -44,7 +44,6 @@ namespace Data.ViewModels
 
     public class MstSecurityLookUpDto : BaseModelDto 
     {
-        public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? PersonId { get; set; }
         public string? CardNumber { get; set; }

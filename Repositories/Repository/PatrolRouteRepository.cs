@@ -55,6 +55,7 @@ namespace Repositories.Repository
         public IQueryable<PatrolRouteLookUpRM> MinimalGetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            
 
             var query = _context.PatrolRoutes
             .Include(x => x.PatrolRouteAreas)
