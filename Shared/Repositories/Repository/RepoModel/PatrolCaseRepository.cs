@@ -24,8 +24,8 @@ namespace Repositories.Repository
         public async Task<PatrolCaseRM?> GetByIdAsync(Guid id)
         {
             return await GetAllProjectedQueryable()
-           .Where(a => a.Id == id )
-           .FirstOrDefaultAsync();
+            .Where(a => a.Id == id )
+            .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<PatrolCaseRM>> GetAllAsync()
@@ -289,7 +289,7 @@ namespace Repositories.Repository
 
         public async Task<bool> SessionExistsAsync(Guid sessionId)
         {
-            return await _context.MstFloors
+            return await _context.PatrolCases
                 .AnyAsync(f => f.Id == sessionId && f.Status != 0);
         }
 

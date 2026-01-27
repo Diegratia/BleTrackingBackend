@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
+using DataView;
+using Entities.Models;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
@@ -140,20 +142,56 @@ namespace BusinessLogic.Services.Implementation
                 data
             };
         }
-        
-        private T? GetFilterValueAsEnum<T>(Dictionary<string, object> filters, string key) where T : struct, Enum
-    {
-        if (filters.TryGetValue(key, out var value) && value != null)
-        {
-            // Mendukung string ("Open") maupun angka ("1") secara case-insensitive
-            if (Enum.TryParse<T>(value.ToString(), ignoreCase: true, out var result))
-            {
-                return result;
-            }
-        }
-        return null;
-    }
 
-   
+        public async Task<PatrolCaseDto?> GetByIdAsync(Guid id)
+        {
+            var patrolCase = await _repo.GetByIdAsync(id);
+            if (patrolCase == null)
+                throw new NotFoundException($"patrolCase with id {id} not found");
+            return patrolCase == null ? null : _mapper.Map<PatrolCaseDto>(patrolCase);
+        }
+
+        public async Task<IEnumerable<PatrolCaseDto>> GetAllAsync()
+        {
+            var patrolCases = await _repo.GetAllAsync();
+            return _mapper.Map<IEnumerable<PatrolCaseDto>>(patrolCases);
+        }
+
+        public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto createDto)
+        {
+            if (!await _repo.SessionExistsAsync(createDto.PatrolSessionId!.Value))
+                throw new NotFoundException($"PatrolSessionId with id {createDto.PatrolSessionId} not found");
+
+            var patrolCase = _mapper.Map<PatrolCase>(createDto);
+            SetCreateAudit(patrolCase);
+
+            await _repo.AddAsync(patrolCase);
+            await _audit.Created(
+                "Patrol Case",
+                patrolCase.Id,
+                "Created Patrol Case",
+                new { patrolCase.Title }
+            );
+            return _mapper.Map<PatrolCaseDto>(patrolCase);
+        }
+        
+        //  public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto)
+        // {
+        //     var patrolCase = await _repo.GetByIdAsync(id);
+        //     if (patrolCase == null)
+        //         throw new NotFoundException($"patrolCase with id {id} not found");
+
+        //     // SetUpdateAudit(patrolCase);
+        //     _mapper.Map(updateDto, patrolCase);
+        //     await _repo.UpdateAsync(patrolCase);
+        //     await _audit.Updated(
+        //         "Patrol Case",
+        //         patrolCase.Id,
+        //         "Updated patrolCase",
+        //         new { patrolCase.Title }
+        //     );
+        //     return _mapper.Map<PatrolAreaDto>(patrolArea);
+        // }
+        
     }
 }
