@@ -7,6 +7,7 @@ WORKDIR /app
   COPY global.json ./
   COPY Services.API/Patrol/Patrol.csproj Services.API/Patrol/
   COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj Shared/BusinessLogic.Services/
+  COPY Shared/Shared.Contracts/Shared.Contracts.csproj Shared/Shared.Contracts/
   COPY Shared/Data.ViewModels/Data.ViewModels.csproj Shared/Data.ViewModels/
   COPY Shared/Entities.Models/Entities.Models.csproj Shared/Entities.Models/
   COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj Shared/Helpers.Consumer/
