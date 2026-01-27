@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using Repositories.Repository.RepoModel;

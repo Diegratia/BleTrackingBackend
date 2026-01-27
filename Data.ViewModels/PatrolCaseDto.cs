@@ -38,12 +38,11 @@ namespace Data.ViewModels
         public CaseType? CaseType { get; set; }
         public PatrolCaseAttachmentUpdateDto? Attachment { get; set; }
     }
-    
-        public class PatrolCaseCreateManualDto
+
+    public class PatrolCaseCreateManualDto
     {
         public string Title { get; set; }
         public string Description { get; set; }
-
         public Guid PatrolAssignmentId { get; set; }
         public Guid SecurityId { get; set; }
     }

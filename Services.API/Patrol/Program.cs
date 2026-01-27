@@ -63,6 +63,7 @@ builder.Services.AddScoped<IPatrolAssignmentService, PatrolAssignmentService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddScoped<IPatrolCaseService, PatrolCaseService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
@@ -80,6 +81,8 @@ builder.Services.AddScoped<PatrolAreaRepository>();
 builder.Services.AddScoped<PatrolRouteRepository>();
 builder.Services.AddScoped<PatrolAssignmentRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
+builder.Services.AddScoped<PatrolCaseRepository>();
+builder.Services.AddScoped<MstSecurityRepository>();
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
 builder.Host.UseWindowsService();

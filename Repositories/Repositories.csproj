@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" />
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
-
+    <PackageReference Include="DotNetEnv" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

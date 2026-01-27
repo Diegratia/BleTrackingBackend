@@ -1014,11 +1014,11 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(m => m.Security)
-                    .WithMany(m => m.PatrolCases)
+                    .WithMany(m => m.SecuritiesPatrolCases)
                     .HasForeignKey(m => m.SecurityId)
                     .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(m => m.ApprovedByHead)
-                    .WithMany(m => m.PatrolCases)
+                    .WithMany(m => m.HeadPatrolCases)
                     .HasForeignKey(m => m.ApprovedByHeadId)
                     .OnDelete(DeleteBehavior.NoAction);
         });
