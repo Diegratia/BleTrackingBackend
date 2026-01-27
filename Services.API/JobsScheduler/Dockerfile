@@ -6,11 +6,11 @@ WORKDIR /app
   COPY Directory.Packages.props ./
   COPY global.json ./
   COPY Services.API/JobsScheduler/JobsScheduler.csproj Services.API/JobsScheduler/
-  COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
-  COPY Repositories/Repositories.csproj Repositories/
+  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
+  COPY Shared/Shared.Contracts/Shared.Contracts.csproj Shared.Contracts/
+  COPY Shared/Repositories/Repositories.csproj Repositories/
 
-WORKDIR /app/Services.API/JobsScheduler
-RUN dotnet restore
+RUN dotnet restore Services.API/JobsScheduler/JobsScheduler.csproj
 
 WORKDIR /app
 COPY . .
