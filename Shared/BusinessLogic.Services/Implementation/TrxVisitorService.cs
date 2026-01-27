@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;

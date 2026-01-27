@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
 using System.Diagnostics.CodeAnalysis;
+using Shared.Contracts;
 
 namespace Entities.Models
 {

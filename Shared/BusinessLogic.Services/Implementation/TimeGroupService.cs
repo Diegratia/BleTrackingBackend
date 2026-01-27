@@ -7,7 +7,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

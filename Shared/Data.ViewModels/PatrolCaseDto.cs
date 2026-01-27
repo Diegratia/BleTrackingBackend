@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Helpers.Consumer;
+using Shared.Contracts;
 
 namespace Data.ViewModels
 {
@@ -46,5 +47,7 @@ namespace Data.ViewModels
         public Guid PatrolAssignmentId { get; set; }
         public Guid SecurityId { get; set; }
     }
+
+
 
 }

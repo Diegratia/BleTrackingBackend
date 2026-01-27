@@ -7,6 +7,7 @@ using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Shared.Contracts;
 
 namespace Repositories.Repository
 {

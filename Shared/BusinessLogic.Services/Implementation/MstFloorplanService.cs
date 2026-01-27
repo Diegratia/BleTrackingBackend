@@ -23,7 +23,8 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
-using Helpers.Consumer;
+using Shared.Contracts;
+
 
 namespace BusinessLogic.Services.Implementation
 {

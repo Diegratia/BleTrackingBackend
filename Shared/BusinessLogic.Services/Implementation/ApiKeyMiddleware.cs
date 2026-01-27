@@ -4,7 +4,7 @@ using Repositories.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Helpers.Consumer;
+using Shared.Contracts;
 
 public static class ApiKeyMiddlewareExtensions
 

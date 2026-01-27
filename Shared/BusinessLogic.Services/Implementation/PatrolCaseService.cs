@@ -10,6 +10,7 @@ using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -35,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
-            }
+        }
         public async Task<object> FilterAsync(
             DataTablesRequest request,
             PatrolCaseFilter filter
@@ -51,10 +52,10 @@ namespace BusinessLogic.Services.Implementation
             // 2. Map Time Report (Shortcut for DateRange)
             if (!string.IsNullOrEmpty(request.TimeReport))
             {
-               // Helper to calculate date range based on "Daily", "Weekly", etc.
-               // We can reuse the logic from BaseProjectionRepository or simple switch here.
-               // For now, let's assume specific date filters are passed or implement a simple helper if needed.
-               // If you have a shared helper, use it. Otherwise, we can infer it or ignored it if specific date filters exist.
+                // Helper to calculate date range based on "Daily", "Weekly", etc.
+                // We can reuse the logic from BaseProjectionRepository or simple switch here.
+                // For now, let's assume specific date filters are passed or implement a simple helper if needed.
+                // If you have a shared helper, use it. Otherwise, we can infer it or ignored it if specific date filters exist.
             }
 
             // 3. Map Date Filters (Generic Dictionary -> Specific Prop)
@@ -70,19 +71,44 @@ namespace BusinessLogic.Services.Implementation
             // 4. Map Specific Filters (Dictionary -> Properties)
             if (request.Filters != null)
             {
+                // if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
+                // {
+                //      // Handle simple value or array (if logic supports it)
+                //      // For simple single value:
+                //      if (int.TryParse(statusObj.ToString(), out int statusInt))
+                //         filter.CaseStatus = (CaseStatus)statusInt;
+                //      // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
+                // }
+
+                // if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
+                // {
+                //      if (int.TryParse(typeObj.ToString(), out int typeInt))
+                //         filter.CaseType = (CaseType)typeInt;
+                // }
+
                 if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
                 {
-                     // Handle simple value or array (if logic supports it)
-                     // For simple single value:
-                     if (int.TryParse(statusObj.ToString(), out int statusInt))
-                        filter.CaseStatus = (CaseStatus)statusInt;
-                     // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
+                    // Handle simple value or array (if logic supports it)
+                    // For simple single value:
+                    if (Enum.TryParse<CaseStatus>(
+                            statusObj.ToString(),
+                            ignoreCase: true,
+                            out var statusEnum))
+                    {
+                        filter.CaseStatus = statusEnum;
+                    }
+                    // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
                 }
 
                 if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
                 {
-                     if (int.TryParse(typeObj.ToString(), out int typeInt))
-                        filter.CaseType = (CaseType)typeInt;
+                    if (Enum.TryParse<CaseType>(
+                           typeObj.ToString(),
+                           ignoreCase: true,
+                           out var typeEnum))
+                    {
+                        filter.CaseType = typeEnum;
+                    }
                 }
 
                 if (request.Filters.TryGetValue("SecurityId", out var secIdObj) && secIdObj != null)
@@ -90,7 +116,7 @@ namespace BusinessLogic.Services.Implementation
                     if (Guid.TryParse(secIdObj.ToString(), out Guid secId))
                         filter.SecurityId = secId;
                 }
-                
+
                 if (request.Filters.TryGetValue("PatrolAssignmentId", out var assignIdObj) && assignIdObj != null)
                 {
                     if (Guid.TryParse(assignIdObj.ToString(), out Guid assignId))
@@ -103,7 +129,7 @@ namespace BusinessLogic.Services.Implementation
                         filter.PatrolRouteId = routeId;
                 }
             }
-            
+
             var (data, total, filtered) = await _repo.FilterAsync(filter);
 
             return new
@@ -114,6 +140,19 @@ namespace BusinessLogic.Services.Implementation
                 data
             };
         }
+        
+        private T? GetFilterValueAsEnum<T>(Dictionary<string, object> filters, string key) where T : struct, Enum
+    {
+        if (filters.TryGetValue(key, out var value) && value != null)
+        {
+            // Mendukung string ("Open") maupun angka ("1") secara case-insensitive
+            if (Enum.TryParse<T>(value.ToString(), ignoreCase: true, out var result))
+            {
+                return result;
+            }
+        }
+        return null;
+    }
 
    
     }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Data.ViewModels;
 
 namespace BusinessLogic.Services.Implementation.EngineService

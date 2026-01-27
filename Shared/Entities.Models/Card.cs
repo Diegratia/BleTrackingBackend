@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore;
+using Shared.Contracts;
+
 
 namespace Entities.Models
 {

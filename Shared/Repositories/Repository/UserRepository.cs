@@ -5,7 +5,8 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Microsoft.AspNetCore.Http;
-using Helpers.Consumer;
+using Shared.Contracts;
+
 
 namespace Repositories.Repository
 {

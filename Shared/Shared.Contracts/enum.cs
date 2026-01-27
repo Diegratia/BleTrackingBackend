@@ -1,6 +1,7 @@
+
 using System.Text.Json.Serialization;
 
-namespace Helpers.Consumer
+namespace Shared.Contracts
 {
     public enum OrganizationType
     {
@@ -253,7 +254,6 @@ namespace Helpers.Consumer
         PatrolSummary
     }
     
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum FileType
     {
         Photo,

@@ -15,13 +15,14 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
-using Helpers.Consumer;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using AutoMapper.Execution;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
+using Shared.Contracts;
+
 
 namespace BusinessLogic.Services.Implementation
 {

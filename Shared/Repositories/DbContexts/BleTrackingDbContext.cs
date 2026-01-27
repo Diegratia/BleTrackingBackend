@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Entities.Models;
-using Helpers.Consumer;
+using Shared.Contracts;
+
 
 
 namespace Repositories.DbContexts
@@ -1000,6 +1001,18 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
                 entity.Property(e => e.SecurityId).HasMaxLength(36);
                 entity.Property(e => e.ApprovedByHeadId).HasMaxLength(36);
+                entity.Property(e => e.CaseType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CaseType)Enum.Parse(typeof(CaseType), v, true)
+                    );
+                entity.Property(e => e.CaseStatus)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CaseStatus)Enum.Parse(typeof(CaseStatus), v, true)
+                    );
 
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolCases)
@@ -1088,7 +1101,6 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.PatrolCaseId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
-
 
              // Boundary
                 modelBuilder.Entity<Boundary>(entity =>

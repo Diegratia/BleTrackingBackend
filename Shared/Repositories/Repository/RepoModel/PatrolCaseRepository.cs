@@ -10,6 +10,7 @@ using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
 using System.Linq.Dynamic.Core;
 using Repositories.Extensions;
+using Shared.Contracts;
 
 namespace Repositories.Repository
 {

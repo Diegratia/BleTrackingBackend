@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using Shared.Contracts;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Entities.Models

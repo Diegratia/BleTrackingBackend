@@ -15,7 +15,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;

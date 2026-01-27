@@ -1,5 +1,6 @@
 using System;
-using Helpers.Consumer;
+using Shared.Contracts;
+
 
 namespace Data.ViewModels
 {

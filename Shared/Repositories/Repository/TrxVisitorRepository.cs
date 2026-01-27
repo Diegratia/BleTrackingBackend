@@ -10,6 +10,8 @@ using Helpers.Consumer;
 using System.Security.Claims;
 // using Data.ViewModels.MinimalDto;
 using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Shared.Contracts;
+
 
 namespace Repositories.Repository
 {

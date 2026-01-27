@@ -11,6 +11,7 @@ using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -82,15 +83,15 @@ namespace Web.API.Controllers.Controllers
         // }
 
 
-        // [HttpPost("{filter}")]
-        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request, [FromBody] PatrolCaseFilter filter)
-        // {
-        //     if (!ModelState.IsValid)
-        //         return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
-
-        //     var result = await _PatrolCaseService.FilterAsync(request, filter);
-        //     return Ok(ApiResponse.Paginated("Patrol Case filtered successfully", result));
-        // }
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+                
+            var result = await _PatrolCaseService.FilterAsync(request, new PatrolCaseFilter());
+            return Ok(ApiResponse.Paginated("Patrol Case filtered successfully", result));
+        }
 
         // PUT: api/PatrolRoute/{id}
         // [HttpPut("{id}")]

@@ -1,4 +1,4 @@
-using Helpers.Consumer;
+using Shared.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BusinessLogic.Services.Extension.RootExtension

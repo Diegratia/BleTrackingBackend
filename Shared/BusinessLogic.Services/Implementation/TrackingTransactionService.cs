@@ -14,7 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Repository.RepoModel;
 

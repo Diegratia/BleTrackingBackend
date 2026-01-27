@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Data.ViewModels.Dto.Helpers.MinimalDto;
+using Shared.Contracts;
 
 namespace Helpers.Consumer.DtoHelpers.MinimalDto
 {

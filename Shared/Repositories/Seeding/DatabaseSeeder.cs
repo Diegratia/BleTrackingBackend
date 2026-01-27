@@ -3,8 +3,9 @@ using Repositories.DbContexts;
 using Entities.Models;
 using System;
 using System.Linq;
-using Helpers.Consumer;
 using Bogus.DataSets;
+using Shared.Contracts;
+
 
 namespace Repositories.Seeding
 {

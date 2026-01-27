@@ -32,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Entities.Models\Entities.Models.csproj" />
     <ProjectReference Include="..\Helpers.Consumer\Helpers.Consumer.csproj" />
+    <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,9 +14,14 @@
     <PackageReference Include="MQTTnet" />
   </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
+    </ItemGroup>
+
   <ItemGroup>
     <Content Include="EmailTemplate\*.html" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
   </ItemGroup>
   
+
   
 </Project>

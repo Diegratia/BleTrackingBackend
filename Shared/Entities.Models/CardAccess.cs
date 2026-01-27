@@ -5,6 +5,8 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Helpers.Consumer;
+using Shared.Contracts;
+
     
     namespace Entities.Models
 {

@@ -9,6 +9,8 @@ using Repositories.DbContexts;
 using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore.Storage;
 using Repositories.TenantContexts;
+using Shared.Contracts;
+
 
 namespace Repositories.Repository
 {

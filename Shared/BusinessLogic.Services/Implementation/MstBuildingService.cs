@@ -27,7 +27,8 @@ using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using DataView;
 using BusinessLogic.Services.Extension.FileStorageService;
-using Helpers.Consumer;
+using Shared.Contracts;
+
 
 
 namespace BusinessLogic.Services.Implementation

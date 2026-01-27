@@ -19,7 +19,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using BusinessLogic.Services.Implementation;
 using Bogus.DataSets;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Interface

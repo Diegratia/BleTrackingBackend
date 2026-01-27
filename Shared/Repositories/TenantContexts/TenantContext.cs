@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Entities.Models;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
+
 
 namespace Repositories.TenantContexts
 {

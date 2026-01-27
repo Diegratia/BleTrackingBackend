@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
-using Helpers.Consumer;
+using Shared.Contracts;
 using Helpers.Consumer.Mqtt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

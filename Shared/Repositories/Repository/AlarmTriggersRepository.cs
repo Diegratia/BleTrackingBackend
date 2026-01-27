@@ -6,9 +6,10 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
-using Helpers.Consumer;
 using Data.ViewModels;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+
 
 namespace Repositories.Repository
 {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;

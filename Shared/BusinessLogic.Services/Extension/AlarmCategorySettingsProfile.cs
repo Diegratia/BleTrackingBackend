@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
-using Helpers.Consumer;
+using Shared.Contracts;
 namespace BusinessLogic.Services.Extension
 {
     public class AlarmCategorySettingsProfile : Profile

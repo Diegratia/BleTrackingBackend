@@ -8,7 +8,7 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Helpers.Consumer;
+using Shared.Contracts;
 using BusinessLogic.Services.Extension.RootExtension;
 
 

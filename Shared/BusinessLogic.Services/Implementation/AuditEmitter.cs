@@ -27,56 +27,54 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
         }
 
-       private async Task Emit(
-        string evt,
-        string entity,
-        string details,
-        object? meta)
-    {
-        try
+        private async Task Emit(
+            string evt,
+            string entity,
+            string details,
+            object? meta)
         {
-            var user = _http.HttpContext?.User;
-
-            var payload = new
+            try
             {
-                @event = evt,
-                entity,
-                eventTime = DateTime.UtcNow,
-                serverTime = DateTime.UtcNow,
-                actor = new
+                var user = _http.HttpContext?.User;
+
+                var payload = new
                 {
-                    name = user?.Identity?.Name ?? "System",
-                    role = user?.FindFirst(ClaimTypes.Role)?.Value ?? "System",
-                    type = user == null ? "System" : "User"
-                },
-                details,
-                metadata = meta
-            };
+                    @event = evt,
+                    entity,
+                    eventTime = DateTime.UtcNow,
+                    serverTime = DateTime.UtcNow,
+                    actor = new
+                    {
+                        name = user?.Identity?.Name ?? "System",
+                        role = user?.FindFirst(ClaimTypes.Role)?.Value ?? "System",
+                        type = user == null ? "System" : "User"
+                    },
+                    details,
+                    metadata = meta
+                };
 
-            await _mqtt.PublishAsync(
-                "audit/action",
-                JsonSerializer.Serialize(payload)
-            );
+                await _mqtt.PublishAsync(
+                    "audit/action",
+                    JsonSerializer.Serialize(payload)
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"[AUDIT] Publish failed: {ex.Message}");
+            }
         }
-        catch (Exception ex)
+
+            public enum AuditAction
         {
-            _logger.LogWarning($"[AUDIT] Publish failed: {ex.Message}");
+            LOGIN,
+            LOGOUT,
+            DOWNLOAD,
+            UPLOAD,
+            APPROVE,
+            REJECT,
+            SYNC,
+            ALARM
         }
-    }
-
-    public enum AuditAction
-{
-    LOGIN,
-    LOGOUT,
-    DOWNLOAD,
-    UPLOAD,
-    APPROVE,
-    REJECT,
-    SYNC,
-    ALARM
-}
-
-
 
         public Task Created(string entity, object id, string details, object? meta = null)
             => Emit("CREATE", entity, details, meta);
