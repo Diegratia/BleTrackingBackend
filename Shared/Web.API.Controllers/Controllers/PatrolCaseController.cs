@@ -82,15 +82,15 @@ namespace Web.API.Controllers.Controllers
         // }
 
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request, [FromBody] PatrolCaseFilter filter)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+        // [HttpPost("{filter}")]
+        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request, [FromBody] PatrolCaseFilter filter)
+        // {
+        //     if (!ModelState.IsValid)
+        //         return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
 
-            var result = await _PatrolCaseService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Paginated("Patrol Case filtered successfully", result));
-        }
+        //     var result = await _PatrolCaseService.FilterAsync(request, filter);
+        //     return Ok(ApiResponse.Paginated("Patrol Case filtered successfully", result));
+        // }
 
         // PUT: api/PatrolRoute/{id}
         // [HttpPut("{id}")]

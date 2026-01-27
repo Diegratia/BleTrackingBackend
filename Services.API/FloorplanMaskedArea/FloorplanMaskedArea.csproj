@@ -30,9 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
-  	<ProjectReference Include="..\..\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-		<ProjectReference Include="..\..\Data.ViewModels\Data.ViewModels.csproj" />
-    <ProjectReference Include="..\..\Web.API.Controllers\Web.API.Controllers.csproj" />
+  	<ProjectReference Include="..\..\Shared\BusinessLogic.Services\BusinessLogic.Services.csproj" />
+		<ProjectReference Include="..\..\Shared\Data.ViewModels\Data.ViewModels.csproj" />
+    <ProjectReference Include="..\..\Shared\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
   <ItemGroup>
   <Content Include="../../.env" CopyToOutputDirectory="Always">

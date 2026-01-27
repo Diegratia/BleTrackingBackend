@@ -6,15 +6,18 @@ WORKDIR /app
   COPY Directory.Packages.props ./
   COPY global.json ./
   COPY Services.API/MstAccessControl/MstAccessControl.csproj Services.API/MstAccessControl/
-  COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
-  COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/
-  COPY Entities.Models/Entities.Models.csproj Entities.Models/
-  COPY Helpers.Consumer/Helpers.Consumer.csproj Helpers.Consumer/
-  COPY Repositories/Repositories.csproj Repositories/
-  COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
 
-WORKDIR /app/Services.API/MstAccessControl
-RUN dotnet restore
+  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj shared/BusinessLogic.Services/
+  COPY Shared/Data.ViewModels/Data.ViewModels.csproj shared/Data.ViewModels/
+  COPY Shared/Entities.Models/Entities.Models.csproj shared/Entities.Models/
+  COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj shared/Helpers.Consumer/
+  COPY Shared/Repositories/Repositories.csproj shared/Repositories/
+  COPY Shared/Web.API.Controllers/Web.API.Controllers.csproj shared/Web.API.Controllers/
+
+# WORKDIR /app/Services.API/MstAccessControl
+# RUN dotnet restore
+RUN dotnet restore Services.API/MstAccessControl/MstAccessControl.csproj
+
 
 WORKDIR /app
 COPY . .
