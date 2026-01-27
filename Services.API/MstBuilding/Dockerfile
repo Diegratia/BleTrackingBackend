@@ -7,12 +7,13 @@ WORKDIR /app
   COPY global.json ./
   COPY Services.API/MstBuilding/MstBuilding.csproj Services.API/MstBuilding/
 
-  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj shared/BusinessLogic.Services/
-  COPY Shared/Data.ViewModels/Data.ViewModels.csproj shared/Data.ViewModels/
-  COPY Shared/Entities.Models/Entities.Models.csproj shared/Entities.Models/
-  COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj shared/Helpers.Consumer/
-  COPY Shared/Repositories/Repositories.csproj shared/Repositories/
-  COPY Shared/Web.API.Controllers/Web.API.Controllers.csproj shared/Web.API.Controllers/
+  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj Shared/BusinessLogic.Services/
+  COPY Shared/Shared.Contracts/Shared.Contracts.csproj Shared/Shared.Contracts/
+  COPY Shared/Data.ViewModels/Data.ViewModels.csproj Shared/Data.ViewModels/
+  COPY Shared/Entities.Models/Entities.Models.csproj Shared/Entities.Models/
+  COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj Shared/Helpers.Consumer/
+  COPY Shared/Repositories/Repositories.csproj Shared/Repositories/
+  COPY Shared/Web.API.Controllers/Web.API.Controllers.csproj Shared/Web.API.Controllers/
 
 # WORKDIR /app/Services.API/MstBuilding
 # RUN dotnet restore
