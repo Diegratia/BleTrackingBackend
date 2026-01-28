@@ -40,7 +40,7 @@ namespace BusinessLogic.Services.Implementation
             _repo = repo;
         }
         public async Task<object> FilterAsync(
-            DataTablesRequest request,
+            DataTablesProjectedRequest request,
             PatrolCaseFilter filter
         )
         {
@@ -71,66 +71,66 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // 4. Map Specific Filters (Dictionary -> Properties)
-            if (request.Filters != null)
-            {
-                // if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
-                // {
-                //      // Handle simple value or array (if logic supports it)
-                //      // For simple single value:
-                //      if (int.TryParse(statusObj.ToString(), out int statusInt))
-                //         filter.CaseStatus = (CaseStatus)statusInt;
-                //      // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
-                // }
+            // if (request.Filters != null)
+            // {
+            //     // if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
+            //     // {
+            //     //      // Handle simple value or array (if logic supports it)
+            //     //      // For simple single value:
+            //     //      if (int.TryParse(statusObj.ToString(), out int statusInt))
+            //     //         filter.CaseStatus = (CaseStatus)statusInt;
+            //     //      // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
+            //     // }
 
-                // if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
-                // {
-                //      if (int.TryParse(typeObj.ToString(), out int typeInt))
-                //         filter.CaseType = (CaseType)typeInt;
-                // }
+            //     // if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
+            //     // {
+            //     //      if (int.TryParse(typeObj.ToString(), out int typeInt))
+            //     //         filter.CaseType = (CaseType)typeInt;
+            //     // }
 
-                if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
-                {
-                    // Handle simple value or array (if logic supports it)
-                    // For simple single value:
-                    if (Enum.TryParse<CaseStatus>(
-                            statusObj.ToString(),
-                            ignoreCase: true,
-                            out var statusEnum))
-                    {
-                        filter.CaseStatus = statusEnum;
-                    }
-                    // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
-                }
+            //     if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
+            //     {
+            //         // Handle simple value or array (if logic supports it)
+            //         // For simple single value:
+            //         if (Enum.TryParse<CaseStatus>(
+            //                 statusObj.ToString(),
+            //                 ignoreCase: true,
+            //                 out var statusEnum))
+            //         {
+            //             filter.CaseStatus = statusEnum;
+            //         }
+            //         // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
+            //     }
 
-                if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
-                {
-                    if (Enum.TryParse<CaseType>(
-                           typeObj.ToString(),
-                           ignoreCase: true,
-                           out var typeEnum))
-                    {
-                        filter.CaseType = typeEnum;
-                    }
-                }
+            //     if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
+            //     {
+            //         if (Enum.TryParse<CaseType>(
+            //                typeObj.ToString(),
+            //                ignoreCase: true,
+            //                out var typeEnum))
+            //         {
+            //             filter.CaseType = typeEnum;
+            //         }
+            //     }
 
-                if (request.Filters.TryGetValue("SecurityId", out var secIdObj) && secIdObj != null)
-                {
-                    if (Guid.TryParse(secIdObj.ToString(), out Guid secId))
-                        filter.SecurityId = secId;
-                }
+            //     if (request.Filters.TryGetValue("SecurityId", out var secIdObj) && secIdObj != null)
+            //     {
+            //         if (Guid.TryParse(secIdObj.ToString(), out Guid secId))
+            //             filter.SecurityId = secId;
+            //     }
 
-                if (request.Filters.TryGetValue("PatrolAssignmentId", out var assignIdObj) && assignIdObj != null)
-                {
-                    if (Guid.TryParse(assignIdObj.ToString(), out Guid assignId))
-                        filter.PatrolAssignmentId = assignId;
-                }
+            //     if (request.Filters.TryGetValue("PatrolAssignmentId", out var assignIdObj) && assignIdObj != null)
+            //     {
+            //         if (Guid.TryParse(assignIdObj.ToString(), out Guid assignId))
+            //             filter.PatrolAssignmentId = assignId;
+            //     }
 
-                if (request.Filters.TryGetValue("PatrolRouteId", out var routeIdObj) && routeIdObj != null)
-                {
-                    if (Guid.TryParse(routeIdObj.ToString(), out Guid routeId))
-                        filter.PatrolRouteId = routeId;
-                }
-            }
+            //     if (request.Filters.TryGetValue("PatrolRouteId", out var routeIdObj) && routeIdObj != null)
+            //     {
+            //         if (Guid.TryParse(routeIdObj.ToString(), out Guid routeId))
+            //             filter.PatrolRouteId = routeId;
+            //     }
+            // }
 
             var (data, total, filtered) = await _repo.FilterAsync(filter);
 
@@ -163,7 +163,36 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"PatrolSessionId with id {createDto.PatrolSessionId} not found");
 
             var patrolCase = _mapper.Map<PatrolCase>(createDto);
+            patrolCase.CaseStatus = CaseStatus.Open;
             SetCreateAudit(patrolCase);
+
+// 2. PROTEKSI: Cek null pada Attachments dari DTO
+if (createDto.Attachments != null && createDto.Attachments.Any())
+    {
+        // Pastikan list di entitas siap pakai
+        patrolCase.PatrolCaseAttachments ??= new List<PatrolCaseAttachment>();
+
+        foreach (var item in createDto.Attachments)
+        {
+            // Map item ke entitas attachment
+            var attachment = _mapper.Map<PatrolCaseAttachment>(item);
+            
+            // Hubungkan ke Parent ID
+            attachment.PatrolCaseId = patrolCase.Id;
+            
+            // Samakan audit dengan parent
+            attachment.ApplicationId = patrolCase.ApplicationId;
+            attachment.CreatedBy = patrolCase.CreatedBy;
+            attachment.UpdatedBy = patrolCase.UpdatedBy;
+            attachment.CreatedAt = DateTime.Now;
+            attachment.UpdatedAt = DateTime.Now;
+            attachment.Status = 1;
+            attachment.UploadedAt = DateTime.Now;
+
+            // Masukkan ke koleksi navigasi
+            patrolCase.PatrolCaseAttachments.Add(attachment);
+        }
+    }
 
             await _repo.AddAsync(patrolCase);
             await _audit.Created(
@@ -172,26 +201,28 @@ namespace BusinessLogic.Services.Implementation
                 "Created Patrol Case",
                 new { patrolCase.Title }
             );
-            return _mapper.Map<PatrolCaseDto>(patrolCase);
+            var resultDto = await _repo.GetByIdAsync(patrolCase.Id);
+            return _mapper.Map<PatrolCaseDto>(resultDto);
         }
         
-        //  public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto)
-        // {
-        //     var patrolCase = await _repo.GetByIdAsync(id);
-        //     if (patrolCase == null)
-        //         throw new NotFoundException($"patrolCase with id {id} not found");
+         public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto)
+        {
+            var patrolCase = await _repo.GetByIdEntitiyAsync(id);
+            if (patrolCase == null)
+                throw new NotFoundException($"patrolCase with id {id} not found");
 
-        //     // SetUpdateAudit(patrolCase);
-        //     _mapper.Map(updateDto, patrolCase);
-        //     await _repo.UpdateAsync(patrolCase);
-        //     await _audit.Updated(
-        //         "Patrol Case",
-        //         patrolCase.Id,
-        //         "Updated patrolCase",
-        //         new { patrolCase.Title }
-        //     );
-        //     return _mapper.Map<PatrolAreaDto>(patrolArea);
-        // }
+            _mapper.Map(updateDto, patrolCase);
+            SetUpdateAudit(patrolCase);
+            await _repo.UpdateAsync(patrolCase);
+            await _audit.Updated(
+                "Patrol Case",
+                patrolCase.Id,
+                "Updated patrolCase",
+                new { patrolCase.Title }
+            );
+            var resultDto = await _repo.GetByIdAsync(patrolCase.Id);
+            return _mapper.Map<PatrolCaseDto>(resultDto);
+        }
         
     }
 }

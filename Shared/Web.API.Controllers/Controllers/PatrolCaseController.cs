@@ -12,6 +12,8 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -59,20 +61,20 @@ namespace Web.API.Controllers.Controllers
 
 
         // POST: api/PatrolRoute
-        // [HttpPost]
-        // public async Task<IActionResult> Create([FromBody] PatrolRouteCreateDto PatrolRouteDto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.ToDictionary(
-        //             kvp => kvp.Key,
-        //             kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-        //         );
-        //         return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-        //     }
-        //     var createdSecurity = await _PatrolRouteService.CreateAsync(PatrolRouteDto);
-        //     return StatusCode(201, ApiResponse.Created("Patrol Route created successfully", createdSecurity));
-        // }
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] PatrolCaseCreateDto createDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+            var create = await _PatrolCaseService.CreateAsync(createDto);
+            return StatusCode(201, ApiResponse.Created("Patrol Case created successfully", create));
+        }
 
         // [HttpDelete("{id}")]
         // // DELETE: api/PatrolRoute/{id}
@@ -83,14 +85,20 @@ namespace Web.API.Controllers.Controllers
         // }
 
 
-        [HttpPost("filter")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+       [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
-                
-            var result = await _PatrolCaseService.FilterAsync(request, new PatrolCaseFilter());
-            return Ok(ApiResponse.Paginated("Patrol Case filtered successfully", result));
+            var filter = new PatrolCaseFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                // Deserialisasi ini akan memetakan string "Incident" ke Enum CaseType.Incident secara otomatis
+                filter = JsonSerializer.Deserialize<PatrolCaseFilter>(request.Filters.GetRawText(), 
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolCaseFilter();
+            }
+
+            var result = await _PatrolCaseService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
 
         // PUT: api/PatrolRoute/{id}

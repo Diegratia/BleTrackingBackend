@@ -27,6 +27,10 @@ namespace Repositories.Repository
             .Where(a => a.Id == id )
             .FirstOrDefaultAsync();
         }
+        public async Task<PatrolCase?> GetByIdEntitiyAsync(Guid id)
+        {
+            return await _context.PatrolCases.FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+        }
 
         public async Task<IEnumerable<PatrolCaseRM>> GetAllAsync()
         {
@@ -53,6 +57,7 @@ namespace Repositories.Repository
             ValidateApplicationIdForEntity(patrolCase, applicationId, isSystemAdmin);
 
             _context.PatrolCases.Add(patrolCase);
+            
             await _context.SaveChangesAsync();
             return patrolCase;
         }
@@ -289,7 +294,7 @@ namespace Repositories.Repository
 
         public async Task<bool> SessionExistsAsync(Guid sessionId)
         {
-            return await _context.PatrolCases
+            return await _context.PatrolSessions
                 .AnyAsync(f => f.Id == sessionId && f.Status != 0);
         }
 

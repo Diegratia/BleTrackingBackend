@@ -106,25 +106,44 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
                 case DbUpdateException ex:
                     statusCode = 400;
-                   var dbMessage = "Database error";
+                    var dbMessage = "Database error";
 
-                        if (_env.IsDevelopment())
-                        {
-                            dbMessage =
-                                ex.InnerException?.InnerException?.Message ??
-                                ex.InnerException?.Message ??
-                                ex.Message;
-                        }
+                    if (_env.IsDevelopment())
+                    {
+                        dbMessage =
+                            ex.InnerException?.InnerException?.Message ??
+                            ex.InnerException?.Message ??
+                            ex.Message;
+                    }
 
                     result = ApiResponse.BadRequest(dbMessage ?? "Database error");  // ✅ Now available
                     _logger.LogError(ex, "Database error");
                     break;
 
+                case JsonException ex:
+                    statusCode = 400;
+                    var jsonMessage = "Invalid format or unrecognized filter value";
+
+                    if (_env.IsDevelopment())
+                    {
+                        jsonMessage = ex.Message; // Detail error muncul saat development
+                    }
+
+                    result = ApiResponse.BadRequest(jsonMessage);
+                    _logger.LogWarning(ex, "JSON Deserialization failed: {Message}", ex.Message);
+                    break;
+
+                    // default:
+                    //     statusCode = 500;
+                    //     var message = _env.IsDevelopment() ? exception.Message : "Internal server error";
+                    //     result = ApiResponse.InternalError(message);  // ✅ Now available
+                    //     _logger.LogError(exception, "Unhandled exception");
+                    //     break;
                 default:
                     statusCode = 500;
-                    var message = _env.IsDevelopment() ? exception.Message : "Internal server error";
-                    result = ApiResponse.InternalError(message);  // ✅ Now available
-                    _logger.LogError(exception, "Unhandled exception");
+                    // Tampilkan detail baris kode yang error hanya untuk sementara (saat debug)
+                    var message = exception.Message + " | Lokasi: " + exception.StackTrace; 
+                    result = ApiResponse.InternalError(message);
                     break;
             }
 

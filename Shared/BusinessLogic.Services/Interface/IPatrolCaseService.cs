@@ -13,9 +13,11 @@ namespace BusinessLogic.Services.Interface
     public interface IPatrolCaseService
     {
         Task<object> FilterAsync(
-            DataTablesRequest request,
+            DataTablesProjectedRequest request,
             PatrolCaseFilter filter
         );
+        Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto createDto);
+        Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto);
         
     }
 }

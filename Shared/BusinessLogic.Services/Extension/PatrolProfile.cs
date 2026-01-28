@@ -101,7 +101,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
         }
     }
-    
+
     public class PatrolAssignmentProfile : Profile
     {
         public PatrolAssignmentProfile()
@@ -136,6 +136,46 @@ namespace BusinessLogic.Services.Extension
 
 
             CreateMap<PatrolAssignmentRM, PatrolAssignmentDto>();
+        }
+    }
+    
+    public class PatrolCaseProfile : Profile
+    {
+        public PatrolCaseProfile()
+        {
+            // Entity/RM -> DTO
+            CreateMap<PatrolCase, PatrolCaseDto>();
+            CreateMap<PatrolCaseRM, PatrolCaseDto>();
+            
+            // Create DTO -> Entity
+            // CreateMap<PatrolCaseCreateDto, PatrolCase>()
+            //     .ForMember(dest => dest.PatrolCaseAttachments, opt => opt.MapFrom(src => src.Attachments));
+                CreateMap<PatrolCaseCreateDto, PatrolCase>()
+                    .ForMember(dest => dest.PatrolCaseAttachments, opt => {
+                        opt.Condition(src => src.Attachments != null); // Hanya map jika ada isinya
+                        opt.MapFrom(src => src.Attachments);
+                    });
+            // Update DTO -> Entity
+            CreateMap<PatrolCaseUpdateDto, PatrolCase>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Manual Create DTO -> Entity
+            CreateMap<PatrolCaseCreateManualDto, PatrolCase>();
+        }
+    }
+
+    public class PatrolCaseAttachmentProfile : Profile
+    {
+        public PatrolCaseAttachmentProfile()
+        {
+            CreateMap<PatrolCaseAttachment, PatrolCaseAttachmentDto>();
+            
+            // Create DTO -> Entity
+            CreateMap<PatrolCaseAttachmentCreateDto, PatrolCaseAttachment>();
+
+            // Update DTO -> Entity
+            CreateMap<PatrolCaseAttachmentUpdateDto, PatrolCaseAttachment>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

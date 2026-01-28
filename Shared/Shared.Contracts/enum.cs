@@ -253,7 +253,7 @@ namespace Shared.Contracts
         Report,
         PatrolSummary
     }
-    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum FileType
     {
         Photo,
