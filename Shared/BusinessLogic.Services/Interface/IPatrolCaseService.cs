@@ -21,7 +21,5 @@ namespace BusinessLogic.Services.Interface
         Task DeleteAsync(Guid id);
         Task<PatrolCaseDto?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolCaseDto>> GetAllAsync();
-    
-        
     }
 }

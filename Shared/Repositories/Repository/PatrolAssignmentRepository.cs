@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using System.Security.Claims;
 
 namespace Repositories.Repository
 {
@@ -99,14 +101,43 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+        // public IQueryable<PatrolAssignment> GetAllQueryable()
+        // {
+            
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+        //     var query = _context.PatrolAssignments
+        //     .Include(d => d.PatrolRoute)
+        //     .Include(d => d.PatrolAssignmentSecurities)
+        //         .ThenInclude(pas => pas.Security)
+        //     .Where(d => d.Status != 0);
+        //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        // }
         public IQueryable<PatrolAssignment> GetAllQueryable()
         {
+            var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
             var query = _context.PatrolAssignments
-            .Include(d => d.PatrolRoute)
-            .Include(d => d.PatrolAssignmentSecurities)
-                .ThenInclude(pas => pas.Security)
-            .Where(d => d.Status != 0);
+                .Include(d => d.PatrolRoute)
+                .Include(d => d.PatrolAssignmentSecurities)
+                    .ThenInclude(pas => pas.Security)
+                .Where(d => d.Status != 0);
+
+            // =============================
+            // 🔐 ROLE-BASED FILTER
+            // =============================
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                // SECURITY / PRIMARY USER
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security.Email == userEmail
+                    )
+                );
+            }
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 

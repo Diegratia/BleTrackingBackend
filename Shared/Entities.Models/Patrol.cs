@@ -118,7 +118,8 @@ namespace Entities.Models
         public PatrolRoute? PatrolRoute { get; set; }
         public MstApplication? Application { get; set; }
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
-        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();    }
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
+    }
     //PatrolAssignmentSecurity
     public class PatrolAssignmentSecurity : BaseModelWithTimeApp, IApplicationEntity
     {
