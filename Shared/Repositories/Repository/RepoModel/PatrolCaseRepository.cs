@@ -24,12 +24,14 @@ namespace Repositories.Repository
         public async Task<PatrolCaseRM?> GetByIdAsync(Guid id)
         {
             return await GetAllProjectedQueryable()
-            .Where(a => a.Id == id )
+            .Where(a => a.Id == id)
             .FirstOrDefaultAsync();
         }
         public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
         {
-            return await _context.PatrolCases.FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+            return await _context.PatrolCases
+            .Include(x => x.PatrolCaseAttachments)
+            .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
         }
 
         public async Task<IEnumerable<PatrolCaseRM>> GetAllAsync()
@@ -57,7 +59,7 @@ namespace Repositories.Repository
             ValidateApplicationIdForEntity(patrolCase, applicationId, isSystemAdmin);
 
             _context.PatrolCases.Add(patrolCase);
-            
+
             await _context.SaveChangesAsync();
             return patrolCase;
         }
@@ -68,7 +70,6 @@ namespace Repositories.Repository
 
             await ValidateApplicationIdAsync(patrolCase.ApplicationId);
             ValidateApplicationIdForEntity(patrolCase, applicationId, isSystemAdmin);
-
             await _context.SaveChangesAsync();
         }
 
@@ -207,7 +208,7 @@ namespace Repositories.Repository
                 var search = filter.Search.ToLower();
                 query = query.Where(x =>
                     x.Title.ToLower().Contains(search) ||
-                    x.Description.ToLower().Contains(search) 
+                    x.Description.ToLower().Contains(search)
                 );
             }
 
@@ -313,6 +314,19 @@ namespace Repositories.Repository
             return await _context.PatrolSessions
                 .AnyAsync(f => f.Id == sessionId && f.Status != 0);
         }
+        public async Task AddManyAsync(IEnumerable<PatrolCaseAttachment> attachments)
+        {
+            _context.PatrolCaseAttachments.AddRange(attachments);
+            await _context.SaveChangesAsync();
+        }
+        
+                public async Task RemoveAllAttachmentsByCaseIdAsync(Guid caseId)
+        {
+            await _context.PatrolCaseAttachments
+                .Where(x => x.PatrolCaseId == caseId)
+                .ExecuteDeleteAsync();
+        }
+
 
     }
 }

@@ -23,7 +23,7 @@ namespace Data.ViewModels
     }
     public class PatrolAttachmentUpdateDto
     {
-        // public string? FileUrl { get; set; }
+        public string? FileUrl { get; set; }
         public FileType? FileType { get; set; }
     }
 }

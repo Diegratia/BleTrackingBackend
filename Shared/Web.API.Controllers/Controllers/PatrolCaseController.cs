@@ -79,7 +79,7 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-       [HttpPost("filter")]
+        [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             var filter = new PatrolCaseFilter();
@@ -87,7 +87,7 @@ namespace Web.API.Controllers.Controllers
             if (request.Filters.ValueKind == JsonValueKind.Object)
             {
                 // Deserialisasi ini akan memetakan string "Incident" ke Enum CaseType.Incident secara otomatis
-                filter = JsonSerializer.Deserialize<PatrolCaseFilter>(request.Filters.GetRawText(), 
+                filter = JsonSerializer.Deserialize<PatrolCaseFilter>(request.Filters.GetRawText(),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolCaseFilter();
             }
 
@@ -96,20 +96,21 @@ namespace Web.API.Controllers.Controllers
         }
 
         // PUT: api/PatrolCase/{id}
-        // [HttpPut("{id}")]
-        // public async Task<IActionResult> Update(Guid id, [FromBody] PatrolRouteUpdateDto updateDto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.ToDictionary(
-        //             kvp => kvp.Key,
-        //             kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-        //         );
-        //         return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-        //     }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] PatrolCaseUpdateDto updateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
 
-        //     var patrolRoute = await _PatrolRouteService.UpdateAsync(id, updateDto);
-        //     return Ok(ApiResponse.Success("Patrol Route updated successfully", patrolRoute));
-        // }
+            var patrolRoute = await _PatrolCaseService.UpdateAsync(id, updateDto);
+            return Ok(ApiResponse.Success("Patrol Case updated successfully", patrolRoute));
+        }
+        
     }
 }

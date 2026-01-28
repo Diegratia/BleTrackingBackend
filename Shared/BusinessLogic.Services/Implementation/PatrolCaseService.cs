@@ -161,6 +161,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<PatrolCaseDto>>(patrolCases);
         }
 
+        // EF STYLE
         public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
         {
             var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
@@ -209,41 +210,141 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdAsync(patrolCase.Id);
             return _mapper.Map<PatrolCaseDto>(result);
         }
+        // SQL STYLE
+        // public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
+        // {
+        //      PatrolCase? patrolCase = null;
+        //      await _repo.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
+        //             ?? throw new NotFoundException(
+        //                 $"PatrolSession with id {dto.PatrolSessionId} not found");
+
+        //         // 1️⃣ CREATE CASE (PARENT)
+        //         patrolCase = new PatrolCase
+        //         {
+        //             Title = dto.Title,
+        //             Description = dto.Description,
+        //             CaseType = dto.CaseType.Value,
+        //             CaseStatus = CaseStatus.Open,
+        //             PatrolSessionId = session.Id,
+        //             SecurityId = session.SecurityId,
+        //             PatrolAssignmentId = session.PatrolAssignmentId,
+        //             PatrolRouteId = session.PatrolRouteId,
+        //         };
+
+        //         SetCreateAudit(patrolCase);
+        //         await _repo.AddAsync(patrolCase);
+        //         if (dto.Attachments?.Any() == true)
+        //         {
+        //             var attachments = dto.Attachments.Select(att =>
+        //                 new PatrolCaseAttachment
+        //                 {
+        //                     PatrolCaseId = patrolCase.Id,
+        //                     FileUrl = att.FileUrl,
+        //                     FileType = att.FileType,
+        //                     MimeType = MimeTypeHelper.GetMimeType(att.FileUrl),
+        //                     ApplicationId = patrolCase.ApplicationId,
+        //                     CreatedAt = DateTime.UtcNow,
+        //                     UpdatedAt = DateTime.UtcNow,
+        //                     CreatedBy = UsernameFormToken,
+        //                     UpdatedBy = UsernameFormToken
+        //                 }).ToList();
+        //             await _repo.AddManyAsync(attachments);
+        //         }
+        //         await _audit.Created(
+        //             "Patrol Case",
+        //             patrolCase.Id,
+        //             "Created Patrol Case",
+        //             new { patrolCase.Title });
+            
+        //     });
+        //         var result = await _repo.GetByIdAsync(patrolCase.Id);
+        //         return _mapper.Map<PatrolCaseDto>(result);
+        // }
+
 
 
         public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto dto)
         {
-            var patrolCase = await _repo.GetByIdEntityAsync(id)
-                ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+            PatrolCase? patrolCase = null;
 
-            if (patrolCase.CaseStatus != CaseStatus.Open &&
-                patrolCase.CaseStatus != CaseStatus.Rejected)
-                throw new BusinessException(
-                    $"Case with status {patrolCase.CaseStatus} cannot be updated");
+            await _repo.ExecuteInTransactionAsync(async () =>
+            {
+                // =====================================================
+                // 🔹 LOAD TRACKED ENTITY
+                // =====================================================
+                patrolCase = await _repo.GetByIdEntityAsync(id)
+                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
-            // =============================
-            // 🔹 UPDATE SCALAR SAJA
-            // =============================
-            patrolCase.Title = dto.Title ?? patrolCase.Title;
-            patrolCase.Description = dto.Description ?? patrolCase.Description;
-            patrolCase.CaseType = dto.CaseType ?? patrolCase.CaseType;
+                // =====================================================
+                // 🔹 VALIDASI STATUS
+                // =====================================================
+                if (patrolCase.CaseStatus != CaseStatus.Open &&
+                    patrolCase.CaseStatus != CaseStatus.Rejected)
+                    throw new BusinessException(
+                        $"Case with status {patrolCase.CaseStatus} cannot be updated");
 
-            SetUpdateAudit(patrolCase);
+                // =====================================================
+                // 🔹 UPDATE SCALAR (MANUAL, BIAR JELAS)
+                // =====================================================
+                if (dto.Title != null)
+                    patrolCase.Title = dto.Title;
 
-            await _repo.UpdateAsync(patrolCase);
+                if (dto.Description != null)
+                    patrolCase.Description = dto.Description;
+
+                if (dto.CaseType.HasValue)
+                    patrolCase.CaseType = dto.CaseType.Value;
+
+                SetUpdateAudit(patrolCase);
+
+                // =====================================================
+                // 🔥 REPLACE ALL ATTACHMENTS (OPTIONAL)
+                // =====================================================
+                if (dto.Attachments != null)
+                {
+                    // 1️⃣ HARD DELETE EXISTING (SQL STYLE)
+                    await _repo.RemoveAllAttachmentsByCaseIdAsync(patrolCase.Id);
+
+                    // 2️⃣ INSERT BARU
+                    var newAttachments = dto.Attachments.Select(att =>
+                        new PatrolCaseAttachment
+                        {
+                            PatrolCaseId = patrolCase.Id,
+                            FileUrl = att.FileUrl,
+                            FileType = att.FileType,
+                            MimeType = MimeTypeHelper.GetMimeType(att.FileUrl),
+                            ApplicationId = patrolCase.ApplicationId,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                            CreatedBy = UsernameFormToken,
+                            UpdatedBy = UsernameFormToken
+                        }).ToList();
+
+                    await _repo.AddManyAsync(newAttachments);
+                }
+
+                // =====================================================
+                // 🔹 SAVE PARENT (TRACKED)
+                // =====================================================
+                await _repo.UpdateAsync(patrolCase);
+            });
+
+            // =====================================================
+            // 🔹 RELOAD FOR RESPONSE
+            // =====================================================
+            var result = await _repo.GetByIdAsync(patrolCase!.Id)
+                ?? throw new Exception("Failed to reload PatrolCase after update");
 
             await _audit.Updated(
                 "Patrol Case",
-                patrolCase.Id,
+                result.Id,
                 "Updated Patrol Case",
-                new { patrolCase.Title }
-            );
+                new { result.Title });
 
-            var result = await _repo.GetByIdAsync(patrolCase.Id);
             return _mapper.Map<PatrolCaseDto>(result);
         }
-
-
 
         public async Task DeleteAsync(Guid id)
         {
