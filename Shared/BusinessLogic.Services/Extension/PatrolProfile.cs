@@ -144,23 +144,21 @@ namespace BusinessLogic.Services.Extension
         public PatrolCaseProfile()
         {
             // Entity/RM -> DTO
-            CreateMap<PatrolCase, PatrolCaseDto>();
             CreateMap<PatrolCaseRM, PatrolCaseDto>();
-            
+
             // Create DTO -> Entity
-            // CreateMap<PatrolCaseCreateDto, PatrolCase>()
-            //     .ForMember(dest => dest.PatrolCaseAttachments, opt => opt.MapFrom(src => src.Attachments));
-                CreateMap<PatrolCaseCreateDto, PatrolCase>()
-                    .ForMember(dest => dest.PatrolCaseAttachments, opt => {
-                        opt.Condition(src => src.Attachments != null); // Hanya map jika ada isinya
-                        opt.MapFrom(src => src.Attachments);
-                    });
+            CreateMap<PatrolCaseCreateDto, PatrolCase>()
+                .ForMember(dest => dest.PatrolCaseAttachments, opt => opt.Ignore());
+
             // Update DTO -> Entity
             CreateMap<PatrolCaseUpdateDto, PatrolCase>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Manual Create DTO -> Entity
             CreateMap<PatrolCaseCreateManualDto, PatrolCase>();
+            CreateMap<MstSecurityLookUpRM, MstSecurityLookUpDto>();
+            CreateMap<PatrolAssignmentLookUpRM, PatrolAssignmentLookUpDto>();
+            CreateMap<PatrolRouteMinimalRM, PatrolRouteMinimalDto>();
         }
     }
 
@@ -168,13 +166,13 @@ namespace BusinessLogic.Services.Extension
     {
         public PatrolCaseAttachmentProfile()
         {
-            CreateMap<PatrolCaseAttachment, PatrolCaseAttachmentDto>();
+            CreateMap<PatrolCaseAttachment, PatrolAttachmentDto>();
             
             // Create DTO -> Entity
-            CreateMap<PatrolCaseAttachmentCreateDto, PatrolCaseAttachment>();
+            CreateMap<PatrolAttachmentCreateDto, PatrolCaseAttachment>();
 
             // Update DTO -> Entity
-            CreateMap<PatrolCaseAttachmentUpdateDto, PatrolCaseAttachment>()
+            CreateMap<PatrolAttachmentUpdateDto, PatrolCaseAttachment>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }

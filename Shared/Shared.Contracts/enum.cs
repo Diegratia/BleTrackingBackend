@@ -256,7 +256,7 @@ namespace Shared.Contracts
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum FileType
     {
-        Photo,
+        Image,
         Video,
         Document
     }

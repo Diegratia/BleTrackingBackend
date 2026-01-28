@@ -21,9 +21,9 @@ namespace Repositories.Repository.RepoModel
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
         public DateTime? CreatedAt { get; set; }
-        public Guid? CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public Guid? UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
         public MstSecurityLookUpRM? Security { get; set; }
         public PatrolAssignmentLookUpRM? PatrolAssignment { get; set; }
         public PatrolRouteMinimalRM? PatrolRoute { get; set; }

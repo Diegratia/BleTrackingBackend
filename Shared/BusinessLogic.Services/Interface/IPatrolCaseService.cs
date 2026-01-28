@@ -18,6 +18,10 @@ namespace BusinessLogic.Services.Interface
         );
         Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto createDto);
         Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto);
+        Task DeleteAsync(Guid id);
+        Task<PatrolCaseDto?> GetByIdAsync(Guid id);
+        Task<IEnumerable<PatrolCaseDto>> GetAllAsync();
+    
         
     }
 }

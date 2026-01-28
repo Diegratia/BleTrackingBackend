@@ -18,6 +18,12 @@ namespace BusinessLogic.Services.Extension.FileStorageService
             int quality = 75
         );
         Task DeleteAsync(string relativePath);
+        Task<string> SaveFileAsync(
+        IFormFile file,
+        string folder,
+        long maxSize,
+        string[] allowedMimeTypes
+    );
     }
 
 }

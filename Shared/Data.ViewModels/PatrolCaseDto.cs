@@ -29,7 +29,7 @@ namespace Data.ViewModels
         public string? Description { get; set; }
         public CaseType? CaseType { get; set; }
         public Guid? PatrolSessionId { get; set; }
-        public List<PatrolCaseAttachmentCreateDto>? Attachments { get; set; }
+        public List<PatrolAttachmentCreateDto>? Attachments { get; set; }
     }
 
     public class PatrolCaseUpdateDto
@@ -37,7 +37,7 @@ namespace Data.ViewModels
         public string? Title { get; set; }
         public string? Description { get; set; }
         public CaseType? CaseType { get; set; }
-        public PatrolCaseAttachmentUpdateDto? Attachment { get; set; }
+        public PatrolAttachmentUpdateDto? Attachment { get; set; }
     }
 
     public class PatrolCaseCreateManualDto

@@ -51,8 +51,8 @@ namespace Web.API.Controllers.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var security = await _PatrolRouteService.GetByIdAsync(id);
-            return Ok(ApiResponse.Success("Patrol Route retrieved successfully", security));
+            var patrolroute = await _PatrolRouteService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroute));
         }
 
 

@@ -133,18 +133,16 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     _logger.LogWarning(ex, "JSON Deserialization failed: {Message}", ex.Message);
                     break;
 
-                    // default:
-                    //     statusCode = 500;
-                    //     var message = _env.IsDevelopment() ? exception.Message : "Internal server error";
-                    //     result = ApiResponse.InternalError(message);  // ✅ Now available
-                    //     _logger.LogError(exception, "Unhandled exception");
-                    //     break;
-                default:
-                    statusCode = 500;
-                    // Tampilkan detail baris kode yang error hanya untuk sementara (saat debug)
-                    var message = exception.Message + " | Lokasi: " + exception.StackTrace; 
-                    result = ApiResponse.InternalError(message);
-                    break;
+                    default:
+                        statusCode = 500;
+                        var message = _env.IsDevelopment() ? exception.Message : "Internal server error";
+                        if (_env.IsDevelopment())
+                            {
+                                message = exception.Message + " | Location: " + exception.StackTrace;; // Detail error muncul saat development
+                            }
+                        result = ApiResponse.InternalError(message);  // ✅ Now available
+                        _logger.LogError(exception, "Unhandled exception");
+                        break;
             }
 
             response.StatusCode = statusCode;

@@ -7,7 +7,7 @@ using Data.ViewModels;
 namespace BusinessLogic.Services.Interface
 {
     public interface IPatrolAreaService
-    {
+{
         Task<PatrolAreaDto> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolAreaDto>> GetAllAsync();
         Task<PatrolAreaDto> CreateAsync(PatrolAreaCreateDto createDto);

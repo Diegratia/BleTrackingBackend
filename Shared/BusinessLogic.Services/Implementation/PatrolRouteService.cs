@@ -355,11 +355,9 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolRoute with id {id} not found");
-            return entity == null
-                ? null
-                : _mapper.Map<PatrolRouteDto>(entity);
+            return _mapper.Map<PatrolRouteDto>(entity);
         }
-            public async Task<IEnumerable<PatrolRouteDto>> GetAllAsync()
+            public async Task<IEnumerable<PatrolRouteDto?>> GetAllAsync()
         {
             var entities = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);

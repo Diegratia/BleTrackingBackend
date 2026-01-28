@@ -151,7 +151,6 @@ namespace Entities.Models
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         [Column("patrol_route_id")]
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
-
         public PatrolAssignment? PatrolAssignment { get; set; }
         public MstSecurity? Security { get; set; }
         public MstSecurity? ApprovedByHead { get; set; }

@@ -30,37 +30,31 @@ namespace Web.API.Controllers.Controllers
             _PatrolCaseService = PatrolCaseService;
         }
 
-        // // GET: api/PatrolRoute
-        // [HttpGet]
-        // public async Task<IActionResult> GetAll()
-        // {
-        //     var patrolroutes = await _PatrolRouteService.GetAllAsync();
-        //     return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
-        // }
-        // // GET: api/PatrolRoute
+        // // GET: api/PatrolCase
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var patrolAreas = await _PatrolCaseService.GetAllAsync();
+            return Ok(ApiResponse.Success("Patrol Case retrieved successfully", patrolAreas));
+        }
+        // // GET: api/PatrolCase
         // [HttpGet("lookup")]
         // public async Task<IActionResult> GetAllLookUpAsync()
         // {
         //     var patrolroutes = await _PatrolRouteService.GetAllLookUpAsync();
         //     return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
         // }
-        // [HttpGet("lookup")]
-        // public async Task<IActionResult> GetAllLookUpAsync()
-        // {
-        //     var patrolroutes = await _PatrolRouteService.GetAllLookUpAsync();
-        //     return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroutes));
-        // }
 
-        // GET: api/PatrolRoute/{id}
-        // [HttpGet("{id}")]
-        // public async Task<IActionResult> GetById(Guid id)
-        // {
-        //     var security = await _PatrolRouteService.GetByIdAsync(id);
-        //     return Ok(ApiResponse.Success("Patrol Route retrieved successfully", security));
-        // }
+        // GET: api/PatrolCase/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var security = await _PatrolCaseService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Patrol Case retrieved successfully", security));
+        }
 
 
-        // POST: api/PatrolRoute
+        // POST: api/PatrolCase
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PatrolCaseCreateDto createDto)
         {
@@ -76,13 +70,13 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Patrol Case created successfully", create));
         }
 
-        // [HttpDelete("{id}")]
-        // // DELETE: api/PatrolRoute/{id}
-        // public async Task<IActionResult> Delete(Guid id)
-        // {
-        //     await _PatrolRouteService.DeleteAsync(id);
-        //     return StatusCode(200, ApiResponse.Success("Patrol Route deleted successfully"));
-        // }
+        // // DELETE: api/PatrolCase/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            await _PatrolCaseService.DeleteAsync(id);
+            return StatusCode(200, ApiResponse.Success("Patrol Case deleted successfully"));
+        }
 
 
        [HttpPost("filter")]
@@ -101,7 +95,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
 
-        // PUT: api/PatrolRoute/{id}
+        // PUT: api/PatrolCase/{id}
         // [HttpPut("{id}")]
         // public async Task<IActionResult> Update(Guid id, [FromBody] PatrolRouteUpdateDto updateDto)
         // {

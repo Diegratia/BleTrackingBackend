@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Extension.FileStorageService;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using DataView;
@@ -27,6 +28,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
 
+
         public PatrolCaseService(
             PatrolCaseRepository repo,
             // PatrolSessionRepository sessionRepo,
@@ -38,6 +40,8 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
+            _mapper = mapper;
+            _audit = audit;
         }
         public async Task<object> FilterAsync(
             DataTablesProjectedRequest request,
@@ -157,72 +161,105 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<PatrolCaseDto>>(patrolCases);
         }
 
-        public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto createDto)
+        public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
         {
-            if (!await _repo.SessionExistsAsync(createDto.PatrolSessionId!.Value))
-                throw new NotFoundException($"PatrolSessionId with id {createDto.PatrolSessionId} not found");
+            var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
+                ?? throw new NotFoundException(
+                    $"PatrolSession with id {dto.PatrolSessionId} not found");
 
-            var patrolCase = _mapper.Map<PatrolCase>(createDto);
-            patrolCase.CaseStatus = CaseStatus.Open;
+            var patrolCase = _mapper.Map<PatrolCase>(dto);
+
+            // =============================
+            // 🔹 SNAPSHOT DARI SESSION
+            // =============================
             SetCreateAudit(patrolCase);
-
-// 2. PROTEKSI: Cek null pada Attachments dari DTO
-if (createDto.Attachments != null && createDto.Attachments.Any())
-    {
-        // Pastikan list di entitas siap pakai
-        patrolCase.PatrolCaseAttachments ??= new List<PatrolCaseAttachment>();
-
-        foreach (var item in createDto.Attachments)
-        {
-            // Map item ke entitas attachment
-            var attachment = _mapper.Map<PatrolCaseAttachment>(item);
-            
-            // Hubungkan ke Parent ID
-            attachment.PatrolCaseId = patrolCase.Id;
-            
-            // Samakan audit dengan parent
-            attachment.ApplicationId = patrolCase.ApplicationId;
-            attachment.CreatedBy = patrolCase.CreatedBy;
-            attachment.UpdatedBy = patrolCase.UpdatedBy;
-            attachment.CreatedAt = DateTime.Now;
-            attachment.UpdatedAt = DateTime.Now;
-            attachment.Status = 1;
-            attachment.UploadedAt = DateTime.Now;
-
-            // Masukkan ke koleksi navigasi
-            patrolCase.PatrolCaseAttachments.Add(attachment);
-        }
-    }
+            patrolCase.PatrolSessionId = session.Id;
+            patrolCase.SecurityId = session.SecurityId;
+            patrolCase.PatrolAssignmentId = session.PatrolAssignmentId;
+            patrolCase.PatrolRouteId = session.PatrolRouteId;
+            patrolCase.CaseStatus = CaseStatus.Open;
+            if (dto.Attachments?.Any() == true)
+            {
+                foreach (var att in dto.Attachments)
+                {
+                    patrolCase.PatrolCaseAttachments.Add(new PatrolCaseAttachment
+                    {
+                        PatrolCaseId = patrolCase.Id,
+                        FileUrl = att.FileUrl,
+                        FileType = att.FileType,
+                        MimeType = MimeTypeHelper.GetMimeType(att.FileUrl),
+                        ApplicationId = AppId,
+                        UploadedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = UsernameFormToken,
+                        UpdatedBy = UsernameFormToken
+                    });
+                }
+            }
 
             await _repo.AddAsync(patrolCase);
             await _audit.Created(
                 "Patrol Case",
                 patrolCase.Id,
                 "Created Patrol Case",
-                new { patrolCase.Title }
+                new { patrolCase.CaseType }
             );
-            var resultDto = await _repo.GetByIdAsync(patrolCase.Id);
-            return _mapper.Map<PatrolCaseDto>(resultDto);
-        }
-        
-         public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto)
-        {
-            var patrolCase = await _repo.GetByIdEntitiyAsync(id);
-            if (patrolCase == null)
-                throw new NotFoundException($"patrolCase with id {id} not found");
 
-            _mapper.Map(updateDto, patrolCase);
+            var result = await _repo.GetByIdAsync(patrolCase.Id);
+            return _mapper.Map<PatrolCaseDto>(result);
+        }
+
+
+        public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto dto)
+        {
+            var patrolCase = await _repo.GetByIdEntityAsync(id)
+                ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+
+            if (patrolCase.CaseStatus != CaseStatus.Open &&
+                patrolCase.CaseStatus != CaseStatus.Rejected)
+                throw new BusinessException(
+                    $"Case with status {patrolCase.CaseStatus} cannot be updated");
+
+            // =============================
+            // 🔹 UPDATE SCALAR SAJA
+            // =============================
+            patrolCase.Title = dto.Title ?? patrolCase.Title;
+            patrolCase.Description = dto.Description ?? patrolCase.Description;
+            patrolCase.CaseType = dto.CaseType ?? patrolCase.CaseType;
+
             SetUpdateAudit(patrolCase);
+
             await _repo.UpdateAsync(patrolCase);
+
             await _audit.Updated(
                 "Patrol Case",
                 patrolCase.Id,
-                "Updated patrolCase",
+                "Updated Patrol Case",
                 new { patrolCase.Title }
             );
-            var resultDto = await _repo.GetByIdAsync(patrolCase.Id);
-            return _mapper.Map<PatrolCaseDto>(resultDto);
+
+            var result = await _repo.GetByIdAsync(patrolCase.Id);
+            return _mapper.Map<PatrolCaseDto>(result);
         }
+
+
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var patrolCase = await _repo.GetByIdEntityAsync(id);
+            if (patrolCase == null)
+                throw new NotFoundException($"PatrolArea with id {id} not found");
+            SetDeleteAudit(patrolCase);
+            await _audit.Deleted(
+                "Patrol Area",
+                patrolCase.Id,
+                "Deleted patrolArea",
+                new { patrolCase.Title }
+            );
+            await _repo.DeleteAsync(id);
+        }
+        
         
     }
 }

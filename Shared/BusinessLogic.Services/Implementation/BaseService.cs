@@ -42,6 +42,18 @@ namespace BusinessLogic.Services.Implementation
                 return username;
             }
         }
+        protected string EmailFormToken
+        {
+            get
+            {
+                var email = Http.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    throw new Exception("Email missing in token");
+
+                return email;
+            }
+        }
+
 
         protected void SetCreateAudit(BaseModelWithTime entity)
         {
@@ -114,7 +126,22 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedAt = DateTime.UtcNow;
         }
 
-        
+         public static class FileMimePresets
+        {
+            public static readonly string[] Documents =
+            {
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            };
+
+            public static readonly string[] Videos =
+            {
+                "video/mp4",
+                "video/webm",
+                "video/quicktime"
+            };
+        }
 
     }
 }

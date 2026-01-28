@@ -27,7 +27,7 @@ namespace Repositories.Repository
             .Where(a => a.Id == id )
             .FirstOrDefaultAsync();
         }
-        public async Task<PatrolCase?> GetByIdEntitiyAsync(Guid id)
+        public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
         {
             return await _context.PatrolCases.FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
         }
@@ -148,6 +148,10 @@ namespace Repositories.Repository
                 PatrolAssignmentId = t.PatrolAssignmentId,
                 PatrolRouteId = t.PatrolRouteId,
                 ApplicationId = t.ApplicationId,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+                CreatedBy = t.CreatedBy,
+                UpdatedBy = t.UpdatedBy,
                 Security = t.Security == null ? null : new MstSecurityLookUpRM
                 {
                     Id = t.Security.Id,
@@ -160,18 +164,21 @@ namespace Repositories.Repository
                     OrganizationName = t.Security.Organization.Name,
                     DepartmentName = t.Security.Department.Name,
                     DistrictName = t.Security.District.Name,
+                    ApplicationId = t.Security.ApplicationId,
                 },
                 PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRM
-                {   
+                {
                     Id = t.PatrolAssignment.Id,
                     Name = t.PatrolAssignment.Name,
                     Description = t.PatrolAssignment.Description,
+                    ApplicationId = t.PatrolAssignment.ApplicationId,
                 },
                 PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteMinimalRM
-                {   
+                {
                     Id = t.PatrolRoute.Id,
                     Name = t.PatrolRoute.Name,
                     Description = t.PatrolRoute.Description,
+                    ApplicationId = t.PatrolRoute.ApplicationId,
                 },
             });
 
@@ -281,15 +288,24 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
-
-
-        
-        
-            public async Task<List<PatrolCase>> GetBySessionIdAsync(Guid sessionId)
+        public async Task<PatrolSession?> GetPatrolSessionAsync(Guid sessionId)
         {
-            return await _context.PatrolCases
-                .Where(ma => ma.PatrolSessionId == sessionId && ma.Status != 0)
-                .ToListAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolSessions
+                .Include(x => x.PatrolAssignment)
+                .Include(x => x.PatrolRoute)
+                .Where(x => x.Id == sessionId && x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.FirstOrDefaultAsync();
+        }
+
+
+        public async Task<MstSecurity?> GetIdBySecurityEmailAsync(string email)
+        {
+            return await _context.MstSecurities.FirstOrDefaultAsync(f => f.Email == email && f.Status != 0);
         }
 
         public async Task<bool> SessionExistsAsync(Guid sessionId)
