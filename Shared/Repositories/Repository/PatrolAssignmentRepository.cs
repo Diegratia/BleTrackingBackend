@@ -125,12 +125,8 @@ namespace Repositories.Repository
                     .ThenInclude(pas => pas.Security)
                 .Where(d => d.Status != 0);
 
-            // =============================
-            // 🔐 ROLE-BASED FILTER
-            // =============================
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                // SECURITY / PRIMARY USER
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
                         pas.Security.Email == userEmail
@@ -143,13 +139,24 @@ namespace Repositories.Repository
 
             public IQueryable<PatrolAssignment> GetAllQueryableWithoutTracking()
         {
+            var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
             var query = _context.PatrolAssignments
             .Include(d => d.PatrolRoute)
             .Include(d => d.PatrolAssignmentSecurities)
                 .ThenInclude(pas => pas.Security)
             .AsNoTracking()
             .Where(d => d.Status != 0);
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security.Email == userEmail
+                    )
+                );
+            }
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
