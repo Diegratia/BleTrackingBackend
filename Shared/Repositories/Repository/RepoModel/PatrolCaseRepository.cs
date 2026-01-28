@@ -128,11 +128,22 @@ namespace Repositories.Repository
 
         public IQueryable<PatrolCaseRM> GetAllProjectedQueryable()
         {
+            var userEmail = GetUserEmail();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.PatrolCases
                 .AsNoTracking()
                 .Where(fd => fd.Status != 0);
+            
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                // SECURITY / PRIMARY USER
+                query = query.Where(pas =>
+                        pas.Security.Email == userEmail
+                    );
+            }
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
@@ -190,6 +201,10 @@ namespace Repositories.Repository
             PatrolCaseFilter filter
         )
         {
+            var userEmail = GetUserEmail();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             // 1. Base Query (Filtered by ApplicationId & Active Status)
@@ -210,6 +225,14 @@ namespace Repositories.Repository
                     x.Title.ToLower().Contains(search) ||
                     x.Description.ToLower().Contains(search)
                 );
+            }
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                // SECURITY / PRIMARY USER
+                query = query.Where(pas =>
+                        pas.Security.Email == userEmail 
+                    );
             }
 
             if (filter.CaseType.HasValue)
@@ -288,6 +311,36 @@ namespace Repositories.Repository
 
             return (data, total, filtered);
         }
+
+         public IQueryable<PatrolAssignment> GetAllQueryable()
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolAssignments
+                .Include(d => d.PatrolRoute)
+                .Include(d => d.PatrolAssignmentSecurities)
+                    .ThenInclude(pas => pas.Security)
+                .Where(d => d.Status != 0);
+
+            // =============================
+            // 🔐 ROLE-BASED FILTER
+            // =============================
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                // SECURITY / PRIMARY USER
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security.Email == userEmail
+                    )
+                );
+            }
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
 
         public async Task<PatrolSession?> GetPatrolSessionAsync(Guid sessionId)
         {

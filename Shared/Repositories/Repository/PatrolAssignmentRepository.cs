@@ -89,7 +89,7 @@ namespace Repositories.Repository
         public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()
-            .AsNoTracking()  // ✅ 
+            .AsNoTracking()  
             .Where(a => a.Id == id && a.Status != 0)
             .FirstOrDefaultAsync();
         }
