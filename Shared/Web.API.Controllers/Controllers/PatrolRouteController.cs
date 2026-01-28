@@ -14,6 +14,7 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
+    
     [MinLevel(LevelPriority.Primary)]
     [Route("api/patrol-route")]
     [ApiController]

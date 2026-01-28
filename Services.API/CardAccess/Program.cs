@@ -13,6 +13,8 @@ using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
 using Helpers.Consumer.Mqtt;
+using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
@@ -108,15 +110,15 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAssertion(context =>
             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
     });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
+    options.AddPolicy("RequireAll", policy =>
+     {
+         policy.RequireAssertion(context =>
+             context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary") || context.User.IsInRole("Secondary"));
+     });
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
-
+builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -160,6 +162,7 @@ builder.Services.AddScoped<ICardGroupService, CardGroupService>();
 builder.Services.AddScoped<ICardAccessService, CardAccessService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 // builder.Services.AddScoped<ICardService, CardService>();
 
 // Registrasi Repositories

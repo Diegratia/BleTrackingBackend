@@ -40,14 +40,13 @@ namespace BusinessLogic.Services.Implementation
             var entities = await _repository.GetAllAsync();
             var dtos = _mapper.Map<List<TimeGroupDto>>(entities);
 
-             foreach (var dto in dtos)
+            foreach (var dto in dtos)
             {
                 var entity = entities.First(e => e.Id == dto.Id);
-                dto.CardAccessIds = entity.CardAccessTimeGroups
+            dto.CardAccessIds = entity.CardAccessTimeGroups
                     .Select(x => (Guid?)x.CardAccessId)
                     .ToList();
             }
-
             return dtos;
         }
 

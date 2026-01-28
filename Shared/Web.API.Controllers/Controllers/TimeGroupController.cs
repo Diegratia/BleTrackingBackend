@@ -6,10 +6,12 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Shared.Contracts;
+using BusinessLogic.Services.Extension.RootExtension;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.Primary)]
     [Route("api/[controller]")]
     [ApiController]
     public class TimeGroupController : ControllerBase

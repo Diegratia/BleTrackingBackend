@@ -15,6 +15,8 @@ using DotNetEnv;
 using BusinessLogic.Services.Background;
 using Helpers.Consumer.Mqtt;
 using Data.ViewModels.Shared.ExceptionHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Microsoft.AspNetCore.Authorization;
 
 try
 {
@@ -84,41 +86,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireRole("System"));
-    options.AddPolicy("RequirePrimaryRole", policy =>
-        policy.RequireRole("Primary"));
-    options.AddPolicy("RequireSuperAdminRole", policy =>
-        policy.RequireRole("SuperAdmin"));
+builder.Services.AddAuthorizationNewPolicies();
 
-    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
-    });
-
-    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
-    });
-    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
-    options.AddPolicy("RequireUserCreatedRole", policy =>
-        policy.RequireRole("UserCreated"));
-});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -159,6 +128,8 @@ builder.Services.AddAutoMapper(typeof(AlarmCategorySettingsProfile));
 builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
 builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 
 // Registrasi Repositories
 builder.Services.AddScoped<AlarmTriggersRepository>();

@@ -7,12 +7,14 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.Primary)]
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class AlarmTriggersController : ControllerBase
     {
         private readonly IAlarmTriggersService _service;
