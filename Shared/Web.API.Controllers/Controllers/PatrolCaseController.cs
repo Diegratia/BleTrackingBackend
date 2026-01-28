@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
-using Helpers.Consumer;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using System.Text.Json;
@@ -17,7 +16,7 @@ using System.Text.Json.Serialization;
 
 namespace Web.API.Controllers.Controllers
 {
-    // [MinLevel(LevelPriority.PrimaryAdmin)]
+    [MinLevel(LevelPriority.Primary)]
     [Route("api/patrol-case")]
     [ApiController]
 

@@ -21,6 +21,7 @@ using Serilog;
 using Serilog.Events;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using Microsoft.AspNetCore.Authorization;
 
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
@@ -67,6 +68,7 @@ builder.Services.AddScoped<IPatrolCaseService, PatrolCaseService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();

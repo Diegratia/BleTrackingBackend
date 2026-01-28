@@ -10,10 +10,11 @@ using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    // [MinLevel(LevelPriority.PrimaryAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-area")]
     [ApiController]
 
