@@ -52,7 +52,6 @@ namespace Entities.Models
         public int Status { get; set; } = 1;
         public MstApplication Application { get; set; }
         public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
-        public ICollection<PatrolRouteTimeGroups> PatrolRouteTimeGroups { get; set; } = new List<PatrolRouteTimeGroups>();
         public ICollection<PatrolAssignment> PatrolAssignments { get; set; } = new List<PatrolAssignment>();
         public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
         public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
@@ -83,25 +82,6 @@ namespace Entities.Models
         public PatrolArea PatrolArea { get; set; }
         public MstApplication Application { get; set; }
     }
-    //PatrolRouteTimeGroups
-    [Table("patrol_route_time_groups")]
-    public class PatrolRouteTimeGroups : IApplicationEntity
-    {
-        [Column("patrol_route_id")]
-        public Guid PatrolRouteId { get; set; }
-        public PatrolRoute? PatrolRoutes { get; set; }
-
-        [Column("time_group_id")]
-        public Guid TimeGroupId { get; set; }
-        public TimeGroup? TimeGroup { get; set; }
-
-        [Column("application_id")]
-        public Guid ApplicationId { get; set; }
-
-        [Column("status")]
-        public int Status { get; set; } = 1;
-
-    }
     //PatrolAssignment
     public class PatrolAssignment : BaseModelWithTimeApp, IApplicationEntity
     {
@@ -111,11 +91,14 @@ namespace Entities.Models
         public string? Description { get; set; }
         [Column("patrol_route_id")]
         public Guid? PatrolRouteId { get; set; }
+        [Column("time_group_id")]
+        public Guid? TimeGroupId { get; set; }
         [Column("start_date")]
         public DateTime? StartDate { get; set; }
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
+        public TimeGroup? TimeGroup { get; set; }
         public MstApplication? Application { get; set; }
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
         public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();

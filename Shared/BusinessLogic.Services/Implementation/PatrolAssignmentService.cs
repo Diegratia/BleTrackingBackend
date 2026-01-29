@@ -59,28 +59,35 @@ namespace BusinessLogic.Services.Implementation
 
             if (!await _repository.PatrolRouteExistsAsync(createDto.PatrolRouteId!.Value))
                 throw new NotFoundException($"PatrolRoute with id {createDto.PatrolRouteId} not found");
+            if (!await _repository.TimeGroupExistsAsync(createDto.TimeGroupId!.Value))
+                throw new NotFoundException($"TimeGroup with id {createDto.TimeGroupId} not found");
+            if (!await _repository.CheckTimeGroupPatrolType(createDto.TimeGroupId!.Value))
+                throw new NotFoundException($"TimeGroup should be Patrol Type");
 
             var invalidSecurityIds =
             await _repository.GetInvalidSecurityIdsByApplicationAsync(createDto.SecurityIds, AppId);
             if (invalidSecurityIds.Any())
             {
-                throw new NotFoundException(
+                throw new UnauthorizedException(
                     $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
                 );
             }
-
-            // var invalidIds = await _repository.GetInvalidOwnershipIdsAsync<MstSecurity>(
-            //     createDto.SecurityIds,
-            //     AppId
-            // );
-
-            // if (invalidIds.Any())
-            // {
-            //     throw new DataView.ValidationException(new Dictionary<string, string[]>
-            //     {
-            //         ["securityIds"] = invalidIds.Select(id => $"Invalid Id: {id}").ToArray()
-            //     });
-            // }
+            var invalidRouteId =
+            await _repository.CheckInvalidRouteOwnershipAsync(createDto.PatrolRouteId.Value, AppId);
+            if (invalidRouteId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"Some PatrolRouteId do not belong to this Application: {string.Join(", ", invalidRouteId)}"
+                );
+            }
+            var invalidTimeGroupIdd =
+            await _repository.CheckInvalidTGOwnershipAsync(createDto.TimeGroupId.Value, AppId);
+            if (invalidTimeGroupIdd.Any())
+            {
+                throw new UnauthorizedException(
+                    $"Some TimeGroupId do not belong to this Application: {string.Join(", ", invalidTimeGroupIdd)}"
+                );
+            }
 
 
             var missingSecurityIds = await _repository
@@ -123,90 +130,20 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repository.GetByIdAsync(patrolAssignment.Id);
             return _mapper.Map<PatrolAssignmentDto>(result);
         }
-
-        //     public async Task<PatrolAssignmentDto> UpdateAsync(
-        //     Guid id,
-        //     PatrolAssignmentUpdateDto dto)
-        // {
-        //     PatrolAssignment result = null;
-
-        //         var assignment = await _repository.GetByIdWithTrackingAsync(id)
-        //             ?? throw new NotFoundException(
-        //                 $"PatrolAssignment with id {id} not found");
-
-        //         // ================= VALIDASI =================
-
-        //         if (dto.PatrolRouteId.HasValue &&
-        //             !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
-        //             throw new NotFoundException($"PatrolRoute not found");
-
-        //         var newSecurityIds = dto.SecurityIds?
-        //             .Where(x => x.HasValue)
-        //             .Select(x => x.Value)
-        //             .Distinct()
-        //             .ToList() ?? new List<Guid>();
-
-        //         var missing =
-        //             await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
-
-        //         if (missing.Count > 0)
-        //             throw new NotFoundException(
-        //                 $"Security not found: {string.Join(", ", missing)}");
-
-
-
-        //     // ================= REPLACE SECURITY =================
-
-        //     await _repository.RemoveAllPatrolAssignmentSecurities(id);
-
-        //     _mapper.Map(dto, assignment);
-
-        //     foreach (var secId in newSecurityIds)
-        //     {
-        //         await _repository.AddPatrolAssignmentSecurityAsync(
-        //             new PatrolAssignmentSecurity
-        //             {
-        //                 PatrolAssignmentId = assignment.Id,
-        //                 SecurityId = secId,
-        //                 ApplicationId = assignment.ApplicationId,
-        //                 CreatedAt = DateTime.UtcNow,
-        //                 UpdatedAt = DateTime.UtcNow,
-        //                 CreatedBy = UsernameFormToken,
-        //                 UpdatedBy = UsernameFormToken
-        //             });
-        //     }
-
-        //         // 🔥 INI WAJIB (SAMA SEPERTI ROUTE)
-
-        //         // ================= UPDATE SCALAR =================
-        //         // _mapper.Map(dto, assignment);
-        //         SetUpdateAudit(assignment);
-        //         await _repository.UpdateAsync(assignment);
-
-        //     result = await _repository.GetByIdAsync(assignment.Id)
-        //         ?? throw new Exception("Failed reload");
-
-
-
-        //     await _audit.Updated(
-        //         "Patrol Assignment",
-        //         result.Id,
-        //         "Updated Patrol Assignment",
-        //         new { result.Name });
-
-        //     return _mapper.Map<PatrolAssignmentDto>(result);
-        // }
         
-                public async Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
+        public async Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
         {
             var assignment = await _repository.GetByIdWithTrackingAsync(id)
                 ?? throw new NotFoundException($"PatrolAssignment {id} not found");
 
                 // ================= VALIDASI =================
 
-                if (dto.PatrolRouteId.HasValue &&
-                    !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
-                    throw new NotFoundException($"PatrolRoute not found");
+            if (dto.PatrolRouteId.HasValue &&
+                !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
+                throw new NotFoundException($"PatrolRoute not found");
+            if (dto.TimeGroupId.HasValue &&
+                !await _repository.TimeGroupExistsAsync(dto.TimeGroupId!.Value))
+                throw new NotFoundException($"TimeGroup with id {dto.TimeGroupId} not found");
 
                 var newSecurityIds = dto.SecurityIds?
                     .Where(x => x.HasValue)

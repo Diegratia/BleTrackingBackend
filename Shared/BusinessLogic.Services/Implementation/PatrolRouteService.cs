@@ -13,7 +13,6 @@ namespace BusinessLogic.Services.Implementation
     public class PatrolRouteService : BaseService, IPatrolRouteService
     {
         private readonly PatrolRouteRepository _repo;
-        private TimeGroupRepository _timeGroupRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
@@ -21,13 +20,11 @@ namespace BusinessLogic.Services.Implementation
 
         public PatrolRouteService(
             PatrolRouteRepository repo,
-            TimeGroupRepository timeGroupRepository,
             IMapper mapper,
             IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
-            _timeGroupRepository = timeGroupRepository;
             _mapper = mapper;
             _audit = audit;
         }
@@ -42,17 +39,8 @@ namespace BusinessLogic.Services.Implementation
                 .Distinct()
                 .ToList();
 
-            var TimeGroupIds = dto.TimeGroupIds
-                .Where(x => x.HasValue)
-                .Select(x => x.Value)
-                .Distinct()
-                .ToList();
-
                 var missingAreaIds = await _repo
                 .GetMissingAreaIdsAsync(areaIds);
-
-                var missingTimeGroupIds = await _repo
-                .GetMissingTimeGroupIdsAsync(TimeGroupIds);
 
             if (missingAreaIds.Count > 0)
             {
@@ -60,21 +48,6 @@ namespace BusinessLogic.Services.Implementation
                     $"PatrolArea not found: {string.Join(", ", missingAreaIds)}"
                 );
             }
-
-            if (missingTimeGroupIds.Count > 0)
-            {
-                throw new NotFoundException(
-                    $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}"
-                );
-            }
-
-            entity.PatrolRouteTimeGroups = TimeGroupIds
-                .Select(x => new PatrolRouteTimeGroups
-                {
-                    TimeGroupId = x,
-                    ApplicationId = AppId,
-                    PatrolRouteId = entity.Id,
-                }).ToList();
 
             foreach (var (areaId, index) in areaIds.Select((id, i) => (id, i)))
             {
@@ -118,44 +91,6 @@ namespace BusinessLogic.Services.Implementation
             {
                 var route = await _repo.GetByIdWithTrackingAsync(id)
                     ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
-
-                // =====================================================
-                // 🔹 VALIDASI TIME GROUP
-                // =====================================================
-                var newTimeGroupIds = dto.TimeGroupIds?
-                    .Where(x => x.HasValue)
-                    .Select(x => x.Value)
-                    .Distinct()
-                    .ToList() ?? new List<Guid>();
-
-                var missingTimeGroupIds =
-                    await _repo.GetMissingTimeGroupIdsAsync(newTimeGroupIds);
-
-                if (missingTimeGroupIds.Count > 0)
-                    throw new NotFoundException(
-                        $"TimeGroup not found: {string.Join(", ", missingTimeGroupIds)}");
-
-                // =====================================================
-                // 🔥 REPLACE ALL TIME GROUPS
-                // =====================================================
-                foreach (var old in route.PatrolRouteTimeGroups.ToList())
-                {
-                    _repo.RemovePatrolRouteTimeGroup(old); // state = Deleted
-                }
-                route.PatrolRouteTimeGroups.Clear();
-
-                foreach (var tgId in newTimeGroupIds)
-                {
-                    route.PatrolRouteTimeGroups.Add(new PatrolRouteTimeGroups
-                    {
-                        PatrolRouteId = route.Id,
-                        TimeGroupId = tgId,
-                        ApplicationId = AppId,
-                        Status = 1
-                    });
-                }
-
-                
 
                 // =====================================================
                 // 🔥 REPLACE ALL AREAS
@@ -338,7 +273,6 @@ namespace BusinessLogic.Services.Implementation
             {
                 SetDeleteAudit(entity);
                 await _repo.DeleteByRouteIdAsync(id);
-                await _repo.DeleteTimeGroupByRouteIdAsync(id);
                 await _repo.DeleteAsync(id);
             });
             await _audit.Deleted(

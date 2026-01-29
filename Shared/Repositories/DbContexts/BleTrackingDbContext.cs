@@ -52,7 +52,6 @@ namespace Repositories.DbContexts
         public DbSet<PatrolArea> PatrolAreas{ get; set; }
         public DbSet<PatrolRoute> PatrolRoutes{ get; set; }
         public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
-        public DbSet<PatrolRouteTimeGroups> PatrolRouteTimeGroups{ get; set; }
         public DbSet<PatrolAssignment> PatrolAssignments{ get; set; }
         public DbSet<PatrolAssignmentSecurity> PatrolAssignmentSecurities{ get; set; }
         public DbSet<SecurityGroup> SecurityGroups{ get; set; }
@@ -105,7 +104,6 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
             modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
             modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
-            modelBuilder.Entity<PatrolRouteTimeGroups>().ToTable("patrol_route_time_groups");
             modelBuilder.Entity<PatrolAssignment>().ToTable("patrol_assignment");
             modelBuilder.Entity<PatrolAssignmentSecurity>().ToTable("patrol_assignment_security");
             modelBuilder.Entity<PatrolCase>().ToTable("patrol_case");
@@ -882,10 +880,6 @@ namespace Repositories.DbContexts
                     .WithOne(e => e.PatrolRoute)
                     .HasForeignKey(e => e.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
-                entity.HasMany(e => e.PatrolRouteTimeGroups)
-                    .WithOne(e => e.PatrolRoutes)
-                    .HasForeignKey(e => e.PatrolRouteId)
-                    .OnDelete(DeleteBehavior.NoAction);
 
             });
 
@@ -914,6 +908,7 @@ namespace Repositories.DbContexts
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
+                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.ApplicationId)
@@ -923,7 +918,10 @@ namespace Repositories.DbContexts
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
-
+                entity.HasOne(m => m.TimeGroup)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
                 entity.HasMany(e => e.PatrolAssignmentSecurities)
                     .WithOne(e => e.PatrolAssignment)
                     .HasForeignKey(e => e.PatrolAssignmentId)
@@ -1633,23 +1631,6 @@ namespace Repositories.DbContexts
 
                 entity.HasOne(e => e.TimeGroup)
                     .WithMany(ma => ma.CardAccessTimeGroups)
-                    .HasForeignKey(e => e.TimeGroupId)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-             // PatrolRouteTimeGroups (pivot PatrolRoute <-> TimeGroups)
-            modelBuilder.Entity<PatrolRouteTimeGroups>(entity =>
-            {
-                entity.ToTable("patrol_route_time_groups");
-
-                entity.HasKey(e => new { e.PatrolRouteId, e.TimeGroupId });
-
-                entity.HasOne(e => e.PatrolRoutes)
-                    .WithMany(e => e.PatrolRouteTimeGroups)
-                    .HasForeignKey(e => e.PatrolRouteId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(e => e.TimeGroup)
-                    .WithMany(ma => ma.PatrolRouteTimeGroups)
                     .HasForeignKey(e => e.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

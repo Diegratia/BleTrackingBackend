@@ -204,26 +204,27 @@ namespace Repositories.Repository
             };
         }
 
-public async Task<IReadOnlyCollection<Guid>> GetInvalidOwnershipIdsAsync<TEntity>(
-    IEnumerable<Guid> ids,
-    Guid applicationId
-)
-    where TEntity : class, IApplicationEntity
-{
-    var idList = ids.Distinct().ToList();
-    if (!idList.Any())
-        return Array.Empty<Guid>();
-
-    var validIds = await _context.Set<TEntity>()
-        .Where(e =>
-            idList.Contains(EF.Property<Guid>(e, "Id")) &&
-            e.ApplicationId == applicationId
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidOwnershipIdsAsync<TEntity>(
+            IEnumerable<Guid> ids,
+            Guid applicationId
         )
-        .Select(e => EF.Property<Guid>(e, "Id"))
-        .ToListAsync();
+            where TEntity : class, IApplicationEntity
+        {
+            var idList = ids.Distinct().ToList();
+            if (!idList.Any())
+                return Array.Empty<Guid>();
 
-    return idList.Except(validIds).ToList();
-}
+            var validIds = await _context.Set<TEntity>()
+                .Where(e =>
+                    idList.Contains(EF.Property<Guid>(e, "Id")) &&
+                    e.ApplicationId == applicationId
+                )
+                .Select(e => EF.Property<Guid>(e, "Id"))
+                .ToListAsync();
+
+            return idList.Except(validIds).ToList();
+        }
+
 
 
 

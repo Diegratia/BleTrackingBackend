@@ -24,8 +24,6 @@ namespace Repositories.Repository
             var query = _context.PatrolRoutes
                 .Include(x => x.PatrolRouteAreas)
                     .ThenInclude(x => x.PatrolArea)
-                .Include(x => x.PatrolRouteTimeGroups)
-                    .ThenInclude(x => x.TimeGroup)
                 .AsNoTracking()
                 .Where(x => x.Status != 0);
 
@@ -39,8 +37,6 @@ namespace Repositories.Repository
             var query = _context.PatrolRoutes
                 .Include(x => x.PatrolRouteAreas)
                     .ThenInclude(x => x.PatrolArea)
-                .Include(x => x.PatrolRouteTimeGroups)
-                    .ThenInclude(x => x.TimeGroup)
                 .Where(x => x.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -59,8 +55,6 @@ namespace Repositories.Repository
 
             var query = _context.PatrolRoutes
             .Include(x => x.PatrolRouteAreas)
-            .Include(x => x.PatrolRouteTimeGroups)
-                .ThenInclude(x => x.TimeGroup)
             .AsNoTracking()
             .Where(ca => ca.Status != 0);
 
@@ -83,8 +77,6 @@ namespace Repositories.Repository
 
             var query = _context.PatrolRoutes
             .Include(x => x.PatrolRouteAreas)
-            .Include(x => x.PatrolRouteTimeGroups)
-                .ThenInclude(x => x.TimeGroup)
             .AsNoTracking()
             .Where(ca => ca.Status != 0);
 
@@ -99,9 +91,6 @@ namespace Repositories.Repository
                 PatrolAreaIds = ca.PatrolRouteAreas
                         .Select(x => (Guid?)x.PatrolAreaId)
                         .ToList(),
-                TimeGroupIds = ca.PatrolRouteTimeGroups
-                        .Select(x => (Guid?)x.TimeGroupId)
-                        .ToList()
             });
             return await projected.ToListAsync();
         }
@@ -197,14 +186,6 @@ namespace Repositories.Repository
             _context.PatrolRouteAreas.RemoveRange(items);
             await _context.SaveChangesAsync();
         }
-        public async Task DeleteTimeGroupByRouteIdAsync(Guid routeId)
-        {
-            var items = _context.PatrolRouteTimeGroups
-                .Where(x => x.PatrolRouteId == routeId);
-
-            _context.PatrolRouteTimeGroups.RemoveRange(items);
-            await _context.SaveChangesAsync();
-        }
 
         
         
@@ -213,10 +194,6 @@ namespace Repositories.Repository
             _context.PatrolRouteAreas.Remove(entity);
         }
 
-        public void RemovePatrolRouteTimeGroup(PatrolRouteTimeGroups entity)
-        {
-            _context.PatrolRouteTimeGroups.Remove(entity);
-        }
 
         public async Task<IReadOnlyCollection<Guid>> GetMissingAreaIdsAsync(
     IEnumerable<Guid> ids
@@ -233,22 +210,5 @@ namespace Repositories.Repository
 
             return idList.Except(existingIds).ToList();
         }
-        public async Task<IReadOnlyCollection<Guid>> GetMissingTimeGroupIdsAsync(
-    IEnumerable<Guid> ids
-        )
-        {
-            var idList = ids.Distinct().ToList();
-                if (!idList.Any())
-                    return Array.Empty<Guid>();
-
-            var existingIds = await _context.TimeGroups
-                .Where(x => idList.Contains(x.Id) && x.Status != 0)
-                .Select(x => x.Id)
-                .ToListAsync();
-
-            return idList.Except(existingIds).ToList();
-        }
-
-
     }
 }

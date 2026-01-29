@@ -51,18 +51,6 @@ namespace BusinessLogic.Services.Extension
                         })
                         .ToList()
                 ))
-            .ForMember(dest => dest.PatrolTimeGroups,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteTimeGroups
-                        // .OrderBy(x => x.OrderIndex)
-                        .Select(x => new PatrolTimeGroupDto
-                        {
-                            TimeGroupId = x.TimeGroupId,
-                            Name = x.TimeGroup.Name,
-                            ScheduleType = x.TimeGroup.ScheduleType.ToString(),
-                        })
-                        .ToList()
-                ))
              .ForMember(dest => dest.PatrolAreaCount,
                 opt => opt.MapFrom(src =>
                     src.PatrolRouteAreas.Count(x => x.status != 0)))
@@ -133,6 +121,8 @@ namespace BusinessLogic.Services.Extension
                         ApplicationId = x.Security != null ? x.Security.ApplicationId : Guid.Empty
                     }).ToList()
                 ));
+            CreateMap<TimeGroup, AssignmentTimeGroupDto>();
+            CreateMap<PatrolRoute, PatrolRouteDto>();
 
 
             CreateMap<PatrolAssignmentRM, PatrolAssignmentDto>();

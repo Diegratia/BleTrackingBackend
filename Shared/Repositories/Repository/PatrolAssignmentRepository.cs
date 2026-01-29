@@ -89,7 +89,7 @@ namespace Repositories.Repository
         public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()
-            .AsNoTracking()  
+            .AsNoTracking()
             .Where(a => a.Id == id && a.Status != 0)
             .FirstOrDefaultAsync();
         }
@@ -103,7 +103,7 @@ namespace Repositories.Repository
 
         // public IQueryable<PatrolAssignment> GetAllQueryable()
         // {
-            
+
         //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
         //     var query = _context.PatrolAssignments
         //     .Include(d => d.PatrolRoute)
@@ -121,6 +121,7 @@ namespace Repositories.Repository
 
             var query = _context.PatrolAssignments
                 .Include(d => d.PatrolRoute)
+                .Include(d => d.TimeGroup)
                 .Include(d => d.PatrolAssignmentSecurities)
                     .ThenInclude(pas => pas.Security)
                 .Where(d => d.Status != 0);
@@ -137,7 +138,7 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-            public IQueryable<PatrolAssignment> GetAllQueryableWithoutTracking()
+        public IQueryable<PatrolAssignment> GetAllQueryableWithoutTracking()
         {
             var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -226,6 +227,16 @@ namespace Repositories.Repository
             return await _context.PatrolRoutes
                 .AnyAsync(f => f.Id == patrolRouteId && f.Status != 0);
         }
+        public async Task<bool> TimeGroupExistsAsync(Guid timeGroupId)
+        {
+            return await _context.TimeGroups
+                .AnyAsync(f => f.Id == timeGroupId && f.Status != 0);
+        }
+        public async Task<bool> CheckTimeGroupPatrolType(Guid timeGroupId)
+        {
+            return await _context.TimeGroups
+                .AnyAsync(f => f.Id == timeGroupId && f.Status != 0 && f.ScheduleType == ScheduleType.Patrol);
+        }
 
         public async Task RemoveAssignmentSecurities(Guid patrolAssignmentId)
         {
@@ -235,7 +246,7 @@ namespace Repositories.Repository
             _context.PatrolAssignmentSecurities.RemoveRange(rows);
             await _context.SaveChangesAsync();
         }
-        
+
 
         public async Task<IReadOnlyCollection<Guid>> GetInvalidSecurityIdsByApplicationAsync(
     IEnumerable<Guid> securityIds,
@@ -257,7 +268,26 @@ namespace Repositories.Repository
 
             return ids.Except(validIds).ToList();
         }
-
-    
+        
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidRouteOwnershipAsync(
+            Guid routeId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<PatrolRoute>(
+                new[] { routeId },
+                applicationId
+            );
+        }
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidTGOwnershipAsync(
+            Guid timeGroupId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<TimeGroup>(
+                new[] { timeGroupId },
+                applicationId
+            );
+        }
     }
 }

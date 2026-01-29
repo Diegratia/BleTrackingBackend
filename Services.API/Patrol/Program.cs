@@ -70,7 +70,6 @@ builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
-
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
 
