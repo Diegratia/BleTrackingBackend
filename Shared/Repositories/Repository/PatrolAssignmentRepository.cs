@@ -261,6 +261,10 @@ namespace Repositories.Repository
                 StartDate = pa.StartDate,
                 EndDate = pa.EndDate,
                 ApplicationId = pa.ApplicationId,
+                CreatedAt = pa.CreatedAt,
+                UpdatedAt = pa.UpdatedAt,
+                CreatedBy = pa.CreatedBy,
+                UpdatedBy = pa.UpdatedBy,
                 PatrolRoute = pa.PatrolRoute == null ? null : new PatrolRouteLookUpRead
                 {
                     Id = pa.PatrolRoute.Id,
