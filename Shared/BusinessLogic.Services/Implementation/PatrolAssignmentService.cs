@@ -17,6 +17,7 @@ using QuestPDF.Drawing;
 using DataView;
 using BusinessLogic.Services.Extension;
 using Shared.Contracts.Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -41,21 +42,21 @@ namespace BusinessLogic.Services.Implementation
             _audit = audit;
         }
 
-        public async Task<PatrolAssignmentDto?> GetByIdAsync(Guid id)
+        public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
         {
             var patrolAssignment = await _repository.GetByIdAsync(id);
             if (patrolAssignment == null)
                 throw new NotFoundException($"PatrolAssignment with id {id} not found");
-            return patrolAssignment == null ? null : _mapper.Map<PatrolAssignmentDto>(patrolAssignment);
+            return patrolAssignment == null ? null : _mapper.Map<PatrolAssignmentRead>(patrolAssignment);
         }
 
-        public async Task<IEnumerable<PatrolAssignmentDto>> GetAllAsync()
+        public async Task<IEnumerable<PatrolAssignmentRead>> GetAllAsync()
         {
             var patrolAreas = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<PatrolAssignmentDto>>(patrolAreas);
+            return _mapper.Map<IEnumerable<PatrolAssignmentRead>>(patrolAreas);
         }
 
-        public async Task<PatrolAssignmentDto> CreateAsync(PatrolAssignmentCreateDto createDto)
+        public async Task<PatrolAssignmentRead> CreateAsync(PatrolAssignmentCreateDto createDto)
         {
 
             if (!await _repository.PatrolRouteExistsAsync(createDto.PatrolRouteId!.Value))
@@ -129,10 +130,10 @@ namespace BusinessLogic.Services.Implementation
                 new { patrolAssignment.Name }
             );
             var result = await _repository.GetByIdAsync(patrolAssignment.Id);
-            return _mapper.Map<PatrolAssignmentDto>(result);
+            return _mapper.Map<PatrolAssignmentRead>(result);
         }
 
-        public async Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
+        public async Task<PatrolAssignmentRead> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
         {
             var assignment = await _repository.GetByIdWithTrackingAsync(id)
                 ?? throw new NotFoundException($"PatrolAssignment {id} not found");
@@ -196,7 +197,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repository.GetByIdAsync(id);
             await _audit.Updated("Patrol Assignment", id, "Updated", new { result!.Name });
 
-            return _mapper.Map<PatrolAssignmentDto>(result);
+            return _mapper.Map<PatrolAssignmentRead>(result);
         }
 
 
@@ -228,7 +229,7 @@ namespace BusinessLogic.Services.Implementation
             var searchableColumns = new[] { "Name" };
             var validSortColumns = new[] { "UpdatedAt", "Name", "Status" };
 
-            var filterService = new GenericDataTableService<PatrolAssignment, PatrolAssignmentDto>(
+            var filterService = new GenericDataTableService<PatrolAssignment, PatrolAssignmentRead>(
                 query,
                 _mapper,
                 searchableColumns,
@@ -237,10 +238,10 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
-        public async Task<IEnumerable<PatrolAssignmentLookUpDto>> GetAllLookUpAsync()
+        public async Task<IEnumerable<PatrolAssignmentLookUpRead>> GetAllLookUpAsync()
         {
             var patrolareas = await _repository.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<PatrolAssignmentLookUpDto>>(patrolareas);
+            return _mapper.Map<IEnumerable<PatrolAssignmentLookUpRead>>(patrolareas);
         }
 
         // projection filter
@@ -258,7 +259,7 @@ namespace BusinessLogic.Services.Implementation
             var (data, total, filtered) = await _repository.FilterAsync(filter);
 
             // RM → DTO
-            var dto = _mapper.Map<List<PatrolAssignmentDto>>(data);
+            var dto = _mapper.Map<List<PatrolAssignmentRead>>(data);
 
             return new
             {

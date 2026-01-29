@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Helpers.Consumer;
+using Shared.Contracts.Read;
 
 namespace Data.ViewModels
 {
@@ -15,7 +16,7 @@ namespace Data.ViewModels
         public DateTime? EndedAt { get; set; }
         public PatrolRouteMinimalDto? PatrolRoute { get; set; }
         public MstSecurityLookUpDto? Security { get; set; }
-        public PatrolAssignmentLookUpDto? PatrolAssignment { get; set; }
+        public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
         
     }
 }

@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Helpers.Consumer;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Data.ViewModels
 {
@@ -20,7 +21,7 @@ namespace Data.ViewModels
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
         public MstSecurityLookUpDto? Security { get; set; }
-        public PatrolAssignmentLookUpDto? PatrolAssignment { get; set; }
+        public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
         public PatrolRouteMinimalDto? PatrolRoute { get; set; }
     }
     public class PatrolCaseCreateDto : BaseModelDto

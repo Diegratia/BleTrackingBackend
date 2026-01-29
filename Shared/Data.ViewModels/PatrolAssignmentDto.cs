@@ -5,21 +5,21 @@ using System.Threading.Tasks;
 
 namespace Data.ViewModels
 {
-    public class PatrolAssignmentDto : BaseModelWithStatusDto
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public Guid? PatrolRouteId { get; set; }
-        public Guid? TimeGroupId { get; set; }
-        public string? PatrolRouteName { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+    // public class PatrolAssignmentDto : BaseModelWithStatusDto
+    // {
+    //     public string? Name { get; set; }
+    //     public string? Description { get; set; }
+    //     public Guid? PatrolRouteId { get; set; }
+    //     public Guid? TimeGroupId { get; set; }
+    //     public string? PatrolRouteName { get; set; }
+    //     public DateTime? StartDate { get; set; }
+    //     public DateTime? EndDate { get; set; }
 
-        // RESULT dari PatrolAssignmentSecurity
-        public List<SecurityListDto>? Securities { get; set; }
-        public AssignmentTimeGroupDto? TimeGroup { get; set; }
-        public PatrolRouteLookUpDto? PatrolRoute { get; set; }
-    }
+    //     // RESULT dari PatrolAssignmentSecurity
+    //     public List<SecurityListDto>? Securities { get; set; }
+    //     public AssignmentTimeGroupDto? TimeGroup { get; set; }
+    //     public PatrolRouteLookUpDto? PatrolRoute { get; set; }
+    // }
 
     public class PatrolAssignmentCreateDto : BaseModelDto
     {
@@ -43,30 +43,30 @@ namespace Data.ViewModels
         public List<Guid?> SecurityIds { get; set; } = new();
     }
 
-    public class PatrolAssignmentLookUpDto 
-    {
-        public Guid? Id { get; set; }
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-    }
+    // public class PatrolAssignmentLookUpDto 
+    // {
+    //     public Guid? Id { get; set; }
+    //     public string? Name { get; set; }
+    //     public string? Description { get; set; }
+    // }
 
-    public class SecurityListDto 
-    {
-        public Guid? Id { get; set; }
-        public string? Name { get; set; }
-        public string? CardNumber { get; set; }
-        public string? IdentityId { get; set; }
-        public string? OrganizationName { get; set; }
-        public string? DepartmentName { get; set; }
-        public string? DistrictName { get; set; }
-    }
+    // public class SecurityListDto 
+    // {
+    //     public Guid? Id { get; set; }
+    //     public string? Name { get; set; }
+    //     public string? CardNumber { get; set; }
+    //     public string? IdentityId { get; set; }
+    //     public string? OrganizationName { get; set; }
+    //     public string? DepartmentName { get; set; }
+    //     public string? DistrictName { get; set; }
+    // }
 
-    public class AssignmentTimeGroupDto
-    {
-        public Guid? Id { get; set; }
-        public string? Name { get; set; }
-        public string? ScheduleType { get; set; }
-        public List<TimeBlockDtoRM> TimeBlocks { get; set; } = new();
-    }
+    // public class AssignmentTimeGroupDto
+    // {
+    //     public Guid? Id { get; set; }
+    //     public string? Name { get; set; }
+    //     public string? ScheduleType { get; set; }
+    //     public List<TimeBlockDtoRM> TimeBlocks { get; set; } = new();
+    // }
 
 }

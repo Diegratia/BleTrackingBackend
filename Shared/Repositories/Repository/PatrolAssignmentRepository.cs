@@ -12,6 +12,7 @@ using Shared.Contracts;
 using System.Security.Claims;
 using Shared.Contracts.Shared.Contracts;
 using Repositories.Extensions;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -29,7 +30,7 @@ namespace Repositories.Repository
         //    .FirstOrDefaultAsync();
         // }
 
-        public async Task<IEnumerable<PatrolAssignmentRM>> GetAllAsync()
+        public async Task<IEnumerable<PatrolAssignmentRead>> GetAllAsync()
         {
             return await GetAllProjectedQueryable().ToListAsync();
         }
@@ -88,7 +89,7 @@ namespace Repositories.Repository
         }
 
         // Di PatrolAssignmentRepository
-        public async Task<PatrolAssignmentRM?> GetByIdAsync(Guid id)
+        public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
         {
             return await GetAllProjectedQueryable()
             .AsNoTracking()
@@ -193,7 +194,7 @@ namespace Repositories.Repository
         //Projection Query
 
 
-    public async Task<(List<PatrolAssignmentRM> Data, int Total, int Filtered)>
+    public async Task<(List<PatrolAssignmentRead> Data, int Total, int Filtered)>
         FilterAsync(PatrolAssignmentFilter filter)
     {
         var query = GetAllProjectedQueryable();
@@ -226,7 +227,7 @@ namespace Repositories.Repository
         return (data, total, filtered);
     }
 
-            private IQueryable<PatrolAssignmentRM> GetAllProjectedQueryable()
+            private IQueryable<PatrolAssignmentRead> GetAllProjectedQueryable()
         {
             var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -250,7 +251,7 @@ namespace Repositories.Repository
             }
 
             // 🔥 FULL PROJECTION
-            return query.Select(pa => new PatrolAssignmentRM
+            return query.Select(pa => new PatrolAssignmentRead
             {
                 Id = pa.Id,
                 Name = pa.Name,
@@ -259,14 +260,8 @@ namespace Repositories.Repository
                 TimeGroupId = pa.TimeGroupId,
                 StartDate = pa.StartDate,
                 EndDate = pa.EndDate,
-                Status = pa.Status,
-                CreatedAt = pa.CreatedAt,
-                UpdatedAt = pa.UpdatedAt,
-                CreatedBy = pa.CreatedBy,
-                UpdatedBy = pa.UpdatedBy,
                 ApplicationId = pa.ApplicationId,
-
-                PatrolRoute = pa.PatrolRoute == null ? null : new PatrolRouteLookUpRM
+                PatrolRoute = pa.PatrolRoute == null ? null : new PatrolRouteLookUpRead
                 {
                     Id = pa.PatrolRoute.Id,
                     Name = pa.PatrolRoute.Name,
@@ -283,14 +278,14 @@ namespace Repositories.Repository
                         .FirstOrDefault()
                 },
 
-                TimeGroup = pa.TimeGroup == null ? null : new AssignmentTimeGroupRM
+                TimeGroup = pa.TimeGroup == null ? null : new AssignmentTimeGroupRead
                 {
                     Id = pa.TimeGroup.Id,
                     Name = pa.TimeGroup.Name,
                     ScheduleType = pa.TimeGroup.ScheduleType.ToString(),
                     TimeBlocks = pa.TimeGroup.TimeBlocks
                         .Where(x => x.Status != 0)
-                        .Select(x => new TimeBlockRM
+                        .Select(x => new TimeBlockRead
                         {
                             Id = x.Id,
                             DayOfWeek = x.DayOfWeek,
@@ -302,7 +297,7 @@ namespace Repositories.Repository
 
                 Securities = pa.PatrolAssignmentSecurities
                     .Where(x => x.Status != 0)
-                    .Select(x => new SecurityListRM
+                    .Select(x => new  SecurityListRead
                     {
                         Id = x.Security.Id,
                         Name = x.Security.Name,
