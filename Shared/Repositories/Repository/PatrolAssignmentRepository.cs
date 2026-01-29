@@ -32,7 +32,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<PatrolAssignmentRead>> GetAllAsync()
         {
-            return await GetAllProjectedQueryable().ToListAsync();
+            return await GetAllProjectedQueryable(BaseEntityQuery()).ToListAsync();
         }
 
         public async Task<PatrolAssignment> AddAsync(PatrolAssignment patrolassignment)
@@ -91,8 +91,7 @@ namespace Repositories.Repository
         // Di PatrolAssignmentRepository
         public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllProjectedQueryable()
-            .AsNoTracking()
+            return await GetAllProjectedQueryable(BaseEntityQuery())
             .Where(a => a.Id == id && a.Status != 0)
             .FirstOrDefaultAsync();
         }
@@ -192,42 +191,8 @@ namespace Repositories.Repository
         }
 
         //Projection Query
-
-
-    public async Task<(List<PatrolAssignmentRead> Data, int Total, int Filtered)>
-        FilterAsync(PatrolAssignmentFilter filter)
-    {
-        var query = GetAllProjectedQueryable();
-
-        var total = await query.CountAsync();
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            var search = filter.Search.ToLower();
-            query = query.Where(x =>
-                x.Name!.ToLower().Contains(search) ||
-                x.Description!.ToLower().Contains(search)
-            );
-        }
-
-        if (filter.PatrolRouteId.HasValue)
-            query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId);
-
-        if (filter.TimeGroupId.HasValue)
-            query = query.Where(x => x.TimeGroupId == filter.TimeGroupId);
-
-        var filtered = await query.CountAsync();
-
-        // 🔥 PROJECTION
-
-        query = query.ApplySorting(filter.SortColumn, filter.SortDir);
-        query = query.ApplyPaging(filter.Page, filter.PageSize);
-
-        var data = await query.ToListAsync();
-        return (data, total, filtered);
-    }
-
-            private IQueryable<PatrolAssignmentRead> GetAllProjectedQueryable()
+        
+        private IQueryable<PatrolAssignment> BaseEntityQuery()
         {
             var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -240,7 +205,6 @@ namespace Repositories.Repository
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            // 🔐 Role-based filter
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
                 query = query.Where(pa =>
@@ -250,6 +214,47 @@ namespace Repositories.Repository
                 );
             }
 
+            return query;
+        }
+
+
+
+
+    public async Task<(List<PatrolAssignmentRead> Data, int Total, int Filtered)>
+            FilterAsync(PatrolAssignmentFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            var total = await query.CountAsync();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(x =>
+                    x.Name!.ToLower().Contains(search) ||
+                    x.Description!.ToLower().Contains(search)
+                );
+            }
+
+            if (filter.PatrolRouteId.HasValue)
+                query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId);
+
+            if (filter.TimeGroupId.HasValue)
+                query = query.Where(x => x.TimeGroupId == filter.TimeGroupId);
+
+            var filtered = await query.CountAsync();
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await GetAllProjectedQueryable(query).ToListAsync();
+            return (data, total, filtered);
+        }
+
+            private IQueryable<PatrolAssignmentRead> GetAllProjectedQueryable(
+                IQueryable<PatrolAssignment> query
+            )
+        {
             // 🔥 FULL PROJECTION
             return query.Select(pa => new PatrolAssignmentRead
             {
@@ -261,10 +266,6 @@ namespace Repositories.Repository
                 StartDate = pa.StartDate,
                 EndDate = pa.EndDate,
                 ApplicationId = pa.ApplicationId,
-                CreatedAt = pa.CreatedAt,
-                UpdatedAt = pa.UpdatedAt,
-                CreatedBy = pa.CreatedBy,
-                UpdatedBy = pa.UpdatedBy,
                 PatrolRoute = pa.PatrolRoute == null ? null : new PatrolRouteLookUpRead
                 {
                     Id = pa.PatrolRoute.Id,
