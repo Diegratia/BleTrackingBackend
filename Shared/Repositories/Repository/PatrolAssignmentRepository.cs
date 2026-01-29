@@ -146,9 +146,16 @@ namespace Repositories.Repository
             var isPrimaryAdmin = IsPrimaryAdmin();
             var query = _context.PatrolAssignments
             .Include(d => d.PatrolRoute)
+            .Include(d => d.TimeGroup)
             .Include(d => d.PatrolAssignmentSecurities)
                 .ThenInclude(pas => pas.Security)
-            .AsNoTracking()
+                    .ThenInclude(s => s.Organization)
+            .Include(d => d.PatrolAssignmentSecurities)
+                .ThenInclude(pas => pas.Security)
+                    .ThenInclude(s => s.Department)
+            .Include(d => d.PatrolAssignmentSecurities)
+                .ThenInclude(pas => pas.Security)
+                    .ThenInclude(s => s.District)
             .Where(d => d.Status != 0);
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
