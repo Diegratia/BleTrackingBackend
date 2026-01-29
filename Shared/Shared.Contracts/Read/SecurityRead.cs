@@ -1,0 +1,33 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Shared.Contracts.Read
+{
+    public class MstSecurityLookUpRead
+    {
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? PersonId { get; set; }
+        public string? CardNumber { get; set; }
+        public Guid? OrganizationId { get; set; }
+        public Guid? DepartmentId { get; set; }
+        public Guid? DistrictId { get; set; }
+        public string? OrganizationName { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? DistrictName { get; set; }
+    }
+
+     public class SecurityListRead
+        {
+            public Guid? Id { get; set; }
+            public string? Name { get; set; }
+            public string? CardNumber { get; set; }
+            public string? IdentityId { get; set; }
+            public string? OrganizationName { get; set; }
+            public string? DepartmentName { get; set; }
+            public string? DistrictName { get; set; }
+        }
+
+}

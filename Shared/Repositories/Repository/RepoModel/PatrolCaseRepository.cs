@@ -21,9 +21,34 @@ namespace Repositories.Repository
         {
         }
 
+        private IQueryable<PatrolCase> BaseEntityQuery()
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolCases
+                .AsNoTracking()
+                .Where(x => x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                // SECURITY / PRIMARY USER
+                query = query.Where(pas =>
+                        pas.Security.Email == userEmail
+                    );
+            }
+
+            return query;
+        }
+
+
         public async Task<PatrolCaseRM?> GetByIdAsync(Guid id)
         {
-            return await GetAllProjectedQueryable()
+            return await GetAllProjectedQueryable(BaseEntityQuery())
             .Where(a => a.Id == id)
             .FirstOrDefaultAsync();
         }
@@ -36,7 +61,7 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<PatrolCaseRM>> GetAllAsync()
         {
-            return await GetAllProjectedQueryable().ToListAsync();
+            return await GetAllProjectedQueryable(BaseEntityQuery()).ToListAsync();
         }
 
         public async Task<PatrolCase> AddAsync(PatrolCase patrolCase)
@@ -90,27 +115,10 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public IQueryable<PatrolCaseRM> GetAllProjectedQueryable()
+        public IQueryable<PatrolCaseRM> GetAllProjectedQueryable(
+            IQueryable<PatrolCase> query 
+        )
         {
-            var userEmail = GetUserEmail();
-            var isSuperAdmin = IsSuperAdmin();
-            var isPrimaryAdmin = IsPrimaryAdmin();
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.PatrolCases
-                .AsNoTracking()
-                .Where(fd => fd.Status != 0);
-            
-            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
-            {
-                // SECURITY / PRIMARY USER
-                query = query.Where(pas =>
-                        pas.Security.Email == userEmail
-                    );
-            }
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
             var projected = query.Select(t => new PatrolCaseRM
             {
                 Id = t.Id,
@@ -165,18 +173,7 @@ namespace Repositories.Repository
             PatrolCaseFilter filter
         )
         {
-            var userEmail = GetUserEmail();
-            var isSuperAdmin = IsSuperAdmin();
-            var isPrimaryAdmin = IsPrimaryAdmin();
-
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            // 1. Base Query (Filtered by ApplicationId & Active Status)
-            var query = _context.PatrolCases
-                .AsNoTracking()
-                .Where(x => x.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            var query = BaseEntityQuery();
 
             // 2. Count Total (Before Filter)
             var total = await query.CountAsync();
@@ -189,14 +186,6 @@ namespace Repositories.Repository
                     x.Title.ToLower().Contains(search) ||
                     x.Description.ToLower().Contains(search)
                 );
-            }
-
-            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
-            {
-                // SECURITY / PRIMARY USER
-                query = query.Where(pas =>
-                        pas.Security.Email == userEmail 
-                    );
             }
 
             if (filter.CaseType.HasValue)
@@ -223,60 +212,18 @@ namespace Repositories.Repository
             // 4. Count Filtered
             var filtered = await query.CountAsync();
 
-            // 5. Projection (Manual Select) - Include relationships here
-            var projectedQuery = query.Select(t => new PatrolCaseRM
-            {
-                Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                CaseType = t.CaseType,
-                CaseStatus = t.CaseStatus,
-                PatrolSessionId = t.PatrolSessionId,
-                SecurityId = t.SecurityId,
-                ApprovedByHeadId = t.ApprovedByHeadId,
-                PatrolAssignmentId = t.PatrolAssignmentId,
-                PatrolRouteId = t.PatrolRouteId,
-                ApplicationId = t.ApplicationId,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt,
-                Security = t.Security == null ? null : new MstSecurityLookUpRM
-                {
-                    Id = t.Security.Id,
-                    Name = t.Security.Name,
-                    PersonId = t.Security.PersonId,
-                    CardNumber = t.Security.CardNumber,
-                    OrganizationId = t.Security.OrganizationId,
-                    DepartmentId = t.Security.DepartmentId,
-                    DistrictId = t.Security.DistrictId,
-                    OrganizationName = t.Security.Organization.Name,
-                    DepartmentName = t.Security.Department.Name,
-                    DistrictName = t.Security.District.Name,
-                },
-                PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRM
-                {
-                    Id = t.PatrolAssignment.Id,
-                    Name = t.PatrolAssignment.Name,
-                    Description = t.PatrolAssignment.Description,
-                },
-                PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteMinimalRM
-                {
-                    Id = t.PatrolRoute.Id,
-                    Name = t.PatrolRoute.Name,
-                    Description = t.PatrolRoute.Description,
-                }
-            });
-
             // 6. Sorting & Paging
             // Note: Make sure to include Repositories.Extensions namespace
-            projectedQuery = projectedQuery.ApplySorting(filter.SortColumn, filter.SortDir);
-            projectedQuery = projectedQuery.ApplyPaging(filter.Page, filter.PageSize);
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            var data = await projectedQuery.ToListAsync();
+
+            var data = await GetAllProjectedQueryable(query).ToListAsync();
 
             return (data, total, filtered);
         }
 
-         public IQueryable<PatrolAssignment> GetAllQueryable()
+        public IQueryable<PatrolAssignment> GetAllQueryable()
         {
             var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
