@@ -65,10 +65,6 @@ namespace Repositories.Repository
                 Id = ca.Id,
                 Name = ca.Name,
                 Description = ca.Description,
-
-                PatrolAreaIds = ca.PatrolRouteAreas
-                        .Select(x => (Guid?)x.PatrolAreaId)
-                        .ToList()
             });
         }
         public async Task<List<PatrolRouteLookUpRM>> GetAllLookUpAsync()
@@ -87,10 +83,6 @@ namespace Repositories.Repository
                 Id = ca.Id,
                 Name = ca.Name,
                 Description = ca.Description,
-
-                PatrolAreaIds = ca.PatrolRouteAreas
-                        .Select(x => (Guid?)x.PatrolAreaId)
-                        .ToList(),
             });
             return await projected.ToListAsync();
         }

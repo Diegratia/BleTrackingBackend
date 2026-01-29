@@ -11,6 +11,8 @@ using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
 using Shared.Contracts;
+using Shared.Contracts.Shared.Contracts;
+using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -74,12 +76,20 @@ namespace Web.API.Controllers.Controllers
 
 
         [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
+            var filter = new PatrolAssignmentFilter();
+
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
-
-            var result = await _PatrolAssignmentService.FilterAsync(request);
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                // Deserialisasi ini akan memetakan string "Incident" ke Enum CaseType.Incident secara otomatis
+                filter = JsonSerializer.Deserialize<PatrolAssignmentFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolAssignmentFilter();
+            }
+            
+            var result = await _PatrolAssignmentService.FilterProjectedAsync(request, filter);
             return Ok(ApiResponse.Paginated("Patrol Assignment filtered successfully", result));
         }
 

@@ -90,42 +90,6 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-
-        // public IQueryable<PatrolCase> GetAllQueryable()
-        // {
-        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-        //     var query = _context.PatrolCases
-        //     .Include(d => d.Security)
-        //     .Include(d => d.ApprovedByHead)
-        //     .Include(d => d.PatrolSession)
-        //     .Include(d => d.PatrolRoute)
-        //     .Include(d => d.PatrolCaseAttachments)
-        //     .Where(d => d.Status != 0);
-
-        //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        // }
-
-        // public async Task<List<PatrolAreaLookUpRM>> GetAllLookUpAsync()
-        // {
-        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-        //     var query = _context.PatrolCases
-        //     .AsNoTracking()
-        //     .Where(d => d.Status != 0);
-        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-        //     var projected = query.Select(t => new PatrolAreaLookUpRM
-        //     {
-        //         Id = t.Id,
-        //         Name = t.Name,
-        //         Color = t.Color,
-        //         FloorName = t.Floor.Name,
-        //         FloorplanName = t.Floorplan.Name,
-        //         IsActive = t.IsActive
-        //     }); 
-        //     return await projected.ToListAsync();
-        // }
-
         public IQueryable<PatrolCaseRM> GetAllProjectedQueryable()
         {
             var userEmail = GetUserEmail();

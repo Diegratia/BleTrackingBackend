@@ -10,6 +10,8 @@ using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using System.Security.Claims;
+using Shared.Contracts.Shared.Contracts;
+using Repositories.Extensions;
 
 namespace Repositories.Repository
 {
@@ -27,9 +29,9 @@ namespace Repositories.Repository
         //    .FirstOrDefaultAsync();
         // }
 
-        public async Task<IEnumerable<PatrolAssignment>> GetAllAsync()
+        public async Task<IEnumerable<PatrolAssignmentRM>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllProjectedQueryable().ToListAsync();
         }
 
         public async Task<PatrolAssignment> AddAsync(PatrolAssignment patrolassignment)
@@ -86,9 +88,9 @@ namespace Repositories.Repository
         }
 
         // Di PatrolAssignmentRepository
-        public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
+        public async Task<PatrolAssignmentRM?> GetByIdAsync(Guid id)
         {
-            return await GetAllQueryable()
+            return await GetAllProjectedQueryable()
             .AsNoTracking()
             .Where(a => a.Id == id && a.Status != 0)
             .FirstOrDefaultAsync();
@@ -187,6 +189,136 @@ namespace Repositories.Repository
             });
             return await projected.ToListAsync();
         }
+
+        //Projection Query
+
+
+    public async Task<(List<PatrolAssignmentRM> Data, int Total, int Filtered)>
+        FilterAsync(PatrolAssignmentFilter filter)
+    {
+        var query = GetAllProjectedQueryable();
+
+        var total = await query.CountAsync();
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.ToLower();
+            query = query.Where(x =>
+                x.Name!.ToLower().Contains(search) ||
+                x.Description!.ToLower().Contains(search)
+            );
+        }
+
+        if (filter.PatrolRouteId.HasValue)
+            query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId);
+
+        if (filter.TimeGroupId.HasValue)
+            query = query.Where(x => x.TimeGroupId == filter.TimeGroupId);
+
+        var filtered = await query.CountAsync();
+
+        // 🔥 PROJECTION
+
+        query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+        query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+        var data = await query.ToListAsync();
+        return (data, total, filtered);
+    }
+
+            private IQueryable<PatrolAssignmentRM> GetAllProjectedQueryable()
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolAssignments
+                .AsNoTracking()
+                .Where(x => x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // 🔐 Role-based filter
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security.Email == userEmail
+                    )
+                );
+            }
+
+            // 🔥 FULL PROJECTION
+            return query.Select(pa => new PatrolAssignmentRM
+            {
+                Id = pa.Id,
+                Name = pa.Name,
+                Description = pa.Description,
+                PatrolRouteId = pa.PatrolRouteId,
+                TimeGroupId = pa.TimeGroupId,
+                StartDate = pa.StartDate,
+                EndDate = pa.EndDate,
+                Status = pa.Status,
+                CreatedAt = pa.CreatedAt,
+                UpdatedAt = pa.UpdatedAt,
+                CreatedBy = pa.CreatedBy,
+                UpdatedBy = pa.UpdatedBy,
+                ApplicationId = pa.ApplicationId,
+
+                PatrolRoute = pa.PatrolRoute == null ? null : new PatrolRouteLookUpRM
+                {
+                    Id = pa.PatrolRoute.Id,
+                    Name = pa.PatrolRoute.Name,
+                    Description = pa.PatrolRoute.Description,
+                    StartAreaName = pa.PatrolRoute.PatrolRouteAreas
+                        .Where(x => x.status != 0)
+                        .OrderBy(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault(),
+                    EndAreaName = pa.PatrolRoute.PatrolRouteAreas
+                        .Where(x => x.status != 0)
+                        .OrderByDescending(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault()
+                },
+
+                TimeGroup = pa.TimeGroup == null ? null : new AssignmentTimeGroupRM
+                {
+                    Id = pa.TimeGroup.Id,
+                    Name = pa.TimeGroup.Name,
+                    ScheduleType = pa.TimeGroup.ScheduleType.ToString(),
+                    TimeBlocks = pa.TimeGroup.TimeBlocks
+                        .Where(x => x.Status != 0)
+                        .Select(x => new TimeBlockRM
+                        {
+                            Id = x.Id,
+                            DayOfWeek = x.DayOfWeek,
+                            StartTime = x.StartTime,
+                            EndTime = x.EndTime
+                        })
+                        .ToList()
+                },
+
+                Securities = pa.PatrolAssignmentSecurities
+                    .Where(x => x.Status != 0)
+                    .Select(x => new SecurityListRM
+                    {
+                        Id = x.Security.Id,
+                        Name = x.Security.Name,
+                        CardNumber = x.Security.CardNumber,
+                        IdentityId = x.Security.IdentityId,
+                        OrganizationName = x.Security.Organization.Name,
+                        DepartmentName = x.Security.Department.Name,
+                        DistrictName = x.Security.District.Name
+                    })
+                    .ToList()
+            });
+        }
+
+
+
+        //Helpers
 
         public async Task RemoveAllPatrolAssignmentSecurities(Guid assignmentId)
         {

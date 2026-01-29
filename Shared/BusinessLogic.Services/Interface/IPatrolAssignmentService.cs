@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Shared.Contracts.Shared.Contracts;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -13,7 +14,11 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolAssignmentDto> CreateAsync(PatrolAssignmentCreateDto createDto);
         Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterProjectedAsync(
+            DataTablesProjectedRequest request,
+            PatrolAssignmentFilter filter
+        );
         Task<IEnumerable<PatrolAssignmentLookUpDto>> GetAllLookUpAsync();
 
     }

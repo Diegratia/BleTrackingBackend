@@ -31,9 +31,11 @@ namespace Data.ViewModels
 
     public class PatrolRouteLookUpDto
     {
+        public Guid? Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public List<Guid?> PatrolAreaIds { get; set; } = new();
+        public string? StartAreaName { get; set; }
+        public string? EndAreaName { get; set; }
     }
 
     public class PatrolRouteAreaDto

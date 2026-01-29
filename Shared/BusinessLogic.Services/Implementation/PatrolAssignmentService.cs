@@ -16,6 +16,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using DataView;
 using BusinessLogic.Services.Extension;
+using Shared.Contracts.Shared.Contracts;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -100,7 +101,7 @@ namespace BusinessLogic.Services.Implementation
                 );
             }
 
-    
+
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
             SetCreateAudit(patrolAssignment);
 
@@ -130,13 +131,13 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repository.GetByIdAsync(patrolAssignment.Id);
             return _mapper.Map<PatrolAssignmentDto>(result);
         }
-        
+
         public async Task<PatrolAssignmentDto> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
         {
             var assignment = await _repository.GetByIdWithTrackingAsync(id)
                 ?? throw new NotFoundException($"PatrolAssignment {id} not found");
 
-                // ================= VALIDASI =================
+            // ================= VALIDASI =================
 
             if (dto.PatrolRouteId.HasValue &&
                 !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
@@ -145,28 +146,28 @@ namespace BusinessLogic.Services.Implementation
                 !await _repository.TimeGroupExistsAsync(dto.TimeGroupId!.Value))
                 throw new NotFoundException($"TimeGroup with id {dto.TimeGroupId} not found");
 
-                var newSecurityIds = dto.SecurityIds?
-                    .Where(x => x.HasValue)
-                    .Select(x => x.Value)
-                    .Distinct()
-                    .ToList() ?? new List<Guid>();
+            var newSecurityIds = dto.SecurityIds?
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .Distinct()
+                .ToList() ?? new List<Guid>();
 
-                var missing =
-                    await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
+            var missing =
+                await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
 
-                if (missing.Count > 0)
-                    throw new NotFoundException(
-                        $"Security not found: {string.Join(", ", missing)}");
+            if (missing.Count > 0)
+                throw new NotFoundException(
+                    $"Security not found: {string.Join(", ", missing)}");
 
             var invalidSecurityIds =
                 await _repository.GetInvalidSecurityIdsByApplicationAsync(newSecurityIds, AppId);
-                if (invalidSecurityIds.Any())
-                {
-                    throw new NotFoundException(
-                        $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
-                    );
-                }
-                
+            if (invalidSecurityIds.Any())
+            {
+                throw new NotFoundException(
+                    $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
+                );
+            }
+
 
             // 1. Replace all child (SQL-style)
             await _repository.RemoveAllPatrolAssignmentSecurities(id);
@@ -202,7 +203,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var patrolAssignment = await _repository.GetByIdAsync(id);
+            var patrolAssignment = await _repository.GetByIdWithTrackingAsync(id);
             if (patrolAssignment == null)
                 throw new NotFoundException($"PatrolAssignment with id {id} not found");
             await _repository.ExecuteInTransactionAsync(async () =>
@@ -235,11 +236,37 @@ namespace BusinessLogic.Services.Implementation
 
             return await filterService.FilterAsync(request);
         }
-        
-            public async Task<IEnumerable<PatrolAssignmentLookUpDto>> GetAllLookUpAsync()
+
+        public async Task<IEnumerable<PatrolAssignmentLookUpDto>> GetAllLookUpAsync()
         {
             var patrolareas = await _repository.GetAllLookUpAsync();
             return _mapper.Map<IEnumerable<PatrolAssignmentLookUpDto>>(patrolareas);
+        }
+
+        // projection filter
+            public async Task<object> FilterProjectedAsync(
+            DataTablesProjectedRequest request,
+            PatrolAssignmentFilter filter
+        )
+        {
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            // RM → DTO
+            var dto = _mapper.Map<List<PatrolAssignmentDto>>(data);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data = dto
+            };
         }
 
         

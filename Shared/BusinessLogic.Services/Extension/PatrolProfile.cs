@@ -100,32 +100,34 @@ namespace BusinessLogic.Services.Extension
             CreateMap<PatrolAssignmentUpdateDto, PatrolAssignment>()
                 .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore());
             CreateMap<PatrolAssignmentLookUpRM, PatrolAssignmentLookUpDto>();
-            CreateMap<PatrolAssignment, PatrolAssignmentDto>()
-            .ForMember(dest => dest.Securities,
-                opt => opt.MapFrom(src =>
-                    src.PatrolAssignmentSecurities.Select(x => new SecurityListDto
-                    {
-                        Id = x.SecurityId,
-                        Name = x.Security != null ? x.Security.Name : null,
-                        CardNumber = x.Security != null ? x.Security.CardNumber : null,
-                        IdentityId = x.Security != null ? x.Security.IdentityId : null,
-                        OrganizationName = x.Security != null && x.Security.Organization != null
-                            ? x.Security.Organization.Name
-                            : null,
-                        DepartmentName = x.Security != null && x.Security.Department != null
-                            ? x.Security.Department.Name
-                            : null,
-                        DistrictName = x.Security != null && x.Security.District != null
-                            ? x.Security.District.Name
-                            : null,
-                        ApplicationId = x.Security != null ? x.Security.ApplicationId : Guid.Empty
-                    }).ToList()
-                ));
+            CreateMap<PatrolAssignment, PatrolAssignmentDto>();
+            // .ForMember(dest => dest.Securities,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolAssignmentSecurities.Select(x => new SecurityListDto
+            //         {
+            //             Id = x.SecurityId,
+            //             Name = x.Security != null ? x.Security.Name : null,
+            //             CardNumber = x.Security != null ? x.Security.CardNumber : null,
+            //             IdentityId = x.Security != null ? x.Security.IdentityId : null,
+            //             OrganizationName = x.Security != null && x.Security.Organization != null
+            //                 ? x.Security.Organization.Name
+            //                 : null,
+            //             DepartmentName = x.Security != null && x.Security.Department != null
+            //                 ? x.Security.Department.Name
+            //                 : null,
+            //             DistrictName = x.Security != null && x.Security.District != null
+            //                 ? x.Security.District.Name
+            //                 : null
+            //         }).ToList()
+            //     ));
             CreateMap<TimeGroup, AssignmentTimeGroupDto>();
             CreateMap<PatrolRoute, PatrolRouteDto>();
 
-
             CreateMap<PatrolAssignmentRM, PatrolAssignmentDto>();
+            CreateMap<SecurityListRM, SecurityListDto>();
+            CreateMap<TimeBlockRM, TimeBlockDtoRM>();
+            CreateMap<PatrolRouteLookUpRM, PatrolRouteLookUpDto>();
+            CreateMap<AssignmentTimeGroupRM, AssignmentTimeGroupDto>();
         }
     }
     
