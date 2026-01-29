@@ -101,7 +101,7 @@ namespace BusinessLogic.Services.Extension
             CreateMap<PatrolAssignmentUpdateDto, PatrolAssignment>()
                 .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore());
             CreateMap<PatrolAssignment, PatrolAssignmentRead>();
-            CreateMap<TimeGroup, AssignmentTimeGroupRead>();
+
         }
     }
     

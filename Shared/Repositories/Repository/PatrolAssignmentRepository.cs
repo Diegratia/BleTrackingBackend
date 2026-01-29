@@ -91,10 +91,12 @@ namespace Repositories.Repository
         // Di PatrolAssignmentRepository
         public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllProjectedQueryable(BaseEntityQuery())
-            .Where(a => a.Id == id && a.Status != 0)
-            .FirstOrDefaultAsync();
+            return await GetAllProjectedQueryable(
+                    BaseEntityQuery().Where(x => x.Id == id) 
+                )
+                .FirstOrDefaultAsync();
         }
+
 
         public async Task<PatrolAssignment?> GetByIdWithTrackingAsync(Guid id)
         {
