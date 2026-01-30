@@ -101,12 +101,13 @@ namespace Repositories.Repository
             var query = BaseEntityQuery().Where(x => x.Id == id);
             return await ProjectToRead(query).FirstOrDefaultAsync();
         }
-            public async Task<PatrolRoute?> GetByIdWithTrackingAsync(Guid id)
+        
+        public async Task<PatrolRoute?> GetByIdWithTrackingAsync(Guid id)
         {
             return await BaseEntityQuery()
                 .Include(x => x.PatrolRouteAreas)
                     .ThenInclude(x => x.PatrolArea)
-                .FirstOrDefaultAsync(a => a.Id == id); 
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<IEnumerable<PatrolRouteRead>> GetAllAsync()

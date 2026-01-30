@@ -87,7 +87,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolRouteRead> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
-            PatrolRoute result = null;
 
             await _repo.ExecuteInTransactionAsync(async () =>
             {
@@ -136,11 +135,10 @@ namespace BusinessLogic.Services.Implementation
 
                 // 🔥 PASTIKAN EF UPDATE PARENT
                 await _repo.UpdateAsync(route);
-
-                // reload untuk response
-                result = await _repo.GetByIdWithTrackingAsync(route.Id)
-                    ?? throw new Exception("Failed to reload PatrolRoute after update");
             });
+                // reload untuk response
+            var result = await _repo.GetByIdAsync(id)
+                    ?? throw new Exception("Failed to reload PatrolRoute after update");
 
             await _audit.Updated(
                 "Patrol Route",
@@ -148,8 +146,7 @@ namespace BusinessLogic.Services.Implementation
                 "Updated Patrol Route",
                 new { result.Name }
             );
-
-            return _mapper.Map<PatrolRouteRead>(result);
+            return result;
         }
         
 

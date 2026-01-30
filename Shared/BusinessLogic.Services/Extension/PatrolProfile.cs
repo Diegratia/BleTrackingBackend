@@ -27,41 +27,41 @@ namespace BusinessLogic.Services.Extension
     {
         public PatrolRouteProfile()
         {
-            CreateMap<PatrolRoute, PatrolRouteRead>()
-            .ForMember(dest => dest.PatrolAreas,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .OrderBy(x => x.OrderIndex)
-                        .Select(x => new PatrolRouteAreaReadDto
-                        {
-                            PatrolAreaId = x.PatrolAreaId,
-                            OrderIndex = x.OrderIndex,
-                            EstimatedDistance = x.EstimatedDistance,
-                            EstimatedTime = x.EstimatedTime,
-                            StartAreaId = x.StartAreaId,
-                            EndAreaId = x.EndAreaId
-                        })
-                        .ToList()
-                ))
-            .ForMember(dest => dest.PatrolAreaCount,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas.Count(x => x.status != 0)))
-            .ForMember(dest => dest.StartAreaName,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .Where(x => x.status != 0)
-                        .OrderBy(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault()
-                ))
-            .ForMember(dest => dest.EndAreaName,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .Where(x => x.status != 0)
-                        .OrderByDescending(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault()
-                ));
+            // CreateMap<PatrolRoute, PatrolRouteRead>()
+            // .ForMember(dest => dest.PatrolAreas,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .OrderBy(x => x.OrderIndex)
+            //             .Select(x => new PatrolRouteAreaReadDto
+            //             {
+            //                 PatrolAreaId = x.PatrolAreaId,
+            //                 OrderIndex = x.OrderIndex,
+            //                 EstimatedDistance = x.EstimatedDistance,
+            //                 EstimatedTime = x.EstimatedTime,
+            //                 StartAreaId = x.StartAreaId,
+            //                 EndAreaId = x.EndAreaId
+            //             })
+            //             .ToList()
+            //     ))
+            // .ForMember(dest => dest.PatrolAreaCount,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas.Count(x => x.status != 0)))
+            // .ForMember(dest => dest.StartAreaName,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .Where(x => x.status != 0)
+            //             .OrderBy(x => x.OrderIndex)
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
+            //     ))
+            // .ForMember(dest => dest.EndAreaName,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .Where(x => x.status != 0)
+            //             .OrderByDescending(x => x.OrderIndex)
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
+            //     ));
             CreateMap<PatrolRouteCreateDto, PatrolRoute>();
             CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
         }
