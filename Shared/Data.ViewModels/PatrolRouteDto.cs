@@ -17,18 +17,5 @@ namespace Data.ViewModels
         public string? Description { get; set; }
         public List<Guid?> PatrolAreaIds { get; set; } = new();
 
-    }
-
-    public class PatrolRouteAreaDto
-    {
-        public Guid PatrolAreaId { get; set; }
-        public int OrderIndex { get; set; }
-
-        public float EstimatedDistance { get; set; }
-        public int EstimatedTime { get; set; }
-
-        public Guid? StartAreaId { get; set; }
-        public Guid? EndAreaId { get; set; }
-    }
-        
+    }     
 }
