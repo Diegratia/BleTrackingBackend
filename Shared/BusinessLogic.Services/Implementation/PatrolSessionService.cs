@@ -127,7 +127,7 @@ namespace BusinessLogic.Services.Implementation
             return await _repo.GetByIdAsync(patrolSession.Id)
                 ?? throw new Exception("Failed to load created PatrolSession");
         }
-        
+       // MASIH KURANG PENGECEKAN PATROL CASE - KARENA WAJIB BUAT PATROL CASE TIAP SELESAI 
     public async Task<PatrolSessionRead> StopAsync(Guid sessionId)
     {
 
