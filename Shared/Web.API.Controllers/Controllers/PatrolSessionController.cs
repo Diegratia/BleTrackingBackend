@@ -48,6 +48,12 @@ namespace Web.API.Controllers.Controllers
             var session = await _PatrolSessionService.GetByIdAsync(id);
             return Ok(ApiResponse.Success("Patrol Session retrieved successfully", session));
         }
+        [HttpPost("{id}/stop")]
+        public async Task<IActionResult> StopSession(Guid id)
+        {
+            var session = await _PatrolSessionService.StopAsync(id);
+            return Ok(ApiResponse.Success("Patrol Session stopped successfully", session));
+        }
 
         // POST: api/PatrolArea
         [HttpPost("start")]

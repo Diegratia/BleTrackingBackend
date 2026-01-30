@@ -21,5 +21,6 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolSessionRead> CreateAsync(PatrolSessionStartDto dto);
         Task<PatrolSessionRead?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolSessionRead>> GetAllAsync();
+        Task<PatrolSessionRead> StopAsync(Guid sessionId);
     }
 }

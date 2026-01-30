@@ -124,10 +124,20 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
             return patrolSession;
         }
+        
+                public async Task UpdateAsync(PatrolSession patrolSession)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(patrolSession.ApplicationId);
+            ValidateApplicationIdForEntity(patrolSession, applicationId, isSystemAdmin);
+            await _context.SaveChangesAsync();
+        }
+
 
 
         public IQueryable<PatrolSessionRead> ProjectToRead(
-            IQueryable<PatrolSession> query 
+            IQueryable<PatrolSession> query
         )
         {
             // ini snapshot sejak sesi dimulai

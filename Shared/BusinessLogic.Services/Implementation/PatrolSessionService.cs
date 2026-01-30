@@ -83,7 +83,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<PatrolSessionRead>> GetAllAsync()
         {
             var patrolSessions = await _repo.GetAllAsync();
-            return patrolSessions;  
+            return patrolSessions;
         }
 
         public async Task<IEnumerable<PatrolSessionLookUpRead>> GetAllLookUpAsync()
@@ -94,19 +94,15 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolSessionRead> CreateAsync(PatrolSessionStartDto dto)
         {
-
-            // 1️⃣ Ambil assignment + relasi yang diperlukan
             var assignment = await _repo.GetAssignmentByIdAsync(dto.PatrolAssignmentId.Value);
 
             if (assignment == null)
                 throw new NotFoundException("PatrolAssignment not found");
 
-            // 2️⃣ Ambil security dari context (user login)
             var security = await _repo.GetSecurityByEmail();
             if (security == null)
                 throw new UnauthorizedAccessException("Security not found");
 
-            // 3️⃣ CREATE SESSION + SNAPSHOT
             var patrolSession = new PatrolSession
             {
                 PatrolAssignmentId = assignment.Id,
@@ -125,14 +121,36 @@ namespace BusinessLogic.Services.Implementation
 
                 StartedAt = DateTime.UtcNow,
             };
-
-            // 4️⃣ Save
             patrolSession = await _repo.AddAsync(patrolSession);
 
-            // 5️⃣ Return read model
+
             return await _repo.GetByIdAsync(patrolSession.Id)
                 ?? throw new Exception("Failed to load created PatrolSession");
         }
+        
+    public async Task<PatrolSessionRead> StopAsync(Guid sessionId)
+    {
 
+        var session = await _repo.GetByIdEntityAsync(sessionId);
+
+        if (session == null)
+            throw new NotFoundException("PatrolSession not found");
+
+        var security = await _repo.GetSecurityByEmail();
+            if (security == null)
+        throw new UnauthorizedAccessException("You are not allowed to stop this session");
+
+        if (session.EndedAt.HasValue)
+            throw new BusinessException("PatrolSession already ended");
+
+        session.EndedAt = DateTime.UtcNow;
+
+        await _repo.UpdateAsync(session);
+
+        return await _repo.GetByIdAsync(session.Id)
+            ?? throw new Exception("Failed to load stopped PatrolSession");
     }
 }
+
+
+    }
