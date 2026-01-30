@@ -125,41 +125,12 @@ namespace Repositories.Repository
             {
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security != null &&
                         pas.Security.Email == userEmail
                     )
                 );
             }
 
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        }
-
-        public IQueryable<PatrolAssignment> GetAllQueryableWithoutTracking()
-        {
-            var userEmail = GetUserEmail();
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var isSuperAdmin = IsSuperAdmin();
-            var isPrimaryAdmin = IsPrimaryAdmin();
-            var query = _context.PatrolAssignments
-            .Include(d => d.PatrolRoute)
-            .Include(d => d.TimeGroup)
-            .Include(d => d.PatrolAssignmentSecurities)
-                .ThenInclude(pas => pas.Security)
-                    .ThenInclude(s => s.Organization)
-            .Include(d => d.PatrolAssignmentSecurities)
-                .ThenInclude(pas => pas.Security)
-                    .ThenInclude(s => s.Department)
-            .Include(d => d.PatrolAssignmentSecurities)
-                .ThenInclude(pas => pas.Security)
-                    .ThenInclude(s => s.District)
-            .Where(d => d.Status != 0);
-            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
-            {
-                query = query.Where(pa =>
-                    pa.PatrolAssignmentSecurities.Any(pas =>
-                        pas.Security.Email == userEmail
-                    )
-                );
-            }
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 

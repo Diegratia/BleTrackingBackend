@@ -7,16 +7,13 @@ using Shared.Contracts.Read;
 
 namespace Data.ViewModels
 {
-    public class PatrolSessionDto : BaseModelDto
+    
+    public class PatrolSessionCreateDto : BaseModelDto
     {
         public Guid? PatrolRouteId { get; set; }
         public Guid? SecurityId { get; set; }
         public Guid? PatrolAssignmentId { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
-        public PatrolRouteLookUpRead? PatrolRoute { get; set; }
-        public MstSecurityLookUpRead? Security { get; set; }
-        public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
-        
     }
 }

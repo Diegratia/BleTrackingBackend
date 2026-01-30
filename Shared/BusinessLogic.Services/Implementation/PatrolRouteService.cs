@@ -85,15 +85,14 @@ namespace BusinessLogic.Services.Implementation
                 return result;
         }
 
-            public async Task<PatrolRouteRead> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
+        public async Task<PatrolRouteRead> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
-            PatrolRouteRead result = null;
+            PatrolRoute result = null;
 
             await _repo.ExecuteInTransactionAsync(async () =>
             {
                 var route = await _repo.GetByIdWithTrackingAsync(id)
                     ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
-
                 // =====================================================
                 // 🔥 REPLACE ALL AREAS
                 // =====================================================
@@ -102,6 +101,7 @@ namespace BusinessLogic.Services.Implementation
                     .Select(x => x.Value)
                     .Distinct()
                     .ToList() ?? new List<Guid>();
+                
 
                 foreach (var old in route.PatrolRouteAreas.ToList())
                 {
@@ -138,7 +138,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repo.UpdateAsync(route);
 
                 // reload untuk response
-                result = await _repo.GetByIdAsync(route.Id)
+                result = await _repo.GetByIdWithTrackingAsync(route.Id)
                     ?? throw new Exception("Failed to reload PatrolRoute after update");
             });
 
@@ -149,8 +149,10 @@ namespace BusinessLogic.Services.Implementation
                 new { result.Name }
             );
 
-            return result;
+            return _mapper.Map<PatrolRouteRead>(result);
         }
+        
+
 
         public async Task DeleteAsync(Guid id)
         {
@@ -168,7 +170,9 @@ namespace BusinessLogic.Services.Implementation
                     "Patrol Route",
                     entity.Id,
                     "Deleted Patrol Route",
-                    new { entity.Name
+                    new
+                    {
+                        entity.Name
                     }
                 );
         }

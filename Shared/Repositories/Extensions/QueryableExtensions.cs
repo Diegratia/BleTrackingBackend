@@ -13,12 +13,12 @@ namespace Repositories.Extensions
             return query.Skip((page - 1) * pageSize).Take(pageSize);
         }
 
-        public static IQueryable<T> ApplySorting<T>(this IQueryable<T> query, string sortColumn, string sortDir)
+        public static IQueryable<T> ApplySorting<T>(this IQueryable<T> query, string? sortColumn, string? sortDir)
         {
             if (string.IsNullOrEmpty(sortColumn))
             {
                 // Default sorting if needed, or just return
-               sortColumn = "UpdatedAt";
+            sortColumn = "UpdatedAt";
             }
             if (string.IsNullOrEmpty(sortDir) || !new[] { "asc", "desc" }.Contains(sortDir.ToLower()))
             {

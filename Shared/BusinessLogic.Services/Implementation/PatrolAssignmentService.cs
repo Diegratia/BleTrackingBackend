@@ -222,21 +222,6 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryableWithoutTracking();
-
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Status" };
-
-            var filterService = new GenericDataTableService<PatrolAssignment, PatrolAssignmentRead>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
-        }
 
         public async Task<IEnumerable<PatrolAssignmentLookUpRead>> GetAllLookUpAsync()
         {

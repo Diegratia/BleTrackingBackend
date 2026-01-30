@@ -15,7 +15,6 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolAssignmentRead> CreateAsync(PatrolAssignmentCreateDto createDto);
         Task<PatrolAssignmentRead> UpdateAsync(Guid id, PatrolAssignmentUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
         Task<object> FilterProjectedAsync(
             DataTablesProjectedRequest request,
             PatrolAssignmentFilter filter

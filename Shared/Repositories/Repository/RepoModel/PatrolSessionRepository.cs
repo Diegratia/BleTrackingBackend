@@ -15,59 +15,77 @@ using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
-    public class PatrolCaseRepository : BaseRepository
+    public class PatrolSessionRepository : BaseRepository
     {
-        public PatrolCaseRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public PatrolSessionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
         }
 
-        private IQueryable<PatrolCase> BaseEntityQuery()
+        private IQueryable<PatrolSession> BaseEntityQuery()
         {
             var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var isSuperAdmin = IsSuperAdmin();
             var isPrimaryAdmin = IsPrimaryAdmin();
 
-            var query = _context.PatrolCases
+            var query = _context.PatrolSessions
                 .Where(x => x.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                query = query.Where(pas =>
-                        pas.Security != null
-                        && pas.Security.Email == userEmail
+                    query = query.Where(pas =>
+                        pas.Security != null &&
+                        pas.Security.Email == userEmail
                     );
             }
 
             return query;
         }
 
-
-        public async Task<PatrolCaseRead?> GetByIdAsync(Guid id)
+        public async Task<PatrolSessionRead?> GetByIdAsync(Guid id)
         {
             var query = BaseEntityQuery().Where(x => x.Id == id);
             return await ProjectToRead(query).FirstOrDefaultAsync();
-
         }
-        public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
+        public async Task<PatrolSession?> GetByIdEntityAsync(Guid id)
         {
             var query = BaseEntityQuery()
-            .Include(x => x.PatrolCaseAttachments)
             .Where(x => x.Id == id);
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
+        public async Task<IEnumerable<PatrolSessionRead>> GetAllAsync()
         {
-            // return await ProjectToRead(BaseEntityQuery()).ToListAsync();
             var query = BaseEntityQuery();
             return await ProjectToRead(query).ToListAsync();
         }
 
-        public async Task<PatrolCase> AddAsync(PatrolCase patrolCase)
+            public async Task<List<PatrolSessionLookUpRead>> GetAllLookUpAsync()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = BaseEntityQuery().AsNoTracking();
+
+            var projected = query.Select(ca => new PatrolSessionLookUpRead
+            {
+                Id = ca.Id,
+                PatrolRouteId = ca.PatrolRouteId,
+                PatrolRouteName = ca.PatrolRoute != null ? ca.PatrolRoute.Name : null,
+                SecurityId = ca.SecurityId,
+                SecurityName = ca.Security != null ? ca.Security.Name : null,
+                PatrolAssignmentId = ca.PatrolAssignmentId,
+                PatrolAssignmentName = ca.PatrolAssignment != null ? ca.PatrolAssignment.Name : null,
+                StartedAt = ca.StartedAt,
+                EndedAt = ca.EndedAt
+            });
+            return await projected.ToListAsync();
+        }
+
+
+        public async Task<PatrolSession> AddAsync(PatrolSession patrolSession)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -76,64 +94,35 @@ namespace Repositories.Repository
                 if (!applicationId.HasValue)
                     throw new UnauthorizedAccessException("ApplicationId not found in context");
 
-                patrolCase.ApplicationId = applicationId.Value;
+                patrolSession.ApplicationId = applicationId.Value;
             }
-            else if (patrolCase.ApplicationId == Guid.Empty)
+            else if (patrolSession.ApplicationId == Guid.Empty)
             {
                 throw new ArgumentException("System admin must provide a valid ApplicationId");
             }
 
-            await ValidateApplicationIdAsync(patrolCase.ApplicationId);
-            ValidateApplicationIdForEntity(patrolCase, applicationId, isSystemAdmin);
+            await ValidateApplicationIdAsync(patrolSession.ApplicationId);
+            ValidateApplicationIdForEntity(patrolSession, applicationId, isSystemAdmin);
 
-            _context.PatrolCases.Add(patrolCase);
-
-            await _context.SaveChangesAsync();
-            return patrolCase;
-        }
-
-        public async Task UpdateAsync(PatrolCase patrolCase)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            await ValidateApplicationIdAsync(patrolCase.ApplicationId);
-            ValidateApplicationIdForEntity(patrolCase, applicationId, isSystemAdmin);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.PatrolCases
-                .Where(d => d.Id == id && d.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            var patrolCase = await query.FirstOrDefaultAsync();
-
-            if (patrolCase == null)
-                return;
+            _context.PatrolSessions.Add(patrolSession);
 
             await _context.SaveChangesAsync();
+            return patrolSession;
         }
 
-        public IQueryable<PatrolCaseRead> ProjectToRead(
-            IQueryable<PatrolCase> query 
+
+        public IQueryable<PatrolSessionRead> ProjectToRead(
+            IQueryable<PatrolSession> query 
         )
         {
-            var projected = query.AsNoTracking().Select(t => new PatrolCaseRead
+            var projected = query.AsNoTracking().Select(t => new PatrolSessionRead
             {
                 Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                CaseType = t.CaseType,
-                CaseStatus = t.CaseStatus,
-                PatrolSessionId = t.PatrolSessionId,
                 SecurityId = t.SecurityId,
-                ApprovedByHeadId = t.ApprovedByHeadId,
                 PatrolAssignmentId = t.PatrolAssignmentId,
                 PatrolRouteId = t.PatrolRouteId,
+                StartedAt = t.StartedAt,
+                EndedAt = t.EndedAt,
                 ApplicationId = t.ApplicationId,
                 Security = t.Security == null ? null : new MstSecurityLookUpRead
                 {
@@ -173,30 +162,22 @@ namespace Repositories.Repository
             return projected;
         }
 
-        public async Task<(List<PatrolCaseRead> Data, int Total, int Filtered)> FilterAsync(
-            PatrolCaseFilter filter
+        public async Task<(List<PatrolSessionRead> Data, int Total, int Filtered)> FilterAsync(
+            PatrolSessionFilter filter
         )
         {
             var query = BaseEntityQuery();
 
-            // 2. Count Total (Before Filter)
             var total = await query.CountAsync();
 
-            // 3. Apply Filters
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 var search = filter.Search.ToLower();
-                query = query.Where(x =>
-                    x.Title.ToLower().Contains(search) ||
-                    x.Description.ToLower().Contains(search)
-                );
+                // query = query.Where(x =>
+                //     x.Title.ToLower().Contains(search) ||
+                //     x.Description.ToLower().Contains(search)
+                // );
             }
-
-            if (filter.CaseType.HasValue)
-                query = query.Where(x => x.CaseType == filter.CaseType.Value);
-
-            if (filter.CaseStatus.HasValue)
-                query = query.Where(x => x.CaseStatus == filter.CaseStatus.Value);
 
             if (filter.SecurityId.HasValue)
                 query = query.Where(x => x.SecurityId == filter.SecurityId.Value);
@@ -213,59 +194,15 @@ namespace Repositories.Repository
             if (filter.DateTo.HasValue)
                 query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
 
-            // 4. Count Filtered
             var filtered = await query.CountAsync();
 
-            // 6. Sorting & Paging
-            // Note: Make sure to include Repositories.Extensions namespace
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);
-
 
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
         }
-
-
-        public async Task<PatrolSession?> GetPatrolSessionAsync(Guid sessionId)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.PatrolSessions
-                .Include(x => x.PatrolAssignment)
-                .Include(x => x.PatrolRoute)
-                .Where(x => x.Id == sessionId && x.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.FirstOrDefaultAsync();
-        }
-
-
-        public async Task<MstSecurity?> GetIdBySecurityEmailAsync(string email)
-        {
-            return await _context.MstSecurities.FirstOrDefaultAsync(f => f.Email == email && f.Status != 0);
-        }
-
-        public async Task<bool> SessionExistsAsync(Guid sessionId)
-        {
-            return await _context.PatrolSessions
-                .AnyAsync(f => f.Id == sessionId && f.Status != 0);
-        }
-        public async Task AddManyAsync(IEnumerable<PatrolCaseAttachment> attachments)
-        {
-            _context.PatrolCaseAttachments.AddRange(attachments);
-            await _context.SaveChangesAsync();
-        }
-        
-                public async Task RemoveAllAttachmentsByCaseIdAsync(Guid caseId)
-        {
-            await _context.PatrolCaseAttachments
-                .Where(x => x.PatrolCaseId == caseId)
-                .ExecuteDeleteAsync();
-        }
-
 
     }
 }

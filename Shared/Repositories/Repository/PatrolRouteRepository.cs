@@ -103,7 +103,9 @@ namespace Repositories.Repository
         }
             public async Task<PatrolRoute?> GetByIdWithTrackingAsync(Guid id)
         {
-            return await BaseEntityQuery() 
+            return await BaseEntityQuery()
+                .Include(x => x.PatrolRouteAreas)
+                    .ThenInclude(x => x.PatrolArea)
                 .FirstOrDefaultAsync(a => a.Id == id); 
         }
 
