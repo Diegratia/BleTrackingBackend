@@ -21,10 +21,6 @@ namespace BusinessLogic.Services.Implementation
     public class PatrolCaseService : BaseService, IPatrolCaseService
     {
         private readonly PatrolCaseRepository _repo;
-        // private readonly PatrolSessionRepository _sessionRepo;
-        private readonly MstSecurityRepository _securityRepo;
-        private readonly PatrolRouteRepository _routeRepo;
-        private readonly PatrolAssignmentRepository _assignmentRepo;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
@@ -32,10 +28,6 @@ namespace BusinessLogic.Services.Implementation
 
         public PatrolCaseService(
             PatrolCaseRepository repo,
-            // PatrolSessionRepository sessionRepo,
-            MstSecurityRepository securityRepo,
-            PatrolRouteRepository routeRepo,
-            PatrolAssignmentRepository assignmentRepo,
             IMapper mapper,
             IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
@@ -86,12 +78,12 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        public async Task<PatrolCaseDto?> GetByIdAsync(Guid id)
+        public async Task<PatrolCaseRead?> GetByIdAsync(Guid id)
         {
             var patrolCase = await _repo.GetByIdAsync(id);
             if (patrolCase == null)
                 throw new NotFoundException($"patrolCase with id {id} not found");
-            return patrolCase == null ? null : _mapper.Map<PatrolCaseDto>(patrolCase);
+            return patrolCase;
         }
 
         public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
@@ -102,7 +94,7 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // EF STYLE
-        public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
+        public async Task<PatrolCaseRead?> CreateAsync(PatrolCaseCreateDto dto)
         {
             var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
                 ?? throw new NotFoundException(
@@ -148,7 +140,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repo.GetByIdAsync(patrolCase.Id);
-            return _mapper.Map<PatrolCaseDto>(result);
+            return result;
         }
         // SQL STYLE
         // public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
@@ -205,7 +197,7 @@ namespace BusinessLogic.Services.Implementation
 
 
 
-        public async Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto dto)
+        public async Task<PatrolCaseRead> UpdateAsync(Guid id, PatrolCaseUpdateDto dto)
         {
             PatrolCase? patrolCase = null;
 
@@ -283,14 +275,14 @@ namespace BusinessLogic.Services.Implementation
                 "Updated Patrol Case",
                 new { result.Title });
 
-            return _mapper.Map<PatrolCaseDto>(result);
+            return result;
         }
 
         public async Task DeleteAsync(Guid id)
         {
             var patrolCase = await _repo.GetByIdEntityAsync(id);
             if (patrolCase == null)
-                throw new NotFoundException($"PatrolArea with id {id} not found");
+                throw new NotFoundException($"PatrolCase with id {id} not found");
             SetDeleteAudit(patrolCase);
             await _audit.Deleted(
                 "Patrol Area",

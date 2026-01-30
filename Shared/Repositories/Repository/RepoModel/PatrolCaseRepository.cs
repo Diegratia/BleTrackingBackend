@@ -36,7 +36,6 @@ namespace Repositories.Repository
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                // SECURITY / PRIMARY USER
                 query = query.Where(pas =>
                         pas.Security.Email == userEmail
                     );
@@ -52,7 +51,7 @@ namespace Repositories.Repository
             return await ProjectToRead(query).FirstOrDefaultAsync();
 
         }
-       public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
+        public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
         {
             var query = BaseEntityQuery()
             .Include(x => x.PatrolCaseAttachments)
@@ -135,10 +134,6 @@ namespace Repositories.Repository
                 PatrolAssignmentId = t.PatrolAssignmentId,
                 PatrolRouteId = t.PatrolRouteId,
                 ApplicationId = t.ApplicationId,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt,
-                CreatedBy = t.CreatedBy,
-                UpdatedBy = t.UpdatedBy,
                 Security = t.Security == null ? null : new MstSecurityLookUpRead
                 {
                     Id = t.Security.Id,
@@ -163,6 +158,14 @@ namespace Repositories.Repository
                     Id = t.PatrolRoute.Id,
                     Name = t.PatrolRoute.Name,
                     Description = t.PatrolRoute.Description,
+                    StartAreaName = t.PatrolRoute.PatrolRouteAreas
+                        .OrderBy(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault(),
+                    EndAreaName = t.PatrolRoute.PatrolRouteAreas
+                        .OrderByDescending(x => x.OrderIndex)
+                        .Select(x => x.PatrolArea.Name)
+                        .FirstOrDefault()
                 },
             });
 

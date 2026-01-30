@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
 using DataView;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -59,10 +60,10 @@ namespace BusinessLogic.Services.Implementation
             var securities = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<MstSecurityDto>>(securities);
         }
-        public async Task<IEnumerable<MstSecurityLookUpDto>> GetAllLookUpAsync()
+        public async Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
             var securities = await _repository.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<MstSecurityLookUpDto>>(securities);
+            return _mapper.Map<IEnumerable<MstSecurityLookUpRead>>(securities);
         }
 
         public async Task<IEnumerable<OpenMstSecurityDto>> OpenGetAllSecuritiesAsync()

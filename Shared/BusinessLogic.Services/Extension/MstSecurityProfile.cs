@@ -44,7 +44,6 @@ namespace BusinessLogic.Services.Extension
             CreateMap<MstSecurityDto, MstSecurity>();
             CreateMap<BlacklistReasonDto, MstSecurity>();
 
-            CreateMap<MstSecurityLookUpRM, MstSecurityLookUpDto>();
             CreateMap<MstOrganization, MstOrganizationDto>();
             CreateMap<MstDistrict, MstDistrictDto>();
             CreateMap<MstDepartment, MstDepartmentDto>();

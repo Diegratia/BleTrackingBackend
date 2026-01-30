@@ -7,6 +7,8 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -29,7 +31,7 @@ namespace BusinessLogic.Services.Implementation
             _audit = audit;
         }
 
-        public async Task<PatrolRouteDto> CreateAsync(PatrolRouteCreateDto dto)
+        public async Task<PatrolRouteRead> CreateAsync(PatrolRouteCreateDto dto)
         {
             var entity = _mapper.Map<PatrolRoute>(dto);
 
@@ -64,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
                     UpdatedBy = UsernameFormToken,
                 });
             }
-            PatrolRoute result = null;
+            PatrolRouteRead result = null;
 
                 await _repo.ExecuteInTransactionAsync(async () =>
                 {
@@ -80,12 +82,12 @@ namespace BusinessLogic.Services.Implementation
                     "Created Patrol Route",
                     new { result.Name }
                 );
-                return _mapper.Map<PatrolRouteDto>(result);
+                return _mapper.Map<PatrolRouteRead>(result);
         }
 
-            public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
+            public async Task<PatrolRouteRead> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
         {
-            PatrolRoute result = null;
+            PatrolRouteRead result = null;
 
             await _repo.ExecuteInTransactionAsync(async () =>
             {
@@ -147,121 +149,8 @@ namespace BusinessLogic.Services.Implementation
                 new { result.Name }
             );
 
-            return _mapper.Map<PatrolRouteDto>(result);
+            return result;
         }
-
-
-
-
-        // public async Task<PatrolRouteDto> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
-        // {
-        //     var route = await _repo.GetByIdAsync(id)
-        //         ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
-
-        //     // =======================
-        //     // 🔹 UPDATE TIME GROUPS
-        //     // =======================
-        //     var newTimeGroupIds = dto.TimeGroupIds
-        //         .Where(x => x.HasValue)
-        //         .Select(x => x.Value)
-        //         .Distinct()
-        //         .ToList();
-
-        //     // existing
-        //     var existingTimeGroups = route.PatrolRouteTimeGroups
-        //         .Where(x => x.Status != 0)
-        //         .ToList();
-
-        //     var existingTimeGroupIds = existingTimeGroups
-        //         .Select(x => x.TimeGroupId)
-        //         .ToHashSet();
-
-        //     // 🔸 remove yang tidak ada di request
-        //     var toRemove = existingTimeGroups
-        //         .Where(x => !newTimeGroupIds.Contains(x.TimeGroupId))
-        //         .ToList();
-
-        //     foreach (var item in toRemove)
-        //     {
-        //         item.Status = 0; // soft delete
-        //     }
-
-        //     // 🔸 add yang baru
-        //     var toAdd = newTimeGroupIds
-        //         .Where(id => !existingTimeGroupIds.Contains(id))
-        //         .ToList();
-
-        //     foreach (var timeGroupId in toAdd)
-        //     {
-        //         route.PatrolRouteTimeGroups.Add(new PatrolRouteTimeGroups
-        //         {
-        //             PatrolRouteId = route.Id,
-        //             TimeGroupId = timeGroupId,
-        //             ApplicationId = route.ApplicationId,
-        //             Status = 1,
-        //         });
-        //     }
-
-        //     var newAreaIds = dto.PatrolAreaIds
-        //         .Where(x => x.HasValue)
-        //         .Select(x => x.Value)
-        //         .Distinct()
-        //         .ToList();
-
-        //     // hapus yang tidak ada
-        //     route.PatrolRouteAreas.RemoveWhere(x =>
-        //         !newAreaIds.Contains(x.PatrolAreaId));
-
-        //     // existing
-        //     var existingMap = route.PatrolRouteAreas
-        //         .ToDictionary(x => x.PatrolAreaId);
-
-        //     // tambah yang baru
-        //     var existingIds = route.PatrolRouteAreas
-        //         .Select(x => x.PatrolAreaId)
-        //         .ToHashSet();
-
-        //     // tambah & update order
-        //     for (int i = 0; i < newAreaIds.Count; i++)
-        //     {
-        //         var areaId = newAreaIds[i];
-
-        //         if (existingMap.TryGetValue(areaId, out var existing))
-        //         {
-        //             existing.OrderIndex = i + 1; 
-        //             existing.UpdatedAt = DateTime.UtcNow;
-        //             existing.UpdatedBy = UsernameFormToken;
-        //         }
-        //         else
-        //         {
-        //             route.PatrolRouteAreas.Add(new PatrolRouteAreas
-        //             {
-        //                 PatrolAreaId = areaId,
-        //                 PatrolRouteId = route.Id,
-        //                 OrderIndex = i + 1,
-        //                 EstimatedDistance = 0,
-        //                 EstimatedTime = 0,
-        //                 status = 1,
-        //                 ApplicationId = route.ApplicationId,
-        //                 CreatedAt = DateTime.UtcNow,
-        //                 UpdatedAt = DateTime.UtcNow,
-        //                 CreatedBy = UsernameFormToken,
-        //                 UpdatedBy = UsernameFormToken,
-        //             });
-        //         }
-        //     }
-        //     _mapper.Map(dto, route);
-        //     SetStartEndArea(route);
-        //     SetUpdateAudit(route);
-        //     await _repo.UpdateAsync();
-        //     await _audit.Updated(
-        //         "Patrol Route",
-        //         route.Id,
-        //         "Updated Patrol Route",
-        //         new { route.Name }
-        //     );
-        //     return _mapper.Map<PatrolRouteDto>(route);
-        // }
 
         public async Task DeleteAsync(Guid id)
         {
@@ -284,38 +173,50 @@ namespace BusinessLogic.Services.Implementation
                 );
         }
 
-        public async Task<PatrolRouteDto?> GetByIdAsync(Guid id)
+        public async Task<PatrolRouteRead?> GetByIdAsync(Guid id)
         {
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolRoute with id {id} not found");
-            return _mapper.Map<PatrolRouteDto>(entity);
+            return entity;
         }
-            public async Task<IEnumerable<PatrolRouteDto?>> GetAllAsync()
+            public async Task<IEnumerable<PatrolRouteRead?>> GetAllAsync()
         {
             var entities = await _repo.GetAllAsync();
-            return _mapper.Map<IEnumerable<PatrolRouteDto>>(entities);
+            return entities;
         }
-            public async Task<IEnumerable<PatrolRouteLookUpDto>> GetAllLookUpAsync()
+            public async Task<IEnumerable<PatrolRouteLookUpRead>> GetAllLookUpAsync()
         {
             var entities = await _repo.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<PatrolRouteLookUpDto>>(entities);
+            return entities;
         }
 
-            public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            PatrolRouteFilter filter
+        )
         {
-            var query = _repo.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Status", "OrderIndex", "Name" };
+            if (request.DateFilters != null && request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+            {
+                filter.DateFrom = dateFilter.DateFrom;
+                filter.DateTo = dateFilter.DateTo;
+            }
 
-            var filterService = new GenericDataTableService< PatrolRoute, PatrolRouteDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repo.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
 

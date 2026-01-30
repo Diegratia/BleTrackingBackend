@@ -5,16 +5,6 @@ using System.Threading.Tasks;
 
 namespace Data.ViewModels
 {
-    public class PatrolRouteDto : BaseModelWithAuditDto
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public int? PatrolAreaCount { get; set; }
-        public string? StartAreaName { get; set; }
-        public string? EndAreaName { get; set; }
-        public List<PatrolRouteAreaDto> PatrolAreas { get; set; } = new();
-
-    }
     public class PatrolRouteCreateDto : BaseModelDto
     {
         public string? Name { get; set; }
@@ -29,15 +19,6 @@ namespace Data.ViewModels
 
     }
 
-    public class PatrolRouteLookUpDto
-    {
-        public Guid? Id { get; set; }
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? StartAreaName { get; set; }
-        public string? EndAreaName { get; set; }
-    }
-
     public class PatrolRouteAreaDto
     {
         public Guid PatrolAreaId { get; set; }
@@ -50,9 +31,4 @@ namespace Data.ViewModels
         public Guid? EndAreaId { get; set; }
     }
         
-        public class PatrolRouteMinimalDto : BaseModelDto
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-    }
 }

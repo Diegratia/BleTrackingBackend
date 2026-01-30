@@ -14,8 +14,8 @@ namespace Data.ViewModels
         public Guid? PatrolAssignmentId { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
-        public PatrolRouteMinimalDto? PatrolRoute { get; set; }
-        public MstSecurityLookUpDto? Security { get; set; }
+        public PatrolRouteLookUpRead? PatrolRoute { get; set; }
+        public MstSecurityLookUpRead? Security { get; set; }
         public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
         
     }

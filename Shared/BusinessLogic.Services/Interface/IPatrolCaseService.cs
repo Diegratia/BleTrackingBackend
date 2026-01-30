@@ -17,10 +17,10 @@ namespace BusinessLogic.Services.Interface
             DataTablesProjectedRequest request,
             PatrolCaseFilter filter
         );
-        Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto createDto);
-        Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto);
+        Task<PatrolCaseRead> CreateAsync(PatrolCaseCreateDto createDto);
+        Task<PatrolCaseRead> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<PatrolCaseDto?> GetByIdAsync(Guid id);
+        Task<PatrolCaseRead?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolCaseRead>> GetAllAsync();
     }
 }

@@ -27,65 +27,57 @@ namespace BusinessLogic.Services.Extension
     {
         public PatrolRouteProfile()
         {
+            // // CreateMap<PatrolRoute, PatrolRouteDto>()
+            // // .ForMember(dest => dest.PatrolAreaIds,
+            // //     opt => opt.MapFrom(src =>
+            // //         src.PatrolRouteAreas
+            // //             .Where(x => x.status != 0)
+            // //             .OrderBy(x => x.OrderIndex)
+            // //             .Select(x => (Guid?)x.PatrolAreaId)
+            // //             .ToList()
+            // //     ));
             // CreateMap<PatrolRoute, PatrolRouteDto>()
-            // .ForMember(dest => dest.PatrolAreaIds,
+            // .ForMember(dest => dest.PatrolAreas,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .OrderBy(x => x.OrderIndex)
+            //             .Select(x => new PatrolRouteAreaDto
+            //             {
+            //                 PatrolAreaId = x.PatrolAreaId,
+            //                 OrderIndex = x.OrderIndex,
+            //                 EstimatedDistance = x.EstimatedDistance,
+            //                 EstimatedTime = x.EstimatedTime,
+            //                 StartAreaId = x.StartAreaId,
+            //                 EndAreaId = x.EndAreaId
+            //             })
+            //             .ToList()
+            //     ))
+            // .ForMember(dest => dest.PatrolAreaCount,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas.Count(x => x.status != 0)))
+            // .ForMember(dest => dest.StartAreaName,
             //     opt => opt.MapFrom(src =>
             //         src.PatrolRouteAreas
             //             .Where(x => x.status != 0)
             //             .OrderBy(x => x.OrderIndex)
-            //             .Select(x => (Guid?)x.PatrolAreaId)
-            //             .ToList()
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
+            //     ))
+            // .ForMember(dest => dest.EndAreaName,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .Where(x => x.status != 0)
+            //             .OrderByDescending(x => x.OrderIndex)
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
             //     ));
-            CreateMap<PatrolRoute, PatrolRouteDto>()
-            .ForMember(dest => dest.PatrolAreas,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .OrderBy(x => x.OrderIndex)
-                        .Select(x => new PatrolRouteAreaDto
-                        {
-                            PatrolAreaId = x.PatrolAreaId,
-                            OrderIndex = x.OrderIndex,
-                            EstimatedDistance = x.EstimatedDistance,
-                            EstimatedTime = x.EstimatedTime,
-                            StartAreaId = x.StartAreaId,
-                            EndAreaId = x.EndAreaId
-                        })
-                        .ToList()
-                ))
-             .ForMember(dest => dest.PatrolAreaCount,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas.Count(x => x.status != 0)))
-
-            .ForMember(dest => dest.StartAreaName,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .Where(x => x.status != 0)
-                        .OrderBy(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault()
-                ))
-
-            .ForMember(dest => dest.EndAreaName,
-                opt => opt.MapFrom(src =>
-                    src.PatrolRouteAreas
-                        .Where(x => x.status != 0)
-                        .OrderByDescending(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault()
-                ));
-            // .ForMember(dest => dest.TimeGroupIds,
-            //         opt => opt.MapFrom(src =>
-            //             src.PatrolRouteTimeGroups
-            //                 .Where(x => x.Status != 0)
-            //                 .Select(x => (Guid?)x.TimeGroupId)
-            //                 .ToList()
-            //         ));
-
-            CreateMap<PatrolRouteRM, PatrolRouteDto>();
-            CreateMap<PatrolRouteLookUpRM, PatrolRouteDto>();
-
-            // CreateMap<PatrolRouteRM, PatrolRouteDto>();
-            CreateMap<PatrolRouteLookUpRM, PatrolRouteLookUpDto>();
+            // // .ForMember(dest => dest.TimeGroupIds,
+            // //         opt => opt.MapFrom(src =>
+            // //             src.PatrolRouteTimeGroups
+            // //                 .Where(x => x.Status != 0)
+            // //                 .Select(x => (Guid?)x.TimeGroupId)
+            // //                 .ToList()
+            // //         ));
             CreateMap<PatrolRouteCreateDto, PatrolRoute>();
             CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
         }
@@ -109,22 +101,14 @@ namespace BusinessLogic.Services.Extension
     {
         public PatrolCaseProfile()
         {
-            // Entity/RM -> DTO
-            CreateMap<PatrolCaseRM, PatrolCaseDto>();
-
+            CreateMap<PatrolCase, PatrolCaseRead>();
             // Create DTO -> Entity
             CreateMap<PatrolCaseCreateDto, PatrolCase>()
                 .ForMember(dest => dest.PatrolCaseAttachments, opt => opt.Ignore());
-
             // Update DTO -> Entity
             CreateMap<PatrolCaseUpdateDto, PatrolCase>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // Manual Create DTO -> Entity
-            CreateMap<PatrolCaseCreateManualDto, PatrolCase>();
-            CreateMap<MstSecurityLookUpRM, MstSecurityLookUpDto>();
-            CreateMap<PatrolAssignmentLookUpRM, PatrolAssignmentLookUpRead>();
-            CreateMap<PatrolRouteMinimalRM, PatrolRouteMinimalDto>();
         }
     }
 

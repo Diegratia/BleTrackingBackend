@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -11,7 +12,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<IEnumerable<MstSecurityDto>> GetAllSecuritiesAsync();
         Task<IEnumerable<OpenMstSecurityDto>> OpenGetAllSecuritiesAsync();
-        Task<IEnumerable<MstSecurityLookUpDto>> GetAllLookUpAsync();
+        Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync();
         // Task<MstSecurityDto> SecurityBlacklistAsync(Guid id, BlacklistReasonDto dto);
         //  Task UnBlacklistSecurityAsync(Guid id) ;
         Task<MstSecurityDto> GetSecurityByIdAsync(Guid id);

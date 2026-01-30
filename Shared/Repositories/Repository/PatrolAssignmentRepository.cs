@@ -163,18 +163,17 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<List<PatrolAssignmentLookUpRM>> GetAllLookUpAsync()
+        public async Task<List<PatrolAssignmentLookUpRead>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = BaseEntityQuery().AsNoTracking();
 
-            var projected = query.Select(ca => new PatrolAssignmentLookUpRM
+            var projected = query.Select(ca => new PatrolAssignmentLookUpRead
             {
                 Id = ca.Id,
                 Name = ca.Name,
                 Description = ca.Description,
-                ApplicationId = ca.ApplicationId
             });
             return await projected.ToListAsync();
         }
@@ -260,12 +259,10 @@ namespace Repositories.Repository
                     Name = pa.PatrolRoute.Name,
                     Description = pa.PatrolRoute.Description,
                     StartAreaName = pa.PatrolRoute.PatrolRouteAreas
-                        .Where(x => x.status != 0)
                         .OrderBy(x => x.OrderIndex)
                         .Select(x => x.PatrolArea.Name)
                         .FirstOrDefault(),
                     EndAreaName = pa.PatrolRoute.PatrolRouteAreas
-                        .Where(x => x.status != 0)
                         .OrderByDescending(x => x.OrderIndex)
                         .Select(x => x.PatrolArea.Name)
                         .FirstOrDefault()
@@ -277,7 +274,6 @@ namespace Repositories.Repository
                     Name = pa.TimeGroup.Name,
                     ScheduleType = pa.TimeGroup.ScheduleType.ToString(),
                     TimeBlocks = pa.TimeGroup.TimeBlocks
-                        .Where(x => x.Status != 0)
                         .Select(x => new TimeBlockRead
                         {
                             Id = x.Id,
@@ -287,9 +283,7 @@ namespace Repositories.Repository
                         })
                         .ToList()
                 },
-
                 Securities = pa.PatrolAssignmentSecurities
-                    .Where(x => x.Status != 0)
                     .Select(x => new  SecurityListRead
                     {
                         Id = x.Security.Id,

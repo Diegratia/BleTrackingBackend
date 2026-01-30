@@ -11,6 +11,7 @@ using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
 using Shared.Contracts;
+using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -82,14 +83,22 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(200, ApiResponse.Success("Patrol Route deleted successfully"));
         }
 
-
+        //FILTER
         [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
+            var filter = new PatrolRouteFilter();
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
 
-            var result = await _PatrolRouteService.FilterAsync(request);
+                    if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+
+                filter = JsonSerializer.Deserialize<PatrolRouteFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolRouteFilter();
+            }
+
+            var result = await _PatrolRouteService.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Patrol Route filtered successfully", result));
         }
 

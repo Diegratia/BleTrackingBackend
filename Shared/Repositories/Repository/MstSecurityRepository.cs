@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,7 +133,7 @@ namespace Repositories.Repository
         //     return await q.CountAsync();
         // }
 
-        public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
+        public async Task<List<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
@@ -141,7 +142,7 @@ namespace Repositories.Repository
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            var projected = query.Select(t => new MstSecurityLookUpRM
+            var projected = query.Select(t => new MstSecurityLookUpRead
             {
                 Id = t.Id,
                 Name = t.Name,
@@ -153,7 +154,6 @@ namespace Repositories.Repository
                 OrganizationName = t.Organization.Name,
                 DepartmentName = t.Department.Name,
                 DistrictName = t.District.Name,
-                ApplicationId = t.ApplicationId
             }); 
             return await projected.ToListAsync();
         }
