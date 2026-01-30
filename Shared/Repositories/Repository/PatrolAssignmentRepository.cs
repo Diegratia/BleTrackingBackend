@@ -23,13 +23,6 @@ namespace Repositories.Repository
         {
         }
 
-        // public async Task<PatrolAssignment?> GetByIdAsync(Guid id)
-        // {
-        //     return await GetAllQueryable()
-        //    .Where(a => a.Id == id && a.Status != 0)
-        //    .FirstOrDefaultAsync();
-        // }
-
         public async Task<IEnumerable<PatrolAssignmentRead>> GetAllAsync()
         {
             return await GetAllProjectedQueryable(BaseEntityQuery()).ToListAsync();
@@ -91,19 +84,17 @@ namespace Repositories.Repository
         // Di PatrolAssignmentRepository
         public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllProjectedQueryable(
-                    BaseEntityQuery().Where(x => x.Id == id) 
-                )
-                .FirstOrDefaultAsync();
+            var query = BaseEntityQuery().Where(x => x.Id == id);
+            return await GetAllProjectedQueryable(query).FirstOrDefaultAsync();
         }
 
-
+        // Di Repository
         public async Task<PatrolAssignment?> GetByIdWithTrackingAsync(Guid id)
         {
-            return await GetAllQueryable()
-                .Where(a => a.Id == id && a.Status != 0)
-                .FirstOrDefaultAsync();
+            return await BaseEntityQuery() 
+                .FirstOrDefaultAsync(a => a.Id == id); 
         }
+
 
         // public IQueryable<PatrolAssignment> GetAllQueryable()
         // {
@@ -176,11 +167,7 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.PatrolRoutes
-            .AsNoTracking()
-            .Where(ca => ca.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            var query = BaseEntityQuery().AsNoTracking();
 
             var projected = query.Select(ca => new PatrolAssignmentLookUpRM
             {
@@ -202,7 +189,6 @@ namespace Repositories.Repository
             var isPrimaryAdmin = IsPrimaryAdmin();
 
             var query = _context.PatrolAssignments
-                .AsNoTracking()
                 .Where(x => x.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -258,7 +244,7 @@ namespace Repositories.Repository
             )
         {
             // 🔥 FULL PROJECTION
-            return query.Select(pa => new PatrolAssignmentRead
+            return query.AsNoTracking().Select(pa => new PatrolAssignmentRead
             {
                 Id = pa.Id,
                 Name = pa.Name,

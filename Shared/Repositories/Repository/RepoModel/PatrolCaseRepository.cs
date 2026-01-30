@@ -11,6 +11,7 @@ using Repositories.Repository.RepoModel;
 using System.Linq.Dynamic.Core;
 using Repositories.Extensions;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -29,7 +30,6 @@ namespace Repositories.Repository
             var isPrimaryAdmin = IsPrimaryAdmin();
 
             var query = _context.PatrolCases
-                .AsNoTracking()
                 .Where(x => x.Status != 0);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
@@ -46,22 +46,25 @@ namespace Repositories.Repository
         }
 
 
-        public async Task<PatrolCaseRM?> GetByIdAsync(Guid id)
+        public async Task<PatrolCaseRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllProjectedQueryable(BaseEntityQuery())
-            .Where(a => a.Id == id)
-            .FirstOrDefaultAsync();
+            var query = BaseEntityQuery().Where(x => x.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
+
         }
-        public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
+       public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
         {
-            return await _context.PatrolCases
+            var query = BaseEntityQuery()
             .Include(x => x.PatrolCaseAttachments)
-            .FirstOrDefaultAsync(f => f.Id == id && f.Status != 0);
+            .Where(x => x.Id == id);
+            return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<PatrolCaseRM>> GetAllAsync()
+        public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
         {
-            return await GetAllProjectedQueryable(BaseEntityQuery()).ToListAsync();
+            // return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+            var query = BaseEntityQuery();
+            return await ProjectToRead(query).ToListAsync();
         }
 
         public async Task<PatrolCase> AddAsync(PatrolCase patrolCase)
@@ -115,11 +118,11 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public IQueryable<PatrolCaseRM> GetAllProjectedQueryable(
+        public IQueryable<PatrolCaseRead> ProjectToRead(
             IQueryable<PatrolCase> query 
         )
         {
-            var projected = query.Select(t => new PatrolCaseRM
+            var projected = query.AsNoTracking().Select(t => new PatrolCaseRead
             {
                 Id = t.Id,
                 Title = t.Title,
@@ -136,7 +139,7 @@ namespace Repositories.Repository
                 UpdatedAt = t.UpdatedAt,
                 CreatedBy = t.CreatedBy,
                 UpdatedBy = t.UpdatedBy,
-                Security = t.Security == null ? null : new MstSecurityLookUpRM
+                Security = t.Security == null ? null : new MstSecurityLookUpRead
                 {
                     Id = t.Security.Id,
                     Name = t.Security.Name,
@@ -148,28 +151,25 @@ namespace Repositories.Repository
                     OrganizationName = t.Security.Organization.Name,
                     DepartmentName = t.Security.Department.Name,
                     DistrictName = t.Security.District.Name,
-                    ApplicationId = t.Security.ApplicationId,
                 },
-                PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRM
+                PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRead
                 {
                     Id = t.PatrolAssignment.Id,
                     Name = t.PatrolAssignment.Name,
                     Description = t.PatrolAssignment.Description,
-                    ApplicationId = t.PatrolAssignment.ApplicationId,
                 },
-                PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteMinimalRM
+                PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteLookUpRead
                 {
                     Id = t.PatrolRoute.Id,
                     Name = t.PatrolRoute.Name,
                     Description = t.PatrolRoute.Description,
-                    ApplicationId = t.PatrolRoute.ApplicationId,
                 },
             });
 
             return projected;
         }
 
-        public async Task<(List<PatrolCaseRM> Data, int Total, int Filtered)> FilterAsync(
+        public async Task<(List<PatrolCaseRead> Data, int Total, int Filtered)> FilterAsync(
             PatrolCaseFilter filter
         )
         {
@@ -218,7 +218,7 @@ namespace Repositories.Repository
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
 
-            var data = await GetAllProjectedQueryable(query).ToListAsync();
+            var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
         }

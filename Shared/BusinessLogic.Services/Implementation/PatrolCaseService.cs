@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -74,68 +75,6 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // 4. Map Specific Filters (Dictionary -> Properties)
-            // if (request.Filters != null)
-            // {
-            //     // if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
-            //     // {
-            //     //      // Handle simple value or array (if logic supports it)
-            //     //      // For simple single value:
-            //     //      if (int.TryParse(statusObj.ToString(), out int statusInt))
-            //     //         filter.CaseStatus = (CaseStatus)statusInt;
-            //     //      // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
-            //     // }
-
-            //     // if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
-            //     // {
-            //     //      if (int.TryParse(typeObj.ToString(), out int typeInt))
-            //     //         filter.CaseType = (CaseType)typeInt;
-            //     // }
-
-            //     if (request.Filters.TryGetValue("CaseStatus", out var statusObj) && statusObj != null)
-            //     {
-            //         // Handle simple value or array (if logic supports it)
-            //         // For simple single value:
-            //         if (Enum.TryParse<CaseStatus>(
-            //                 statusObj.ToString(),
-            //                 ignoreCase: true,
-            //                 out var statusEnum))
-            //         {
-            //             filter.CaseStatus = statusEnum;
-            //         }
-            //         // Note: If you need to support array [3, 1], PatrolCaseFilter.CaseStatus needs to be List<CaseStatus>
-            //     }
-
-            //     if (request.Filters.TryGetValue("CaseType", out var typeObj) && typeObj != null)
-            //     {
-            //         if (Enum.TryParse<CaseType>(
-            //                typeObj.ToString(),
-            //                ignoreCase: true,
-            //                out var typeEnum))
-            //         {
-            //             filter.CaseType = typeEnum;
-            //         }
-            //     }
-
-            //     if (request.Filters.TryGetValue("SecurityId", out var secIdObj) && secIdObj != null)
-            //     {
-            //         if (Guid.TryParse(secIdObj.ToString(), out Guid secId))
-            //             filter.SecurityId = secId;
-            //     }
-
-            //     if (request.Filters.TryGetValue("PatrolAssignmentId", out var assignIdObj) && assignIdObj != null)
-            //     {
-            //         if (Guid.TryParse(assignIdObj.ToString(), out Guid assignId))
-            //             filter.PatrolAssignmentId = assignId;
-            //     }
-
-            //     if (request.Filters.TryGetValue("PatrolRouteId", out var routeIdObj) && routeIdObj != null)
-            //     {
-            //         if (Guid.TryParse(routeIdObj.ToString(), out Guid routeId))
-            //             filter.PatrolRouteId = routeId;
-            //     }
-            // }
-
             var (data, total, filtered) = await _repo.FilterAsync(filter);
 
             return new
@@ -155,10 +94,11 @@ namespace BusinessLogic.Services.Implementation
             return patrolCase == null ? null : _mapper.Map<PatrolCaseDto>(patrolCase);
         }
 
-        public async Task<IEnumerable<PatrolCaseDto>> GetAllAsync()
+        public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
         {
             var patrolCases = await _repo.GetAllAsync();
-            return _mapper.Map<IEnumerable<PatrolCaseDto>>(patrolCases);
+            return patrolCases;  
+
         }
 
         // EF STYLE

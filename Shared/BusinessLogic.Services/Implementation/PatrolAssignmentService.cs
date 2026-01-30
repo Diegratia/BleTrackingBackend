@@ -47,13 +47,13 @@ namespace BusinessLogic.Services.Implementation
             var patrolAssignment = await _repository.GetByIdAsync(id);
             if (patrolAssignment == null)
                 throw new NotFoundException($"PatrolAssignment with id {id} not found");
-            return patrolAssignment == null ? null : _mapper.Map<PatrolAssignmentRead>(patrolAssignment);
+            return patrolAssignment;
         }
 
         public async Task<IEnumerable<PatrolAssignmentRead>> GetAllAsync()
         {
             var patrolAreas = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<PatrolAssignmentRead>>(patrolAreas);
+            return patrolAreas;
         }
 
         public async Task<PatrolAssignmentRead> CreateAsync(PatrolAssignmentCreateDto createDto)
@@ -130,7 +130,7 @@ namespace BusinessLogic.Services.Implementation
                 new { patrolAssignment.Name }
             );
             var result = await _repository.GetByIdAsync(patrolAssignment.Id);
-            return _mapper.Map<PatrolAssignmentRead>(result);
+            return result!;
         }
 
         public async Task<PatrolAssignmentRead> UpdateAsync(Guid id, PatrolAssignmentUpdateDto dto)
@@ -197,7 +197,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repository.GetByIdAsync(id);
             await _audit.Updated("Patrol Assignment", id, "Updated", new { result!.Name });
 
-            return _mapper.Map<PatrolAssignmentRead>(result);
+            return result!;
         }
 
 
@@ -259,14 +259,14 @@ namespace BusinessLogic.Services.Implementation
             var (data, total, filtered) = await _repository.FilterAsync(filter);
 
             // RM → DTO
-            var dto = _mapper.Map<List<PatrolAssignmentRead>>(data);
+            // var dto = _mapper.Map<List<PatrolAssignmentRead>>(data);
 
             return new
             {
                 draw = request.Draw,
                 recordsTotal = total,
                 recordsFiltered = filtered,
-                data = dto
+                data = data
             };
         }
 

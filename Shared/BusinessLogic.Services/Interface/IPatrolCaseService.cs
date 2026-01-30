@@ -7,6 +7,7 @@ using Data.ViewModels;
 using Entities.Models;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -20,6 +21,6 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolCaseDto> UpdateAsync(Guid id, PatrolCaseUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<PatrolCaseDto?> GetByIdAsync(Guid id);
-        Task<IEnumerable<PatrolCaseDto>> GetAllAsync();
+        Task<IEnumerable<PatrolCaseRead>> GetAllAsync();
     }
 }
