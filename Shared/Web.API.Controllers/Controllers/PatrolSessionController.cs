@@ -51,7 +51,7 @@ namespace Web.API.Controllers.Controllers
 
         // POST: api/PatrolArea
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PatrolSessionCreateDto dto)
+        public async Task<IActionResult> Create([FromBody] PatrolSessionStartDto dto)
         {
             if (!ModelState.IsValid)
             {

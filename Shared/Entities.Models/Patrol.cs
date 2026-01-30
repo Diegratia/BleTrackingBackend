@@ -143,15 +143,29 @@ namespace Entities.Models
         public MstApplication? Application { get; set; }
         public ICollection<PatrolCaseAttachment> PatrolCaseAttachments { get; set; } = new List<PatrolCaseAttachment>();
     }
-    //PatrolSession
+    //PatrolSession - ini merupakan snapshot
     public class PatrolSession : BaseModelWithTimeApp, IApplicationEntity
     {
         [Column("patrol_route_id")]
-        public Guid PatrolRouteId { get; set; } // snapshot dari engine
+        public Guid PatrolRouteId { get; set; } 
+        [Column("patrol_route_name_snap")]
+        public string? PatrolRouteNameSnap { get; set; }
         [Column("patrol_assignment_id")]
-        public Guid PatrolAssignmentId { get; set; } // snapshot dari engine
+        public Guid PatrolAssignmentId { get; set; } 
+        [Column("patrol_assignment_name_snap")]
+        public string? PatrolAssignmentNameSnap { get; set; }
         [Column("security_id")]
-        public Guid SecurityId { get; set; } // snapshot dari engine
+        public Guid SecurityId { get; set; } 
+        [Column("security_name_snap")]
+        public string? SecurityNameSnap { get; set; }
+        [Column("security_identity_id_snap")]
+        public string? SecurityIdentityIdSnap { get; set; }
+        [Column("security_card_number_snap")]
+        public string? SecurityCardNumberSnap { get; set; }
+        [Column("time_group_id")]
+        public Guid? TimeGroupId { get; set; }
+        [Column("time_group_name_snap")]
+        public string? TimeGroupNameSnap { get; set; }
         [Column("started_at")]
         public DateTime StartedAt { get; set; } // event action
         [Column("ended_at")]
@@ -159,6 +173,7 @@ namespace Entities.Models
         public PatrolAssignment? PatrolAssignment { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
         public MstSecurity? Security { get; set; }
+        public TimeGroup? TimeGroup { get; set; }
         public MstApplication? Application { get; set; }
         public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
         public ICollection<PatrolCheckpointLog> PatrolCheckpointLogs { get; set; } = new List<PatrolCheckpointLog>();
@@ -170,14 +185,17 @@ namespace Entities.Models
         public Guid? PatrolSessionId { get; set; }
         [Column("patrol_area_id")]
         public Guid? PatrolAreaId { get; set; }
+        [Column("area_name_snapshot")]
+        public string? AreaNameSnap { get; set; }
         [Column("order_index")]
         public int? OrderIndex { get; set; }
         [Column("arrived_at")]
         public DateTime? ArrivedAt { get; set; }
         [Column("left_at")]
         public DateTime? LeftAt { get; set; }
-        [Column("distance_from_prev")]
-        public DateTime? DistanceFromPrev { get; set; }
+
+        [Column("distance_from_prev_meters")]
+        public double? DistanceFromPrevMeters { get; set; }
         public PatrolSession? PatrolSession { get; set; }
         public PatrolArea? PatrolArea { get; set; }
         public MstApplication? Application { get; set; }

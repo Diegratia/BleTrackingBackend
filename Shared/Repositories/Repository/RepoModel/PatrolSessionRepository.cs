@@ -50,6 +50,21 @@ namespace Repositories.Repository
             var query = BaseEntityQuery().Where(x => x.Id == id);
             return await ProjectToRead(query).FirstOrDefaultAsync();
         }
+        public async Task<MstSecurity?> GetSecurityByEmail()
+        {
+            var query = await _context.MstSecurities
+                .FirstOrDefaultAsync(x => x.Email == GetUserEmail());
+            return query;
+        }
+        public async Task<PatrolAssignment?> GetAssignmentByIdAsync(Guid id)
+        {
+            var query = await _context.PatrolAssignments
+                .Include(x => x.PatrolRoute)
+                .Include(x => x.PatrolAssignmentSecurities)
+                .Include(x => x.TimeGroup)
+            .FirstOrDefaultAsync(x => x.Id == id);
+            return query;
+        }
         public async Task<PatrolSession?> GetByIdEntityAsync(Guid id)
         {
             var query = BaseEntityQuery()
@@ -73,11 +88,11 @@ namespace Repositories.Repository
             {
                 Id = ca.Id,
                 PatrolRouteId = ca.PatrolRouteId,
-                PatrolRouteName = ca.PatrolRoute != null ? ca.PatrolRoute.Name : null,
+                PatrolRouteName = ca.PatrolRouteNameSnap,
                 SecurityId = ca.SecurityId,
-                SecurityName = ca.Security != null ? ca.Security.Name : null,
+                SecurityName = ca.SecurityNameSnap,
                 PatrolAssignmentId = ca.PatrolAssignmentId,
-                PatrolAssignmentName = ca.PatrolAssignment != null ? ca.PatrolAssignment.Name : null,
+                PatrolAssignmentName = ca.PatrolAssignmentNameSnap,
                 StartedAt = ca.StartedAt,
                 EndedAt = ca.EndedAt
             });
@@ -115,50 +130,32 @@ namespace Repositories.Repository
             IQueryable<PatrolSession> query 
         )
         {
+            // ini snapshot sejak sesi dimulai
             var projected = query.AsNoTracking().Select(t => new PatrolSessionRead
             {
                 Id = t.Id,
                 SecurityId = t.SecurityId,
+                SecurityNameSnap = t.SecurityNameSnap,
+                SecurityIdentityIdSnap = t.SecurityIdentityIdSnap,
+                SecurityCardNumberSnap = t.SecurityCardNumberSnap,
                 PatrolAssignmentId = t.PatrolAssignmentId,
+                PatrolAssignmentNameSnap = t.PatrolAssignmentNameSnap,
                 PatrolRouteId = t.PatrolRouteId,
+                PatrolRouteNameSnap = t.PatrolRouteNameSnap,
+                TimeGroupId = t.TimeGroupId,
+                TimeGroupNameSnap = t.TimeGroupNameSnap,
                 StartedAt = t.StartedAt,
                 EndedAt = t.EndedAt,
+                StartAreaNameSnap = t.PatrolCheckpointLogs
+                                    .OrderBy(x => x.OrderIndex)
+                                    .Select(x => x.AreaNameSnap)
+                                    .FirstOrDefault(),
+                EndAreaNameSnap = t.PatrolCheckpointLogs
+                            .OrderByDescending(x => x.OrderIndex)
+                            .Select(x => x.AreaNameSnap)
+                            .FirstOrDefault(),
                 ApplicationId = t.ApplicationId,
-                Security = t.Security == null ? null : new MstSecurityLookUpRead
-                {
-                    Id = t.Security.Id,
-                    Name = t.Security.Name,
-                    PersonId = t.Security.PersonId,
-                    CardNumber = t.Security.CardNumber,
-                    OrganizationId = t.Security.OrganizationId,
-                    DepartmentId = t.Security.DepartmentId,
-                    DistrictId = t.Security.DistrictId,
-                    OrganizationName = t.Security.Organization.Name,
-                    DepartmentName = t.Security.Department.Name,
-                    DistrictName = t.Security.District.Name,
-                },
-                PatrolAssignment = t.PatrolAssignment == null ? null : new PatrolAssignmentLookUpRead
-                {
-                    Id = t.PatrolAssignment.Id,
-                    Name = t.PatrolAssignment.Name,
-                    Description = t.PatrolAssignment.Description,
-                },
-                PatrolRoute = t.PatrolRoute == null ? null : new PatrolRouteLookUpRead
-                {
-                    Id = t.PatrolRoute.Id,
-                    Name = t.PatrolRoute.Name,
-                    Description = t.PatrolRoute.Description,
-                    StartAreaName = t.PatrolRoute.PatrolRouteAreas
-                        .OrderBy(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault(),
-                    EndAreaName = t.PatrolRoute.PatrolRouteAreas
-                        .OrderByDescending(x => x.OrderIndex)
-                        .Select(x => x.PatrolArea.Name)
-                        .FirstOrDefault()
-                },
             });
-
             return projected;
         }
 

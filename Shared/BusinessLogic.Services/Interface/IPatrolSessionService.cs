@@ -18,7 +18,7 @@ namespace BusinessLogic.Services.Interface
             PatrolSessionFilter filter
         );
         Task<IEnumerable<PatrolSessionLookUpRead>> GetAllLookUpAsync();
-        Task<PatrolSessionRead?> CreateAsync(PatrolSessionCreateDto dto);
+        Task<PatrolSessionRead> CreateAsync(PatrolSessionStartDto dto);
         Task<PatrolSessionRead?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolSessionRead>> GetAllAsync();
     }

@@ -1042,6 +1042,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
                 entity.Property(e => e.PatrolAssignmentId).HasMaxLength(36);
                 entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.Property(e => e.TimeGroupId).HasMaxLength(36);
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolSessions)
                     .HasForeignKey(m => m.ApplicationId)
@@ -1057,6 +1058,10 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.Security)
                     .WithMany(m => m.PatrolSessions)
                     .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.TimeGroup)
+                    .WithMany(m => m.PatrolSessions)
+                    .HasForeignKey(m => m.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 

@@ -71,7 +71,7 @@ namespace BusinessLogic.Services.Extension
     {
         public PatrolSessionProfile()
         {
-            CreateMap<PatrolSessionCreateDto, PatrolRoute>();
+            CreateMap<PatrolSessionStartDto, PatrolRoute>();
         }
     }
 
