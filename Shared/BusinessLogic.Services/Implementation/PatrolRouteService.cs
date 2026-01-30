@@ -82,7 +82,7 @@ namespace BusinessLogic.Services.Implementation
                     "Created Patrol Route",
                     new { result.Name }
                 );
-                return _mapper.Map<PatrolRouteRead>(result);
+                return result;
         }
 
             public async Task<PatrolRouteRead> UpdateAsync(Guid id, PatrolRouteUpdateDto dto)
