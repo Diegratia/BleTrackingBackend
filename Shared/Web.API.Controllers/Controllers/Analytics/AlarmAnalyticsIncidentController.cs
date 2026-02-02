@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize("RequireAllAndUserCreated")]
+    [MinLevel(LevelPriority.Primary)]
+
     public class AlarmAnalyticsIncidentController : ControllerBase
     {
         private readonly IAlarmAnalyticsIncidentService _service;

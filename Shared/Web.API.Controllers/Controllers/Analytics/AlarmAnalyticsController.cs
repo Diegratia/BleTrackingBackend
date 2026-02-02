@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels.AlarmAnalytics;
 using System.Threading.Tasks;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize("RequireAllAndUserCreated")]
+    [MinLevel(LevelPriority.Primary)]
+
     public class AlarmAnalyticsController : ControllerBase
     {
         private readonly IAlarmAnalyticsService _service;

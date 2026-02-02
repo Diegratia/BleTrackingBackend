@@ -246,6 +246,8 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
 using Data.ViewModels.Shared.ExceptionHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Microsoft.AspNetCore.Authorization;
 
 try
 {
@@ -278,6 +280,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 // === CORS ===
 builder.Services.AddCors(o => o.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+builder.Services.AddAuthorizationNewPolicies();
 
 // === Config ===
 builder.Configuration
@@ -307,46 +310,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireRole("System"));
-    options.AddPolicy("RequirePrimaryRole", policy =>
-        policy.RequireRole("Primary"));
-    options.AddPolicy("RequireSuperAdminRole", policy =>
-        policy.RequireRole("SuperAdmin"));
-
-    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
-    });
-
-    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
-    });
-    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
-     options.AddPolicy("RequireAllAndUserCreated", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ) || context.User.IsInRole("UserCreated"));
-    });
-    options.AddPolicy("RequireUserCreatedRole", policy =>
-        policy.RequireRole("UserCreated"));
-});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -361,6 +324,8 @@ builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>(
 builder.Services.AddScoped<IDashboardService, DashboardService>(); 
 builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 
 builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
 builder.Services.AddScoped<AlarmAnalyticsRepository>();

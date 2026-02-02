@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Interface.Analytics;
 using System.Net.Mime;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize("RequireAllAndUserCreated")]
+    [MinLevel(LevelPriority.Primary)]
+    
     public class TrackingAnalyticsController : ControllerBase
     {
         private readonly ITrackingAnalyticsService _service;
@@ -126,10 +129,10 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
             {
                 var pdfBytes = await _serviceV2.ExportVisitorSessionSummaryToPdfAsync(request);
-                
+
                 // Generate filename berdasarkan filter
                 string fileName = GenerateExportFileName(request, "pdf");
-                
+
                 return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
             }
             catch (Exception ex)
@@ -161,22 +164,22 @@ namespace Web.API.Controllers.Controllers.Analytics
         private string GenerateExportFileName(TrackingAnalyticsRequestRM request, string extension)
         {
             var parts = new List<string> { "VisitorSessions" };
-            
+
             if (!string.IsNullOrEmpty(request.TimeRange))
             {
                 parts.Add(request.TimeRange);
             }
-            
+
             if (request.From.HasValue)
             {
                 parts.Add(request.From.Value.ToString("yyyyMMdd"));
             }
-            
+
             if (request.To.HasValue)
             {
                 parts.Add(request.To.Value.ToString("yyyyMMdd"));
             }
-            
+
             return $"{string.Join("_", parts)}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.{extension}";
         }
     }

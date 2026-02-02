@@ -8,12 +8,15 @@ using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Implementation.Analytics;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
     [ApiController]
     [Route("api/tracking-presets")]
-    [Authorize("RequireAllAndUserCreated")]
+    [MinLevel(LevelPriority.Primary)]
+
     public class TrackingReportPresetController : ControllerBase
     {
         private readonly ITrackingReportPresetService _presetService;
