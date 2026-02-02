@@ -200,7 +200,6 @@ namespace BusinessLogic.Services.Implementation
             
             if (lastSwap.SwapType != SwapType.EnterArea)
                 throw new BusinessException("Last swap is not an EnterArea swap");
-            var swapBy = UsernameFormToken;
             
             var dto = new CardSwapTransactionCreateDto
             {
@@ -210,8 +209,9 @@ namespace BusinessLogic.Services.Implementation
                 ToCardId = lastSwap.FromCardId,  // Give back the previous card
                 MaskedAreaId = lastSwap.MaskedAreaId.Value,
                 SwapType = SwapType.ExitArea,
+                SwapMode = lastSwap.SwapMode.Value,
                 SwapChainId = request.SwapChainId,
-                SwapBy = swapBy,
+                SwapBy = UsernameFormToken,
                 IdentityType = null,
                 IdentityValue = null
             };
