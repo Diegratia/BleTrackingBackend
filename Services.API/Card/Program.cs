@@ -94,41 +94,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorizationNewPolicies();
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireRole("System"));
-    options.AddPolicy("RequirePrimaryRole", policy =>
-        policy.RequireRole("Primary"));
-    options.AddPolicy("RequireSuperAdminRole", policy =>
-        policy.RequireRole("SuperAdmin"));
-
-    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
-    });
-
-    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
-    });
-    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
-    options.AddPolicy("RequireUserCreatedRole", policy =>
-        policy.RequireRole("UserCreated"));
-});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -169,7 +134,6 @@ builder.Services.AddScoped<ICardSwapTransactionService, CardSwapTransactionServi
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
-
 
 
 // Registrasi Repositories

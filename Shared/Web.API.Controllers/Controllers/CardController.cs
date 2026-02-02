@@ -7,12 +7,14 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class CardController : ControllerBase
     {
         private readonly ICardService _service;
@@ -616,7 +618,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
