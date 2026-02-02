@@ -9,9 +9,12 @@ namespace Shared.Contracts
     public class CardSwapTransactionFilter
     {
         public string? Search { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? SwapChainId { get; set; }
         public SwapType? SwapType { get; set; }
+        public SwapMode? SwapMode { get; set; }
         public CardSwapStatus? Status { get; set; }
         public Guid? MaskedAreaId { get; set; }
         public Guid? FromCardId { get; set; }

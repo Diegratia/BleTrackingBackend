@@ -83,6 +83,15 @@ namespace BusinessLogic.Services.Implementation
             filter.SortColumn = request.SortColumn ?? "ExecutedAt";
             filter.SortDir = request.SortDir ?? "desc";
             filter.Search = request.SearchValue;
+
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("ExecutedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
             
             var (data, total, filtered) = await _repo.FilterAsync(filter);
             

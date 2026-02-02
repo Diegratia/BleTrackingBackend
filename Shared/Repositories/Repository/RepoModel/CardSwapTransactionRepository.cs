@@ -149,6 +149,9 @@ namespace Repositories.Repository.RepoModel
             if (filter.SwapType.HasValue)
                 query = query.Where(x => x.SwapType == filter.SwapType.Value);
 
+            if (filter.SwapMode.HasValue)
+                query = query.Where(x => x.SwapMode == filter.SwapMode.Value);
+
             if (filter.Status.HasValue)
                 query = query.Where(x => x.CardSwapStatus == filter.Status.Value);
 
