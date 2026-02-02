@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260202050011_CardSwapTransactions")]
+    partial class CardSwapTransactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -503,8 +506,8 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("card_number");
 
-                    b.Property<string>("CardStatus")
-                        .HasColumnType("nvarchar(255)")
+                    b.Property<int?>("CardStatus")
+                        .HasColumnType("int")
                         .HasColumnName("card_status");
 
                     b.Property<string>("CardType")
@@ -931,8 +934,8 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("from_card_id");
 
-                    b.Property<string>("IdentityType")
-                        .HasColumnType("nvarchar(255)")
+                    b.Property<int?>("IdentityType")
+                        .HasColumnType("int")
                         .HasColumnName("identity_type");
 
                     b.Property<string>("IdentityValue")

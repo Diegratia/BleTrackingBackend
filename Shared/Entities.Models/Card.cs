@@ -100,6 +100,8 @@ namespace Entities.Models
         public FloorplanMaskedArea RegisteredMaskedArea { get; set; }
         public CardGroup CardGroup { get; set; }
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
+        public ICollection<CardSwapTransaction> ToCards { get; set; } = new List<CardSwapTransaction>();
+        public ICollection<CardSwapTransaction> FromCards { get; set; } = new List<CardSwapTransaction>();
         public ICollection<CardCardAccess?> CardCardAccesses { get; set; } = new List<CardCardAccess?>();
         [NotMapped]
         public ICollection<CardAccess> CardAccesses => CardCardAccesses.Select(cga => cga.CardAccess).ToList();

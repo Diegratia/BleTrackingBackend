@@ -564,7 +564,6 @@ namespace Repositories.Repository.Analytics
 
             try
             {
-                // Query tunggal dengan semua JOIN untuk mendapatkan semua data sekaligus
                 var sql = $@"
             WITH TrackingData AS (
                 SELECT 

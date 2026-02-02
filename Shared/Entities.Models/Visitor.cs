@@ -97,5 +97,6 @@ namespace Entities.Models
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
         public ICollection<TrxVisitor> TrxVisitors { get; set; } = new List<TrxVisitor>();
+        public ICollection<CardSwapTransaction> CardSwapTransactions { get; set; } = new List<CardSwapTransaction>();
     }
 }

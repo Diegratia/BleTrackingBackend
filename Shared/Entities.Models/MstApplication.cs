@@ -110,6 +110,7 @@ namespace Entities.Models
         public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
         public ICollection<PatrolCheckpointLog> PatrolCheckpointLogs { get; set; } = new List<PatrolCheckpointLog>();
         public ICollection<PatrolCaseAttachment> PatrolCaseAttachments { get; set; } = new List<PatrolCaseAttachment>();
+        public ICollection<CardSwapTransaction> CardSwapTransactions { get; set; } = new List<CardSwapTransaction>();
 
         
     }

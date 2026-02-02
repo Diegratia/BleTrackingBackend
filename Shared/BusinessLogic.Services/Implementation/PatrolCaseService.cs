@@ -44,7 +44,7 @@ namespace BusinessLogic.Services.Implementation
             // 1. Map Standard DataTables params
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
-            filter.SortColumn = request.SortColumn;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 

@@ -51,6 +51,7 @@ namespace Shared.Contracts
         Extended
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum IdentityType
     {
         DriverLicense,
@@ -62,10 +63,20 @@ namespace Shared.Contracts
         Other,
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum SwapType
     {
         EnterArea,
         ExitArea
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum CardSwapStatus
+    {
+        Pending,    // Transaksi dibuat tapi belum dieksekusi
+        Active,     // Sedang menahan kartu (kartu di lokasi)
+        Completed,  // Sudah dikembalikan/reverse
+        Cancelled   // Transaksi batal
     }
 
     public enum PersonType
@@ -86,6 +97,8 @@ namespace Shared.Contracts
         Ble,
         RfidBle
     }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CardStatus
     {
         Available,
@@ -94,6 +107,7 @@ namespace Shared.Contracts
         Damaged,
         Swapped
     }
+
 
     public enum IntegrationType
     {

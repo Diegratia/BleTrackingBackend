@@ -34,6 +34,7 @@ namespace Repositories.DbContexts
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
         public DbSet<Card> Cards{ get; set; }
+        public DbSet<CardSwapTransaction> CardSwapTransactions{ get; set; }
         public DbSet<AlarmTriggers> AlarmTriggers{ get; set; }
         public DbSet<AlarmCategorySettings> AlarmCategorySettings{ get; set; }
         
@@ -100,6 +101,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
+            modelBuilder.Entity<CardSwapTransaction>().ToTable("card_swap_transaction");
             modelBuilder.Entity<Geofence>().ToTable("geofence");
             modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
             modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
@@ -1689,6 +1691,12 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (CardType)Enum.Parse(typeof(CardType), v, true)
                     );
+                entity.Property(e => e.CardStatus)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CardStatus)Enum.Parse(typeof(CardStatus), v, true)
+                    );
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany()
@@ -1729,6 +1737,61 @@ namespace Repositories.DbContexts
                     .WithOne(e => e.Card)
                     .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
+                
+            });
+            // CardSwapTransaction
+            modelBuilder.Entity<CardSwapTransaction>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.SwapType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (SwapType)Enum.Parse(typeof(SwapType), v, true)
+                    );
+                entity.Property(e => e.CardSwapStatus)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (CardSwapStatus)Enum.Parse(typeof(CardSwapStatus), v, true)
+                    );
+                entity.Property(e => e.IdentityType)
+                    .HasColumnName("identity_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (IdentityType)Enum.Parse(typeof(IdentityType), v, true)
+                    );
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.CardSwapTransactions)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.HasOne(m => m.Visitor)
+                    .WithMany(m => m.CardSwapTransactions)
+                    .HasForeignKey(m => m.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.TrxVisitorId).HasMaxLength(36);
+                entity.HasOne(m => m.TrxVisitor)
+                    .WithMany(m => m.CardSwapTransactions)
+                    .HasForeignKey(m => m.TrxVisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.FromCardId).HasMaxLength(36);
+                entity.HasOne(m => m.FromCard)
+                    .WithMany(m => m.FromCards)
+                    .HasForeignKey(m => m.FromCardId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.ToCardId).HasMaxLength(36);
+                entity.HasOne(m => m.ToCard)
+                    .WithMany(m => m.ToCards)
+                    .HasForeignKey(m => m.ToCardId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 
             });
 

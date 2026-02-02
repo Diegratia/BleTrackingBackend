@@ -18,7 +18,7 @@ namespace Repositories.Extensions
             if (string.IsNullOrEmpty(sortColumn))
             {
                 // Default sorting if needed, or just return
-            sortColumn = "UpdatedAt";
+                return query;
             }
             if (string.IsNullOrEmpty(sortDir) || !new[] { "asc", "desc" }.Contains(sortDir.ToLower()))
             {

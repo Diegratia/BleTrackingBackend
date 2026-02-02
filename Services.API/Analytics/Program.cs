@@ -318,7 +318,6 @@ builder.Services.AddHttpContextAccessor();
 
 
 // === Dependencies ===
-builder.Services.AddScoped<IAlarmAnalyticsService, AlarmAnalyticsService>();
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
 builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>(); 
@@ -328,7 +327,6 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 
 builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
-builder.Services.AddScoped<AlarmAnalyticsRepository>();
 builder.Services.AddScoped<TrackingAnalyticsRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddScoped<CardRepository>();

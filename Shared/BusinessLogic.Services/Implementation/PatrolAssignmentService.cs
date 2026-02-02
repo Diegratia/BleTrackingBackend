@@ -237,7 +237,7 @@ namespace BusinessLogic.Services.Implementation
         {
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
-            filter.SortColumn = request.SortColumn;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 

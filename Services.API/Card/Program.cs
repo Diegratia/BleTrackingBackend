@@ -8,11 +8,14 @@ using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
+using Repositories.Repository.RepoModel;
 using DotNetEnv;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension.RootExtension;
+using Microsoft.AspNetCore.Authorization;
 
 try
 {
@@ -90,7 +93,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
-
+builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAuthenticatedUser", policy =>
@@ -159,15 +162,21 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddAutoMapper(typeof(CardProfile));
+builder.Services.AddAutoMapper(typeof(CardProfile), typeof(CardSwapTransactionProfile));
 // Registrasi Services
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddScoped<ICardSwapTransactionService, CardSwapTransactionService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
+
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<CardAccessRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
+builder.Services.AddScoped<CardSwapTransactionRepository>();
 
 var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
            builder.Configuration["Ports:CardService"] ?? "5026";

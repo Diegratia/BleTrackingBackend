@@ -126,13 +126,13 @@ namespace Entities.Models
     [Column("application_id")]
     public Guid ApplicationId { get; set; }
     public int TrxStatus { get; set; }
-    
+
     [Column("is_member")]
     public int? IsMember { get; set; }
 
     [Column("person_type")]
     public PersonType? PersonType { get; set; }
-  
+
     [Column("agenda")]
     public string? Agenda { get; set; }
 
@@ -143,6 +143,7 @@ namespace Entities.Models
     public MstApplication Application { get; set; }
     public Visitor? Visitor { get; set; }
     public MstMember? Member { get; set; }
+    public ICollection<CardSwapTransaction> CardSwapTransactions { get; set; } = new List<CardSwapTransaction>();
 
   }
 }

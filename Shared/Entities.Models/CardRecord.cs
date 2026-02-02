@@ -53,7 +53,7 @@ namespace Entities.Models
         [Column("checkin_masked_area")]
         public Guid? CheckinMaskedArea { get; set; }
 
-        [Column("visitor_type")]
+        [Column("visitor_active_status")]
         public VisitorActiveStatus? VisitorActiveStatus { get; set; }
 
         [Column("status")]
@@ -64,17 +64,8 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        // [ForeignKey(nameof(CardSwapTransaction))]
-        // [Column("card_swap_transaction_id")]
-        // public Guid? CardSwapTransactionId { get; set; }
-
-        // [Column("is_swap_record")]
-        // public bool IsSwapRecord { get; set; } = false;
-
         [NotMapped]
         public bool IsActive => CheckoutAt == null;
-
-
 
         public MstApplication Application { get; set; }
         public Visitor Visitor { get; set; }
