@@ -11,7 +11,6 @@ using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Helpers.Consumer;
 using Shared.Contracts;
-using Shared.Contracts.Shared.Contracts;
 using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers

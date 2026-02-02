@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Shared.Contracts.Read;
-using Shared.Contracts.Shared.Contracts;
+using Shared.Contracts;
 
 namespace BusinessLogic.Services.Interface
 {

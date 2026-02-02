@@ -1,4 +1,5 @@
 using AutoMapper;
+using Data.ViewModels;
 using Entities.Models;
 using Shared.Contracts;
 

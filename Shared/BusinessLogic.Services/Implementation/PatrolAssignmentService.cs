@@ -16,7 +16,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using DataView;
 using BusinessLogic.Services.Extension;
-using Shared.Contracts.Shared.Contracts;
+using Shared.Contracts;
 using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
