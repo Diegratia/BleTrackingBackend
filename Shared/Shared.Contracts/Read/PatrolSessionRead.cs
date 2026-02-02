@@ -21,6 +21,10 @@ namespace Shared.Contracts.Read
         public string? EndAreaNameSnap { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
+
+        // Checkpoint Summary & Details
+        public int CheckpointCount { get; set; }
+        public List<PatrolCheckpointLogRead> Checkpoints { get; set; } = new();
         
         // public PatrolRouteLookUpRead? PatrolRoute { get; set; }
         // public MstSecurityLookUpRead? Security { get; set; }

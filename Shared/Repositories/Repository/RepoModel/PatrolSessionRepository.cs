@@ -165,6 +165,21 @@ namespace Repositories.Repository
                             .Select(x => x.AreaNameSnap)
                             .FirstOrDefault(),
                 ApplicationId = t.ApplicationId,
+
+                // Checkpoint Details
+                CheckpointCount = t.PatrolCheckpointLogs.Count(),
+                Checkpoints = t.PatrolCheckpointLogs
+                    .OrderBy(c => c.OrderIndex)
+                    .Select(c => new PatrolCheckpointLogRead
+                    {
+                        Id = c.Id,
+                        PatrolAreaId = c.PatrolAreaId,
+                        AreaNameSnap = c.AreaNameSnap,
+                        OrderIndex = c.OrderIndex,
+                        ArrivedAt = c.ArrivedAt,
+                        LeftAt = c.LeftAt,
+                        DistanceFromPrevMeters = c.DistanceFromPrevMeters
+                    }).ToList()
             });
             return projected;
         }
