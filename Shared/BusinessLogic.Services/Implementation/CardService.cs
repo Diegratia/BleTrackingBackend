@@ -140,14 +140,17 @@ namespace BusinessLogic.Services.Implementation
             if (card.VisitorId != null && card.MemberId == null)
             {
                 card.IsUsed = true;
+                card.CardStatus = CardStatus.Used;
             }
             else if (card.VisitorId == null && card.MemberId != null)
             {
                 card.IsUsed = true;
+                card.CardStatus = CardStatus.Used;
             }
             else
             {
                 card.IsUsed = false;
+                card.CardStatus = CardStatus.Available;
             }
 
             if (card.IsMultiMaskedArea == true)
@@ -158,6 +161,7 @@ namespace BusinessLogic.Services.Implementation
             card.Id = Guid.NewGuid();
             card.StatusCard = 1;
             card.IsUsed = false;
+            card.CardStatus = CardStatus.Available;
 
             card.CreatedAt = DateTime.UtcNow;
             card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -477,14 +481,17 @@ namespace BusinessLogic.Services.Implementation
             if (updateDto.VisitorId != null && updateDto.MemberId == null)
             {
                 updateDto.IsUsed = true;
+                updateDto.CardStatus = CardStatus.Used;
             }
             else if (updateDto.VisitorId == null && updateDto.MemberId != null)
             {
                 updateDto.IsUsed = true;
+                updateDto.CardStatus = CardStatus.Used;
             }
             else
             {
                 updateDto.IsUsed = false;
+                updateDto.CardStatus = CardStatus.Available;
             }
 
             card.UpdatedAt = DateTime.UtcNow;
@@ -508,6 +515,7 @@ namespace BusinessLogic.Services.Implementation
 
             card.UpdatedAt = DateTime.UtcNow;
             card.IsUsed = true;
+            card.CardStatus = CardStatus.Used;
             card.LastUsed = member.Name;
             card.UpdatedBy = username;
             member.CardNumber = card.CardNumber;

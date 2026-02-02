@@ -98,6 +98,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new InvalidOperationException("Card already checked in by another visitor.");
 
             card.IsUsed = true;
+            card.CardStatus = CardStatus.Used;
             card.LastUsed = visitor.Name;
             card.VisitorId = visitor.Id;
             card.CheckinAt = DateTime.UtcNow;
@@ -146,6 +147,7 @@ namespace BusinessLogic.Services.Implementation
 
             card.CheckinAt = null;
             card.IsUsed = false;
+            card.CardStatus = CardStatus.Available;
             card.VisitorId = null;
             card.LastUsed = visitor.Name;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Shared.Contracts;
 
 namespace Data.ViewModels
 {
@@ -173,6 +174,7 @@ namespace Data.ViewModels
         public bool? IsMultiMaskedArea { get; set; }
         public Guid? RegisteredMaskedAreaId { get; set; } // isikan  null jika bisa digunakan disemua site.
         public bool? IsUsed { get; set; }
+        public CardStatus? CardStatus { get; set; }
         public string? LastUsed { get; set; }
         public Guid? VisitorId { get; set; }
         public Guid? MemberId { get; set; }

@@ -171,6 +171,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _repository.AddAsync(security);
                 card.IsUsed = true;
+                card.CardStatus = CardStatus.Used;
                 card.LastUsed = security.Name;
                 card.SecurityId = security.Id;
                 card.CheckinAt = DateTime.UtcNow;
@@ -240,6 +241,7 @@ namespace BusinessLogic.Services.Implementation
                 if (oldCard != null && oldCard.Id != cardId)
                 {
                     oldCard.IsUsed = false;
+                    oldCard.CardStatus = CardStatus.Available;
                     oldCard.SecurityId = null;
                     oldCard.CheckinAt = null;
                     await _cardRepository.UpdateAsync(oldCard);
@@ -252,6 +254,7 @@ namespace BusinessLogic.Services.Implementation
                         throw new BusinessException("This card is already assigned to another security.");
 
                     card.IsUsed = true;
+                    card.CardStatus = CardStatus.Used;
                     card.LastUsed = security.Name;
                     card.SecurityId = security.Id;
                     card.CheckinAt = DateTime.UtcNow;
@@ -304,6 +307,7 @@ namespace BusinessLogic.Services.Implementation
                 if (oldCard != null)
                         {
                             oldCard.IsUsed = false;
+                            oldCard.CardStatus = CardStatus.Available;
                             oldCard.SecurityId = null;
                             oldCard.CheckinAt = null;
                             await _cardRepository.UpdateAsync(oldCard);

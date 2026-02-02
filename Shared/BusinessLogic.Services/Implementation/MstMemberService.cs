@@ -180,6 +180,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _repository.AddAsync(member);
                 card.IsUsed = true;
+                card.CardStatus = CardStatus.Used;
                 card.LastUsed = member.Name;
                 card.MemberId = member.Id;
                 card.CheckinAt = DateTime.UtcNow;
@@ -249,6 +250,7 @@ namespace BusinessLogic.Services.Implementation
                 if (oldCard != null && oldCard.Id != cardId)
                 {
                     oldCard.IsUsed = false;
+                    oldCard.CardStatus = CardStatus.Available;
                     oldCard.MemberId = null;
                     oldCard.CheckinAt = null;
                     await _cardRepository.UpdateAsync(oldCard);
@@ -261,6 +263,7 @@ namespace BusinessLogic.Services.Implementation
                         throw new InvalidOperationException("This card is already assigned to another member.");
 
                     card.IsUsed = true;
+                    card.CardStatus = CardStatus.Used;
                     card.LastUsed = member.Name;
                     card.MemberId = member.Id;
                     card.CheckinAt = DateTime.UtcNow;
