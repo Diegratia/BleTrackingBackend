@@ -53,8 +53,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<CardSwapTransactionRead> CreateAsync(CardSwapTransactionCreateDto dto)
         {
-            // Validate card availability
-            await ValidateCardAvailabilityAsync(dto.ToCardId, "ToCard");
             
             var entity = _mapper.Map<CardSwapTransaction>(dto);
             
@@ -123,29 +121,17 @@ namespace BusinessLogic.Services.Implementation
             var area = await _repo.GetMaskedAreaByIdAsync(request.MaskedAreaId);
             if (area == null)
                 throw new NotFoundException($"MaskedArea with id {request.MaskedAreaId} not found");
-            
-
-            //  if (SwapType.EnterArea)
-            // {
-            //     await ValidateCardAvailabilityAsync(dto.ToCardId, "ToCard");
-            // }
-
-            // if (SwapType.ExitArea)
-            // {
-            //     // optional: validasi bahwa ToCard adalah kartu visitor
-            //     // atau skip validasi sama sekali
-            // }
                     
             // Validate ToCard exists and available
             await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
 
-            var card = await _repo.GetCardbyCardNumber(visitor.CardNumber);
-                if(card == null)
+            var visitorCard  = await _repo.GetCardbyCardNumber(visitor.CardNumber);
+                if(visitorCard  == null)
                     throw new NotFoundException($"Card with number {visitor.CardNumber} not found");
             
             // Get last active swap to determine FromCard
             var lastSwap = await _repo.GetLastActiveSwapAsync(request.VisitorId, Guid.Empty);
-            var fromCardId = lastSwap?.ToCardId ?? card.Id;
+            var fromCardId = lastSwap?.ToCardId ?? visitorCard .Id;
             
             // Get swap chain (reuse existing or create new)
             var swapChainId = lastSwap?.SwapChainId ?? Guid.NewGuid();
@@ -168,7 +154,7 @@ namespace BusinessLogic.Services.Implementation
                 IdentityType = request.IdentityType,
                 IdentityValue = request.IdentityValue,
                 SwapBy = swapBy
-               
+            
             };
             
             return await CreateAsync(dto);
@@ -236,8 +222,8 @@ namespace BusinessLogic.Services.Implementation
             if (card == null)
                 throw new NotFoundException($"{cardType} with id {cardId} not found");
             
-            // if (card.CardStatus != CardStatus.Available)
-            //     throw new BusinessException($"{cardType} is not available (status: {card.CardStatus})");
+            if (card.CardStatus != CardStatus.Available)
+                throw new BusinessException($"{cardType} is not available (status: {card.CardStatus})");
         }
     }
 }

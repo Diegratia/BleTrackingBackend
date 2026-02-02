@@ -232,6 +232,11 @@ namespace Repositories.Repository.RepoModel
             return await _context.Cards
                 .FirstOrDefaultAsync(a => a.CardNumber == cardNumber && a.StatusCard != 0);
         }
+        public async Task<Card?> GetAvailableCardbyId(Guid? cardId)
+        {
+            return await _context.Cards
+                .FirstOrDefaultAsync(a => a.Id == cardId && a.StatusCard != 0 && a.CardStatus == CardStatus.Available && a.IsUsed == false);
+        }
         public async Task<TrxVisitor?> GetLatestTrxVisitor(Guid? visitorId)
         {
             return await _context.TrxVisitors
