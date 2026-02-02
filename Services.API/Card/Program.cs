@@ -16,6 +16,7 @@ using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 try
 {
@@ -202,7 +203,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-// app.UseHttpsRedirection();
+app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
