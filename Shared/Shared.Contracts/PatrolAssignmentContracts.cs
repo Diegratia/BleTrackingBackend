@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Shared.Contracts
-{
-    using System;
 
 namespace Shared.Contracts
 {
@@ -30,6 +27,4 @@ namespace Shared.Contracts
         public string? SortColumn { get; set; }
         public string? SortDir { get; set; }
     }
-}
-
 }

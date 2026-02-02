@@ -74,6 +74,9 @@ builder.Services.AddControllers();
     // Scan semua validator di assembly yang mengandung BrandValidator
     builder.Services.AddValidatorsFromAssemblyContaining<CardCreateDtoValidator>();
     builder.Services.AddValidatorsFromAssemblyContaining<CardUpdateDtoValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<SwapCreateValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<SwapForwardValidator>();
+    builder.Services.AddValidatorsFromAssemblyContaining<SwapReverseValidator>();
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??

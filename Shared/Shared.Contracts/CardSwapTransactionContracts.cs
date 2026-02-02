@@ -4,28 +4,6 @@ using Shared.Contracts;
 
 namespace Shared.Contracts
 {
-    // DTO for creating swap transaction
-    public class CardSwapTransactionCreateDto
-    {
-        public Guid VisitorId { get; set; }
-        public Guid? TrxVisitorId { get; set; }
-        public Guid FromCardId { get; set; }
-        public Guid ToCardId { get; set; }
-        public Guid MaskedAreaId { get; set; }
-        public SwapType SwapType { get; set; }
-        public SwapMode SwapMode { get; set; }
-        public Guid SwapChainId { get; set; }
-        public string SwapBy { get; set; } = string.Empty;
-        public IdentityType? IdentityType { get; set; }
-        public string? IdentityValue { get; set; }
-    }
-
-    // DTO for updating swap transaction (minimal)
-    public class CardSwapTransactionUpdateDto
-    {
-        public CardSwapStatus? CardSwapStatus { get; set; }
-        public DateTime? CompletedAt { get; set; }
-    }
 
     // Filter for DataTables
     public class CardSwapTransactionFilter
@@ -38,29 +16,11 @@ namespace Shared.Contracts
         public Guid? MaskedAreaId { get; set; }
         public Guid? FromCardId { get; set; }
         public Guid? ToCardId { get; set; }
-        
+
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public string? SortColumn { get; set; }
         public string? SortDir { get; set; }
-    }
-
-    public class ForwardSwapRequest
-    {
-        public Guid VisitorId { get; set; }
-        public Guid? TrxVisitorId { get; set; }
-        public Guid MaskedAreaId { get; set; }
-        public Guid ToCardId { get; set; }
-        public IdentityType? IdentityType { get; set; }
-        public SwapMode? SwapMode { get; set; }
-        public string? IdentityValue { get; set; }
-        public string SwapBy { get; set; } = string.Empty;
-    }
-
-    public class ReverseSwapRequest
-    {
-        public Guid VisitorId { get; set; }
-        public Guid SwapChainId { get; set; }
     }
 
     public class CardSwapTransactionRead
