@@ -125,13 +125,13 @@ namespace BusinessLogic.Services.Implementation
             // Validate ToCard exists and available
             await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
 
-            var visitorCard  = await _repo.GetCardbyCardNumber(visitor.CardNumber);
-                if(visitorCard  == null)
-                    throw new NotFoundException($"Card with number {visitor.CardNumber} not found");
+            // var visitorCard  = await _repo.GetCardbyCardNumber(visitor.CardNumber);
+            //     if(visitorCard  == null)
+            //         throw new NotFoundException($"Card with number {visitor.CardNumber} not found");
             
             // Get last active swap to determine FromCard
             var lastSwap = await _repo.GetLastActiveSwapAsync(request.VisitorId, Guid.Empty);
-            var fromCardId = lastSwap?.ToCardId ?? visitorCard .Id;
+            // var fromCardId = lastSwap?.ToCardId ?? visitorCard .Id;
             
             // Get swap chain (reuse existing or create new)
             var swapChainId = lastSwap?.SwapChainId ?? Guid.NewGuid();
@@ -139,17 +139,56 @@ namespace BusinessLogic.Services.Implementation
             var trxVisitor = await _repo.GetLatestTrxVisitor(visitor.Id);
                 if(trxVisitor == null)
                     throw new NotFoundException($"TrxVisitor with visitor id {visitor.Id} not found");
+                    
+                Guid? fromCardId = null;
+                Guid? toCardId = null;
+
+                // 🔑 DOMAIN DECISION BASED ON SwapMode
+                switch (request.SwapMode)
+                {
+                    case SwapMode.CardSwap:
+                        await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
+
+                        var visitorCard = await _repo.GetCardbyCardNumber(visitor.CardNumber!)
+                            ?? throw new NotFoundException("Visitor card not found");
+
+                        fromCardId = visitorCard.Id;
+                        toCardId = request.ToCardId;
+                        request.IdentityType = IdentityType.CardAccess;
+                        break;
+
+                    case SwapMode.HoldIdentity:
+                        if (request.IdentityType == null || string.IsNullOrEmpty(request.IdentityValue))
+                            throw new BusinessException("Identity is required for HoldIdentity");
+                        break;
+
+                    case SwapMode.CardAndIdentity:
+                        await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
+
+                        var card = await _repo.GetCardbyCardNumber(visitor.CardNumber!)
+                            ?? throw new NotFoundException("Visitor card not found");
+
+                        fromCardId = card.Id;
+                        toCardId = request.ToCardId;
+                        break;
+
+                    case SwapMode.ExtendAccess:
+                        // hanya memperpanjang / menambah konteks akses
+                        break;
+                }
+
             
             
             // Create transaction
-                var dto = new CardSwapTransactionCreateDto
+            var dto = new CardSwapTransactionCreateDto
             {
                 VisitorId = request.VisitorId,
                 TrxVisitorId = trxVisitor.Id,
-                FromCardId = fromCardId,
+                FromCardId = fromCardId.Value,
                 ToCardId = request.ToCardId,
                 MaskedAreaId = request.MaskedAreaId,
                 SwapType = SwapType.EnterArea,
+                SwapMode = request.SwapMode.Value,
                 SwapChainId = swapChainId,
                 IdentityType = request.IdentityType,
                 IdentityValue = request.IdentityValue,

@@ -62,6 +62,14 @@ namespace Shared.Contracts
         NDA,
         Other,
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum SwapMode
+    {
+        CardSwap,
+        HoldIdentity,
+        CardAndIdentity,
+        ExtendAccess,
+    }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum SwapType

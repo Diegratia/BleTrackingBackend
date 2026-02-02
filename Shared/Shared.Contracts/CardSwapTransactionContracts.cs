@@ -13,6 +13,7 @@ namespace Shared.Contracts
         public Guid ToCardId { get; set; }
         public Guid MaskedAreaId { get; set; }
         public SwapType SwapType { get; set; }
+        public SwapMode SwapMode { get; set; }
         public Guid SwapChainId { get; set; }
         public string SwapBy { get; set; } = string.Empty;
         public IdentityType? IdentityType { get; set; }
@@ -51,6 +52,7 @@ namespace Shared.Contracts
         public Guid MaskedAreaId { get; set; }
         public Guid ToCardId { get; set; }
         public IdentityType? IdentityType { get; set; }
+        public SwapMode? SwapMode { get; set; }
         public string? IdentityValue { get; set; }
         public string SwapBy { get; set; } = string.Empty;
     }

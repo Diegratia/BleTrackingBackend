@@ -40,6 +40,8 @@ namespace Entities.Models
 
         [Column("card_swap_status")]
         public CardSwapStatus? CardSwapStatus { get; set; }
+        [Column("swap_mode")]
+        public SwapMode? SwapMode { get; set; }
 
         [Column("masked_area_id")]
         public Guid? MaskedAreaId { get; set; }

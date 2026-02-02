@@ -1762,6 +1762,13 @@ namespace Repositories.DbContexts
                         v => v.ToString().ToLower(),
                         v => (IdentityType)Enum.Parse(typeof(IdentityType), v, true)
                     );
+                entity.Property(e => e.SwapMode)
+                    .HasColumnName("swap_mode")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (SwapMode)Enum.Parse(typeof(SwapMode), v, true)
+                    );
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.CardSwapTransactions)
