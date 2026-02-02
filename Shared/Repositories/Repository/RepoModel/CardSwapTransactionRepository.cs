@@ -98,6 +98,7 @@ namespace Repositories.Repository.RepoModel
                     VisitorName = t.Visitor != null ? t.Visitor.Name ?? "N/A" : "N/A",
                     TrxVisitorId = t.TrxVisitorId,
                     SwapType = t.SwapType ?? SwapType.EnterArea,
+                    SwapMode = t.SwapMode.Value,
                     CardSwapStatus = t.CardSwapStatus ?? CardSwapStatus.Pending,
                     MaskedAreaId = t.MaskedAreaId ?? Guid.Empty,
                     MaskedAreaName = t.MaskedArea != null ? t.MaskedArea.Name ?? "N/A" : "N/A",

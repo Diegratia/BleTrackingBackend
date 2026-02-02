@@ -8,8 +8,8 @@ public class SwapCreateValidator : AbstractValidator<CardSwapTransactionCreateDt
         RuleFor(swap => swap.VisitorId)
             .NotEmpty().WithMessage("Visitor Id is required.");
 
-        RuleFor(swap => swap.SwapMode)
-            .NotEmpty().WithMessage("Swap Mode is required.");
+        // RuleFor(swap => swap.SwapMode)
+        //     .NotEmpty().WithMessage("Swap Mode is required.");
     }
 }
 
@@ -20,8 +20,8 @@ public class SwapForwardValidator : AbstractValidator<ForwardSwapRequest>
         RuleFor(swap => swap.VisitorId)
             .NotEmpty().WithMessage("Visitor Id is required.");
 
-        RuleFor(swap => swap.SwapMode)
-            .NotEmpty().WithMessage("Swap Mode is required.");
+        // RuleFor(swap => swap.SwapMode)
+        //     .NotEmpty().WithMessage("Swap Mode is required.");
     }
 }
 public class SwapReverseValidator : AbstractValidator<ReverseSwapRequest>

@@ -26,14 +26,15 @@ namespace Shared.Contracts
     public class CardSwapTransactionRead
     {
         public Guid Id { get; set; }
-        public Guid FromCardId { get; set; }
+        public Guid? FromCardId { get; set; }
         public string FromCardNumber { get; set; } = string.Empty;
-        public Guid ToCardId { get; set; }
+        public Guid? ToCardId { get; set; }
         public string ToCardNumber { get; set; } = string.Empty;
         public Guid VisitorId { get; set; }
         public string VisitorName { get; set; } = string.Empty;
         public Guid? TrxVisitorId { get; set; }
         public SwapType SwapType { get; set; }
+        public SwapMode SwapMode { get; set; }
         public CardSwapStatus CardSwapStatus { get; set; }
         public Guid MaskedAreaId { get; set; }
         public string MaskedAreaName { get; set; } = string.Empty;

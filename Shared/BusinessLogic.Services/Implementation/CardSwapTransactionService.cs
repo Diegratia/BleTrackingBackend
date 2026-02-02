@@ -56,7 +56,6 @@ namespace BusinessLogic.Services.Implementation
             
             var entity = _mapper.Map<CardSwapTransaction>(dto);
             
-            // Set business values
             entity.Id = Guid.NewGuid();
             entity.ApplicationId = AppId;
             entity.SwapSequence = await _repo.GetNextSequenceAsync(dto.SwapChainId);
@@ -77,10 +76,8 @@ namespace BusinessLogic.Services.Implementation
             return result ?? throw new Exception("Failed to reload after create");
         }
 
-        // DataTables Filtering
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, CardSwapTransactionFilter filter)
         {
-            // Map DataTables params
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
             filter.SortColumn = request.SortColumn ?? "ExecutedAt";
@@ -107,22 +104,18 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<CardSwapTransactionRead>(entity);
         }
 
-        // Business Logic: Forward Swap (Enter Area)
         public async Task<CardSwapTransactionRead> PerformForwardSwapAsync(ForwardSwapRequest request)
         {
-            // Validate visitor exists
             var visitor = await _repo.GetVisitorByIdAsync(request.VisitorId);
             if (visitor == null)
                 throw new NotFoundException($"Visitor with id {request.VisitorId} not found");
             if (string.IsNullOrEmpty(visitor.CardNumber))
                 throw new BusinessException("Visitor does not have a registered card number");
             
-            // Validate area exists
             var area = await _repo.GetMaskedAreaByIdAsync(request.MaskedAreaId);
             if (area == null)
                 throw new NotFoundException($"MaskedArea with id {request.MaskedAreaId} not found");
                     
-            // Validate ToCard exists and available
             await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
 
             // var visitorCard  = await _repo.GetCardbyCardNumber(visitor.CardNumber);
@@ -133,7 +126,6 @@ namespace BusinessLogic.Services.Implementation
             var lastSwap = await _repo.GetLastActiveSwapAsync(request.VisitorId, Guid.Empty);
             // var fromCardId = lastSwap?.ToCardId ?? visitorCard .Id;
             
-            // Get swap chain (reuse existing or create new)
             var swapChainId = lastSwap?.SwapChainId ?? Guid.NewGuid();
             var swapBy = UsernameFormToken;
             var trxVisitor = await _repo.GetLatestTrxVisitor(visitor.Id);
@@ -143,12 +135,11 @@ namespace BusinessLogic.Services.Implementation
                 Guid? fromCardId = null;
                 Guid? toCardId = null;
 
-                // 🔑 DOMAIN DECISION BASED ON SwapMode
+                //DOMAIN DECISION BASED ON SwapMode
                 switch (request.SwapMode)
                 {
                     case SwapMode.CardSwap:
                         await ValidateCardAvailabilityAsync(request.ToCardId, "Tracking Card");
-
                         var visitorCard = await _repo.GetCardbyCardNumber(visitor.CardNumber!)
                             ?? throw new NotFoundException("Visitor card not found");
 
@@ -177,18 +168,15 @@ namespace BusinessLogic.Services.Implementation
                         break;
                 }
 
-            
-            
-            // Create transaction
             var dto = new CardSwapTransactionCreateDto
             {
                 VisitorId = request.VisitorId,
                 TrxVisitorId = trxVisitor.Id,
-                FromCardId = fromCardId.Value,
+                FromCardId = fromCardId,
                 ToCardId = request.ToCardId,
                 MaskedAreaId = request.MaskedAreaId,
                 SwapType = SwapType.EnterArea,
-                SwapMode = request.SwapMode.Value,
+                SwapMode = request.SwapMode,
                 SwapChainId = swapChainId,
                 IdentityType = request.IdentityType,
                 IdentityValue = request.IdentityValue,
@@ -202,7 +190,6 @@ namespace BusinessLogic.Services.Implementation
         // Business Logic: Reverse Swap (Exit Area - LIFO)
         public async Task<CardSwapTransactionRead> PerformReverseSwapAsync(ReverseSwapRequest request)
         {
-            // Check if can reverse
             if (!await CanReverseSwapAsync(request.VisitorId, request.SwapChainId))
                 throw new BusinessException("No active swap available for reverse operation");
             
@@ -215,7 +202,6 @@ namespace BusinessLogic.Services.Implementation
                 throw new BusinessException("Last swap is not an EnterArea swap");
             var swapBy = UsernameFormToken;
             
-            // Create reverse transaction (ExitArea)
             var dto = new CardSwapTransactionCreateDto
             {
                 VisitorId = request.VisitorId,
@@ -240,7 +226,6 @@ namespace BusinessLogic.Services.Implementation
             return result;
         }
 
-        // Check if reverse is possible
         public async Task<bool> CanReverseSwapAsync(Guid visitorId, Guid swapChainId)
         {
             var lastSwap = await _repo.GetLastActiveSwapAsync(visitorId, swapChainId);

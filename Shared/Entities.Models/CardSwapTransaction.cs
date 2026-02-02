@@ -24,10 +24,10 @@ namespace Entities.Models
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Column("from_card_id")]
-        public Guid FromCardId { get; set; }
+        public Guid? FromCardId { get; set; }
 
         [Column("to_card_id")]
-        public Guid ToCardId { get; set; }
+        public Guid? ToCardId { get; set; }
 
         [Column("trx_visitor_id")]
         public Guid? TrxVisitorId { get; set; }
