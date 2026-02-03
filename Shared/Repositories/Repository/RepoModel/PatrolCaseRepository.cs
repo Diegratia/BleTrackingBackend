@@ -34,13 +34,26 @@ namespace Repositories.Repository
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
+            // if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            // {
+            //     query = query.Where(pas =>
+            //             pas.Security != null
+            //             && pas.Security.Email == userEmail
+            //         );
+            // }
+
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                query = query.Where(pas =>
-                        pas.Security != null
+                query = query.Where(pc =>
+                    (pc.Security != null && pc.Security.Email == userEmail)
+                    || _context.PatrolAssignmentSecurities.Any(pas =>
+                        pas.PatrolAssignmentId == pc.PatrolAssignmentId
+                        && pas.Security != null
                         && pas.Security.Email == userEmail
-                    );
+                    )
+                );
             }
+
 
             return query;
         }
