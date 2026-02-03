@@ -181,10 +181,19 @@ namespace Repositories.Repository
                         .Select(x => x.PatrolArea.Name)
                         .FirstOrDefault()
                 },
+                Attachments = t.PatrolCaseAttachments.Select(x => new PatrolAttachmentRead
+                {
+                    Id = x.Id,
+                    FileUrl = x.FileUrl,
+                    FileType = x.FileType,
+                    MimeType = x.MimeType,
+                    UploadedAt = x.UploadedAt
+                }).ToList()
             });
 
             return projected;
         }
+        
 
         public async Task<(List<PatrolCaseRead> Data, int Total, int Filtered)> FilterAsync(
             PatrolCaseFilter filter

@@ -19,6 +19,7 @@ namespace Shared.Contracts.Read
         public MstSecurityLookUpRead? Security { get; set; }
         public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
         public PatrolRouteLookUpRead? PatrolRoute { get; set; }
+        public List<PatrolAttachmentRead>? Attachments { get; set; }
     }
 
 
