@@ -202,6 +202,8 @@ namespace Repositories.Repository
                         floorIds.Add(parsed);
                 }
             }
+            if (floorIds.Count > 0)
+                query = query.Where(x => floorIds.Contains(x.FloorId));
 
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
