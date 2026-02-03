@@ -62,10 +62,10 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(reader.ApplicationId);
             ValidateApplicationIdForEntity(reader, applicationId, isSystemAdmin);
 
-            var brand = await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
-            if (brand == null)
-                throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
+            // var brand = await _context.MstBrands
+            //     .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
+            // if (brand == null)
+            //     throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
 
             _context.MstBleReaders.Add(reader);
             await _context.SaveChangesAsync();
@@ -80,10 +80,10 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(reader.ApplicationId);
             ValidateApplicationIdForEntity(reader, applicationId, isSystemAdmin);
 
-            var brand = await _context.MstBrands
-                .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
-            if (brand == null)
-                throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
+            // var brand = await _context.MstBrands
+            //     .FirstOrDefaultAsync(b => b.Id == reader.BrandId && b.Status != 0);
+            // if (brand == null)
+            //     throw new ArgumentException($"Brand with ID {reader.BrandId} not found.");
 
             await _context.SaveChangesAsync();
         }
@@ -97,8 +97,8 @@ namespace Repositories.Repository
 
             var reader = await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
 
-            if (reader == null)
-                throw new KeyNotFoundException("BLE Reader not found or unauthorized");
+            // if (reader == null)
+            //     throw new KeyNotFoundException("BLE Reader not found or unauthorized");
 
             await _context.SaveChangesAsync();
         }
