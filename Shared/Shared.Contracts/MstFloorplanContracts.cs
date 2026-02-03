@@ -1,11 +1,13 @@
 using System;
+using System.Text.Json;
 
 namespace Shared.Contracts
 {
     public class MstFloorplanFilter
     {
         public string? Search { get; set; }
-        public Guid? FloorId { get; set; }
+        // public Guid? FloorId { get; set; }
+        public JsonElement FloorId { get; set; }
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
         public int? Status { get; set; }

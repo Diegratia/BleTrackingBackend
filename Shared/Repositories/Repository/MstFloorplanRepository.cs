@@ -179,8 +179,29 @@ namespace Repositories.Repository
                 );
             }
 
-            if (filter.FloorId.HasValue)
-                query = query.Where(x => x.FloorId == filter.FloorId.Value);
+            // if (filter.FloorId.HasValue)
+            //     query = query.Where(x => x.FloorId == filter.FloorId.Value);
+            
+            var floorIds = new List<Guid>();
+            if (filter.FloorId.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var raw = filter.FloorId.GetString();
+                if (!string.IsNullOrWhiteSpace(raw) && Guid.TryParse(raw, out var singleId))
+                    floorIds.Add(singleId);
+            }
+            else if (filter.FloorId.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var el in filter.FloorId.EnumerateArray())
+                {
+                    if (el.ValueKind != System.Text.Json.JsonValueKind.String)
+                        continue;
+                    var raw = el.GetString();
+                    if (string.IsNullOrWhiteSpace(raw))
+                        continue;
+                    if (Guid.TryParse(raw, out var parsed))
+                        floorIds.Add(parsed);
+                }
+            }
 
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
