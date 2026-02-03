@@ -4,20 +4,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IMstBleReaderService
     {
-        Task<MstBleReaderDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<MstBleReaderDto>> GetAllAsync();
-        Task<IEnumerable<MstBleReaderDto>> GetAllUnassignedAsync();
+        Task<MstBleReaderRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<MstBleReaderRead>> GetAllAsync();
+        Task<IEnumerable<MstBleReaderRead>> GetAllUnassignedAsync();
         Task<IEnumerable<OpenMstBleReaderDto>> OpenGetAllAsync();
-        Task<MstBleReaderDto> CreateAsync(MstBleReaderCreateDto createDto);
+        Task<MstBleReaderRead> CreateAsync(MstBleReaderCreateDto createDto);
         Task UpdateAsync(Guid id, MstBleReaderUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<IEnumerable<MstBleReaderDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<IEnumerable<MstBleReaderRead>> ImportAsync(IFormFile file);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, MstBleReaderFilter filter);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
     }

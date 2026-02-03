@@ -11,15 +11,15 @@ using Repositories.Repository;
 using System.IO;
 using System.Globalization;
 using System.Linq;
-using System.IO;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
+using DataView;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 
 
@@ -44,31 +44,32 @@ namespace BusinessLogic.Services.Implementation
             // _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<MstBleReaderDto> GetByIdAsync(Guid id)
+        public async Task<MstBleReaderRead> GetByIdAsync(Guid id)
         {
             var bleReader = await _repository.GetByIdAsync(id);
-            return bleReader == null ? null : _mapper.Map<MstBleReaderDto>(bleReader);
+            if (bleReader == null)
+                throw new NotFoundException($"BLE Reader with id {id} not found");
+            return bleReader;
         }
 
-        public async Task<IEnumerable<MstBleReaderDto>> GetAllAsync()
+        public async Task<IEnumerable<MstBleReaderRead>> GetAllAsync()
         {
             var bleReaders = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
-            return mapped;
+            return bleReaders;
         }
-        public async Task<IEnumerable<MstBleReaderDto>> GetAllUnassignedAsync()
+        public async Task<IEnumerable<MstBleReaderRead>> GetAllUnassignedAsync()
         {
             var bleReaders = await _repository.GetAllUnassignedAsync();
-            return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
+            return bleReaders;
         }
 
-                public async Task<IEnumerable<OpenMstBleReaderDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<OpenMstBleReaderDto>> OpenGetAllAsync()
         {
-            var bleReaders = await _repository.GetAllAsync();
+            var bleReaders = await _repository.GetAllExportAsync();
             return _mapper.Map<IEnumerable<OpenMstBleReaderDto>>(bleReaders);
         }
 
-        public async Task<MstBleReaderDto> CreateAsync(MstBleReaderCreateDto createDto)
+        public async Task<MstBleReaderRead> CreateAsync(MstBleReaderCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -87,7 +88,8 @@ namespace BusinessLogic.Services.Implementation
                 "Created BLE Reader",
                 new { createdBleReader.Name }
             );
-            return _mapper.Map<MstBleReaderDto>(createdBleReader);
+            var result = await _repository.GetByIdAsync(createdBleReader.Id);
+            return result!;
         }
 
             public async Task<List<MstBleReaderDto>> CreateBatchAsync(List<MstBleReaderCreateDto> createDto)
@@ -118,9 +120,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MstBleReaderUpdateDto updateDto)
         {
-            var bleReader = await _repository.GetByIdAsync(id);
+            var bleReader = await _repository.GetByIdEntityAsync(id);
             if (bleReader == null)
-                throw new KeyNotFoundException("BLE Reader not found");
+                throw new NotFoundException($"BLE Reader with id {id} not found");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -139,9 +141,9 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var bleReader = await _repository.GetByIdAsync(id);
+            var bleReader = await _repository.GetByIdEntityAsync(id);
             if (bleReader == null)
-                throw new KeyNotFoundException("BLE Reader not found");
+                throw new NotFoundException($"BLE Reader with id {id} not found");
 
             bleReader.UpdatedBy = username ?? "";
             bleReader.UpdatedAt = DateTime.UtcNow;
@@ -156,7 +158,7 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-        public async Task<IEnumerable<MstBleReaderDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstBleReaderRead>> ImportAsync(IFormFile file)
         {
             var bleReaders = new List<MstBleReader>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -204,28 +206,46 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(bleReader);
             }
 
-            return _mapper.Map<IEnumerable<MstBleReaderDto>>(bleReaders);
+            var ids = bleReaders.Select(x => x.Id).ToList();
+            var query = _repository.GetAllQueryable()
+                .Where(x => ids.Contains(x.Id));
+            return await _repository.ProjectToRead(query).ToListAsync();
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            MstBleReaderFilter filter
+        )
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "Brand.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Brand.Name", "Gmac", "Ip", "CreatedAt", "Status" };
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<MstBleReader, MstBleReaderDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var bleReaders = await _repository.GetAllExportAsync();
 
             var document = QuestPDF.Fluent.Document.Create(container =>
