@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,6 @@ using Repositories.DbContexts;
 using Repositories.Extensions;
 using Shared.Contracts;
 using Shared.Contracts.Read;
-using System.Text.Json;
 
 namespace Repositories.Repository
 {
@@ -107,6 +107,17 @@ namespace Repositories.Repository
         {
             return await _context.MstBrands
                 .FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidBrandOwnershipAsync(
+            Guid brandId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstBrand>(
+                new[] { brandId },
+                applicationId
+            );
         }
 
         private IQueryable<MstBleReader> BaseEntityQuery()

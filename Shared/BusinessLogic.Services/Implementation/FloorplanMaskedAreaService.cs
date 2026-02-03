@@ -1,26 +1,26 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Data.ViewModels;
-using Entities.Models;
-using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
 using ClosedXML.Excel;
+using Data.ViewModels;
+using DataView;
+using Entities.Models;
+using Helpers.Consumer.Mqtt;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using StackExchange.Redis;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using Microsoft.Extensions.Caching.Distributed;
-using Helpers.Consumer.Mqtt;
-using System.IO;
-using DataView;
+using Repositories.Repository;
 using Shared.Contracts;
 using Shared.Contracts.Read;
+using StackExchange.Redis;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -188,9 +188,23 @@ namespace BusinessLogic.Services.Implementation
             if (floor == null)
                 throw new NotFoundException($"Floor with ID {createDto.FloorId} not found.");
 
+            var floorplan = await _repository.GetFloorplanByIdAsync(createDto.FloorplanId);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with ID {createDto.FloorplanId} not found.");
+
+            var invalidFloorplanId =
+                await _repository.CheckInvalidFloorplanOwnershipAsync(createDto.FloorplanId, AppId);
+            if (invalidFloorplanId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                );
+            }
+
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
             var area = _mapper.Map<FloorplanMaskedArea>(createDto);
+            area.ApplicationId = floorplan.ApplicationId;
             area.Id = Guid.NewGuid();
             area.Status = 1;
             area.CreatedBy = username;
@@ -219,13 +233,29 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         public async Task UpdateAsync(Guid id, FloorplanMaskedAreaUpdateDto updateDto)
         {
+            var area = await _repository.GetByIdEntityAsync(id);
+            if (area == null)
+                throw new NotFoundException($"Masked Area with id {id} not found");
+
             var floor = await _repository.GetFloorByIdAsync(updateDto.FloorId);
             if (floor == null)
                 throw new NotFoundException($"Floor with ID {updateDto.FloorId} not found.");
 
-            var area = await _repository.GetByIdEntityAsync(id);
-            if (area == null)
-                throw new NotFoundException($"Masked Area with id {id} not found");
+            if (updateDto.FloorplanId != area.FloorplanId)
+            {
+                var floorplan = await _repository.GetFloorplanByIdAsync(updateDto.FloorplanId);
+                if (floorplan == null)
+                    throw new NotFoundException($"Floorplan with ID {updateDto.FloorplanId} not found.");
+
+                var invalidFloorplanId =
+                    await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -306,7 +336,7 @@ namespace BusinessLogic.Services.Implementation
             foreach (var a in deviceAssignments)
             {
                 await _floorplanDeviceService.SetDeviceAssignmentAsync(
-                    a.readerId, a.cctvId, a.accessId, 
+                    a.readerId, a.cctvId, a.accessId,
                     false, username);
             }
             await _audit.Deleted(
@@ -319,71 +349,71 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
-    //     public async Task SoftDeleteAsync(Guid id)
-    // {
-    //     var username = _httpContextAccessor.HttpContext?
-    //         .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+        //     public async Task SoftDeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?
+        //         .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-    //     var area = await _repository.GetByIdAsync(id);
-    //     if (area == null)
-    //         throw new KeyNotFoundException("Masked area not found");
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null)
+        //         throw new KeyNotFoundException("Masked area not found");
 
-    //     List<Guid> deviceIds = new();
+        //     List<Guid> deviceIds = new();
 
-    //     await _repository.ExecuteInTransactionAsync(async () =>
-    //     {
-    //         area.Status = 0;
-    //         area.UpdatedBy = username;
-    //         area.UpdatedAt = DateTime.UtcNow;
-    //         await _repository.SoftDeleteAsync(id);
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         area.Status = 0;
+        //         area.UpdatedBy = username;
+        //         area.UpdatedAt = DateTime.UtcNow;
+        //         await _repository.SoftDeleteAsync(id);
 
-    //         var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
-    //         foreach (var d in devices)
-    //         {
-    //             deviceIds.Add(d.Id);
-    //         }
-    //     });
+        //         var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+        //         foreach (var d in devices)
+        //         {
+        //             deviceIds.Add(d.Id);
+        //         }
+        //     });
 
-    //     // 🔥 side effect SETELAH commit
-    //     foreach (var deviceId in deviceIds)
-    //     {
-    //         await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
-    //     }
+        //     // 🔥 side effect SETELAH commit
+        //     foreach (var deviceId in deviceIds)
+        //     {
+        //         await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
+        //     }
 
-    //     await _audit.Deleted(
-    //         "Masked Area",
-    //         area.Id,
-    //         "Deleted masked area",
-    //         new { area.Name }
-    //     );
-    //     await RemoveGroupAsync();
-    //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-    // }
+        //     await _audit.Deleted(
+        //         "Masked Area",
+        //         area.Id,
+        //         "Deleted masked area",
+        //         new { area.Name }
+        //     );
+        //     await RemoveGroupAsync();
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
 
-    // ============================================================
-    // INTERNAL CASCADE DELETE
-    // ============================================================
-    public async Task CascadeDeleteAsync(Guid id, string username)
-    {
-        var area = await _repository.GetByIdEntityAsync(id);
-        if (area == null) return;
-
-        area.Status = 0;
-        area.UpdatedBy = username;
-        area.UpdatedAt = DateTime.UtcNow;
-
-        await _repository.SoftDeleteAsync(id);
-
-        var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
-        foreach (var d in devices)
+        // ============================================================
+        // INTERNAL CASCADE DELETE
+        // ============================================================
+        public async Task CascadeDeleteAsync(Guid id, string username)
         {
-            await _floorplanDeviceService.CascadeDeleteAsync(d.Id, username);
-        }
+            var area = await _repository.GetByIdEntityAsync(id);
+            if (area == null) return;
 
-        // ❌ NO TRANSACTION
-        // ❌ NO AUDIT
-        // ❌ NO MQTT
-    }
+            area.Status = 0;
+            area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.SoftDeleteAsync(id);
+
+            var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+            foreach (var d in devices)
+            {
+                await _floorplanDeviceService.CascadeDeleteAsync(d.Id, username);
+            }
+
+            // ❌ NO TRANSACTION
+            // ❌ NO AUDIT
+            // ❌ NO MQTT
+        }
 
 
 

@@ -1,23 +1,23 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.IO;
-using System.Globalization;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using DataView;
+using Repositories.Repository;
 using Shared.Contracts;
 using Shared.Contracts.Read;
 
@@ -25,7 +25,7 @@ using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstBleReaderService : IMstBleReaderService
+    public class MstBleReaderService : BaseService, IMstBleReaderService
     {
         private readonly MstBleReaderRepository _repository;
         private readonly IMapper _mapper;
@@ -36,11 +36,12 @@ namespace BusinessLogic.Services.Implementation
 
         public MstBleReaderService(MstBleReaderRepository repository,
         IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
+            : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
-            _audit = audit; 
+            _audit = audit;
             // _httpClientFactory = httpClientFactory;
         }
 
@@ -73,6 +74,22 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
+            if (createDto.BrandId != Guid.Empty)
+            {
+                var brand = await _repository.GetBrandByIdAsync(createDto.BrandId);
+                if (brand == null)
+                    throw new NotFoundException($"Brand with ID {createDto.BrandId} not found.");
+
+                var invalidBrandId =
+                    await _repository.CheckInvalidBrandOwnershipAsync(createDto.BrandId, AppId);
+                if (invalidBrandId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"BrandId does not belong to this Application: {string.Join(", ", invalidBrandId)}"
+                    );
+                }
+            }
+
             var bleReader = _mapper.Map<MstBleReader>(createDto);
             bleReader.Id = Guid.NewGuid();
             bleReader.CreatedBy = username;
@@ -92,12 +109,28 @@ namespace BusinessLogic.Services.Implementation
             return result!;
         }
 
-            public async Task<List<MstBleReaderDto>> CreateBatchAsync(List<MstBleReaderCreateDto> createDto)
+        public async Task<List<MstBleReaderDto>> CreateBatchAsync(List<MstBleReaderCreateDto> createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var result = new List<MstBleReaderDto>();
             foreach (var dto in createDto)
             {
+                if (dto.BrandId != Guid.Empty)
+                {
+                    var brand = await _repository.GetBrandByIdAsync(dto.BrandId);
+                    if (brand == null)
+                        throw new NotFoundException($"Brand with ID {dto.BrandId} not found.");
+
+                    var invalidBrandId =
+                        await _repository.CheckInvalidBrandOwnershipAsync(dto.BrandId, AppId);
+                    if (invalidBrandId.Any())
+                    {
+                        throw new UnauthorizedException(
+                            $"BrandId does not belong to this Application: {string.Join(", ", invalidBrandId)}"
+                        );
+                    }
+                }
+
                 var bleReader = _mapper.Map<MstBleReader>(dto);
                 bleReader.Id = Guid.NewGuid();
                 bleReader.CreatedBy = username;
@@ -123,6 +156,22 @@ namespace BusinessLogic.Services.Implementation
             var bleReader = await _repository.GetByIdEntityAsync(id);
             if (bleReader == null)
                 throw new NotFoundException($"BLE Reader with id {id} not found");
+
+            if (updateDto.BrandId != Guid.Empty && updateDto.BrandId != bleReader.BrandId)
+            {
+                var brand = await _repository.GetBrandByIdAsync(updateDto.BrandId);
+                if (brand == null)
+                    throw new NotFoundException($"Brand with ID {updateDto.BrandId} not found.");
+
+                var invalidBrandId =
+                    await _repository.CheckInvalidBrandOwnershipAsync(updateDto.BrandId, AppId);
+                if (invalidBrandId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"BrandId does not belong to this Application: {string.Join(", ", invalidBrandId)}"
+                    );
+                }
+            }
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
@@ -168,7 +217,7 @@ namespace BusinessLogic.Services.Implementation
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 
@@ -184,9 +233,9 @@ namespace BusinessLogic.Services.Implementation
                 var bleReader = new MstBleReader
                 {
                     Id = Guid.NewGuid(),
-                    BrandId = brandId ,
+                    BrandId = brandId,
                     Name = row.Cell(2).GetValue<string>(),
-                    Ip = row.Cell(3).GetValue<string>(), 
+                    Ip = row.Cell(3).GetValue<string>(),
                     Gmac = row.Cell(4).GetValue<string>(),
                     IsAssigned = false,
                     CreatedBy = username,
@@ -198,7 +247,7 @@ namespace BusinessLogic.Services.Implementation
 
                 bleReaders.Add(bleReader);
                 rowNumber++;
-            }   
+            }
 
             // Simpan ke database
             foreach (var bleReader in bleReaders)
@@ -349,7 +398,7 @@ namespace BusinessLogic.Services.Implementation
         }
 
     }
-    
+
     // public class HttpClientAuthorizationDelegatingHandler : DelegatingHandler
     // {
     //     private readonly IHttpContextAccessor _httpContextAccessor;

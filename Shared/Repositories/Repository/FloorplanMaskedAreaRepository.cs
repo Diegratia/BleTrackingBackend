@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
-using Repositories.Repository.RepoModel;
 using Repositories.Extensions;
+using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using Shared.Contracts.Read;
-using System.Text.Json;
 
 namespace Repositories.Repository
 {
@@ -32,7 +32,7 @@ namespace Repositories.Repository
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q
-                .OrderByDescending(x => x.UpdatedAt) 
+                .OrderByDescending(x => x.UpdatedAt)
                 .Take(topCount)
                 .Select(x => new AreaSummaryRM
                 {
@@ -159,6 +159,17 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(f => f.Id == floorplanId && f.Status != 0);
         }
 
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorplanOwnershipAsync(
+            Guid floorplanId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstFloorplan>(
+                new[] { floorplanId },
+                applicationId
+            );
+        }
+
         public async Task<List<FloorplanMaskedArea>> GetByFloorIdAsync(Guid floorId)
         {
             return await _context.FloorplanMaskedAreas
@@ -172,11 +183,11 @@ namespace Repositories.Repository
                 .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
                 .ToListAsync();
         }
-        
-                public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
-            List<Guid>? buildingIds = null,
-            List<Guid>? floorIds = null,
-            List<Guid>?  floorplanIds = null)
+
+        public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
+    List<Guid>? buildingIds = null,
+    List<Guid>? floorIds = null,
+    List<Guid>? floorplanIds = null)
         {
             var query = _context.FloorplanMaskedAreas
                 .Include(m => m.Floorplan)
@@ -351,8 +362,8 @@ namespace Repositories.Repository
             return ids;
         }
 
-    
-    // single input
+
+        // single input
         //     public async Task<List<Guid>> GetMaskedAreaIdsByLocationAsync(
         //     Guid? buildingId,
         //     Guid? floorId,
