@@ -24,6 +24,8 @@ namespace Repositories.Repository
         {
             var query = GetAllQueryable();
 
+            var total = await query.CountAsync();
+
             if (filter.Status.HasValue)
             {
                 query = query.Where(x => x.Status == filter.Status.Value);
@@ -45,8 +47,7 @@ namespace Repositories.Repository
                 query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
             }
 
-            int total = await query.CountAsync();
-            int filtered = total;
+            var filtered = await query.CountAsync();
 
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);

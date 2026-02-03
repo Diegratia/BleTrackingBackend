@@ -23,7 +23,8 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.Generate, opt => opt.Ignore());
             CreateMap<MstDistrictUpdateDto, MstDistrict>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Generate, opt => opt.Ignore());
+                .ForMember(dest => dest.Generate, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
         }
 
     }

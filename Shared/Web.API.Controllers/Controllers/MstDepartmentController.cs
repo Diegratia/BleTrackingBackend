@@ -200,7 +200,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("open/{filter}")]
+        [HttpPost("open/filter")]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)

@@ -27,13 +27,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
+        private readonly IAuditEmitter _audit;
 
-        public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
+        public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _cache = cache;
+            _audit = audit;
         }
 
         public async Task<IEnumerable<MstOrganizationDto>> GetAllOrganizationsAsync()
@@ -60,7 +62,9 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstOrganizationDto> GetOrganizationByIdAsync(Guid id)
         {
             var organization = await _repository.GetByIdAsync(id);
-            return organization == null ? null : _mapper.Map<MstOrganizationDto>(organization);
+            if (organization == null)
+                throw new NotFoundException($"Organization with ID {id} not found");
+            return _mapper.Map<MstOrganizationDto>(organization);
         }
 
         public async Task<MstOrganizationDto> CreateOrganizationAsync(MstOrganizationCreateDto dto)
@@ -101,18 +105,22 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteOrganizationAsync(Guid id)
         {
-            try
-            {
-                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-                var organization = await _repository.GetByIdAsync(id);
-
-                _cache.Remove("MstOrganizationService_GetAll");
-                await _repository.DeleteAsync(id);
-            }
-            catch (KeyNotFoundException)
-            {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var organization = await _repository.GetByIdAsync(id);
+            if (organization == null)
                 throw new NotFoundException($"Organization with ID {id} not found");
-            }
+
+            organization.UpdatedBy = username;
+            organization.UpdatedAt = DateTime.UtcNow;
+
+            _cache.Remove("MstOrganizationService_GetAll");
+            await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "Organization",
+                organization.Id,
+                "Deleted organization",
+                new { organization.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstOrganizationFilter filter)
@@ -130,7 +138,7 @@ namespace BusinessLogic.Services.Implementation
 
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
-            filter.SortColumn = request.SortColumn;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 
@@ -155,7 +163,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var organizations = await _repository.GetAllAsync();
+            var organizations = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>
             {

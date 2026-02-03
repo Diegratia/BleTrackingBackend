@@ -91,6 +91,7 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedAt = DateTime.UtcNow;
         }
 
+
         protected void SetUpdateAudit(BaseModelWithTime entity)
         {
             entity.UpdatedBy = UsernameFormToken;

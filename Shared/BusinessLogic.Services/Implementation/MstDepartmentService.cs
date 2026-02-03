@@ -27,13 +27,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
+        private readonly IAuditEmitter _audit;
 
-        public MstDepartmentService(MstDepartmentRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
+        public MstDepartmentService(MstDepartmentRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _cache = cache;
+            _audit = audit;
         }
 
         public async Task<MstDepartmentRead> GetByIdAsync(Guid id)
@@ -99,26 +101,29 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            try
-            {
-                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-                var department = await _repository.GetByIdAsync(id);
-                department.UpdatedBy = username;
-                department.UpdatedAt = DateTime.UtcNow;
-                _cache.Remove("MstDepartmentService_GetAll");
-                await _repository.DeleteAsync(id);
-            }
-            catch (KeyNotFoundException)
-            {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var department = await _repository.GetByIdAsync(id);
+            if (department == null)
                 throw new NotFoundException($"Department with ID {id} not found");
-            }
+
+            department.UpdatedBy = username;
+            department.UpdatedAt = DateTime.UtcNow;
+
+            _cache.Remove("MstDepartmentService_GetAll");
+            await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "Department",
+                department.Id,
+                "Deleted department",
+                new { department.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstDepartmentFilter filter)
         {
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
-            filter.SortColumn = request.SortColumn;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 #if DEBUG

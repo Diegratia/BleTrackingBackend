@@ -21,13 +21,17 @@ using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstBrandService : IMstBrandService
+    public class MstBrandService : BaseService, IMstBrandService 
     {
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<MstBrandService> _logger;
 
-        public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger)
+        public MstBrandService(MstBrandRepository repository,
+        IMapper mapper,
+        ILogger<MstBrandService> logger,
+        IHttpContextAccessor httpContextAccessor
+        ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
@@ -71,7 +75,6 @@ namespace BusinessLogic.Services.Implementation
 
             var brand = _mapper.Map<MstBrand>(createDto);
             brand.Status = 1;
-
             await _repository.RawAddAsync(brand);
             return _mapper.Map<MstBrandRead>(brand);
         }
@@ -79,29 +82,19 @@ namespace BusinessLogic.Services.Implementation
         public async Task UpdateAsync(Guid id, MstBrandUpdateDto updateDto)
         {
             if (updateDto == null) throw new BusinessException("Update data cannot be null");
-
             var brand = await _repository.GetByIdAsync(id);
             if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
-
             _mapper.Map(updateDto, brand);
-            // No audit fields to update
-
             await _repository.UpdateAsync(brand);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            try
-            {
-                var brand = await _repository.GetByIdAsync(id);
-                // No audit fields to set
-                await _repository.DeleteAsync(id);
-            }
-            catch (KeyNotFoundException)
-            {
+            var brand = await _repository.GetByIdAsync(id);
+            if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
-            }
+            await _repository.DeleteAsync(brand.Id);
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBrandFilter filter)

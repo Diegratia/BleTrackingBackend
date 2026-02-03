@@ -257,7 +257,7 @@ namespace BusinessLogic.Services.Implementation
                 building.UpdatedBy = username;
                 building.UpdatedAt = DateTime.UtcNow;
                 building.Status = 0;
-                await _repository.DeleteAsync(id);
+                await _repository.UpdateAsync(building);
             });
             await _audit.Deleted(
                 "Building Area",
@@ -316,7 +316,7 @@ namespace BusinessLogic.Services.Implementation
             // Set base pagination properties
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
-            filter.SortColumn = request.SortColumn;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 

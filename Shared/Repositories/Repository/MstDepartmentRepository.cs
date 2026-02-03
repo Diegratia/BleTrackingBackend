@@ -24,6 +24,8 @@ namespace Repositories.Repository
         {
             var query = GetAllQueryable();
 
+            var total = await query.CountAsync();
+
             if (filter.Status.HasValue)
             {
                 query = query.Where(x => x.Status == filter.Status.Value);
@@ -35,8 +37,7 @@ namespace Repositories.Repository
                 query = query.Where(x => x.Name.ToLower().Contains(searchLower) || x.Code.ToLower().Contains(searchLower));
             }
 
-            int total = await query.CountAsync();
-            int filtered = total;
+            var filtered = await query.CountAsync();
 
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);
@@ -46,11 +47,11 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
-        public async Task<MstDepartment> GetByIdAsync(Guid id)
+        public async Task<MstDepartment?> GetByIdAsync(Guid id)
         {
             return await GetAllQueryable()
             .Where(d => d.Id == id && d.Status != 0)
-            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Department not found");
+            .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<MstDepartmentRead>> GetAllAsync()
