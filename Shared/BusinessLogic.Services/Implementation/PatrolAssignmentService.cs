@@ -147,6 +147,30 @@ namespace BusinessLogic.Services.Implementation
                 !await _repository.TimeGroupExistsAsync(dto.TimeGroupId!.Value))
                 throw new NotFoundException($"TimeGroup with id {dto.TimeGroupId} not found");
 
+            if (dto.PatrolRouteId.HasValue)
+            {
+                var invalidRouteId =
+                    await _repository.CheckInvalidRouteOwnershipAsync(dto.PatrolRouteId.Value, AppId);
+                if (invalidRouteId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"Some PatrolRouteId do not belong to this Application: {string.Join(", ", invalidRouteId)}"
+                    );
+                }
+            }
+
+            if (dto.TimeGroupId.HasValue)
+            {
+                var invalidTimeGroupId =
+                    await _repository.CheckInvalidTGOwnershipAsync(dto.TimeGroupId.Value, AppId);
+                if (invalidTimeGroupId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"Some TimeGroupId do not belong to this Application: {string.Join(", ", invalidTimeGroupId)}"
+                    );
+                }
+            }
+
             var newSecurityIds = dto.SecurityIds?
                 .Where(x => x.HasValue)
                 .Select(x => x.Value)
@@ -164,7 +188,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.GetInvalidSecurityIdsByApplicationAsync(newSecurityIds, AppId);
             if (invalidSecurityIds.Any())
             {
-                throw new NotFoundException(
+                throw new UnauthorizedException(
                     $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
                 );
             }
