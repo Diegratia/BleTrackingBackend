@@ -1,10 +1,12 @@
 using System.Threading.RateLimiting;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels.Shared.ExceptionHelper;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http; // For StatusCodes
 using Microsoft.AspNetCore.RateLimiting;
@@ -50,6 +52,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstOrganizationProfile));
 
 builder.Services.AddScoped<IMstOrganizationService, MstOrganizationService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddScoped<MstOrganizationRepository>();
 
 

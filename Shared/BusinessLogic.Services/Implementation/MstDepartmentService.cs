@@ -79,6 +79,12 @@ namespace BusinessLogic.Services.Implementation
             department.Status = 1;
 
             var createdDepartment = await _repository.AddAsync(department);
+            await _audit.Created(
+                "Department",
+                createdDepartment.Id,
+                "Created department",
+                new { createdDepartment.Name }
+            );
             _cache.Remove("MstDepartmentService_GetAll");
             return _mapper.Map<MstDepartmentRead>(createdDepartment);
         }
@@ -97,6 +103,12 @@ namespace BusinessLogic.Services.Implementation
             department.UpdatedAt = DateTime.UtcNow;
             _cache.Remove("MstDepartmentService_GetAll");
             await _repository.UpdateAsync(department);
+            await _audit.Updated(
+                "Department",
+                department.Id,
+                "Updated department",
+                new { department.Name }
+            );
         }
 
         public async Task DeleteAsync(Guid id)

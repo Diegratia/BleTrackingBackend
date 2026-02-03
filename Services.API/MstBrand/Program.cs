@@ -12,7 +12,9 @@ using Repositories.Seeding;
 using Data.ViewModels.Shared.ExceptionHelper;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Http; 
+using Microsoft.AspNetCore.Http;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 // 1. Load Env
 EnvTryCatchExtension.LoadEnvWithTryCatch();
@@ -50,6 +52,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MstBrandProfile));
 
 builder.Services.AddScoped<IMstBrandService, MstBrandService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddScoped<MstBrandRepository>();
 
 

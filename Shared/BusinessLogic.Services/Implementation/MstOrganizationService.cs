@@ -81,6 +81,12 @@ namespace BusinessLogic.Services.Implementation
             organization.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(organization);
+            await _audit.Created(
+                "Organization",
+                organization.Id,
+                "Created organization",
+                new { organization.Name }
+            );
             _cache.Remove("MstOrganizationService_GetAll");
 
             return _mapper.Map<MstOrganizationDto>(organization);
@@ -101,6 +107,12 @@ namespace BusinessLogic.Services.Implementation
 
             _cache.Remove("MstOrganizationService_GetAll");
             await _repository.UpdateAsync(organization);
+            await _audit.Updated(
+                "Organization",
+                organization.Id,
+                "Updated organization",
+                new { organization.Name }
+            );
         }
 
         public async Task DeleteOrganizationAsync(Guid id)

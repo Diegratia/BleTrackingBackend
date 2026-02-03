@@ -28,14 +28,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
+        private readonly IAuditEmitter _audit;
 
 
-        public MstDistrictService(MstDistrictRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
+        public MstDistrictService(MstDistrictRepository repository,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor,
+        IMemoryCache cache,
+        IAuditEmitter audit
+        )
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _cache = cache;
+            _audit = audit;
         }
 
         public async Task<MstDistrictRead> GetByIdAsync(Guid id)
@@ -79,6 +86,12 @@ namespace BusinessLogic.Services.Implementation
             district.Status = 1;
 
             var createdDistrict = await _repository.AddAsync(district);
+            await _audit.Created(
+                "District",
+                createdDistrict.Id,
+                "Created District",
+                new { createdDistrict.Name }
+            );
             _cache.Remove("MstDistrictService_GetAll");
             return _mapper.Map<MstDistrictRead>(createdDistrict);
         }
@@ -113,6 +126,12 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, district);
             _cache.Remove("MstDistrictService_GetAll");
             await _repository.UpdateAsync(district);
+            await _audit.Updated(
+                "District",
+                district.Id,
+                "Updated District",
+                new { district.Name }
+            );
         }
 
         public async Task DeleteAsync(Guid id)
@@ -126,6 +145,12 @@ namespace BusinessLogic.Services.Implementation
             district.UpdatedBy = username;
             _cache.Remove("MstDistrictService_GetAll");
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "District",
+                district.Id,
+                "Deleted District",
+                new { district.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstDistrictFilter filter)

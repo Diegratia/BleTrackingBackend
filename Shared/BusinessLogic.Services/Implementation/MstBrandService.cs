@@ -26,16 +26,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<MstBrandService> _logger;
+        private readonly IAuditEmitter _audit;
 
         public MstBrandService(MstBrandRepository repository,
         IMapper mapper,
         ILogger<MstBrandService> logger,
-        IHttpContextAccessor httpContextAccessor
+        IHttpContextAccessor httpContextAccessor,
+        IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _audit = audit;
         }
 
         public async Task<MstBrandRead> GetByIdAsync(Guid id)
@@ -66,6 +69,12 @@ namespace BusinessLogic.Services.Implementation
             // No audit fields to set
 
             await _repository.AddAsync(brand);
+            await _audit.Created(
+                "Brand",
+                brand.Id,
+                "Created Brand",
+                new { brand.Name }
+            );
             return _mapper.Map<MstBrandRead>(brand);
         }
 
@@ -86,6 +95,12 @@ namespace BusinessLogic.Services.Implementation
             if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
             _mapper.Map(updateDto, brand);
+            await _audit.Updated(
+                "Brand",
+                brand.Id,
+                "Updated Brand",
+                new { brand.Name }
+            );
             await _repository.UpdateAsync(brand);
         }
 
@@ -94,6 +109,12 @@ namespace BusinessLogic.Services.Implementation
             var brand = await _repository.GetByIdAsync(id);
             if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
+            await _audit.Deleted(
+                "Brand",
+                brand.Id,
+                "Deleted Brand",
+                new { brand.Name }
+            );
             await _repository.DeleteAsync(brand.Id);
         }
 
