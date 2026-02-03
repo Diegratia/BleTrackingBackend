@@ -11,13 +11,13 @@ namespace BusinessLogic.Services.Extension.RootExtension
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            var redisHost = configuration["Redis:Host"] 
+            var redisHost = configuration["Redis:Host"]
                             ?? Environment.GetEnvironmentVariable("REDIS_HOST");
 
-            var redisPassword = configuration["Redis:Password"] 
+            var redisPassword = configuration["Redis:Password"]
                                 ?? Environment.GetEnvironmentVariable("REDIS_PASSWORD");
 
-            var redisInstance = configuration["Redis:InstanceName"] 
+            var redisInstance = configuration["Redis:InstanceName"]
                                 ?? Environment.GetEnvironmentVariable("REDIS_INSTANCE");
 
             if (string.IsNullOrWhiteSpace(redisHost))

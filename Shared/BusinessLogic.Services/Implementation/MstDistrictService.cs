@@ -1,22 +1,23 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using DataView; // For NotFoundException, BusinessException
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-
-using ClosedXML.Excel;
+using Microsoft.Extensions.Caching.Memory;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using Microsoft.Extensions.Caching.Memory;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -37,34 +38,34 @@ namespace BusinessLogic.Services.Implementation
             _cache = cache;
         }
 
-        public async Task<MstDistrictDto> GetByIdAsync(Guid id)
+        public async Task<MstDistrictRead> GetByIdAsync(Guid id)
         {
             var district = await _repository.GetByIdAsync(id);
-            return district == null ? null : _mapper.Map<MstDistrictDto>(district);
+            if (district == null) throw new NotFoundException($"District with id {id} not found");
+            return _mapper.Map<MstDistrictRead>(district);
         }
 
-        public async Task<IEnumerable<MstDistrictDto>> GetAllAsync()
+        public async Task<IEnumerable<MstDistrictRead>> GetAllAsync()
         {
             const string cacheKey = "MstDistrictService_GetAll";
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDistrictDto> cachedData))
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDistrictRead> cachedData))
                 return cachedData;
             var districts = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
 
             var cacheOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 
-            _cache.Set(cacheKey, mapped, cacheOptions);
-            return mapped;
+            _cache.Set(cacheKey, districts, cacheOptions);
+            return districts;
         }
 
-        public async Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<MstDistrictRead>> OpenGetAllAsync()
         {
             var districts = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstDistrictDto>>(districts);
+            return districts;
         }
 
-        public async Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto)
+        public async Task<MstDistrictRead> CreateAsync(MstDistrictCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = _mapper.Map<MstDistrict>(createDto);
@@ -79,36 +80,34 @@ namespace BusinessLogic.Services.Implementation
 
             var createdDistrict = await _repository.AddAsync(district);
             _cache.Remove("MstDistrictService_GetAll");
-            return _mapper.Map<MstDistrictDto>(createdDistrict);
+            return _mapper.Map<MstDistrictRead>(createdDistrict);
         }
 
-        public async Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos)
+        public async Task<List<MstDistrictRead>> CreateBatchAsync(List<MstDistrictCreateDto> dtos)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var result = new List<MstDistrictDto>();
+            var createdDistricts = new List<MstDistrictRead>();
             foreach (var dto in dtos)
             {
-                var district = _mapper.Map<MstDistrict>(dto);
-                district.Id = Guid.NewGuid();
-
-                district.CreatedBy = username;
-                district.UpdatedBy = username;
-                district.CreatedAt = DateTime.UtcNow;
-                district.UpdatedAt = DateTime.UtcNow;
-                district.Status = 1;
-                await _repository.AddAsync(district);
-                _cache.Remove("MstDistrictService_GetAll");
-                result.Add(_mapper.Map<MstDistrictDto>(district));
+                var created = await CreateAsync(dto);
+                createdDistricts.Add(created);
             }
-            return result;
+            return createdDistricts;
         }
 
         public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var district = await _repository.GetByIdAsync(id);
+
+            // Note: If Repo GetByIdAsync throws KeyNotFound, it will be caught by middleware as 500 or 404 depending on implementation. 
+            // Better to handle it here explicitly if Repo returns nullable, but currently Repo throws KeyNotFound. 
+            // We will trust Repo or catch and rethrow if needed. 
+            // ideally repo should return null, service throws NotFound.
+            // But let's assume standard pattern:
+
             if (district == null)
-                throw new KeyNotFoundException("District not found");
+                throw new NotFoundException($"District with id {id} not found");
+
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
             _mapper.Map(updateDto, district);
@@ -119,32 +118,38 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            // Use GetByIdAsync to standard check
             var district = await _repository.GetByIdAsync(id);
+            if (district == null) throw new NotFoundException($"District with id {id} not found");
+
             district.UpdatedAt = DateTime.UtcNow;
             district.UpdatedBy = username;
             _cache.Remove("MstDistrictService_GetAll");
             await _repository.DeleteAsync(id);
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstDistrictFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "DistrictHost", "CreatedAt", "Status" };
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<MstDistrict, MstDistrictDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var districts = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>
@@ -204,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(district.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(district.UpdatedBy);
                             table.Cell().Element(CellStyle).Text(district.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                            table.Cell().Element(CellStyle).Text(district.Status);
+                            table.Cell().Element(CellStyle).Text(district.Status.ToString());
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -258,7 +263,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 6).Value = district.CreatedAt;
                 worksheet.Cell(row, 7).Value = district.UpdatedBy;
                 worksheet.Cell(row, 8).Value = district.UpdatedAt;
-                worksheet.Cell(row, 9).Value = district.Status;
+                worksheet.Cell(row, 9).Value = district.Status.ToString();
                 row++;
             }
 
@@ -268,8 +273,8 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-        
-        public async Task<IEnumerable<MstDistrictDto>> ImportAsync(IFormFile file)
+
+        public async Task<IEnumerable<MstDistrictRead>> ImportAsync(IFormFile file)
         {
             var districts = new List<MstDistrict>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -305,7 +310,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(district);
             }
 
-            return _mapper.Map<IEnumerable<MstDistrictDto>>(districts);
+            return _mapper.Map<List<MstDistrictRead>>(districts);
         }
     }
 }

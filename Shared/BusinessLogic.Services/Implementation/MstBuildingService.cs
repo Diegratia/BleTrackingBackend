@@ -9,9 +9,6 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
 using System.IO;
-using System.Globalization;
-using System.Linq;
-using System.IO;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
@@ -19,7 +16,6 @@ using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using StackExchange.Redis;
@@ -28,8 +24,7 @@ using Helpers.Consumer.Mqtt;
 using DataView;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
-
-
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -41,12 +36,12 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IFileStorageService _fileStorageService;
-        private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 1 MB
-         private readonly IMqttClientService _mqttClient;
+        private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 5 MB
+        private readonly IMqttClientService _mqttClient;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IAuditEmitter _audit;
-        private readonly ILogger<MstBuilding>_logger;
+        private readonly ILogger<MstBuilding> _logger;
         private bool cacheDisabled = false;
 
         public MstBuildingService(
@@ -75,8 +70,8 @@ namespace BusinessLogic.Services.Implementation
             _fileStorageService = fileStorageService;
             _audit = audit;
         }
-        
-         private bool IsRedisAlive()
+
+        private bool IsRedisAlive()
         {
             if (cacheDisabled) return false;
 
@@ -92,10 +87,10 @@ namespace BusinessLogic.Services.Implementation
 
         private string Key(string key)
             => $"cache:mstbuilding:{AppId}:{key}";
-        private string GroupKey 
+        private string GroupKey
             => $"cache:mstbuilding:group:{AppId}";
 
- public async Task RemoveGroupAsync()
+        public async Task RemoveGroupAsync()
         {
             if (!IsRedisAlive()) return;
 
@@ -113,7 +108,7 @@ namespace BusinessLogic.Services.Implementation
             }
             catch
             {
-                cacheDisabled = true;  
+                cacheDisabled = true;
             }
         }
 
@@ -127,7 +122,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<MstBuildingDto>(building);
         }
 
-            public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
+        public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
         {
             var cacheKey = Key("getall");
 
@@ -153,7 +148,7 @@ namespace BusinessLogic.Services.Implementation
             var data = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(data);
 
-          if (IsRedisAlive())
+            if (IsRedisAlive())
             {
                 try
                 {
@@ -177,7 +172,7 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-            public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync()
         {
             var buildings = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstBuildingDto>>(buildings);
@@ -219,7 +214,7 @@ namespace BusinessLogic.Services.Implementation
             if (building == null)
                 throw new NotFoundException("Building not found");
 
-                if (updateDto.Image != null)
+            if (updateDto.Image != null)
             {
                 // hapus image lama
                 await _fileStorageService.DeleteAsync(building.Image);
@@ -273,31 +268,7 @@ namespace BusinessLogic.Services.Implementation
             await _floorService.RemoveGroupAsync();
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-    }
-
-        //     public async Task DeleteAsync(Guid id)
-        // {
-            
-        //     await _repository.ExecuteInTransactionAsync(async () =>
-        //     {
-        //         var floors = await _floorRepository.GetByBuildingIdAsync(id);
-        //         foreach (var floor in floors)
-        //         {
-        //             await _floorService.CascadeDeleteAsync(floor.Id);
-        //         }
-
-        //         await _repository.DeleteAsync(id);
-        //     });
-
-        //                 await _audit.Deleted(
-        //         "Building Area",
-        //         building.Id,
-        //         "Deleted building",
-        //         new { building.Name }
-        //     );
-        // }
-
-        
+        }
 
         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
         {
@@ -340,22 +311,37 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBuildingFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            // Set base pagination properties
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status" };
+            // Map Date Filters (Generic Dictionary -> Specific Prop)
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<MstBuilding, MstBuildingDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            // Call Repo
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
+
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -380,7 +366,6 @@ namespace BusinessLogic.Services.Implementation
                         table.ColumnsDefinition(columns =>
                         {
                             columns.ConstantColumn(35);
-                            columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
@@ -477,6 +462,6 @@ namespace BusinessLogic.Services.Implementation
             return stream.ToArray();
         }
     }
-
 }
+
 

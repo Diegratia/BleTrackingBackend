@@ -1,0 +1,16 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Shared.Contracts -> E:\g\A\BleTrackingBackend\Shared\Shared.Contracts\bin\Debug\net8.0\Shared.Contracts.dll
+  Helpers.Consumer -> E:\g\A\BleTrackingBackend\Shared\Helpers.Consumer\bin\Debug\net8.0\Helpers.Consumer.dll
+  Entities.Models -> E:\g\A\BleTrackingBackend\Shared\Entities.Models\bin\Debug\net8.0\Entities.Models.dll
+  Data.ViewModels -> E:\g\A\BleTrackingBackend\Shared\Data.ViewModels\bin\Debug\net8.0\Data.ViewModels.dll
+  Repositories -> E:\g\A\BleTrackingBackend\Shared\Repositories\bin\Debug\net8.0\Repositories.dll
+  BusinessLogic.Services -> E:\g\A\BleTrackingBackend\Shared\BusinessLogic.Services\bin\Debug\net8.0\BusinessLogic.Services.dll
+  Web.API.Controllers -> E:\g\A\BleTrackingBackend\Shared\Web.API.Controllers\bin\Debug\net8.0\Web.API.Controllers.dll
+  MstDistrict -> E:\g\A\BleTrackingBackend\Services.API\MstDistrict\bin\Debug\net8.0\MstDistrict.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.31

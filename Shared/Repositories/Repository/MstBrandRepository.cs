@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -16,50 +19,43 @@ namespace Repositories.Repository
         {
         }
 
+        public async Task<(List<MstBrandRead> Data, int Total, int Filtered)> FilterAsync(MstBrandFilter filter)
+        {
+            var query = GetAllQueryable();
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == filter.Status.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Search))
+            {
+                string searchLower = filter.Search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(searchLower) || x.Tag.ToLower().Contains(searchLower));
+            }
+
+            int total = await query.CountAsync();
+            int filtered = total;
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
         public async Task<MstBrand> GetByIdAsync(Guid id)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstBrands
-                .Where(d => d.Id == id && d.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.FirstOrDefaultAsync();
+            return await GetAllQueryable()
+            .Where(b => b.Id == id && b.Status != 0)
+            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Brand not found");
         }
 
-        public async Task<IEnumerable<MstBrand>> GetAllAsync()
+        public async Task<IEnumerable<MstBrandRead>> GetAllAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstBrands
-                .Where(b => b.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await ProjectToRead(GetAllQueryable()).ToListAsync();
         }
-
-//         public async Task<IEnumerable<MstBrand>> GetAllAsync()
-// {
-//     using (var connection = _connectionFactory.CreateConnection())
-//     {
-//         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-//         var query = "SELECT * FROM MstBrands WHERE Status != @Status";
-//         var parameters = new { Status = 0 };
-
-//         if (!isSystemAdmin)
-//         {
-//             query += " AND (ApplicationId = @ApplicationId OR ApplicationId IS NULL)";
-//             parameters["ApplicationId"] = applicationId;
-//         }
-
-//         var brands = await connection.QueryAsync<MstBrand>(query, parameters);
-
-//         return brands;
-//     }
-// }
 
         public async Task<MstBrand> AddAsync(MstBrand brand)
         {
@@ -87,6 +83,16 @@ namespace Repositories.Repository
 
         public async Task<MstBrand> RawAddAsync(MstBrand brand)
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            // Just basic validation or none? 'RawAddAsync' seemed to bypass in original, but we should be careful.
+            // Original implementation:
+            // _context.MstBrands.Add(brand);
+            // await _context.SaveChangesAsync();
+            // return brand;
+
+            // Should we apply app context? Assuming Internal use might need specific handling or just bypass.
+            // Keeping it simple as per original but safer?
+            // The original RawAddAsync didn't check anything.
             _context.MstBrands.Add(brand);
             await _context.SaveChangesAsync();
             return brand;
@@ -121,26 +127,31 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public IQueryable<MstBrandRead> ProjectToRead(IQueryable<MstBrand> query)
+        {
+            return query.AsNoTracking().Select(x => new MstBrandRead
+            {
+                Id = x.Id,
+                Name = x.Name ?? "",
+                Tag = x.Tag ?? "",
+                Status = x.Status ?? 0,
+                ApplicationId = x.ApplicationId
+            });
+        }
+
         public IQueryable<MstBrand> GetAllQueryable()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.MstBrands
-                .Where(d => d.Status != 0);
+                .Where(b => b.Status != 0);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<IEnumerable<MstBrand>> GetAllExportAsync()
+        public async Task<IEnumerable<MstBrandRead>> GetAllExportAsync()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstBrands
-                .Where(d => d.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return await query.ToListAsync();
+            return await ProjectToRead(GetAllQueryable()).ToListAsync();
         }
     }
 }

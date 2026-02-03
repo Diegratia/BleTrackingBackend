@@ -1,23 +1,76 @@
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Entities.Models;
-    using Microsoft.EntityFrameworkCore;
-    using Repositories.DbContexts;
-    using Microsoft.AspNetCore.Http;
-    using System.Security.Claims;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Entities.Models;
+using Microsoft.EntityFrameworkCore;
+using Repositories.DbContexts;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using Repositories.Extensions;
 
 namespace Repositories.Repository
 {
     public class MstBuildingRepository : BaseRepository
+    {
+        public MstBuildingRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
+        }
 
-            public MstBuildingRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
-                : base(context, httpContextAccessor)
+        public async Task<(List<MstBuildingRead> Data, int Total, int Filtered)> FilterAsync(MstBuildingFilter filter)
+        {
+            var query = GetAllQueryable();
+
+            if (filter.Status.HasValue)
             {
+                query = query.Where(x => x.Status == filter.Status.Value);
             }
 
-            public async Task<MstBuilding?> GetByIdAsync(Guid id)
+            if (!string.IsNullOrEmpty(filter.Search))
+            {
+                string searchLower = filter.Search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(searchLower));
+            }
+
+            if (filter.DateFrom.HasValue)
+            {
+                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
+            }
+
+            if (filter.DateTo.HasValue)
+            {
+                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+            }
+
+            int total = await query.CountAsync();
+            int filtered = total;
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // Manual projection
+            var data = await query.AsNoTracking()
+                .Select(x => new MstBuildingRead
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Image = x.Image,
+                    CreatedAt = x.CreatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedBy = x.UpdatedBy,
+                    Status = x.Status,
+                    ApplicationId = x.ApplicationId
+                })
+                .ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        public async Task<MstBuilding?> GetByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
@@ -28,20 +81,20 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-          public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
                 .Where(d => d.Id == id && d.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            var district = await query.FirstOrDefaultAsync();
-            if (district == null)
+            var building = await query.FirstOrDefaultAsync();
+            if (building == null)
                 throw new KeyNotFoundException("Building not found");
 
+            building.Status = 0;
             await _context.SaveChangesAsync();
         }
-            
 
         public async Task<IEnumerable<MstBuilding>> GetAllAsync()
         {
@@ -71,13 +124,13 @@ namespace Repositories.Repository
             return building;
         }
 
-         public async Task UpdateAsync(MstBuilding building)
+        public async Task UpdateAsync(MstBuilding building)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             await ValidateApplicationIdAsync(building.ApplicationId);
             ValidateApplicationIdForEntity(building, applicationId, isSystemAdmin);
 
-            // _context.MstDistricts.Update(district);
+            // _context.MstBuildings.Update(building);
             await _context.SaveChangesAsync();
         }
 

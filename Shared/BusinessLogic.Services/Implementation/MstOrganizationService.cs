@@ -1,20 +1,22 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using Data.ViewModels.Shared.ExceptionHelper;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
+using Microsoft.Extensions.Caching.Memory;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using Microsoft.Extensions.Caching.Memory;
+using Repositories.Repository;
+using Shared.Contracts;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -25,7 +27,6 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
-
 
         public MstOrganizationService(MstOrganizationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
@@ -64,7 +65,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstOrganizationDto> CreateOrganizationAsync(MstOrganizationCreateDto dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (dto == null) throw new BusinessException("Organization data cannot be null");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var organization = _mapper.Map<MstOrganization>(dto);
@@ -83,11 +84,11 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateOrganizationAsync(Guid id, MstOrganizationUpdateDto dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (dto == null) throw new BusinessException("Update data cannot be null");
 
             var organization = await _repository.GetByIdAsync(id);
             if (organization == null || organization.Status == 0)
-                throw new KeyNotFoundException($"Organization with ID {id} not found or has been deleted.");
+                throw new NotFoundException($"Organization with ID {id} not found");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             organization.UpdatedBy = username;
@@ -100,37 +101,60 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteOrganizationAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var organization = await _repository.GetByIdAsync(id);
-            if (organization == null || organization.Status == 0)
-                throw new KeyNotFoundException($"Organization with ID {id} not found or already deleted.");
+            try
+            {
+                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+                var organization = await _repository.GetByIdAsync(id);
 
-            organization.Status = 0;
-            organization.UpdatedBy = username;
-            organization.UpdatedAt = DateTime.UtcNow;
-            _cache.Remove("MstOrganizationService_GetAll");
-            await _repository.DeleteAsync(id);
+                _cache.Remove("MstOrganizationService_GetAll");
+                await _repository.DeleteAsync(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new NotFoundException($"Organization with ID {id} not found");
+            }
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstOrganizationFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            // Use the passed filter directly
+            // Ensure Page and PageSize are set if not properly bound (though deserialization usually handles it, 
+            // but DataTables request carries start/length which might override or sync with filter)
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Code", "OrganizationHost", "CreatedAt", "Status" };
+            // Sync DataTables params to Filter if needed (or rely on what's passed)
+            // Typically if we use DataTablesProjectedRequest, the 'filter' object comes from the JSON 'Filters' prop.
+            // But standard DataTables paging (Start, Length) is separate.
+            // We should ensure the filter uses the DataTables paging if that's the intent, 
+            // OR if the filter DTO already has them.
+            // However, the Repository expects the filter DTO to have Page/PageSize.
 
-            var filterService = new GenericDataTableService<MstOrganization, MstOrganizationDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            return await filterService.FilterAsync(request);
+            // If there's extra filtering needed from Columns, map it here:
+            // if (request.Columns != null)
+            // {
+            //     foreach (var col in request.Columns)
+            //     {
+            //         if (!string.IsNullOrEmpty(col.Search.Value))
+            //         {
+            //              // Example: Mapping specific column search if needed
+            //              // if (col.Name == "Status" && int.TryParse(col.Search.Value, out int status))
+            //              //    filter.Status = status;
+            //         }
+            //     }
+            // }
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+            return new { draw = request.Draw, recordsTotal = total, recordsFiltered = filtered, data };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var organizations = await _repository.GetAllAsync();
 
             var document = Document.Create(container =>
@@ -152,7 +176,6 @@ namespace BusinessLogic.Services.Implementation
                         table.ColumnsDefinition(columns =>
                         {
                             columns.ConstantColumn(35);
-                            columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
@@ -181,8 +204,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(organization.Code);
                             table.Cell().Element(CellStyle).Text(organization.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(organization.OrganizationHost ?? "-");
-                            table.Cell().Element(CellStyle).Text(organization.CreatedAt.ToString("yyyy-MM-dd"));
                             table.Cell().Element(CellStyle).Text(organization.CreatedBy ?? "-");
+                            table.Cell().Element(CellStyle).Text(organization.CreatedAt.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(organization.Status == 1 ? "Active" : "Inactive");
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -246,7 +270,7 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-        
+
         public async Task<IEnumerable<MstOrganizationDto>> ImportAsync(IFormFile file)
         {
             var organizations = new List<MstOrganization>();
@@ -285,6 +309,6 @@ namespace BusinessLogic.Services.Implementation
 
             return _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);
         }
-        
+
     }
 }

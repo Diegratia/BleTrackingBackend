@@ -1,32 +1,31 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using Data.ViewModels.Shared.ExceptionHelper;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
+using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
-
 {
     public class MstBrandService : IMstBrandService
     {
         private readonly MstBrandRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<MstBrandService> _logger;
-
 
         public MstBrandService(MstBrandRepository repository, IMapper mapper, ILogger<MstBrandService> logger)
         {
@@ -35,81 +34,93 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
         }
 
-        public async Task<MstBrandDto> GetByIdAsync(Guid id)
+        public async Task<MstBrandRead> GetByIdAsync(Guid id)
         {
             var brand = await _repository.GetByIdAsync(id);
-            return brand == null ? null : _mapper.Map<MstBrandDto>(brand);
+            if (brand == null) throw new NotFoundException($"Brand with ID {id} not found");
+            return _mapper.Map<MstBrandRead>(brand);
         }
 
-        public async Task<IEnumerable<MstBrandDto>> GetAllAsync()
+        public async Task<IEnumerable<MstBrandRead>> GetAllAsync()
         {
             var brands = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstBrandDto>>(brands);
-            return mapped;
+            return brands;
         }
 
-        public async Task<IEnumerable<OpenMstBrandDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<MstBrandRead>> OpenGetAllAsync()
         {
             var brands = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstBrandDto>>(brands);
+            return brands;
         }
 
-        public async Task<MstBrandDto> CreateAsync(MstBrandCreateDto createDto)
+        public async Task<MstBrandRead> CreateAsync(MstBrandCreateDto createDto)
         {
+            if (createDto == null) throw new BusinessException("Brand data cannot be null");
+
             var brand = _mapper.Map<MstBrand>(createDto);
             brand.Status = 1;
+            // No audit fields to set
 
             await _repository.AddAsync(brand);
-            return _mapper.Map<MstBrandDto>(brand);
+            return _mapper.Map<MstBrandRead>(brand);
         }
 
-        public async Task<MstBrandDto> CreateInternalAsync(MstBrandCreateDto createDto)
+        public async Task<MstBrandRead> CreateInternalAsync(MstBrandCreateDto createDto)
         {
+            if (createDto == null) throw new BusinessException("Brand data cannot be null");
+
             var brand = _mapper.Map<MstBrand>(createDto);
             brand.Status = 1;
 
             await _repository.RawAddAsync(brand);
-            return _mapper.Map<MstBrandDto>(brand);
+            return _mapper.Map<MstBrandRead>(brand);
         }
 
         public async Task UpdateAsync(Guid id, MstBrandUpdateDto updateDto)
         {
+            if (updateDto == null) throw new BusinessException("Update data cannot be null");
+
             var brand = await _repository.GetByIdAsync(id);
             if (brand == null)
-                throw new KeyNotFoundException("Brand not found");
+                throw new NotFoundException($"Brand with ID {id} not found");
+
             _mapper.Map(updateDto, brand);
+            // No audit fields to update
+
             await _repository.UpdateAsync(brand);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var brand = await _repository.GetByIdAsync(id);
-            if (brand == null)
-                throw new KeyNotFoundException("Brand not found");
-
-            brand.Status = 0;
-            await _repository.DeleteAsync(id);
+            try
+            {
+                var brand = await _repository.GetByIdAsync(id);
+                // No audit fields to set
+                await _repository.DeleteAsync(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new NotFoundException($"Brand with ID {id} not found");
+            }
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBrandFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            Console.WriteLine($"DEBUG: Filtering Brands with Page: {filter.Page}, PageSize: {filter.PageSize}");
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "Tag", "Status" };
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var filterService = new GenericDataTableService<MstBrand, MstBrandDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+            return new { draw = request.Draw, recordsTotal = total, recordsFiltered = filtered, data };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var brands = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>

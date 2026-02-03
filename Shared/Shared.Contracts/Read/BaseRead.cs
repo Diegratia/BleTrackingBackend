@@ -18,7 +18,6 @@ namespace Shared.Contracts.Read
         public string? UpdatedBy { get; set; }
         [JsonIgnore]
         public DateTime UpdatedAt { get; set; }
-        [JsonIgnore]
         public int Status { get; set; }
         public Guid ApplicationId { get; set; }
     }

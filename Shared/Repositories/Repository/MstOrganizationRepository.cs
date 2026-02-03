@@ -6,6 +6,9 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using Repositories.Extensions;
 
 namespace Repositories.Repository
 {
@@ -14,6 +17,45 @@ namespace Repositories.Repository
         public MstOrganizationRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+        }
+
+        public async Task<(List<MstOrganizationRead> Data, int Total, int Filtered)> FilterAsync(MstOrganizationFilter filter)
+        {
+            var query = GetAllQueryable();
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == filter.Status.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Search))
+            {
+                string searchLower = filter.Search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(searchLower) || x.Code.ToLower().Contains(searchLower));
+            }
+
+            int total = await query.CountAsync();
+            int filtered = total;
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await query.AsNoTracking()
+                .Select(x => new MstOrganizationRead
+                {
+                    Id = x.Id,
+                    Code = x.Code,
+                    Name = x.Name,
+                    OrganizationHost = x.OrganizationHost,
+                    CreatedAt = x.CreatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedBy = x.UpdatedBy,
+                    Status = x.Status
+                })
+                .ToListAsync();
+
+            return (data, total, filtered);
         }
 
         public async Task<IEnumerable<MstOrganization>> GetAllAsync()

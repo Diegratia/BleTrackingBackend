@@ -4,21 +4,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IMstDistrictService
     {
-        Task<MstDistrictDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<MstDistrictDto>> GetAllAsync();
-        Task<IEnumerable<OpenMstDistrictDto>> OpenGetAllAsync();
-        Task<MstDistrictDto> CreateAsync(MstDistrictCreateDto createDto);
-        Task<List<MstDistrictDto>> CreateBatchAsync(List<MstDistrictCreateDto> dtos);
+        Task<MstDistrictRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<MstDistrictRead>> GetAllAsync();
+        Task<IEnumerable<MstDistrictRead>> OpenGetAllAsync();
+        Task<MstDistrictRead> CreateAsync(MstDistrictCreateDto createDto);
+        Task<List<MstDistrictRead>> CreateBatchAsync(List<MstDistrictCreateDto> dtos);
         Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, MstDistrictFilter filter);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
-         Task<IEnumerable<MstDistrictDto>> ImportAsync(IFormFile file);
+        Task<IEnumerable<MstDistrictRead>> ImportAsync(IFormFile file);
     }
 }

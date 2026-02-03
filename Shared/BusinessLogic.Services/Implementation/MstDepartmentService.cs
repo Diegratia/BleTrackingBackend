@@ -1,22 +1,23 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using Data.ViewModels.Shared.ExceptionHelper;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
+using Microsoft.Extensions.Caching.Memory;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using Microsoft.Extensions.Caching.Memory;
-
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -27,7 +28,6 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
 
-
         public MstDepartmentService(MstDepartmentRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _repository = repository;
@@ -36,41 +36,37 @@ namespace BusinessLogic.Services.Implementation
             _cache = cache;
         }
 
-        public async Task<MstDepartmentDto> GetByIdAsync(Guid id)
+        public async Task<MstDepartmentRead> GetByIdAsync(Guid id)
         {
             var department = await _repository.GetByIdAsync(id);
-            return department == null ? null : _mapper.Map<MstDepartmentDto>(department);
+            if (department == null) throw new NotFoundException($"Department with ID {id} not found");
+            return _mapper.Map<MstDepartmentRead>(department);
         }
 
-        public async Task<IEnumerable<MstDepartmentDto>> GetAllAsync()
+        public async Task<IEnumerable<MstDepartmentRead>> GetAllAsync()
         {
             const string cacheKey = "MstDepartmentService_GetAll";
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDepartmentDto> cachedData))
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDepartmentRead> cachedData))
                 return cachedData;
             var departments = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
 
             var cacheOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 
-            _cache.Set(cacheKey, mapped, cacheOptions);
-            return mapped;
+            _cache.Set(cacheKey, departments, cacheOptions);
+            return departments;
         }
 
-        public async Task<IEnumerable<OpenMstDepartmentDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<MstDepartmentRead>> OpenGetAllAsync()
         {
             var departments = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstDepartmentDto>>(departments);
+            return departments;
         }
 
-        //     public async Task<IEnumerable<MstDepartmentDto>> MixGetAllAsync()
-        // {
-        //     var departments = await _repository.MixGetAllAsync();
-        //     return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
-        // }
-
-        public async Task<MstDepartmentDto> CreateAsync(MstDepartmentCreateDto createDto)
+        public async Task<MstDepartmentRead> CreateAsync(MstDepartmentCreateDto createDto)
         {
+            if (createDto == null) throw new BusinessException("Department data cannot be null");
+
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = _mapper.Map<MstDepartment>(createDto);
             department.Id = Guid.NewGuid();
@@ -82,15 +78,17 @@ namespace BusinessLogic.Services.Implementation
 
             var createdDepartment = await _repository.AddAsync(department);
             _cache.Remove("MstDepartmentService_GetAll");
-            return _mapper.Map<MstDepartmentDto>(createdDepartment);
+            return _mapper.Map<MstDepartmentRead>(createdDepartment);
         }
 
         public async Task UpdateAsync(Guid id, MstDepartmentUpdateDto updateDto)
         {
+            if (updateDto == null) throw new BusinessException("Update data cannot be null");
+
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var department = await _repository.GetByIdAsync(id);
             if (department == null)
-                throw new KeyNotFoundException("Department not found");
+                throw new NotFoundException($"Department with ID {id} not found");
 
             _mapper.Map(updateDto, department);
             department.UpdatedBy = username;
@@ -101,49 +99,38 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var department = await _repository.GetByIdAsync(id);
-            department.UpdatedBy = username;
-            department.UpdatedAt = DateTime.UtcNow;
-            _cache.Remove("MstDepartmentService_GetAll");
-            await _repository.DeleteAsync(id);
+            try
+            {
+                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+                var department = await _repository.GetByIdAsync(id);
+                department.UpdatedBy = username;
+                department.UpdatedAt = DateTime.UtcNow;
+                _cache.Remove("MstDepartmentService_GetAll");
+                await _repository.DeleteAsync(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new NotFoundException($"Department with ID {id} not found");
+            }
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstDepartmentFilter filter)
         {
-            var query = _repository.GetAllQueryable();
-
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "DepartmentHost", "CreatedAt", "Status" };
-
-            var filterService = new GenericDataTableService<MstDepartment, MstDepartmentDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
-        }
-
-        public async Task<object> MixFilterAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryable();
-
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "DepartmentHost", "CreatedAt", "UpdatedAt", "Status" };
-
-            var filterService = new GenericDataTableService<MstDepartment, MstDepartmentDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+#if DEBUG
+            Console.WriteLine($"Filter parameters synchronized. Page: {filter.Page}, PageSize: {filter.PageSize}");
+#endif
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+            return new { draw = request.Draw, recordsTotal = total, recordsFiltered = filtered, data };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var districts = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>
@@ -256,7 +243,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 6).Value = district.CreatedAt;
                 worksheet.Cell(row, 7).Value = district.UpdatedBy;
                 worksheet.Cell(row, 8).Value = district.UpdatedAt;
-                worksheet.Cell(row, 9).Value = district.Status;
+                worksheet.Cell(row, 9).Value = district.Status.ToString();
                 row++;
             }
 
@@ -266,8 +253,8 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-        
-         public async Task<IEnumerable<MstDepartmentDto>> ImportAsync(IFormFile file)
+
+        public async Task<IEnumerable<MstDepartmentRead>> ImportAsync(IFormFile file)
         {
             var departments = new List<MstDepartment>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -303,7 +290,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(department);
             }
 
-            return _mapper.Map<IEnumerable<MstDepartmentDto>>(departments);
+            return _mapper.Map<IEnumerable<MstDepartmentRead>>(departments);
         }
     }
 }

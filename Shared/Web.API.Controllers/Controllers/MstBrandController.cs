@@ -1,91 +1,45 @@
 using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Interface;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     [Route("api/[controller]")]
     [ApiController]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class MstBrandController : ControllerBase
     {
         private readonly IMstBrandService _mstBrandService;
-        private readonly ILogger<MstBrandService> _logger;
 
-        public MstBrandController(IMstBrandService mstBrandService, ILogger<MstBrandService> logger)
+        public MstBrandController(IMstBrandService mstBrandService)
         {
             _mstBrandService = mstBrandService;
-            _logger = logger;
         }
 
         // GET: api/MstBrand
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var brands = await _mstBrandService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brands retrieved successfully",
-                    collection = new { data = brands },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var brands = await _mstBrandService.GetAllAsync();
+            return Ok(ApiResponse.Success("Brands retrieved successfully", brands));
         }
 
         // GET: api/MstBrand/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var brand = await _mstBrandService.GetByIdAsync(id);
-                if (brand == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Brand not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand retrieved successfully",
-                    collection = new { data = brand },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var brand = await _mstBrandService.GetByIdAsync(id);
+            if (brand == null) return NotFound(ApiResponse.NotFound("Brand not found"));
+            return Ok(ApiResponse.Success("Brand retrieved successfully", brand));
         }
 
         // POST: api/MstBrand
@@ -94,37 +48,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdBrand = await _mstBrandService.CreateAsync(mstBrandDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Brand created successfully",
-                    collection = new { data = createdBrand },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdBrand = await _mstBrandService.CreateAsync(mstBrandDto);
+            return StatusCode(201, ApiResponse.Created("Brand created successfully", createdBrand));
         }
 
         // PUT: api/MstBrand/{id}
@@ -133,281 +65,100 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstBrandService.UpdateAsync(id, mstBrandDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Brand not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstBrandService.UpdateAsync(id, mstBrandDto);
+            return Ok(ApiResponse.Success("Brand updated successfully"));
         }
 
         // DELETE: api/MstBrand/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstBrandService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Brand not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstBrandService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Brand marked as deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstBrandFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstBrandService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brands filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstBrandFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstBrandFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstBrandService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Brands filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstBrandService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstBrand_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstBrandService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstBrand_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstBrandService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstBrand_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstBrandService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstBrand_Report.xlsx");
         }
 
-        //OPEN
+        // OPEN APIs
 
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var brands = await _mstBrandService.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brands retrieved successfully",
-                    collection = new { data = brands },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-        [AllowAnonymous]
-        [HttpPost("open")]
-        
-        public async Task<IActionResult> OpenCreate([FromBody] MstBrandCreateDto mstBrandDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdBrand = await _mstBrandService.CreateAsync(mstBrandDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Brand created successfully",
-                    collection = new { data = createdBrand },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var brands = await _mstBrandService.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Brands retrieved successfully", brands));
         }
 
         [AllowAnonymous]
         [HttpGet("open/{id}")]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
-            try
+            var brand = await _mstBrandService.GetByIdAsync(id);
+            if (brand == null) return NotFound(ApiResponse.NotFound("Brand not found"));
+            return Ok(ApiResponse.Success("Brand retrieved successfully", brand));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("open/create")]
+        public async Task<IActionResult> OpenCreate([FromBody] MstBrandCreateDto mstBrandDto)
+        {
+            if (!ModelState.IsValid)
             {
-                var brand = await _mstBrandService.GetByIdAsync(id);
-                if (brand == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Brand not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand retrieved successfully",
-                    collection = new { data = brand },
-                    code = 200
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var createdBrand = await _mstBrandService.CreateAsync(mstBrandDto);
+            return StatusCode(201, ApiResponse.Created("Brand created successfully", createdBrand));
         }
 
         [AllowAnonymous]
@@ -416,133 +167,47 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstBrandService.UpdateAsync(id, mstBrandDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Brand not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstBrandService.UpdateAsync(id, mstBrandDto);
+            return Ok(ApiResponse.Success("Brand updated successfully"));
         }
 
         [AllowAnonymous]
         [HttpDelete("open/{id}")]
         public async Task<IActionResult> OpenDelete(Guid id)
         {
-            try
-            {
-                await _mstBrandService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brand deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Brand not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstBrandService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Brand marked as deleted successfully"));
         }
 
-        [HttpPost("open/filter")]
         [AllowAnonymous]
-        public async Task<IActionResult> PublicFilter([FromBody] DataTablesRequest request)
+        [HttpPost("open/filter")]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstBrandFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstBrandService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Brands filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstBrandFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstBrandFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstBrandService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Brands filtered successfully", result));
         }
     }
 }

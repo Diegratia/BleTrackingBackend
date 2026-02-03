@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -15,7 +16,7 @@ namespace BusinessLogic.Services.Interface
         Task<MstOrganizationDto> CreateOrganizationAsync(MstOrganizationCreateDto createDto);
         Task UpdateOrganizationAsync(Guid id, MstOrganizationUpdateDto updateDto);
         Task DeleteOrganizationAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, MstOrganizationFilter filter);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task<IEnumerable<MstOrganizationDto>> ImportAsync(IFormFile file);

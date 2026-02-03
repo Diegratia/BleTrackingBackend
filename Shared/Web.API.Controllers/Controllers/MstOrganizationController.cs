@@ -1,18 +1,22 @@
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class MstOrganizationController : ControllerBase
     {
         private readonly IMstOrganizationService _mstOrganizationService;
@@ -26,64 +30,17 @@ namespace Web.API.Controllers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var organizations = await _mstOrganizationService.GetAllOrganizationsAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organizations retrieved successfully",
-                    collection = new { data = organizations },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var organizations = await _mstOrganizationService.GetAllOrganizationsAsync();
+            return Ok(ApiResponse.Success("Organizations retrieved successfully", organizations));
         }
 
         // GET: api/MstOrganization/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var organization = await _mstOrganizationService.GetOrganizationByIdAsync(id);
-                if (organization == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Organization not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization retrieved successfully",
-                    collection = new { data = organization },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var organization = await _mstOrganizationService.GetOrganizationByIdAsync(id);
+            if (organization == null) return NotFound(ApiResponse.NotFound("Organization not found"));
+            return Ok(ApiResponse.Success("Organization retrieved successfully", organization));
         }
 
         // POST: api/MstOrganization
@@ -92,37 +49,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdOrganization = await _mstOrganizationService.CreateOrganizationAsync(mstOrganizationDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Organization created successfully",
-                    collection = new { data = createdOrganization },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdOrganization = await _mstOrganizationService.CreateOrganizationAsync(mstOrganizationDto);
+            return StatusCode(201, ApiResponse.Created("Organization created successfully", createdOrganization));
         }
 
         // PUT: api/MstOrganization/{id}
@@ -131,244 +66,97 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstOrganizationService.UpdateOrganizationAsync(id, mstOrganizationDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstOrganizationService.UpdateOrganizationAsync(id, mstOrganizationDto);
+            return Ok(ApiResponse.Success("Organization updated successfully"));
         }
 
         // DELETE: api/MstOrganization/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstOrganizationService.DeleteOrganizationAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization marked as deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstOrganizationService.DeleteOrganizationAsync(id);
+            return Ok(ApiResponse.Success("Organization marked as deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                   kvp => kvp.Key,
+                   kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstOrganizationFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstOrganizationService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organiaztions filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstOrganizationFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstOrganizationFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstOrganizationService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Organizations filtered successfully", result));
+        }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(ApiResponse.BadRequest("No file uploaded or file is empty"));
+
+            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(ApiResponse.BadRequest("Only .xlsx files are allowed"));
+
+            var floors = await _mstOrganizationService.ImportAsync(file);
+            return Ok(ApiResponse.Success("Organizations imported successfully", floors));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstOrganizationService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstOrganization_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstOrganizationService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstOrganization_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstOrganizationService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstOrganization_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstOrganizationService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstOrganization_Report.xlsx");
         }
 
-        //OPEN
+        //OPEN APIs
 
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var organizations = await _mstOrganizationService.OpenGetAllOrganizationsAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organizations retrieved successfully",
-                    collection = new { data = organizations },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var organizations = await _mstOrganizationService.OpenGetAllOrganizationsAsync();
+            return Ok(ApiResponse.Success("Organizations retrieved successfully", organizations));
         }
-
 
         // GET: api/MstOrganization/{id}
         [AllowAnonymous]
         [HttpGet("open/{id}")]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
-            try
-            {
-                var organization = await _mstOrganizationService.GetOrganizationByIdAsync(id);
-                if (organization == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Organization not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization retrieved successfully",
-                    collection = new { data = organization },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var organization = await _mstOrganizationService.GetOrganizationByIdAsync(id);
+            if (organization == null) return NotFound(ApiResponse.NotFound("Organization not found"));
+            return Ok(ApiResponse.Success("Organization retrieved successfully", organization));
         }
 
         // POST: api/MstOrganization
@@ -378,233 +166,66 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdOrganization = await _mstOrganizationService.CreateOrganizationAsync(mstOrganizationDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Organization created successfully",
-                    collection = new { data = createdOrganization },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdOrganization = await _mstOrganizationService.CreateOrganizationAsync(mstOrganizationDto);
+            return StatusCode(201, ApiResponse.Created("Organization created successfully", createdOrganization));
         }
 
         // PUT: api/MstOrganization/{id}
+        [AllowAnonymous]
         [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] MstOrganizationUpdateDto mstOrganizationDto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstOrganizationService.UpdateOrganizationAsync(id, mstOrganizationDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstOrganizationService.UpdateOrganizationAsync(id, mstOrganizationDto);
+            return Ok(ApiResponse.Success("Organization updated successfully"));
         }
 
-        [AllowAnonymous]
         // DELETE: api/MstOrganization/{id}
+        [AllowAnonymous]
         [HttpDelete("open/{id}")]
         public async Task<IActionResult> OpenDelete(Guid id)
         {
-            try
-            {
-                await _mstOrganizationService.DeleteOrganizationAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organization marked as deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstOrganizationService.DeleteOrganizationAsync(id);
+            return Ok(ApiResponse.Success("Organization marked as deleted successfully"));
         }
 
         [AllowAnonymous]
         [HttpPost("open/{filter}")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstOrganizationFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstOrganizationService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organiaztions filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
-
-         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        [HttpPost("import")]
-        public async Task<IActionResult> Import([FromForm] IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                filter = JsonSerializer.Deserialize<MstOrganizationFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstOrganizationFilter();
             }
 
-            if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var floors = await _mstOrganizationService.ImportAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Organiaztions imported successfully",
-                    collection = new { data = floors },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstOrganizationService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Organizations filtered successfully", result));
         }
     }
 }

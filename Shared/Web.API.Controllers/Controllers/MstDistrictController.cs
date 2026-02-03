@@ -1,18 +1,22 @@
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
+using BusinessLogic.Services.Extension.RootExtension; // For MinLevelAttribute
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper; // For ApiResponse
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts; // For LevelPriority
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequireAll")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class MstDistrictController : ControllerBase
     {
         private readonly IMstDistrictService _mstDistrictService;
@@ -21,128 +25,34 @@ namespace Web.API.Controllers.Controllers
         {
             _mstDistrictService = mstDistrictService;
         }
-        
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("No file uploaded or file is empty"));
 
             if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("Only .xlsx files are allowed"));
 
-            try
-            {
-                var floors = await _mstDistrictService.ImportAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Districts imported successfully",
-                    collection = new { data = floors },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floors = await _mstDistrictService.ImportAsync(file);
+            return Ok(ApiResponse.Success("Districts imported successfully", floors));
         }
 
         // GET: api/MstDistrict
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var districts = await _mstDistrictService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Districts retrieved successfully",
-                    collection = new { data = districts },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var districts = await _mstDistrictService.GetAllAsync();
+            return Ok(ApiResponse.Success("Districts retrieved successfully", districts));
         }
 
         // GET: api/MstDistrict/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var district = await _mstDistrictService.GetByIdAsync(id);
-                if (district == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "District not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District retrieved successfully",
-                    collection = new { data = district },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var district = await _mstDistrictService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("District retrieved successfully", district));
         }
 
         // POST: api/MstDistrict
@@ -151,37 +61,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdDistrict = await _mstDistrictService.CreateAsync(mstDistrictDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "District created successfully",
-                    collection = new { data = createdDistrict },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdDistrict = await _mstDistrictService.CreateAsync(mstDistrictDto);
+            return StatusCode(201, ApiResponse.Created("District created successfully", createdDistrict));
         }
 
         [HttpPost("batch")]
@@ -189,36 +77,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-            try
-            {
-                var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "District created successfully",
-                    collection = new { data = createdDistrict },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);
+            return StatusCode(201, ApiResponse.Created("District created successfully", createdDistrict));
         }
 
         // PUT: api/MstDistrict/{id}
@@ -227,205 +94,75 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstDistrictService.UpdateAsync(id, mstDistrictDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "District not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstDistrictService.UpdateAsync(id, mstDistrictDto);
+            return Ok(ApiResponse.Success("District updated successfully"));
         }
 
         // DELETE: api/MstDistrict/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstDistrictService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "District not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstDistrictService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("District deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
+            // Note: Validation model state for DataTablesRequest usually manual or handled by binder
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                   kvp => kvp.Key,
+                   kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+               );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstDistrictFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstDistrictService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Districts filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstDistrictFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstDistrictFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstDistrictService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Districts filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstDistrictService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstDistrict_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstDistrictService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstDistrict_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstDistrictService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstDistrict_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstDistrictService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstDistrict_Report.xlsx");
         }
 
-        //OPEN
+        //OPEN APIs (Assuming they need to stay Open/AllowAnonymous)
 
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var districts = await _mstDistrictService.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Districts retrieved successfully",
-                    collection = new { data = districts },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var districts = await _mstDistrictService.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Districts retrieved successfully", districts));
         }
 
         // GET: api/MstDistrict/{id}
@@ -433,37 +170,10 @@ namespace Web.API.Controllers.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
-            try
-            {
-                var district = await _mstDistrictService.GetByIdAsync(id);
-                if (district == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "District not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District retrieved successfully",
-                    collection = new { data = district },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var district = await _mstDistrictService.GetByIdAsync(id);
+            // Note: Service might generally not throw for GetById nullable rets, so manual check ok or move check to service
+            if (district == null) return NotFound(ApiResponse.NotFound("District not found"));
+            return Ok(ApiResponse.Success("District retrieved successfully", district));
         }
 
         // POST: api/MstDistrict
@@ -473,124 +183,48 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-
-            try
-            {
-                var createdDistrict = await _mstDistrictService.CreateAsync(mstDistrictDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "District created successfully",
-                    collection = new { data = createdDistrict },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdDistrict = await _mstDistrictService.CreateAsync(mstDistrictDto);
+            return StatusCode(201, ApiResponse.Created("District created successfully", createdDistrict));
         }
 
         [HttpPost("open/batch")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenCreate([FromBody] List<MstDistrictCreateDto> mstDistrictDto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-            try
-            {
-                var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "District created successfully",
-                    collection = new { data = createdDistrict },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdDistrict = await _mstDistrictService.CreateBatchAsync(mstDistrictDto);
+            return StatusCode(201, ApiResponse.Created("District created successfully", createdDistrict));
         }
 
         // PUT: api/MstDistrict/{id}
-        [AllowAnonymous]
+        [AllowAnonymous] // Assuming open needs to be open
         [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] MstDistrictUpdateDto mstDistrictDto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstDistrictService.UpdateAsync(id, mstDistrictDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "District not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstDistrictService.UpdateAsync(id, mstDistrictDto);
+            return Ok(ApiResponse.Success("District updated successfully"));
         }
 
         // DELETE: api/MstDistrict/{id}
@@ -598,86 +232,32 @@ namespace Web.API.Controllers.Controllers
         [HttpDelete("open/{id}")]
         public async Task<IActionResult> OpenDelete(Guid id)
         {
-            try
-            {
-                await _mstDistrictService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "District deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "District not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstDistrictService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("District deleted successfully"));
         }
 
         [AllowAnonymous]
-        [HttpPost("open/{filter}")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        [HttpPost("open/filter")] // Note: original code had this route. Keep as is? Usually filter is POST.
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstDistrictFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _mstDistrictService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Districts filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstDistrictFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstDistrictFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstDistrictService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Districts filtered successfully", result));
         }
     }
 }
