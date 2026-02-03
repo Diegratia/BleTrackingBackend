@@ -165,8 +165,28 @@ namespace Repositories.Repository
                 );
             }
 
-            if (filter.BuildingId.HasValue)
-                query = query.Where(x => x.BuildingId == filter.BuildingId.Value);
+            var buildingIds = new List<Guid>();
+            if (filter.BuildingId.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var raw = filter.BuildingId.GetString();
+                if (!string.IsNullOrWhiteSpace(raw) && Guid.TryParse(raw, out var singleId))
+                    buildingIds.Add(singleId);
+            }
+            else if (filter.BuildingId.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var el in filter.BuildingId.EnumerateArray())
+                {
+                    if (el.ValueKind != System.Text.Json.JsonValueKind.String)
+                        continue;
+                    var raw = el.GetString();
+                    if (string.IsNullOrWhiteSpace(raw))
+                        continue;
+                    if (Guid.TryParse(raw, out var parsed))
+                        buildingIds.Add(parsed);
+                }
+            }
+            if (buildingIds.Count > 0)
+                query = query.Where(x => buildingIds.Contains(x.BuildingId));
 
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
