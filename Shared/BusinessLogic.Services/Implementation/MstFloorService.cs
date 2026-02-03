@@ -26,6 +26,8 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
 using DataView;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -119,15 +121,15 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-        public async Task<MstFloorDto> GetByIdAsync(Guid id)
+        public async Task<MstFloorRead> GetByIdAsync(Guid id)
         {
             var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
                 throw new NotFoundException($"Floor with id {id} not found");
-            return _mapper.Map<MstFloorDto>(floor);
+            return floor;
         }
 
-            public async Task<IEnumerable<MstFloorDto>> GetAllAsync()
+            public async Task<IEnumerable<MstFloorRead>> GetAllAsync()
         {
             var cacheKey = Key("getall");
 
@@ -139,7 +141,7 @@ namespace BusinessLogic.Services.Implementation
                     if (cached != null)
                     {
                         _logger.LogInformation($"Cache hit: {cacheKey}");
-                        return JsonSerializer.Deserialize<IEnumerable<MstFloorDto>>(cached)!;
+                        return JsonSerializer.Deserialize<IEnumerable<MstFloorRead>>(cached)!;
                     }
                 }
                 catch
@@ -151,15 +153,13 @@ namespace BusinessLogic.Services.Implementation
             _logger.LogInformation($"Cache miss: {cacheKey}");
 
             var floors = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstFloorDto>>(floors);
-
             if (IsRedisAlive())
             {
                 try
                 {
                     await _cache.SetStringAsync(
                         cacheKey,
-                        JsonSerializer.Serialize(mapped),
+                        JsonSerializer.Serialize(floors),
                         new DistributedCacheEntryOptions
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
@@ -173,18 +173,18 @@ namespace BusinessLogic.Services.Implementation
                     cacheDisabled = true;
                 }
             }
-            return mapped;
+            return floors;
         }
 
 
-            public async Task<IEnumerable<OpenMstFloorDto>> OpenGetAllAsync()
+        public async Task<IEnumerable<MstFloorRead>> OpenGetAllAsync()
         {
             var floors = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstFloorDto>>(floors);
+            return floors;
         }
 
 
-        public async Task<MstFloorDto> CreateAsync(MstFloorCreateDto createDto)
+        public async Task<MstFloorRead> CreateAsync(MstFloorCreateDto createDto)
         {
             var floor = _mapper.Map<MstFloor>(createDto);
             if (!await _repository.BuildingExistsAsync(createDto.BuildingId))
@@ -222,27 +222,15 @@ namespace BusinessLogic.Services.Implementation
             );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            return _mapper.Map<MstFloorDto>(floor);
+            var result = await _repository.GetByIdAsync(floor.Id);
+            return result!;
         }
-
-        //   public async Task UpdateAsync(Guid id, MstDistrictUpdateDto updateDto)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-        //     var district = await _repository.GetByIdAsync(id);
-        //     if (district == null)
-        //         throw new KeyNotFoundException("District not found");
-        //     district.UpdatedAt = DateTime.UtcNow;
-        //     district.UpdatedBy = username;
-        //     _mapper.Map(updateDto, district);
-
-        //     await _repository.UpdateAsync(district);
-        // }
         
         
 
         public async Task UpdateAsync(Guid id, MstFloorUpdateDto updateDto)
         {
-            var floor = await _repository.GetByIdAsync(id);
+            var floor = await _repository.GetByIdEntityAsync(id);
             if (floor == null)
                 throw new NotFoundException($"Floor with id {id} not found");
 
@@ -330,7 +318,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var floor = await _repository.GetByIdAsync(id);
+            var floor = await _repository.GetByIdEntityAsync(id);
             if (floor == null)
                 throw new NotFoundException($"Floor with id {id} not found");
 
@@ -414,7 +402,7 @@ namespace BusinessLogic.Services.Implementation
             await _repository.SoftDeleteAsync(id);
         }
 
-        public async Task<IEnumerable<MstFloorDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstFloorRead>> ImportAsync(IFormFile file)
         {
             var floors = new List<MstFloor>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -458,31 +446,57 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(floor);
             }
 
-            return _mapper.Map<IEnumerable<MstFloorDto>>(floors);
+            return floors.Select(f => new MstFloorRead
+            {
+                Id = f.Id,
+                BuildingId = f.BuildingId,
+                Name = f.Name,
+                Status = f.Status ?? 0,
+                ApplicationId = f.ApplicationId,
+                CreatedBy = f.CreatedBy,
+                CreatedAt = f.CreatedAt,
+                UpdatedBy = f.UpdatedBy,
+                UpdatedAt = f.UpdatedAt
+            }).ToList();
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            MstFloorFilter filter
+        )
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "Building.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Status", "Building.Name"};
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<MstFloor, MstFloorDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
 
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
-            var floors = await _repository.GetAllAsync();
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            var floors = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>
             {
@@ -577,8 +591,6 @@ namespace BusinessLogic.Services.Implementation
 
             foreach (var floor in floors)
             {
-                await _repository.GetAllExportAsync();
-
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = floor.Building?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = floor.BuildingId.ToString();

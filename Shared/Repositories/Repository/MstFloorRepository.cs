@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Repositories.Repository;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -17,14 +20,22 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<MstFloor?> GetByIdAsync(Guid id)
+        public async Task<MstFloorRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllQueryable().Where(f => f.Id == id && f.Status != 0).FirstOrDefaultAsync();
+            var query = BaseEntityQuery().Where(f => f.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MstFloor>> GetAllAsync()
+        public async Task<MstFloor?> GetByIdEntityAsync(Guid id)
         {
-            return await GetAllQueryable().ToListAsync();
+            return await BaseEntityQuery()
+                .Where(f => f.Id == id && f.Status != 0)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<MstFloorRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
 
         public async Task<MstFloor> AddAsync(MstFloor floor)
@@ -92,6 +103,11 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
+        public IQueryable<MstFloor> BaseEntityQuery()
+        {
+            return GetAllQueryable();
+        }
+
         public async Task<MstBuilding?> GetBuildingByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
@@ -127,9 +143,71 @@ namespace Repositories.Repository
         }
 
 
-        public async Task<IEnumerable<MstFloor>> GetAllExportAsync()
+        public async Task<IEnumerable<MstFloorRead>> GetAllExportAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        public async Task<(List<MstFloorRead> Data, int Total, int Filtered)> FilterAsync(
+            MstFloorFilter filter
+        )
+        {
+            var query = BaseEntityQuery();
+
+            var total = await query.CountAsync();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(x =>
+                    x.Name.ToLower().Contains(search) ||
+                    x.Building.Name.ToLower().Contains(search)
+                );
+            }
+
+            if (filter.BuildingId.HasValue)
+                query = query.Where(x => x.BuildingId == filter.BuildingId.Value);
+
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+
+            if (filter.Status.HasValue)
+                query = query.Where(x => x.Status == filter.Status.Value);
+
+            var filtered = await query.CountAsync();
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+            return (data, total, filtered);
+        }
+
+        public IQueryable<MstFloorRead> ProjectToRead(IQueryable<MstFloor> query)
+        {
+            return query.AsNoTracking().Select(x => new MstFloorRead
+            {
+                Id = x.Id,
+                BuildingId = x.BuildingId,
+                Name = x.Name,
+                Status = x.Status ?? 0,
+                ApplicationId = x.ApplicationId,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedBy = x.UpdatedBy,
+                UpdatedAt = x.UpdatedAt,
+                Building = x.Building == null ? null : new MstBuildingRead
+                {
+                    Id = x.Building.Id,
+                    Name = x.Building.Name,
+                    Image = x.Building.Image,
+                    Status = x.Building.Status,
+                    ApplicationId = x.Building.ApplicationId
+                }
+            });
         }
     }
 }

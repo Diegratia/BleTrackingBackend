@@ -7,11 +7,15 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
+using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [MinLevel(LevelPriority.SuperAdmin)]
 
     public class MstFloorController : ControllerBase
     {
@@ -22,7 +26,6 @@ namespace Web.API.Controllers.Controllers
             _mstFloorService = mstFloorService;
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -30,7 +33,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floors retrieved successfully", floors));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -38,7 +40,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floor retrieved successfully", floor));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] MstFloorCreateDto mstFloorDto)
         {
@@ -55,7 +56,6 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Floor created successfully", createdFloor));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorUpdateDto mstFloorDto)
         {
@@ -72,7 +72,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floor updated successfully"));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -80,7 +79,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floor deleted successfully"));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -98,9 +96,8 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floors imported successfully", floors));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("filter")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -111,7 +108,14 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            var result = await _mstFloorService.FilterAsync(request);
+            var filter = new MstFloorFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<MstFloorFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstFloorFilter();
+            }
+
+            var result = await _mstFloorService.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Floors filtered successfully", result));
         }
 
@@ -195,7 +199,7 @@ namespace Web.API.Controllers.Controllers
         
         [AllowAnonymous]
         [HttpPost("open/filter")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -206,7 +210,14 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            var result = await _mstFloorService.FilterAsync(request);
+            var filter = new MstFloorFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<MstFloorFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstFloorFilter();
+            }
+
+            var result = await _mstFloorService.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Floors filtered successfully", result));
         }
 
