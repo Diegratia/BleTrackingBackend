@@ -28,7 +28,7 @@ public class EntityFilter
     public string? SortDir { get; set; }
     
     // Specific filters
-    public DateTime? DateFrom { get; set; }
+    public DateTimeOffset? DateFrom { get; set; }
     public int? Status { get; set; }
 }
 ```

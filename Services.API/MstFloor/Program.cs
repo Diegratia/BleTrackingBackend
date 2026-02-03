@@ -16,6 +16,7 @@ using StackExchange.Redis;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension.FileStorageService;
+using Data.ViewModels.Shared.ExceptionHelper;
 
 try
 {
@@ -102,7 +103,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = redisInstance;
 });
 builder.Services.AddHostedService<MqttRecoveryService>();
-builder.Services.AddHostedService<RedisRecoveryService>();
+// builder.Services.AddHostedService<RedisRecoveryService>();
 
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
@@ -304,6 +305,7 @@ if (app.Environment.IsDevelopment())
 // });
 
 app.UseCors("AllowAll");
+app.UseMiddleware<CustomExceptionMiddleware>();
 // // Buat direktori Uploads/FloorImages jika belum ada
 // var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Uploads/FloorImages");
 // Directory.CreateDirectory(uploadsPath);

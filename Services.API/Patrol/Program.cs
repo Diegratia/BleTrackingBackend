@@ -45,12 +45,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 
-            options.JsonSerializerOptions.Converters.Add(
-                new JsonStringEnumConverter()
-            );
-            options.JsonSerializerOptions.Converters.Add(
-                new UtcDateTimeConverter()
-            );
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+        options.JsonSerializerOptions.Converters.Add(
+            new UtcDateTimeConverter()
+        );
     });
 
 builder.Services.AddValidatorExtensions();  

@@ -25,6 +25,7 @@ using System.Text.Json;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
+using DataView;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -121,7 +122,9 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstFloorDto> GetByIdAsync(Guid id)
         {
             var floor = await _repository.GetByIdAsync(id);
-            return floor == null ? null : _mapper.Map<MstFloorDto>(floor);
+            if (floor == null)
+                throw new NotFoundException($"Floor with id {id} not found");
+            return _mapper.Map<MstFloorDto>(floor);
         }
 
             public async Task<IEnumerable<MstFloorDto>> GetAllAsync()
@@ -184,36 +187,23 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstFloorDto> CreateAsync(MstFloorCreateDto createDto)
         {
             var floor = _mapper.Map<MstFloor>(createDto);
+            if (!await _repository.BuildingExistsAsync(createDto.BuildingId))
+                throw new NotFoundException($"Building with id {createDto.BuildingId} not found");
 
-            // if (createDto.FloorImage != null && createDto.FloorImage.Length > 0)
-            // {
-            //     if (string.IsNullOrEmpty(createDto.FloorImage.ContentType) || !_allowedImageTypes.Contains(createDto.FloorImage.ContentType))
-            //         throw new ArgumentException("Only image files (jpg, png, jpeg) are allowed.");
+            var invalidBuildingId =
+                await _repository.CheckInvalidBuildingOwnershipAsync(createDto.BuildingId, AppId);
+            if (invalidBuildingId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"BuildingId does not belong to this Application: {string.Join(", ", invalidBuildingId)}"
+                );
+            }
 
-            //     if (createDto.FloorImage.Length > MaxFileSize)
-            //         throw new ArgumentException("File size exceeds 50 MB limit.");
-
-            //     var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "FloorImages");
-            //     Directory.CreateDirectory(uploadDir);
-
-            //     var fileExtension = Path.GetExtension(createDto.FloorImage.FileName)?.ToLower() ?? ".jpg";
-            //     var fileName = $"{Guid.NewGuid()}{fileExtension}";
-            //     var filePath = Path.Combine(uploadDir, fileName);
-
-            //     try
-            //     {
-            //         using (var stream = new FileStream(filePath, FileMode.Create))
-            //         {
-            //             await createDto.FloorImage.CopyToAsync(stream);
-            //         }
-            //     }
-            //     catch (IOException ex)
-            //     {
-            //         throw new IOException("Failed to save image file.", ex);
-            //     }
-
-            //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
-            // }
+            var building = await _repository.GetBuildingByIdAsync(createDto.BuildingId);
+            if (building == null)
+                throw new NotFoundException($"Building with id {createDto.BuildingId} not found");
+            floor.BuildingId = building.Id;
+            floor.ApplicationId = building.ApplicationId;
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.Id = Guid.NewGuid();
@@ -254,7 +244,27 @@ namespace BusinessLogic.Services.Implementation
         {
             var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
+                throw new NotFoundException($"Floor with id {id} not found");
+
+            if (updateDto.BuildingId.HasValue && updateDto.BuildingId.Value != floor.BuildingId)
+            {
+                if (!await _repository.BuildingExistsAsync(updateDto.BuildingId.Value))
+                    throw new NotFoundException($"Building with id {updateDto.BuildingId.Value} not found");
+
+                var invalidBuildingId =
+                    await _repository.CheckInvalidBuildingOwnershipAsync(updateDto.BuildingId.Value, AppId);
+                if (invalidBuildingId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"BuildingId does not belong to this Application: {string.Join(", ", invalidBuildingId)}"
+                    );
+                }
+
+                var building = await _repository.GetBuildingByIdAsync(updateDto.BuildingId.Value);
+                if (building == null)
+                    throw new NotFoundException($"Building with id {updateDto.BuildingId.Value} not found");
+                floor.BuildingId = building.Id;
+            }
 
             // if (updateDto.FloorImage != null && updateDto.FloorImage.Length > 0)
             // {
@@ -302,11 +312,10 @@ namespace BusinessLogic.Services.Implementation
             //     floor.FloorImage = $"/Uploads/FloorImages/{fileName}";
             // }
 
+            _mapper.Map(updateDto, floor);
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             floor.UpdatedBy = username;
             floor.UpdatedAt = DateTime.UtcNow;
-
-            _mapper.Map(updateDto, floor);
             await _repository.UpdateAsync(floor);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
@@ -323,7 +332,7 @@ namespace BusinessLogic.Services.Implementation
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
+                throw new NotFoundException($"Floor with id {id} not found");
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {
@@ -388,12 +397,12 @@ namespace BusinessLogic.Services.Implementation
 
             // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
 
-            public async Task CascadeDeleteAsync(Guid id)
+        public async Task CascadeDeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floor = await _repository.GetByIdAsync(id);
             if (floor == null)
-                throw new KeyNotFoundException("Floor not found");
+                throw new NotFoundException($"Floor with id {id} not found");
             var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
             foreach (var floorplan in floorplans)
             {
@@ -432,6 +441,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     BuildingId = buildingId,
                     Name = row.Cell(2).GetValue<string>(),
+                    ApplicationId = building.ApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,

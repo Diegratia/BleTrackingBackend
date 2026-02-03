@@ -102,6 +102,23 @@ namespace Repositories.Repository
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
+        public async Task<bool> BuildingExistsAsync(Guid buildingId)
+        {
+            return await _context.MstBuildings
+                .AnyAsync(b => b.Id == buildingId && b.Status != 0);
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
+            Guid buildingId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstBuilding>(
+                new[] { buildingId },
+                applicationId
+            );
+        }
+
              public async Task<List<MstFloor>> GetByBuildingIdAsync(Guid buildingId)
         {
               return await _context.MstFloors
