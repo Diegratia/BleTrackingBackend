@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using System.Text.Json;
 
 namespace Repositories.Repository
 {
@@ -51,14 +55,20 @@ namespace Repositories.Repository
             return await q.CountAsync();
         }
 
-        public async Task<FloorplanMaskedArea?> GetByIdAsync(Guid id)
+        public async Task<FloorplanMaskedAreaRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllQueryable().Where(a => a.Id == id && a.Status != 0).FirstOrDefaultAsync();
+            var query = BaseEntityQuery().Where(a => a.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<FloorplanMaskedArea>> GetAllAsync()
+        public async Task<FloorplanMaskedArea?> GetByIdEntityAsync(Guid id)
         {
-            return await GetAllQueryable().AsNoTracking().ToListAsync();
+            return await BaseEntityQuery().Where(a => a.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<FloorplanMaskedAreaRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
 
         public async Task<FloorplanMaskedArea> AddAsync(FloorplanMaskedArea area)
@@ -108,6 +118,11 @@ namespace Repositories.Repository
                 throw new KeyNotFoundException("Area not found");
 
             await _context.SaveChangesAsync();
+        }
+
+        private IQueryable<FloorplanMaskedArea> BaseEntityQuery()
+        {
+            return GetAllQueryable();
         }
 
         public IQueryable<FloorplanMaskedArea> GetAllQueryable()
@@ -199,6 +214,141 @@ namespace Repositories.Repository
                 .Select(m => m.Id)
                 .Distinct()
                 .ToListAsync();
+        }
+
+        public IQueryable<FloorplanMaskedAreaRead> ProjectToRead(IQueryable<FloorplanMaskedArea> query)
+        {
+            return query.AsNoTracking().Select(x => new FloorplanMaskedAreaRead
+            {
+                Id = x.Id,
+                FloorplanId = x.FloorplanId,
+                FloorId = x.FloorId,
+                Name = x.Name,
+                AreaShape = x.AreaShape,
+                ColorArea = x.ColorArea,
+                RestrictedStatus = x.RestrictedStatus.ToString(),
+                AllowFloorChange = x.AllowFloorChange,
+                Status = x.Status,
+                ApplicationId = x.ApplicationId,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedBy = x.UpdatedBy,
+                UpdatedAt = x.UpdatedAt,
+                Floor = x.Floor == null ? null : new MstFloorRead
+                {
+                    Id = x.Floor.Id,
+                    BuildingId = x.Floor.BuildingId,
+                    Name = x.Floor.Name,
+                    Status = x.Floor.Status ?? 0,
+                    ApplicationId = x.Floor.ApplicationId,
+                    CreatedBy = x.Floor.CreatedBy,
+                    CreatedAt = x.Floor.CreatedAt,
+                    UpdatedBy = x.Floor.UpdatedBy,
+                    UpdatedAt = x.Floor.UpdatedAt
+                },
+                Floorplan = x.Floorplan == null ? null : new MstFloorplanRead
+                {
+                    Id = x.Floorplan.Id,
+                    Name = x.Floorplan.Name,
+                    FloorId = x.Floorplan.FloorId,
+                    FloorplanImage = x.Floorplan.FloorplanImage,
+                    PixelX = x.Floorplan.PixelX,
+                    PixelY = x.Floorplan.PixelY,
+                    FloorX = x.Floorplan.FloorX,
+                    FloorY = x.Floorplan.FloorY,
+                    MeterPerPx = x.Floorplan.MeterPerPx,
+                    EngineId = x.Floorplan.EngineId,
+                    Status = x.Floorplan.Status ?? 0,
+                    ApplicationId = x.Floorplan.ApplicationId,
+                    CreatedBy = x.Floorplan.CreatedBy,
+                    CreatedAt = x.Floorplan.CreatedAt,
+                    UpdatedBy = x.Floorplan.UpdatedBy,
+                    UpdatedAt = x.Floorplan.UpdatedAt
+                }
+            });
+        }
+
+        public async Task<(List<FloorplanMaskedAreaRead> Data, int Total, int Filtered)> FilterAsync(
+            FloorplanMaskedAreaFilter filter
+        )
+        {
+            var query = BaseEntityQuery();
+
+            var total = await query.CountAsync();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(x =>
+                    x.Name.ToLower().Contains(search) ||
+                    x.Floor.Name.ToLower().Contains(search) ||
+                    x.Floorplan.Name.ToLower().Contains(search)
+                );
+            }
+
+            var floorIds = ExtractIds(filter.FloorId);
+            if (floorIds.Count > 0)
+                query = query.Where(x => floorIds.Contains(x.FloorId));
+
+            var floorplanIds = ExtractIds(filter.FloorplanId);
+            if (floorplanIds.Count > 0)
+                query = query.Where(x => floorplanIds.Contains(x.FloorplanId));
+
+            if (!string.IsNullOrWhiteSpace(filter.RestrictedStatus))
+            {
+                if (Enum.TryParse<RestrictedStatus>(filter.RestrictedStatus, true, out var restricted))
+                    query = query.Where(x => x.RestrictedStatus == restricted);
+                else if (int.TryParse(filter.RestrictedStatus, out var restrictedInt))
+                    query = query.Where(x => (int)x.RestrictedStatus == restrictedInt);
+            }
+
+            if (filter.AllowFloorChange.HasValue)
+                query = query.Where(x => x.AllowFloorChange == filter.AllowFloorChange.Value);
+
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+
+            if (filter.Status.HasValue)
+                query = query.Where(x => x.Status == filter.Status.Value);
+
+            var filtered = await query.CountAsync();
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        private static List<Guid> ExtractIds(JsonElement element)
+        {
+            var ids = new List<Guid>();
+
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                var raw = element.GetString();
+                if (!string.IsNullOrWhiteSpace(raw) && Guid.TryParse(raw, out var singleId))
+                    ids.Add(singleId);
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in element.EnumerateArray())
+                {
+                    if (el.ValueKind != JsonValueKind.String)
+                        continue;
+                    var raw = el.GetString();
+                    if (string.IsNullOrWhiteSpace(raw))
+                        continue;
+                    if (Guid.TryParse(raw, out var parsed))
+                        ids.Add(parsed);
+                }
+            }
+
+            return ids;
         }
 
     

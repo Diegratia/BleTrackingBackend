@@ -1,612 +1,201 @@
 using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Interface;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class FloorplanMaskedAreaController : ControllerBase
     {
         private readonly IFloorplanMaskedAreaService _service;
 
-        public FloorplanMaskedAreaController(IFloorplanMaskedAreaService FloorplanMaskedAreaService)
+        public FloorplanMaskedAreaController(IFloorplanMaskedAreaService service)
         {
-            _service = FloorplanMaskedAreaService;
+            _service = service;
         }
-        // GET: api/FloorplanMaskedArea
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var areas = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Areas retrieved successfully",
-                    collection = new { data = areas },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var areas = await _service.GetAllAsync();
+            return Ok(ApiResponse.Success("Areas retrieved successfully", areas));
         }
 
-        // GET: api/FloorplanMaskedArea/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var area = await _service.GetByIdAsync(id);
-                if (area == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Area not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area retrieved successfully",
-                    collection = new { data = area },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var area = await _service.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Area retrieved successfully", area));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // POST: api/FloorplanMaskedArea
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] FloorplanMaskedAreaCreateDto FloorplanMaskedAreaDto)
+        public async Task<IActionResult> Create([FromBody] FloorplanMaskedAreaCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdArea = await _service.CreateAsync(FloorplanMaskedAreaDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Area created successfully",
-                    collection = new { data = createdArea },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdArea = await _service.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Area created successfully", createdArea));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // PUT: api/FloorplanMaskedArea/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Area not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Area updated successfully"));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // DELETE: api/FloorplanMaskedArea/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _service.SoftDeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Area not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.SoftDeleteAsync(id);
+            return Ok(ApiResponse.Success("Area deleted successfully"));
         }
 
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // [HttpPost("import")]
-        // public async Task<IActionResult> Import([FromForm] IFormFile file)
-        // {
-        //     if (file == null || file.Length == 0)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "No file uploaded or file is empty",
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Only .xlsx files are allowed",
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var maskedAreas = await _service.ImportAsync(file);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Masked Area imported successfully",
-        //             collection = new { data = maskedAreas },
-        //             code = 200
-        //         });
-        //     }
-        //     catch (ArgumentException ex)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new FloorplanMaskedAreaFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan Masked Area filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<FloorplanMaskedAreaFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new FloorplanMaskedAreaFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _service.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Floorplan masked areas filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _service.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "FloorplanMaskedArea_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _service.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "FloorplanMaskedArea_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _service.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "FloorplanMaskedArea_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _service.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "FloorplanMaskedArea_Report.xlsx");
         }
 
-        //OPEN
+        // OPEN
 
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var areas = await _service.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Areas retrieved successfully",
-                    collection = new { data = areas },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var areas = await _service.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Areas retrieved successfully", areas));
         }
 
-        [AllowAnonymous]
-        // POST: api/FloorplanMaskedArea
-        [HttpPost("open")]
-        public async Task<IActionResult> OpenCreate([FromBody] FloorplanMaskedAreaCreateDto FloorplanMaskedAreaDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdArea = await _service.CreateAsync(FloorplanMaskedAreaDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Area created successfully",
-                    collection = new { data = createdArea },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-        [HttpPost("open/{filter}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan Masked Area filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
-
-        // GET: api/FloorplanMaskedArea/{id}
         [HttpGet("open/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
-            try
-            {
-                var area = await _service.GetByIdAsync(id);
-                if (area == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Area not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area retrieved successfully",
-                    collection = new { data = area },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var area = await _service.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Area retrieved successfully", area));
         }
 
-
+        [HttpPost("open")]
         [AllowAnonymous]
-        // PUT: api/FloorplanMaskedArea/{id}
-        [HttpPut("open/{id}")]
-        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto FloorplanMaskedAreaDto)
+        public async Task<IActionResult> OpenCreate([FromBody] FloorplanMaskedAreaCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, FloorplanMaskedAreaDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Area updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Area not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdArea = await _service.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Area created successfully", createdArea));
         }
 
-        // [AllowAnonymous]
-        // // DELETE: api/FloorplanMaskedArea/{id}
-        // [HttpDelete("open/{id}")]
-        // public async Task<IActionResult> OpenDelete(Guid id)
-        // {
-        //     try
-        //     {
-        //         await _service.DeleteAsync(id);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Area deleted successfully",
-        //             collection = new { data = (object)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (KeyNotFoundException)
-        //     {
-        //         return NotFound(new
-        //         {
-        //             success = false,
-        //             msg = "Area not found",
-        //             collection = new { data = (object)null },
-        //             code = 404
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+        [HttpPut("open/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+
+            await _service.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Area updated successfully"));
+        }
+
+        [HttpPost("open/filter")]
+        [AllowAnonymous]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+
+            var filter = new FloorplanMaskedAreaFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<FloorplanMaskedAreaFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new FloorplanMaskedAreaFilter();
+            }
+
+            var result = await _service.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Floorplan masked areas filtered successfully", result));
+        }
     }
 }

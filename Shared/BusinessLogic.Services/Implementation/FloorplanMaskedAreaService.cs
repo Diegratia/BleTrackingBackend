@@ -12,13 +12,15 @@ using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Helpers.Consumer.Mqtt;
 using System.IO;
+using DataView;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -112,13 +114,15 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // GET BY ID
         // ============================================================
-        public async Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id)
+        public async Task<FloorplanMaskedAreaRead> GetByIdAsync(Guid id)
         {
             var area = await _repository.GetByIdAsync(id);
-            return area == null ? null : _mapper.Map<FloorplanMaskedAreaDto>(area);
+            if (area == null)
+                throw new NotFoundException($"Masked Area with id {id} not found");
+            return area;
         }
 
-        public async Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync()
+        public async Task<IEnumerable<FloorplanMaskedAreaRead>> GetAllAsync()
         {
             var cacheKey = Key("getall");
 
@@ -130,7 +134,7 @@ namespace BusinessLogic.Services.Implementation
                     if (cached != null)
                     {
                         _logger.LogInformation($"Cache hit: {cacheKey}");
-                        return JsonSerializer.Deserialize<IEnumerable<FloorplanMaskedAreaDto>>(cached)!;
+                        return JsonSerializer.Deserialize<IEnumerable<FloorplanMaskedAreaRead>>(cached)!;
                     }
                 }
                 catch
@@ -143,7 +147,6 @@ namespace BusinessLogic.Services.Implementation
             _logger.LogInformation($"Cache miss: {cacheKey}");
 
             var data = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<FloorplanMaskedAreaDto>>(data);
 
             if (IsRedisAlive())
             {
@@ -151,7 +154,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     await _cache.SetStringAsync(
                         cacheKey,
-                        JsonSerializer.Serialize(mapped),
+                        JsonSerializer.Serialize(data),
                         new DistributedCacheEntryOptions
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
@@ -166,12 +169,12 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            return mapped;
+            return data;
         }
 
         public async Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync()
         {
-            var areas = await _repository.GetAllAsync();
+            var areas = await _repository.GetAllExportAsync();
             return _mapper.Map<IEnumerable<OpenFloorplanMaskedAreaDto>>(areas);
         }
 
@@ -179,11 +182,11 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // CREATE
         // ============================================================
-        public async Task<FloorplanMaskedAreaDto> CreateAsync(FloorplanMaskedAreaCreateDto createDto)
+        public async Task<FloorplanMaskedAreaRead> CreateAsync(FloorplanMaskedAreaCreateDto createDto)
         {
             var floor = await _repository.GetFloorByIdAsync(createDto.FloorId);
             if (floor == null)
-                throw new ArgumentException($"Floor with ID {createDto.FloorId} not found.");
+                throw new NotFoundException($"Floor with ID {createDto.FloorId} not found.");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -206,7 +209,8 @@ namespace BusinessLogic.Services.Implementation
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
 
-            return _mapper.Map<FloorplanMaskedAreaDto>(area);
+            var result = await _repository.GetByIdAsync(area.Id);
+            return result!;
         }
 
 
@@ -217,11 +221,11 @@ namespace BusinessLogic.Services.Implementation
         {
             var floor = await _repository.GetFloorByIdAsync(updateDto.FloorId);
             if (floor == null)
-                throw new ArgumentException($"Floor with ID {updateDto.FloorId} not found.");
+                throw new NotFoundException($"Floor with ID {updateDto.FloorId} not found.");
 
-            var area = await _repository.GetByIdAsync(id);
+            var area = await _repository.GetByIdEntityAsync(id);
             if (area == null)
-                throw new KeyNotFoundException("Area not found");
+                throw new NotFoundException($"Masked Area with id {id} not found");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -269,9 +273,9 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            var area = await _repository.GetByIdAsync(id);
+            var area = await _repository.GetByIdEntityAsync(id);
             if (area == null)
-                throw new KeyNotFoundException("Area not found");
+                throw new NotFoundException($"Masked Area with id {id} not found");
 
             List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
 
@@ -361,7 +365,7 @@ namespace BusinessLogic.Services.Implementation
     // ============================================================
     public async Task CascadeDeleteAsync(Guid id, string username)
     {
-        var area = await _repository.GetByIdAsync(id);
+        var area = await _repository.GetByIdEntityAsync(id);
         if (area == null) return;
 
         area.Status = 0;
@@ -386,21 +390,35 @@ namespace BusinessLogic.Services.Implementation
         // ============================================================
         // FILTER DATATABLE
         // ============================================================
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            FloorplanMaskedAreaFilter filter
+        )
         {
-            var query = _repository.GetAllQueryable().AsNoTracking();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "Floor.Name", "Floorplan.Name" };
-            var validSortColumns = new[] { "Name", "Floor.Name", "Floorplan.Name", "CreatedAt", "UpdatedAt", "RestrictedStatus", "Status" };
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<FloorplanMaskedArea, FloorplanMaskedAreaDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns
-            );
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
 

@@ -4,20 +4,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IFloorplanMaskedAreaService
     {
-        Task<FloorplanMaskedAreaDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<FloorplanMaskedAreaDto>> GetAllAsync();
+        Task<FloorplanMaskedAreaRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<FloorplanMaskedAreaRead>> GetAllAsync();
         Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync();
-        Task<FloorplanMaskedAreaDto> CreateAsync(FloorplanMaskedAreaCreateDto createDto);
+        Task<FloorplanMaskedAreaRead> CreateAsync(FloorplanMaskedAreaCreateDto createDto);
         Task UpdateAsync(Guid id, FloorplanMaskedAreaUpdateDto updateDto);
         // Task DeleteAsync(Guid id);
         Task SoftDeleteAsync(Guid id);
         // Task<IEnumerable<FloorplanMaskedAreaDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, FloorplanMaskedAreaFilter filter);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task RemoveGroupAsync();
