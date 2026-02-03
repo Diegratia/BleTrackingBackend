@@ -29,14 +29,13 @@ namespace BusinessLogic.Services.Extension
 
             // Mapping dari Update DTO ke Domain
             CreateMap<MstBuildingUpdateDto, MstBuilding>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null))
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Generate, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
-                .ForMember(dest => dest.Image, opt => opt.Ignore());
-                // .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.Image, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }
