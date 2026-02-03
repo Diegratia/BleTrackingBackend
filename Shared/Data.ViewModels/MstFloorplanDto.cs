@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 
@@ -74,18 +72,18 @@ namespace Data.ViewModels
     public class MstFloorplanUpdateDto
     {
         public string? Name { get; set; }
-        public Guid FloorId { get; set; }
+        public Guid? FloorId { get; set; }
         public IFormFile? FloorplanImage { get; set; }
 
-        public float PixelX { get; set; }
+        public float? PixelX { get; set; }
 
-        public float PixelY { get; set; }
+        public float? PixelY { get; set; }
 
-        public float FloorX { get; set; }
+        public float? FloorX { get; set; }
 
-        public float FloorY { get; set; }
+        public float? FloorY { get; set; }
 
-        public float MeterPerPx { get; set; }
+        public float? MeterPerPx { get; set; }
         public Guid? EngineId { get; set; }
 
         // public Guid ApplicationId { get; set; }

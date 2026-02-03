@@ -345,46 +345,6 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
-    // }
-    //     public async Task DeleteAsync(Guid id)
-    // {
-    //     var username = _httpContextAccessor.HttpContext?.User
-    //         .FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            //     var floor = await _repository.GetByIdAsync(id);
-            //     if (floor == null)
-            //         throw new KeyNotFoundException("Floor not found");
-
-            //     await _repository.ExecuteInTransactionAsync(async () =>
-            //     {
-            //         var floorplans = await _floorplanRepository.GetByFloorIdAsync(id);
-            //         foreach (var fp in floorplans)
-            //         {
-            //             await _floorplanService.CascadeDeleteAsync(fp.Id); 
-            //         }
-
-            //         floor.Status = 0;
-            //         floor.UpdatedBy = username;
-            //         floor.UpdatedAt = DateTime.UtcNow;
-
-            //         await _repository.SoftDeleteAsync(id);
-            //     });
-
-            //         // 🔥 SATU-SATUNYA AUDIT
-            //         await _audit.Deleted(
-            //             "Floor Area",
-            //             floor.Id,
-            //             "Deleted floor",
-            //             new { floor.Name }
-            //         );
-            //         await RemoveGroupAsync();
-            //         await _floorplanService.RemoveGroupAsync();
-            //         await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            // }
-
-
-            // 🔥 METHOD BARU, KHUSUS INTERNAL CASCADE
-
         public async Task CascadeDeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";

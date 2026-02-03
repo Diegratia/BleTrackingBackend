@@ -139,7 +139,7 @@ namespace Web.API.Controllers.Controllers
 
         //OPEN
 
-         [AllowAnonymous]
+        [AllowAnonymous]
         [HttpGet("open")]
         public async Task<IActionResult> OpenGetAll()
         {

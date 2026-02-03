@@ -1,617 +1,247 @@
 using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Interface;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class MstFloorplanController : ControllerBase
     {
-        private readonly IMstFloorplanService _service;
+        private readonly IMstFloorplanService _mstFloorplanService;
 
-        public MstFloorplanController(IMstFloorplanService service)
+        public MstFloorplanController(IMstFloorplanService mstFloorplanService)
         {
-            _service = service;
+            _mstFloorplanService = mstFloorplanService;
         }
 
-        // GET: api/MstFloorplan
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var floorplans = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplans retrieved successfully",
-                    collection = new { data = floorplans },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floorplans = await _mstFloorplanService.GetAllAsync();
+            return Ok(ApiResponse.Success("Floorplans retrieved successfully", floorplans));
         }
 
-        // GET: api/MstFloorplan/{id}
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var floorplan = await _service.GetByIdAsync(id);
-                if (floorplan == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Floorplan not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan retrieved successfully",
-                    collection = new { data = floorplan },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floorplan = await _mstFloorplanService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Floorplan retrieved successfully", floorplan));
         }
 
-        // POST: api/MstFloorplan
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstFloorplanCreateDto dto)
         {
             if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+                if (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0)
                 {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                    errors["FloorplanImage"] = new[] { "File is empty" };
+                }
+
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdFloorplan = await _service.CreateAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Floorplan created successfully",
-                    collection = new { data = createdFloorplan },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var created = await _mstFloorplanService.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Floorplan created successfully", created));
         }
 
-        // PUT: api/MstFloorplan/{id}
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorplanUpdateDto dto)
         {
-           if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
+            if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+                if (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0)
                 {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                    errors["FloorplanImage"] = new[] { "File is empty" };
+                }
+
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Floorplan not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstFloorplanService.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Floorplan updated successfully"));
         }
 
-        // DELETE: api/MstFloorplan/{id}
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Floorplan not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstFloorplanService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Floorplan deleted successfully"));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstFloorplanFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floors filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstFloorplanFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstFloorplanFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstFloorplanService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Floorplans filtered successfully", result));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("No file uploaded or file is empty"));
             }
 
             if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Only .xlsx files are allowed"));
             }
 
-            try
-            {
-                var floorplans = await _service.ImportAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplans imported successfully",
-                    collection = new { data = floorplans },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floorplans = await _mstFloorplanService.ImportAsync(file);
+            return Ok(ApiResponse.Success("Floorplans imported successfully", floorplans));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _service.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstFloorplan_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstFloorplanService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstFloorplan_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _service.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstFloorplan_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstFloorplanService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstFloorplan_Report.xlsx");
         }
 
-        //OPEN
+        // OPEN
 
-          // GET: api/MstFloorplan
         [AllowAnonymous]
         [HttpGet("open")]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var floorplans = await _service.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplans retrieved successfully",
-                    collection = new { data = floorplans },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floorplans = await _mstFloorplanService.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Floorplans retrieved successfully", floorplans));
         }
-        
-            [AllowAnonymous]
+
+        [AllowAnonymous]
         [HttpGet("open/{id}")]
         public async Task<IActionResult> OpenGetById(Guid id)
         {
-            try
-            {
-                var floorplan = await _service.GetByIdAsync(id);
-                if (floorplan == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Floorplan not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan retrieved successfully",
-                    collection = new { data = floorplan },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var floorplan = await _mstFloorplanService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Floorplan retrieved successfully", floorplan));
         }
 
-        // POST: api/MstFloorplan
         [AllowAnonymous]
         [HttpPost("open")]
         public async Task<IActionResult> OpenCreate([FromForm] MstFloorplanCreateDto dto)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+                if (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0)
                 {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                    errors["FloorplanImage"] = new[] { "File is empty" };
+                }
+
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdFloorplan = await _service.CreateAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Floorplan created successfully",
-                    collection = new { data = createdFloorplan },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var created = await _mstFloorplanService.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Floorplan created successfully", created));
         }
 
-        // PUT: api/MstFloorplan/{id}
         [AllowAnonymous]
         [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromForm] MstFloorplanUpdateDto dto)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+                if (dto.FloorplanImage != null && dto.FloorplanImage.Length == 0)
                 {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                    errors["FloorplanImage"] = new[] { "File is empty" };
+                }
+
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Floorplan not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstFloorplanService.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Floorplan updated successfully"));
         }
 
-        // DELETE: api/MstFloorplan/{id}
         [AllowAnonymous]
         [HttpDelete("open/{id}")]
         public async Task<IActionResult> OpenDelete(Guid id)
         {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floorplan deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Floorplan not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstFloorplanService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Floorplan deleted successfully"));
         }
 
         [AllowAnonymous]
-        [HttpPost("open/{filter}")]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        [HttpPost("open/filter")]
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new MstFloorplanFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Floors filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<MstFloorplanFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstFloorplanFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _mstFloorplanService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Floorplans filtered successfully", result));
         }
-        
     }
 }

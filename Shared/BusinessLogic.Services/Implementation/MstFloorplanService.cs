@@ -24,6 +24,8 @@ using System.Text.Json;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
+using Shared.Contracts.Read;
+using DataView;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -147,13 +149,15 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
-        public async Task<MstFloorplanDto> GetByIdAsync(Guid id)
+        public async Task<MstFloorplanRead> GetByIdAsync(Guid id)
         {
             var floorplan = await _repository.GetByIdAsync(id);
-            return floorplan == null ? null : _mapper.Map<MstFloorplanDto>(floorplan);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with id {id} not found");
+            return floorplan;
         }
 
-        public async Task<IEnumerable<MstFloorplanDto>> GetAllAsync()
+        public async Task<IEnumerable<MstFloorplanRead>> GetAllAsync()
         {
             var cacheKey = Key("getall");
 
@@ -165,7 +169,7 @@ namespace BusinessLogic.Services.Implementation
                     if (cached != null)
                     {
                         _logger.LogInformation($"Cache hit: {cacheKey}");
-                        return JsonSerializer.Deserialize<IEnumerable<MstFloorplanDto>>(cached)!;
+                        return JsonSerializer.Deserialize<IEnumerable<MstFloorplanRead>>(cached)!;
                     }
                 }
                 catch
@@ -177,7 +181,6 @@ namespace BusinessLogic.Services.Implementation
             _logger.LogInformation($"Cache miss: {cacheKey}");
 
             var floors = await _repository.GetAllAsync();
-            var mapped = _mapper.Map<IEnumerable<MstFloorplanDto>>(floors);
 
             if (IsRedisAlive())
             {
@@ -185,7 +188,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     await _cache.SetStringAsync(
                         cacheKey,
-                        JsonSerializer.Serialize(mapped),
+                        JsonSerializer.Serialize(floors),
                         new DistributedCacheEntryOptions
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
@@ -199,18 +202,36 @@ namespace BusinessLogic.Services.Implementation
                     cacheDisabled = true;
                 }
             }
-            return mapped;
+            return floors;
         }
-                public async Task<IEnumerable<OpenMstFloorplanDto>> OpenGetAllAsync()
+                public async Task<IEnumerable<MstFloorplanRead>> OpenGetAllAsync()
         {
             var floorplans = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OpenMstFloorplanDto>>(floorplans);
+            return floorplans;
         }
 
-        public async Task<MstFloorplanDto> CreateAsync(MstFloorplanCreateDto createDto)
+        public async Task<MstFloorplanRead> CreateAsync(MstFloorplanCreateDto createDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var floorplan = _mapper.Map<MstFloorplan>(createDto);
+
+            if (!await _repository.FloorExistsAsync(createDto.FloorId))
+                throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
+
+            var invalidFloorId =
+                await _repository.CheckInvalidFloorOwnershipAsync(createDto.FloorId, AppId);
+            if (invalidFloorId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}"
+                );
+            }
+
+            var floor = await _repository.GetFloorByIdAsync(createDto.FloorId);
+            if (floor == null)
+                throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
+            floorplan.FloorId = floor.Id;
+            floorplan.ApplicationId = floor.ApplicationId;
 
             if (createDto.FloorplanImage != null)
             {
@@ -234,15 +255,36 @@ namespace BusinessLogic.Services.Implementation
                 "Created floorplan",
                 new { createdFloorplan.Name }
             );
-            return _mapper.Map<MstFloorplanDto>(createdFloorplan);
+            var result = await _repository.GetByIdAsync(createdFloorplan.Id);
+            return result!;
         }
 
         public async Task UpdateAsync(Guid id, MstFloorplanUpdateDto updateDto)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var floorplan = await _repository.GetByIdAsync(id);
+            var floorplan = await _repository.GetByIdEntityAsync(id);
             if (floorplan == null)
-                throw new KeyNotFoundException("Floorplan not found");
+                throw new NotFoundException($"Floorplan with id {id} not found");
+
+            if (updateDto.FloorId.HasValue && updateDto.FloorId.Value != floorplan.FloorId)
+            {
+                if (!await _repository.FloorExistsAsync(updateDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+
+                var invalidFloorId =
+                    await _repository.CheckInvalidFloorOwnershipAsync(updateDto.FloorId.Value, AppId);
+                if (invalidFloorId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}"
+                    );
+                }
+
+                var floor = await _repository.GetFloorByIdAsync(updateDto.FloorId.Value);
+                if (floor == null)
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+                floorplan.FloorId = floor.Id;
+            }
 
             if (updateDto.FloorplanImage != null)
             {
@@ -270,9 +312,9 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var floorplan = await _repository.GetByIdAsync(id);
+            var floorplan = await _repository.GetByIdEntityAsync(id);
             if (floorplan == null)
-                throw new KeyNotFoundException("Floorplan not found");
+                throw new NotFoundException($"Floorplan with id {id} not found");
 
             await _repository.ExecuteInTransactionAsync(async () =>
         {
@@ -346,7 +388,7 @@ namespace BusinessLogic.Services.Implementation
                 _httpContextAccessor.HttpContext?.User
                     .FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-            var floorplan = await _repository.GetByIdAsync(id);
+            var floorplan = await _repository.GetByIdEntityAsync(id);
             if (floorplan == null) return;
 
             // ==== CHILD ENTITIES (NO SERVICE DeleteAsync) ====
@@ -419,25 +461,38 @@ namespace BusinessLogic.Services.Implementation
         }
 
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            MstFloorplanFilter filter
+        )
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
-            var enumColumns = new Dictionary<string, Type> { { "Status", typeof(int) } };
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
-        public async Task<IEnumerable<MstFloorplanDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<MstFloorplanRead>> ImportAsync(IFormFile file)
         {
             var floorplans = new List<MstFloorplan>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
@@ -468,7 +523,7 @@ namespace BusinessLogic.Services.Implementation
                     Id = Guid.NewGuid(),
                     Name = name,
                     FloorId = floorId,
-                    ApplicationId = Guid.Parse(userApplicationId),
+                    ApplicationId = floor.ApplicationId,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = username,
@@ -485,14 +540,31 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(floorplan);
             }
 
-            return _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
+            return floorplans.Select(fp => new MstFloorplanRead
+            {
+                Id = fp.Id,
+                Name = fp.Name,
+                FloorId = fp.FloorId,
+                FloorplanImage = fp.FloorplanImage,
+                PixelX = fp.PixelX,
+                PixelY = fp.PixelY,
+                FloorX = fp.FloorX,
+                FloorY = fp.FloorY,
+                MeterPerPx = fp.MeterPerPx,
+                EngineId = fp.EngineId,
+                Status = fp.Status ?? 0,
+                ApplicationId = fp.ApplicationId,
+                CreatedBy = fp.CreatedBy,
+                CreatedAt = fp.CreatedAt,
+                UpdatedBy = fp.UpdatedBy,
+                UpdatedAt = fp.UpdatedAt
+            }).ToList();
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var floorplans = await _repository.GetAllExportAsync();
-            var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 
             var document = Document.Create(container =>
             {
@@ -530,10 +602,10 @@ namespace BusinessLogic.Services.Implementation
                         });
 
                         int index = 1;
-                        foreach (var dto in dtos)
+                        foreach (var dto in floorplans)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(dto.Floor.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(dto.Floor?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(dto.Name);
                             table.Cell().Element(CellStyle).Text(dto.MaskedAreaCount.ToString());
                             table.Cell().Element(CellStyle).Text(dto.CreatedAt.ToString("yyyy-MM-dd"));
@@ -564,7 +636,6 @@ namespace BusinessLogic.Services.Implementation
         public async Task<byte[]> ExportExcelAsync()
         {
             var floorplans = await _repository.GetAllExportAsync();
-            var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Floorplans");
@@ -580,10 +651,10 @@ namespace BusinessLogic.Services.Implementation
             int row = 2;
             int no = 1;
 
-            foreach (var dto in dtos)
+            foreach (var dto in floorplans)
             {
                 worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = dto.Floor.Name ?? "-";
+                worksheet.Cell(row, 2).Value = dto.Floor?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = dto.Name;
                 worksheet.Cell(row, 4).Value = dto.MaskedAreaCount;
                 worksheet.Cell(row, 5).Value = dto.CreatedBy;

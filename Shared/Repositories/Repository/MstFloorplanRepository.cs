@@ -6,6 +6,9 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -16,14 +19,22 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<MstFloorplan> GetByIdAsync(Guid id)
+        public async Task<MstFloorplanRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllQueryable().Where(fp => fp.Id == id && fp.Status != 0).FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Floorplan not found");
+            var query = BaseEntityQuery().Where(fp => fp.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MstFloorplan>> GetAllAsync()
+        public async Task<MstFloorplan?> GetByIdEntityAsync(Guid id)
         {
-            return await GetAllQueryable().ToListAsync();
+            return await BaseEntityQuery()
+                .Where(fp => fp.Id == id && fp.Status != 0)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<MstFloorplanRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
 
         public async Task<MstFloorplan> AddAsync(MstFloorplan floorplan)
@@ -81,7 +92,7 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<MstFloor> GetFloorByIdAsync(Guid id)
+        public async Task<MstFloor?> GetFloorByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -93,9 +104,26 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MstFloorplan>> GetAllExportAsync()
+        public async Task<bool> FloorExistsAsync(Guid floorId)
         {
-            return await GetAllQueryable().ToListAsync();
+            return await _context.MstFloors
+                .AnyAsync(f => f.Id == floorId && f.Status != 0);
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
+            Guid floorId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstFloor>(
+                new[] { floorId },
+                applicationId
+            );
+        }
+
+        public async Task<IEnumerable<MstFloorplanRead>> GetAllExportAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
 
         public IQueryable<MstFloorplan> GetAllQueryable()
@@ -112,24 +140,9 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public IQueryable<object> GetAllQueryableWithMaskedAreaCount()
+        public IQueryable<MstFloorplan> BaseEntityQuery()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstFloorplans
-                .Include(f => f.Floor)
-                .Include(f => f.FloorplanMaskedAreas)
-                .Where(f => f.Status != 0);
-            
-            query = query.WithActiveRelations();
-            
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return query.Select(f => new
-            {
-                Entity = f,
-                MaskedAreaCount = f.FloorplanMaskedAreas.Count()
-            }).AsNoTracking();
+            return GetAllQueryable();
         }
 
             public async Task<List<MstFloorplan>> GetByFloorIdAsync(Guid floorId)
@@ -147,6 +160,82 @@ namespace Repositories.Repository
 
             if (floor == null)
                 throw new ArgumentException($"Floor with ID {floorId} not found or not part of the application");
+        }
+
+        public async Task<(List<MstFloorplanRead> Data, int Total, int Filtered)> FilterAsync(
+            MstFloorplanFilter filter
+        )
+        {
+            var query = BaseEntityQuery();
+
+            var total = await query.CountAsync();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(x =>
+                    x.Name.ToLower().Contains(search) ||
+                    x.Floor.Name.ToLower().Contains(search)
+                );
+            }
+
+            if (filter.FloorId.HasValue)
+                query = query.Where(x => x.FloorId == filter.FloorId.Value);
+
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+
+            if (filter.Status.HasValue)
+                query = query.Where(x => x.Status == filter.Status.Value);
+
+            var filtered = await query.CountAsync();
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+            return (data, total, filtered);
+        }
+
+        public IQueryable<MstFloorplanRead> ProjectToRead(IQueryable<MstFloorplan> query)
+        {
+            return query.AsNoTracking().Select(x => new MstFloorplanRead
+            {
+                Id = x.Id,
+                Name = x.Name,
+                FloorId = x.FloorId,
+                FloorplanImage = x.FloorplanImage,
+                PixelX = x.PixelX,
+                PixelY = x.PixelY,
+                FloorX = x.FloorX,
+                FloorY = x.FloorY,
+                MeterPerPx = x.MeterPerPx,
+                EngineId = x.EngineId,
+                Status = x.Status ?? 0,
+                ApplicationId = x.ApplicationId,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedBy = x.UpdatedBy,
+                UpdatedAt = x.UpdatedAt,
+                MaskedAreaCount = x.FloorplanMaskedAreas.Count(m => m.Status != 0),
+                DeviceCount = x.FloorplanDevices.Count(m => m.Status != 0),
+                PatrolAreaCount = x.PatrolAreas.Count(m => m.Status != 0),
+                Floor = x.Floor == null ? null : new MstFloorRead
+                {
+                    Id = x.Floor.Id,
+                    BuildingId = x.Floor.BuildingId,
+                    Name = x.Floor.Name,
+                    Status = x.Floor.Status ?? 0,
+                    ApplicationId = x.Floor.ApplicationId,
+                    CreatedBy = x.Floor.CreatedBy,
+                    CreatedAt = x.Floor.CreatedAt,
+                    UpdatedBy = x.Floor.UpdatedBy,
+                    UpdatedAt = x.Floor.UpdatedAt
+                }
+            });
         }
     }
 }
