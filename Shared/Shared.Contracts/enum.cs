@@ -246,7 +246,7 @@ namespace Shared.Contracts
         System,
         SuperAdmin,
         PrimaryAdmin, // operator or security head
-        Primary, //security
+        Primary, //security / Guard
         Secondary, // member /employee
         UserCreated // visitor
     }
