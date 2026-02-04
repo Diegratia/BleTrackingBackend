@@ -286,7 +286,7 @@ public class VisitorService : IVisitorService
                         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
                         EmailConfirmationAt = DateTime.UtcNow,
                         LastLoginAt = DateTime.MinValue,
-                        StatusActive = StatusActive.Active,
+                        Status = 1,
                         ApplicationId = applicationId.Value,
                         GroupId = userGroup.Id
                     };
@@ -575,7 +575,7 @@ public class VisitorService : IVisitorService
                             EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
                             EmailConfirmationAt = DateTime.UtcNow,
                             LastLoginAt = DateTime.MinValue,
-                            StatusActive = StatusActive.Active,
+                            Status = 1,
                             ApplicationId = applicationId.Value,
                             GroupId = userGroup.Id
                         };
@@ -743,7 +743,7 @@ public class VisitorService : IVisitorService
 
             user.IsEmailConfirmation = 1;
             user.EmailConfirmationAt = DateTime.UtcNow;
-            user.StatusActive = StatusActive.Active;
+            user.Status = 1;
 
             // update user status konfirmasi
             await _userRepository.UpdateConfirmAsync(user);
@@ -781,7 +781,7 @@ public class VisitorService : IVisitorService
                 latestTrx.Status = VisitorStatus.Precheckin;
                 user.IsEmailConfirmation = 1;
                 user.EmailConfirmationAt = DateTime.UtcNow;
-                user.StatusActive = StatusActive.Active;
+                user.Status = 1;
 
                 await _visitorRepository.UpdateAsync(visitor);
             }
@@ -1158,7 +1158,7 @@ public class VisitorService : IVisitorService
                     //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
                     //         EmailConfirmationAt = DateTime.UtcNow,
                     //         LastLoginAt = DateTime.MinValue,
-                    //         StatusActive = StatusActive.NonActive,
+                    //         Status = Status.NonActive,
                     //         ApplicationId = applicationId,
                     //         GroupId = userGroup.Id
                     //     };
@@ -1457,7 +1457,7 @@ public class VisitorService : IVisitorService
                     EmailConfirmationExpiredAt = expiredInvitation,
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.MinValue,
-                    StatusActive = StatusActive.NonActive,
+                    Status = 0,
                     ApplicationId = applicationId,
                     GroupId = userGroup.Id,
                 };
@@ -2087,7 +2087,7 @@ public class VisitorService : IVisitorService
         //                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //                 EmailConfirmationAt = DateTime.UtcNow,
         //                 LastLoginAt = DateTime.MinValue,
-        //                 StatusActive = StatusActive.Active,
+        //                 Status = 1,
         //                 ApplicationId = applicationId.Value,
         //                 GroupId = userGroup.Id
         //             };
@@ -2266,7 +2266,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.Active,
+        //         Status = 1,
         //         ApplicationId = applicationId.Value,
         //         GroupId = userGroup.Id
         //     };
@@ -2487,7 +2487,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.Active,
+        //         Status = 1,
         //         ApplicationId = applicationId.Value,
         //         GroupId = userGroup.Id
         //     };
@@ -2676,7 +2676,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.Active,
+        //         Status = 1,
         //         ApplicationId = applicationId.Value,
         //         GroupId = userGroup.Id
         //     };
@@ -2935,7 +2935,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.Active,
+        //         Status = 1,
         //         ApplicationId = applicationId.Value,
         //         GroupId = userGroup.Id
         //     };
@@ -3173,7 +3173,7 @@ public class VisitorService : IVisitorService
 //                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
 //                 EmailConfirmationAt = DateTime.UtcNow,
 //                 LastLoginAt = DateTime.MinValue,
-//                 StatusActive = StatusActive.NonActive,
+//                 Status = Status.NonActive,
 //                 GroupId = userGroup.Id
 //             };
 
@@ -3303,7 +3303,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.NonActive,
+        //         Status = Status.NonActive,
         //         ApplicationId = applicationId,
         //         GroupId = userGroup.Id
         //     };
@@ -3543,7 +3543,7 @@ public class VisitorService : IVisitorService
         //         EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
         //         EmailConfirmationAt = DateTime.UtcNow,
         //         LastLoginAt = DateTime.MinValue,
-        //         StatusActive = StatusActive.NonActive,
+        //         Status = Status.NonActive,
         //         ApplicationId = applicationId,
         //         GroupId = userGroup.Id
         //     };

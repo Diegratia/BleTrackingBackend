@@ -31,7 +31,7 @@ namespace Data.ViewModels
         public Guid ApplicationId { get; set; }
         public string LevelPriority { get; set; }
         public int IsEmailConfirmed { get; set; }
-        public string StatusActive { get; set; }
+        public int Status { get; set; }
     }
 
         public class LogoutRequestDto

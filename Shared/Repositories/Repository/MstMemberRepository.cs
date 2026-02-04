@@ -181,7 +181,7 @@ namespace Repositories.Repository
         {
             var query = _context.Users
                 .Include(u => u.Group)
-                .Where(u => u.Id == id && u.StatusActive != 0);
+                .Where(u => u.Id == id && u.Status != 0);
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
         }
 

@@ -17,6 +17,7 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using Microsoft.AspNetCore.Authorization;
 
 
 try
@@ -76,7 +77,7 @@ builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.AuthProfi
 builder.Services.AddJwtAuthExtension(builder.Configuration);
 
 // Konfigurasi Otorisasi
-builder.Services.AddAuthorizationPolicies();
+builder.Services.AddAuthorizationNewPolicies();
 
 // Konfigurasi Swagger
 builder.Services.AddSwaggerExtension();
@@ -87,8 +88,12 @@ builder.Services.AddHttpContextAccessor();
 // Registrasi Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserGroupService, UserGroupService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
