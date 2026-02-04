@@ -29,6 +29,7 @@ namespace Shared.Contracts.Read
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
+        public string? FloorplanImage { get; set; }
     }
 
     public class MinimalBleReaderRead

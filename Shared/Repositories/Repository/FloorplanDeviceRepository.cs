@@ -176,6 +176,7 @@ namespace Repositories.Repository
                 {
                     Id = t.Floorplan.Id,
                     Name = t.Floorplan.Name,
+                    FloorplanImage = t.Floorplan.FloorplanImage
                 },
                 Reader = t.Reader == null ? null : new MinimalBleReaderRead
                 {
