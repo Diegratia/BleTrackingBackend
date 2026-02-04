@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -13,7 +15,7 @@ namespace BusinessLogic.Services.Interface
         Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto);
         Task UpdateAsync(Guid id, GeofenceUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
+        Task<object> FilterAsync(DataTablesProjectedRequest request, GeofenceFilter filter);
 
     }
 }

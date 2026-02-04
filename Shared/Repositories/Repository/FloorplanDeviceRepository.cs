@@ -279,33 +279,6 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
-        private static List<Guid> ExtractIds(JsonElement element)
-        {
-            var ids = new List<Guid>();
-
-            if (element.ValueKind == JsonValueKind.String)
-            {
-                var raw = element.GetString();
-                if (!string.IsNullOrWhiteSpace(raw) && Guid.TryParse(raw, out var singleId))
-                    ids.Add(singleId);
-            }
-            else if (element.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var el in element.EnumerateArray())
-                {
-                    if (el.ValueKind != JsonValueKind.String)
-                        continue;
-                    var raw = el.GetString();
-                    if (string.IsNullOrWhiteSpace(raw))
-                        continue;
-                    if (Guid.TryParse(raw, out var parsed))
-                        ids.Add(parsed);
-                }
-            }
-
-            return ids;
-        }
-
         public async Task<IEnumerable<FloorplanDevice>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();

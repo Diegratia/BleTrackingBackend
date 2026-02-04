@@ -1,18 +1,22 @@
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Entities.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class GeofenceController : ControllerBase
     {
         private readonly IGeofenceService _service;
@@ -23,240 +27,94 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/MstAccessCctv
+        // GET: api/Geofence
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var geofences = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Geofences retrieved successfully",
-                    collection = new { data = geofences },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var geofences = await _service.GetAllAsync();
+            return Ok(ApiResponse.Success("Geofences retrieved successfully", geofences));
         }
 
         // GET: api/MstAccessCctv/{id}
+        // GET: api/Geofence/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
+            var geofence = await _service.GetByIdAsync(id);
+            if (geofence == null)
             {
-                var accessCctv = await _service.GetByIdAsync(id);
-                if (accessCctv == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Geofence not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Geofence retrieved successfully",
-                    collection = new { data = accessCctv },
-                    code = 200
-                });
+                return NotFound(ApiResponse.NotFound("Geofence not found"));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            return Ok(ApiResponse.Success("Geofence retrieved successfully", geofence));
         }
 
         // POST: api/MstAccessCctv
+        // POST: api/Geofence
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GeofenceCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
+            var geofence = await _service.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Geofence created successfully", geofence));
 
-            try
-            {
-                var geofence = await _service.CreateAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Geofence created successfully",
-                    collection = new { data = dto },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
         }
 
         // PUT: api/MstAccessCctv/{id}
+        // PUT: api/Geofence/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] GeofenceUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Geofence updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Geofence not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAsync(id, dto);
+            return StatusCode(204, ApiResponse.NoContent("Geofence updated successfully"));
         }
 
         // DELETE: api/MstAccessCctv/{id}
+        // DELETE: api/Geofence/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Geofence deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Geofence not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.DeleteAsync(id);
+            return StatusCode(204, ApiResponse.NoContent("Geofence deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new GeofenceFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Geofence filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<GeofenceFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GeofenceFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+
+            var result = await _service.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Geofence filtered successfully", result));
         }
     }
 }

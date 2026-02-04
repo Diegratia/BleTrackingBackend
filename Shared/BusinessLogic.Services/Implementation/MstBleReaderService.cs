@@ -193,7 +193,9 @@ namespace BusinessLogic.Services.Implementation
             var bleReader = await _repository.GetByIdEntityAsync(id);
             if (bleReader == null)
                 throw new NotFoundException($"BLE Reader with id {id} not found");
-
+            if (bleReader.IsAssigned == true)
+                throw new BusinessException("BLE Reader is still in use by floorplan device");
+            
             bleReader.UpdatedBy = username ?? "";
             bleReader.UpdatedAt = DateTime.UtcNow;
             bleReader.Status = 0;

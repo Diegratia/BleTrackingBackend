@@ -1,20 +1,23 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using Data.ViewModels.Shared.ExceptionHelper;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using DataView;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -58,8 +61,23 @@ namespace BusinessLogic.Services.Implementation
             if (!await _repository.FloorExistsAsync(createDto.FloorId!.Value))
                 throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
 
-            if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId!.Value))
-                throw new NotFoundException($"Floorplan with id {createDto.FloorplanId} not found");
+            var invalidFloorId = await _repository.CheckInvalidFloorOwnershipAsync(createDto.FloorId.Value, AppId);
+            if (invalidFloorId.Any())
+                throw new UnauthorizedException($"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}");
+
+            if (createDto.FloorplanId.HasValue)
+            {
+                if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {createDto.FloorplanId} not found");
+
+                var invalidFloorplanId = await _repository.CheckInvalidFloorplanOwnershipAsync(createDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
 
 
             var patrolArea = _mapper.Map<PatrolArea>(createDto);
@@ -76,14 +94,29 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolAreaDto> UpdateAsync(Guid id, PatrolAreaUpdateDto updateDto)
         {
-            var patrolArea = await _repository.GetByIdAsync(id);
+            var patrolArea = await _repository.GetByIdEntityAsync(id);
             if (patrolArea == null)
                 throw new NotFoundException($"PatrolArea with id {id} not found");
             if (!await _repository.FloorExistsAsync(updateDto.FloorId!.Value))
                 throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
 
-            if (!await _repository.FloorplanExistsAsync(updateDto.FloorplanId!.Value))
-                throw new NotFoundException($"Floorplan with id {updateDto.FloorplanId} not found");
+            var invalidFloorId = await _repository.CheckInvalidFloorOwnershipAsync(updateDto.FloorId.Value, AppId);
+            if (invalidFloorId.Any())
+                throw new UnauthorizedException($"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}");
+
+            if (updateDto.FloorplanId.HasValue && updateDto.FloorplanId != patrolArea.FloorplanId)
+            {
+                if (!await _repository.FloorplanExistsAsync(updateDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {updateDto.FloorplanId} not found");
+
+                var invalidFloorplanId = await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
 
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             // patrolArea.UpdatedBy = username;
@@ -102,7 +135,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var patrolArea = await _repository.GetByIdAsync(id);
+            var patrolArea = await _repository.GetByIdEntityAsync(id);
             if (patrolArea == null)
                 throw new NotFoundException($"PatrolArea with id {id} not found");
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
@@ -120,28 +153,31 @@ namespace BusinessLogic.Services.Implementation
             await _repository.DeleteAsync(id);
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, PatrolAreaFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Status" };
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<PatrolArea, PatrolAreaDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
-                public async Task<IEnumerable<PatrolAreaLookUpDto>> GetAllLookUpAsync()
+
+        public async Task<IEnumerable<PatrolAreaLookUpDto>> GetAllLookUpAsync()
         {
             var patrolareas = await _repository.GetAllLookUpAsync();
             return _mapper.Map<IEnumerable<PatrolAreaLookUpDto>>(patrolareas);
         }
 
-        
+
     }
 }

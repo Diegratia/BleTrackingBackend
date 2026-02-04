@@ -1,15 +1,16 @@
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Data.ViewModels.ResponseHelper;
-using BusinessLogic.Services.Extension.RootExtension;
-using Helpers.Consumer;
+using Microsoft.AspNetCore.Mvc;
 using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
@@ -75,13 +76,26 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
 
-            var result = await _PatrolAreaService.FilterAsync(request);
+            var filter = new PatrolAreaFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<PatrolAreaFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolAreaFilter();
+            }
+
+            var result = await _PatrolAreaService.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Patrol Area filtered successfully", result));
         }
 

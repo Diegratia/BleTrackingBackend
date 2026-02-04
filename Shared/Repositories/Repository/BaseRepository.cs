@@ -1,13 +1,14 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Repositories.DbContexts;
-using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore.Storage;
+using Repositories.DbContexts;
 using Repositories.TenantContexts;
 using Shared.Contracts;
 
@@ -223,6 +224,33 @@ namespace Repositories.Repository
                 .ToListAsync();
 
             return idList.Except(validIds).ToList();
+        }
+
+        public static List<Guid> ExtractIds(JsonElement element)
+        {
+            var ids = new List<Guid>();
+
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                var raw = element.GetString();
+                if (!string.IsNullOrWhiteSpace(raw) && Guid.TryParse(raw, out var singleId))
+                    ids.Add(singleId);
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in element.EnumerateArray())
+                {
+                    if (el.ValueKind != JsonValueKind.String)
+                        continue;
+                    var raw = el.GetString();
+                    if (string.IsNullOrWhiteSpace(raw))
+                        continue;
+                    if (Guid.TryParse(raw, out var parsed))
+                        ids.Add(parsed);
+                }
+            }
+
+            return ids;
         }
 
 

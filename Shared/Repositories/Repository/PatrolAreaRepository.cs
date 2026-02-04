@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Extensions;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -18,16 +21,20 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<PatrolArea> GetByIdAsync(Guid id)
+        public async Task<PatrolAreaRead?> GetByIdAsync(Guid id)
         {
-            return await GetAllQueryable()
-           .Where(a => a.Id == id && a.Status != 0)
-           .FirstOrDefaultAsync();
+            var query = GetAllQueryable().Where(a => a.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<PatrolArea>> GetAllAsync()
+        public async Task<PatrolArea?> GetByIdEntityAsync(Guid id)
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllQueryable().FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<IEnumerable<PatrolAreaRead>> GetAllAsync()
+        {
+            return await ProjectToRead(GetAllQueryable()).ToListAsync();
         }
 
         public async Task<PatrolArea> AddAsync(PatrolArea patrolarea)
@@ -110,11 +117,11 @@ namespace Repositories.Repository
                 FloorName = t.Floor.Name,
                 FloorplanName = t.Floorplan.Name,
                 IsActive = t.IsActive
-            }); 
+            });
             return await projected.ToListAsync();
         }
-        
-            public async Task<List<PatrolArea>> GetByFloorplanIdAsync(Guid floorplanId)
+
+        public async Task<List<PatrolArea>> GetByFloorplanIdAsync(Guid floorplanId)
         {
             return await _context.PatrolAreas
                 .Where(ma => ma.FloorplanId == floorplanId && ma.Status != 0)
@@ -133,5 +140,94 @@ namespace Repositories.Repository
                 .AnyAsync(f => f.Id == floorplanId && f.Status != 0);
         }
 
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorplanOwnershipAsync(
+            Guid floorplanId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstFloorplan>(
+                new[] { floorplanId },
+                applicationId
+            );
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
+            Guid floorId,
+            Guid applicationId
+        )
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstFloor>(
+                new[] { floorId },
+                applicationId
+            );
+        }
+
+        public async Task<(List<PatrolAreaRead> Data, int Total, int Filtered)> FilterAsync(PatrolAreaFilter filter)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            // Base query with tenant filter
+            var query = _context.PatrolAreas.AsQueryable();
+            query = query.Where(x => x.Status != 0);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var total = await query.CountAsync();
+
+            // 1. Specific Filtering
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var s = filter.Search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(s));
+            }
+
+            var floorIds = ExtractIds(filter.FloorId);
+            if (floorIds.Count > 0)
+                query = query.Where(x => x.FloorId.HasValue && floorIds.Contains(x.FloorId.Value));
+
+            var floorplanIds = ExtractIds(filter.FloorplanId);
+            if (floorplanIds.Count > 0)
+                query = query.Where(x => x.FloorplanId.HasValue && floorplanIds.Contains(x.FloorplanId.Value));
+
+            if (filter.IsActive.HasValue)
+                query = query.Where(x => x.IsActive == filter.IsActive);
+
+            if (filter.Status.HasValue)
+                query = query.Where(x => x.Status == filter.Status);
+
+            var filtered = await query.CountAsync();
+
+            // 2. Sorting & Paging
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // 3. Manual Projection
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        private IQueryable<PatrolAreaRead> ProjectToRead(IQueryable<PatrolArea> query)
+        {
+            return query.AsNoTracking().Select(t => new PatrolAreaRead
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Remarks = t.Remarks,
+                AreaShape = t.AreaShape,
+                Color = t.Color,
+                FloorplanId = t.FloorplanId,
+                FloorplanName = t.Floorplan.Name,
+                FloorId = t.FloorId,
+                FloorName = t.Floor.Name,
+                IsActive = t.IsActive,
+                Status = t.Status,
+                CreatedAt = t.CreatedAt,
+                CreatedBy = t.CreatedBy,
+                UpdatedAt = t.UpdatedAt,
+                UpdatedBy = t.UpdatedBy,
+                ApplicationId = t.ApplicationId
+            });
+        }
     }
 }
