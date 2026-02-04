@@ -14,8 +14,15 @@ namespace BusinessLogic.Services.Extension.RootExtension
             services.AddValidatorsFromAssemblyContaining<LoginValidator>();
             services.AddValidatorsFromAssemblyContaining<PatrolAreaCreateValidator>();
             services.AddValidatorsFromAssemblyContaining<PatrolAreaUpdateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolRouteCreateValidator>();
             services.AddValidatorsFromAssemblyContaining<PatrolRouteUpdateValidator>();
-            services.AddValidatorsFromAssemblyContaining<PatrolRouteUpdateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAssignmentCreateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAssignmentUpdateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolSessionStartValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolCaseCreateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolCaseUpdateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAttachmentCreateValidator>();
+            services.AddValidatorsFromAssemblyContaining<PatrolAttachmentUpdateValidator>();
             return services;
         }
     }
