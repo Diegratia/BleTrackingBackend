@@ -274,61 +274,64 @@ Services.API/[ServiceName]/
 
 #### Program.cs Template
 ```csharp
+using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Interface;
 using Data.ViewModels.Shared.ExceptionHelper;
-using DotNetEnv;
+using Helpers.Consumer.Mqtt;
+using Microsoft.AspNetCore.Authorization;
+using Repositories.DbContexts;
+using Repositories.Repository;
+using Serilog;
+using System.Text.Json.Serialization;
 
-// Load .env file
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),
-        Path.Combine(AppContext.BaseDirectory, ".env"),
-        "/app/.env"
-    };
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-    if (envFile != null) Env.Load(envFile);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Extensions
-builder.Services.AddCorsExtension();
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+builder.UseSerilogExtension();
+builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
 
-builder.Services.AddControllers();
-builder.Services.AddValidatorExtensions();
+builder.Services.AddCorsExtension();
 builder.Services.AddDbContextExtension(builder.Configuration);
-builder.Services.AddAutoMapper(typeof([Service]Profile));
-builder.Services.AddJwtAuthExtension(builder.Configuration);
-builder.Services.AddAuthorizationPolicies();
+// Optional: builder.Services.AddRedisExtension(builder.Configuration);
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
+builder.Services.AddValidatorExtensions();
 builder.Services.AddSwaggerExtension();
+
+builder.Services.AddJwtAuthExtension(builder.Configuration);
+builder.Services.AddAuthorizationNewPolicies();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddAutoMapper(typeof([Service]Profile));
 
 // Register service-specific dependencies
 builder.Services.AddScoped<I[Service]Service, [Service]Service>();
 builder.Services.AddScoped<[Service]Repository>();
 
+// Optional background/MQTT
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
+// Optional Redis recovery if Redis enabled
+// builder.Services.AddHostedService<RedisRecoveryService>();
+
 builder.UseDefaultHostExtension("[SERVICE]_PORT", "[PORT]");
-builder.Host.UseWindowsService();
 
 var app = builder.Build();
-app.UseHealthCheckExtension();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    // context.Database.Migrate(); // Optional
-}
+app.UseHealthCheckExtension();
 
 if (app.Environment.IsDevelopment())
 {
@@ -336,19 +339,58 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "[Service] API");
-        c.RoutePrefix = "";
+        c.RoutePrefix = string.Empty;
     });
 }
 
 app.UseCors("AllowAll");
-app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
+app.UseSerilogRequestLoggingExtension();
+app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
 ```
+
+#### Unified Refactor Guide (Current Standard)
+Use this single checklist for refactoring a Service/Entity stack (DataTables + Auth + Middleware):
+
+1. Analyze & prepare
+2. Identify target entity and files:
+3. `Shared/Shared.Contracts/Read/[Entity]Read.cs`
+4. `Shared/Shared.Contracts/[Entity]Filter.cs`
+5. `Shared/Repositories/Repository/[Entity]Repository.cs`
+6. `Shared/BusinessLogic.Services/Implementation/[Entity]Service.cs`
+7. `Shared/Web.API.Controllers/Controllers/[Entity]Controller.cs`
+8. `Services.API/[Service]/Program.cs`
+9. Create filter + read contracts
+10. Filter DTO must include `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`, and entity-specific filters (e.g., `DateFrom`, `Status`).
+11. Read DTO lives in `Shared/Shared.Contracts/Read` and is used for projection and responses.
+12. Repository refactor
+13. Add `BaseEntityQuery()` if needed and use it (do not duplicate tenant filter logic).
+14. Add `ProjectToRead(...)` with `AsNoTracking()` + manual `Select` (no AutoMapper in query).
+15. Add `FilterAsync(FilterDto)` that uses `ApplySorting` and `ApplyPaging`.
+16. Service refactor
+17. Use `DataTablesProjectedRequest` + typed filter, map request fields to filter.
+18. Throw `NotFoundException` for missing entity, `BusinessException` for logic errors.
+19. Controller refactor
+20. Apply `[MinLevel(LevelPriority.SuperAdmin)]` at class level.
+21. Remove manual try/catch and use `ApiResponse` helpers.
+22. Filter endpoint must deserialize `request.Filters` with `PropertyNameCaseInsensitive = true`.
+23. Program.cs refactor
+24. Use RootExtension methods, register `MinLevelHandler`, and include `CustomExceptionMiddleware`.
+25. Definition of done
+26. Repository has `FilterAsync` returning `(List, int, int)`.
+27. Projection uses manual `Select` only.
+28. Service maps `DataTablesProjectedRequest` to filter.
+29. Controller uses `ApiResponse` and no manual try/catch.
+30. Program.cs uses standard extensions and middleware.
+
+Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`, and `MstDistrictController.cs`.
 
 ### 2. Naming Conventions
 

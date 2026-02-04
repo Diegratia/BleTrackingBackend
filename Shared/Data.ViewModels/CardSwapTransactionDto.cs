@@ -29,7 +29,7 @@ namespace Data.ViewModels
         public Guid VisitorId { get; set; }
         public Guid? TrxVisitorId { get; set; }
         public Guid MaskedAreaId { get; set; }
-        public Guid ToCardId { get; set; }
+        public Guid? ToCardId { get; set; }
         public IdentityType? IdentityType { get; set; }
         public SwapMode SwapMode { get; set; }
         public string? IdentityValue { get; set; }
