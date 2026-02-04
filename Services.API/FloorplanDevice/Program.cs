@@ -32,13 +32,13 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddValidatorExtensions();
+builder.Services.AddJwtAuthExtension(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 
-builder.Services.AddJwtAuthExtension(builder.Configuration);
-builder.Services.AddAuthorizationNewPolicies();
-builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddAutoMapper(typeof(FloorplanDeviceProfile));
 
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
@@ -46,12 +46,12 @@ builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
-builder.Services.AddHostedService<RedisRecoveryService>();
 
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<MstBleReaderRepository>();
 builder.Services.AddScoped<MstAccessControlRepository>();
 builder.Services.AddScoped<MstAccessCctvRepository>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 builder.UseDefaultHostExtension("FLOORPLAN_DEVICE_PORT", "5003");
 
@@ -86,9 +86,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 
+app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
 app.UseSerilogRequestLoggingExtension();
-app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -96,3 +96,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
