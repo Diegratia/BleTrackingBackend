@@ -207,6 +207,7 @@ namespace Shared.Contracts
         PostponeInvestigated // 1 minggu 
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum DeviceType
     {
         Cctv,
@@ -214,6 +215,7 @@ namespace Shared.Contracts
         BleReader
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum DeviceStatus
     {
         Active,

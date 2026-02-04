@@ -4,21 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IFloorplanDeviceService
     {
-        Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto);
-        Task<FloorplanDeviceRM> GetByIdAsync(Guid id);
-        Task<IEnumerable<FloorplanDeviceRM>> GetAllAsync();
+        Task<FloorplanDeviceRead> CreateAsync(FloorplanDeviceCreateDto dto);
+        Task<FloorplanDeviceRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<FloorplanDeviceRead>> GetAllAsync();
         Task<IEnumerable<OpenFloorplanDeviceDto>> OpenGetAllAsync();
         Task UpdateAsync(Guid Id, FloorplanDeviceUpdateDto dto);
         Task DeleteAsync(Guid id);
-        Task<IEnumerable<FloorplanDeviceDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesRequest request);
-        Task<object> ProjectionFilterAsync(DataTablesRequest request);
+        Task<IEnumerable<FloorplanDeviceRead>> ImportAsync(IFormFile file);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, FloorplanDeviceFilter filter);
         Task SetDeviceAssignmentAsync(Guid? readerId, Guid? cctvId, Guid? controlId, bool isAssigned, string username);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
