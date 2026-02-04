@@ -2,82 +2,82 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class OverpopulatingService : IOverpopulatingService
+    public class OverpopulatingService : BaseService, IOverpopulatingService
     {
         private readonly OverpopulatingRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
 
-        public OverpopulatingService(OverpopulatingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
+        public OverpopulatingService(
+            OverpopulatingRepository repository,
+            IMapper mapper,
+            IAuditEmitter audit,
+            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _audit = audit;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<OverpopulatingDto> GetByIdAsync(Guid id)
+        public async Task<OverpopulatingRead> GetByIdAsync(Guid id)
         {
             var overpopulating = await _repository.GetByIdAsync(id);
-            return overpopulating == null ? null : _mapper.Map<OverpopulatingDto>(overpopulating);
+            if (overpopulating == null)
+                throw new NotFoundException($"Overpopulating with id {id} not found");
+            return overpopulating;
         }
 
-        public async Task<IEnumerable<OverpopulatingDto>> GetAllAsync()
+        public async Task<IEnumerable<OverpopulatingRead>> GetAllAsync()
         {
             var overpopulatings = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<OverpopulatingDto>>(overpopulatings);
+            return overpopulatings;
         }
 
         public async Task<OverpopulatingDto> CreateAsync(OverpopulatingCreateDto createDto)
         {
             var overpopulating = _mapper.Map<Overpopulating>(createDto);
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             overpopulating.Id = Guid.NewGuid();
             overpopulating.Status = 1;
-            overpopulating.CreatedBy = username;
-            overpopulating.CreatedAt = DateTime.UtcNow;
-            overpopulating.UpdatedBy = username;
-            overpopulating.UpdatedAt = DateTime.UtcNow;
+            overpopulating.ApplicationId = AppId;
+            SetCreateAudit(overpopulating);
 
             await _repository.AddAsync(overpopulating);
+
             await _audit.Created(
                 "Overpopulating",
                 overpopulating.Id,
                 "Created Overpopulating",
                 new { overpopulating.Name }
             );
-            return _mapper.Map<OverpopulatingDto>(overpopulating);
+
+            var result = await _repository.GetByIdAsync(overpopulating.Id);
+            return _mapper.Map<OverpopulatingDto>(result);
         }
 
         public async Task UpdateAsync(Guid id, OverpopulatingUpdateDto updateDto)
         {
-            var overpopulating = await _repository.GetByIdAsync(id);
+            var overpopulating = await _repository.GetByIdEntityAsync(id);
             if (overpopulating == null)
-                throw new KeyNotFoundException("Overpopulating not found");
+                throw new NotFoundException($"Overpopulating with id {id} not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            overpopulating.UpdatedBy = username;
-            overpopulating.UpdatedAt = DateTime.UtcNow;
-
+            SetUpdateAudit(overpopulating);
             _mapper.Map(updateDto, overpopulating);
             await _repository.UpdateAsync(overpopulating);
+
             await _audit.Updated(
                 "Overpopulating",
                 overpopulating.Id,
@@ -88,17 +88,13 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var overpopulating = await _repository.GetByIdAsync(id);
+            var overpopulating = await _repository.GetByIdEntityAsync(id);
             if (overpopulating == null)
-            {
-                throw new KeyNotFoundException("Overpopulating not found");
-            }
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            overpopulating.UpdatedBy = username;
-            overpopulating.UpdatedAt = DateTime.UtcNow;
-            overpopulating.Status = 0;
-            overpopulating.IsActive = 0;
-            await _repository.DeleteAsync(id);
+                throw new NotFoundException($"Overpopulating with id {id} not found");
+
+            SetDeleteAudit(overpopulating);
+            await _repository.SoftDeleteAsync(id);
+
             await _audit.Deleted(
                 "Overpopulating",
                 overpopulating.Id,
@@ -107,21 +103,33 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, OverpopulatingFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name"};
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Status"};
+            // Map Date Filters (Generic Dictionary -> Specific Prop)
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<Overpopulating, OverpopulatingDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
     }
 }

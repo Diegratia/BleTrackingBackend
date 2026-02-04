@@ -1536,6 +1536,72 @@ public async Task<List<PatrolCaseRead>> GetAllAsync()
 }
 ```
 
+### Service Return Type Pattern
+
+**PENTING**: Jika repository sudah mengembalikan `Read` DTO (hasil `ProjectToRead`), service **TIDAK PERLU** menggunakan mapper lagi.
+
+#### Pattern yang Benar:
+
+```csharp
+// 1. Repository - Mengembalikan Read DTO
+public async Task<GeofenceRead?> GetByIdAsync(Guid id)
+{
+    var query = BaseEntityQuery().Where(x => x.Id == id);
+    return await ProjectToRead(query).FirstOrDefaultAsync();
+}
+
+// 2. Service Interface - Return type menggunakan Read DTO
+public interface IGeofenceService
+{
+    Task<GeofenceRead> GetByIdAsync(Guid id);  // BUKAN GeofenceDto
+    Task<IEnumerable<GeofenceRead>> GetAllAsync();
+}
+
+// 3. Service Implementation - Langsung return, TANPA mapper
+public async Task<GeofenceRead> GetByIdAsync(Guid id)
+{
+    var geofence = await _repository.GetByIdAsync(id);
+    if (geofence == null)
+        throw new NotFoundException($"Geofence with id {id} not found");
+
+    return geofence;  // TANPA _mapper.Map<GeofenceDto>(geofence)
+}
+
+// 4. Controller - Langsung return hasil service
+[HttpGet("{id}")]
+public async Task<IActionResult> GetById(Guid id)
+{
+    var geofence = await _service.GetByIdAsync(id);
+    return Ok(ApiResponse.Success("Geofence retrieved successfully", geofence));
+}
+```
+
+#### Kenapa Tidak Perlu Mapper?
+
+1. **Repository sudah melakukan projection**: `ProjectToRead()` sudah meng-select field yang diperlukan dan meng-convert ke `GeofenceRead`
+2. **Tidak ada double mapping**: Entity → GeofenceRead (di repository) sudah cukup, tidak perlu GeofenceRead → GeofenceDto
+3. **Lebih efisien**: Menghindari mapping yang redundant
+4. **Konsistensi**: Read operation mengembalikan Read DTO, Create/Update tetap menggunakan Entity DTO
+
+#### Exception: Create/Update Operations
+
+Untuk Create/Update, tetap gunakan Entity DTO karena perlu mapping ke Entity:
+
+```csharp
+public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
+{
+    var entity = _mapper.Map<Geofence>(dto);  // DTO → Entity masih diperlukan
+    SetCreateAudit(entity);
+    await _repository.AddAsync(entity);
+
+    await _audit.Created("Geofence", entity.Id, "Created", new { entity.Name });
+
+    // Return DTO untuk response
+    var result = await _repository.GetByIdAsync(entity.Id);
+    return _mapper.Map<GeofenceDto>(result);  // BISA juga langsung return result
+}
+```
+
 ---
 
 ## Best Practices

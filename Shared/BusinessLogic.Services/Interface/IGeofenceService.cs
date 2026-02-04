@@ -10,8 +10,8 @@ namespace BusinessLogic.Services.Interface
 {
     public interface IGeofenceService
     {
-        Task<GeofenceDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<GeofenceDto>> GetAllAsync();
+        Task<GeofenceRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<GeofenceRead>> GetAllAsync();
         Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto);
         Task UpdateAsync(Guid id, GeofenceUpdateDto updateDto);
         Task DeleteAsync(Guid id);

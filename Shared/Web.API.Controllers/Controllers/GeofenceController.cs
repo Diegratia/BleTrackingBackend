@@ -11,6 +11,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -42,10 +43,6 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var geofence = await _service.GetByIdAsync(id);
-            if (geofence == null)
-            {
-                return NotFound(ApiResponse.NotFound("Geofence not found"));
-            }
             return Ok(ApiResponse.Success("Geofence retrieved successfully", geofence));
         }
 

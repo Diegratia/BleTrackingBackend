@@ -117,6 +117,7 @@ Update file: [Entity]Service.cs
 - Throw BusinessException for logic errors.
 - If entity depends on another master, validate ownership via repository helper before create/update.
 - Call `_audit.Created/Updated/Deleted` after DB operations.
+- **CRITICAL**: For GetById/GetAll that return Read DTOs from repository, DO NOT use mapper - return directly.
 
 ```csharp
 public class EntityService : BaseService, IEntityService
@@ -136,6 +137,44 @@ public class EntityService : BaseService, IEntityService
         _audit = audit;
     }
 
+    // CORRECT: Return Read DTO directly from repository (NO MAPPER)
+    public async Task<EntityRead> GetByIdAsync(Guid id)
+    {
+        var entity = await _repo.GetByIdAsync(id);
+        if (entity == null)
+            throw new NotFoundException($"Entity with id {id} not found");
+        return entity;  // Direct return, no mapper needed
+    }
+
+    // CORRECT: Return Read DTO list directly
+    public async Task<IEnumerable<EntityRead>> GetAllAsync()
+    {
+        var entities = await _repo.GetAllAsync();
+        return entities;  // Direct return
+    }
+
+    // CORRECT: Use mapper for Create (DTO → Entity)
+    public async Task<EntityDto> CreateAsync(EntityCreateDto dto)
+    {
+        var entity = _mapper.Map<Entity>(dto);  // Mapper for DTO → Entity
+        entity.Id = Guid.NewGuid();
+        entity.ApplicationId = AppId;
+        SetCreateAudit(entity);
+
+        await _repo.AddAsync(entity);
+
+        await _audit.Created(
+            "Entity",
+            entity.Id,
+            "Created Entity",
+            new { entity.Name }
+        );
+
+        // Option 1: Return Read DTO directly (no mapper)
+        var result = await _repo.GetByIdAsync(entity.Id);
+        return result;  // or _mapper.Map<EntityDto>(result)
+    }
+
     public async Task<object> FilterAsync(DataTablesProjectedRequest request, EntityFilter filter)
     {
         filter.Page = (request.Start / request.Length) + 1;
@@ -151,12 +190,42 @@ public class EntityService : BaseService, IEntityService
             draw = request.Draw,
             recordsTotal = total,
             recordsFiltered = filtered,
-            data
+            data  // Already EntityRead[] from repository
         };
     }
+}
+```
 
-    public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
-    {
+#### Interface Service Return Types:
+
+```csharp
+public interface IEntityService
+{
+    // Use Read DTO for query operations (no mapper in service)
+    Task<EntityRead> GetByIdAsync(Guid id);           // Not EntityDto
+    Task<IEnumerable<EntityRead>> GetAllAsync();      // Not IEnumerable<EntityDto>
+
+    // Use Entity DTO for create/update (mapper needed for DTO → Entity)
+    Task<EntityDto> CreateAsync(EntityCreateDto dto);
+    Task UpdateAsync(Guid id, EntityUpdateDto dto);
+    Task DeleteAsync(Guid id);
+
+    // Filter returns object with data array
+    Task<object> FilterAsync(DataTablesProjectedRequest request, EntityFilter filter);
+}
+```
+
+#### Key Points - Return Type Pattern:
+
+1. **Repository returns Read DTO** → Service returns directly (NO MAPPER)
+2. **Create/Update needs Entity** → Use mapper for DTO → Entity conversion
+3. **Interface uses Read DTO** for GetById/GetAll return types
+4. **No double mapping** → Entity → Read → DTO is redundant
+
+**Why?**
+- Repository's `ProjectToRead()` already does the projection (Entity → Read DTO)
+- Adding mapper again would be: Entity → Read DTO → Entity DTO (inefficient)
+- Read operations should return Read DTOs for consistency
         var entity = _mapper.Map<Entity>(dto);
         entity.Id = Guid.NewGuid();
         entity.ApplicationId = AppId;

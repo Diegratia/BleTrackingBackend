@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IStayOnAreaService
     {
-        Task<StayOnAreaDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<StayOnAreaDto>> GetAllAsync();
+        Task<StayOnAreaRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<StayOnAreaRead>> GetAllAsync();
         Task<StayOnAreaDto> CreateAsync(StayOnAreaCreateDto createDto);
         Task UpdateAsync(Guid id, StayOnAreaUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
-
+        Task<object> FilterAsync(DataTablesProjectedRequest request, StayOnAreaFilter filter);
     }
 }

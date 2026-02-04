@@ -5,102 +5,97 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class StayOnAreaService : IStayOnAreaService
+    public class StayOnAreaService : BaseService, IStayOnAreaService
     {
         private readonly StayOnAreaRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
 
-        public StayOnAreaService(StayOnAreaRepository repository, 
-        IMapper mapper, 
-        IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
+        public StayOnAreaService(
+            StayOnAreaRepository repository,
+            IMapper mapper,
+            IAuditEmitter audit,
+            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _audit = audit;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<StayOnAreaDto> GetByIdAsync(Guid id)
+        public async Task<StayOnAreaRead> GetByIdAsync(Guid id)
         {
             var onArea = await _repository.GetByIdAsync(id);
-            return onArea == null ? null : _mapper.Map<StayOnAreaDto>(onArea);
+            if (onArea == null)
+                throw new NotFoundException($"StayOnArea with id {id} not found");
+            return onArea;
         }
 
-        public async Task<IEnumerable<StayOnAreaDto>> GetAllAsync()
+        public async Task<IEnumerable<StayOnAreaRead>> GetAllAsync()
         {
             var onAreas = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<StayOnAreaDto>>(onAreas);
+            return onAreas;
         }
 
         public async Task<StayOnAreaDto> CreateAsync(StayOnAreaCreateDto createDto)
         {
             var onArea = _mapper.Map<StayOnArea>(createDto);
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             onArea.Id = Guid.NewGuid();
             onArea.Status = 1;
-            onArea.CreatedBy = username;
-            onArea.CreatedAt = DateTime.UtcNow;
-            onArea.UpdatedBy = username;
-            onArea.UpdatedAt = DateTime.UtcNow;
+            onArea.ApplicationId = AppId;
+            SetCreateAudit(onArea);
 
             await _repository.AddAsync(onArea);
+
             await _audit.Created(
                 "StayOnArea",
                 onArea.Id,
                 "Created StayOnArea",
                 new { onArea.Name }
             );
-            return _mapper.Map<StayOnAreaDto>(onArea);
+
+            var result = await _repository.GetByIdAsync(onArea.Id);
+            return _mapper.Map<StayOnAreaDto>(result);
         }
 
         public async Task UpdateAsync(Guid id, StayOnAreaUpdateDto updateDto)
         {
-            var onArea = await _repository.GetByIdAsync(id);
+            var onArea = await _repository.GetByIdEntityAsync(id);
             if (onArea == null)
-                throw new KeyNotFoundException("StayOnArea not found");
+                throw new NotFoundException($"StayOnArea with id {id} not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            onArea.UpdatedBy = username;
-            onArea.UpdatedAt = DateTime.UtcNow;
-
+            SetUpdateAudit(onArea);
             _mapper.Map(updateDto, onArea);
+            await _repository.UpdateAsync(onArea);
+
             await _audit.Updated(
                 "StayOnArea",
                 onArea.Id,
                 "Updated StayOnArea",
                 new { onArea.Name }
             );
-            await _repository.UpdateAsync(onArea);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var onArea = await _repository.GetByIdAsync(id);
+            var onArea = await _repository.GetByIdEntityAsync(id);
             if (onArea == null)
-            {
-                throw new KeyNotFoundException("StayOnArea not found");
-            }
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            onArea.Status = 0;
-            onArea.IsActive = 0;
-            onArea.UpdatedBy = username;
-            onArea.UpdatedAt = DateTime.UtcNow;
-            await _repository.DeleteAsync(id);
+                throw new NotFoundException($"StayOnArea with id {id} not found");
+
+            SetDeleteAudit(onArea);
+            await _repository.SoftDeleteAsync(id);
+
             await _audit.Deleted(
                 "StayOnArea",
                 onArea.Id,
@@ -109,21 +104,33 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, StayOnAreaFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name"};
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Status"};
+            // Map Date Filters (Generic Dictionary -> Specific Prop)
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<StayOnArea, StayOnAreaDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
     }
 }

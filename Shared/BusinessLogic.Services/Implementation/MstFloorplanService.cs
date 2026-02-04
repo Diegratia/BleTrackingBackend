@@ -417,7 +417,7 @@ namespace BusinessLogic.Services.Implementation
                 s.Status = 0;
                 s.UpdatedBy = username;
                 s.UpdatedAt = DateTime.UtcNow;
-                await _stayOnAreaRepository.DeleteAsync(s.Id);
+                await _stayOnAreaRepository.SoftDeleteAsync(s.Id);
             }
 
             var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
@@ -426,7 +426,7 @@ namespace BusinessLogic.Services.Implementation
                 b.Status = 0;
                 b.UpdatedBy = username;
                 b.UpdatedAt = DateTime.UtcNow;
-                await _boundaryRepository.DeleteAsync(b.Id);
+                await _boundaryRepository.SoftDeleteAsync(b.Id);
             }
 
             var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
@@ -435,7 +435,7 @@ namespace BusinessLogic.Services.Implementation
                 o.Status = 0;
                 o.UpdatedBy = username;
                 o.UpdatedAt = DateTime.UtcNow;
-                await _overpopulatingRepository.DeleteAsync(o.Id);
+                await _overpopulatingRepository.SoftDeleteAsync(o.Id);
             }
 
             var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);

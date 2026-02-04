@@ -1,18 +1,22 @@
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Entities.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.SuperAdmin)]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class OverpopulatingController : ControllerBase
     {
         private readonly IOverpopulatingService _service;
@@ -22,241 +26,87 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        // GET: api/MstAccessCctv
+        // GET: api/Overpopulating
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var boundarys = await _service.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Overpopulatings retrieved successfully",
-                    collection = new { data = boundarys },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var overpopulatings = await _service.GetAllAsync();
+            return Ok(ApiResponse.Success("Overpopulatings retrieved successfully", overpopulatings));
         }
 
-        // GET: api/MstAccessCctv/{id}
+        // GET: api/Overpopulating/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var accessCctv = await _service.GetByIdAsync(id);
-                if (accessCctv == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Overpopulating not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Overpopulating retrieved successfully",
-                    collection = new { data = accessCctv },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var overpopulating = await _service.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Overpopulating retrieved successfully", overpopulating));
         }
 
-        // POST: api/MstAccessCctv
+        // POST: api/Overpopulating
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] OverpopulatingCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var boundary = await _service.CreateAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Overpopulating created successfully",
-                    collection = new { data = dto },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var overpopulating = await _service.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Overpopulating created successfully", overpopulating));
         }
 
-        // PUT: api/MstAccessCctv/{id}
+        // PUT: api/Overpopulating/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] OverpopulatingUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Overpopulating updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Overpopulating not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Overpopulating updated successfully"));
         }
 
-        // DELETE: api/MstAccessCctv/{id}
+        // DELETE: api/Overpopulating/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Overpopulating deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Overpopulating not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Overpopulating deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
+            var filter = new OverpopulatingFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var result = await _service.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Overpopulating filtered successfully",
-                    collection = result,
-                    code = 200
-                });
+                filter = JsonSerializer.Deserialize<OverpopulatingFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new OverpopulatingFilter();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _service.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
     }
 }

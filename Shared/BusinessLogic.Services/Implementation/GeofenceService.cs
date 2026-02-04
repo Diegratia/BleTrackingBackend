@@ -35,16 +35,18 @@ namespace BusinessLogic.Services.Implementation
             _audit = audit;
         }
 
-        public async Task<GeofenceDto> GetByIdAsync(Guid id)
+        public async Task<GeofenceRead> GetByIdAsync(Guid id)
         {
             var geofence = await _repository.GetByIdAsync(id);
-            return geofence == null ? null : _mapper.Map<GeofenceDto>(geofence);
+            if (geofence == null)
+                throw new NotFoundException($"Geofence with id {id} not found");
+            return geofence;
         }
 
-        public async Task<IEnumerable<GeofenceDto>> GetAllAsync()
+        public async Task<IEnumerable<GeofenceRead>> GetAllAsync()
         {
             var geofences = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<GeofenceDto>>(geofences);
+            return geofences;
         }
 
         public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto)

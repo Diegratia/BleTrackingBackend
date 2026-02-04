@@ -155,10 +155,6 @@ namespace Repositories.Repository
                 IsActive = t.IsActive,
                 Status = t.Status,
                 ApplicationId = t.ApplicationId,
-                CreatedBy = t.CreatedBy,
-                CreatedAt = t.CreatedAt,
-                UpdatedBy = t.UpdatedBy,
-                UpdatedAt = t.UpdatedAt
             });
         }
 
