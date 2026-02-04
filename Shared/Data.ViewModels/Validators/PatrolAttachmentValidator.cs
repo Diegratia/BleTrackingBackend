@@ -11,9 +11,6 @@ namespace Data.ViewModels.Validators
 
             RuleFor(x => x.FileType)
                 .NotNull().WithMessage("FileType is required.");
-
-            RuleFor(x => x.PatrolCaseId)
-                .NotEmpty().WithMessage("PatrolCaseId is required.");
         }
     }
 

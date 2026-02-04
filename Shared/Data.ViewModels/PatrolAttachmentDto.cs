@@ -19,7 +19,6 @@ namespace Data.ViewModels
     {
         public string? FileUrl { get; set; }
         public FileType? FileType { get; set; }
-        public Guid? PatrolCaseId { get; set; }
     }
     public class PatrolAttachmentUpdateDto
     {
