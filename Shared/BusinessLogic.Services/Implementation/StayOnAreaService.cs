@@ -48,7 +48,7 @@ namespace BusinessLogic.Services.Implementation
             return onAreas;
         }
 
-        public async Task<StayOnAreaDto> CreateAsync(StayOnAreaCreateDto createDto)
+        public async Task<StayOnAreaRead> CreateAsync(StayOnAreaCreateDto createDto)
         {
             var onArea = _mapper.Map<StayOnArea>(createDto);
             onArea.Id = Guid.NewGuid();
@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(onArea.Id);
-            return _mapper.Map<StayOnAreaDto>(result);
+            return _mapper.Map<StayOnAreaRead>(result);
         }
 
         public async Task UpdateAsync(Guid id, StayOnAreaUpdateDto updateDto)
@@ -94,6 +94,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"StayOnArea with id {id} not found");
 
             SetDeleteAudit(onArea);
+            onArea.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(

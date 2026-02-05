@@ -53,7 +53,7 @@ namespace BusinessLogic.Services.Implementation
             return boundaries;
         }
 
-        public async Task<BoundaryDto> CreateAsync(BoundaryCreateDto createDto)
+        public async Task<BoundaryRead> CreateAsync(BoundaryCreateDto createDto)
         {
             var boundary = _mapper.Map<Boundary>(createDto);
             boundary.Id = Guid.NewGuid();
@@ -71,7 +71,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(boundary.Id);
-            return _mapper.Map<BoundaryDto>(result);
+            return _mapper.Map<BoundaryRead>(result);
         }
 
         public async Task UpdateAsync(Guid id, BoundaryUpdateDto updateDto)
@@ -99,6 +99,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"Boundary with id {id} not found");
 
             SetDeleteAudit(boundary);
+            boundary.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(

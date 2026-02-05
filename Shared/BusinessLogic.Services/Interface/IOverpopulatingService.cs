@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<OverpopulatingRead> GetByIdAsync(Guid id);
         Task<IEnumerable<OverpopulatingRead>> GetAllAsync();
-        Task<OverpopulatingDto> CreateAsync(OverpopulatingCreateDto createDto);
+        Task<OverpopulatingRead> CreateAsync(OverpopulatingCreateDto createDto);
         Task UpdateAsync(Guid id, OverpopulatingUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesProjectedRequest request, OverpopulatingFilter filter);

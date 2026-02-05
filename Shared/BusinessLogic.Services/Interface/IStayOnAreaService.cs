@@ -13,7 +13,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<StayOnAreaRead> GetByIdAsync(Guid id);
         Task<IEnumerable<StayOnAreaRead>> GetAllAsync();
-        Task<StayOnAreaDto> CreateAsync(StayOnAreaCreateDto createDto);
+        Task<StayOnAreaRead> CreateAsync(StayOnAreaCreateDto createDto);
         Task UpdateAsync(Guid id, StayOnAreaUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesProjectedRequest request, StayOnAreaFilter filter);

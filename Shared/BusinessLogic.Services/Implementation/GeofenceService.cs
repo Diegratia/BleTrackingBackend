@@ -49,7 +49,7 @@ namespace BusinessLogic.Services.Implementation
             return geofences;
         }
 
-        public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto)
+        public async Task<GeofenceRead> CreateAsync(GeofenceCreateDto createDto)
         {
             if (createDto.FloorId.HasValue)
             {
@@ -86,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
                 "Created geofence",
                 new { geofence.Name }
             );
-            return _mapper.Map<GeofenceDto>(geofence);
+            return _mapper.Map<GeofenceRead>(geofence);
         }
 
         public async Task UpdateAsync(Guid id, GeofenceUpdateDto updateDto)

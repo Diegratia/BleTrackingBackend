@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
             return overpopulatings;
         }
 
-        public async Task<OverpopulatingDto> CreateAsync(OverpopulatingCreateDto createDto)
+        public async Task<OverpopulatingRead> CreateAsync(OverpopulatingCreateDto createDto)
         {
             var overpopulating = _mapper.Map<Overpopulating>(createDto);
             overpopulating.Id = Guid.NewGuid();
@@ -65,7 +65,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(overpopulating.Id);
-            return _mapper.Map<OverpopulatingDto>(result);
+            return _mapper.Map<OverpopulatingRead>(result);
         }
 
         public async Task UpdateAsync(Guid id, OverpopulatingUpdateDto updateDto)
@@ -93,6 +93,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"Overpopulating with id {id} not found");
 
             SetDeleteAudit(overpopulating);
+            overpopulating.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(
