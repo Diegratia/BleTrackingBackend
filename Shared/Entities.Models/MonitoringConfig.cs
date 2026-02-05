@@ -18,10 +18,14 @@ namespace Entities.Models
         [Required]
         public string Config { get; set; }
 
+        [Column("building_id")]
+        public Guid? BuildingId { get; set; } 
+
         [Required]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-         public MstApplication Application { get; set; }
+        public MstApplication Application { get; set; }
+        public MstBuilding? Building { get; set; }
     }
 }

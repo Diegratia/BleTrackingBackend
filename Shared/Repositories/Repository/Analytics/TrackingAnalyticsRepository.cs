@@ -899,6 +899,20 @@ namespace Repositories.Repository.Analytics
             // query = ApplyBuildingFilterIfNonSystemAdmin(query, t =>
             //     t.FloorplanMaskedArea?.Floorplan?.Floor?.BuildingId
             // );
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(t =>
+                    t.FloorplanMaskedArea != null &&
+                    t.FloorplanMaskedArea.Floorplan != null &&
+                    t.FloorplanMaskedArea.Floorplan.Floor != null &&
+                    accessibleBuildingIds.Contains(
+                        t.FloorplanMaskedArea.Floorplan.Floor.BuildingId
+                    )
+                );
+            }
+
 
             if (request.BuildingId.HasValue)
                 query = query.Where(a => a.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);

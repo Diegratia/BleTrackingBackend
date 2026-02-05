@@ -1,101 +1,123 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Extension.RootExtension;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+
 namespace BusinessLogic.Services.Implementation
 {
-    public class MonitoringConfigService : IMonitoringConfigService
+    public class MonitoringConfigService : BaseService, IMonitoringConfigService
     {
         private readonly MonitoringConfigRepository _repository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
+        private readonly IAuditEmitter _audit;
 
-        public MonitoringConfigService(MonitoringConfigRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MonitoringConfigService(
+            MonitoringConfigRepository repository,
+            IMapper mapper,
+            IAuditEmitter audit,
+            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repository = repository;
-            _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
+            _audit = audit;
         }
 
-        public async Task<MonitoringConfigDto> GetByIdAsync(Guid id)
+        public async Task<MonitoringConfigRead> GetByIdAsync(Guid id)
         {
             var config = await _repository.GetByIdAsync(id);
-            return config == null ? null : _mapper.Map<MonitoringConfigDto>(config);
+            if (config == null)
+                throw new NotFoundException($"MonitoringConfig with id {id} not found");
+            return config;
         }
 
-        public async Task<IEnumerable<MonitoringConfigDto>> GetAllAsync()
-
+        public async Task<IEnumerable<MonitoringConfigRead>> GetAllAsync()
         {
             var configs = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MonitoringConfigDto>>(configs);
+            return configs;
         }
 
         public async Task<MonitoringConfigDto> CreateAsync(MonitoringConfigCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var config = _mapper.Map<MonitoringConfig>(createDto);
-            config.CreatedAt = DateTime.Now;
-            config.CreatedBy = username;
-            config.UpdatedAt = DateTime.Now;
-            config.UpdatedBy = username;
+
+            SetCreateAudit(config);
+            ValidateApplicationIdForEntity(config);
 
             await _repository.AddAsync(config);
+            await _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
+
             return _mapper.Map<MonitoringConfigDto>(config);
         }
 
         public async Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var config = await _repository.GetByIdAsync(id);
+            var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
-                throw new KeyNotFoundException("Config not found");
-            _mapper.Map(updateDto, config);
+                throw new NotFoundException($"MonitoringConfig with id {id} not found");
 
-            config.UpdatedAt = DateTime.Now;
-            config.UpdatedBy = username;
+            _mapper.Map(updateDto, config);
+            SetUpdateAudit(config);
+            ValidateApplicationIdForEntity(config);
 
             await _repository.UpdateAsync(config);
+            await _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var config = await _repository.GetByIdAsync(id);
+            var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
-                throw new KeyNotFoundException("Config not found");
-            config.UpdatedAt = DateTime.Now;
-            config.UpdatedBy = username;
+                throw new NotFoundException($"MonitoringConfig with id {id} not found");
+
+            SetDeleteAudit(config);
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MonitoringConfigFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            // Map DataTablesProjectedRequest to filter
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name" };
+            // Map Date Filters
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<MonitoringConfig, MonitoringConfigDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
+
+        private void ValidateApplicationIdForEntity(MonitoringConfig config)
+        {
+            var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
+            _repository.ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
+        }
     }
 }

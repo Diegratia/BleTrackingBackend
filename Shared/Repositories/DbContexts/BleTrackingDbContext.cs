@@ -365,10 +365,16 @@ namespace Repositories.DbContexts
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.BuildingId).HasMaxLength(36);
 
                 entity.HasOne(m => m.Application)
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Building)
+                    .WithMany()
+                    .HasForeignKey(m => m.BuildingId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
             // TrackingReportPreset

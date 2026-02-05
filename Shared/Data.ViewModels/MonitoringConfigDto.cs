@@ -11,6 +11,7 @@ namespace Data.ViewModels
         public Guid Id { get; set; }    
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public Guid? BuildingId { get; set; }
         public string Config { get; set; }
     }
     public class MonitoringConfigCreateDto : BaseModelDto
@@ -18,11 +19,14 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string Config { get; set; }
+        public Guid? BuildingId { get; set; }
+
     }
     public class MonitoringConfigUpdateDto
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public Guid? BuildingId { get; set; }
         public string Config { get; set; }
     }
 }
