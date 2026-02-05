@@ -439,7 +439,7 @@ namespace BusinessLogic.Services.Interface
             if (user == null || user.Status != 1)
                 throw new UnauthorizedAccessException("User not found or inactive");
 
-            var newAccessToken = GenerateJwtToken(user);
+            var newAccessToken = await GenerateJwtToken(user);
 
             return new AuthResponseDto
             {

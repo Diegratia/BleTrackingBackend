@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
+using DataView;
 using Entities.Models;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
@@ -166,7 +167,7 @@ namespace BusinessLogic.Services.Implementation
 
             // Get details for audit
             var user = await _userRepository.GetByIdEntityAsync(userId);
-            var building = await _buildingRepository.GetByIdEntityAsync(buildingId);
+            var building = await _buildingRepository.GetByIdAsync(buildingId);
 
             // Revoke access
             await _accessRepository.RemoveAccessAsync(userId, buildingId);

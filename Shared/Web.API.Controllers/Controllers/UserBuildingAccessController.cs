@@ -5,12 +5,13 @@ using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 using Shared.Contracts.Read;
 
 namespace Web.API.Controllers.Controllers
 {
     [MinLevel(LevelPriority.SuperAdmin)]
-    [Route("api/[controller]")]
+    [Route("api/user-building-access")]
     [ApiController]
     public class UserBuildingAccessController : ControllerBase
     {

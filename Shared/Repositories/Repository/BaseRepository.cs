@@ -31,7 +31,7 @@ namespace Repositories.Repository
             // _tenantContext = tenantContext;
         }
 
-        protected (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
+        public (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
         {
             var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
             if (isSystemAdmin == true)
@@ -68,7 +68,7 @@ namespace Repositories.Repository
             return query;
         }
 
-        protected async Task ValidateApplicationIdAsync(Guid applicationId)
+        public async Task ValidateApplicationIdAsync(Guid applicationId)
         {
             var application = await _context.MstApplications
                 .FirstOrDefaultAsync(a => a.Id == applicationId && a.ApplicationStatus != 0);
@@ -76,7 +76,7 @@ namespace Repositories.Repository
                 throw new ArgumentException($"Application with ID {applicationId} not found.");
         }
 
-        protected void ValidateApplicationIdForEntity<T>(T entity, Guid? applicationId, bool isSystemAdmin) where T : class, IApplicationEntity
+        public void ValidateApplicationIdForEntity<T>(T entity, Guid? applicationId, bool isSystemAdmin) where T : class, IApplicationEntity
         {
             if (!isSystemAdmin && applicationId.HasValue && entity.ApplicationId != applicationId)
                 throw new UnauthorizedAccessException("ApplicationId mismatch");
@@ -294,12 +294,9 @@ namespace Repositories.Repository
             if (!accessibleBuildingIds.Any())
                 return query;
 
-            // Filter by accessible buildings
-            query = query.Where(entity =>
-            {
-                var buildingId = buildingIdSelector(entity);
-                return buildingId.HasValue && accessibleBuildingIds.Contains(buildingId.Value);
-            });
+            // Filter by accessible buildings - must use expression tree, not statement block
+            var buildingIds = accessibleBuildingIds.ToList();
+            query = query.Where(entity => buildingIdSelector(entity).HasValue && buildingIds.Contains(buildingIdSelector(entity).Value));
 
             return query;
         }
