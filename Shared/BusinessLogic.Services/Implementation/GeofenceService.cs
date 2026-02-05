@@ -1,61 +1,83 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
 using Data.ViewModels;
+using Data.ViewModels.Shared.ExceptionHelper;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class GeofenceService : IGeofenceService
+    public class GeofenceService : BaseService, IGeofenceService
     {
         private readonly GeofenceRepository _repository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
 
-        public GeofenceService(GeofenceRepository repository, 
-        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
+        public GeofenceService(GeofenceRepository repository,
+        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _audit = audit;
         }
 
-        public async Task<GeofenceDto> GetByIdAsync(Guid id)
+        public async Task<GeofenceRead> GetByIdAsync(Guid id)
         {
             var geofence = await _repository.GetByIdAsync(id);
-            return geofence == null ? null : _mapper.Map<GeofenceDto>(geofence);
+            if (geofence == null)
+                throw new NotFoundException($"Geofence with id {id} not found");
+            return geofence;
         }
 
-        public async Task<IEnumerable<GeofenceDto>> GetAllAsync()
+        public async Task<IEnumerable<GeofenceRead>> GetAllAsync()
         {
             var geofences = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<GeofenceDto>>(geofences);
+            return geofences;
         }
 
         public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto)
         {
-            var geofence = _mapper.Map<Geofence>(createDto);
+            if (createDto.FloorId.HasValue)
+            {
+                if (!await _repository.FloorExistsAsync(createDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            geofence.Id = Guid.NewGuid();
+                var invalidFloorId = await _repository.CheckInvalidFloorOwnershipAsync(createDto.FloorId.Value, AppId);
+                if (invalidFloorId.Any())
+                    throw new UnauthorizedException($"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}");
+            }
+
+            if (createDto.FloorplanId.HasValue)
+            {
+                if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {createDto.FloorplanId} not found");
+
+                var invalidFloorplanId = await _repository.CheckInvalidFloorplanOwnershipAsync(createDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
+
+            var geofence = _mapper.Map<Geofence>(createDto);
+            SetCreateAudit(geofence);
             geofence.Status = 1;
-            geofence.CreatedBy = username;
-            geofence.CreatedAt = DateTime.UtcNow;
-            geofence.UpdatedBy = username;
-            geofence.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(geofence);
             await _audit.Created(
@@ -69,14 +91,35 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, GeofenceUpdateDto updateDto)
         {
-            var geofence = await _repository.GetByIdAsync(id);
+            var geofence = await _repository.GetByIdEntityAsync(id);
             if (geofence == null)
                 throw new KeyNotFoundException("Geofence not found");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            geofence.UpdatedBy = username;
-            geofence.UpdatedAt = DateTime.UtcNow;
+            if (updateDto.FloorId.HasValue && updateDto.FloorId != geofence.FloorId)
+            {
+                if (!await _repository.FloorExistsAsync(updateDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
 
+                var invalidFloorId = await _repository.CheckInvalidFloorOwnershipAsync(updateDto.FloorId.Value, AppId);
+                if (invalidFloorId.Any())
+                    throw new UnauthorizedException($"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}");
+            }
+
+            if (updateDto.FloorplanId.HasValue && updateDto.FloorplanId != geofence.FloorplanId)
+            {
+                if (!await _repository.FloorplanExistsAsync(updateDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {updateDto.FloorplanId} not found");
+
+                var invalidFloorplanId = await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
+
+            SetUpdateAudit(geofence);
             _mapper.Map(updateDto, geofence);
             await _repository.UpdateAsync(geofence);
             await _audit.Updated(
@@ -89,16 +132,26 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var geofence = await _repository.GetByIdAsync(id);
+            var geofence = await _repository.GetByIdEntityAsync(id);
             if (geofence == null)
             {
                 throw new KeyNotFoundException("Geofence not found");
             }
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            SetDeleteAudit(geofence);
+            geofence.IsActive = 0; // Keeping manual set for IsActive as not in SetDeleteAudit for BaseModelWithTime? BaseService.SetDeleteAudit usually handles Status = 0.
+            // But checking BaseService SetDeleteAudit(BaseModelWithTime) only updates UpdatedBy/At. It does NOT set Status=0 in the code I viewed?
+            // Wait, I checked BaseService.cs in step 255.
+            // protected void SetDeleteAudit(BaseModelWithTime entity) { // entity.Status = 0; entity.UpdatedBy... }
+            // The Status=0 line is commented out in BaseService! " // entity.Status = 0;"
+            // So I MUST set Status = 0 manually here if BaseService doesn't do it.
             geofence.Status = 0;
-            geofence.IsActive = 0;
-            geofence.UpdatedBy = username;
-            geofence.UpdatedAt = DateTime.UtcNow;
+
+            // Re-checking BaseService content...
+            // Line 113: // entity.Status = 1; (in CreateAudit)
+            // Line 113: // entity.Status = 0; (in DeleteAudit)
+            // It seems BaseService DOES NOT set Status. So I must set it.
+
             await _repository.DeleteAsync(id);
             await _audit.Deleted(
                 "Geofence",
@@ -108,21 +161,24 @@ namespace BusinessLogic.Services.Implementation
             );
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, GeofenceFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name"};
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Status"};
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<Geofence, GeofenceDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
+
     }
 }

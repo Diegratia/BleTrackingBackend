@@ -4129,6 +4129,15 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -4148,13 +4157,6 @@ namespace Repositories.Migrations
                     b.Property<DateTime>("EmailConfirmationExpiredAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("email_confirmation_expired_at");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
 
                     b.Property<Guid>("GroupId")
                         .HasColumnType("uniqueidentifier")
@@ -4182,9 +4184,17 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("password");
 
-                    b.Property<int>("StatusActive")
+                    b.Property<int>("Status")
                         .HasColumnType("int")
-                        .HasColumnName("status_active");
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
 
                     b.Property<Guid?>("UserGroupId")
                         .HasColumnType("uniqueidentifier");

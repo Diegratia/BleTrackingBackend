@@ -1,24 +1,25 @@
-using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
-using Microsoft.EntityFrameworkCore;
-using Repositories.DbContexts;
-using AutoMapper;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.SuperAdmin)]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class UserGroupController : ControllerBase
     {
-        private readonly IAuthService _service;
+        private readonly IUserGroupService _service;
 
-         public UserGroupController(IAuthService service)
+        public UserGroupController(IUserGroupService service)
         {
             _service = service;
         }
@@ -28,99 +29,29 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createGroup = await _service.CreateGroupAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Group created successfully",
-                    collection = new { data = createGroup },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var userGroup = await _service.CreateAsync(dto);
+            return StatusCode(201, ApiResponse.Created("UserGroup created successfully", userGroup));
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var groups = await _service.GetAllGroupsAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "User groups retrieved successfully",
-                    collection = new { data = groups },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var groups = await _service.GetAllAsync();
+            return Ok(ApiResponse.Success("User groups retrieved successfully", groups));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var group = await _service.GetGroupByIdAsync(id);
-                if (group == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "User group not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "User group retrieved successfully",
-                    collection = new { data = group },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var group = await _service.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("UserGroup retrieved successfully", group));
         }
 
         [HttpPut("{id}")]
@@ -128,111 +59,47 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-    
-                await _service.UpdateGroupAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "User group updated successfully",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("UserGroup updated successfully"));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
+            await _service.DeleteAsync(id);
+            return Ok(ApiResponse.Success("UserGroup deleted successfully"));
+        }
+
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
+        {
+            if (!ModelState.IsValid)
             {
-                await _service.DeleteGroupAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "User group deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
-            catch (KeyNotFoundException ex)
+
+            var filter = new UserGroupFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
+                filter = JsonSerializer.Deserialize<UserGroupFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new UserGroupFilter();
             }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+
+            var result = await _service.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

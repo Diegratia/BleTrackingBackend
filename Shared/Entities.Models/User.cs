@@ -5,17 +5,13 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Helpers.Consumer;
+using System.Text.Json.Serialization;
 
 namespace Entities.Models
 {
-    public enum StatusActive
-    {
-        NonActive,
-        Active
-        
-    }
 
-    public class User : BaseModel, IApplicationEntity
+
+    public class User : BaseModelWithTimeApp, IApplicationEntity
     {
         [Required]
         [Column("username")]
@@ -56,10 +52,6 @@ namespace Entities.Models
         [Required]
         [Column("last_login_at")]
         public DateTime LastLoginAt { get; set; }
-
-        [Required]
-        [Column("status_active")]
-        public StatusActive StatusActive { get; set; }
         
         [Column("is_integration")]
         public bool IsIntegration { get; set; }

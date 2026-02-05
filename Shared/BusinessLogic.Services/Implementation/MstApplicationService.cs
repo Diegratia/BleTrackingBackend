@@ -198,7 +198,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
-                    StatusActive = StatusActive.Active,
+                    Status = 1,
                     GroupId = userGroups[0].Id, // Super Admin
                     ApplicationId = userGroups[0].ApplicationId
                 },
@@ -214,7 +214,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
-                    StatusActive = StatusActive.Active,
+                    Status = 1,
                     GroupId = userGroups[1].Id, // Operator
                     ApplicationId = userGroups[1].ApplicationId
                 },
@@ -230,7 +230,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
-                    StatusActive = StatusActive.Active,
+                    Status = 1,
                     GroupId = userGroups[2].Id, // Security
                     ApplicationId = userGroups[2].ApplicationId
                 },
@@ -246,7 +246,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(1),
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
-                    StatusActive = StatusActive.Active,
+                    Status = 1,
                     GroupId = userGroups[3].Id, // other primary
                     ApplicationId = userGroups[3].ApplicationId
                 }

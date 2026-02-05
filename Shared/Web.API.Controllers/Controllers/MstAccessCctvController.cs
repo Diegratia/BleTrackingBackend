@@ -4,14 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
+using BusinessLogic.Services.Extension.RootExtension;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
+using Shared.Contracts;
+using System.Text;
+using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.SuperAdmin)]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
     public class MstAccessCctvController : ControllerBase
     {
         private readonly IMstAccessCctvService _mstAccessCctvService;
@@ -25,90 +29,23 @@ namespace Web.API.Controllers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var accessCctvs = await _mstAccessCctvService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access CCTVs retrieved successfully",
-                    collection = new { data = accessCctvs },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var accessCctvs = await _mstAccessCctvService.GetAllAsync();
+            return Ok(ApiResponse.Success("Access CCTVs retrieved successfully", accessCctvs));
         }
 
         [HttpGet("unassigned")]
         public async Task<IActionResult> GetAllUnassignedAsync()
         {
-            try
-            {
-                var accessCctvs = await _mstAccessCctvService.GetAllUnassignedAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Unassigned Access CCTVs retrieved successfully",
-                    collection = new { data = accessCctvs },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var accessCctvs = await _mstAccessCctvService.GetAllUnassignedAsync();
+            return Ok(ApiResponse.Success("Unassigned Access CCTVs retrieved successfully", accessCctvs));
         }
 
         // GET: api/MstAccessCctv/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var accessCctv = await _mstAccessCctvService.GetByIdAsync(id);
-                if (accessCctv == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Access CCTV not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access CCTV retrieved successfully",
-                    collection = new { data = accessCctv },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var accessCctv = await _mstAccessCctvService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Access CCTV retrieved successfully", accessCctv));
         }
 
         // POST: api/MstAccessCctv
@@ -117,37 +54,15 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                var createdAccessCctv = await _mstAccessCctvService.CreateAsync(mstAccessCctvDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Access CCTV created successfully",
-                    collection = new { data = createdAccessCctv },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdAccessCctv = await _mstAccessCctvService.CreateAsync(mstAccessCctvDto);
+            return StatusCode(201, ApiResponse.Created("Access CCTV created successfully", createdAccessCctv));
         }
 
         // PUT: api/MstAccessCctv/{id}
@@ -156,254 +71,86 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
 
-            try
-            {
-                await _mstAccessCctvService.UpdateAsync(id, mstAccessCctvDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access CCTV updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Access CCTV not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstAccessCctvService.UpdateAsync(id, mstAccessCctvDto);
+            return Ok(ApiResponse.Success("Access CCTV updated successfully"));
         }
 
         // DELETE: api/MstAccessCctv/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstAccessCctvService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access CCTV deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Access CCTV not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstAccessCctvService.DeleteAsync(id);
+            return Ok(ApiResponse.Success("Access CCTV deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
+            var filter = new MstAccessCctvFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                filter = JsonSerializer.Deserialize<MstAccessCctvFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new MstAccessCctvFilter();
             }
 
-            try
-            {
-                var result = await _mstAccessCctvService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access Cctv filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstAccessCctvService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstAccessCctvService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstAccessCctv_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstAccessCctvService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstAccessCctv_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstAccessCctvService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstAccessCctv_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstAccessCctvService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstAccessCctv_Report.xlsx");
         }
 
-        //OPEN
+        // OPEN
 
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var accessCctvs = await _mstAccessCctvService.OpenGetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access CCTVs retrieved successfully",
-                    collection = new { data = accessCctvs },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var accessCctvs = await _mstAccessCctvService.OpenGetAllAsync();
+            return Ok(ApiResponse.Success("Access CCTVs retrieved successfully", accessCctvs));
         }
 
-        [HttpPost("open/{filter}")]
+        [HttpPost("open/filter")]
         [AllowAnonymous]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
+        public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
+            var filter = new MstAccessCctvFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                filter = JsonSerializer.Deserialize<MstAccessCctvFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new MstAccessCctvFilter();
             }
 
-            try
-            {
-                var result = await _mstAccessCctvService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Access Cctv filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstAccessCctvService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Data retrieved", result));
         }
     }
 }

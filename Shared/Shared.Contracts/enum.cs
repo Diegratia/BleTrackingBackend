@@ -158,6 +158,14 @@ namespace Shared.Contracts
         Mutation
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum StatusActive
+    {
+        NonActive,
+        Active
+
+    }
+
     public enum RestrictedStatus
     {
         Restrict,
@@ -240,7 +248,7 @@ namespace Shared.Contracts
         Medium,
         Low
     }
-
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum LevelPriority
     {
         System,

@@ -9,6 +9,12 @@
 6. [Service Port Mapping](#service-port-mapping)
 7. [Development Commands](#development-commands)
 8. [Common Patterns](#common-patterns)
+9. [Multi-Tenancy & ApplicationId Filtering](#multi-tenancy--applicationid-filtering)
+10. [Projection Pattern (ProjectToRead)](#projection-pattern-projecttoread)
+11. [Best Practices](#best-practices)
+12. [Troubleshooting](#troubleshooting)
+13. [Resources](#resources)
+14. [Contact & Support](#contact--support)
 
 ---
 
@@ -356,41 +362,39 @@ app.MapControllers();
 app.Run();
 ```
 
-#### Unified Refactor Guide (Current Standard)
-Use this single checklist for refactoring a Service/Entity stack (DataTables + Auth + Middleware):
+### Unified Refactor Guide (Standard Berdasarkan PatrolCase)
+Gunakan checklist ini saat melakukan refactoring Service/Entity stack untuk mendukung DataTables, Projection, dan Strict Ownership:
 
-1. Analyze & prepare
-2. Identify target entity and files:
-3. `Shared/Shared.Contracts/Read/[Entity]Read.cs`
-4. `Shared/Shared.Contracts/[Entity]Filter.cs`
-5. `Shared/Repositories/Repository/[Entity]Repository.cs`
-6. `Shared/BusinessLogic.Services/Implementation/[Entity]Service.cs`
-7. `Shared/Web.API.Controllers/Controllers/[Entity]Controller.cs`
-8. `Services.API/[Service]/Program.cs`
-9. Create filter + read contracts
-10. Filter DTO must include `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`, and entity-specific filters (e.g., `DateFrom`, `Status`).
-11. Read DTO lives in `Shared/Shared.Contracts/Read` and is used for projection and responses.
-12. Repository refactor
-13. Add `BaseEntityQuery()` if needed and use it (do not duplicate tenant filter logic).
-14. Add `ProjectToRead(...)` with `AsNoTracking()` + manual `Select` (no AutoMapper in query).
-15. Add `FilterAsync(FilterDto)` that uses `ApplySorting` and `ApplyPaging`.
-16. Service refactor
-17. Use `DataTablesProjectedRequest` + typed filter, map request fields to filter.
-18. Throw `NotFoundException` for missing entity, `BusinessException` for logic errors.
-19. Controller refactor
-20. Apply `[MinLevel(LevelPriority.SuperAdmin)]` at class level.
-21. Remove manual try/catch and use `ApiResponse` helpers.
-22. Filter endpoint must deserialize `request.Filters` with `PropertyNameCaseInsensitive = true`.
-23. Program.cs refactor
-24. Use RootExtension methods, register `MinLevelHandler`, and include `CustomExceptionMiddleware`.
-25. Definition of done
-26. Repository has `FilterAsync` returning `(List, int, int)`.
-27. Projection uses manual `Select` only.
-28. Service maps `DataTablesProjectedRequest` to filter.
-29. Controller uses `ApiResponse` and no manual try/catch.
-30. Program.cs uses standard extensions and middleware.
+1.  **Analyze & Prepare**: Identifikasi entity, relation, dan requirements (DataTables?).
+2.  **Define Contracts**:
+    *   `Shared/Shared.Contracts/Read/[Entity]Read.cs`: DTO untuk data read-only (projection).
+    *   `Shared/Shared.Contracts/[Entity]Filter.cs`: Model filter dengan `JsonElement` untuk ID fields (support single/array).
+3.  **Repository Refactor (Standard: `PatrolCaseRepository`)**:
+    *   **Strict Multi-Tenancy**: Gunakan `BaseEntityQuery()` untuk mengintegrasikan `ApplyApplicationIdFilter`.
+    *   **Manual Projection**: Implementasikan `ProjectToRead(IQueryable<Entity> query)` yang mengembalikan `IQueryable<EntityRead>`. Gunakan `AsNoTracking()` dan manual `Select`.
+    *   **Filtering**: Implementasikan `FilterAsync([Entity]Filter filter)` yang menggunakan `BaseEntityQuery`, menghitung total/filtered, menerapkan sorting/paging, dan memanggil `ProjectToRead`.
+    *   **ID Filter Pattern**: Gunakan `ExtractIds(filter.SomeId)` untuk handle ID filter yang support single value dan array.
+    *   **Entity Access**: Sediakan `GetByIdEntityAsync(Guid id)` untuk operasi yang membutuhkan entity asli (Create/Update/Delete).
+4.  **Service Refactor (Standard: `PatrolCaseService`)**:
+    *   **Inherit BaseService**: Extend `BaseService` untuk audit fields helper.
+    *   **Inject IAuditEmitter**: Tambahkan `IAuditEmitter` di constructor untuk audit logging.
+    *   **DataTables Support**: Gunakan `DataTablesProjectedRequest` dan deserialisasi `request.Filter` ke typed filter.
+    *   **Ownership Validation**: Panggil `CheckInvalid[Related]OwnershipAsync` sebelum Create/Update jika ada relasi ke master data lain.
+    *   **Error Handling**: Gunakan `NotFoundException`, `UnauthorizedException`, atau `BusinessException` secara eksplisit.
+    *   **Audit Calls**: Panggil `_audit.Created/Updated/Deleted` setelah operasi database.
+5.  **Controller Refactor (Standard: `PatrolCaseController`)**:
+    *   **Standardized Responses**: Gunakan `ApiResponse.Success`, `ApiResponse.Created`, `ApiResponse.Paginated`, dll.
+    *   **Centralized Authorization**: Tambahkan `[MinLevel(LevelPriority.SuperAdmin)]` di level class atau method.
+    *   **Clean Endpoints**: Hapus redundant `try-catch`. Gunakan global exception middleware.
+6.  **Program.cs Refactor**:
+    *   **RootExtension**: Gunakan `AddDbContextExtension`, `AddJwtAuthExtension`, `AddAuthorizationNewPolicies`.
+    *   **MinLevelHandler**: Register `MinLevelHandler` sebagai singleton.
+    *   **AuditEmitter**: Register `IAuditEmitter` sebagai scoped.
+    *   **Middleware**: Tambahkan `CustomExceptionMiddleware` dan `UseSerilogRequestLoggingExtension`.
 
-Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`, and `MstDistrictController.cs`.
+Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`, `MstAccessCctvRepository.cs`.
+
+Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`.
 
 ### 2. Naming Conventions
 
@@ -1125,7 +1129,118 @@ public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBui
 // Lihat bagian "Specific Repository Pattern" di atas.
 ```
 
-### 3. Soft Delete Pattern
+### 3. ExtractIds Pattern for ID Filters
+
+Gunakan pattern ini untuk filter ID yang perlu support **single value** dan **array**:
+
+```csharp
+// 1. Filter DTO - Gunakan JsonElement untuk ID fields
+using System.Text.Json;
+
+public class MstAccessCctvFilter
+{
+    public JsonElement IntegrationId { get; set; }
+    public JsonElement FloorplanId { get; set; }
+}
+
+// 2. Repository - Gunakan ExtractIds method dari BaseRepository
+public async Task<(List<MstAccessCctvRead> Data, int Total, int Filtered)> FilterAsync(
+    MstAccessCctvFilter filter)
+{
+    var query = BaseEntityQuery();
+
+    // ExtractIds handle single string dan array of strings
+    var integrationIds = ExtractIds(filter.IntegrationId);
+    if (integrationIds.Count > 0)
+        query = query.Where(x => x.IntegrationId.HasValue && integrationIds.Contains(x.IntegrationId.Value));
+
+    var floorplanIds = ExtractIds(filter.FloorplanId);
+    if (floorplanIds.Count > 0)
+        query = query.Where(x => floorplanIds.Contains(x.FloorplanId));
+
+    // ... rest of filtering
+}
+```
+
+**Kenapa perlu ExtractIds?**
+- Frontend bisa kirim: `"integrationId": "guid-string"` (single)
+- Atau: `"integrationId": ["guid-1", "guid-2"]` (array)
+- `ExtractIds` otomatis handle kedua kasus tersebut
+- Method ini tersedia di `BaseRepository.cs`
+
+### 4. Audit Emitter Pattern
+
+Gunakan `IAuditEmitter` untuk tracking perubahan data:
+
+```csharp
+// 1. Register di Program.cs
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+
+// 2. Inject di Service
+public class MstAccessCctvService : BaseService, IMstAccessCctvService
+{
+    private readonly IAuditEmitter _audit;
+
+    public MstAccessCctvService(
+        MstAccessCctvRepository repo,
+        IAuditEmitter audit,
+        IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+    {
+        _repo = repo;
+        _audit = audit;
+    }
+
+    // 3. Gunakan setelah operasi database
+    public async Task<MstAccessCctvDto> CreateAsync(MstAccessCctvCreateDto dto)
+    {
+        var entity = _mapper.Map<MstAccessCctv>(dto);
+        SetCreateAudit(entity);
+        await _repo.AddAsync(entity);
+
+        await _audit.Created(
+            "Access CCTV",
+            entity.Id,
+            "Created Access CCTV",
+            new { entity.Name }
+        );
+
+        return _mapper.Map<MstAccessCctvDto>(entity);
+    }
+
+    public async Task UpdateAsync(Guid id, MstAccessCctvUpdateDto dto)
+    {
+        var entity = await _repo.GetByIdEntityAsync(id);
+        // ... update logic
+
+        await _repo.UpdateAsync(entity);
+
+        await _audit.Updated(
+            "Access CCTV",
+            entity.Id,
+            "Updated Access CCTV",
+            new { entity.Name }
+        );
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var entity = await _repo.GetByIdEntityAsync(id);
+        // ... validation
+
+        SetDeleteAudit(entity);
+        await _repo.SoftDeleteAsync(id);
+
+        await _audit.Deleted(
+            "Access CCTV",
+            entity.Id,
+            "Deleted Access CCTV",
+            new { entity.Name }
+        );
+    }
+}
+```
+
+### 5. Soft Delete Pattern
 
 ```csharp
 // Entity
@@ -1150,7 +1265,7 @@ public async Task SoftDeleteAsync(Guid id)
 modelBuilder.Entity<MstBuilding>().HasQueryFilter(b => b.Status != 0);
 ```
 
-### 4. Audit Trail Pattern
+### 4. Audit Trail Pattern (BaseService)
 
 ```csharp
 // Base entity with audit
@@ -1173,16 +1288,23 @@ public abstract class BaseService
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedBy = UsernameFormToken;
     }
-    
+
     protected void SetUpdateAudit(BaseModelWithTime entity)
     {
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedBy = UsernameFormToken;
     }
+
+    protected void SetDeleteAudit(BaseModelWithTime entity)
+    {
+        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedBy = UsernameFormToken;
+        entity.Status = 0;
+    }
 }
 ```
 
-### 5. JWT Claims Pattern
+### 7. JWT Claims Pattern
 
 ```csharp
 // Token claims
@@ -1203,7 +1325,7 @@ protected string UsernameFormToken => Http.HttpContext?.User.FindFirst(ClaimType
 protected string Role => Http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
 ```
 
-### 6. MQTT Message Pattern
+### 8. MQTT Message Pattern
 
 ```csharp
 // MQTT Service
@@ -1235,29 +1357,9 @@ public class EngineMqttListener : BackgroundService
 }
 ```
 
-### 7. Multi-tenancy Pattern
 
-```csharp
-// Entity dengan application isolation
-public class MstBuilding : BaseModel, IApplicationEntity
-{
-    public Guid ApplicationId { get; set; }
-    public MstApplication Application { get; set; }
-}
 
-// Repository filtering
-protected IQueryable<T> ApplyTenantFilter<T>(IQueryable<T> query) where T : class, IApplicationEntity
-{
-    var (appId, isSystemAdmin) = GetApplicationIdAndRole();
-    
-    if (!isSystemAdmin && appId.HasValue)
-        return query.Where(x => x.ApplicationId == appId.Value);
-    
-    return query;
-}
-```
-
-### 8. Exception Handling Pattern
+### 9. Exception Handling Pattern
 
 ```csharp
 // Custom exceptions
@@ -1349,6 +1451,155 @@ builder.Services.AddQuartz(q =>
         .WithCronSchedule("0 0 2 * * ?")); // Daily at 2 AM
 });
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+```
+
+
+
+## Multi-Tenancy & ApplicationId Filtering
+
+Semua entity yang memiliki `ApplicationId` harus mengimplementasikan `IApplicationEntity`. Repository wajib menerapkan filter ini secara konsisten menggunakan pattern `BaseEntityQuery`.
+
+### Implementation Pattern (Standard: PatrolCase)
+
+```csharp
+// 1. Repository - BaseEntityQuery
+private IQueryable<PatrolCase> BaseEntityQuery()
+{
+    var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+    
+    // Base data query (active only)
+    var query = _context.PatrolCases.Where(x => x.Status != 0);
+    
+    // Apply multi-tenancy filter (Shared/Repositories/Repository/BaseRepository.cs)
+    return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+}
+
+// 2. Repository - Usage
+public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
+{
+    return await BaseEntityQuery().FirstOrDefaultAsync(x => x.Id == id);
+}
+```
+
+### Knowledge Base
+- **System Admin**: Mengakses SEMUA data (`ApplicationId` diabaikan).
+- **Tenant User**: Hanya mengakses data milik `ApplicationId` yang ada di JWT Claim.
+- **Consistency**: Gunakan `BaseEntityQuery()` di SEMUA method repository yang membaca data (`GetById`, `GetAll`, `Filter`).
+
+### Strict Ownership Validation
+Saat melakukan Create atau Update pada entity yang memiliki relasi ke Master Data lain (seperti `Floor`, `Floorplan`), wajib melakukan validasi kepemilikan (Ownership Check) untuk mencegah cross-tenant data access.
+
+```csharp
+// Di Service
+if (dto.FloorId.HasValue)
+{
+    var invalidFloors = await _repository.CheckInvalidFloorOwnershipAsync(
+        dto.FloorId.Value, 
+        AppId // Dari BaseService
+    );
+    if (invalidFloors.Any())
+        throw new UnauthorizedException("Floor does not belong to your application");
+}
+```
+
+Repository harus menyediakan method helper yang menggunakan `CheckInvalidOwnershipIdsAsync<T>` dari `BaseRepository`.
+
+---
+
+## Projection Pattern (ProjectToRead)
+
+Gunakan pattern ini untuk memisahkan domain entity dari read-only DTO (Read Contracts). Ini meningkatkan performance dengan membatasi field yang diambil dari database.
+
+### Implementation Pattern (Standard: PatrolCase)
+
+```csharp
+// 1. Repository - Define Projection
+private IQueryable<PatrolCaseRead> ProjectToRead(IQueryable<PatrolCase> query)
+{
+    // Gunakan AsNoTracking() untuk performance
+    // Gunakan Select manual (jangan AutoMapper dalam IQueryable)
+    return query.AsNoTracking().Select(t => new PatrolCaseRead
+    {
+        Id = t.Id,
+        Title = t.Title,
+        ApplicationId = t.ApplicationId,
+        SecurityName = t.Security != null ? t.Security.Name : null,
+        // ... field lainnya
+    });
+}
+
+// 2. Repository - Usage
+public async Task<List<PatrolCaseRead>> GetAllAsync()
+{
+    var query = BaseEntityQuery();
+    return await ProjectToRead(query).ToListAsync();
+}
+```
+
+### Service Return Type Pattern
+
+**PENTING**: Jika repository sudah mengembalikan `Read` DTO (hasil `ProjectToRead`), service **TIDAK PERLU** menggunakan mapper lagi.
+
+#### Pattern yang Benar:
+
+```csharp
+// 1. Repository - Mengembalikan Read DTO
+public async Task<GeofenceRead?> GetByIdAsync(Guid id)
+{
+    var query = BaseEntityQuery().Where(x => x.Id == id);
+    return await ProjectToRead(query).FirstOrDefaultAsync();
+}
+
+// 2. Service Interface - Return type menggunakan Read DTO
+public interface IGeofenceService
+{
+    Task<GeofenceRead> GetByIdAsync(Guid id);  // BUKAN GeofenceDto
+    Task<IEnumerable<GeofenceRead>> GetAllAsync();
+}
+
+// 3. Service Implementation - Langsung return, TANPA mapper
+public async Task<GeofenceRead> GetByIdAsync(Guid id)
+{
+    var geofence = await _repository.GetByIdAsync(id);
+    if (geofence == null)
+        throw new NotFoundException($"Geofence with id {id} not found");
+
+    return geofence;  // TANPA _mapper.Map<GeofenceDto>(geofence)
+}
+
+// 4. Controller - Langsung return hasil service
+[HttpGet("{id}")]
+public async Task<IActionResult> GetById(Guid id)
+{
+    var geofence = await _service.GetByIdAsync(id);
+    return Ok(ApiResponse.Success("Geofence retrieved successfully", geofence));
+}
+```
+
+#### Kenapa Tidak Perlu Mapper?
+
+1. **Repository sudah melakukan projection**: `ProjectToRead()` sudah meng-select field yang diperlukan dan meng-convert ke `GeofenceRead`
+2. **Tidak ada double mapping**: Entity → GeofenceRead (di repository) sudah cukup, tidak perlu GeofenceRead → GeofenceDto
+3. **Lebih efisien**: Menghindari mapping yang redundant
+4. **Konsistensi**: Read operation mengembalikan Read DTO, Create/Update tetap menggunakan Entity DTO
+
+#### Exception: Create/Update Operations
+
+Untuk Create/Update, tetap gunakan Entity DTO karena perlu mapping ke Entity:
+
+```csharp
+public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
+{
+    var entity = _mapper.Map<Geofence>(dto);  // DTO → Entity masih diperlukan
+    SetCreateAudit(entity);
+    await _repository.AddAsync(entity);
+
+    await _audit.Created("Geofence", entity.Id, "Created", new { entity.Name });
+
+    // Return DTO untuk response
+    var result = await _repository.GetByIdAsync(entity.Id);
+    return _mapper.Map<GeofenceDto>(result);  // BISA juga langsung return result
+}
 ```
 
 ---

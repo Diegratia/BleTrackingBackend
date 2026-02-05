@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IBoundaryService
     {
-        Task<BoundaryDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<BoundaryDto>> GetAllAsync();
+        Task<BoundaryRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<BoundaryRead>> GetAllAsync();
         Task<BoundaryDto> CreateAsync(BoundaryCreateDto createDto);
         Task UpdateAsync(Guid id, BoundaryUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request); 
-
+        Task<object> FilterAsync(DataTablesProjectedRequest request, BoundaryFilter filter);
     }
 }
