@@ -273,6 +273,11 @@ namespace Repositories.Repository
             IQueryable<AlarmRecordTracking> query,
             TrackingAnalyticsRequestRM request)
         {
+            // Apply building access filter for non-system/super admin users
+            query = ApplyBuildingFilterIfNonSystemAdmin(query, x =>
+                x.FloorplanMaskedArea?.Floorplan?.Floor?.BuildingId
+            );
+
             if (request.BuildingId.HasValue)
                 query = query.Where(x =>
                     x.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);
@@ -300,6 +305,11 @@ namespace Repositories.Repository
             IQueryable<AlarmTriggers> query,
             AlarmAnalyticsRequestRM request)
         {
+            // Apply building access filter for non-system/super admin users
+            query = ApplyBuildingFilterIfNonSystemAdmin(query, a =>
+                a.Floorplan?.Floor?.BuildingId
+            );
+
             if (request.BuildingId.HasValue)
                 query = query.Where(a =>
                     a.Floorplan.Floor.Building.Id == request.BuildingId);
@@ -323,7 +333,7 @@ namespace Repositories.Repository
             if (request.IsActive.HasValue)
                 query = query.Where(a =>
                     a.IsActive == request.IsActive);
-            
+
             if (!string.IsNullOrWhiteSpace(request.PersonType))
             {
                 var type = request.PersonType.Trim().ToLower();

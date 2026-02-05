@@ -98,7 +98,12 @@ namespace Repositories.Repository
             .Include(d => d.Floorplan)
             .Where(d => d.Status != 0);
 
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // Apply building access filter for non-system/super admin users
+            query = ApplyBuildingFilterIfNonSystemAdmin(query, d => d.Floor?.BuildingId);
+
+            return query;
         }
 
         public async Task<List<PatrolAreaLookUpRM>> GetAllLookUpAsync()

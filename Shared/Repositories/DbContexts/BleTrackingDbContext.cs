@@ -72,6 +72,7 @@ namespace Repositories.DbContexts
         // public DbSet<RecordTrackingLog> RecordTrackingLogs { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
+        public DbSet<UserBuildingAccess> UserBuildingAccesses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
 
@@ -120,6 +121,7 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
+            modelBuilder.Entity<UserBuildingAccess>().ToTable("user_building_access");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
 
             // MstApplication

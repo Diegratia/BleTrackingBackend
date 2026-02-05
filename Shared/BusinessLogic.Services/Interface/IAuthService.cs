@@ -44,6 +44,7 @@ namespace BusinessLogic.Services.Interface
         private readonly UserGroupRepository _userGroupRepository;
         private readonly RefreshTokenRepository _refreshTokenRepository;
         private readonly MstIntegrationRepository _mstIntegrationRepository;
+        private readonly UserBuildingAccessRepository _userBuildingAccessRepository;
         // private readonly VisitorRepository _visitorRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
@@ -58,6 +59,7 @@ namespace BusinessLogic.Services.Interface
             UserGroupRepository userGroupRepository,
             RefreshTokenRepository refreshTokenRepository,
             MstIntegrationRepository mstIntegrationRepository,
+            UserBuildingAccessRepository userBuildingAccessRepository,
             IMapper mapper,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
@@ -68,6 +70,7 @@ namespace BusinessLogic.Services.Interface
             _userGroupRepository = userGroupRepository;
             _refreshTokenRepository = refreshTokenRepository;
             _mstIntegrationRepository = mstIntegrationRepository;
+            _userBuildingAccessRepository = userBuildingAccessRepository;
             _mapper = mapper;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
@@ -98,7 +101,7 @@ namespace BusinessLogic.Services.Interface
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
 
-            var accessToken = GenerateJwtToken(user);
+            var accessToken = await GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken
@@ -150,7 +153,7 @@ namespace BusinessLogic.Services.Interface
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
 
-            var accessToken = GenerateJwtToken(user);
+            var accessToken = await GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken
@@ -206,7 +209,7 @@ namespace BusinessLogic.Services.Interface
             await _userRepository.UpdateAsync(user);
 
             // Buat token
-            var accessToken = GenerateJwtToken(user);
+            var accessToken = await GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken
@@ -452,12 +455,12 @@ namespace BusinessLogic.Services.Interface
             };
         }
 
-        private string GenerateJwtToken(User user)
+        private async Task<string> GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
@@ -468,6 +471,14 @@ namespace BusinessLogic.Services.Interface
                 new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()),
                 new Claim("level", ((int)user.Group.LevelPriority).ToString())
             };
+
+            // Add accessible buildings claim for non-System and non-SuperAdmin users
+            if (user.Group.LevelPriority != LevelPriority.System && user.Group.LevelPriority != LevelPriority.SuperAdmin)
+            {
+                var accessibleBuildingIds = await _userBuildingAccessRepository.GetAccessibleBuildingIdsAsync(user.Id);
+                var buildingIdsString = string.Join(",", accessibleBuildingIds.Select(id => id.ToString()));
+                claims.Add(new Claim("accessibleBuildings", buildingIdsString));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

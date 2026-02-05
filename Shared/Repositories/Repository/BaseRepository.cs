@@ -253,6 +253,56 @@ namespace Repositories.Repository
             return ids;
         }
 
+        /// <summary>
+        /// Get accessible building IDs from JWT token claim
+        /// Returns empty list for System Admin and SuperAdmin (bypass building restrictions)
+        /// </summary>
+        protected IEnumerable<Guid> GetAccessibleBuildingsFromToken()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            // System admin bypasses building restrictions
+            if (isSystemAdmin)
+                return Enumerable.Empty<Guid>();
+
+            // SuperAdmin also bypasses building restrictions
+            if (IsSuperAdmin())
+                return Enumerable.Empty<Guid>();
+
+            var buildingIdsClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("accessibleBuildings")?.Value;
+
+            if (string.IsNullOrEmpty(buildingIdsClaim))
+                return Enumerable.Empty<Guid>();
+
+            return buildingIdsClaim.Split(',')
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => Guid.Parse(id))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Apply building filter to query if user is not System/SuperAdmin and has building restrictions
+        /// </summary>
+        protected IQueryable<T> ApplyBuildingFilterIfNonSystemAdmin<T>(
+            IQueryable<T> query,
+            Func<T, Guid?> buildingIdSelector
+        ) where T : class
+        {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+
+            // Skip if system admin, super admin, or no restriction (empty list means bypass)
+            if (!accessibleBuildingIds.Any())
+                return query;
+
+            // Filter by accessible buildings
+            query = query.Where(entity =>
+            {
+                var buildingId = buildingIdSelector(entity);
+                return buildingId.HasValue && accessibleBuildingIds.Contains(buildingId.Value);
+            });
+
+            return query;
+        }
 
 
 
