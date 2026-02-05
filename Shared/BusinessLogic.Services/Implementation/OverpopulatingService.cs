@@ -93,6 +93,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"Overpopulating with id {id} not found");
 
             SetDeleteAudit(overpopulating);
+            overpopulating.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(

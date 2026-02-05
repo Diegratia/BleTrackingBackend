@@ -94,6 +94,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"StayOnArea with id {id} not found");
 
             SetDeleteAudit(onArea);
+            onArea.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(

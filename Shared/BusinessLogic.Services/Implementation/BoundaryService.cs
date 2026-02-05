@@ -99,6 +99,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"Boundary with id {id} not found");
 
             SetDeleteAudit(boundary);
+            boundary.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
             await _audit.Deleted(
