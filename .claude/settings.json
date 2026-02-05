@@ -1,0 +1,6 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash E:\\g\\A\\BleTrackingBackend\\.claude\\statusline-command.sh"
+  }
+}
