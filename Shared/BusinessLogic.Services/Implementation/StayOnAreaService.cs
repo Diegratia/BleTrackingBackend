@@ -48,7 +48,7 @@ namespace BusinessLogic.Services.Implementation
             return onAreas;
         }
 
-        public async Task<StayOnAreaDto> CreateAsync(StayOnAreaCreateDto createDto)
+        public async Task<StayOnAreaRead> CreateAsync(StayOnAreaCreateDto createDto)
         {
             var onArea = _mapper.Map<StayOnArea>(createDto);
             onArea.Id = Guid.NewGuid();
@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(onArea.Id);
-            return _mapper.Map<StayOnAreaDto>(result);
+            return _mapper.Map<StayOnAreaRead>(result);
         }
 
         public async Task UpdateAsync(Guid id, StayOnAreaUpdateDto updateDto)

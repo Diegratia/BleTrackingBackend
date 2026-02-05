@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<GeofenceRead> GetByIdAsync(Guid id);
         Task<IEnumerable<GeofenceRead>> GetAllAsync();
-        Task<GeofenceDto> CreateAsync(GeofenceCreateDto createDto);
+        Task<GeofenceRead> CreateAsync(GeofenceCreateDto createDto);
         Task UpdateAsync(Guid id, GeofenceUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesProjectedRequest request, GeofenceFilter filter);

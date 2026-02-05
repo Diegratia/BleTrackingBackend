@@ -13,7 +13,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<BoundaryRead> GetByIdAsync(Guid id);
         Task<IEnumerable<BoundaryRead>> GetAllAsync();
-        Task<BoundaryDto> CreateAsync(BoundaryCreateDto createDto);
+        Task<BoundaryRead> CreateAsync(BoundaryCreateDto createDto);
         Task UpdateAsync(Guid id, BoundaryUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesProjectedRequest request, BoundaryFilter filter);
