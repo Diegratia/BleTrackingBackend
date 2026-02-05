@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Repositories.Repository;
 using Repositories.Repository.RepoModel;
-using DotNetEnv;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Helpers.Consumer.Mqtt;
@@ -18,33 +18,7 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.AspNetCore.Authorization;
 using Data.ViewModels.Shared.ExceptionHelper;
 
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
-        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
-        "/app/.env"                                                   // path dalam Docker container
-    };
-
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-    if (envFile != null)
-    {
-        Console.WriteLine($"Loading env file: {envFile}");
-        Env.Load(envFile);
-    }
-    else
-    {
-        Console.WriteLine("No .env file found — skipping load");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
-
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
@@ -54,9 +28,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin() 
-              .AllowAnyMethod() 
-              .AllowAnyHeader(); 
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -65,80 +39,40 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddControllers();
-
-    // Registrasi otomatis validasi FluentValidation
-    builder.Services.AddFluentValidationAutoValidation();
-    builder.Services.AddFluentValidationClientsideAdapters();
-
-    // Scan semua validator di assembly yang mengandung BrandValidator
-    builder.Services.AddValidatorsFromAssemblyContaining<CardCreateDtoValidator>();
-    builder.Services.AddValidatorsFromAssemblyContaining<CardUpdateDtoValidator>();
-    builder.Services.AddValidatorsFromAssemblyContaining<SwapCreateValidator>();
-    builder.Services.AddValidatorsFromAssemblyContaining<SwapForwardValidator>();
-    builder.Services.AddValidatorsFromAssemblyContaining<SwapReverseValidator>();
-
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??
-                         "Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
-
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? string.Empty,
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? string.Empty,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty))
-        };
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
+
+// Registrasi otomatis validasi FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+
+// Scan semua validator di assembly yang mengandung BrandValidator
+builder.Services.AddValidatorsFromAssemblyContaining<CardCreateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CardUpdateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SwapCreateValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SwapForwardValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SwapReverseValidator>();
+
+builder.UseSerilogExtension();
+builder.Services.AddJwtAuthExtension(builder.Configuration);
 builder.Services.AddAuthorizationNewPolicies();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+builder.Services.AddDbContextExtension(builder.Configuration);
+builder.Services.AddSwaggerExtension();
 
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(CardProfile), typeof(CardSwapTransactionProfile));
+
 // Registrasi Services
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<ICardSwapTransactionService, CardSwapTransactionService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
-
 
 // Registrasi Repositories
 builder.Services.AddScoped<CardRepository>();
@@ -152,41 +86,43 @@ var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var host = env == "Production" ? "0.0.0.0" : "localhost";
 builder.WebHost.UseUrls($"http://{host}:{port}");
 
-    var app = builder.Build();
+var app = builder.Build();
 
-        app.MapGet("/hc", async (IServiceProvider sp) =>
+app.UseSerilogRequestLoggingExtension();
+
+app.MapGet("/hc", async (IServiceProvider sp) =>
+{
+    var db = sp.GetRequiredService<BleTrackingDbContext>();
+    var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+
+    try
     {
-        var db = sp.GetRequiredService<BleTrackingDbContext>();
-        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
-
-        try
+        await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
+        return Results.Ok(new
         {
-            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
-            return Results.Ok(new
+            code = 200,
+            msg = "Healthy",
+            details = new
             {
-                code = 200,
-                msg = "Healthy",
-                details = new
-                {
-                    database = "Connected"
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Health check failed");
-            return Results.Problem("Database unreachable", statusCode: 500);
-        }
-    })
-    .AllowAnonymous();
+                database = "Connected"
+            }
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Health check failed");
+        return Results.Problem("Database unreachable", statusCode: 500);
+    }
+})
+.AllowAnonymous();
 
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
     try
     {
-        // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        // context.Database.Migrate();
+        // DatabaseSeeder.Seed(context);
     }
     catch (Exception ex)
     {
@@ -201,7 +137,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = string.Empty;
     });
 }
 
@@ -213,6 +149,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
-
 
 

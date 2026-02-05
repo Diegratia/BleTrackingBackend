@@ -4,42 +4,62 @@ using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Jobs;
-using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
+using Serilog;
+
+// Load .env with proper error handling
+EnvTryCatchExtension.LoadEnvWithTryCatch();
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/jobscheduler-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 try
 {
-    Env.Load("/app/.env");
-    Console.WriteLine("Successfully loaded .env file");
+    Log.Information("Starting JobsScheduler service...");
+
+    var builder = Host.CreateDefaultBuilder(args);
+
+    // Configure Serilog
+    builder.UseSerilog();
+
+    // Configure Windows Service
+    builder.UseWindowsService();
+
+    builder.ConfigureServices((hostContext, services) =>
+    {
+        // Get connection string from environment
+        var connectionString = Environment.GetEnvironmentVariable("BleTrackingDbConnection") ??
+                                "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
+
+        // Add DbContext
+        services.AddDbContext<BleTrackingDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        // Add Quartz
+        BusinessLogic.Services.Jobs.QuartzConfig.AddQuartzServices(services);
+    });
+
+    var host = builder.Build();
+
+    // Ensure Quartz scheduler is started
+    var schedulerFactory = host.Services.GetRequiredService<ISchedulerFactory>();
+    var scheduler = await schedulerFactory.GetScheduler();
+    await scheduler.Start();
+
+    Log.Information("Quartz Scheduler started at {Time:UTC}", DateTime.UtcNow);
+    Log.Information("JobsScheduler is running as Windows Service");
+
+    await host.RunAsync();
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-    throw;
+    Log.Fatal(ex, "JobsScheduler service failed to start");
 }
-
-var builder = Host.CreateDefaultBuilder(args);
-builder.UseWindowsService();
-
-builder.ConfigureServices((hostContext, services) =>
+finally
 {
-    // Tambahkan logging
-    services.AddLogging(logging => logging.AddConsole());
-
-    // Tambahkan DbContext
-    services.AddDbContext<BleTrackingDbContext>(options =>
-        options.UseSqlServer(Environment.GetEnvironmentVariable("BleTrackingDbConnection") ??
-                            "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
-
-    // Tambahkan Quartz
-    BusinessLogic.Services.Jobs.QuartzConfig.AddQuartzServices(services);
-});
-
-var host = builder.Build();
-
-// Pastikan scheduler Quartz dimulai
-var schedulerFactory = host.Services.GetRequiredService<ISchedulerFactory>();
-var scheduler = await schedulerFactory.GetScheduler();
-await scheduler.Start();
-host.Services.GetRequiredService<ILogger<Program>>().LogInformation("Quartz Scheduler started at {Time:UTC}", DateTime.UtcNow);
-
-await host.RunAsync();
+    Log.CloseAndFlush();
+}
