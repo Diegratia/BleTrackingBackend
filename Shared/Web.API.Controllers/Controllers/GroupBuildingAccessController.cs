@@ -25,19 +25,18 @@ namespace Web.API.Controllers.Controllers
         /// <summary>
         /// Assign multiple buildings to a group
         /// </summary>
-        /// <param name="groupId">Group ID</param>
-        /// <param name="request">Request containing list of building IDs</param>
+        /// <param name="request">Request containing groupId and list of building IDs</param>
         /// <returns></returns>
-        [HttpPost("group/{groupId}/assign")]
-        public async Task<IActionResult> AssignBuildingsToGroup(Guid groupId, [FromBody] AssignBuildingsToGroupRequest request)
+        [HttpPost("assign")]
+        public async Task<IActionResult> Assign([FromBody] AssignBuildingsToGroupRequest request)
         {
             if (request.BuildingIds == null || !request.BuildingIds.Any())
             {
                 return BadRequest(ApiResponse.BadRequest("BuildingIds list is required"));
             }
 
-            await _service.AssignBuildingsToGroupAsync(groupId, request.BuildingIds);
-            return Ok(ApiResponse.Success($"Buildings assigned to group {groupId} successfully"));
+            await _service.AssignBuildingsToGroupAsync(request.GroupId, request.BuildingIds);
+            return Ok(ApiResponse.Success($"Buildings assigned to group {request.GroupId} successfully"));
         }
 
         /// <summary>
@@ -45,8 +44,8 @@ namespace Web.API.Controllers.Controllers
         /// </summary>
         /// <param name="groupId">Group ID</param>
         /// <returns></returns>
-        [HttpGet("group/{groupId}")]
-        public async Task<IActionResult> GetGroupAccessibleBuildings(Guid groupId)
+        [HttpGet("buildings")]
+        public async Task<IActionResult> GetBuildings([FromQuery] Guid groupId)
         {
             var buildings = await _service.GetGroupAccessibleBuildingsAsync(groupId);
             return Ok(ApiResponse.Success("Group's accessible buildings retrieved successfully", buildings));
@@ -57,8 +56,8 @@ namespace Web.API.Controllers.Controllers
         /// </summary>
         /// <param name="buildingId">Building ID</param>
         /// <returns></returns>
-        [HttpGet("building/{buildingId}")]
-        public async Task<IActionResult> GetGroupsByBuilding(Guid buildingId)
+        [HttpGet("groups")]
+        public async Task<IActionResult> GetGroups([FromQuery] Guid buildingId)
         {
             var groups = await _service.GetGroupsByBuildingAsync(buildingId);
             return Ok(ApiResponse.Success("Groups with access to building retrieved successfully", groups));
@@ -67,14 +66,13 @@ namespace Web.API.Controllers.Controllers
         /// <summary>
         /// Revoke building access from a group
         /// </summary>
-        /// <param name="groupId">Group ID</param>
-        /// <param name="buildingId">Building ID</param>
+        /// <param name="request">Request containing groupId and buildingId</param>
         /// <returns></returns>
-        [HttpDelete("group/{groupId}/building/{buildingId}")]
-        public async Task<IActionResult> RevokeBuildingAccess(Guid groupId, Guid buildingId)
+        [HttpDelete("revoke")]
+        public async Task<IActionResult> Revoke([FromBody] RevokeAccessRequest request)
         {
-            await _service.RevokeBuildingAccessAsync(groupId, buildingId);
-            return Ok(ApiResponse.Success($"Building access revoked from group {groupId} successfully"));
+            await _service.RevokeBuildingAccessAsync(request.GroupId, request.BuildingId);
+            return Ok(ApiResponse.Success($"Building access revoked from group {request.GroupId} successfully"));
         }
 
         /// <summary>
@@ -82,8 +80,8 @@ namespace Web.API.Controllers.Controllers
         /// </summary>
         /// <param name="groupId">Group ID</param>
         /// <returns></returns>
-        [HttpDelete("group/{groupId}/all")]
-        public async Task<IActionResult> RevokeAllBuildingAccess(Guid groupId)
+        [HttpDelete("revoke-all")]
+        public async Task<IActionResult> RevokeAll([FromQuery] Guid groupId)
         {
             await _service.RevokeAllBuildingAccessAsync(groupId);
             return Ok(ApiResponse.Success($"All building access revoked from group {groupId} successfully"));
@@ -95,8 +93,8 @@ namespace Web.API.Controllers.Controllers
         /// <param name="groupId">Group ID</param>
         /// <param name="buildingId">Building ID</param>
         /// <returns></returns>
-        [HttpGet("group/{groupId}/building/{buildingId}/check")]
-        public async Task<IActionResult> HasAccess(Guid groupId, Guid buildingId)
+        [HttpGet("check")]
+        public async Task<IActionResult> Check([FromQuery] Guid groupId, [FromQuery] Guid buildingId)
         {
             var hasAccess = await _service.HasAccessAsync(groupId, buildingId);
             return Ok(ApiResponse.Success("Access check completed", new
@@ -113,6 +111,16 @@ namespace Web.API.Controllers.Controllers
     /// </summary>
     public class AssignBuildingsToGroupRequest
     {
+        public Guid GroupId { get; set; }
         public List<Guid> BuildingIds { get; set; }
+    }
+
+    /// <summary>
+    /// Request model for revoking building access from group
+    /// </summary>
+    public class RevokeAccessRequest
+    {
+        public Guid GroupId { get; set; }
+        public Guid BuildingId { get; set; }
     }
 }
