@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Quartz;
 using Repositories.DbContexts;
@@ -25,31 +26,56 @@ namespace BusinessLogic.Services.JobsScheduler
             var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             var thresholdDate = wibNow.AddDays(-30).ToString("yyyyMMdd");
 
-            _logger.LogInformation("🧹 Starting DropOldTrackingTablesJob at {TimeWIB} WIB", wibNow);
-
-            var sql = $@"
-                DECLARE @sql NVARCHAR(MAX) = '';
-                SELECT @sql = STRING_AGG('DROP TABLE [dbo].[' + name + '];', CHAR(13))
-                FROM sys.tables
-                WHERE name LIKE 'tracking_transaction_%'
-                AND TRY_CAST(RIGHT(name, 8) AS INT) < @thresholdDate;
-
-                IF @sql IS NOT NULL
-                BEGIN
-                    PRINT 'Dropping old tracking tables...';
-                    EXEC sp_executesql @sql;
-                END
-                ELSE
-                BEGIN
-                    PRINT 'No old tracking tables found to drop.';
-                END";
-
-            var parameter = new Microsoft.Data.SqlClient.SqlParameter("@thresholdDate", thresholdDate);
+            _logger.LogInformation("🧹 Starting DropOldTrackingTablesJob at {TimeWIB} WIB (threshold: {Threshold})", wibNow.ToString("yyyy-MM-dd HH:mm:ss"), thresholdDate);
 
             try
             {
-                var affected = await _context.Database.ExecuteSqlRawAsync(sql, parameter);
-                _logger.LogInformation("✅ DropOldTrackingTablesJob executed successfully at {TimeWIB} WIB", wibNow);
+                // Step 1: Get list of tables to drop
+                var getTablesSql = @"
+                    SELECT name
+                    FROM sys.tables
+                    WHERE name LIKE 'tracking_transaction_%'
+                    AND TRY_CAST(RIGHT(name, 8) AS INT) < @thresholdDate
+                    ORDER BY name;";
+
+                var thresholdParam = new Microsoft.Data.SqlClient.SqlParameter("@thresholdDate", thresholdDate);
+
+                var tables = await _context.Database
+                    .SqlQueryRaw<string>(getTablesSql, thresholdParam)
+                    .ToListAsync();
+
+                if (tables.Count == 0)
+                {
+                    _logger.LogInformation("✅ No old tracking tables found (older than {Threshold})", thresholdDate);
+                    return;
+                }
+
+                _logger.LogInformation("Found {Count} tables to drop (older than {Threshold})", tables.Count, thresholdDate);
+                _logger.LogInformation("Tables: {Tables}", string.Join(", ", tables));
+
+                // Step 2: Drop each table individually
+                var droppedCount = 0;
+                var failedCount = 0;
+
+                foreach (var table in tables)
+                {
+                    try
+                    {
+                        var dropSql = $"DROP TABLE [dbo].[{table}];";
+                        await _context.Database.ExecuteSqlRawAsync(dropSql);
+                        droppedCount++;
+                        _logger.LogInformation("Dropped table: {TableName} ({Count}/{Total})", table, droppedCount, tables.Count);
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        _logger.LogError(ex, "Failed to drop table: {TableName}", table);
+                    }
+                }
+
+                _logger.LogInformation("✅ DropOldTrackingTablesJob completed at {TimeWIB} WIB - Dropped: {Dropped}, Failed: {Failed}",
+                    TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone).ToString("yyyy-MM-dd HH:mm:ss"),
+                    droppedCount, failedCount);
             }
             catch (Exception ex)
             {
