@@ -27,6 +27,7 @@ namespace Shared.Contracts.Read
         /// Count of members
         /// </summary>
         public int MemberCount { get; set; }
+        public int AccessibleBuildingCount { get; set; }
 
         /// <summary>
         /// Audit fields

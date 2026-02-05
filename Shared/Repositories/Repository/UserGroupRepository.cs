@@ -90,6 +90,18 @@ namespace Repositories.Repository
             if (applicationIds.Count > 0)
                 query = query.Where(x => applicationIds.Contains(x.ApplicationId));
 
+            // Filter by member IDs - groups that contain these specific members
+            var memberIds = ExtractIds(filter.MemberId);
+            if (memberIds.Count > 0)
+            {
+                query = query.Where(ug =>
+                    _context.Users
+                        .Any(u => u.GroupId == ug.Id
+                            && u.Status != 0
+                            && memberIds.Contains(u.Id))
+                );
+            }
+
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
 
@@ -104,6 +116,7 @@ namespace Repositories.Repository
             var groupIds = await query.Select(x => x.Id).ToListAsync();
             var data = new List<UserGroupWithDetailsRead>();
 
+            // Sequential foreach loop (DbContext is not thread-safe)
             foreach (var groupId in groupIds)
             {
                 var groupRead = await GetByGroupIdWithDetailsAsync(groupId);
@@ -273,6 +286,7 @@ namespace Repositories.Repository
                 AccessibleBuildings = buildings,
                 Members = membersList,
                 MemberCount = membersList.Count,
+                AccessibleBuildingCount = buildings.Count,
                 CreatedAt = group.CreatedAt,
                 UpdatedAt = group.UpdatedAt,
                 CreatedBy = group.CreatedBy,
