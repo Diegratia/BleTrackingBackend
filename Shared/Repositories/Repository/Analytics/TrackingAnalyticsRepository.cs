@@ -894,6 +894,11 @@ namespace Repositories.Repository.Analytics
         // helpers filter
         private IQueryable<TrackingTransaction> ApplyFilters(IQueryable<TrackingTransaction> query, TrackingAnalyticsRequestRM request)
         {
+            // Apply building access filter for non-system/super admin users
+            query = ApplyBuildingFilterIfNonSystemAdmin(query, t =>
+                t.FloorplanMaskedArea?.Floorplan?.Floor?.BuildingId
+            );
+
             if (request.BuildingId.HasValue)
                 query = query.Where(a => a.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);
 
