@@ -6,7 +6,10 @@
       "Bash(dotnet ef:*)",
       "Skill(glm-plan-usage:usage-query-skill)",
       "Bash(dotnet build:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Skill(glm-plan-usage:usage-query)",
+      "Bash(where:*)",
+      "Bash(code:*)"
     ]
   }
 }

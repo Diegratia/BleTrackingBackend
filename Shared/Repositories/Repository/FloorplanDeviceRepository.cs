@@ -166,12 +166,8 @@ namespace Repositories.Repository
                 AccessControlId = t.AccessControlId,
                 Path = t.Path,
                 FloorplanId = t.FloorplanId,
-                UpdatedAt = t.UpdatedAt,
-                CreatedAt = t.CreatedAt,
-                ApplicationId = t.ApplicationId,
                 Status = t.Status,
-                CreatedBy = t.CreatedBy,
-                UpdatedBy = t.UpdatedBy,
+                ApplicationId = t.ApplicationId,
                 Floorplan = t.Floorplan == null ? null : new MinimalFloorplanRead
                 {
                     Id = t.Floorplan.Id,
@@ -265,9 +261,6 @@ namespace Repositories.Repository
 
             if (filter.DateTo.HasValue)
                 query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
-
-            if (filter.Status.HasValue)
-                query = query.Where(x => x.Status == filter.Status.Value);
 
             var filtered = await query.CountAsync();
 

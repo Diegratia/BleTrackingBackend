@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 
 namespace Repositories.Repository
@@ -19,90 +20,10 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<IEnumerable<MstEngine>> GetAllAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
-        }
-        public async Task<IEnumerable<MstEngine>> GetAllOnlineAsync()
-        {
-            return await GetAllQueryable().Where(e => e.ServiceStatus == ServiceStatus.Online).ToListAsync() ?? new List<MstEngine>();
-        }
-
-        public async Task<MstEngine?> GetByIdAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstEngines
-                .Where(e => e.Id == id && e.Status != 0);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-        }
-            public async Task<MstEngine?> GetByEngineIdAsync(string engineId)
-        {
-
-            var query = _context.MstEngines
-                .Where(e => e.EngineTrackingId == engineId && e.Status != 0);
-
-            return await query.FirstOrDefaultAsync();
-        }
-
-        public async Task<MstEngine> AddAsync(MstEngine engine)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            if (!isSystemAdmin)
-            {
-                if (!applicationId.HasValue)
-                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
-
-                engine.ApplicationId = applicationId.Value;
-            }
-            else if (engine.ApplicationId == Guid.Empty)
-            {
-                throw new ArgumentException("Admin must specify ApplicationId explicitly.");
-            }
-
-            await ValidateApplicationIdAsync(engine.ApplicationId);
-            ValidateApplicationIdForEntity(engine, applicationId, isSystemAdmin);
-
-            _context.MstEngines.Add(engine);
-            await _context.SaveChangesAsync();
-            return engine;
-        }
-
-        public async Task UpdateAsync(MstEngine engine)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            await ValidateApplicationIdAsync(engine.ApplicationId);
-            ValidateApplicationIdForEntity(engine, applicationId, isSystemAdmin);
-
-            // _context.MstEngines.Update(engine);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateByEngineStringAsync(MstEngine engine)
-        {
-            _context.MstEngines.Attach(engine);
-            _context.Entry(engine).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-        }
-
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var engine = await GetByIdAsync(id);
-            if (engine == null)
-                throw new KeyNotFoundException("Engine not found.");
-
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            if (!isSystemAdmin && engine.ApplicationId != applicationId)
-                throw new UnauthorizedAccessException("You don’t have permission to delete this entity.");
-
-            await _context.SaveChangesAsync();
-        }
-
-        public IQueryable<MstEngine> GetAllQueryable()
+        /// <summary>
+        /// Base query with multi-tenancy and status filtering
+        /// </summary>
+        private IQueryable<MstEngine> BaseEntityQuery()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -112,9 +33,182 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<IEnumerable<MstEngine>> GetAllExportAsync()
+        /// <summary>
+        /// Manual projection to Read DTO (NOT using AutoMapper)
+        /// </summary>
+        private IQueryable<MstEngineRead> ProjectToRead(IQueryable<MstEngine> query)
         {
-            return await GetAllQueryable().ToListAsync();
+            return query.AsNoTracking()
+                .Select(e => new MstEngineRead
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    EngineTrackingId = e.EngineTrackingId,
+                    Port = e.Port,
+                    Status = e.Status ?? 0,
+                    IsLive = e.IsLive,
+                    LastLive = e.LastLive,
+                    ServiceStatus = e.ServiceStatus.ToString(),
+                    ApplicationId = e.ApplicationId,
+                    CreatedAt = e.CreatedAt,
+                    UpdatedAt = e.UpdatedAt,
+                    CreatedBy = e.CreatedBy,
+                    UpdatedBy = e.UpdatedBy
+                });
+        }
+
+        /// <summary>
+        /// Get entity by ID for update/delete operations
+        /// </summary>
+        public async Task<MstEngine?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        /// <summary>
+        /// Get by ID with projection to Read DTO
+        /// </summary>
+        public async Task<MstEngineRead?> GetByIdAsync(Guid id)
+        {
+            var query = BaseEntityQuery()
+                .Where(e => e.Id == id);
+
+            return await ProjectToRead(query).FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Get by EngineTrackingId (string)
+        /// </summary>
+        public async Task<MstEngine?> GetByEngineIdAsync(string engineId)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(e => e.EngineTrackingId == engineId);
+        }
+
+        /// <summary>
+        /// Get all engines with projection
+        /// </summary>
+        public async Task<List<MstEngineRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        /// <summary>
+        /// Get all online engines
+        /// </summary>
+        public async Task<List<MstEngineRead>> GetAllOnlineAsync()
+        {
+            return await ProjectToRead(
+                BaseEntityQuery()
+                    .Where(e => e.ServiceStatus == ServiceStatus.Online)
+            ).ToListAsync();
+        }
+
+        /// <summary>
+        /// Filter engines with pagination
+        /// </summary>
+        public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterAsync(MstEngineFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            // Search
+            if (!string.IsNullOrEmpty(filter.Search))
+            {
+                query = query.Where(e => EF.Functions.Like(e.Name!, $"%{filter.Search}%"));
+            }
+
+            // Filter by Status
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(e => e.Status == filter.Status.Value);
+            }
+
+            // Filter by IsLive
+            if (filter.IsLive.HasValue)
+            {
+                query = query.Where(e => e.IsLive == filter.IsLive.Value);
+            }
+
+            // Date range filter
+            if (filter.DateFrom.HasValue)
+            {
+                query = query.Where(e => e.CreatedAt >= filter.DateFrom.Value);
+            }
+
+            if (filter.DateTo.HasValue)
+            {
+                query = query.Where(e => e.CreatedAt <= filter.DateTo.Value);
+            }
+
+            var filtered = await query.CountAsync();
+
+            // Sorting
+            if (!string.IsNullOrEmpty(filter.SortColumn))
+            {
+                var sortColumn = char.ToUpper(filter.SortColumn[0]) + filter.SortColumn.Substring(1);
+                query = filter.SortDir?.ToLower() == "asc"
+                    ? query.OrderBy(e => EF.Property<object>(e, sortColumn))
+                    : query.OrderByDescending(e => EF.Property<object>(e, sortColumn));
+            }
+            else
+            {
+                query = query.OrderByDescending(e => e.CreatedAt);
+            }
+
+            // Pagination
+            var data = await ProjectToRead(query)
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+
+            var total = await BaseEntityQuery().CountAsync();
+
+            return (data, total, filtered);
+        }
+
+        /// <summary>
+        /// Get all for export
+        /// </summary>
+        public async Task<List<MstEngineRead>> GetAllExportAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        /// <summary>
+        /// Add new engine
+        /// </summary>
+        public async Task AddAsync(MstEngine engine)
+        {
+            _context.MstEngines.Add(engine);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Update engine
+        /// </summary>
+        public async Task UpdateAsync(MstEngine engine)
+        {
+            _context.MstEngines.Update(engine);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Update by engine tracking ID string
+        /// </summary>
+        public async Task UpdateByEngineStringAsync(MstEngine engine)
+        {
+            _context.MstEngines.Attach(engine);
+            _context.Entry(engine).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Get queryable for legacy DataTables support
+        /// </summary>
+        public IQueryable<MstEngine> GetAllQueryable()
+        {
+            return BaseEntityQuery();
         }
     }
 }

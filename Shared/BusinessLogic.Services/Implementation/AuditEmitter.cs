@@ -64,7 +64,7 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
-            public enum AuditAction
+        public enum AuditAction
         {
             LOGIN,
             LOGOUT,
@@ -73,7 +73,8 @@ namespace BusinessLogic.Services.Implementation
             APPROVE,
             REJECT,
             SYNC,
-            ALARM
+            ALARM,
+            ACTION
         }
 
         public Task Created(string entity, object id, string details, object? meta = null)

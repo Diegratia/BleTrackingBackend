@@ -27,29 +27,27 @@ Identify target entity and files:
 
 ### 2. Create Filter DTO
 Add file: Shared/Shared.Contracts/[Entity]Filter.cs
-Required fields:
-- Search, Page, PageSize, SortColumn, SortDir
-- Entity-specific filters (e.g., DateFrom, Status, CategoryId, etc)
+
+**IMPORTANT**: Always inherit from `BaseFilter` for consistency:
 
 ```csharp
-using System.Text.Json;
+using Shared.Contracts.Read;
 
-public class EntityFilter
+public class EntityFilter : BaseFilter
 {
-    public string? Search { get; set; }
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 10;
-    public string? SortColumn { get; set; }
-    public string? SortDir { get; set; }
-
     // Entity-specific filters
-    public DateTime? DateFrom { get; set; }
     public int? Status { get; set; }
+    public DateTime? DateFrom { get; set; }
+    public DateTime? DateTo { get; set; }
 
     // Use JsonElement for ID filters to support both single Guid and Guid array
     public JsonElement CategoryId { get; set; }
+    public JsonElement FloorId { get; set; }
 }
 ```
+
+`BaseFilter` already includes:
+- `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`, `DateFrom`, `DateTo`
 
 **Important**: For ID filters that need to support both single value and array, use `JsonElement` type and the `ExtractIds` helper method from `BaseRepository` (see section 8 for details).
 
@@ -322,7 +320,159 @@ app.UseMiddleware<CustomExceptionMiddleware>();
 
 ## Advanced Patterns
 
-### 8. ExtractIds Pattern for ID Filters
+### 8. Relationship Validation Pattern (CheckInvalidOwnershipIdsAsync)
+
+**CRITICAL**: When entity has relationship to another entity (e.g., Floor → Building, Floorplan → Floor), ALWAYS validate ownership using `CheckInvalidOwnershipIdsAsync` pattern.
+
+#### Why This Pattern?
+- Ensures the related entity belongs to the same Application (multi-tenancy safety)
+- Prevents users from referencing entities from other applications
+- Provides consistent error messages for invalid ownership
+
+#### Repository Implementation
+
+Create a validation helper method in the repository for each relationship:
+
+```csharp
+// In EntityRepository.cs
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
+    Guid floorId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstFloor>(
+        new[] { floorId },
+        applicationId
+    );
+}
+
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
+    Guid buildingId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstBuilding>(
+        new[] { buildingId },
+        applicationId
+    );
+}
+```
+
+For multiple IDs (e.g., when using JsonElement filter):
+
+```csharp
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
+    List<Guid> floorIds,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstFloor>(
+        floorIds,
+        applicationId
+    );
+}
+```
+
+#### Service Implementation
+
+Use the repository validation helper in Service Create/Update:
+
+```csharp
+// In EntityService.cs
+public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
+{
+    // 1. Check if Floor exists
+    if (!await _repository.FloorExistsAsync(dto.FloorId))
+        throw new NotFoundException($"Floor with id {dto.FloorId} not found");
+
+    // 2. Check if Floor belongs to this Application
+    var invalidFloorIds = await _repository.CheckInvalidFloorOwnershipAsync(dto.FloorId, AppId);
+    if (invalidFloorIds.Any())
+    {
+        throw new UnauthorizedException(
+            $"FloorId does not belong to this Application: {string.Join(", ", invalidFloorIds)}"
+        );
+    }
+
+    // 3. Get the Floor to inherit ApplicationId
+    var floor = await _repository.GetFloorByIdAsync(dto.FloorId);
+    if (floor == null)
+        throw new NotFoundException($"Floor with id {dto.FloorId} not found");
+
+    // 4. Create entity with inherited ApplicationId
+    var entity = new Entity
+    {
+        Id = Guid.NewGuid(),
+        FloorId = floor.Id,
+        ApplicationId = floor.ApplicationId,  // Inherit from Floor
+        Name = dto.Name,
+        Status = 1
+    };
+
+    SetCreateAudit(entity);
+    await _repository.AddAsync(entity);
+
+    await _audit.Created("Entity", entity.Id, "Created entity", new { entity.Name });
+
+    var result = await _repository.GetByIdAsync(entity.Id);
+    return result!;
+}
+```
+
+#### Pattern Summary for Relationships
+
+| Step | Repository Method | Service Usage |
+|------|-------------------|---------------|
+| 1. Check existence | `FloorExistsAsync(Guid id)` | `if (!await _repo.FloorExistsAsync(dto.FloorId))` |
+| 2. Check ownership | `CheckInvalidFloorOwnershipAsync(id, appId)` | `var invalid = await _repo.CheckInvalid...()` |
+| 3. Get related entity | `GetFloorByIdAsync(Guid id)` | `var floor = await _repo.GetFloorByIdAsync(dto.FloorId)` |
+| 4. Inherit ApplicationId | N/A | `entity.ApplicationId = floor.ApplicationId` |
+
+#### Common Relationships & Validation
+
+| Entity | Related To | Repository Method to Create |
+|--------|-----------|----------------------------|
+| Floorplan | Floor | `CheckInvalidFloorOwnershipAsync` |
+| Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
+| PatrolArea | Floor | `CheckInvalidFloorOwnershipAsync` |
+| MaskedArea | Floorplan | `CheckInvalidFloorplanOwnershipAsync` |
+
+---
+
+### 9. Audit Fields in Response (JsonIgnore Pattern)
+
+**IMPORTANT**: Audit fields should NOT be visible in API response. They are already hidden in `BaseRead` using `[JsonIgnore]`:
+
+```csharp
+// Shared/Shared.Contracts/Read/BaseRead.cs
+public class BaseRead
+{
+    [JsonPropertyOrder(-10)]
+    public Guid Id { get; set; }
+
+    [JsonIgnore]  // NOT sent in response
+    public string? CreatedBy { get; set; }
+
+    [JsonIgnore]  // NOT sent in response
+    public DateTime CreatedAt { get; set; }
+
+    [JsonIgnore]  // NOT sent in response
+    public string? UpdatedBy { get; set; }
+
+    [JsonIgnore]  // NOT sent in response
+    public DateTime UpdatedAt { get; set; }
+
+    public int Status { get; set; }  // Included in response
+    public Guid ApplicationId { get; set; }
+}
+```
+
+**Key Points**:
+- Audit fields are stored in DB but NOT sent in JSON response
+- `Status` IS included in response (needed for frontend display)
+- `ApplicationId` IS included (needed for multi-tenancy)
+- Do NOT include `CreatedBy`, `CreatedAt`, `UpdatedBy`, `UpdatedAt` in manual projection
+
+---
+
+### 10. ExtractIds Pattern for ID Filters
 
 When filtering by ID fields that need to support both single values and arrays, use the `ExtractIds` helper method from `BaseRepository`.
 
@@ -373,7 +523,7 @@ The `ExtractIds` method automatically handles:
 - Empty/null → Returns empty list
 
 ```csharp
-// From BaseRepository.cs (lines 229-254)
+// From BaseRepository.cs
 public static List<Guid> ExtractIds(JsonElement element)
 {
     var ids = new List<Guid>();
@@ -405,6 +555,16 @@ public static List<Guid> ExtractIds(JsonElement element)
 ## Definition of Done
 - Repository has FilterAsync returning (List, int, int)
 - Projection uses manual Select only (no AutoMapper in query)
+- Filter inherits from `BaseFilter`
+- Service maps DataTablesProjectedRequest to filter
+- Service uses IAuditEmitter for Create/Update/Delete operations
+- Controller uses ApiResponse and no manual try/catch
+- Program.cs uses RootExtension + MinLevel + middleware + AuditEmitter
+- ID filters use JsonElement + ExtractIds pattern for flexibility
+- **Relationship validation**: All related entities validated with `CheckInvalidOwnershipIdsAsync`
+- **Audit fields hidden**: CreatedBy, CreatedAt, UpdatedBy, UpdatedAt use `[JsonIgnore]` in BaseRead
+- Repository has FilterAsync returning (List, int, int)
+- Projection uses manual Select only (no AutoMapper in query)
 - Service maps DataTablesProjectedRequest to filter
 - Service uses IAuditEmitter for Create/Update/Delete operations
 - Controller uses ApiResponse and no manual try/catch
@@ -419,3 +579,5 @@ public static List<Guid> ExtractIds(JsonElement element)
 - Shared/Web.API.Controllers/Controllers/PatrolCaseController.cs
 - Shared/Web.API.Controllers/Controllers/MstDistrictController.cs
 - Services.API/Patrol/Program.cs
+- **Shared/Repositories/Repository/MstFloorplanRepository.cs** - Relationship validation pattern
+- **Shared/BusinessLogic.Services/Implementation/MstFloorplanService.cs** - Full audit + cache + MQTT pattern

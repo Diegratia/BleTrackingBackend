@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BusinessLogic.Services.Interface;
 using Shared.Contracts;
 using Data.ViewModels;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation.EngineService
 {
@@ -31,7 +32,7 @@ while (!stoppingToken.IsCancellationRequested)
         using var scope = _scopeFactory.CreateScope();
         var engineService = scope.ServiceProvider.GetRequiredService<IMstEngineService>();
 
-        var engines = await engineService.GetAllOnlineAsync() ?? new List<MstEngineDto>();
+        var engines = await engineService.GetAllOnlineAsync() ?? new List<MstEngineRead>();
         var now = DateTime.UtcNow;
 
         foreach (var engine in engines)

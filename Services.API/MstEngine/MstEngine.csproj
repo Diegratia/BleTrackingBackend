@@ -10,16 +10,19 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
     <PackageReference Include="Bogus" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <!-- <PackageReference Include="BCrypt.Net" /> -->
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" /> 
     <PackageReference Include="DotNetEnv" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Swashbuckle.AspNetCore" />

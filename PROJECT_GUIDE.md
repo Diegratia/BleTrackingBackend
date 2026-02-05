@@ -1131,18 +1131,30 @@ public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBui
 
 ### 3. ExtractIds Pattern for ID Filters
 
-Gunakan pattern ini untuk filter ID yang perlu support **single value** dan **array**:
+**IMPORTANT**: Filter DTO harus selalu inherit dari `BaseFilter` untuk konsistensi.
 
 ```csharp
-// 1. Filter DTO - Gunakan JsonElement untuk ID fields
-using System.Text.Json;
+// 1. Filter DTO - Inherit dari BaseFilter
+using Shared.Contracts.Read;
 
-public class MstAccessCctvFilter
+public class MstAccessCctvFilter : BaseFilter  // Selalu inherit BaseFilter
 {
+    // BaseFilter sudah menyediakan: Search, Page, PageSize, SortColumn, SortDir, DateFrom, DateTo
+
+    // Entity-specific filters
+    public DeviceStatus? DeviceStatus { get; set; }
+
+    // Gunakan JsonElement untuk ID fields (support single & array)
     public JsonElement IntegrationId { get; set; }
     public JsonElement FloorplanId { get; set; }
 }
+```
 
+`BaseFilter` sudah termasuk:
+- `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`
+- `DateFrom`, `DateTo`
+
+```csharp
 // 2. Repository - Gunakan ExtractIds method dari BaseRepository
 public async Task<(List<MstAccessCctvRead> Data, int Total, int Filtered)> FilterAsync(
     MstAccessCctvFilter filter)
@@ -1168,7 +1180,124 @@ public async Task<(List<MstAccessCctvRead> Data, int Total, int Filtered)> Filte
 - `ExtractIds` otomatis handle kedua kasus tersebut
 - Method ini tersedia di `BaseRepository.cs`
 
-### 4. Audit Emitter Pattern
+---
+
+### 4. Relationship Validation Pattern (CheckInvalidOwnershipIdsAsync)
+
+**CRITICAL**: Ketika entity memiliki relasi ke entity lain (e.g., Floor → Building, Floorplan → Floor), SELALU validasi ownership menggunakan `CheckInvalidOwnershipIdsAsync` pattern.
+
+#### Kenapa Pattern Ini?
+- Memastikan related entity milik Application yang sama (multi-tenancy safety)
+- Mencegah user reference entity dari application lain
+- Error message yang konsisten
+
+#### Repository Implementation
+```csharp
+// Buat helper method di repository untuk setiap relasi
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
+    Guid floorId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstFloor>(
+        new[] { floorId },
+        applicationId
+    );
+}
+
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
+    Guid buildingId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstBuilding>(
+        new[] { buildingId },
+        applicationId
+    );
+}
+```
+
+#### Service Implementation
+```csharp
+// Gunakan di Service Create/Update
+public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
+{
+    // 1. Cek Floor exists
+    if (!await _repository.FloorExistsAsync(dto.FloorId))
+        throw new NotFoundException($"Floor with id {dto.FloorId} not found");
+
+    // 2. Cek Floor milik Application ini
+    var invalidIds = await _repository.CheckInvalidFloorOwnershipAsync(dto.FloorId, AppId);
+    if (invalidIds.Any())
+        throw new UnauthorizedException($"FloorId does not belong to this Application");
+
+    // 3. Get Floor untuk inherit ApplicationId
+    var floor = await _repository.GetFloorByIdAsync(dto.FloorId);
+
+    // 4. Create entity dengan inherited ApplicationId
+    var entity = new Entity
+    {
+        FloorId = floor.Id,
+        ApplicationId = floor.ApplicationId,  // Inherit dari Floor
+        Name = dto.Name,
+        Status = 1
+    };
+
+    SetCreateAudit(entity);
+    await _repository.AddAsync(entity);
+    await _audit.Created("Entity", entity.Id, "Created", new { entity.Name });
+
+    var result = await _repository.GetByIdAsync(entity.Id);
+    return result!;
+}
+```
+
+#### Common Relationships & Validation
+
+| Entity | Related To | Repository Method |
+|--------|-----------|-------------------|
+| Floorplan | Floor | `CheckInvalidFloorOwnershipAsync` |
+| Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
+| PatrolArea | Floor | `CheckInvalidFloorOwnershipAsync` |
+| MaskedArea | Floorplan | `CheckInvalidFloorplanOwnershipAsync` |
+
+---
+
+### 5. Audit Fields in Response (JsonIgnore Pattern)
+
+**IMPORTANT**: Audit fields TIDAK perlu visible di API response. Mereka sudah hidden di `BaseRead` menggunakan `[JsonIgnore]`:
+
+```csharp
+// Shared/Shared.Contracts/Read/BaseRead.cs
+public class BaseRead
+{
+    [JsonPropertyOrder(-10)]
+    public Guid Id { get; set; }
+
+    [JsonIgnore]  // TIDAK dikirim di response
+    public string? CreatedBy { get; set; }
+
+    [JsonIgnore]  // TIDAK dikirim di response
+    public DateTime CreatedAt { get; set; }
+
+    [JsonIgnore]  // TIDAK dikirim di response
+    public string? UpdatedBy { get; set; }
+
+    [JsonIgnore]  // TIDAK dikirim di response
+    public DateTime UpdatedAt { get; set; }
+
+    public int Status { get; set; }  // DIKIRIM di response
+    public Guid ApplicationId { get; set; }
+}
+```
+
+**Key Points**:
+- Audit fields disimpan di DB tapi TIDAK dikirim di JSON response
+- `Status` DIKIRIM di response (perlu untuk frontend display)
+- `ApplicationId` DIKIRIM (perlu untuk multi-tenancy)
+- JANGAN include `CreatedBy`, `CreatedAt`, `UpdatedBy`, `UpdatedAt` di manual projection
+
+---
+
+### 6. Audit Emitter Pattern
 
 Gunakan `IAuditEmitter` untuk tracking perubahan data:
 

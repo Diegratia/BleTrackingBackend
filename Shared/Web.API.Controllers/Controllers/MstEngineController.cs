@@ -1,15 +1,16 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels;
+using Data.ViewModels.ResponseHelper;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/[controller]")]
     [ApiController]
     public class MstEngineController : ControllerBase
@@ -21,300 +22,129 @@ namespace Web.API.Controllers.Controllers
             _mstEngineService = mstEngineService;
         }
 
-        // GET: api/MstEngine
+        /// <summary>
+        /// Get all engines
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var engines = await _mstEngineService.GetAllEnginesAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Engines retrieved successfully",
-                    collection = new { data = engines },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var engines = await _mstEngineService.GetAllEnginesAsync();
+            return Ok(ApiResponse.Success("Engines retrieved successfully", engines));
         }
 
-        // GET: api/MstEngine/{id}
+        /// <summary>
+        /// Get engine by ID
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var engine = await _mstEngineService.GetEngineByIdAsync(id);
-                if (engine == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Engine not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Engine retrieved successfully",
-                    collection = new { data = engine },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var engine = await _mstEngineService.GetEngineByIdAsync(id);
+            if (engine == null)
+                return NotFound(ApiResponse.NotFound("Engine not found"));
+
+            return Ok(ApiResponse.Success("Engine retrieved successfully", engine));
         }
 
-        // POST: api/MstEngine
+        /// <summary>
+        /// Create new engine
+        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MstEngineCreateDto mstEngineDto)
+        public async Task<IActionResult> Create([FromBody] MstEngineCreateDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdEngine = await _mstEngineService.CreateEngineAsync(mstEngineDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Engine created successfully",
-                    collection = new { data = createdEngine },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdEngine = await _mstEngineService.CreateEngineAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdEngine.Id },
+                ApiResponse.Created("Engine created successfully", createdEngine));
         }
 
-        // PUT: api/MstEngine/{id}
+        /// <summary>
+        /// Update engine
+        /// </summary>
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] MstEngineUpdateDto mstEngineDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] MstEngineUpdateDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                await _mstEngineService.UpdateEngineAsync(id, mstEngineDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Engine updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Engine not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstEngineService.UpdateEngineAsync(id, dto);
+            return Ok(ApiResponse.Success("Engine updated successfully"));
         }
 
-        // DELETE: api/MstEngine/{id}
+        /// <summary>
+        /// Delete engine (soft delete)
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstEngineService.DeleteEngineAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Engine deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Engine not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstEngineService.DeleteEngineAsync(id);
+            return Ok(ApiResponse.Success("Engine deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
+        /// <summary>
+        /// Filter engines with DataTables format (legacy)
+        /// </summary>
+        [HttpPost("filter-datatables")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _mstEngineService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Engines filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstEngineService.FilterAsync(request);
+            return Ok(ApiResponse.Success("Engines filtered successfully", result));
         }
 
-        [HttpGet("export/pdf")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ExportPdf()
+        /// <summary>
+        /// Filter engines with new format
+        /// </summary>
+        [HttpPost("filter")]
+        public async Task<IActionResult> FilterNew([FromBody] MstEngineFilter filter)
         {
-            try
+            var (data, total, filtered) = await _mstEngineService.FilterNewAsync(filter);
+            return Ok(ApiResponse.Success("Engines filtered successfully", new
             {
-                var pdfBytes = await _mstEngineService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstEngine_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+                data,
+                total,
+                filtered,
+                page = filter.Page,
+                pageSize = filter.PageSize
+            }));
         }
 
-        [HttpGet("export/excel")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ExportExcel()
+        /// <summary>
+        /// Export engines to PDF
+        /// </summary>
+        // [HttpGet("export/pdf")]
+        // [AllowAnonymous]
+        // public async Task<IActionResult> ExportPdf()
+        // {
+        //     var pdfBytes = await _mstEngineService.ExportPdfAsync();
+        //     return File(pdfBytes, "application/pdf", "MstEngine_Report.pdf");
+        // }
+
+        // /// <summary>
+        // /// Export engines to Excel
+        // /// </summary>
+        // [HttpGet("export/excel")]
+        // [AllowAnonymous]
+        // public async Task<IActionResult> ExportExcel()
+        // {
+        //     var excelBytes = await _mstEngineService.ExportExcelAsync();
+        //     return File(excelBytes,
+        //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //         "MstEngine_Report.xlsx");
+        // }
+
+        /// <summary>
+        /// Stop engine via MQTT
+        /// </summary>
+        [HttpPost("stop/{engineId}")]
+        public async Task<IActionResult> StopEngine(string engineId)
         {
-            try
-            {
-                var excelBytes = await _mstEngineService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstEngine_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstEngineService.StopEngineAsync(engineId);
+            return Ok(ApiResponse.Success($"Stop command sent to engine {engineId}"));
         }
-            // GET: [HttpPost("stop/{engineId}")]
-            [HttpPost("stop/{engineId}")]
-            public async Task<IActionResult> StopEngine(string engineId)
-            {
-                await _mstEngineService.StopEngineAsync(engineId);
-                return Ok(new { message = $"Stop command sent to engine {engineId}" });
-            }
-            // GET: [HttpPost("start/{engineId}")]
-            [HttpPost("start/{engineId}")]
-            public async Task<IActionResult> StartEngine(string engineId)
-            {
-                await _mstEngineService.StartEngineAsync(engineId);
-                return Ok(new { message = $"Start command sent to engine {engineId}" });
-            }
 
+        /// <summary>
+        /// Start engine via MQTT
+        /// </summary>
+        [HttpPost("start/{engineId}")]
+        public async Task<IActionResult> StartEngine(string engineId)
+        {
+            await _mstEngineService.StartEngineAsync(engineId);
+            return Ok(ApiResponse.Success($"Start command sent to engine {engineId}"));
+        }
     }
 }
