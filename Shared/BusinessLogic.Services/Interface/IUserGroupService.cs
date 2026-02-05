@@ -10,8 +10,8 @@ namespace BusinessLogic.Services.Interface
 {
     public interface IUserGroupService
     {
-        Task<UserGroupRead> GetByIdAsync(Guid id);
-        Task<IEnumerable<UserGroupRead>> GetAllAsync();
+        Task<UserGroupWithDetailsRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<UserGroupWithDetailsRead>> GetAllAsync();
         Task<UserGroupDto> CreateAsync(CreateUserGroupDto dto);
         Task UpdateAsync(Guid id, UpdateUserGroupDto dto);
         Task DeleteAsync(Guid id);

@@ -19,6 +19,7 @@ using Data.ViewModels.Shared.ExceptionHelper;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
@@ -78,6 +79,7 @@ builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserGroupService, UserGroupService>();
 builder.Services.AddScoped<IUserBuildingAccessService, UserBuildingAccessService>();
+builder.Services.AddScoped<IGroupBuildingAccessService, GroupBuildingAccessService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
@@ -87,6 +89,7 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<UserBuildingAccessRepository>();
+builder.Services.AddScoped<GroupBuildingAccessRepository>();
 builder.Services.AddScoped<MstBuildingRepository>();
 builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();

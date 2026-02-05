@@ -44,7 +44,7 @@ namespace BusinessLogic.Services.Interface
         private readonly UserGroupRepository _userGroupRepository;
         private readonly RefreshTokenRepository _refreshTokenRepository;
         private readonly MstIntegrationRepository _mstIntegrationRepository;
-        private readonly UserBuildingAccessRepository _userBuildingAccessRepository;
+        private readonly GroupBuildingAccessRepository _groupBuildingAccessRepository;
         // private readonly VisitorRepository _visitorRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
@@ -59,7 +59,7 @@ namespace BusinessLogic.Services.Interface
             UserGroupRepository userGroupRepository,
             RefreshTokenRepository refreshTokenRepository,
             MstIntegrationRepository mstIntegrationRepository,
-            UserBuildingAccessRepository userBuildingAccessRepository,
+            GroupBuildingAccessRepository groupBuildingAccessRepository,
             IMapper mapper,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
@@ -70,7 +70,7 @@ namespace BusinessLogic.Services.Interface
             _userGroupRepository = userGroupRepository;
             _refreshTokenRepository = refreshTokenRepository;
             _mstIntegrationRepository = mstIntegrationRepository;
-            _userBuildingAccessRepository = userBuildingAccessRepository;
+            _groupBuildingAccessRepository = groupBuildingAccessRepository;
             _mapper = mapper;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
@@ -475,7 +475,7 @@ namespace BusinessLogic.Services.Interface
             // Add accessible buildings claim for non-System and non-SuperAdmin users
             if (user.Group.LevelPriority != LevelPriority.System && user.Group.LevelPriority != LevelPriority.SuperAdmin)
             {
-                var accessibleBuildingIds = await _userBuildingAccessRepository.GetAccessibleBuildingIdsAsync(user.Id);
+                var accessibleBuildingIds = await _groupBuildingAccessRepository.GetAccessibleBuildingIdsAsync(user.GroupId);
                 var buildingIdsString = string.Join(",", accessibleBuildingIds.Select(id => id.ToString()));
                 claims.Add(new Claim("accessibleBuildings", buildingIdsString));
             }

@@ -2,6 +2,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
@@ -20,8 +21,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly UserGroupRepository _repository;
         private readonly UserRepository _userRepository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public UserGroupService(
             UserGroupRepository repository,
@@ -37,7 +38,7 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<UserGroupRead> GetByIdAsync(Guid id)
+        public async Task<UserGroupWithDetailsRead> GetByIdAsync(Guid id)
         {
             var group = await _repository.GetByIdAsync(id);
             if (group == null)
@@ -45,7 +46,7 @@ namespace BusinessLogic.Services.Implementation
             return group;
         }
 
-        public async Task<IEnumerable<UserGroupRead>> GetAllAsync()
+        public async Task<IEnumerable<UserGroupWithDetailsRead>> GetAllAsync()
         {
             var groups = await _repository.GetAllAsync();
             return groups;

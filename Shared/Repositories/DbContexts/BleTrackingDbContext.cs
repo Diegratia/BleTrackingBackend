@@ -73,6 +73,7 @@ namespace Repositories.DbContexts
         public DbSet<User> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<UserBuildingAccess> UserBuildingAccesses { get; set; }
+        public DbSet<GroupBuildingAccess> GroupBuildingAccesses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
 
@@ -122,6 +123,29 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<UserBuildingAccess>().ToTable("user_building_access");
+            modelBuilder.Entity<GroupBuildingAccess>(entity =>
+            {
+                entity.ToTable("group_building_access");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.GroupId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.BuildingId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
+
+                entity.HasOne(gba => gba.Group)
+                    .WithMany()
+                    .HasForeignKey(gba => gba.GroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(gba => gba.Building)
+                    .WithMany()
+                    .HasForeignKey(gba => gba.BuildingId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(gba => gba.GroupId);
+                entity.HasIndex(gba => gba.BuildingId);
+                entity.HasQueryFilter(gba => gba.Status != 0);
+            });
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
 
             // MstApplication

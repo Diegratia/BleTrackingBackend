@@ -80,15 +80,6 @@ namespace Web.API.Controllers.Controllers
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-            }
-
             var filter = new UserGroupFilter();
             if (request.Filters.ValueKind == JsonValueKind.Object)
             {

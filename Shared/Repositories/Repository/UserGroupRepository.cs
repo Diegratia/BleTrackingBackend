@@ -29,10 +29,9 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task<UserGroupRead?> GetByIdAsync(Guid id)
+        public async Task<UserGroupWithDetailsRead?> GetByIdAsync(Guid id)
         {
-            var query = BaseEntityQuery().Where(x => x.Id == id);
-            return await ProjectToRead(query).FirstOrDefaultAsync();
+            return await GetByGroupIdWithDetailsAsync(id);
         }
 
         public async Task<UserGroup?> GetByIdEntityAsync(Guid id)
@@ -41,10 +40,21 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<UserGroupRead>> GetAllAsync()
+        public async Task<IEnumerable<UserGroupWithDetailsRead>> GetAllAsync()
         {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = BaseEntityQuery();
-            return await ProjectToRead(query).ToListAsync();
+            var groups = await query.ToListAsync();
+
+            var result = new List<UserGroupWithDetailsRead>();
+            foreach (var group in groups)
+            {
+                var groupRead = await GetByGroupIdWithDetailsAsync(group.Id);
+                if (groupRead != null)
+                    result.Add(groupRead);
+            }
+
+            return result;
         }
 
         public IQueryable<UserGroup> GetAllQueryable()
@@ -52,18 +62,7 @@ namespace Repositories.Repository
             return BaseEntityQuery();
         }
 
-        private IQueryable<UserGroupRead> ProjectToRead(IQueryable<UserGroup> query)
-        {
-            return query.AsNoTracking().Select(x => new UserGroupRead
-            {
-                Id = x.Id,
-                Name = x.Name,
-                LevelPriority = x.LevelPriority.ToString(),
-                ApplicationId = x.ApplicationId,
-            });
-        }
-
-        public async Task<(List<UserGroupRead> Data, int Total, int Filtered)> FilterAsync(
+        public async Task<(List<UserGroupWithDetailsRead> Data, int Total, int Filtered)> FilterAsync(
             UserGroupFilter filter)
         {
             var query = BaseEntityQuery();
@@ -102,7 +101,16 @@ namespace Repositories.Repository
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            var data = await ProjectToRead(query).ToListAsync();
+            var groupIds = await query.Select(x => x.Id).ToListAsync();
+            var data = new List<UserGroupWithDetailsRead>();
+
+            foreach (var groupId in groupIds)
+            {
+                var groupRead = await GetByGroupIdWithDetailsAsync(groupId);
+                if (groupRead != null)
+                    data.Add(groupRead);
+            }
+
             return (data, total, filtered);
         }
 
@@ -201,6 +209,75 @@ namespace Repositories.Repository
                 throw new ArgumentException($"Group with ID {groupId} not found.");
             if (!allowedPriorities.Any(ap => ap == group.LevelPriority))
                 throw new UnauthorizedAccessException($"Group must have one of the allowed roles: {string.Join(", ", allowedPriorities)}.");
+        }
+
+        public async Task<UserGroupWithDetailsRead?> GetByGroupIdWithDetailsAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            // Get group entity
+            var group = await BaseEntityQuery().Where(x => x.Id == id).FirstOrDefaultAsync();
+            if (group == null)
+                return null;
+
+            // Get accessible buildings for this group
+            var buildingQuery = _context.GroupBuildingAccesses
+                .Where(gba => gba.GroupId == id && gba.Status != 0);
+
+            // Apply multi-tenancy filter for buildings
+            if (!isSystemAdmin && applicationId.HasValue)
+            {
+                buildingQuery = buildingQuery.Where(gba => gba.ApplicationId == applicationId.Value);
+            }
+
+            var buildings = await buildingQuery
+                .Select(gba => new MstBuildingRead
+                {
+                    Id = gba.BuildingId,
+                    Name = gba.Building != null ? gba.Building.Name : "",
+                    ApplicationId = gba.ApplicationId,
+                    Status = gba.Status,
+                    CreatedAt = gba.CreatedAt,
+                    UpdatedAt = gba.UpdatedAt
+                })
+                .ToListAsync();
+
+            // Get members of this group
+            var usersQuery = _context.Users
+                .Where(u => u.GroupId == id && u.Status != 0);
+
+            // Apply multi-tenancy filter for users
+            if (!isSystemAdmin && applicationId.HasValue)
+            {
+                usersQuery = usersQuery.Where(u => u.ApplicationId == applicationId.Value);
+            }
+
+            var membersList = await usersQuery
+                .Select(u => new UserGroupMemberRead
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Email = u.Email,
+                    FullName = u.Username,
+                    Status = u.Status
+                })
+                .ToListAsync();
+
+            // Combine all data
+            return new UserGroupWithDetailsRead
+            {
+                Id = group.Id,
+                Name = group.Name,
+                LevelPriority = group.LevelPriority.ToString(),
+                ApplicationId = group.ApplicationId,
+                AccessibleBuildings = buildings,
+                Members = membersList,
+                MemberCount = membersList.Count,
+                CreatedAt = group.CreatedAt,
+                UpdatedAt = group.UpdatedAt,
+                CreatedBy = group.CreatedBy,
+                UpdatedBy = group.UpdatedBy
+            };
         }
     }
 }
