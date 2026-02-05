@@ -100,8 +100,13 @@ namespace Repositories.Repository
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            // Apply building access filter for non-system/super admin users
-            query = ApplyBuildingFilterIfNonSystemAdmin(query, d => d.Floor?.BuildingId);
+            // Building access filter untuk PrimaryAdmin (bukan System/SuperAdmin)
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(d => d.FloorId.HasValue &&
+                                        accessibleBuildingIds.Contains(d.Floor.BuildingId));
+            }
 
             return query;
         }
@@ -176,6 +181,15 @@ namespace Repositories.Repository
             var query = _context.PatrolAreas.AsQueryable();
             query = query.Where(x => x.Status != 0);
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // Building access filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Include(x => x.Floor)
+                            .Where(x => x.FloorId.HasValue &&
+                                       accessibleBuildingIds.Contains(x.Floor.BuildingId));
+            }
 
             var total = await query.CountAsync();
 

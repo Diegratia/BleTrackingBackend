@@ -279,31 +279,6 @@ namespace Repositories.Repository
                 .Select(id => Guid.Parse(id))
                 .ToList();
         }
-
-        /// <summary>
-        /// Apply building filter to query if user is not System/SuperAdmin and has building restrictions
-        /// </summary>
-        protected IQueryable<T> ApplyBuildingFilterIfNonSystemAdmin<T>(
-            IQueryable<T> query,
-            Func<T, Guid?> buildingIdSelector
-        ) where T : class
-        {
-            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
-
-            // Skip if system admin, super admin, or no restriction (empty list means bypass)
-            if (!accessibleBuildingIds.Any())
-                return query;
-
-            // Filter by accessible buildings - must use expression tree, not statement block
-            var buildingIds = accessibleBuildingIds.ToList();
-            query = query.Where(entity => buildingIdSelector(entity).HasValue && buildingIds.Contains(buildingIdSelector(entity).Value));
-
-            return query;
-        }
-
-
-
-
     }
 }
 
