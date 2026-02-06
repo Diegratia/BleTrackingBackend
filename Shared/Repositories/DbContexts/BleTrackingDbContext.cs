@@ -74,6 +74,7 @@ namespace Repositories.DbContexts
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<UserBuildingAccess> UserBuildingAccesses { get; set; }
         public DbSet<GroupBuildingAccess> GroupBuildingAccesses { get; set; }
+        public DbSet<MonitoringConfigBuildingAccess> MonitoringConfigBuildingAccesses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
 
@@ -145,6 +146,29 @@ namespace Repositories.DbContexts
                 entity.HasIndex(gba => gba.GroupId);
                 entity.HasIndex(gba => gba.BuildingId);
                 entity.HasQueryFilter(gba => gba.Status != 0);
+            });
+            modelBuilder.Entity<MonitoringConfigBuildingAccess>(entity =>
+            {
+                entity.ToTable("monitoring_config_building_access");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.MonitoringConfigId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.BuildingId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
+
+                entity.HasOne(mcba => mcba.MonitoringConfig)
+                    .WithMany(mc => mc.BuildingAccesses)
+                    .HasForeignKey(mcba => mcba.MonitoringConfigId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(mcba => mcba.Building)
+                    .WithMany()
+                    .HasForeignKey(mcba => mcba.BuildingId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(mcba => mcba.MonitoringConfigId);
+                entity.HasIndex(mcba => mcba.BuildingId);
+                entity.HasQueryFilter(mcba => mcba.Status != 0);
             });
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
 

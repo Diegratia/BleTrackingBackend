@@ -14,9 +14,15 @@ namespace Repositories.Repository
 {
     public class MonitoringConfigRepository : BaseRepository
     {
-        public MonitoringConfigRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        private readonly MonitoringConfigBuildingAccessRepository _buildingAccessRepository;
+
+        public MonitoringConfigRepository(
+            BleTrackingDbContext context,
+            IHttpContextAccessor httpContextAccessor,
+            MonitoringConfigBuildingAccessRepository buildingAccessRepository)
             : base(context, httpContextAccessor)
         {
+            _buildingAccessRepository = buildingAccessRepository;
         }
 
         private IQueryable<MonitoringConfig> BaseEntityQuery()
@@ -28,14 +34,20 @@ namespace Repositories.Repository
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             // Building access filter untuk PrimaryAdmin (bukan System/SuperAdmin)
+            // Now filters via junction table
             var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
             if (accessibleBuildingIds.Any())
             {
-                query = query.Where(x => x.BuildingId.HasValue &&
-                                        accessibleBuildingIds.Contains(x.BuildingId.Value));
+                var configIdsWithAccess = _context.MonitoringConfigBuildingAccesses
+                    .Where(mcba => mcba.Status != 0 &&
+                                  accessibleBuildingIds.Contains(mcba.BuildingId))
+                    .Select(mcba => mcba.MonitoringConfigId)
+                    .Distinct();
+
+                query = query.Where(x => configIdsWithAccess.Contains(x.Id));
             }
 
-            return query.Include(x => x.Building);
+            return query;
         }
 
         public async Task<MonitoringConfigRead?> GetByIdAsync(Guid id)
@@ -65,20 +77,40 @@ namespace Repositories.Repository
 
         private IQueryable<MonitoringConfigRead> ProjectToRead(IQueryable<MonitoringConfig> query)
         {
-            return query.AsNoTracking().Select(x => new MonitoringConfigRead
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Description = x.Description,
-                Config = x.Config,
-                BuildingId = x.BuildingId,
-                BuildingName = x.Building != null ? x.Building.Name : null,
-                ApplicationId = x.ApplicationId,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-                CreatedBy = x.CreatedBy,
-                UpdatedBy = x.UpdatedBy
-            });
+            return query.AsNoTracking()
+                .Include(x => x.BuildingAccesses)
+                    .ThenInclude(ba => ba.Building)
+                .Select(x => new MonitoringConfigRead
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Description = x.Description,
+                    Config = x.Config,
+                    BuildingIds = x.BuildingAccesses
+                        .Where(ba => ba.Status != 0)
+                        .Select(ba => ba.BuildingId)
+                        .ToList(),
+                    BuildingNames = x.BuildingAccesses
+                        .Where(ba => ba.Status != 0)
+                        .Select(ba => ba.Building.Name)
+                        .ToList(),
+                    // Backward compatibility: set first building
+                    BuildingId = x.BuildingAccesses
+                        .Where(ba => ba.Status != 0)
+                        .OrderBy(ba => ba.CreatedAt)
+                        .Select(ba => (Guid?)ba.BuildingId)
+                        .FirstOrDefault(),
+                    BuildingName = x.BuildingAccesses
+                        .Where(ba => ba.Status != 0)
+                        .OrderBy(ba => ba.CreatedAt)
+                        .Select(ba => ba.Building.Name)
+                        .FirstOrDefault(),
+                    ApplicationId = x.ApplicationId,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedBy = x.UpdatedBy
+                });
         }
 
         public async Task<(List<MonitoringConfigRead> Data, int Total, int Filtered)> FilterAsync(
@@ -90,13 +122,17 @@ namespace Repositories.Repository
             var query = _context.MonitoringConfigs.AsQueryable();
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            // Building access filter untuk PrimaryAdmin
+            // Building access filter untuk PrimaryAdmin - now via junction table
             var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
             if (accessibleBuildingIds.Any())
             {
-                query = query.Include(x => x.Building)
-                            .Where(x => x.BuildingId.HasValue &&
-                                       accessibleBuildingIds.Contains(x.BuildingId.Value));
+                var configIdsWithAccess = _context.MonitoringConfigBuildingAccesses
+                    .Where(mcba => mcba.Status != 0 &&
+                                  accessibleBuildingIds.Contains(mcba.BuildingId))
+                    .Select(mcba => mcba.MonitoringConfigId)
+                    .Distinct();
+
+                query = query.Where(x => configIdsWithAccess.Contains(x.Id));
             }
 
             var total = await query.CountAsync();
@@ -117,9 +153,18 @@ namespace Repositories.Repository
             if (applicationIds.Count > 0)
                 query = query.Where(x => applicationIds.Contains(x.ApplicationId));
 
+            // Filter by buildings via junction table
             var buildingIds = ExtractIds(filter.BuildingId);
             if (buildingIds.Count > 0)
-                query = query.Where(x => x.BuildingId.HasValue && buildingIds.Contains(x.BuildingId.Value));
+            {
+                var configIdsWithBuildings = _context.MonitoringConfigBuildingAccesses
+                    .Where(mcba => mcba.Status != 0 &&
+                                  buildingIds.Contains(mcba.BuildingId))
+                    .Select(mcba => mcba.MonitoringConfigId)
+                    .Distinct();
+
+                query = query.Where(x => configIdsWithBuildings.Contains(x.Id));
+            }
 
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
@@ -136,7 +181,7 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
-        public async Task<MonitoringConfig> AddAsync(MonitoringConfig config)
+        public async Task<MonitoringConfig> AddAsync(MonitoringConfig config, List<Guid> buildingIds)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -155,17 +200,83 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(config.ApplicationId);
             ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
 
+            // Validate building ownership
+            if (buildingIds != null && buildingIds.Any())
+            {
+                var invalidBuildingIds = await _buildingAccessRepository
+                    .CheckInvalidBuildingOwnershipAsync(buildingIds, config.ApplicationId);
+                if (invalidBuildingIds.Any())
+                    throw new UnauthorizedAccessException(
+                        $"BuildingIds do not belong to this Application: {string.Join(", ", invalidBuildingIds)}");
+            }
+
             _context.MonitoringConfigs.Add(config);
             await _context.SaveChangesAsync();
+
+            // Add building accesses
+            if (buildingIds != null && buildingIds.Any())
+            {
+                var buildingAccesses = buildingIds.Select(buildingId =>
+                    new MonitoringConfigBuildingAccess
+                    {
+                        MonitoringConfigId = config.Id,
+                        BuildingId = buildingId,
+                        ApplicationId = config.ApplicationId,
+                        Status = 1,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = config.CreatedBy,
+                        UpdatedBy = config.UpdatedBy
+                    }).ToList();
+
+                await _buildingAccessRepository.AddAccessRangeAsync(buildingAccesses);
+            }
+
             return config;
         }
 
-        public async Task UpdateAsync(MonitoringConfig config)
+        public async Task UpdateAsync(MonitoringConfig config, List<Guid>? buildingIds)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             await ValidateApplicationIdAsync(config.ApplicationId);
             ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
+
+            // Validate building ownership if provided
+            if (buildingIds != null && buildingIds.Any())
+            {
+                var invalidBuildingIds = await _buildingAccessRepository
+                    .CheckInvalidBuildingOwnershipAsync(buildingIds, config.ApplicationId);
+                if (invalidBuildingIds.Any())
+                    throw new UnauthorizedAccessException(
+                        $"BuildingIds do not belong to this Application: {string.Join(", ", invalidBuildingIds)}");
+            }
+
+            // Update building accesses if provided
+            if (buildingIds != null)
+            {
+                // Remove all existing
+                await _buildingAccessRepository.RemoveAllAccessesByConfigAsync(config.Id);
+
+                // Add new ones
+                if (buildingIds.Any())
+                {
+                    var buildingAccesses = buildingIds.Select(buildingId =>
+                        new MonitoringConfigBuildingAccess
+                        {
+                            MonitoringConfigId = config.Id,
+                            BuildingId = buildingId,
+                            ApplicationId = config.ApplicationId,
+                            Status = 1,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                            CreatedBy = config.UpdatedBy,
+                            UpdatedBy = config.UpdatedBy
+                        }).ToList();
+
+                    await _buildingAccessRepository.AddAccessRangeAsync(buildingAccesses);
+                }
+            }
 
             await _context.SaveChangesAsync();
         }
@@ -183,6 +294,9 @@ namespace Repositories.Repository
 
             if (config == null)
                 return;
+
+            // Soft delete all building accesses
+            await _buildingAccessRepository.RemoveAllAccessesByConfigAsync(id);
 
             _context.MonitoringConfigs.Remove(config);
             await _context.SaveChangesAsync();

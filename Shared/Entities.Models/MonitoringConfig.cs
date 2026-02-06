@@ -18,14 +18,19 @@ namespace Entities.Models
         [Required]
         public string Config { get; set; }
 
+        [Obsolete("Use BuildingAccesses collection instead")]
         [Column("building_id")]
-        public Guid? BuildingId { get; set; } 
+        public Guid? BuildingId { get; set; }
 
         [Required]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
         public MstApplication Application { get; set; }
+        [Obsolete("Use BuildingAccesses collection instead")]
         public MstBuilding? Building { get; set; }
+
+        public ICollection<MonitoringConfigBuildingAccess> BuildingAccesses { get; set; }
+            = new List<MonitoringConfigBuildingAccess>();
     }
 }

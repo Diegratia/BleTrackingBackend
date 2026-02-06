@@ -3,6 +3,7 @@ using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension.RootExtension;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using DataView;
@@ -48,12 +49,20 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MonitoringConfigDto> CreateAsync(MonitoringConfigCreateDto createDto)
         {
+            // Handle backward compatibility: if old BuildingId provided, add to BuildingIds
+            if (createDto.BuildingId.HasValue &&
+                (createDto.BuildingIds == null || !createDto.BuildingIds.Contains(createDto.BuildingId.Value)))
+            {
+                createDto.BuildingIds ??= new List<Guid>();
+                createDto.BuildingIds.Add(createDto.BuildingId.Value);
+            }
+
             var config = _mapper.Map<MonitoringConfig>(createDto);
 
             SetCreateAudit(config);
             ValidateApplicationIdForEntity(config);
 
-            await _repository.AddAsync(config);
+            config = await _repository.AddAsync(config, createDto.BuildingIds);
             await _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
 
             return _mapper.Map<MonitoringConfigDto>(config);
@@ -61,6 +70,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto)
         {
+            // Handle backward compatibility: if old BuildingId provided, add to BuildingIds
+            if (updateDto.BuildingId.HasValue &&
+                (updateDto.BuildingIds == null || !updateDto.BuildingIds.Contains(updateDto.BuildingId.Value)))
+            {
+                updateDto.BuildingIds ??= new List<Guid>();
+                updateDto.BuildingIds.Add(updateDto.BuildingId.Value);
+            }
+
             var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
                 throw new NotFoundException($"MonitoringConfig with id {id} not found");
@@ -69,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(config);
             ValidateApplicationIdForEntity(config);
 
-            await _repository.UpdateAsync(config);
+            await _repository.UpdateAsync(config, updateDto.BuildingIds);
             await _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
         }
 

@@ -110,7 +110,7 @@ builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
-
+builder.Services.AddScoped<MonitoringConfigBuildingAccessRepository>();
 builder.Services.AddScoped<MonitoringConfigRepository>();
 
 
