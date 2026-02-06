@@ -60,7 +60,7 @@ namespace BusinessLogic.Services.Implementation
             var config = _mapper.Map<MonitoringConfig>(createDto);
 
             SetCreateAudit(config);
-            ValidateApplicationIdForEntity(config);
+            // ValidateApplicationIdForEntity(config);
 
             config = await _repository.AddAsync(config, createDto.BuildingIds);
             await _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
@@ -84,7 +84,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, config);
             SetUpdateAudit(config);
-            ValidateApplicationIdForEntity(config);
+            // ValidateApplicationIdForEntity(config);
 
             await _repository.UpdateAsync(config, updateDto.BuildingIds);
             await _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
@@ -131,10 +131,10 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        private void ValidateApplicationIdForEntity(MonitoringConfig config)
-        {
-            var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
-            _repository.ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
-        }
+        // private void ValidateApplicationIdForEntity(MonitoringConfig config)
+        // {
+        //     var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
+        //     _repository.ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
+        // }
     }
 }
