@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Interface
     {
         Task<MonitoringConfigRead> GetByIdAsync(Guid id);
         Task<IEnumerable<MonitoringConfigRead>> GetAllAsync();
-        Task<MonitoringConfigDto> CreateAsync(MonitoringConfigCreateDto createDto);
+        Task<MonitoringConfigRead> CreateAsync(MonitoringConfigCreateDto createDto);
         Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto);
         Task DeleteAsync(Guid id);
         Task<object> FilterAsync(DataTablesProjectedRequest request, MonitoringConfigFilter filter);

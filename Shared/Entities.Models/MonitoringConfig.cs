@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 using Helpers.Consumer;
 
 namespace Entities.Models
@@ -12,13 +10,14 @@ namespace Entities.Models
     {
         [Column("name")]
         public string? Name { get; set; }
+
         [Column("description")]
         public string? Description { get; set; }
+
         [Column("config")]
         [Required]
         public string Config { get; set; }
 
-        [Obsolete("Use BuildingAccesses collection instead")]
         [Column("building_id")]
         public Guid? BuildingId { get; set; }
 
@@ -27,9 +26,7 @@ namespace Entities.Models
         public Guid ApplicationId { get; set; }
 
         public MstApplication Application { get; set; }
-        [Obsolete("Use BuildingAccesses collection instead")]
         public MstBuilding? Building { get; set; }
-
         public ICollection<MonitoringConfigBuildingAccess> BuildingAccesses { get; set; }
             = new List<MonitoringConfigBuildingAccess>();
     }

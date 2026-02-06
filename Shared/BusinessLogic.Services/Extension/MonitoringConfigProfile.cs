@@ -13,7 +13,6 @@ namespace BusinessLogic.Services.Extension
     {
         public MonitoringConfigProfile()
         {
-            CreateMap<MonitoringConfig, MonitoringConfigDto>();
             CreateMap<MonitoringConfigCreateDto, MonitoringConfig>();
             CreateMap<MonitoringConfigUpdateDto, MonitoringConfig>();
         }

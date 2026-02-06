@@ -3,7 +3,6 @@ using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension.RootExtension;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using DataView;
@@ -47,44 +46,26 @@ namespace BusinessLogic.Services.Implementation
             return configs;
         }
 
-        public async Task<MonitoringConfigDto> CreateAsync(MonitoringConfigCreateDto createDto)
+        public async Task<MonitoringConfigRead> CreateAsync(MonitoringConfigCreateDto createDto)
         {
-            // Handle backward compatibility: if old BuildingId provided, add to BuildingIds
-            if (createDto.BuildingId.HasValue &&
-                (createDto.BuildingIds == null || !createDto.BuildingIds.Contains(createDto.BuildingId.Value)))
-            {
-                createDto.BuildingIds ??= new List<Guid>();
-                createDto.BuildingIds.Add(createDto.BuildingId.Value);
-            }
-
             var config = _mapper.Map<MonitoringConfig>(createDto);
-
             SetCreateAudit(config);
-            // ValidateApplicationIdForEntity(config);
 
             config = await _repository.AddAsync(config, createDto.BuildingIds);
             await _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
+            var result = await _repository.GetByIdAsync(config.Id);
 
-            return _mapper.Map<MonitoringConfigDto>(config);
+            return result ?? throw new Exception("Failed to reload MonitoringConfig after create");
         }
 
         public async Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto)
         {
-            // Handle backward compatibility: if old BuildingId provided, add to BuildingIds
-            if (updateDto.BuildingId.HasValue &&
-                (updateDto.BuildingIds == null || !updateDto.BuildingIds.Contains(updateDto.BuildingId.Value)))
-            {
-                updateDto.BuildingIds ??= new List<Guid>();
-                updateDto.BuildingIds.Add(updateDto.BuildingId.Value);
-            }
-
             var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
                 throw new NotFoundException($"MonitoringConfig with id {id} not found");
 
             _mapper.Map(updateDto, config);
             SetUpdateAudit(config);
-            // ValidateApplicationIdForEntity(config);
 
             await _repository.UpdateAsync(config, updateDto.BuildingIds);
             await _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
@@ -103,14 +84,12 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MonitoringConfigFilter filter)
         {
-            // Map DataTablesProjectedRequest to filter
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
             filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 
-            // Map Date Filters
             if (request.DateFilters != null)
             {
                 if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
@@ -130,11 +109,5 @@ namespace BusinessLogic.Services.Implementation
                 data
             };
         }
-
-        // private void ValidateApplicationIdForEntity(MonitoringConfig config)
-        // {
-        //     var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
-        //     _repository.ValidateApplicationIdForEntity(config, applicationId, isSystemAdmin);
-        // }
     }
 }

@@ -94,17 +94,6 @@ namespace Repositories.Repository
                         .Where(ba => ba.Status != 0)
                         .Select(ba => ba.Building.Name)
                         .ToList(),
-                    // Backward compatibility: set first building
-                    BuildingId = x.BuildingAccesses
-                        .Where(ba => ba.Status != 0)
-                        .OrderBy(ba => ba.CreatedAt)
-                        .Select(ba => (Guid?)ba.BuildingId)
-                        .FirstOrDefault(),
-                    BuildingName = x.BuildingAccesses
-                        .Where(ba => ba.Status != 0)
-                        .OrderBy(ba => ba.CreatedAt)
-                        .Select(ba => ba.Building.Name)
-                        .FirstOrDefault(),
                     ApplicationId = x.ApplicationId,
                     CreatedAt = x.CreatedAt,
                     UpdatedAt = x.UpdatedAt,
