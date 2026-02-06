@@ -218,5 +218,27 @@ namespace Repositories.Repository
 
             return idList.Except(existingIds).ToList();
         }
+
+        /// <summary>
+        /// Get patrol areas with their AreaShape data for distance calculation
+        /// </summary>
+        public async Task<Dictionary<Guid, PatrolArea>> GetAreasWithShapeAsync(
+            IEnumerable<Guid> areaIds)
+        {
+            var idList = areaIds.Distinct().ToList();
+            if (!idList.Any())
+                return new Dictionary<Guid, PatrolArea>();
+
+            var areas = await _context.PatrolAreas
+                .AsNoTracking()
+                .Where(x => idList.Contains(x.Id) && x.Status != 0)
+                .Select(x => new { x.Id, x.AreaShape })
+                .ToListAsync();
+
+            return areas.ToDictionary(
+                x => x.Id,
+                x => new PatrolArea { Id = x.Id, AreaShape = x.AreaShape }
+            );
+        }
     }
 }

@@ -4,6 +4,7 @@ using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using DataView;
 using Entities.Models;
+using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Repositories.Repository;
@@ -51,14 +52,18 @@ namespace BusinessLogic.Services.Implementation
                 );
             }
 
+            // 1. Load area shapes for distance calculation
+            var areasLookup = await _repo.GetAreasWithShapeAsync(areaIds);
+
+            // 2. Create route areas
             foreach (var (areaId, index) in areaIds.Select((id, i) => (id, i)))
             {
                 entity.PatrolRouteAreas.Add(new PatrolRouteAreas
                 {
                     PatrolAreaId = areaId,
                     ApplicationId = AppId,
-                    OrderIndex = index + 1,          
-                    EstimatedDistance = 0,         
+                    OrderIndex = index + 1,
+                    EstimatedDistance = 0,  // Temporary, will be calculated
                     EstimatedTime = 0,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
@@ -66,6 +71,10 @@ namespace BusinessLogic.Services.Implementation
                     UpdatedBy = UsernameFormToken,
                 });
             }
+
+            // 3. Calculate and set distances
+            CalculateAndSetDistances(entity.PatrolRouteAreas, areasLookup);
+
             PatrolRouteRead result = null;
 
                 await _repo.ExecuteInTransactionAsync(async () =>
@@ -108,6 +117,10 @@ namespace BusinessLogic.Services.Implementation
                 }
                 route.PatrolRouteAreas.Clear();
 
+                // 1. Load area shapes for distance calculation
+                var areasLookup = await _repo.GetAreasWithShapeAsync(newAreaIds);
+
+                // 2. Create new route areas
                 for (int i = 0; i < newAreaIds.Count; i++)
                 {
                     route.PatrolRouteAreas.Add(new PatrolRouteAreas
@@ -115,7 +128,7 @@ namespace BusinessLogic.Services.Implementation
                         PatrolRouteId = route.Id,
                         PatrolAreaId = newAreaIds[i],
                         OrderIndex = i + 1,
-                        EstimatedDistance = 0,
+                        EstimatedDistance = 0,  // Temporary, will be calculated
                         EstimatedTime = 0,
                         status = 1,
                         ApplicationId = route.ApplicationId,
@@ -125,6 +138,9 @@ namespace BusinessLogic.Services.Implementation
                         UpdatedBy = UsernameFormToken
                     });
                 }
+
+                // 3. Calculate and set distances
+                CalculateAndSetDistances(route.PatrolRouteAreas, areasLookup);
 
                 // =====================================================
                 // 🔹 UPDATE ROUTE (SCALAR SAJA)
@@ -238,6 +254,38 @@ namespace BusinessLogic.Services.Implementation
             {
                 item.StartAreaId = startAreaId;
                 item.EndAreaId = endAreaId;
+            }
+        }
+
+        /// <summary>
+        /// Calculate and set estimated distances for route areas
+        /// </summary>
+        private void CalculateAndSetDistances(
+            ICollection<PatrolRouteAreas> routeAreas,
+            Dictionary<Guid, PatrolArea> areasLookup)
+        {
+            // Prepare data for geometry helper
+            var orderedAreas = routeAreas
+                .OrderBy(x => x.OrderIndex)
+                .Select(x => (
+                    AreaId: x.PatrolAreaId,
+                    OrderIndex: x.OrderIndex,
+                    AreaShape: areasLookup.TryGetValue(x.PatrolAreaId, out var area)
+                        ? area.AreaShape
+                        : null
+                ))
+                .ToList();
+
+            // Calculate distances using geometry helper
+            var distanceMap = GeometryHelper.CalculateRouteDistances(orderedAreas);
+
+            // Apply calculated distances to route areas
+            foreach (var routeArea in routeAreas)
+            {
+                routeArea.EstimatedDistance = distanceMap.TryGetValue(
+                    routeArea.OrderIndex, out var distance)
+                    ? distance
+                    : 0;
             }
         }
 
