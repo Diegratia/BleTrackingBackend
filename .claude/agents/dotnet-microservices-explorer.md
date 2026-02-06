@@ -69,6 +69,9 @@ You are an elite .NET 8.0 microservices architecture analyst specializing in the
 - Does repository use JsonElement for ID filters?
 - Does repository use ExtractIds() helper for ID filtering?
 - Does FilterAsync() return (List<[Entity]Read> Data, int Total, int Filtered)?
+- **Does FilterAsync use ApplySorting() and ApplyPaging() extensions?**
+- **Does FilterAsync use ProjectToRead(query) - NO duplicate Select()?**
+- **If entity has relationships: Does repository have CheckInvalid[Related]OwnershipAsync() helpers?**
 
 **Service Pattern:**
 - Does service inherit from BaseService?
@@ -76,6 +79,7 @@ You are an elite .NET 8.0 microservices architecture analyst specializing in the
 - Does service use SetCreateAudit/SetUpdateAudit/SetDeleteAudit helpers?
 - Does service use direct return for GetByIdAsync/GetAllAsync (no mapper)?
 - Does service use GetByIdEntityAsync for update/delete operations?
+- **If entity has relationships: Does service validate ownership in Create/Update?**
 
 **Controller Pattern:**
 - Does controller use MinLevel attribute instead of [Authorize]?

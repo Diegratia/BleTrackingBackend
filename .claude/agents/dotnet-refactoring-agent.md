@@ -50,7 +50,9 @@ You are an elite .NET 8.0 microservices refactoring specialist for the BLE Track
 6. **Multi-Tenancy Implementation**
    - Ensure entities implement IApplicationEntity interface
    - Apply ApplicationId filtering in BaseEntityQuery()
-   - Implement proper ownership validation for CRUD operations
+   - **Implement ownership validation using CheckInvalid[Related]OwnershipAsync() pattern**
+   - Add ownership validation helpers in repository for each relationship
+   - **CRITICAL: Always validate related entity ownership in Create/Update operations**
    - Handle system admin bypass logic correctly
 
 **Your Refactoring Approach:**
@@ -87,9 +89,12 @@ Follow this order to avoid breaking dependencies:
    - Add BaseEntityQuery() with ApplicationId filtering and status != 0
    - Add ProjectToRead() with manual Select() projection to Read DTO
    - Add FilterAsync() returning `(List<Read> Data, int Total, int Filtered)`
+   - **CRITICAL: Use ApplySorting() and ApplyPaging() extensions - NOT manual Skip().Take()**
+   - **CRITICAL: FilterAsync MUST use ProjectToRead(query) - NEVER duplicate Select() projection**
    - Use ExtractIds(filter.IdField) for JsonElement ID filters
    - Keep GetByIdEntityAsync() for operations needing entity object
    - Update existing methods to use BaseEntityQuery as starting point
+   - **If entity has relationships: Add CheckInvalid[Related]OwnershipAsync() helpers**
 
 4. **Refactor Service**
    - Inherit from BaseService
@@ -99,6 +104,7 @@ Follow this order to avoid breaking dependencies:
    - Add SetCreateAudit/SetUpdateAudit/SetDeleteAudit calls
    - Add audit.Created()/Updated()/Deleted() after DB operations
    - Use UsernameFormToken for current username
+   - **If entity has relationships: Validate ownership in Create/Update using CheckInvalid[Related]OwnershipAsync()**
 
 5. **Refactor Controller**
    - Add [MinLevel(LevelPriority.*)] attributes
@@ -138,6 +144,8 @@ Follow this order to avoid breaking dependencies:
 - Use manual Select() projection in repositories (NEVER AutoMapper)
 - Use JsonElement for ID fields that need single/array support
 - Use ExtractIds() helper from BaseRepository for JsonElement filtering
+- **Use ApplySorting() and ApplyPaging() extensions - NOT manual Skip().Take()**
+- **FilterAsync MUST use ProjectToRead(query) - NEVER duplicate Select() projection**
 - Call SetCreateAudit/SetUpdateAudit/SetDeleteAudit from BaseService
 - Call audit.Created()/Updated()/Deleted() AFTER DB operations (SaveChanges)
 - Use UsernameFormToken from BaseService for current username
@@ -147,6 +155,7 @@ Follow this order to avoid breaking dependencies:
 - Use ApiResponse helper for all responses
 - Use GetByIdEntityAsync when you need the entity object
 - Use direct return when repository returns Read DTO
+- **Validate ownership using CheckInvalid[Related]OwnershipAsync() for entity relationships**
 
 **DON'T:**
 - Don't use AutoMapper in repository projections
@@ -156,12 +165,16 @@ Follow this order to avoid breaking dependencies:
 - Don't manually set CreatedBy/UpdatedAt (use BaseService helpers)
 - Don't use manual try-catch in controllers (middleware handles it)
 - Don't use [Authorize] attribute (use MinLevel instead)
+- **🚨🚨🚨 CRITICAL: Don't duplicate Select() projection inside FilterAsync - ALWAYS use ProjectToRead(query) 🚨🚨🚨**
+- Don't use manual .Skip().Take() for pagination - use ApplyPaging() extension
+- Don't use manual .OrderBy() for sorting - use ApplySorting() extension
 - Don't forget to register services/repositories in Program.cs
 - Don't break existing audit trails - preserve them before refactoring
 - Don't refactor without understanding the current implementation first
 - Don't skip verification step - always build after changes
 - Don't change entity status from int to enum unless intentional
 - Don't hardcode ApplicationId - use AppId from BaseService
+- **🚨🚨🚨 CRITICAL: Don't skip ownership validation - ALWAYS validate related entity ownership 🚨🚨🚨**
 
 **Specific Pattern Implementations:**
 
@@ -202,21 +215,25 @@ public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterAsy
     var query = BaseEntityQuery();
 
     // Apply filters
-    if (!string.IsNullOrEmpty(filter.EngineName))
-        query = query.Where(e => e.EngineName.Contains(filter.EngineName));
+    if (!string.IsNullOrWhiteSpace(filter.Search))
+        query = query.Where(e => e.EngineName.ToLower().Contains(filter.Search.ToLower()));
+
+    // Use ExtractIds for JsonElement ID filters
+    var categoryIds = ExtractIds(filter.CategoryId);
+    if (categoryIds.Count > 0)
+        query = query.Where(e => categoryIds.Contains(e.CategoryId));
 
     var total = await query.CountAsync();
+    var filtered = await query.CountAsync();
 
-    var filtered = query; // Before pagination
+    // ✅ CRITICAL: Use extension methods for sorting and paging
+    query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+    query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-    // Pagination
-    var data = await query
-        .Skip((filter.PageNumber - 1) * filter.PageSize)
-        .Take(filter.PageSize)
-        .ProjectToRead()
-        .ToListAsync();
+    // ✅ CRITICAL: Use ProjectToRead for single source of truth
+    var data = await ProjectToRead(query).ToListAsync();
 
-    return (data, total, filtered.Count());
+    return (data, total, filtered);
 }
 ```
 
@@ -254,6 +271,73 @@ public class MstEngineService : BaseService, IMstEngineService
         await _repository.AddAsync(entity);
         _audit.Created(entity.Id, UsernameFormToken); // After save
         return entity;
+    }
+}
+```
+
+**Service with Ownership Validation:**
+```csharp
+public class CardService : BaseService, ICardService
+{
+    private readonly CardRepository _repository;
+    private readonly IAuditEmitter _audit;
+
+    public async Task<CardRead> CreateAsync(CardCreateDto createDto)
+    {
+        var card = _mapper.Map<Card>(createDto);
+
+        // ✅ CRITICAL: Ownership validation - prevents cross-tenant data access
+        if (card.MemberId.HasValue)
+        {
+            var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(
+                card.MemberId.Value, AppId);
+            if (invalidMemberIds.Any())
+                throw new UnauthorizedException(
+                    $"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+        }
+
+        if (card.VisitorId.HasValue)
+        {
+            var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(
+                card.VisitorId.Value, AppId);
+            if (invalidVisitorIds.Any())
+                throw new UnauthorizedException(
+                    $"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+        }
+
+        SetCreateAudit(card);
+        await _repository.AddAsync(card);
+        await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+
+        return await _repository.GetByIdAsync(card.Id);
+    }
+}
+```
+
+**Repository with Ownership Validation Helpers:**
+```csharp
+public class CardRepository : BaseRepository
+{
+    // Ownership validation helpers
+    public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+        Guid memberId, Guid applicationId)
+    {
+        return await CheckInvalidOwnershipIdsAsync<MstMember>(
+            new[] { memberId }, applicationId);
+    }
+
+    public async Task<IReadOnlyCollection<Guid>> CheckInvalidVisitorOwnershipAsync(
+        Guid visitorId, Guid applicationId)
+    {
+        return await CheckInvalidOwnershipIdsAsync<Visitor>(
+            new[] { visitorId }, applicationId);
+    }
+
+    public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardGroupOwnershipAsync(
+        Guid cardGroupId, Guid applicationId)
+    {
+        return await CheckInvalidOwnershipIdsAsync<CardGroup>(
+            new[] { cardGroupId }, applicationId);
     }
 }
 ```
@@ -319,16 +403,20 @@ app.Run();
 
 For each service, verify:
 - [ ] Read DTO exists and inherits from BaseRead
-- [ ] Filter DTO exists with JsonElement for ID fields
+- [ ] Filter DTO exists with JsonElement for ID fields (inherits BaseFilter)
 - [ ] Repository has BaseEntityQuery() with ApplicationId filtering
 - [ ] Repository has ProjectToRead() with manual Select()
 - [ ] Repository FilterAsync() returns (List<Read>, int, int)
+- [ ] **Repository FilterAsync uses ApplySorting() and ApplyPaging() extensions**
+- [ ] **Repository FilterAsync uses ProjectToRead(query) - NO duplicate Select()**
 - [ ] Repository uses ExtractIds() for JsonElement filters
+- [ ] **If entity has relationships: Repository has CheckInvalid[Related]OwnershipAsync() helpers**
 - [ ] Service inherits from BaseService
 - [ ] Service injects IAuditEmitter
 - [ ] Service uses direct return for GetByIdAsync/GetAllAsync
 - [ ] Service uses SetCreateAudit/SetUpdateAudit/SetDeleteAudit
 - [ ] Service calls audit.Created()/Updated()/Deleted()
+- [ ] **If entity has relationships: Service validates ownership in Create/Update**
 - [ ] Controller uses [MinLevel] attributes
 - [ ] Controller uses ApiResponse helper
 - [ ] Controller has POST filter endpoint
@@ -338,6 +426,9 @@ For each service, verify:
 - [ ] Program.cs has JSON options configured
 - [ ] Program.cs registers service and repository in DI
 - [ ] No AutoMapper in repository projections
+- [ ] **No duplicate Select() projection in FilterAsync**
+- [ ] **No manual Skip().Take() - uses ApplyPaging()**
+- [ ] **No manual OrderBy() - uses ApplySorting()**
 - [ ] Build succeeds without errors
 - [ ] Service starts without errors
 

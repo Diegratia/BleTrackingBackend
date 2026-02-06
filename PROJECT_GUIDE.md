@@ -1,6 +1,7 @@
 # BLE Tracking Backend - Project Guide
 
 ## Table of Contents
+
 1. [Project Overview](#project-overview)
 2. [Tech Stack](#tech-stack)
 3. [Architecture](#architecture)
@@ -23,6 +24,7 @@
 BLE Tracking Backend adalah sistem microservices untuk memonitor lokasi orang dan gadget menggunakan teknologi Bluetooth Low Energy (BLE). Sistem ini menyediakan fitur real-time tracking, alarm system, patrol management, dan card access control.
 
 ### Key Features
+
 - **Real-time BLE Tracking**: Melacak posisi perangkat BLE secara real-time
 - **Alarm System**: Deteksi dan notifikasi pelanggaran area (Geofence, Boundary, StayOnArea, Overpopulating)
 - **Patrol Management**: Manajemen patroli security dengan route dan checkpoint
@@ -36,44 +38,54 @@ BLE Tracking Backend adalah sistem microservices untuk memonitor lokasi orang da
 ## Tech Stack
 
 ### Core Framework
+
 - **.NET 8.0** (SDK 8.0.411) - Primary framework
 - **C# 12** - Programming language
 - **ASP.NET Core 8.0** - Web API framework
 
 ### Database & ORM
+
 - **SQL Server** - Primary database
 - **Entity Framework Core 8.0.13** - ORM utama
 - **Dapper 2.1.66** - Micro-ORM untuk query kompleks
 
 ### Authentication & Authorization
+
 - **JWT Bearer Authentication** - Token-based auth
 - **BCrypt.Net-Next 4.0.3** - Password hashing
 
 ### Communication
+
 - **MQTT (MQTTnet 4.3.3)** - Real-time messaging dengan engine tracking
 - **HTTP/REST** - API communication antar services
 - **Nginx** - API Gateway dan reverse proxy
 
 ### Caching & Storage
+
 - **Redis (StackExchange.Redis 2.9.32)** - Distributed caching
 - **Local File Storage** - Untuk gambar floorplan, visitor, member
 
 ### Background Processing
+
 - **Quartz.NET 3.15.0** - Job scheduling
 - **IHostedService** - Background services
 
 ### API Documentation
+
 - **Swagger/OpenAPI (Swashbuckle 6.6.2)** - API documentation
 
 ### Validation & Mapping
+
 - **FluentValidation 12.0.0** - Input validation
 - **AutoMapper 12.0.1** - Object mapping
 
 ### Logging
+
 - **Serilog** - Structured logging
 - **Console, File** - Log outputs
 
 ### Utilities
+
 - **ClosedXML 0.105.0** - Excel export
 - **QuestPDF 2024.12.2** - PDF generation
 - **CsvHelper 33.1.0** - CSV processing
@@ -81,6 +93,7 @@ BLE Tracking Backend adalah sistem microservices untuk memonitor lokasi orang da
 - **System.Linq.Dynamic.Core 1.6.6** - Dynamic LINQ queries
 
 ### Development Tools
+
 - **Docker & Docker Compose** - Containerization
 - **Git** - Version control
 
@@ -89,6 +102,7 @@ BLE Tracking Backend adalah sistem microservices untuk memonitor lokasi orang da
 ## Architecture
 
 ### Microservices Architecture
+
 Project menggunakan arsitektur microservices dengan prinsip Clean Architecture. Setiap service adalah standalone ASP.NET Core application yang dapat di-deploy secara independen.
 
 ```
@@ -123,12 +137,14 @@ Project menggunakan arsitektur microservices dengan prinsip Clean Architecture. 
 ```
 
 ### Clean Architecture Layers
+
 1. **Controllers Layer** (`Web.API.Controllers`): Handle HTTP requests/responses
 2. **Business Logic Layer** (`BusinessLogic.Services`): Business rules dan logic
 3. **Repository Layer** (`Repositories`): Data access abstraction
 4. **Entity Layer** (`Entities.Models`): Domain entities
 
 ### Design Patterns
+
 - **Repository Pattern**: Abstract data access dengan `BaseRepository`
 - **Unit of Work**: Transaksi database management
 - **Dependency Injection**: Service registration di `Program.cs`
@@ -266,7 +282,9 @@ BleTrackingBackend/
 ### 1. Project Structure Guidelines
 
 #### Service Project Structure
+
 Setiap microservice harus memiliki struktur minimal:
+
 ```
 Services.API/[ServiceName]/
 ├── [ServiceName].csproj           # Project file dengan SDK Web
@@ -279,6 +297,7 @@ Services.API/[ServiceName]/
 ```
 
 #### Program.cs Template
+
 ```csharp
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
@@ -330,8 +349,6 @@ builder.Services.AddScoped<[Service]Repository>();
 // Optional background/MQTT
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
-// Optional Redis recovery if Redis enabled
-// builder.Services.AddHostedService<RedisRecoveryService>();
 
 builder.UseDefaultHostExtension("[SERVICE]_PORT", "[PORT]");
 
@@ -363,42 +380,45 @@ app.Run();
 ```
 
 ### Unified Refactor Guide (Standard Berdasarkan PatrolCase)
+
 Gunakan checklist ini saat melakukan refactoring Service/Entity stack untuk mendukung DataTables, Projection, dan Strict Ownership:
 
 1.  **Analyze & Prepare**: Identifikasi entity, relation, dan requirements (DataTables?).
 2.  **Define Contracts**:
-    *   `Shared/Shared.Contracts/Read/[Entity]Read.cs`: DTO untuk data read-only (projection).
-    *   `Shared/Shared.Contracts/[Entity]Filter.cs`: Model filter dengan `JsonElement` untuk ID fields (support single/array).
+    - `Shared/Shared.Contracts/Read/[Entity]Read.cs`: DTO untuk data read-only (projection).
+    - `Shared/Shared.Contracts/[Entity]Filter.cs`: Model filter dengan `JsonElement` untuk ID fields (support single/array).
 3.  **Repository Refactor (Standard: `PatrolCaseRepository`)**:
-    *   **Strict Multi-Tenancy**: Gunakan `BaseEntityQuery()` untuk mengintegrasikan `ApplyApplicationIdFilter`.
-    *   **Manual Projection**: Implementasikan `ProjectToRead(IQueryable<Entity> query)` yang mengembalikan `IQueryable<EntityRead>`. Gunakan `AsNoTracking()` dan manual `Select`.
-    *   **Filtering**: Implementasikan `FilterAsync([Entity]Filter filter)` yang menggunakan `BaseEntityQuery`, menghitung total/filtered, menerapkan sorting/paging, dan memanggil `ProjectToRead`.
-    *   **ID Filter Pattern**: Gunakan `ExtractIds(filter.SomeId)` untuk handle ID filter yang support single value dan array.
-    *   **Entity Access**: Sediakan `GetByIdEntityAsync(Guid id)` untuk operasi yang membutuhkan entity asli (Create/Update/Delete).
+    - **Strict Multi-Tenancy**: Gunakan `BaseEntityQuery()` untuk mengintegrasikan `ApplyApplicationIdFilter`.
+    - **Manual Projection**: Implementasikan `ProjectToRead(IQueryable<Entity> query)` yang mengembalikan `IQueryable<EntityRead>`. Gunakan `AsNoTracking()` dan manual `Select`.
+    - **Filtering**: Implementasikan `FilterAsync([Entity]Filter filter)` yang menggunakan `BaseEntityQuery`, menghitung total/filtered, menerapkan sorting/paging, dan memanggil `ProjectToRead`.
+    - **ID Filter Pattern**: Gunakan `ExtractIds(filter.SomeId)` untuk handle ID filter yang support single value dan array.
+    - **Entity Access**: Sediakan `GetByIdEntityAsync(Guid id)` untuk operasi yang membutuhkan entity asli (Create/Update/Delete).
 4.  **Service Refactor (Standard: `PatrolCaseService`)**:
-    *   **Inherit BaseService**: Extend `BaseService` untuk audit fields helper.
-    *   **Inject IAuditEmitter**: Tambahkan `IAuditEmitter` di constructor untuk audit logging.
-    *   **DataTables Support**: Gunakan `DataTablesProjectedRequest` dan deserialisasi `request.Filter` ke typed filter.
-    *   **Ownership Validation**: Panggil `CheckInvalid[Related]OwnershipAsync` sebelum Create/Update jika ada relasi ke master data lain.
-    *   **Error Handling**: Gunakan `NotFoundException`, `UnauthorizedException`, atau `BusinessException` secara eksplisit.
-    *   **Audit Calls**: Panggil `_audit.Created/Updated/Deleted` setelah operasi database.
+    - **Inherit BaseService**: Extend `BaseService` untuk audit fields helper.
+    - **Inject IAuditEmitter**: Tambahkan `IAuditEmitter` di constructor untuk audit logging.
+    - **DataTables Support**: Gunakan `DataTablesProjectedRequest` dan deserialisasi `request.Filter` ke typed filter.
+    - **Ownership Validation**: Panggil `CheckInvalid[Related]OwnershipAsync` sebelum Create/Update jika ada relasi ke master data lain.
+    - **Error Handling**: Gunakan `NotFoundException`, `UnauthorizedException`, atau `BusinessException` secara eksplisit.
+    - **Audit Calls**: Panggil `_audit.Created/Updated/Deleted` setelah operasi database.
 5.  **Controller Refactor (Standard: `PatrolCaseController`)**:
-    *   **Standardized Responses**: Gunakan `ApiResponse.Success`, `ApiResponse.Created`, `ApiResponse.Paginated`, dll.
-    *   **Centralized Authorization**: Tambahkan `[MinLevel(LevelPriority.SuperAdmin)]` di level class atau method.
-    *   **Clean Endpoints**: Hapus redundant `try-catch`. Gunakan global exception middleware.
+    - **Standardized Responses**: Gunakan `ApiResponse.Success`, `ApiResponse.Created`, `ApiResponse.Paginated`, dll.
+    - **Centralized Authorization**: Tambahkan `[MinLevel(LevelPriority.SuperAdmin)]` di level class atau method.
+    - **Clean Endpoints**: Hapus redundant `try-catch`. Gunakan global exception middleware.
 6.  **Program.cs Refactor**:
-    *   **RootExtension**: Gunakan `AddDbContextExtension`, `AddJwtAuthExtension`, `AddAuthorizationNewPolicies`.
-    *   **MinLevelHandler**: Register `MinLevelHandler` sebagai singleton.
-    *   **AuditEmitter**: Register `IAuditEmitter` sebagai scoped.
-    *   **Middleware**: Tambahkan `CustomExceptionMiddleware` dan `UseSerilogRequestLoggingExtension`.
+    - **RootExtension**: Gunakan `AddDbContextExtension`, `AddJwtAuthExtension`, `AddAuthorizationNewPolicies`.
+    - **MinLevelHandler**: Register `MinLevelHandler` sebagai singleton.
+    - **AuditEmitter**: Register `IAuditEmitter` sebagai scoped.
+    - **Middleware**: Tambahkan `CustomExceptionMiddleware` dan `UseSerilogRequestLoggingExtension`.
 
-Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`, `MstAccessCctvRepository.cs`.
+**Reference Implementations (Golden Standard):**
 
-Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `PatrolCaseController.cs`.
+- **CardRepository.cs**, **CardService.cs**, **CardController.cs** - PRIMARY STANDARD with BaseFilter, JsonElement, ExtractIds
+- PatrolCaseRepository.cs, PatrolCaseService.cs, PatrolCaseController.cs
 
 ### 2. Naming Conventions
 
 #### Files & Classes
+
 - **Controllers**: `[Entity]Controller.cs` (e.g., `MstBuildingController.cs`)
 - **Services**: `[Entity]Service.cs` (e.g., `MstBuildingService.cs`)
 - **Repositories**: `[Entity]Repository.cs` (e.g., `MstBuildingRepository.cs`)
@@ -408,9 +428,11 @@ Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `P
 - **Profiles**: `[Entity]Profile.cs` (e.g., `MstBuildingProfile.cs`)
 
 #### Interfaces
+
 - Prefix dengan `I`: `I[Entity]Service`, `I[Entity]Repository`
 
 #### Variables & Properties
+
 - **Private fields**: `_camelCase` (e.g., `_context`, `_httpContextAccessor`)
 - **Properties**: `PascalCase` (e.g., `Name`, `CreatedAt`)
 - **Method parameters**: `camelCase` (e.g., `id`, `request`)
@@ -419,6 +441,7 @@ Reference implementations: `PatrolCaseRepository.cs`, `PatrolCaseService.cs`, `P
 ### 3. Entity Guidelines
 
 #### Entity Structure
+
 ```csharp
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -452,6 +475,7 @@ namespace Entities.Models
 ```
 
 #### Base Model Types
+
 - **BaseModel**: Standard dengan `Id` (Guid) dan `Generate` (long)
 - **BaseModelWithTime**: Tambah `CreatedAt`, `CreatedBy`, `UpdatedAt`, `UpdatedBy`
 - **IApplicationEntity**: Interface untuk entities dengan `ApplicationId` (multi-tenancy)
@@ -459,41 +483,42 @@ namespace Entities.Models
 ### 4. Repository Guidelines
 
 #### Base Repository Pattern
+
 ```csharp
 public class MstBuildingRepository : BaseRepository
 {
     public MstBuildingRepository(
-        BleTrackingDbContext context, 
-        IHttpContextAccessor httpContextAccessor) 
+        BleTrackingDbContext context,
+        IHttpContextAccessor httpContextAccessor)
         : base(context, httpContextAccessor) { }
 
     public async Task<MstBuilding> GetByIdAsync(Guid id)
     {
         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-        
+
         var query = _context.MstBuildings.AsNoTracking();
-        
+
         if (!isSystemAdmin && applicationId.HasValue)
         {
             query = query.Where(b => b.ApplicationId == applicationId.Value);
         }
-        
+
         return await query.FirstOrDefaultAsync(b => b.Id == id && b.Status != 0);
     }
 
     public async Task<List<MstBuilding>> GetAllAsync()
     {
         var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-        
+
         var query = _context.MstBuildings
             .AsNoTracking()
             .Where(b => b.Status != 0);
-        
+
         if (!isSystemAdmin && applicationId.HasValue)
         {
             query = query.Where(b => b.ApplicationId == applicationId.Value);
         }
-        
+
         return await query.ToListAsync();
     }
 
@@ -522,6 +547,7 @@ public class MstBuildingRepository : BaseRepository
 ```
 
 #### Specific Repository Pattern (Recommended for DataTables)
+
 Untuk fitur yang kompleks (DataTables, reporting), gunakan pendekatan **Specific Repository** dengan **Manual Projection**:
 
 ```csharp
@@ -567,6 +593,7 @@ public class MstBuildingRepository : BaseRepository
 ### 5. Service Guidelines
 
 #### Service Structure
+
 ```csharp
 public class MstBuildingService : BaseService, IMstBuildingService
 {
@@ -576,7 +603,7 @@ public class MstBuildingService : BaseService, IMstBuildingService
     public MstBuildingService(
         MstBuildingRepository repository,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor) 
+        IHttpContextAccessor httpContextAccessor)
         : base(httpContextAccessor)
     {
         _repository = repository;
@@ -588,7 +615,7 @@ public class MstBuildingService : BaseService, IMstBuildingService
         var entity = await _repository.GetByIdAsync(id);
         if (entity == null)
             throw new NotFoundException("Building not found");
-        
+
         var dto = _mapper.Map<MstBuildingDto>(entity);
         return ApiResponse.Success("Success", dto);
     }
@@ -598,11 +625,11 @@ public class MstBuildingService : BaseService, IMstBuildingService
         var entity = _mapper.Map<MstBuilding>(dto);
         entity.Id = Guid.NewGuid();
         entity.ApplicationId = AppId; // Dari BaseService
-        
+
         SetCreateAudit(entity); // Dari BaseService
-        
+
         await _repository.AddAsync(entity);
-        
+
         return ApiResponse.Created("Building created successfully", entity.Id);
     }
 
@@ -611,12 +638,12 @@ public class MstBuildingService : BaseService, IMstBuildingService
         var entity = await _repository.GetByIdAsync(id);
         if (entity == null)
             throw new NotFoundException("Building not found");
-        
+
         _mapper.Map(dto, entity);
         SetUpdateAudit(entity); // Dari BaseService
-        
+
         await _repository.UpdateAsync(entity);
-        
+
         return ApiResponse.Success("Building updated successfully", entity.Id);
     }
 
@@ -631,6 +658,7 @@ public class MstBuildingService : BaseService, IMstBuildingService
 ### 6. Controller Guidelines
 
 #### Controller Structure
+
 ```csharp
 [ApiController]
 [Route("api/[controller]")]
@@ -684,6 +712,7 @@ public class MstBuildingController : ControllerBase
 ### 7. DTO Guidelines
 
 #### DTO Structure
+
 ```csharp
 public class MstBuildingDto
 {
@@ -701,7 +730,7 @@ public class CreateMstBuildingDto
     [Required]
     [StringLength(255)]
     public string Name { get; set; }
-    
+
     [StringLength(500)]
     public string Description { get; set; }
 }
@@ -710,7 +739,7 @@ public class UpdateMstBuildingDto
 {
     [StringLength(255)]
     public string Name { get; set; }
-    
+
     [StringLength(500)]
     public string Description { get; set; }
 }
@@ -719,6 +748,7 @@ public class UpdateMstBuildingDto
 ### 8. Validation Guidelines
 
 #### FluentValidation
+
 ```csharp
 public class CreateMstBuildingValidator : AbstractValidator<CreateMstBuildingDto>
 {
@@ -727,7 +757,7 @@ public class CreateMstBuildingValidator : AbstractValidator<CreateMstBuildingDto
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
             .MaximumLength(255).WithMessage("Name must not exceed 255 characters");
-            
+
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
     }
@@ -737,15 +767,16 @@ public class CreateMstBuildingValidator : AbstractValidator<CreateMstBuildingDto
 ### 9. AutoMapper Guidelines
 
 #### Profile Definition
+
 ```csharp
 public class MstBuildingProfile : Profile
 {
     public MstBuildingProfile()
     {
         CreateMap<MstBuilding, MstBuildingDto>()
-            .ForMember(dest => dest.ApplicationName, 
+            .ForMember(dest => dest.ApplicationName,
                 opt => opt.MapFrom(src => src.Application.Name));
-        
+
         CreateMap<CreateMstBuildingDto, MstBuilding>();
         CreateMap<UpdateMstBuildingDto, MstBuilding>();
     }
@@ -755,6 +786,7 @@ public class MstBuildingProfile : Profile
 ### 10. API Response Guidelines
 
 #### Standard Response Format
+
 ```json
 {
   "success": true,
@@ -767,6 +799,7 @@ public class MstBuildingProfile : Profile
 ```
 
 #### Menggunakan ApiResponse Helper
+
 ```csharp
 // Success
 return ApiResponse.Success("Building created", data);
@@ -787,6 +820,7 @@ return ApiResponse.Paginated("Success", paginatedData);
 ### 11. Extension Methods Guidelines
 
 #### Service Registration Extensions
+
 ```csharp
 public static class ServiceExtensions
 {
@@ -802,6 +836,7 @@ public static class ServiceExtensions
 ### 12. Middleware Guidelines
 
 #### Custom Exception Middleware
+
 ```csharp
 public class CustomExceptionMiddleware
 {
@@ -840,6 +875,7 @@ public class CustomExceptionMiddleware
 ### 13. Multi-tenancy Guidelines
 
 #### Application ID Filtering
+
 Semua entity yang terkait dengan aplikasi harus mengimplementasikan `IApplicationEntity`:
 
 ```csharp
@@ -856,7 +892,7 @@ protected (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
 {
     var isSystemAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(
         c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.System.ToString());
-    
+
     if (isSystemAdmin == true)
         return (null, true);
 
@@ -871,6 +907,7 @@ protected (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
 ### 14. Configuration Guidelines
 
 #### Environment Variables
+
 Gunakan `.env` file untuk local development dan environment variables untuk production:
 
 ```bash
@@ -898,6 +935,7 @@ MST_BUILDING_PORT=5010
 ```
 
 #### appsettings.json
+
 ```json
 {
   "ConnectionStrings": {
@@ -921,38 +959,38 @@ MST_BUILDING_PORT=5010
 
 ## Service Port Mapping
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Auth | 5001 | Authentication & Authorization |
-| FloorplanDevice | 5003 | Manage devices on floorplans |
-| FloorplanMaskedArea | 5004 | Restricted area management |
-| MstAccessCctv | 5005 | CCTV device management |
-| MstAccessControl | 5006 | Access control management |
-| MstApplication | 5007 | Application master data |
-| MstBleReader | 5008 | BLE reader management |
-| MstBrand | 5009 | Brand management |
-| MstBuilding | 5010 | Building master data |
-| MstDepartment | 5011 | Department management |
-| MstDistrict | 5012 | District/location management |
-| MstFloor | 5013 | Floor management |
-| MstFloorplan | 5014 | Floorplan management |
-| MstIntegration | 5015 | Integration settings |
-| MstMember | 5016 | Member/employee management |
-| MstOrganization | 5017 | Organization management |
-| TrackingTransaction | 5018 | Real-time tracking data |
-| Visitor | 5019 | Visitor management |
-| Patrol | 5020 | Patrol management |
-| AlarmRecordTracking | 5002 | Alarm record management |
-| MstEngine | 5022 | Tracking engine management |
-| CardRecord | 5024 | Card transaction records |
-| TrxVisitor | 5025 | Visitor transactions |
-| Card | 5026 | Card management |
-| AlarmTriggers | 5027 | Alarm trigger rules |
-| CardAccess | 5028 | Card access control |
-| MonitoringConfig | 5029 | Monitoring configuration |
-| Geofence | 5030 | Geofence rules & management |
-| Analytics | 5031 | Dashboard & analytics |
-| GatewayHealthApi | 8080 | Health check aggregator |
+| Service             | Port | Description                    |
+| ------------------- | ---- | ------------------------------ |
+| Auth                | 5001 | Authentication & Authorization |
+| FloorplanDevice     | 5003 | Manage devices on floorplans   |
+| FloorplanMaskedArea | 5004 | Restricted area management     |
+| MstAccessCctv       | 5005 | CCTV device management         |
+| MstAccessControl    | 5006 | Access control management      |
+| MstApplication      | 5007 | Application master data        |
+| MstBleReader        | 5008 | BLE reader management          |
+| MstBrand            | 5009 | Brand management               |
+| MstBuilding         | 5010 | Building master data           |
+| MstDepartment       | 5011 | Department management          |
+| MstDistrict         | 5012 | District/location management   |
+| MstFloor            | 5013 | Floor management               |
+| MstFloorplan        | 5014 | Floorplan management           |
+| MstIntegration      | 5015 | Integration settings           |
+| MstMember           | 5016 | Member/employee management     |
+| MstOrganization     | 5017 | Organization management        |
+| TrackingTransaction | 5018 | Real-time tracking data        |
+| Visitor             | 5019 | Visitor management             |
+| Patrol              | 5020 | Patrol management              |
+| AlarmRecordTracking | 5002 | Alarm record management        |
+| MstEngine           | 5022 | Tracking engine management     |
+| CardRecord          | 5024 | Card transaction records       |
+| TrxVisitor          | 5025 | Visitor transactions           |
+| Card                | 5026 | Card management                |
+| AlarmTriggers       | 5027 | Alarm trigger rules            |
+| CardAccess          | 5028 | Card access control            |
+| MonitoringConfig    | 5029 | Monitoring configuration       |
+| Geofence            | 5030 | Geofence rules & management    |
+| Analytics           | 5031 | Dashboard & analytics          |
+| GatewayHealthApi    | 8080 | Health check aggregator        |
 
 ---
 
@@ -961,6 +999,7 @@ MST_BUILDING_PORT=5010
 ### Build & Run
 
 #### Build All Services
+
 ```bash
 # Build solution
 dotnet build BleTrackingBackend.sln
@@ -970,6 +1009,7 @@ dotnet build Services.API/MstBuilding/MstBuilding.csproj
 ```
 
 #### Run Services
+
 ```bash
 # Run specific service
 dotnet run --project Services.API/Auth/Auth.csproj
@@ -981,6 +1021,7 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project Services.API/Auth/Auth.c
 ### Docker Commands
 
 #### Build & Run with Docker Compose
+
 ```bash
 # Build all images
 docker-compose build
@@ -1002,6 +1043,7 @@ docker-compose up -d --build auth
 ```
 
 #### Production Deployment
+
 ```bash
 # Production compose
 docker-compose -f docker-compose-prod.yml up -d
@@ -1010,6 +1052,7 @@ docker-compose -f docker-compose-prod.yml up -d
 ### Database Commands
 
 #### Entity Framework Migrations
+
 ```bash
 # Add migration
 dotnet ef migrations add [MigrationName] --project Shared/Repositories/Repositories.csproj --startup-project Services.API/[Service]/[Service].csproj
@@ -1024,6 +1067,7 @@ dotnet ef migrations remove --project Shared/Repositories/Repositories.csproj --
 ### Windows Service Commands
 
 #### Install as Windows Service
+
 ```bash
 # Install service
 install-service.bat
@@ -1044,6 +1088,7 @@ restart-all-service.bat
 ### Publishing
 
 #### Single Service Publish
+
 ```bash
 # Publish specific service
 dotnet publish Services.API/Auth/Auth.csproj -c Release -o ./publish/auth
@@ -1099,7 +1144,7 @@ public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest re
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
         ) ?? new MstBuildingFilter();
     }
-    
+
     var result = await _service.FilterAsync(request, filter);
     return Ok(ApiResponse.Paginated("Success", result));
 }
@@ -1151,6 +1196,7 @@ public class MstAccessCctvFilter : BaseFilter  // Selalu inherit BaseFilter
 ```
 
 `BaseFilter` sudah termasuk:
+
 - `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`
 - `DateFrom`, `DateTo`
 
@@ -1175,6 +1221,7 @@ public async Task<(List<MstAccessCctvRead> Data, int Total, int Filtered)> Filte
 ```
 
 **Kenapa perlu ExtractIds?**
+
 - Frontend bisa kirim: `"integrationId": "guid-string"` (single)
 - Atau: `"integrationId": ["guid-1", "guid-2"]` (array)
 - `ExtractIds` otomatis handle kedua kasus tersebut
@@ -1187,11 +1234,13 @@ public async Task<(List<MstAccessCctvRead> Data, int Total, int Filtered)> Filte
 **CRITICAL**: Ketika entity memiliki relasi ke entity lain (e.g., Floor → Building, Floorplan → Floor), SELALU validasi ownership menggunakan `CheckInvalidOwnershipIdsAsync` pattern.
 
 #### Kenapa Pattern Ini?
+
 - Memastikan related entity milik Application yang sama (multi-tenancy safety)
 - Mencegah user reference entity dari application lain
 - Error message yang konsisten
 
 #### Repository Implementation
+
 ```csharp
 // Buat helper method di repository untuk setiap relasi
 public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorOwnershipAsync(
@@ -1216,6 +1265,7 @@ public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
 ```
 
 #### Service Implementation
+
 ```csharp
 // Gunakan di Service Create/Update
 public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
@@ -1252,12 +1302,37 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
 
 #### Common Relationships & Validation
 
-| Entity | Related To | Repository Method |
-|--------|-----------|-------------------|
-| Floorplan | Floor | `CheckInvalidFloorOwnershipAsync` |
-| Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
-| PatrolArea | Floor | `CheckInvalidFloorOwnershipAsync` |
-| MaskedArea | Floorplan | `CheckInvalidFloorplanOwnershipAsync` |
+| Entity     | Related To | Repository Method                     |
+| ---------- | ---------- | ------------------------------------- |
+| Floorplan  | Floor      | `CheckInvalidFloorOwnershipAsync`     |
+| Floor      | Building   | `CheckInvalidBuildingOwnershipAsync`  |
+| PatrolArea | Floor      | `CheckInvalidFloorOwnershipAsync`     |
+| MaskedArea | Floorplan  | `CheckInvalidFloorplanOwnershipAsync` |
+| **Card**   | **Member** | `CheckInvalidMemberOwnershipAsync`    |
+| **Card**   | **Visitor** | `CheckInvalidVisitorOwnershipAsync`   |
+| **Card**   | **CardGroup** | `CheckInvalidCardGroupOwnershipAsync` |
+
+**Contoh Implementasi - CardService:**
+
+```csharp
+// Repository - CardRepository.cs
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+    Guid memberId, Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstMember>(
+        new[] { memberId }, applicationId);
+}
+
+// Service - CardService.cs (Create/Update)
+if (card.MemberId.HasValue)
+{
+    var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(
+        card.MemberId.Value, AppId);
+    if (invalidMemberIds.Any())
+        throw new UnauthorizedException(
+            $"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+}
+```
 
 ---
 
@@ -1290,6 +1365,7 @@ public class BaseRead
 ```
 
 **Key Points**:
+
 - Audit fields disimpan di DB tapi TIDAK dikirim di JSON response
 - `Status` DIKIRIM di response (perlu untuk frontend display)
 - `ApplicationId` DIKIRIM (perlu untuk multi-tenancy)
@@ -1461,12 +1537,12 @@ protected string Role => Http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Valu
 public class MqttClientService : IMqttClientService
 {
     public event Func<string, string, Task> OnMessageReceived;
-    
+
     private async Task HandleMessageAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         var topic = e.ApplicationMessage.Topic;
         var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-        
+
         if (OnMessageReceived != null)
             await OnMessageReceived(topic, payload);
     }
@@ -1486,13 +1562,11 @@ public class EngineMqttListener : BackgroundService
 }
 ```
 
-
-
 ### 9. Exception Handling Pattern
 
 ```csharp
 // Custom exceptions
-public class NotFoundException : Exception 
+public class NotFoundException : Exception
 {
     public NotFoundException(string message) : base(message) { }
 }
@@ -1547,7 +1621,7 @@ public class ApiKeyMiddleware
                 return;
             }
         }
-        
+
         context.Response.StatusCode = 401;
         await context.Response.WriteAsJsonAsync(ApiResponse.Unauthorized("Invalid API Key"));
     }
@@ -1582,8 +1656,6 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 ```
 
-
-
 ## Multi-Tenancy & ApplicationId Filtering
 
 Semua entity yang memiliki `ApplicationId` harus mengimplementasikan `IApplicationEntity`. Repository wajib menerapkan filter ini secara konsisten menggunakan pattern `BaseEntityQuery`.
@@ -1595,10 +1667,10 @@ Semua entity yang memiliki `ApplicationId` harus mengimplementasikan `IApplicati
 private IQueryable<PatrolCase> BaseEntityQuery()
 {
     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-    
+
     // Base data query (active only)
     var query = _context.PatrolCases.Where(x => x.Status != 0);
-    
+
     // Apply multi-tenancy filter (Shared/Repositories/Repository/BaseRepository.cs)
     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 }
@@ -1611,11 +1683,13 @@ public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
 ```
 
 ### Knowledge Base
+
 - **System Admin**: Mengakses SEMUA data (`ApplicationId` diabaikan).
 - **Tenant User**: Hanya mengakses data milik `ApplicationId` yang ada di JWT Claim.
 - **Consistency**: Gunakan `BaseEntityQuery()` di SEMUA method repository yang membaca data (`GetById`, `GetAll`, `Filter`).
 
 ### Strict Ownership Validation
+
 Saat melakukan Create atau Update pada entity yang memiliki relasi ke Master Data lain (seperti `Floor`, `Floorplan`), wajib melakukan validasi kepemilikan (Ownership Check) untuk mencegah cross-tenant data access.
 
 ```csharp
@@ -1623,7 +1697,7 @@ Saat melakukan Create atau Update pada entity yang memiliki relasi ke Master Dat
 if (dto.FloorId.HasValue)
 {
     var invalidFloors = await _repository.CheckInvalidFloorOwnershipAsync(
-        dto.FloorId.Value, 
+        dto.FloorId.Value,
         AppId // Dari BaseService
     );
     if (invalidFloors.Any())
@@ -1736,12 +1810,14 @@ public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
 ## Best Practices
 
 ### 1. Performance
+
 - Selalu gunakan `AsNoTracking()` untuk read-only queries
 - Gunakan projection untuk mengurangi data transfer
 - Implement caching untuk data yang sering diakses
 - Gunakan async/await untuk semua I/O operations
 
 ### 2. Security
+
 - Jangan pernah expose database credentials di code
 - Selalu validate input menggunakan FluentValidation
 - Gun parameterized queries (EF Core melakukan ini secara default)
@@ -1749,6 +1825,7 @@ public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
 - Gunakan soft delete, jangan hard delete
 
 ### 3. Maintainability
+
 - Follow naming conventions yang konsisten
 - Gunakan dependency injection untuk semua dependencies
 - Pisahkan business logic ke service layer
@@ -1756,11 +1833,13 @@ public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
 - Dokumentasikan API dengan Swagger
 
 ### 4. Testing
+
 - Tulis unit tests untuk business logic
 - Gunakan integration tests untuk API endpoints
 - Mock external dependencies (database, MQTT, email)
 
 ### 5. Deployment
+
 - Gunakan Docker untuk consistent deployment
 - Pisahkan configuration dari code dengan environment variables
 - Implement health checks untuk setiap service
@@ -1773,6 +1852,7 @@ public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
 ### Common Issues
 
 #### 1. Port Conflicts
+
 ```bash
 # Find process using port
 netstat -ano | findstr :5001
@@ -1781,16 +1861,19 @@ taskkill /PID [PID] /F
 ```
 
 #### 2. Database Connection Issues
+
 - Periksa SQL Server status
 - Verifikasi connection string
 - Pastikan firewall tidak memblokir port 1433
 
 #### 3. JWT Token Issues
+
 - Verifikasi JWT_KEY di .env dan appsettings.json
 - Periksa token expiration
 - Verifikasi issuer dan audience
 
 #### 4. Docker Issues
+
 ```bash
 # Clean build
 docker-compose down
@@ -1804,12 +1887,14 @@ docker-compose up -d
 ## Resources
 
 ### Internal References
+
 - **Directory.Packages.props**: Centralized package versions
 - **docker-compose.yml**: Service orchestration
 - **nginx.conf**: Gateway configuration
 - **Shared/**: Common libraries dan utilities
 
 ### External Documentation
+
 - [.NET 8 Documentation](https://docs.microsoft.com/en-us/dotnet/)
 - [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
 - [JWT.io](https://jwt.io/)
@@ -1820,11 +1905,12 @@ docker-compose up -d
 ## Contact & Support
 
 Untuk pertanyaan atau issues, silakan hubungi:
+
 - **Team Lead**: [Nama]
 - **Technical Lead**: [Nama]
 - **DevOps**: [Nama]
 
 ---
 
-*Last Updated: February 2026*
-*Version: 1.0*
+_Last Updated: February 2026_
+_Version: 1.0_

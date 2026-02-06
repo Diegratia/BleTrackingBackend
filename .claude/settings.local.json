@@ -9,7 +9,9 @@
       "Bash(powershell:*)",
       "Skill(glm-plan-usage:usage-query)",
       "Bash(where:*)",
-      "Bash(code:*)"
+      "Bash(code:*)",
+      "Bash(Select-String:*)",
+      "Bash(dotnet clean:*)"
     ]
   }
 }

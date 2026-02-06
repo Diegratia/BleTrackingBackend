@@ -123,6 +123,51 @@ Shared/                           # Shared business logic and data layers
 - `BaseRepository.ApplyApplicationIdFilter()` handles filtering
 - System admins bypass ApplicationId checks
 
+**6.1. Ownership Validation Pattern (Cross-Tenant Safety)**
+
+**CRITICAL**: When entity has relationship to another entity (e.g., Card → Member, Card → Visitor), ALWAYS validate ownership using `CheckInvalidOwnershipIdsAsync` pattern.
+
+**Why This Pattern?**
+- Prevents users from referencing entities from other applications
+- Ensures multi-tenancy security
+- Provides consistent error messages
+
+**Repository Implementation:**
+
+```csharp
+// In CardRepository.cs
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+    Guid memberId, Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstMember>(
+        new[] { memberId }, applicationId);
+}
+```
+
+**Service Implementation:**
+
+```csharp
+// In CardService.cs - CreateAsync/UpdateAsync
+if (card.MemberId.HasValue)
+{
+    var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(
+        card.MemberId.Value, AppId);
+    if (invalidMemberIds.Any())
+        throw new UnauthorizedException(
+            $"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+}
+```
+
+**Common Ownership Validations:**
+
+| Entity | Related To | Repository Method |
+|--------|-----------|-------------------|
+| Card | Member | `CheckInvalidMemberOwnershipAsync` |
+| Card | Visitor | `CheckInvalidVisitorOwnershipAsync` |
+| Card | CardGroup | `CheckInvalidCardGroupOwnershipAsync` |
+| Floorplan | Floor | `CheckInvalidFloorOwnershipAsync` |
+| Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
+
 **7. Authorization with MinLevel**
 
 - Controllers use `[MinLevel(LevelPriority.SuperAdmin)]` attribute
@@ -149,6 +194,7 @@ Follow the checklist in `REFACTORING_GUIDE.md`. Key points:
    - Add `FilterAsync()` returning `(List<[Entity]Read> Data, int Total, int Filtered)`
    - Use `ExtractIds(filter.IdField)` for ID filters
    - Keep `GetByIdEntityAsync()` for operations that need entity object
+   - **If entity has relationships**: Add `CheckInvalid[Related]OwnershipAsync()` methods for each relationship
 
 4. **Create/Update Service** in `Shared/BusinessLogic.Services/Implementation/[Entity]Service.cs`
    - Inherit from `BaseService`
@@ -157,6 +203,7 @@ Follow the checklist in `REFACTORING_GUIDE.md`. Key points:
    - Use `GetByIdEntityAsync` for update/delete operations
    - Call `SetCreateAudit`, `SetUpdateAudit`, `SetDeleteAudit` from BaseService
    - Call `audit.Created()`, `audit.Updated()`, `audit.Deleted()` after DB operations
+   - **If entity has relationships**: Validate ownership using `CheckInvalid[Related]OwnershipAsync()` in Create/Update
 
 5. **Update Controller** in `Shared/Web.API.Controllers/Controllers/[Entity]Controller.cs`
    - Use `[MinLevel(LevelPriority.[Role])]` for authorization
@@ -267,6 +314,8 @@ Follow the checklist in `REFACTORING_GUIDE.md`. Key points:
 - Use `UsernameFormToken` from BaseService for current username
 - Use `MinLevel` attribute for authorization instead of `[Authorize]`
 - Use `ApiResponse` helper for all controller responses
+- **Validate ownership using `CheckInvalid[Related]OwnershipAsync()` when entity has relationships to other entities**
+- **Create ownership validation helpers in repository for each relationship (Member, Visitor, CardGroup, etc.)**
 
 **DON'T:**
 
@@ -277,6 +326,110 @@ Follow the checklist in `REFACTORING_GUIDE.md`. Key points:
 - Don't manually set CreatedBy/UpdatedAt (use BaseService helpers)
 - Don't use manual try-catch in controllers (handled by middleware)
 - Don't use `[Authorize]` attribute (use MinLevel instead)
+- **🚨🚨🚨 CRITICAL: Don't duplicate Select() projection inside FilterAsync - ALWAYS use ProjectToRead(query) for single source of truth 🚨🚨🚨**
+- Don't use manual `.Skip().Take()` for pagination - use `ApplyPaging()` extension
+- Don't use manual `.OrderBy()` for sorting - use `ApplySorting()` extension
+- **🚨🚨🚨 CRITICAL: Don't skip ownership validation - ALWAYS check if related entities belong to the same Application 🚨🚨🚨**
+
+---
+
+## 🚨🚨🚨 CRITICAL PATTERN: FilterAsync Must Use ProjectToRead 🚨🚨🚠️
+
+**This is the MOST IMPORTANT pattern to follow when implementing FilterAsync in repositories.**
+
+**The Rule: FilterAsync MUST use ProjectToRead(query) for projection - NEVER duplicate Select()!**
+
+### ❌ WRONG - Anti-Pattern (DO NOT DO THIS):
+
+```csharp
+public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
+{
+    var query = BaseEntityQuery();
+    // ... filters ...
+
+    // ❌ WRONG: Manual sorting with try-catch
+    if (!string.IsNullOrEmpty(filter.SortColumn))
+    {
+        var sortDir = filter.SortDir?.ToLower() == "desc" ? "Descending" : "Ascending";
+        try
+        {
+            query = DynamicQueryableExtensions.OrderBy(query, $"{filter.SortColumn} {sortDir}");
+        }
+        catch { /* ignore */ }
+    }
+
+    // ❌ WRONG: Manual pagination + DUPLICATE Select projection
+    var data = await query
+        .Skip((filter.Page - 1) * filter.PageSize)
+        .Take(filter.PageSize)
+        .Select(x => new EntityRead  // ❌ DUPLICATES ProjectToRead()!
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Status = x.Status,
+            // ... 30+ lines of duplicate mapping ...
+        })
+        .ToListAsync();
+
+    return (data, total, filtered);
+}
+```
+
+**Why This Is Wrong:**
+1. ❌ Duplicate mapping logic (violates DRY principle)
+2. ❌ Two sources of truth for same projection
+3. ❌ If you add a field to ProjectToRead, you must remember to update FilterAsync too
+4. ❌ Maintenance nightmare - changes must be synchronized in 2+ places
+5. ❌ Inconsistent responses between GetByIdAsync and FilterAsync
+
+### ✅ CORRECT - Single Source of Truth Pattern:
+
+```csharp
+public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
+{
+    var query = BaseEntityQuery();
+
+    // Apply filters
+    if (!string.IsNullOrWhiteSpace(filter.Search))
+        query = query.Where(x => x.Name.ToLower().Contains(filter.Search.ToLower()));
+
+    var categoryIds = ExtractIds(filter.CategoryId);
+    if (categoryIds.Count > 0)
+        query = query.Where(x => categoryIds.Contains(x.CategoryId));
+
+    var total = await query.CountAsync();
+    var filtered = await query.CountAsync();
+
+    // ✅ CORRECT: Use extension methods
+    query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+    query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+    // ✅ CORRECT: Use ProjectToRead for single source of truth
+    var data = await ProjectToRead(query).ToListAsync();
+
+    return (data, total, filtered);
+}
+```
+
+**Why This Is Correct:**
+1. ✅ Single source of truth - all projection logic in ProjectToRead()
+2. ✅ GetByIdAsync, GetAllAsync, and FilterAsync all use identical projection
+3. ✅ When you add a field, you update ONE place (ProjectToRead)
+4. ✅ Consistent responses across all query methods
+5. ✅ DRY principle - Don't Repeat Yourself
+6. ✅ Maintainable - less code, less bug-prone
+
+**Reference Implementations (Follow These):**
+- ✅ `Shared/Repositories/Repository/CardRepository.cs` - **GOLDEN STANDARD** - Complete pattern with BaseFilter inheritance, JsonElement for ID filters, ExtractIds helper
+- ✅ `Shared/Repositories/Repository/RepoModel/PatrolCaseRepository.cs` - Lines 198-250
+- ✅ `Shared/Repositories/Repository/MstFloorplanRepository.cs`
+
+**Key Points:**
+1. Use `ApplySorting(filter.SortColumn, filter.SortDir)` instead of manual `.OrderBy()`
+2. Use `ApplyPaging(filter.Page, filter.PageSize)` instead of manual `.Skip().Take()`
+3. Use `ProjectToRead(query).ToListAsync()` instead of manual `.Select()`
+4. Never duplicate the Select() projection inside FilterAsync
+5. All projection logic lives in ONE place: the `ProjectToRead()` method
 - Don't forget to register services and repositories in Program.cs
 
 ---

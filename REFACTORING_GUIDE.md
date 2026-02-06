@@ -61,13 +61,45 @@ Update file: [Entity]Repository.cs
 - Add ProjectToRead(...) using AsNoTracking() + manual Select.
 - Add FilterAsync(FilterDto) returning (List, int, int).
 - Use ApplySorting and ApplyPaging.
+- **CRITICAL ⚠️⚠️⚠️: FilterAsync MUST use ProjectToRead() for projection - NEVER duplicate Select() projection inside FilterAsync!**
 - If entity references another master (e.g., Floor -> Building), add ownership check helper for tenant safety.
 
+**🚨🚨🚨 CRITICAL RULE - SINGLE SOURCE OF TRUTH 🚨🚨🚨**
+
+**NEVER duplicate the Select() projection inside FilterAsync! This creates TWO sources of truth for the same mapping.**
+
+**WRONG ❌ (DO NOT DO THIS):**
 ```csharp
 public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
 {
     var query = BaseEntityQuery();
-    var total = await query.CountAsync();
+    // ... filters ...
+
+    // ❌ WRONG: Manual sorting
+    if (!string.IsNullOrEmpty(filter.SortColumn))
+    {
+        query = query.OrderBy($"{filter.SortColumn} {sortDir}");
+    }
+
+    // ❌ WRONG: Manual pagination + DUPLICATE Select projection
+    var data = await query
+        .Skip((filter.Page - 1) * filter.PageSize)
+        .Take(filter.PageSize)
+        .Select(x => new EntityRead  // ❌ THIS IS WRONG! Duplicates ProjectToRead()
+        {
+            Id = x.Id,
+            Name = x.Name,
+            // ... 30+ lines of duplicate mapping ...
+        })
+        .ToListAsync();
+}
+```
+
+**CORRECT ✅ (USE THIS PATTERN):**
+```csharp
+public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
+{
+    var query = BaseEntityQuery();
 
     // filters...
     if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -81,15 +113,30 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
     if (categoryIds.Count > 0)
         query = query.Where(x => categoryIds.Contains(x.CategoryId));
 
+    var total = await query.CountAsync();
     var filtered = await query.CountAsync();
 
+    // ✅ CORRECT: Use extension methods for sorting and paging
     query = query.ApplySorting(filter.SortColumn, filter.SortDir);
     query = query.ApplyPaging(filter.Page, filter.PageSize);
 
+    // ✅ CORRECT: Use ProjectToRead() for single source of truth
     var data = await ProjectToRead(query).ToListAsync();
     return (data, total, filtered);
 }
 ```
+
+**Why This Rule Exists:**
+1. **Single Source of Truth**: All projection logic lives in ONE place (ProjectToRead method)
+2. **Maintainability**: When fields change, you only update ProjectToRead, not multiple places
+3. **Consistency**: GetByIdAsync, GetAllAsync, and FilterAsync all use the exact same projection
+4. **DRY Principle**: Don't Repeat Yourself - duplicate Select() is code duplication
+5. **Bug Prevention**: If you add a field to ProjectToRead but forget to update FilterAsync's manual Select, responses become inconsistent
+
+**Reference Implementations:**
+- ✅ `Shared/Repositories/Repository/CardRepository.cs` - **GOLDEN STANDARD** - Complete pattern with BaseFilter inheritance, JsonElement for ID filters, ExtractIds helper
+- ✅ `Shared/Repositories/Repository/RepoModel/PatrolCaseRepository.cs:198-250` - CORRECT pattern
+- ✅ `Shared/Repositories/Repository/MstFloorplanRepository.cs` - CORRECT pattern
 
 Ownership helper (example):
 ```csharp
@@ -433,6 +480,96 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
 | Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
 | PatrolArea | Floor | `CheckInvalidFloorOwnershipAsync` |
 | MaskedArea | Floorplan | `CheckInvalidFloorplanOwnershipAsync` |
+| **Card** | **Member** | `CheckInvalidMemberOwnershipAsync` |
+| **Card** | **Visitor** | `CheckInvalidVisitorOwnershipAsync` |
+| **Card** | **CardGroup** | `CheckInvalidCardGroupOwnershipAsync` |
+
+#### Example: CardService Ownership Validation
+
+**CardRepository.cs** - Add ownership validation helpers:
+
+```csharp
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+    Guid memberId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<MstMember>(
+        new[] { memberId },
+        applicationId
+    );
+}
+
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidVisitorOwnershipAsync(
+    Guid visitorId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<Visitor>(
+        new[] { visitorId },
+        applicationId
+    );
+}
+
+public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardGroupOwnershipAsync(
+    Guid cardGroupId,
+    Guid applicationId)
+{
+    return await CheckInvalidOwnershipIdsAsync<CardGroup>(
+        new[] { cardGroupId },
+        applicationId
+    );
+}
+```
+
+**CardService.cs** - Validate ownership in Create/Update:
+
+```csharp
+public async Task<CardRead> CreateAsync(CardCreateDto createDto)
+{
+    var card = _mapper.Map<Card>(createDto);
+
+    // Ownership validation - prevents cross-tenant data access
+    if (card.MemberId.HasValue)
+    {
+        var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(
+            card.MemberId.Value, AppId);
+
+        if (invalidMemberIds.Any())
+            throw new UnauthorizedException(
+                $"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+    }
+
+    if (card.VisitorId.HasValue)
+    {
+        var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(
+            card.VisitorId.Value, AppId);
+
+        if (invalidVisitorIds.Any())
+            throw new UnauthorizedException(
+                $"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+    }
+
+    if (card.CardGroupId.HasValue)
+    {
+        var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(
+            card.CardGroupId.Value, AppId);
+
+        if (invalidCardGroupIds.Any())
+            throw new UnauthorizedException(
+                $"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
+    }
+
+    SetCreateAudit(card);
+    await _repository.AddAsync(card);
+    await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+
+    return await _repository.GetByIdAsync(card.Id);
+}
+```
+
+**Key Points for Card Ownership Pattern:**
+- Card tidak perlu inherit ApplicationId dari Member/Visitor (punya ApplicationId sendiri)
+- Validasi mencegah user assign Card ke Member/Visitor/CardGroup dari application lain
+- Untuk Update, cek hanya jika nilai berubah: `if (dto.MemberId.HasValue && dto.MemberId.Value != entity.MemberId)`
 
 ---
 
@@ -574,6 +711,9 @@ public static List<Guid> ExtractIds(JsonElement element)
 ---
 
 ## Reference Implementations (Golden Standard)
+- **Shared/Repositories/Repository/CardRepository.cs** - **PRIMARY STANDARD** - BaseFilter inheritance, JsonElement ID filters, ExtractIds, complete pattern
+- Shared/BusinessLogic.Services/Implementation/CardService.cs
+- Shared/Web.API.Controllers/Controllers/CardController.cs
 - Shared/Repositories/Repository/RepoModel/PatrolCaseRepository.cs
 - Shared/BusinessLogic.Services/Implementation/PatrolCaseService.cs
 - Shared/Web.API.Controllers/Controllers/PatrolCaseController.cs
