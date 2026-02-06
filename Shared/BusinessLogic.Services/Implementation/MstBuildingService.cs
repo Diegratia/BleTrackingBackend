@@ -124,50 +124,9 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstBuildingDto>> GetAllAsync()
         {
-            var cacheKey = Key("getall");
-
-            if (IsRedisAlive())
-            {
-                try
-                {
-                    var cached = await _cache.GetStringAsync(cacheKey);
-                    if (cached != null)
-                    {
-                        _logger.LogInformation($"Cache hit: {cacheKey}");
-                        return JsonSerializer.Deserialize<IEnumerable<MstBuildingDto>>(cached)!;
-                    }
-                }
-                catch
-                {
-                    _logger.LogWarning("Redis get failed → fallback to DB");
-                    cacheDisabled = true;
-                }
-            }
-            _logger.LogInformation($"Cache miss: {cacheKey}");
-
+            // No caching - data is per-user based on building access
             var data = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstBuildingDto>>(data);
-
-            if (IsRedisAlive())
-            {
-                try
-                {
-                    await _cache.SetStringAsync(
-                        cacheKey,
-                        JsonSerializer.Serialize(mapped),
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                        }
-                    );
-
-                    await _redis.SetAddAsync(GroupKey, cacheKey);
-                }
-                catch
-                {
-                    cacheDisabled = true;
-                }
-            }
             return mapped;
         }
 
