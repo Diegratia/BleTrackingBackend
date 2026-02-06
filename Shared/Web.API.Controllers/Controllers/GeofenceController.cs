@@ -17,7 +17,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     public class GeofenceController : ControllerBase
     {
         private readonly IGeofenceService _service;
@@ -27,17 +27,14 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        // GET: api/MstAccessCctv
         // GET: api/Geofence
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-
             var geofences = await _service.GetAllAsync();
             return Ok(ApiResponse.Success("Geofences retrieved successfully", geofences));
         }
 
-        // GET: api/MstAccessCctv/{id}
         // GET: api/Geofence/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -46,8 +43,8 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Geofence retrieved successfully", geofence));
         }
 
-        // POST: api/MstAccessCctv
         // POST: api/Geofence
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GeofenceCreateDto dto)
         {
@@ -61,11 +58,10 @@ namespace Web.API.Controllers.Controllers
             }
             var geofence = await _service.CreateAsync(dto);
             return StatusCode(201, ApiResponse.Created("Geofence created successfully", geofence));
-
         }
 
-        // PUT: api/MstAccessCctv/{id}
         // PUT: api/Geofence/{id}
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] GeofenceUpdateDto dto)
         {
@@ -81,8 +77,8 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(204, ApiResponse.NoContent("Geofence updated successfully"));
         }
 
-        // DELETE: api/MstAccessCctv/{id}
         // DELETE: api/Geofence/{id}
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -108,7 +104,6 @@ namespace Web.API.Controllers.Controllers
                 filter = JsonSerializer.Deserialize<GeofenceFilter>(request.Filters.GetRawText(),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GeofenceFilter();
             }
-
 
             var result = await _service.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Geofence filtered successfully", result));

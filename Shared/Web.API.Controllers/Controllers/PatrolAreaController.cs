@@ -15,7 +15,7 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    [MinLevel(LevelPriority.Primary)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-area")]
     [ApiController]
 
@@ -52,6 +52,7 @@ namespace Web.API.Controllers.Controllers
 
 
         // POST: api/PatrolArea
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PatrolAreaCreateDto PatrolAreaDto)
         {
@@ -67,6 +68,7 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Patrol Area created successfully", createdSecurity));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         // DELETE: api/PatrolArea/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -101,6 +103,7 @@ namespace Web.API.Controllers.Controllers
 
 
         // PUT: api/PatrolArea/{id}
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PatrolAreaUpdateDto updateDto)
         {

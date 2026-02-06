@@ -14,7 +14,7 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/[controller]")]
     [ApiController]
     public class OverpopulatingController : ControllerBase
@@ -43,6 +43,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/Overpopulating
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] OverpopulatingCreateDto dto)
         {
@@ -60,6 +61,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // PUT: api/Overpopulating/{id}
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] OverpopulatingUpdateDto dto)
         {
@@ -77,6 +79,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // DELETE: api/Overpopulating/{id}
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

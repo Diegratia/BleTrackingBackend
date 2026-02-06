@@ -52,6 +52,11 @@ namespace Repositories.Repository
 
         private IQueryable<BoundaryRead> ProjectToRead(IQueryable<Boundary> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(x => x.Floor != null && accessibleBuildingIds.Contains(x.Floor.BuildingId));
+            }
             return query.AsNoTracking().Select(x => new BoundaryRead
             {
                 Id = x.Id,

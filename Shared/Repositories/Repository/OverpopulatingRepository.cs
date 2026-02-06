@@ -52,6 +52,11 @@ namespace Repositories.Repository
 
         private IQueryable<OverpopulatingRead> ProjectToRead(IQueryable<Overpopulating> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(x => x.Floor != null && accessibleBuildingIds.Contains(x.Floor.BuildingId));
+            }
             return query.AsNoTracking().Select(x => new OverpopulatingRead
             {
                 Id = x.Id,

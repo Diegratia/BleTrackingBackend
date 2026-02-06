@@ -141,6 +141,11 @@ namespace Repositories.Repository
 
         private IQueryable<GeofenceRead> ProjectToRead(IQueryable<Geofence> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(t => t.Floor != null && accessibleBuildingIds.Contains(t.Floor.BuildingId));
+            }
             return query.AsNoTracking().Select(t => new GeofenceRead
             {
                 Id = t.Id,
