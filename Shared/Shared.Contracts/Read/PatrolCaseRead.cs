@@ -17,6 +17,7 @@ namespace Shared.Contracts.Read
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
         public MstSecurityLookUpRead? Security { get; set; }
+        public MstSecurityLookUpRead? Approver { get; set; }
         public PatrolAssignmentLookUpRead? PatrolAssignment { get; set; }
         public PatrolRouteLookUpRead? PatrolRoute { get; set; }
         public List<PatrolAttachmentRead>? Attachments { get; set; }

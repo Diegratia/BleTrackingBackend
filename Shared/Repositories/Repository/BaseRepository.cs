@@ -159,6 +159,7 @@ namespace Repositories.Repository
         {
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.SuperAdmin.ToString()) ?? false;
         }
+        
 
         protected bool IsPrimary()
         {

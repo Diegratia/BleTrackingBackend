@@ -26,4 +26,20 @@ namespace Data.ViewModels
         public List<PatrolAttachmentUpdateDto>? Attachments { get; set; }
     }
 
+    /// <summary>
+    /// DTO for approve/reject operations
+    /// </summary>
+    public class PatrolCaseApprovalDto
+    {
+        public string? Reason { get; set; }  // Optional for approve, Required for reject
+    }
+
+    /// <summary>
+    /// DTO for close operation
+    /// </summary>
+    public class PatrolCaseCloseDto
+    {
+        public string? Notes { get; set; }  // Optional closing notes
+    }
+
 }

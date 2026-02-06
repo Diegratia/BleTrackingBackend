@@ -18,5 +18,6 @@ namespace Shared.Contracts
         public JsonElement SecurityId { get; set; }
         public JsonElement PatrolAssignmentId { get; set; }
         public JsonElement PatrolRouteId { get; set; }
+        public JsonElement ApprovedByHeadId { get; set; }
     }
 }

@@ -110,6 +110,41 @@ namespace Web.API.Controllers.Controllers
             var patrolRoute = await _PatrolCaseService.UpdateAsync(id, updateDto);
             return Ok(ApiResponse.Success("Patrol Case updated successfully", patrolRoute));
         }
-        
+
+        // POST: api/patrol-case/{id}/submit
+        [HttpPost("{id}/submit")]
+        public async Task<IActionResult> Submit(Guid id)
+        {
+            var result = await _PatrolCaseService.SubmitAsync(id);
+            return Ok(ApiResponse.Success("Patrol Case submitted for approval", result));
+        }
+
+        // POST: api/patrol-case/{id}/approve
+        [HttpPost("{id}/approve")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
+        public async Task<IActionResult> Approve(Guid id, [FromBody] PatrolCaseApprovalDto dto)
+        {
+            var result = await _PatrolCaseService.ApproveAsync(id, dto);
+            return Ok(ApiResponse.Success("Patrol Case approved", result));
+        }
+
+        // POST: api/patrol-case/{id}/reject
+        [HttpPost("{id}/reject")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
+        public async Task<IActionResult> Reject(Guid id, [FromBody] PatrolCaseApprovalDto dto)
+        {
+            var result = await _PatrolCaseService.RejectAsync(id, dto);
+            return Ok(ApiResponse.Success("Patrol Case rejected", result));
+        }
+
+        // POST: api/patrol-case/{id}/close
+        [HttpPost("{id}/close")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
+        public async Task<IActionResult> Close(Guid id, [FromBody] PatrolCaseCloseDto dto)
+        {
+            var result = await _PatrolCaseService.CloseAsync(id, dto);
+            return Ok(ApiResponse.Success("Patrol Case closed", result));
+        }
+
     }
 }

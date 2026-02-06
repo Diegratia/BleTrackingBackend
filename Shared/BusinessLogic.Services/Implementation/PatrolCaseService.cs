@@ -292,7 +292,166 @@ namespace BusinessLogic.Services.Implementation
             );
             await _repo.DeleteAsync(id);
         }
-        
-        
+
+        public async Task<PatrolCaseRead> SubmitAsync(Guid id)
+        {
+            // Get current user's security ID
+            var currentUserEmail = EmailFormToken;
+            var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
+
+            PatrolCase? patrolCase = null;
+
+            await _repo.ExecuteInTransactionAsync(async () =>
+            {
+                // Load entity
+                patrolCase = await _repo.GetByIdEntityAsync(id)
+                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+
+                // Validate status
+                if (patrolCase.CaseStatus != CaseStatus.Open && patrolCase.CaseStatus != CaseStatus.Rejected)
+                    throw new BusinessException(
+                        $"Only Open or Rejected cases can be submitted. Current status: {patrolCase.CaseStatus}");
+
+                // Validate ownership
+                if (patrolCase.SecurityId != currentSecurityId)
+                    throw new UnauthorizedException(
+                        $"Only the creator can submit this case");
+
+                // Update status
+                patrolCase.CaseStatus = CaseStatus.Submitted;
+                SetUpdateAudit(patrolCase);
+
+                await _repo.UpdateAsync(patrolCase);
+            });
+
+            var result = await _repo.GetByIdAsync(patrolCase!.Id)
+                ?? throw new Exception("Failed to reload PatrolCase after submit");
+
+            await _audit.Updated(
+                "Patrol Case",
+                result.Id,
+                $"Submitted for approval",
+                new { result.CaseStatus, result.Title });
+
+            return result;
+        }
+
+        public async Task<PatrolCaseRead> ApproveAsync(Guid id, PatrolCaseApprovalDto dto)
+        {
+            // Get current user's security ID
+            var currentUserEmail = EmailFormToken;
+            var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
+
+            PatrolCase? patrolCase = null;
+
+            await _repo.ExecuteInTransactionAsync(async () =>
+            {
+                // Load entity - use GetByIdEntityForApprovalAsync to allow PrimaryAdmin access
+                patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
+                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+
+                // Validate status
+                if (patrolCase.CaseStatus != CaseStatus.Submitted)
+                    throw new BusinessException(
+                        $"Only Submitted cases can be approved. Current status: {patrolCase.CaseStatus}");
+
+                // Update status and approver
+                patrolCase.CaseStatus = CaseStatus.Approved;
+                patrolCase.ApprovedByHeadId = currentSecurityId;
+                SetUpdateAudit(patrolCase);
+
+                await _repo.UpdateAsync(patrolCase);
+            });
+
+            var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
+                ?? throw new Exception("Failed to reload PatrolCase after approve");
+
+            await _audit.Updated(
+                "Patrol Case",
+                result.Id,
+                $"Approved{(string.IsNullOrEmpty(dto.Reason) ? "" : $" - {dto.Reason}")}",
+                new { result.CaseStatus, result.ApprovedByHeadId, result.Title });
+
+            return result;
+        }
+
+        public async Task<PatrolCaseRead> RejectAsync(Guid id, PatrolCaseApprovalDto dto)
+        {
+            // Validate reason is required
+            if (string.IsNullOrEmpty(dto.Reason))
+                throw new BusinessException("Reason is required when rejecting a case");
+
+            // Get current user's security ID
+            var currentUserEmail = EmailFormToken;
+            var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
+
+            PatrolCase? patrolCase = null;
+
+            await _repo.ExecuteInTransactionAsync(async () =>
+            {
+                // Load entity - use GetByIdEntityForApprovalAsync to allow PrimaryAdmin access
+                patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
+                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+
+                // Validate status
+                if (patrolCase.CaseStatus != CaseStatus.Submitted)
+                    throw new BusinessException(
+                        $"Only Submitted cases can be rejected. Current status: {patrolCase.CaseStatus}");
+
+                // Update status and approver
+                patrolCase.CaseStatus = CaseStatus.Rejected;
+                patrolCase.ApprovedByHeadId = currentSecurityId;
+                SetUpdateAudit(patrolCase);
+
+                await _repo.UpdateAsync(patrolCase);
+            });
+
+            var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
+                ?? throw new Exception("Failed to reload PatrolCase after reject");
+
+            await _audit.Updated(
+                "Patrol Case",
+                result.Id,
+                $"Rejected - {dto.Reason}",
+                new { result.CaseStatus, result.ApprovedByHeadId, result.Title });
+
+            return result;
+        }
+
+        public async Task<PatrolCaseRead> CloseAsync(Guid id, PatrolCaseCloseDto dto)
+        {
+            PatrolCase? patrolCase = null;
+
+            await _repo.ExecuteInTransactionAsync(async () =>
+            {
+                // Load entity - use GetByIdEntityForApprovalAsync to allow PrimaryAdmin access
+                patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
+                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
+
+                // Validate status
+                if (patrolCase.CaseStatus != CaseStatus.Approved)
+                    throw new BusinessException(
+                        $"Only Approved cases can be closed. Current status: {patrolCase.CaseStatus}");
+
+                // Update status
+                patrolCase.CaseStatus = CaseStatus.Closed;
+                SetUpdateAudit(patrolCase);
+
+                await _repo.UpdateAsync(patrolCase);
+            });
+
+            var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
+                ?? throw new Exception("Failed to reload PatrolCase after close");
+
+            await _audit.Updated(
+                "Patrol Case",
+                result.Id,
+                $"Closed{(string.IsNullOrEmpty(dto.Notes) ? "" : $" - {dto.Notes}")}",
+                new { result.CaseStatus, result.Title });
+
+            return result;
+        }
+
+
     }
 }

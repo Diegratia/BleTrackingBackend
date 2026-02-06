@@ -65,11 +65,72 @@ namespace Repositories.Repository
             return await ProjectToRead(query).FirstOrDefaultAsync();
 
         }
+
+        // For approval operations - allows PrimaryAdmin to access all cases
+        public async Task<PatrolCaseRead?> GetByIdForApprovalAsync(Guid id)
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolCases
+                .Where(x => x.Id == id && x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // For PrimaryAdmin+, allow access to all cases for approval
+            // For Primary (creators), only allow access to their own cases
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pc =>
+                    (pc.Security != null && pc.Security.Email == userEmail)
+                    || _context.PatrolAssignmentSecurities.Any(pas =>
+                        pas.PatrolAssignmentId == pc.PatrolAssignmentId
+                        && pas.Security != null
+                        && pas.Security.Email == userEmail
+                    )
+                );
+            }
+
+            return await ProjectToRead(query).FirstOrDefaultAsync();
+        }
         public async Task<PatrolCase?> GetByIdEntityAsync(Guid id)
         {
             var query = BaseEntityQuery()
             .Include(x => x.PatrolCaseAttachments)
             .Where(x => x.Id == id);
+            return await query.FirstOrDefaultAsync();
+        }
+
+        // For approval operations - allows PrimaryAdmin to access all cases
+        public async Task<PatrolCase?> GetByIdEntityForApprovalAsync(Guid id)
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolCases
+                .Include(x => x.PatrolCaseAttachments)
+                .Where(x => x.Id == id && x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // For PrimaryAdmin+, allow access to all cases for approval
+            // For Primary (creators), only allow access to their own cases
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pc =>
+                    (pc.Security != null && pc.Security.Email == userEmail)
+                    || _context.PatrolAssignmentSecurities.Any(pas =>
+                        pas.PatrolAssignmentId == pc.PatrolAssignmentId
+                        && pas.Security != null
+                        && pas.Security.Email == userEmail
+                    )
+                );
+            }
+
             return await query.FirstOrDefaultAsync();
         }
 
@@ -181,6 +242,19 @@ namespace Repositories.Repository
                         .Select(x => x.PatrolArea.Name)
                         .FirstOrDefault()
                 },
+                Approver = t.ApprovedByHead == null ? null : new MstSecurityLookUpRead
+                {
+                    Id = t.ApprovedByHead.Id,
+                    Name = t.ApprovedByHead.Name,
+                    PersonId = t.ApprovedByHead.PersonId,
+                    CardNumber = t.ApprovedByHead.CardNumber,
+                    OrganizationId = t.ApprovedByHead.OrganizationId,
+                    DepartmentId = t.ApprovedByHead.DepartmentId,
+                    DistrictId = t.ApprovedByHead.DistrictId,
+                    OrganizationName = t.ApprovedByHead.Organization.Name,
+                    DepartmentName = t.ApprovedByHead.Department.Name,
+                    DistrictName = t.ApprovedByHead.District.Name,
+                },
                 Attachments = t.PatrolCaseAttachments.Select(x => new PatrolAttachmentRead
                 {
                     Id = x.Id,
@@ -230,6 +304,10 @@ namespace Repositories.Repository
             if (routeIds.Count > 0)
                 query = query.Where(x => x.PatrolRouteId.HasValue && routeIds.Contains(x.PatrolRouteId.Value));
 
+            var approverIds = ExtractIds(filter.ApprovedByHeadId);
+            if (approverIds.Count > 0)
+                query = query.Where(x => x.ApprovedByHeadId.HasValue && approverIds.Contains(x.ApprovedByHeadId.Value));
+
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
 
@@ -264,10 +342,21 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-
         public async Task<MstSecurity?> GetIdBySecurityEmailAsync(string email)
         {
             return await _context.MstSecurities.FirstOrDefaultAsync(f => f.Email == email && f.Status != 0);
+        }
+
+        public async Task<Guid> GetSecurityIdByEmailAsync(string email)
+        {
+            var security = await _context.MstSecurities
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Email == email && s.Status != 0);
+
+            if (security == null)
+                throw new Exception($"Security with email {email} not found");
+
+            return security.Id;
         }
 
         public async Task<bool> SessionExistsAsync(Guid sessionId)
@@ -281,13 +370,11 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
         
-                public async Task RemoveAllAttachmentsByCaseIdAsync(Guid caseId)
+        public async Task RemoveAllAttachmentsByCaseIdAsync(Guid caseId)
         {
             await _context.PatrolCaseAttachments
                 .Where(x => x.PatrolCaseId == caseId)
                 .ExecuteDeleteAsync();
         }
-
-
     }
 }
