@@ -201,10 +201,7 @@ namespace Repositories.Repository
         {
             var query = BaseEntityQuery();
 
-            // 2. Count Total (Before Filter)
-            var total = await query.CountAsync();
-
-            // 3. Apply Filters
+            // Apply filters
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 var search = filter.Search.ToLower();
@@ -220,14 +217,18 @@ namespace Repositories.Repository
             if (filter.CaseStatus.HasValue)
                 query = query.Where(x => x.CaseStatus == filter.CaseStatus.Value);
 
-            if (filter.SecurityId.HasValue)
-                query = query.Where(x => x.SecurityId == filter.SecurityId.Value);
+            // Use ExtractIds for ID filters (supports both single Guid and Guid array)
+            var securityIds = ExtractIds(filter.SecurityId);
+            if (securityIds.Count > 0)
+                query = query.Where(x => x.SecurityId.HasValue && securityIds.Contains(x.SecurityId.Value));
 
-            if (filter.PatrolAssignmentId.HasValue)
-                query = query.Where(x => x.PatrolAssignmentId == filter.PatrolAssignmentId.Value);
+            var assignmentIds = ExtractIds(filter.PatrolAssignmentId);
+            if (assignmentIds.Count > 0)
+                query = query.Where(x => x.PatrolAssignmentId.HasValue && assignmentIds.Contains(x.PatrolAssignmentId.Value));
 
-            if (filter.PatrolRouteId.HasValue)
-                query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId.Value);
+            var routeIds = ExtractIds(filter.PatrolRouteId);
+            if (routeIds.Count > 0)
+                query = query.Where(x => x.PatrolRouteId.HasValue && routeIds.Contains(x.PatrolRouteId.Value));
 
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
@@ -235,15 +236,14 @@ namespace Repositories.Repository
             if (filter.DateTo.HasValue)
                 query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
 
-            // 4. Count Filtered
+            var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            // 6. Sorting & Paging
-            // Note: Make sure to include Repositories.Extensions namespace
+            // Sorting & Paging
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-
+            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);

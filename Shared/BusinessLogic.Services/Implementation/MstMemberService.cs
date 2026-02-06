@@ -90,7 +90,7 @@ namespace BusinessLogic.Services.Implementation
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
             var username = UsernameFormToken;
-            var card = await _cardRepository.GetByIdAsync(createDto.CardId.Value);
+            var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId.Value);
             if (card == null)
                 throw new InvalidOperationException("Card not found.");
 
@@ -209,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException($"Member with ID {id} not found or has been deleted.");
 
             var cardId = updateDto.CardId ?? Guid.Empty;
-            var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdAsync(cardId) : null;
+            var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdEntityAsync(cardId) : null;
             if (updateDto.CardId.HasValue && card == null)
                 throw new KeyNotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 

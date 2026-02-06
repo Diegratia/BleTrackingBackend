@@ -86,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
             cardRecord.CheckinBy = username;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
 
-            var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value);
+            var card = await _cardRepository.GetByIdEntityAsync(cardRecord.CardId!.Value);
             if (card == null)
                 throw new InvalidOperationException("Card not found.");
 
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation
             if (cardRecord is null)
                 throw new InvalidOperationException("Card record not found.");
 
-            var card = await _cardRepository.GetByIdAsync(cardRecord.CardId!.Value)
+            var card = await _cardRepository.GetByIdEntityAsync(cardRecord.CardId!.Value)
                     ?? throw new InvalidOperationException("Card not found.");
 
             var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value)

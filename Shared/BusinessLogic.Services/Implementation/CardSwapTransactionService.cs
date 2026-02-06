@@ -157,7 +157,7 @@ namespace BusinessLogic.Services.Implementation
 
                         fromCardId = visitorCardEntity.Id;
                         toCardId = request.ToCardId;
-                        toCardEntity = await _cardRepo.GetByIdAsync(toCardId.Value);
+                        toCardEntity = await _cardRepo.GetByIdEntityAsync(toCardId.Value);
                         if (toCardEntity == null)
                             throw new NotFoundException($"Tracking card with id {toCardId} not found");
                         request.IdentityType = IdentityType.CardAccess;
@@ -182,7 +182,7 @@ namespace BusinessLogic.Services.Implementation
 
                         fromCardId = visitorCardEntity.Id;
                         toCardId = request.ToCardId;
-                        toCardEntity = await _cardRepo.GetByIdAsync(toCardId.Value);
+                        toCardEntity = await _cardRepo.GetByIdEntityAsync(toCardId.Value);
                         if (toCardEntity == null)
                             throw new NotFoundException($"Tracking card with id {toCardId} not found");
                         break;
@@ -266,7 +266,7 @@ namespace BusinessLogic.Services.Implementation
             // Tracking card (FromCardId in this reverse swap) becomes Available
             if (lastSwap.ToCardId.HasValue)
             {
-                var trackingCard = await _cardRepo.GetByIdAsync(lastSwap.ToCardId.Value);
+                var trackingCard = await _cardRepo.GetByIdEntityAsync(lastSwap.ToCardId.Value);
                 if (trackingCard != null)
                 {
                     trackingCard.CardStatus = CardStatus.Available;
@@ -277,7 +277,7 @@ namespace BusinessLogic.Services.Implementation
             // Visitor card (ToCardId in this reverse swap) becomes Used
             if (lastSwap.FromCardId.HasValue)
             {
-                var visitorCard = await _cardRepo.GetByIdAsync(lastSwap.FromCardId.Value);
+                var visitorCard = await _cardRepo.GetByIdEntityAsync(lastSwap.FromCardId.Value);
                 if (visitorCard != null)
                 {
                     visitorCard.CardStatus = CardStatus.Used;

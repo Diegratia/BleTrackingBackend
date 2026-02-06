@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 using System.Linq.Dynamic.Core;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
@@ -24,62 +25,52 @@ using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.Extensions.Logging;
 using Helpers.Consumer.Mqtt;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class CardService : ICardService
+    public class CardService : BaseService, ICardService
     {
         private readonly CardRepository _repository;
         private readonly CardAccessRepository _cardAccessRepository;
         private readonly IMapper _mapper;
         private readonly MstMemberRepository _mstMemberRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<Card> _logger;
         private readonly IMqttClientService _mqttClient;
+        private readonly IAuditEmitter _audit;
 
-        public CardService(CardRepository repository,
-        CardAccessRepository cardAccessRepository,
-        MstMemberRepository mstMemberRepository,
-        IMapper mapper,
-        IHttpContextAccessor httpContextAccessor,
-        ILogger<Card> logger,
-        IMqttClientService mqttClient
-        )
+        public CardService(
+            CardRepository repository,
+            CardAccessRepository cardAccessRepository,
+            MstMemberRepository mstMemberRepository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<Card> logger,
+            IMqttClientService mqttClient,
+            IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
             _cardAccessRepository = cardAccessRepository;
             _mstMemberRepository = mstMemberRepository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _mqttClient = mqttClient;
+            _audit = audit;
         }
 
-        public async Task<CardDto> GetByIdAsync(Guid id)
+        public async Task<CardRead?> GetByIdAsync(Guid id)
         {
-            var card = await _repository.GetByIdAsync(id);
-            return card == null ? null : _mapper.Map<CardDto>(card);
-        }
-        public async Task<CardMinimalsDto> GetByIdAsyncV2(Guid id)
-        {
-            var card = await _repository.GetByIdAsync(id);
-            return card == null ? null : _mapper.Map<CardMinimalsDto>(card);
+            return await _repository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<CardDto>> GetAllAsync()
+        public async Task<IEnumerable<CardRead>> GetAllAsync()
         {
-            var cards = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardDto>>(cards);
+            return await _repository.GetAllAsync();
         }
-        public async Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2()
+
+        public async Task<IEnumerable<CardRead>> GetAllUnUsedAsync()
         {
-            var cards = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardMinimalsDto>>(cards);
-        }
-        public async Task<IEnumerable<CardDto>> GetAllUnUsedAsync()
-        {
-            var cards = await _repository.GetUnUsedCardAsync();
-            return _mapper.Map<IEnumerable<CardDto>>(cards);
+            return await _repository.GetUnUsedCardAsync();
         }
 
         public async Task<IEnumerable<OpenCardDto>> OpenGetAllUnUsedAsync()
@@ -93,32 +84,10 @@ namespace BusinessLogic.Services.Implementation
             var cards = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenCardDto>>(cards);
         }
-        
-        //      public async Task<IEnumerable<CardDto>> GetAllAsync()
-        // {
-        //     var cards = await _repository.GetAllAsync();
-        //     var mappedCards = new List<CardDto>();
 
-        //     foreach (var card in cards)
-        //     {
-        //                     try
-        //                     {
-        //                         var dto = _mapper.Map<CardDto>(card);
-        //                         mappedCards.Add(dto);
-        //                     }
-        //                     catch (Exception ex)
-        //                     {
-
-        //         }
-        //     }
-
-        //     return mappedCards;
-        // }
-
-
-        public async Task<CardDto> CreateAsync(CardCreateDto createDto)
+        public async Task<CardRead> CreateAsync(CardCreateDto createDto)
         {
-            var existingCard = await _repository.GetAllQueryable()
+            var existingCard = await _repository.BaseEntityQuery()
             .FirstOrDefaultAsync(b =>
                                 b.CardNumber == createDto.CardNumber ||
                                 b.Dmac == createDto.Dmac);
@@ -136,6 +105,28 @@ namespace BusinessLogic.Services.Implementation
             }
 
             var card = _mapper.Map<Card>(createDto);
+
+            // Ownership validation
+            if (card.MemberId.HasValue)
+            {
+                var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(card.MemberId.Value, AppId);
+                if (invalidMemberIds.Any())
+                    throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+            }
+
+            if (card.VisitorId.HasValue)
+            {
+                var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(card.VisitorId.Value, AppId);
+                if (invalidVisitorIds.Any())
+                    throw new UnauthorizedException($"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+            }
+
+            if (card.CardGroupId.HasValue)
+            {
+                var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(card.CardGroupId.Value, AppId);
+                if (invalidCardGroupIds.Any())
+                    throw new UnauthorizedException($"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
+            }
 
             if (card.VisitorId != null && card.MemberId == null)
             {
@@ -158,25 +149,21 @@ namespace BusinessLogic.Services.Implementation
                 card.RegisteredMaskedArea = null;
             }
 
-            card.Id = Guid.NewGuid();
+            SetCreateAudit(card);
             card.StatusCard = 1;
             card.IsUsed = false;
             card.CardStatus = CardStatus.Available;
 
-            card.CreatedAt = DateTime.UtcNow;
-            card.CreatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
             var createdCard = await _repository.AddAsync(card);
             card.QRCode = createdCard.CardNumber;
             await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            return _mapper.Map<CardDto>(createdCard);
+            await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+            return await _repository.GetByIdAsync(card.Id);
         }
         
-            public async Task<CardMinimalsDto> CreatesAsync(CardAddDto dto)
+        public async Task<CardRead> CreateMinimalAsync(CardAddDto dto)
         {
-            var existingCard = await _repository.GetAllQueryable()
+            var existingCard = await _repository.BaseEntityQuery()
             .FirstOrDefaultAsync(b =>
                                 b.CardNumber == dto.CardNumber ||
                                 b.Dmac == dto.Dmac);
@@ -192,22 +179,35 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException($"Card with Mac {dto.Dmac} already exists.");
                 }
             }
-            
-            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId");
+
             var entity = _mapper.Map<Card>(dto);
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            entity.Id = Guid.NewGuid();
-            entity.CreatedBy = username;
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
+            SetCreateAudit(entity);
             entity.StatusCard = 1;
+            entity.ApplicationId = AppId;
 
-            if (applicationIdClaim != null)
-                entity.ApplicationId = Guid.Parse(applicationIdClaim.Value);
+            // Ownership validation
+            if (dto.MemberId.HasValue)
+            {
+                var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(dto.MemberId.Value, AppId);
+                if (invalidMemberIds.Any())
+                    throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+            }
 
-        if (dto.CardAccessIds.Any())
+            if (dto.VisitorId.HasValue)
+            {
+                var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(dto.VisitorId.Value, AppId);
+                if (invalidVisitorIds.Any())
+                    throw new UnauthorizedException($"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+            }
+
+            if (dto.CardGroupId.HasValue)
+            {
+                var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(dto.CardGroupId.Value, AppId);
+                if (invalidCardGroupIds.Any())
+                    throw new UnauthorizedException($"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
+            }
+
+            if (dto.CardAccessIds.Any())
             {
                 var accesses = await _cardAccessRepository.GetAllQueryable()
                                     .Where(c => dto.CardAccessIds.Contains(c.Id))
@@ -219,7 +219,6 @@ namespace BusinessLogic.Services.Implementation
                     {
                         throw new KeyNotFoundException($"Card Access with id {dto.CardAccessIds.First()} not found");
                     }
-                    // 🔹 Tambahkan baris di join table
                     entity.CardCardAccesses.Add(new CardCardAccess
                     {
                         CardId = entity.Id,
@@ -228,43 +227,42 @@ namespace BusinessLogic.Services.Implementation
                     });
                 }
             }
-                var result = await _repository.AddAsync(entity);
-                await _mqttClient.PublishAsync("engine/refresh/card-related","");
-                return _mapper.Map<CardMinimalsDto>(result);  
+            var result = await _repository.AddAsync(entity);
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");
+            await _audit.Created("Card", result.Id, $"Card {result.CardNumber} created");
+            return await _repository.GetByIdAsync(result.Id);
         }
-
-        // public async Task BlockCardAsync(Guid id, CardBlockDto dto)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var Card = await _repository.GetByIdAsync(id);
-        //     if (Card.MemberId != null)
-        //     {
-        //         Card.IsBlock = dto.IsBlock;
-        //         Card.UpdatedBy = username;
-        //         Card.BlockAt = DateTime.UtcNow;
-        //         Card.UpdatedAt = DateTime.UtcNow;
-        //     }
-        //     else if (Card.VisitorId != null)
-        //     {
-        //         Card.IsBlock = dto.IsBlock;
-        //         Card.UpdatedBy = username;
-        //         Card.BlockAt = DateTime.UtcNow;
-        //         Card.UpdatedAt = DateTime.UtcNow;
-        //     }
-
-        //         await _repository.UpdateAsync(Card);
-        // }
 
         public async Task UpdatesAsync(Guid id, CardEditDto dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            var entity = await _repository.GetAllQueryable()
+            var entity = await _repository.BaseEntityQuery()
                 .Include(cg => cg.CardCardAccesses)
                 .FirstOrDefaultAsync(cg => cg.Id == id);
 
             if (entity == null)
-                throw new KeyNotFoundException("Card Group not found");
+                throw new KeyNotFoundException("Card not found");
+
+            // Ownership validation for updated values
+            if (dto.MemberId.HasValue && dto.MemberId.Value != entity.MemberId)
+            {
+                var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(dto.MemberId.Value, AppId);
+                if (invalidMemberIds.Any())
+                    throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+            }
+
+            if (dto.VisitorId.HasValue && dto.VisitorId.Value != entity.VisitorId)
+            {
+                var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(dto.VisitorId.Value, AppId);
+                if (invalidVisitorIds.Any())
+                    throw new UnauthorizedException($"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+            }
+
+            if (dto.CardGroupId.HasValue && dto.CardGroupId.Value != entity.CardGroupId)
+            {
+                var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(dto.CardGroupId.Value, AppId);
+                if (invalidCardGroupIds.Any())
+                    throw new UnauthorizedException($"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
+            }
 
             // Update scalar
             entity.Name = dto.Name ?? entity.Name;
@@ -277,12 +275,10 @@ namespace BusinessLogic.Services.Implementation
             entity.MemberId = dto.MemberId ?? entity.MemberId;
             entity.CardGroupId = dto.CardGroupId ?? entity.CardGroupId;
             entity.CardType = (CardType)Enum.Parse<CardType>(dto.CardType);
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
 
-            // =============================
-            // 🔹 Update CardAccesses (join table)
-            // =============================
+            SetUpdateAudit(entity);
+
+            // Update CardAccesses (join table)
             var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
             var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
 
@@ -296,7 +292,7 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardCardAccesses.Remove(remove);
             }
 
-            // // Tambah yang baru
+            // Tambah yang baru
             var toAdd = newAccessIds.Except(existingAccessIds).ToList();
             foreach (var addId in toAdd)
             {
@@ -313,27 +309,22 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");      
+            await _mqttClient.PublishAsync("engine/refresh/card-related","");
+            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} updated");
         }
 
         public async Task UpdateAccessAsync(Guid id, CardAccessEdit dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            var entity = await _repository.GetAllQueryable()
+            var entity = await _repository.BaseEntityQuery()
                 .Include(cg => cg.CardCardAccesses)
                 .FirstOrDefaultAsync(cg => cg.Id == id);
 
             if (entity == null)
-                throw new KeyNotFoundException("Card Group not found");
+                throw new KeyNotFoundException("Card not found");
 
-            // Update scalar
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
+            SetUpdateAudit(entity);
 
-            // =============================
-            // 🔹 Update CardAccesses (join table)
-            // =============================
+            // Update CardAccesses (join table)
             var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
             var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
 
@@ -347,120 +338,99 @@ namespace BusinessLogic.Services.Implementation
                 entity.CardCardAccesses.Remove(remove);
             }
 
-                    // // Tambah yang baru
-                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-                foreach (var addId in toAdd)
-                {
-                    var access = await _cardAccessRepository.GetByIdAsync(addId);
-                    if (access == null)
-                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
+            // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
 
-                    entity.CardCardAccesses.Add(new CardCardAccess
-                    {
-                        CardId = entity.Id,
-                        CardAccessId = addId,
-                        ApplicationId = entity.ApplicationId
-                    });
-                }
+                entity.CardCardAccesses.Add(new CardCardAccess
+                {
+                    CardId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
 
             await _repository.UpdateAsync(entity);
+            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated");
         }
         
         public async Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            var entity = await _repository.GetAllQueryable()
+            var entity = await _repository.BaseEntityQuery()
                 .Include(cg => cg.CardCardAccesses)
                 .FirstOrDefaultAsync(cg => cg.CardNumber == cardNumber);
             if (entity == null)
                 throw new KeyNotFoundException("Card not found with card number " + cardNumber);
 
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
+            SetUpdateAudit(entity);
 
             //update cardaccess - join table
             var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
             var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
 
-            // var toRemove = entity.CardCardAccesses
-            //     .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
-            //     .ToList();
+            // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
 
-            // foreach (var remove in toRemove)
-            // {
-            //     entity.CardCardAccesses.Remove(remove);
-            // }
-
-            // // Tambah yang baru
-                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-                foreach (var addId in toAdd)
+                entity.CardCardAccesses.Add(new CardCardAccess
                 {
-                    var access = await _cardAccessRepository.GetByIdAsync(addId);
-                    if (access == null)
-                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
-
-                    entity.CardCardAccesses.Add(new CardCardAccess
-                    {
-                        CardId = entity.Id,
-                        CardAccessId = addId,
-                        ApplicationId = entity.ApplicationId
-                    });
-                }
+                    CardId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
 
             await _repository.UpdateAsync(entity);
+            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated by VMS");
         }
 
         public async Task SwapCard(Guid id, CardAccessEdit dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetByIdEntityAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException("Card not found with card id " + id);
 
-            entity.UpdatedBy = username;
-            entity.UpdatedAt = DateTime.UtcNow;
+            SetUpdateAudit(entity);
 
             //update cardaccess - join table
             var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
             var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
 
-            // var toRemove = entity.CardCardAccesses
-            //     .Where(ca => !newAccessIds.Contains(ca.CardAccessId))
-            //     .ToList();
+            // Tambah yang baru
+            var toAdd = newAccessIds.Except(existingAccessIds).ToList();
+            foreach (var addId in toAdd)
+            {
+                var access = await _cardAccessRepository.GetByIdAsync(addId);
+                if (access == null)
+                    throw new KeyNotFoundException($"Card Access with id {addId} not found");
 
-            // foreach (var remove in toRemove)
-            // {
-            //     entity.CardCardAccesses.Remove(remove);
-            // }
-
-            // // Tambah yang baru
-                var toAdd = newAccessIds.Except(existingAccessIds).ToList();
-                foreach (var addId in toAdd)
+                entity.CardCardAccesses.Add(new CardCardAccess
                 {
-                    var access = await _cardAccessRepository.GetByIdAsync(addId);
-                    if (access == null)
-                        throw new KeyNotFoundException($"Card Access with id {addId} not found");
-
-                    entity.CardCardAccesses.Add(new CardCardAccess
-                    {
-                        CardId = entity.Id,
-                        CardAccessId = addId,
-                        ApplicationId = entity.ApplicationId
-                    });
-                }
+                    CardId = entity.Id,
+                    CardAccessId = addId,
+                    ApplicationId = entity.ApplicationId
+                });
+            }
 
             await _repository.UpdateAsync(entity);
+            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} swapped");
         }
 
         public async Task UpdateAsync(Guid id, CardUpdateDto updateDto)
         {
-            var card = await _repository.GetByIdAsync(id);
+            var card = await _repository.GetByIdEntityAsync(id);
             if (card == null)
-                throw new KeyNotFoundException("Card not found2");
+                throw new KeyNotFoundException("Card not found");
 
-            var existingCard = await _repository.GetAllQueryable()
+            var existingCard = await _repository.BaseEntityQuery()
             .Where(b => b.Id != id)
             .FirstOrDefaultAsync(b =>
                                 b.CardNumber == updateDto.CardNumber ||
@@ -476,6 +446,28 @@ namespace BusinessLogic.Services.Implementation
                 {
                     throw new ArgumentException($"Card with Mac {updateDto.Dmac} already exists.");
                 }
+            }
+
+            // Ownership validation for updated values
+            if (updateDto.MemberId.HasValue && updateDto.MemberId.Value != card.MemberId)
+            {
+                var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(updateDto.MemberId.Value, AppId);
+                if (invalidMemberIds.Any())
+                    throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+            }
+
+            if (updateDto.VisitorId.HasValue && updateDto.VisitorId.Value != card.VisitorId)
+            {
+                var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(updateDto.VisitorId.Value, AppId);
+                if (invalidVisitorIds.Any())
+                    throw new UnauthorizedException($"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+            }
+
+            if (updateDto.CardGroupId.HasValue && updateDto.CardGroupId.Value != card.CardGroupId)
+            {
+                var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(updateDto.CardGroupId.Value, AppId);
+                if (invalidCardGroupIds.Any())
+                    throw new UnauthorizedException($"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
             }
 
             if (updateDto.VisitorId != null && updateDto.MemberId == null)
@@ -494,18 +486,16 @@ namespace BusinessLogic.Services.Implementation
                 updateDto.CardStatus = CardStatus.Available;
             }
 
-            card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "System";
-
+            SetUpdateAudit(card);
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
             await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            await _audit.Updated("Card", card.Id, $"Card {card.CardNumber} updated");
         }
 
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var card = await _repository.GetByIdAsync(id);
+            var card = await _repository.GetByIdEntityAsync(id);
             var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId.Value);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
@@ -513,38 +503,44 @@ namespace BusinessLogic.Services.Implementation
             if (member == null)
                 throw new KeyNotFoundException("Member not found");
 
-            card.UpdatedAt = DateTime.UtcNow;
+            // Ownership validation
+            var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(dto.MemberId.Value, AppId);
+            if (invalidMemberIds.Any())
+                throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+
+            SetUpdateAudit(card);
             card.IsUsed = true;
             card.CardStatus = CardStatus.Used;
             card.LastUsed = member.Name;
-            card.UpdatedBy = username;
             member.CardNumber = card.CardNumber;
             member.BleCardNumber = card.Dmac;
             _mapper.Map(dto, card);
             await _repository.UpdateAsync(card);
+            await _audit.Updated("Card", card.Id, $"Card {card.CardNumber} assigned to member {member.Name}");
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var card = await _repository.GetByIdAsync(id);
-            card.UpdatedAt = DateTime.UtcNow;
-            card.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var card = await _repository.GetByIdEntityAsync(id);
+            if (card == null)
+                throw new KeyNotFoundException("Card not found");
+
+            SetDeleteAudit(card);
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
+            await _audit.Deleted("Card", id, $"Card {card.CardNumber} deleted");
         }
 
-         public async Task<IEnumerable<CardDto>> ImportAsync(IFormFile file)
+        public async Task<IEnumerable<CardRead>> ImportAsync(IFormFile file)
         {
             var cards = new List<Card>();
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
 
             using var stream = file.OpenReadStream();
             using var workbook = new XLWorkbook(stream);
             var worksheet = workbook.Worksheets.Worksheet(1);
             var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; 
+            int rowNumber = 2;
             foreach (var row in rows)
             {
 
@@ -567,7 +563,6 @@ namespace BusinessLogic.Services.Implementation
 
                 var card = new Card
                 {
-                    Id = Guid.NewGuid(),
                     RegisteredMaskedAreaId = maskedAreaId ?? null,
                     Name = row.Cell(2).GetValue<string>() ?? null,
                     Remarks = row.Cell(3).GetValue<string>() ?? null,
@@ -576,13 +571,11 @@ namespace BusinessLogic.Services.Implementation
                     QRCode = row.Cell(6).GetValue<string>() ?? null,
                     IsMultiMaskedArea = row.Cell(7).GetValue<bool?>() ?? false,
                     Dmac = row.Cell(8).GetValue<string>() ?? null,
-                    CreatedBy = username,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = username,
-                    UpdatedAt = DateTime.UtcNow,
+                    ApplicationId = AppId,
                     StatusCard = 1
                 };
 
+                SetCreateAudit(card);
                 cards.Add(card);
                 rowNumber++;
             }
@@ -593,23 +586,41 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(card);
             }
             await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            return _mapper.Map<IEnumerable<CardDto>>(cards);
+            await _audit.Created("Card", cards.Count, $"Imported {cards.Count} cards");
+            return await _repository.GetAllExportAsync();
         }
 
-          public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            CardFilter filter)
         {
-            var query = _repository.GetAllQueryable().AsNoTracking();
+            // 1. Map Standard DataTables params
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "CardNumber", "QRCode" };
-            var validSortColumns = new[] { "Name", "CardNumber", "QRCode", "CardType", "IsVisitor", "CreatedAt", "IsUsed", "RegisteredMaskedAreaId", "IsMultiMaskedArea" };
+            // 2. Map Date Filters (Shortcut for DateRange)
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<Card, CardMinimalsDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            // 3. Call repository FilterAsync (yang menggunakan ProjectToRead)
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
          public async Task<byte[]> ExportPdfAsync()

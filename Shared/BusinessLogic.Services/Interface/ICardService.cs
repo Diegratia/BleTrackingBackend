@@ -4,29 +4,29 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface ICardService
     {
-        Task<CardMinimalsDto> GetByIdAsyncV2(Guid id);
-        Task<CardDto> GetByIdAsync(Guid id);
+        Task<CardRead?> GetByIdAsync(Guid id);
         Task AssignToMemberAsync(Guid id, CardAssignDto dto);
-        Task<IEnumerable<CardDto>> GetAllAsync();
-        Task<IEnumerable<CardMinimalsDto>> GetAllAsyncV2();
-        Task<IEnumerable<CardDto>> GetAllUnUsedAsync();
+        Task<IEnumerable<CardRead>> GetAllAsync();
+        Task<IEnumerable<CardRead>> GetAllUnUsedAsync();
         Task<IEnumerable<OpenCardDto>> OpenGetAllUnUsedAsync();
         Task<IEnumerable<OpenCardDto>> OpenGetAllAsync();
-        Task<CardDto> CreateAsync(CardCreateDto createDto);
+        Task<CardRead> CreateAsync(CardCreateDto createDto);
+        Task<CardRead> CreateMinimalAsync(CardAddDto dto);
         Task UpdatesAsync(Guid id, CardEditDto dto);
         Task UpdateAccessAsync(Guid id, CardAccessEdit dto);
-        Task<CardMinimalsDto> CreatesAsync(CardAddDto dto);
         Task UpdateAsync(Guid id, CardUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, CardFilter filter);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
-        Task<IEnumerable<CardDto>> ImportAsync(IFormFile file);
-         Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto);
+        Task<IEnumerable<CardRead>> ImportAsync(IFormFile file);
+        Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto);
     }
 }
