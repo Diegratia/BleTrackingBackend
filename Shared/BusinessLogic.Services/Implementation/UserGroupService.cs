@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
             return groups;
         }
 
-        public async Task<UserGroupDto> CreateAsync(CreateUserGroupDto dto)
+        public async Task<UserGroupWithDetailsRead> CreateAsync(CreateUserGroupDto dto)
         {
             var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(currentUserId))
@@ -90,7 +90,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(userGroup.Id);
-            return _mapper.Map<UserGroupDto>(result);
+            return result;
         }
 
         public async Task UpdateAsync(Guid id, UpdateUserGroupDto dto)
