@@ -128,9 +128,9 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Patrol Case closed", result));
         }
 
-        // DELETE: api/patrol-case/{caseId}/attachments/{attachmentId}
-        [HttpDelete("{caseId}/attachments/{attachmentId}")]
-        public async Task<IActionResult> DeleteAttachment(Guid caseId, Guid attachmentId)
+        // DELETE: api/patrol-case/attachments
+        [HttpDelete("/attachments")]
+        public async Task<IActionResult> DeleteAttachment([FromQuery] Guid caseId,[FromQuery] Guid attachmentId)
         {
             await _PatrolCaseService.DeleteAttachmentAsync(caseId, attachmentId);
             return Ok(ApiResponse.Success("Attachment deleted successfully"));
