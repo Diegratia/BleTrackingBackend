@@ -23,7 +23,10 @@ namespace Data.ViewModels
         public string? Title { get; set; }
         public string? Description { get; set; }
         public CaseType? CaseType { get; set; }
-        public List<PatrolAttachmentUpdateDto>? Attachments { get; set; }
+        /// <summary>
+        /// Attachments to APPEND (not replace). Use DeleteAttachment endpoint to remove.
+        /// </summary>
+        public List<PatrolAttachmentCreateDto>? Attachments { get; set; }
     }
 
     /// <summary>

@@ -89,7 +89,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
         {
             var patrolCases = await _repo.GetAllAsync();
-            return patrolCases;  
+            return patrolCases;
 
         }
 
@@ -110,7 +110,7 @@ namespace BusinessLogic.Services.Implementation
             patrolCase.SecurityId = session.SecurityId;
             patrolCase.PatrolAssignmentId = session.PatrolAssignmentId;
             patrolCase.PatrolRouteId = session.PatrolRouteId;
-            patrolCase.CaseStatus = CaseStatus.Open;
+            patrolCase.CaseStatus = CaseStatus.Submitted;  // Auto-submit on create
             if (dto.Attachments?.Any() == true)
             {
                 foreach (var att in dto.Attachments)
@@ -142,60 +142,6 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdAsync(patrolCase.Id);
             return result;
         }
-        // SQL STYLE
-        // public async Task<PatrolCaseDto> CreateAsync(PatrolCaseCreateDto dto)
-        // {
-        //      PatrolCase? patrolCase = null;
-        //      await _repo.ExecuteInTransactionAsync(async () =>
-        //     {
-        //         var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
-        //             ?? throw new NotFoundException(
-        //                 $"PatrolSession with id {dto.PatrolSessionId} not found");
-
-        //         // 1️⃣ CREATE CASE (PARENT)
-        //         patrolCase = new PatrolCase
-        //         {
-        //             Title = dto.Title,
-        //             Description = dto.Description,
-        //             CaseType = dto.CaseType.Value,
-        //             CaseStatus = CaseStatus.Open,
-        //             PatrolSessionId = session.Id,
-        //             SecurityId = session.SecurityId,
-        //             PatrolAssignmentId = session.PatrolAssignmentId,
-        //             PatrolRouteId = session.PatrolRouteId,
-        //         };
-
-        //         SetCreateAudit(patrolCase);
-        //         await _repo.AddAsync(patrolCase);
-        //         if (dto.Attachments?.Any() == true)
-        //         {
-        //             var attachments = dto.Attachments.Select(att =>
-        //                 new PatrolCaseAttachment
-        //                 {
-        //                     PatrolCaseId = patrolCase.Id,
-        //                     FileUrl = att.FileUrl,
-        //                     FileType = att.FileType,
-        //                     MimeType = MimeTypeHelper.GetMimeType(att.FileUrl),
-        //                     ApplicationId = patrolCase.ApplicationId,
-        //                     CreatedAt = DateTime.UtcNow,
-        //                     UpdatedAt = DateTime.UtcNow,
-        //                     CreatedBy = UsernameFormToken,
-        //                     UpdatedBy = UsernameFormToken
-        //                 }).ToList();
-        //             await _repo.AddManyAsync(attachments);
-        //         }
-        //         await _audit.Created(
-        //             "Patrol Case",
-        //             patrolCase.Id,
-        //             "Created Patrol Case",
-        //             new { patrolCase.Title });
-            
-        //     });
-        //         var result = await _repo.GetByIdAsync(patrolCase.Id);
-        //         return _mapper.Map<PatrolCaseDto>(result);
-        // }
-
-
 
         public async Task<PatrolCaseRead> UpdateAsync(Guid id, PatrolCaseUpdateDto dto)
         {
@@ -210,12 +156,12 @@ namespace BusinessLogic.Services.Implementation
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
                 // =====================================================
-                // 🔹 VALIDASI STATUS
+                // 🔹 VALIDASI STATUS - HANYA SUBMITTED/REJECTED YG BOLEH EDIT
                 // =====================================================
-                if (patrolCase.CaseStatus != CaseStatus.Open &&
+                if (patrolCase.CaseStatus != CaseStatus.Submitted &&
                     patrolCase.CaseStatus != CaseStatus.Rejected)
                     throw new BusinessException(
-                        $"Case with status {patrolCase.CaseStatus} cannot be updated");
+                        $"Only Submitted or Rejected cases can be updated. Current status: {patrolCase.CaseStatus}");
 
                 // =====================================================
                 // 🔹 UPDATE SCALAR (MANUAL, BIAR JELAS)
@@ -232,14 +178,11 @@ namespace BusinessLogic.Services.Implementation
                 SetUpdateAudit(patrolCase);
 
                 // =====================================================
-                // 🔥 REPLACE ALL ATTACHMENTS (OPTIONAL)
+                // 🔥 APPEND ATTACHMENTS (STORAGE BERSAMA)
                 // =====================================================
-                if (dto.Attachments != null)
+                if (dto.Attachments?.Any() == true)
                 {
-                    // 1️⃣ HARD DELETE EXISTING (SQL STYLE)
-                    await _repo.RemoveAllAttachmentsByCaseIdAsync(patrolCase.Id);
-
-                    // 2️⃣ INSERT BARU
+                    // APPEND only - don't delete existing attachments
                     var newAttachments = dto.Attachments.Select(att =>
                         new PatrolCaseAttachment
                         {
@@ -293,49 +236,6 @@ namespace BusinessLogic.Services.Implementation
             await _repo.DeleteAsync(id);
         }
 
-        public async Task<PatrolCaseRead> SubmitAsync(Guid id)
-        {
-            // Get current user's security ID
-            var currentUserEmail = EmailFormToken;
-            var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
-
-            PatrolCase? patrolCase = null;
-
-            await _repo.ExecuteInTransactionAsync(async () =>
-            {
-                // Load entity
-                patrolCase = await _repo.GetByIdEntityAsync(id)
-                    ?? throw new NotFoundException($"PatrolCase with id {id} not found");
-
-                // Validate status
-                if (patrolCase.CaseStatus != CaseStatus.Open && patrolCase.CaseStatus != CaseStatus.Rejected)
-                    throw new BusinessException(
-                        $"Only Open or Rejected cases can be submitted. Current status: {patrolCase.CaseStatus}");
-
-                // Validate ownership
-                if (patrolCase.SecurityId != currentSecurityId)
-                    throw new UnauthorizedException(
-                        $"Only the creator can submit this case");
-
-                // Update status
-                patrolCase.CaseStatus = CaseStatus.Submitted;
-                SetUpdateAudit(patrolCase);
-
-                await _repo.UpdateAsync(patrolCase);
-            });
-
-            var result = await _repo.GetByIdAsync(patrolCase!.Id)
-                ?? throw new Exception("Failed to reload PatrolCase after submit");
-
-            await _audit.Updated(
-                "Patrol Case",
-                result.Id,
-                $"Submitted for approval",
-                new { result.CaseStatus, result.Title });
-
-            return result;
-        }
-
         public async Task<PatrolCaseRead> ApproveAsync(Guid id, PatrolCaseApprovalDto dto)
         {
             // Get current user's security ID
@@ -350,7 +250,7 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
-                // Validate status
+                // Validate status - only Submitted can be approved
                 if (patrolCase.CaseStatus != CaseStatus.Submitted)
                     throw new BusinessException(
                         $"Only Submitted cases can be approved. Current status: {patrolCase.CaseStatus}");
@@ -393,7 +293,7 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
-                // Validate status
+                // Validate status - only Submitted can be rejected
                 if (patrolCase.CaseStatus != CaseStatus.Submitted)
                     throw new BusinessException(
                         $"Only Submitted cases can be rejected. Current status: {patrolCase.CaseStatus}");
@@ -450,6 +350,28 @@ namespace BusinessLogic.Services.Implementation
                 new { result.CaseStatus, result.Title });
 
             return result;
+        }
+
+        public async Task DeleteAttachmentAsync(Guid caseId, Guid attachmentId)
+        {
+            var patrolCase = await _repo.GetByIdAsync(caseId)
+                ?? throw new NotFoundException($"PatrolCase with id {caseId} not found");
+
+            // Only allow attachment deletion for Submitted or Rejected cases
+            if (patrolCase.CaseStatus != CaseStatus.Submitted && patrolCase.CaseStatus != CaseStatus.Rejected)
+                throw new BusinessException(
+                    $"Cannot delete attachment. Case status is {patrolCase.CaseStatus}");
+
+            var deleted = await _repo.DeleteAttachmentAsync(caseId, attachmentId);
+
+            if (!deleted)
+                throw new NotFoundException($"Attachment with id {attachmentId} not found");
+
+            await _audit.Deleted(
+                "Patrol Case Attachment",
+                attachmentId,
+                $"Deleted attachment from case: {patrolCase.Title}",
+                new { caseId, attachmentId });
         }
 
 

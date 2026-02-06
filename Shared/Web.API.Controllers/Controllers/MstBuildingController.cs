@@ -14,7 +14,6 @@ using System.Text.Json;
 
 namespace Web.API.Controllers.Controllers
 {
-    [MinLevel(LevelPriority.SuperAdmin)]
     [Route("api/[controller]")]
     [ApiController]
     public class MstBuildingController : ControllerBase
@@ -27,19 +26,20 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         public async Task<IActionResult> GetAll()
         {
             var buildings = await _service.GetAllAsync();
             return Ok(ApiResponse.Success("Buildings retrieved successfully", buildings));
         }
-
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var building = await _service.GetByIdAsync(id);
             return Ok(ApiResponse.Success("Building retrieved successfully", building));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstBuildingCreateDto dto)
         {
@@ -55,7 +55,7 @@ namespace Web.API.Controllers.Controllers
             var createdBuilding = await _service.CreateAsync(dto);
             return StatusCode(201, ApiResponse.Created("Building created successfully", createdBuilding));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstBuildingUpdateDto dto)
         {
@@ -71,7 +71,7 @@ namespace Web.API.Controllers.Controllers
             var updatedBuilding = await _service.UpdateAsync(id, dto);
             return Ok(ApiResponse.Success("Building updated successfully", updatedBuilding));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -80,6 +80,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("filter")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)
@@ -97,6 +98,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Buildings filtered successfully", result));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -109,7 +111,6 @@ namespace Web.API.Controllers.Controllers
             var buildings = await _service.ImportAsync(file);
             return Ok(ApiResponse.Success("Buildings imported successfully", buildings));
         }
-
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()

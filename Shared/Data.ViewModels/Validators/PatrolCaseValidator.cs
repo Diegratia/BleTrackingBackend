@@ -38,8 +38,9 @@ namespace Data.ViewModels.Validators
                 .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.")
                 .When(x => x.Description != null);
 
+            // Attachments are appended, not replaced
             RuleForEach(x => x.Attachments)
-                .SetValidator(new PatrolAttachmentUpdateValidator())
+                .SetValidator(new PatrolAttachmentCreateValidator())
                 .When(x => x.Attachments != null);
         }
     }

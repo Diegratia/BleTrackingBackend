@@ -376,5 +376,74 @@ namespace Repositories.Repository
                 .Where(x => x.PatrolCaseId == caseId)
                 .ExecuteDeleteAsync();
         }
+
+        /// <summary>
+        /// Check if a security is member of an assignment group
+        /// </summary>
+        public async Task<bool> IsSecurityInAssignmentAsync(
+            Guid securityId,
+            Guid assignmentId)
+        {
+            return await _context.PatrolAssignmentSecurities
+                .AsNoTracking()
+                .AnyAsync(pas =>
+                    pas.PatrolAssignmentId == assignmentId
+                    && pas.SecurityId == securityId
+                    && pas.Status != 0
+                );
+        }
+
+        /// <summary>
+        /// Get attachment by ID with authorization check
+        /// </summary>
+        public async Task<PatrolCaseAttachment?> GetAttachmentByIdAsync(
+            Guid caseId,
+            Guid attachmentId)
+        {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolCaseAttachments
+                .Where(x => x.Id == attachmentId && x.PatrolCaseId == caseId && x.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            // For PrimaryAdmin+, allow access to all attachments
+            // For others, only allow if they are the creator or in the same assignment
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(att =>
+                    _context.PatrolCases.Any(pc =>
+                        pc.Id == caseId
+                        && pc.Status != 0
+                        && ((pc.Security != null && pc.Security.Email == userEmail)
+                        || _context.PatrolAssignmentSecurities.Any(pas =>
+                            pas.PatrolAssignmentId == pc.PatrolAssignmentId
+                            && pas.Security != null
+                            && pas.Security.Email == userEmail
+                        ))
+                    )
+                );
+            }
+
+            return await query.FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Delete single attachment by ID
+        /// </summary>
+        public async Task<bool> DeleteAttachmentAsync(Guid caseId, Guid attachmentId)
+        {
+            var attachment = await GetAttachmentByIdAsync(caseId, attachmentId);
+            if (attachment == null)
+                return false;
+
+            attachment.Status = 0;
+            attachment.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

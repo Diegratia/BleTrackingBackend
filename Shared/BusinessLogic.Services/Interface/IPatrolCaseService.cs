@@ -23,10 +23,12 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolCaseRead?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolCaseRead>> GetAllAsync();
 
-        // Approval workflow methods
-        Task<PatrolCaseRead> SubmitAsync(Guid id);
+        // Approval workflow methods (Case is auto-submitted on create)
         Task<PatrolCaseRead> ApproveAsync(Guid id, PatrolCaseApprovalDto dto);
         Task<PatrolCaseRead> RejectAsync(Guid id, PatrolCaseApprovalDto dto);
         Task<PatrolCaseRead> CloseAsync(Guid id, PatrolCaseCloseDto dto);
+
+        // Attachment management
+        Task DeleteAttachmentAsync(Guid caseId, Guid attachmentId);
     }
 }
