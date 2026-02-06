@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Models;
 using Data.ViewModels;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Extension
 {
@@ -15,7 +16,13 @@ namespace BusinessLogic.Services.Extension
             // Mapping dari Domain ke DTO
             CreateMap<MstBuilding, MstBuildingDto>();
 
+            // Mapping dari Read DTO ke DTO (untuk repository yang mengembalikan Read DTO)
+            CreateMap<MstBuildingRead, MstBuildingDto>();
+
             CreateMap<MstBuilding, OpenMstBuildingDto>();
+
+            // Mapping dari Read DTO ke Open DTO
+            CreateMap<MstBuildingRead, OpenMstBuildingDto>();
         // .ForMember(dest => dest.buildingId, opt => opt.MapFrom(src => src.id));
 
             // Mapping dari Create DTO ke Domain

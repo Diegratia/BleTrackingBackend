@@ -20,9 +20,33 @@ namespace Repositories.Repository
         {
         }
 
+        private IQueryable<MstBuildingRead> ProjectToRead(IQueryable<MstBuilding> query)
+        {
+            return query.AsNoTracking()
+                .Select(x => new MstBuildingRead
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Image = x.Image,
+                    CreatedAt = x.CreatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedBy = x.UpdatedBy,
+                    Status = x.Status,
+                    ApplicationId = x.ApplicationId
+                });
+        }
+
         public async Task<(List<MstBuildingRead> Data, int Total, int Filtered)> FilterAsync(MstBuildingFilter filter)
         {
             var query = GetAllQueryable();
+
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query
+                .Where(x => accessibleBuildingIds.Contains(x.Id));
+            }
 
             var total = await query.CountAsync();
 
@@ -52,26 +76,23 @@ namespace Repositories.Repository
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Manual projection
-            var data = await query.AsNoTracking()
-                .Select(x => new MstBuildingRead
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Image = x.Image,
-                    CreatedAt = x.CreatedAt,
-                    CreatedBy = x.CreatedBy,
-                    UpdatedAt = x.UpdatedAt,
-                    UpdatedBy = x.UpdatedBy,
-                    Status = x.Status,
-                    ApplicationId = x.ApplicationId
-                })
-                .ToListAsync();
+            var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
         }
 
-        public async Task<MstBuilding?> GetByIdAsync(Guid id)
+        public async Task<MstBuildingRead?> GetByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstBuildings
+                .Where(d => d.Id == id && d.Status != 0);
+            query = query.WithActiveRelations();
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
+        }
+
+        public async Task<MstBuilding?> GetByIdEntityAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
@@ -97,9 +118,9 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<MstBuilding>> GetAllAsync()
+        public async Task<List<MstBuildingRead>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await ProjectToRead(GetAllQueryable()).ToListAsync();
         }
 
         public async Task<MstBuilding> AddAsync(MstBuilding building)

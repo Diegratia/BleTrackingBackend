@@ -210,7 +210,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto updateDto)
         {
             var username = UsernameFormToken;
-            var building = await _repository.GetByIdAsync(id);
+            var building = await _repository.GetByIdEntityAsync(id);
             if (building == null)
                 throw new NotFoundException("Building not found");
 
@@ -243,7 +243,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task DeleteAsync(Guid id)
         {
             var username = UsernameFormToken;
-            var building = await _repository.GetByIdAsync(id);
+            var building = await _repository.GetByIdEntityAsync(id);
             if (building == null)
                 throw new NotFoundException("building not found");
 
