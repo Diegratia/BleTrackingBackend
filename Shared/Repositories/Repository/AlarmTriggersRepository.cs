@@ -89,7 +89,10 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
+            // Apply ApplicationId filter first
             var query = _context.AlarmTriggers
+                .Include(b => b.Floorplan)
+                .ThenInclude(f => f.Floor)
                 .AsNoTracking()
                 .Where(b => b.IsActive == true &&
                        b.Alarm.HasValue &&
@@ -98,6 +101,14 @@ namespace Repositories.Repository
             if (!isSystemAdmin)
             {
                 query = query.Where(b => b.ApplicationId == applicationId);
+            }
+
+            // Building access filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(b => b.Floorplan != null && b.Floorplan.Floor != null &&
+                                        accessibleBuildingIds.Contains(b.Floorplan.Floor.BuildingId));
             }
 
             try
@@ -240,9 +251,16 @@ namespace Repositories.Repository
             .Include(b => b.Visitor)
             .Include(b => b.Member)
             .Include(b => b.Security)
-            .Include(b => b.Floorplan);
+            .Include(b => b.Floorplan)
+            .ThenInclude(f => f.Floor);
 
-            // query = query.WithActiveRelations();
+            // Building access filter untuk PrimaryAdmin (bukan System/SuperAdmin)
+            // var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            // if (accessibleBuildingIds.Any())
+            // {
+            //     query = query.Where(b => b.Floorplan != null && b.Floorplan.Floor != null &&
+            //                             accessibleBuildingIds.Contains(b.Floorplan.Floor.BuildingId));
+            // }
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
