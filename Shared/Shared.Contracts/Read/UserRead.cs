@@ -11,6 +11,7 @@ namespace Shared.Contracts.Read
         public LevelPriority GroupLevel { get; set; }
         public int IsEmailConfirmation { get; set; }
         public bool IsIntegration { get; set; }
+        public string? profilePicture { get; set; }
         public DateTime LastLoginAt { get; set; }
         public StatusEmployee StatusActive { get; set; }
     }

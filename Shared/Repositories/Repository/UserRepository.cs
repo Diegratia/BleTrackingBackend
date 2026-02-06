@@ -62,7 +62,20 @@ namespace Repositories.Repository
                 IsIntegration = x.IsIntegration,
                 LastLoginAt = x.LastLoginAt,
                 Status = (int)x.Status,
+                StatusActive = x.Status == 1 ? StatusEmployee.Active : StatusEmployee.NonActive,
                 ApplicationId = x.ApplicationId,
+                profilePicture = _context.MstMembers
+                    .Where(m => m.Email.ToLower() == x.Email.ToLower() && m.Status != 0)
+                    .Select(m => m.FaceImage)
+                    .FirstOrDefault()
+                    ?? _context.Visitors
+                    .Where(v => v.Email.ToLower() == x.Email.ToLower() && v.Status != 0)
+                    .Select(v => v.FaceImage)
+                    .FirstOrDefault()
+                    ?? _context.MstSecurities
+                    .Where(s => s.Email.ToLower() == x.Email.ToLower() && s.Status != 0)
+                    .Select(s => s.FaceImage)
+                    .FirstOrDefault()
             });
         }
 
