@@ -104,12 +104,12 @@ namespace Repositories.Repository
             }
 
             // Building access filter untuk PrimaryAdmin
-            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
-            if (accessibleBuildingIds.Any())
-            {
-                query = query.Where(b => b.Floorplan != null && b.Floorplan.Floor != null &&
-                                        accessibleBuildingIds.Contains(b.Floorplan.Floor.BuildingId));
-            }
+            // var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            // if (accessibleBuildingIds.Any())
+            // {
+            //     query = query.Where(b => b.Floorplan != null && b.Floorplan.Floor != null &&
+            //                             accessibleBuildingIds.Contains(b.Floorplan.Floor.BuildingId));
+            // }
 
             try
             {
