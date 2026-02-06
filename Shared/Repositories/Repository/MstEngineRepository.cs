@@ -7,6 +7,7 @@ using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
+using Repositories.Extensions;
 using Shared.Contracts;
 using Shared.Contracts.Read;
 
@@ -113,7 +114,7 @@ namespace Repositories.Repository
             var query = BaseEntityQuery();
 
             // Search
-            if (!string.IsNullOrEmpty(filter.Search))
+            if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 query = query.Where(e => EF.Functions.Like(e.Name!, $"%{filter.Search}%"));
             }
@@ -141,28 +142,15 @@ namespace Repositories.Repository
                 query = query.Where(e => e.CreatedAt <= filter.DateTo.Value);
             }
 
+            var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            // Sorting
-            if (!string.IsNullOrEmpty(filter.SortColumn))
-            {
-                var sortColumn = char.ToUpper(filter.SortColumn[0]) + filter.SortColumn.Substring(1);
-                query = filter.SortDir?.ToLower() == "asc"
-                    ? query.OrderBy(e => EF.Property<object>(e, sortColumn))
-                    : query.OrderByDescending(e => EF.Property<object>(e, sortColumn));
-            }
-            else
-            {
-                query = query.OrderByDescending(e => e.CreatedAt);
-            }
+            // Apply sorting and paging using extension methods
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Pagination
-            var data = await ProjectToRead(query)
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-            var total = await BaseEntityQuery().CountAsync();
+            // Use ProjectToRead for single source of truth
+            var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
         }

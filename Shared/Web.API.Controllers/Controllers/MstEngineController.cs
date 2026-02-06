@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
@@ -77,30 +78,21 @@ namespace Web.API.Controllers.Controllers
         }
 
         /// <summary>
-        /// Filter engines with DataTables format (legacy)
-        /// </summary>
-        [HttpPost("filter-datatables")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        {
-            var result = await _mstEngineService.FilterAsync(request);
-            return Ok(ApiResponse.Success("Engines filtered successfully", result));
-        }
-
-        /// <summary>
-        /// Filter engines with new format
+        /// Filter engines
         /// </summary>
         [HttpPost("filter")]
-        public async Task<IActionResult> FilterNew([FromBody] MstEngineFilter filter)
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            var (data, total, filtered) = await _mstEngineService.FilterNewAsync(filter);
-            return Ok(ApiResponse.Success("Engines filtered successfully", new
+            var filter = new MstEngineFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                data,
-                total,
-                filtered,
-                page = filter.Page,
-                pageSize = filter.PageSize
-            }));
+                filter = JsonSerializer.Deserialize<MstEngineFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstEngineFilter();
+            }
+
+            var result = await _mstEngineService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Success("Engines filtered successfully", result));
         }
 
         /// <summary>

@@ -1,11 +1,9 @@
-using AutoMapper;
 using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Data.ViewModels;
-using Data.ViewModels.ResponseHelper;
 using Entities.Models;
 using Helpers.Consumer;
 using Helpers.Consumer.Mqtt;
@@ -15,28 +13,23 @@ using Repositories.Repository;
 using Shared.Contracts;
 using Shared.Contracts.Read;
 using System.Text.Json;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 
 namespace BusinessLogic.Services.Implementation
 {
     public class MstEngineService : BaseService, IMstEngineService
     {
         private readonly MstEngineRepository _engineRepository;
-        private readonly IMapper _mapper;
         private readonly IMqttClientService _mqttClientService;
         private readonly IAuditEmitter _audit;
 
         public MstEngineService(
             MstEngineRepository engineRepository,
-            IMapper mapper,
             IMqttClientService mqttClientService,
             IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
             _engineRepository = engineRepository;
-            _mapper = mapper;
             _mqttClientService = mqttClientService;
             _audit = audit;
         }
@@ -57,10 +50,9 @@ namespace BusinessLogic.Services.Implementation
             return await _engineRepository.GetByIdAsync(id);
         }
 
-        public async Task<MstEngineDto?> GetEngineIdAsync(string engineTrackingId)
+        public async Task<MstEngine?> GetEngineIdAsync(string engineTrackingId)
         {
-            var engine = await _engineRepository.GetByEngineIdAsync(engineTrackingId);
-            return engine == null ? null : _mapper.Map<MstEngineDto>(engine);
+            return await _engineRepository.GetByEngineIdAsync(engineTrackingId);
         }
 
         public async Task<MstEngineRead> CreateEngineAsync(MstEngineCreateDto dto)
@@ -90,20 +82,11 @@ namespace BusinessLogic.Services.Implementation
                 engine
             );
 
-            return new MstEngineRead
-            {
-                Id = engine.Id,
-                Name = engine.Name,
-                EngineTrackingId = engine.EngineTrackingId,
-                Port = engine.Port,
-                Status = engine.Status.Value,
-                IsLive = engine.IsLive,
-                LastLive = engine.LastLive,
-                ServiceStatus = engine.ServiceStatus.ToString(),
-                ApplicationId = engine.ApplicationId,
-                CreatedAt = engine.CreatedAt,
-                UpdatedAt = engine.UpdatedAt
-            };
+            // Get the created entity from repository with projection
+            var createdEngine = await _engineRepository.GetByIdAsync(engine.Id)
+                ?? throw new InvalidOperationException($"Failed to retrieve created engine with ID {engine.Id}");
+
+            return createdEngine;
         }
 
         public async Task UpdateEngineAsync(Guid id, MstEngineUpdateDto dto)
@@ -114,7 +97,14 @@ namespace BusinessLogic.Services.Implementation
             if (engine == null)
                 throw new KeyNotFoundException($"Engine with ID {id} not found");
 
-            _mapper.Map(dto, engine);
+            // Manual mapping (no AutoMapper)
+            if (dto.Name != null) engine.Name = dto.Name;
+            if (dto.EngineTrackingId != null) engine.EngineTrackingId = dto.EngineTrackingId;
+            if (dto.Port.HasValue) engine.Port = dto.Port.Value;
+            if (dto.IsLive.HasValue) engine.IsLive = dto.IsLive.Value;
+            if (dto.LastLive.HasValue) engine.LastLive = dto.LastLive.Value;
+            if (dto.ServiceStatus.HasValue) engine.ServiceStatus = dto.ServiceStatus.Value;
+
             SetUpdateAudit(engine);
 
             await _engineRepository.UpdateAsync(engine);
@@ -135,7 +125,14 @@ namespace BusinessLogic.Services.Implementation
             if (engine == null)
                 throw new KeyNotFoundException($"Engine with ID {engineTrackingId} not found");
 
-            _mapper.Map(dto, engine);
+            // Manual mapping (no AutoMapper)
+            if (dto.Name != null) engine.Name = dto.Name;
+            if (dto.EngineTrackingId != null) engine.EngineTrackingId = dto.EngineTrackingId;
+            if (dto.Port.HasValue) engine.Port = dto.Port.Value;
+            if (dto.IsLive.HasValue) engine.IsLive = dto.IsLive.Value;
+            if (dto.LastLive.HasValue) engine.LastLive = dto.LastLive.Value;
+            if (dto.ServiceStatus.HasValue) engine.ServiceStatus = dto.ServiceStatus.Value;
+
             SetUpdateAudit(engine);
 
             await _engineRepository.UpdateByEngineStringAsync(engine);
@@ -183,7 +180,6 @@ namespace BusinessLogic.Services.Implementation
             await _audit.Action(
                 AuditEmitter.AuditAction.ACTION,
                 "MstEngine",
-                engineTrackingId,
                 $"Stop command sent to engine {engineTrackingId}"
             );
         }
@@ -204,29 +200,35 @@ namespace BusinessLogic.Services.Implementation
             await _audit.Action(
                 AuditEmitter.AuditAction.ACTION,
                 "MstEngine",
-                engineTrackingId,
                 $"Start command sent to engine {engineTrackingId}"
             );
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterAsync(DataTablesProjectedRequest request, MstEngineFilter filter)
         {
-            var query = _engineRepository.GetAllQueryable();
+            // Map DataTablesProjectedRequest to MstEngineFilter
+            filter.Page = request.Start / request.Length + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn;
+            filter.SortDir = request.SortDir;
 
-            var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "Name", "EngineTrackingId", "Status", "Port", "IsLive", "LastLive" };
+            // Deserialize search if provided
+            if (request.Filters.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                var requestFilter = JsonSerializer.Deserialize<MstEngineFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            var filterService = new GenericDataTableService<MstEngine, MstEngineDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+                if (requestFilter != null)
+                {
+                    filter.Search = requestFilter.Search ?? filter.Search;
+                    filter.Status = requestFilter.Status ?? filter.Status;
+                    filter.IsLive = requestFilter.IsLive ?? filter.IsLive;
+                    filter.DateFrom = requestFilter.DateFrom ?? filter.DateFrom;
+                    filter.DateTo = requestFilter.DateTo ?? filter.DateTo;
+                }
+            }
 
-            return await filterService.FilterAsync(request);
-        }
-
-        public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterNewAsync(MstEngineFilter filter)
-        {
             return await _engineRepository.FilterAsync(filter);
         }
 
