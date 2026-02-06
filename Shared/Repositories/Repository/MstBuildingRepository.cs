@@ -22,6 +22,11 @@ namespace Repositories.Repository
 
         private IQueryable<MstBuildingRead> ProjectToRead(IQueryable<MstBuilding> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(x => accessibleBuildingIds.Contains(x.Id));
+            }
             return query.AsNoTracking()
                 .Select(x => new MstBuildingRead
                 {
@@ -40,13 +45,6 @@ namespace Repositories.Repository
         public async Task<(List<MstBuildingRead> Data, int Total, int Filtered)> FilterAsync(MstBuildingFilter filter)
         {
             var query = GetAllQueryable();
-
-            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
-            if (accessibleBuildingIds.Any())
-            {
-                query = query
-                .Where(x => accessibleBuildingIds.Contains(x.Id));
-            }
 
             var total = await query.CountAsync();
 
@@ -161,7 +159,12 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstBuildings
                 .Where(d => d.Status != 0);
-
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query
+                .Where(x => accessibleBuildingIds.Contains(x.Id));
+            }
             query = query.WithActiveRelations();
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }

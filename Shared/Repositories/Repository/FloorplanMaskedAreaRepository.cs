@@ -229,6 +229,11 @@ namespace Repositories.Repository
 
         public IQueryable<FloorplanMaskedAreaRead> ProjectToRead(IQueryable<FloorplanMaskedArea> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(x => x.Floorplan != null && x.Floorplan.Floor != null && accessibleBuildingIds.Contains(x.Floorplan.Floor.BuildingId));
+            }
             return query.AsNoTracking().Select(x => new FloorplanMaskedAreaRead
             {
                 Id = x.Id,

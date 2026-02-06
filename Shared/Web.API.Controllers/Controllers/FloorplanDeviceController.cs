@@ -16,7 +16,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     public class FloorplanDeviceController : ControllerBase
     {
         private readonly IFloorplanDeviceService _service;
@@ -26,6 +26,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -53,6 +54,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floorplan device retrieved successfully", device));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] FloorplanDeviceCreateDto dto)
         {
@@ -69,6 +71,7 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Floorplan device created successfully", createdDevice));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanDeviceUpdateDto dto)
         {
@@ -85,6 +88,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floorplan device updated successfully"));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -151,8 +155,8 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floorplan device retrieved successfully", device));
         }
 
-        [HttpPost("open")]
         [AllowAnonymous]
+        [HttpPost("open")]
         public async Task<IActionResult> OpenCreate([FromBody] FloorplanDeviceCreateDto dto)
         {
             if (!ModelState.IsValid)

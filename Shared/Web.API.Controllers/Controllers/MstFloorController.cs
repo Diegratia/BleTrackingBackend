@@ -15,7 +15,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
 
     public class MstFloorController : ControllerBase
     {
@@ -40,6 +40,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floor retrieved successfully", floor));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] MstFloorCreateDto mstFloorDto)
         {
@@ -55,7 +56,7 @@ namespace Web.API.Controllers.Controllers
             var createdFloor = await _mstFloorService.CreateAsync(mstFloorDto);
             return StatusCode(201, ApiResponse.Created("Floor created successfully", createdFloor));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MstFloorUpdateDto mstFloorDto)
         {
@@ -71,14 +72,14 @@ namespace Web.API.Controllers.Controllers
             await _mstFloorService.UpdateAsync(id, mstFloorDto);
             return Ok(ApiResponse.Success("Floor updated successfully"));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _mstFloorService.DeleteAsync(id);
             return Ok(ApiResponse.Success("Floor deleted successfully"));
         }
-
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {
@@ -95,7 +96,7 @@ namespace Web.API.Controllers.Controllers
             var floors = await _mstFloorService.ImportAsync(file);
             return Ok(ApiResponse.Success("Floors imported successfully", floors));
         }
-
+        
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {

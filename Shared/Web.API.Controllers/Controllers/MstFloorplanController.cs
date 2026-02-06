@@ -15,7 +15,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     public class MstFloorplanController : ControllerBase
     {
         private readonly IMstFloorplanService _mstFloorplanService;
@@ -39,6 +39,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floorplan retrieved successfully", floorplan));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstFloorplanCreateDto dto)
         {
@@ -61,6 +62,7 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Floorplan created successfully", created));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstFloorplanUpdateDto dto)
         {
@@ -83,6 +85,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Floorplan updated successfully"));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -113,6 +116,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Floorplans filtered successfully", result));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {

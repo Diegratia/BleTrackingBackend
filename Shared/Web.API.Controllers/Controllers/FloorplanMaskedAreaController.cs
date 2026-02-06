@@ -14,7 +14,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     public class FloorplanMaskedAreaController : ControllerBase
     {
         private readonly IFloorplanMaskedAreaService _service;
@@ -38,6 +38,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Area retrieved successfully", area));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] FloorplanMaskedAreaCreateDto dto)
         {
@@ -54,6 +55,7 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Area created successfully", createdArea));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
         {
@@ -70,6 +72,7 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Area updated successfully"));
         }
 
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -138,8 +141,8 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Area retrieved successfully", area));
         }
 
-        [HttpPost("open")]
         [AllowAnonymous]
+        [HttpPost("open")]
         public async Task<IActionResult> OpenCreate([FromBody] FloorplanMaskedAreaCreateDto dto)
         {
             if (!ModelState.IsValid)
@@ -155,8 +158,8 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Area created successfully", createdArea));
         }
 
-        [HttpPut("open/{id}")]
         [AllowAnonymous]
+        [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenUpdate(Guid id, [FromBody] FloorplanMaskedAreaUpdateDto dto)
         {
             if (!ModelState.IsValid)
@@ -172,8 +175,8 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Area updated successfully"));
         }
 
-        [HttpPost("open/filter")]
         [AllowAnonymous]
+        [HttpPost("open/filter")]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesProjectedRequest request)
         {
             if (!ModelState.IsValid)

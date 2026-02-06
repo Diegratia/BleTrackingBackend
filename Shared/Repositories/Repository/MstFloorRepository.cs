@@ -208,6 +208,11 @@ namespace Repositories.Repository
 
         public IQueryable<MstFloorRead> ProjectToRead(IQueryable<MstFloor> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(x => accessibleBuildingIds.Contains(x.BuildingId));
+            }
             return query.AsNoTracking().Select(x => new MstFloorRead
             {
                 Id = x.Id,

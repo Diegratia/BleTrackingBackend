@@ -150,6 +150,11 @@ namespace Repositories.Repository
 
         public IQueryable<FloorplanDeviceRead> ProjectToRead(IQueryable<FloorplanDevice> query)
         {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(t => t.Floorplan != null && t.Floorplan.Floor != null && accessibleBuildingIds.Contains(t.Floorplan.Floor.BuildingId));
+            }
             return query.AsNoTracking().Select(t => new FloorplanDeviceRead
             {
                 Id = t.Id,
