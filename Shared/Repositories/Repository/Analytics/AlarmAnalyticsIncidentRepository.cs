@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using Shared.Contracts.Analytics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -103,7 +104,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per day
-        public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
+        public async Task<List<AlarmDailyRead>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
         {
             // 🕒 Gunakan helper untuk override from-to
             var range = GetTimeRange(request.TimeRange ?? "weekly");
@@ -127,7 +128,7 @@ namespace Repositories.Repository.Analytics
 
             var grouped = incidents
                 .GroupBy(x => x.Date)
-                .Select(g => new AlarmDailySummaryRM
+                .Select(g => new AlarmDailyRead
                 {
                     Date = g.Key,
                     Total = g.Count()
@@ -142,7 +143,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per status
-        public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
+        public async Task<List<AlarmStatusRead>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var (from, to) = (
@@ -169,7 +170,7 @@ namespace Repositories.Repository.Analytics
             // GroupBy di memory untuk hasil yang aman dari translation EF
             var grouped = incidents
                 .GroupBy(x => x.Alarm)
-                .Select(g => new AlarmStatusSummaryRM
+                .Select(g => new AlarmStatusRead
                 {
                     Status = g.Key.HasValue ? g.Key.Value.ToString() : "Unknown",
                     Total = g.Count()
@@ -184,7 +185,7 @@ namespace Repositories.Repository.Analytics
                 var statuses = Enum.GetValues(typeof(AlarmRecordStatus)).Cast<AlarmRecordStatus>().ToList();
                 var randomStatuses = statuses.OrderBy(x => random.Next()).Take(3).Select(x => x.ToString()).ToList();
 
-                grouped.AddRange(randomStatuses.Select(s => new AlarmStatusSummaryRM
+                grouped.AddRange(randomStatuses.Select(s => new AlarmStatusRead
                 {
                     Status = s,
                     Total = 0
@@ -197,7 +198,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per visitor
-        public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
+        public async Task<List<AlarmVisitorRead>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -225,7 +226,7 @@ namespace Repositories.Repository.Analytics
             // Lakukan grouping di memory
             var grouped = incidents
                 .GroupBy(x => new { x.VisitorId, x.VisitorName })
-                .Select(g => new AlarmVisitorSummaryRM
+                .Select(g => new AlarmVisitorRead
                 {
                     VisitorId = g.Key.VisitorId,
                     VisitorName = g.Key.VisitorName,
@@ -240,7 +241,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per building
-        public async Task<List<AlarmBuildingSummaryRM>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
+        public async Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
 
@@ -263,7 +264,7 @@ namespace Repositories.Repository.Analytics
 
             var grouped = incidents
                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
-                .Select(g => new AlarmBuildingSummaryRM
+                .Select(g => new AlarmBuildingRead
                 {
                     BuildingId = g.Key.BuildingId,
                     BuildingName = g.Key.BuildingName,
@@ -274,7 +275,7 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-       public async Task<List<AlarmHourlyStatusSummaryRM>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
+       public async Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
 {
     // Range penuh 1 hari
     var date = request.From?.Date ?? DateTime.UtcNow.Date;
@@ -314,7 +315,7 @@ namespace Repositories.Repository.Analytics
         .GroupBy(x => x.Hour)
         .ToDictionary(
             g => g.Key,
-            g => new AlarmHourlyStatusSummaryRM
+            g => new AlarmHourlyStatusRead
             {
                 Hour = g.Key,
                 HourLabel = g.Key.ToString("00") + ".00",
@@ -331,7 +332,7 @@ namespace Repositories.Repository.Analytics
         .Select(hour =>
             groupedHours.ContainsKey(hour)
                 ? groupedHours[hour]
-                : new AlarmHourlyStatusSummaryRM
+                : new AlarmHourlyStatusRead
                 {
                     Hour = hour,
                     HourLabel = hour.ToString("00") + ".00",

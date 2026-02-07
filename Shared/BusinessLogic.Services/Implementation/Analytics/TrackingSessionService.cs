@@ -1,7 +1,9 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
+using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Data.ViewModels.ResponseHelper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -12,30 +14,38 @@ using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using System.Threading.Tasks;
 using Helpers.Consumer;
+using Shared.Contracts;
+using Shared.Contracts.Analytics;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
-    public class TrackingSessionService : ITrackingSessionService
+    public class TrackingSessionService : BaseService, ITrackingSessionService
     {
         private readonly ITrackingReportPresetService _presetService;
         private readonly TrackingSessionRepository _repository;
-        private readonly IMapper _mapper;
+        private readonly IAuditEmitter _audit;
         private readonly ILogger<TrackingSessionService> _logger;
 
         public TrackingSessionService(
             ITrackingReportPresetService presetService,
             TrackingSessionRepository repository,
-            IMapper mapper,
-            ILogger<TrackingSessionService> logger)
+            IAuditEmitter audit,
+            IHttpContextAccessor http,
+            ILogger<TrackingSessionService> logger) : base(http)
         {
             _presetService = presetService;
             _repository = repository;
-            _mapper = mapper;
+            _audit = audit;
             _logger = logger;
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request)
+        {
+            return await GetVisitorSessionSummaryAsync(request, false);
+        }
+
+        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request, bool includeVisualPaths)
         {
             try
             {
@@ -55,7 +65,24 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     }
                 }
 
-                return ApiResponse.Success("Visitor session summary retrieved successfully", data);
+                // Standard response without enhancements
+                if (!includeVisualPaths)
+                {
+                    return ApiResponse.Success("Visitor session summary retrieved successfully", data);
+                }
+
+                // Enhanced response with summary and visual paths
+                var summary = BuildSummary(data);
+                var visualPaths = await BuildVisualPathsAsync(request, tz);
+
+                var enhancedResponse = new VisitorSessionEnhancedResponseRead
+                {
+                    Data = data,
+                    Summary = summary,
+                    VisualPaths = visualPaths
+                };
+
+                return ApiResponse.Success("Visitor session summary retrieved successfully", enhancedResponse);
             }
             catch (Exception ex)
             {
@@ -64,7 +91,91 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsRequestRM overrideRequest)
+        private static VisitorSessionSummaryRead BuildSummary(List<VisitorSessionRead> sessions)
+        {
+            if (sessions.Count == 0)
+            {
+                return new VisitorSessionSummaryRead();
+            }
+
+            var uniqueVisitors = sessions.Where(s => s.PersonType == "Visitor")
+                .Select(s => s.PersonId)
+                .Distinct()
+                .Count();
+
+            var uniqueMembers = sessions.Where(s => s.PersonType == "Member")
+                .Select(s => s.PersonId)
+                .Distinct()
+                .Count();
+
+            var areasVisited = sessions
+                .Where(s => !string.IsNullOrEmpty(s.AreaName))
+                .Select(s => s.AreaName!)
+                .Distinct()
+                .ToList();
+
+            var totalDuration = sessions
+                .Where(s => s.DurationInMinutes.HasValue)
+                .Sum(s => s.DurationInMinutes.Value);
+
+            return new VisitorSessionSummaryRead
+            {
+                TotalDurationMinutes = totalDuration,
+                FirstDetection = sessions.Min(s => s.EnterTime),
+                LastDetection = sessions.Max(s => s.ExitTime ?? s.EnterTime),
+                AreasVisited = areasVisited,
+                TotalDetections = sessions.Sum(s => 1), // Each session is a detection group
+                TotalSessions = sessions.Count,
+                UniqueVisitors = uniqueVisitors,
+                UniqueMembers = uniqueMembers
+            };
+        }
+
+        private async Task<VisualPathsRead> BuildVisualPathsAsync(TrackingAnalyticsFilter request, TimeZoneInfo tz)
+        {
+            var rawPaths = await _repository.GetVisualPathsDataAsync(request);
+
+            var visualPaths = new VisualPathsRead();
+
+            // Group by floorplan
+            var groupedByFloorplan = rawPaths
+                .Where(p => p.FloorplanId != Guid.Empty &&
+                           p.CoordinateX.HasValue &&
+                           p.CoordinateY.HasValue)
+                .GroupBy(p => new
+                {
+                    p.FloorplanId,
+                    p.FloorplanName,
+                    p.FloorplanImage
+                });
+
+            foreach (var group in groupedByFloorplan)
+            {
+                var floorplanKey = group.Key.FloorplanId.ToString();
+
+                visualPaths.Floorplans[floorplanKey] = new FloorplanPathRead
+                {
+                    FloorplanId = group.Key.FloorplanId,
+                    FloorplanName = group.Key.FloorplanName ?? "Unknown",
+                    FloorplanImage = group.Key.FloorplanImage,
+                    Points = group.Select(p => new FloorplanPointRead
+                    {
+                        X = p.CoordinateX!.Value,
+                        Y = p.CoordinateY!.Value,
+                        Time = tz.Id != TimeZoneInfo.Utc.Id
+                            ? TimezoneHelper.ConvertFromUtc(p.TransTimeUtc, tz)
+                            : p.TransTimeUtc,
+                        Area = p.AreaName,
+                        PersonName = p.PersonName,
+                        PersonId = p.PersonId
+                    }).OrderBy(p => p.Time).ToList()
+                };
+            }
+
+            return visualPaths;
+        }
+
+        public async Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)
         {
             try
             {
@@ -86,19 +197,19 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request)
+        public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request)
         {
             var sessions = await _repository.GetVisitorSessionSummaryAsync(request);
             return GeneratePdfReport(sessions, request);
         }
 
-        public async Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsRequestRM request)
+        public async Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsFilter request)
         {
             var sessions = await _repository.GetVisitorSessionSummaryAsync(request);
             return GenerateExcelReport(sessions, request);
         }
 
-        private byte[] GeneratePdfReport(List<VisitorSessionSummaryRM> sessions, TrackingAnalyticsRequestRM request)
+        private byte[] GeneratePdfReport(List<VisitorSessionRead> sessions, TrackingAnalyticsFilter request)
         {
             string reportTitle = GenerateReportTitle(request);
             string filterInfo = GenerateFilterInfo(request);
@@ -203,7 +314,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return document.GeneratePdf();
         }
 
-        private byte[] GenerateExcelReport(List<VisitorSessionSummaryRM> sessions, TrackingAnalyticsRequestRM request)
+        private byte[] GenerateExcelReport(List<VisitorSessionRead> sessions, TrackingAnalyticsFilter request)
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Visitor Sessions");
@@ -301,7 +412,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return stream.ToArray();
         }
 
-        private string GenerateReportTitle(TrackingAnalyticsRequestRM request)
+        private string GenerateReportTitle(TrackingAnalyticsFilter request)
         {
             string title = "Visitor Session Summary Report";
 
@@ -316,7 +427,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return title;
         }
 
-        private string GenerateFilterInfo(TrackingAnalyticsRequestRM request)
+        private string GenerateFilterInfo(TrackingAnalyticsFilter request)
         {
             var filters = new List<string>();
 
@@ -359,6 +470,104 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 .BorderColor(Colors.Grey.Lighten2)
                 .PaddingVertical(4)
                 .PaddingHorizontal(6);
+        }
+
+        public async Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(TrackingAnalyticsFilter request)
+        {
+            try
+            {
+                var rawData = await _repository.GetPeakHoursByAreaAsync(request);
+
+                if (!rawData.Any())
+                {
+                    return new PeakHoursByAreaRead
+                    {
+                        Labels = GenerateHourLabels(),
+                        Series = new List<ChartSeriesDto>()
+                    };
+                }
+
+                // Group by area and create series
+                var groupedByArea = rawData
+                    .Where(x => !string.IsNullOrEmpty(x.AreaName))
+                    .GroupBy(x => x.AreaName!);
+
+                var series = new List<ChartSeriesDto>();
+
+                foreach (var areaGroup in groupedByArea)
+                {
+                    var areaName = areaGroup.Key;
+                    var hourlyData = new int[24]; // 24 hours
+
+                    // Fill in the data
+                    foreach (var item in areaGroup)
+                    {
+                        if (item.Hour >= 0 && item.Hour < 24)
+                        {
+                            hourlyData[item.Hour] = item.Count;
+                        }
+                    }
+
+                    series.Add(new ChartSeriesDto
+                    {
+                        Name = areaName,
+                        Data = hourlyData.ToList()
+                    });
+                }
+
+                // Sort series by total count (descending) - most active areas first
+                series = series
+                    .OrderByDescending(s => s.Data.Sum())
+                    .ToList();
+
+                // Optional: Limit to top 10 areas to avoid overcrowding the chart
+                const int maxAreas = 10;
+                if (series.Count > maxAreas)
+                {
+                    var otherData = new int[24];
+                    for (int i = 0; i < 24; i++)
+                    {
+                        otherData[i] = series.Skip(maxAreas).Sum(s => s.Data[i]);
+                    }
+
+                    series = series.Take(maxAreas).ToList();
+
+                    // Add "Others" series if there's data
+                    if (otherData.Sum() > 0)
+                    {
+                        series.Add(new ChartSeriesDto
+                        {
+                            Name = "Others",
+                            Data = otherData.ToList()
+                        });
+                    }
+                }
+
+                return new PeakHoursByAreaRead
+                {
+                    Labels = GenerateHourLabels(),
+                    Series = series
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetPeakHoursByAreaAsync");
+                return new PeakHoursByAreaRead
+                {
+                    Labels = GenerateHourLabels(),
+                    Series = new List<ChartSeriesDto>()
+                };
+            }
+        }
+
+        private static List<string> GenerateHourLabels()
+        {
+            var labels = new List<string>();
+            for (int i = 0; i < 24; i++)
+            {
+                labels.Add($"{i:D2}:00");
+            }
+            return labels;
         }
     }
 }

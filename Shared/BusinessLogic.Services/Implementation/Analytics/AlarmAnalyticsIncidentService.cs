@@ -85,55 +85,27 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<List<AlarmDailyRead>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
         {
-            var data = await _repository.GetDailySummaryAsync(request);
-            return data.Select(x => new AlarmDailyRead
-            {
-                Date = x.Date,
-                Total = x.Total
-            }).ToList();
+            return await _repository.GetDailySummaryAsync(request);
         }
 
         public async Task<List<AlarmStatusRead>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
-            var data = await _repository.GetStatusSummaryAsync(request);
-            return data.Select(x => new AlarmStatusRead
-            {
-                Status = x.Status,
-                Total = x.Total
-            }).ToList();
+            return await _repository.GetStatusSummaryAsync(request);
         }
 
         public async Task<List<AlarmVisitorRead>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
         {
-            var data = await _repository.GetVisitorSummaryAsync(request);
-            return data.Select(x => new AlarmVisitorRead
-            {
-                VisitorId = x.VisitorId,
-                VisitorName = x.VisitorName,
-                Total = x.Total
-            }).ToList();
+            return await _repository.GetVisitorSummaryAsync(request);
         }
 
         public async Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         {
-            var data = await _repository.GetBuildingSummaryAsync(request);
-            return data.Select(x => new AlarmBuildingRead
-            {
-                BuildingId = x.BuildingId,
-                BuildingName = x.BuildingName,
-                Total = x.Total
-            }).ToList();
+            return await _repository.GetBuildingSummaryAsync(request);
         }
 
         public async Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
-            var data = await _repository.GetHourlyStatusSummaryAsync(request);
-            return data.Select(x => new AlarmHourlyStatusRead
-            {
-                Hour = x.Hour,
-                HourLabel = x.HourLabel,
-                Status = x.Status
-            }).ToList();
+            return await _repository.GetHourlyStatusSummaryAsync(request);
         }
     }
 }

@@ -23,12 +23,11 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
-            CreateMap<AlarmAreaSummaryRM, AlarmAreaSummaryDto>();
-            CreateMap<AlarmVisitorSummaryRM, AlarmVisitorSummaryDto>();
-            CreateMap<AlarmBuildingSummaryRM, AlarmBuildingSummaryDto>();
-            CreateMap<AlarmDailySummaryRM, AlarmDailySummaryDto>();
-            CreateMap<AlarmStatusSummaryRM, AlarmStatusSummaryDto>();
-            CreateMap<AlarmHourlyStatusSummaryRM, AlarmHourlyStatusSummaryDto>();
+
+            // NOTE: Mappings for AlarmAreaSummaryRM, AlarmVisitorSummaryRM, AlarmBuildingSummaryRM,
+            // AlarmDailySummaryRM, AlarmStatusSummaryRM, and AlarmHourlyStatusSummaryRM have been removed
+            // because repositories now return Read DTOs directly (AlarmAreaRead, AlarmVisitorRead, etc.)
+            // These Dtos are now redundant and can be deprecated in favor of Read DTOs.
         }
     }
 }

@@ -95,13 +95,7 @@ namespace Data.ViewModels.AlarmAnalytics
         public class AreaAccessChartDto
     {
         public List<string> Labels { get; set; }
-        public List<ChartSeriesDto> Series { get; set; }
-    }
-
-    public class ChartSeriesDto
-    {
-        public string Name { get; set; }
-        public List<int> Data { get; set; }
+        public List<global::Shared.Contracts.ChartSeriesDto> Series { get; set; }
     }
 
     public class AreaAccessSummaryDto

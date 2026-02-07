@@ -9,6 +9,8 @@
     using Repositories.Repository.RepoModel;
     using Helpers.Consumer;
     using Microsoft.Extensions.Logging;
+    using Shared.Contracts;
+    using Shared.Contracts.Analytics;
 
     namespace Repositories.Repository.Analytics
     {
@@ -98,6 +100,19 @@
             // Di dalam class TrackingSessionRepository
 
             // === DTO SEMENTARA (internal) ===
+            public class VisualPathRaw
+            {
+                public Guid FloorplanId { get; set; }
+                public string? FloorplanName { get; set; }
+                public string? FloorplanImage { get; set; }
+                public float? CoordinateX { get; set; }
+                public float? CoordinateY { get; set; }
+                public DateTime TransTimeUtc { get; set; }
+                public string? AreaName { get; set; }
+                public Guid? PersonId { get; set; }
+                public string? PersonName { get; set; }
+            }
+
             internal class SessionRaw
             {
                 public Guid? PersonId => VisitorId ?? MemberId;
@@ -131,7 +146,7 @@
             // === BUILD SQL UNTUK SESSION ===
             private (string sql, List<object> parameters) BuildSessionSql(
                 string tableName, DateTime fromUtc, DateTime toUtc,
-                TrackingAnalyticsRequestRM request, int startParamIndex)
+                TrackingAnalyticsFilter request, int startParamIndex)
             {
                 var sql = $@"
             SELECT 
@@ -219,9 +234,93 @@
                 return (sql, parameters);
             }
 
+            // === BUILD SQL UNTUK VISUAL PATHS ===
+            private (string sql, List<object> parameters) BuildVisualPathsSql(
+                string tableName, DateTime fromUtc, DateTime toUtc,
+                TrackingAnalyticsFilter request, int startParamIndex)
+            {
+                var sql = $@"
+            SELECT
+                fp.id AS FloorplanId,
+                fp.name AS FloorplanName,
+                fp.floorplan_image AS FloorplanImage,
+                t.coordinate_x AS CoordinateX,
+                t.coordinate_y AS CoordinateY,
+                t.trans_time AS TransTimeUtc,
+                ma.name AS AreaName,
+                COALESCE(v.id, m.id) AS PersonId,
+                COALESCE(v.name, m.name) AS PersonName
+            FROM [dbo].[{tableName}] t
+            LEFT JOIN card c ON t.card_id = c.id
+            LEFT JOIN visitor v ON c.visitor_id = v.id
+            LEFT JOIN mst_member m ON c.member_id = m.id
+            LEFT JOIN floorplan_masked_area ma ON t.floorplan_masked_area_id = ma.id
+            LEFT JOIN mst_floorplan fp ON ma.floorplan_id = fp.id
+            LEFT JOIN mst_floor fl ON fp.floor_id = fl.id
+            LEFT JOIN mst_building b ON fl.building_id = b.id
+            WHERE t.trans_time >= @p{startParamIndex}
+            AND t.trans_time <= @p{startParamIndex + 1}
+            AND t.coordinate_x IS NOT NULL
+            AND t.coordinate_y IS NOT NULL
+            AND fp.id IS NOT NULL
+        ";
+
+                var parameters = new List<object> { fromUtc, toUtc };
+                int paramIndex = startParamIndex + 2;
+
+                if (request.BuildingId.HasValue)
+                {
+                    sql += $" AND b.id = @p{paramIndex++}";
+                    parameters.Add(request.BuildingId.Value);
+                }
+                if (request.FloorId.HasValue)
+                {
+                    sql += $" AND fl.id = @p{paramIndex++}";
+                    parameters.Add(request.FloorId.Value);
+                }
+                if (request.AreaId.HasValue)
+                {
+                    sql += $" AND ma.id = @p{paramIndex++}";
+                    parameters.Add(request.AreaId.Value);
+                }
+                if (request.VisitorId.HasValue)
+                {
+                    sql += $" AND v.id = @p{paramIndex++}";
+                    parameters.Add(request.VisitorId.Value);
+                }
+                if (request.MemberId.HasValue)
+                {
+                    sql += $" AND m.id = @p{paramIndex++}";
+                    parameters.Add(request.MemberId.Value);
+                }
+                // filter tipe person
+                if (!string.IsNullOrWhiteSpace(request.PersonType))
+                {
+                    var type = request.PersonType.Trim().ToLower();
+
+                    if (type == "visitor")
+                    {
+                        sql += $" AND v.id IS NOT NULL";
+                    }
+                    else if (type == "member")
+                    {
+                        sql += $" AND m.id IS NOT NULL";
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.IdentityId))
+                {
+                    sql += $" AND (v.identity_id = @p{paramIndex} OR m.identity_id = @p{paramIndex})";
+                    parameters.Add(request.IdentityId);
+                    paramIndex++;
+                }
+
+                return (sql, parameters);
+            }
+
             // === MAIN METHOD: Get Visitor Session Summary ===
-           public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(
-            TrackingAnalyticsRequestRM request)
+           public async Task<List<VisitorSessionRead>> GetVisitorSessionSummaryAsync(
+            TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -229,7 +328,7 @@
 
             var tableNames = GetTableNamesInRange(fromUtc, toUtc);
             if (!tableNames.Any())
-                return new List<VisitorSessionSummaryRM>();
+                return new List<VisitorSessionRead>();
 
             var unionParts   = new List<string>();
             var allParams    = new List<object>();
@@ -252,11 +351,11 @@
                 .ToListAsync();
 
             if (!raw.Any())
-                return new List<VisitorSessionSummaryRM>();
+                return new List<VisitorSessionRead>();
 
             // var wibZone  = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
             // var nowWib   = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-            var sessions = new List<VisitorSessionSummaryRM>();
+            var sessions = new List<VisitorSessionRead>();
 
             // === GROUP BY PERSON + AREA (DWELL SUMMARY) ===
             var grouped = raw
@@ -310,7 +409,148 @@
                 .ToList();
         }
 
-        public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsRequestRM request)
+        // === GET VISUAL PATHS DATA FOR FLOORPLAN VISUALIZATION ===
+        public async Task<List<VisualPathRaw>> GetVisualPathsDataAsync(
+            TrackingAnalyticsFilter request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var toUtc = range?.to ?? request.To ?? DateTime.UtcNow;
+
+            var tableNames = GetTableNamesInRange(fromUtc, toUtc);
+            if (!tableNames.Any())
+                return new List<VisualPathRaw>();
+
+            var unionParts = new List<string>();
+            var allParams = new List<object>();
+            int paramIndex = 0;
+
+            foreach (var table in tableNames)
+            {
+                var (sql, parameters) =
+                    BuildVisualPathsSql(table, fromUtc, toUtc, request, paramIndex);
+
+                unionParts.Add(sql);
+                allParams.AddRange(parameters);
+                paramIndex += parameters.Count;
+            }
+
+            var fullSql = string.Join("\nUNION ALL\n", unionParts);
+
+            var visualPaths = await _context.Database
+                .SqlQueryRaw<VisualPathRaw>(fullSql, allParams.ToArray())
+                .ToListAsync();
+
+            return visualPaths;
+        }
+
+        // === GET PEAK HOURS BY AREA ===
+        public async Task<List<PeakHoursRawRead>> GetPeakHoursByAreaAsync(
+            TrackingAnalyticsFilter request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
+            var toUtc = range?.to ?? request.To ?? DateTime.UtcNow;
+
+            var tableNames = GetTableNamesInRange(fromUtc, toUtc);
+            if (!tableNames.Any())
+                return new List<PeakHoursRawRead>();
+
+            var unionParts = new List<string>();
+            var allParams = new List<object>();
+            int paramIndex = 0;
+
+            foreach (var table in tableNames)
+            {
+                var (sql, parameters) = BuildPeakHoursSql(table, fromUtc, toUtc, request, paramIndex);
+                unionParts.Add(sql);
+                allParams.AddRange(parameters);
+                paramIndex += parameters.Count;
+            }
+
+            var fullSql = string.Join("\nUNION ALL\n", unionParts);
+
+            var result = await _context.Database
+                .SqlQueryRaw<PeakHoursRawRead>(fullSql, allParams.ToArray())
+                .ToListAsync();
+
+            return result;
+        }
+
+        // === BUILD SQL FOR PEAK HOURS BY AREA ===
+        private (string sql, List<object> parameters) BuildPeakHoursSql(
+            string tableName, DateTime fromUtc, DateTime toUtc,
+            TrackingAnalyticsFilter request, int startParamIndex)
+        {
+            // SQL to count visitors per hour per area
+            // Uses DATEADD(HOUR, DATEDIFF(HOUR, 0, t.trans_time), 0) to group by hour
+            // Adjusts for WIB timezone (UTC+7) by adding 7 hours before extracting hour
+            var sql = $@"
+            SELECT
+                ma.name AS AreaName,
+                (DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))) AS Hour,
+                COUNT(DISTINCT COALESCE(v.id, m.id)) AS Count
+            FROM [dbo].[{tableName}] t
+            LEFT JOIN card c ON t.card_id = c.id
+            LEFT JOIN visitor v ON c.visitor_id = v.id
+            LEFT JOIN mst_member m ON c.member_id = m.id
+            LEFT JOIN floorplan_masked_area ma ON t.floorplan_masked_area_id = ma.id
+            LEFT JOIN mst_floorplan fp ON ma.floorplan_id = fp.id
+            LEFT JOIN mst_floor fl ON fp.floor_id = fl.id
+            LEFT JOIN mst_building b ON fl.building_id = b.id
+            WHERE t.trans_time >= @p{startParamIndex}
+            AND t.trans_time <= @p{startParamIndex + 1}
+            AND ma.id IS NOT NULL
+            AND (v.id IS NOT NULL OR m.id IS NOT NULL)
+        ";
+
+            var parameters = new List<object> { fromUtc, toUtc };
+            int paramIndex = startParamIndex + 2;
+
+            if (request.BuildingId.HasValue)
+            {
+                sql += $" AND b.id = @p{paramIndex++}";
+                parameters.Add(request.BuildingId.Value);
+            }
+            if (request.FloorId.HasValue)
+            {
+                sql += $" AND fl.id = @p{paramIndex++}";
+                parameters.Add(request.FloorId.Value);
+            }
+            if (request.AreaId.HasValue)
+            {
+                sql += $" AND ma.id = @p{paramIndex++}";
+                parameters.Add(request.AreaId.Value);
+            }
+            if (request.VisitorId.HasValue)
+            {
+                sql += $" AND v.id = @p{paramIndex++}";
+                parameters.Add(request.VisitorId.Value);
+            }
+            if (request.MemberId.HasValue)
+            {
+                sql += $" AND m.id = @p{paramIndex++}";
+                parameters.Add(request.MemberId.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(request.PersonType))
+            {
+                var type = request.PersonType.Trim().ToLower();
+                if (type == "visitor")
+                {
+                    sql += $" AND v.id IS NOT NULL";
+                }
+                else if (type == "member")
+                {
+                    sql += $" AND m.id IS NOT NULL";
+                }
+            }
+
+            sql += "\nGROUP BY ma.name, DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))";
+
+            return (sql, parameters);
+        }
+
+        public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsFilter request)
         {
             var sessions = await GetVisitorSessionSummaryAsync(request);
             
@@ -337,9 +577,9 @@
             }).ToList();
         }
 
-        private VisitorSessionSummaryRM MapToSession(SessionRaw rec)
+        private VisitorSessionRead MapToSession(SessionRaw rec)
         {
-            return new VisitorSessionSummaryRM
+            return new VisitorSessionRead
             {
                 PersonId = rec.PersonId,
                 PersonName = rec.PersonName,

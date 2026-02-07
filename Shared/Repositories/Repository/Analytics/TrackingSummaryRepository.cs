@@ -10,6 +10,7 @@ using Repositories.Repository.RepoModel;
 using Helpers.Consumer;
 
 using Dapper;
+using Shared.Contracts;
 using System.Data;
 using Microsoft.Data.SqlClient;
 
@@ -38,7 +39,7 @@ namespace Repositories.Repository.Analytics
         // apply time tange
 
         // area sum
-        public async Task<List<TrackingAreaSummaryRM>> GetAreaSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingAreaSummaryRM>> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -76,7 +77,7 @@ namespace Repositories.Repository.Analytics
         }
 
         // count area accessed sum
-        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsRequestRM request)
+        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsync(TrackingAnalyticsFilter request)
         // {
         //     var range = GetTimeRange(request.TimeRange);
         //     var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -113,7 +114,7 @@ namespace Repositories.Repository.Analytics
         // }
 
         public async Task<List<AreaAccessAggregateRow>> GetAreaAccessDailyAsync(
-            TrackingAnalyticsRequestRM request
+            TrackingAnalyticsFilter request
         )
         {
             var range = GetTimeRange(request.TimeRange);
@@ -162,7 +163,7 @@ namespace Repositories.Repository.Analytics
         }
 
 
-        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsyncV2(TrackingAnalyticsRequestRM request)
+        // public async Task<TrackingAccessPermissionSummaryRM> GetAccessPermissionSummaryAsyncV2(TrackingAnalyticsFilter request)
         // {
         //     var range = GetTimeRange(request.TimeRange);
         //     var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -230,7 +231,7 @@ namespace Repositories.Repository.Analytics
 
 
         // daily sum
-        public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
@@ -268,7 +269,7 @@ namespace Repositories.Repository.Analytics
 
 
         // building sum
-        public async Task<List<TrackingBuildingSummaryRM>> GetBuildingSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingBuildingSummaryRM>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -304,7 +305,7 @@ namespace Repositories.Repository.Analytics
 
 
         // visitor sum
-        public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -348,7 +349,7 @@ namespace Repositories.Repository.Analytics
 
 
         // card sum - tracking-sum - latest tracking
-        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -458,7 +459,7 @@ namespace Repositories.Repository.Analytics
         //         // ===========================================================
         //         // 5️⃣ Reader Summary
         //         // ===========================================================
-        public async Task<List<TrackingReaderSummaryRM>> GetReaderSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingReaderSummaryRM>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -686,7 +687,7 @@ namespace Repositories.Repository.Analytics
             public string BuildingName { get; set; }
         }
 
-        public async Task<List<TrackingHeatmapRM>> GetHeatmapDataAsync(TrackingAnalyticsRequestRM request)
+        public async Task<List<TrackingHeatmapRM>> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
         {
             var tableName = GetTableNameByDate(DateTime.UtcNow);
             var (from, to) = (request.From ?? DateTime.UtcNow.AddHours(-2), request.To ?? DateTime.UtcNow);
@@ -731,7 +732,7 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-        public async Task<TrackingHierarchyRM> GetHierarchySummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<TrackingHierarchyRM> GetHierarchySummaryAsync(TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -821,7 +822,7 @@ namespace Repositories.Repository.Analytics
 
 
         private (string whereSql, List<object> parameters) BuildSqlFilters(
-            TrackingAnalyticsRequestRM request,
+            TrackingAnalyticsFilter request,
             ref int pIndex
         )
         {
@@ -892,7 +893,7 @@ namespace Repositories.Repository.Analytics
 
 
         // helpers filter
-        private IQueryable<TrackingTransaction> ApplyFilters(IQueryable<TrackingTransaction> query, TrackingAnalyticsRequestRM request)
+        private IQueryable<TrackingTransaction> ApplyFilters(IQueryable<TrackingTransaction> query, TrackingAnalyticsFilter request)
         {
             // TODO: Implement building access filter (similar to PatrolAreaRepository)
             // For now, commented out to allow compilation

@@ -1,12 +1,20 @@
 using System.Threading.Tasks;
-using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Shared.Contracts.Analytics;
 
 namespace BusinessLogic.Services.Interface.Analytics;
 
 public interface ITrackingSessionService
 {
-    Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request);
-    Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request);
-    Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsRequestRM request);
-    Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsRequestRM overrideRequest);
+    Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request);
+    Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request, bool includeVisualPaths);
+    Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request);
+    Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsFilter request);
+    Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest);
+
+    /// <summary>
+    /// Get peak hours data grouped by area
+    /// Returns hourly distribution of visitors across different areas
+    /// </summary>
+    Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(TrackingAnalyticsFilter request);
 }

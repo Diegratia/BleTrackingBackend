@@ -1,16 +1,16 @@
 using System.Threading.Tasks;
 using Data.ViewModels.AlarmAnalytics;
-using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Shared.Contracts.Analytics;
 
 namespace BusinessLogic.Services.Interface.Analytics;
 
 public interface IAlarmAnalyticsIncidentService
 {
-    Task<object> GetDailySummaryAsync(AlarmAnalyticsRequestRM request);
-    Task<object> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request);
-    Task<object> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request);
-    Task<object> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request);
-    Task<object> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request);
-    Task<object> GetAreaSummaryChartAsync(AlarmAnalyticsRequestRM request);
+    Task<List<AlarmDailyRead>> GetDailySummaryAsync(AlarmAnalyticsFilter request);
+    Task<List<AlarmStatusRead>> GetStatusSummaryAsync(AlarmAnalyticsFilter request);
+    Task<List<AlarmVisitorRead>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request);
+    Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request);
+    Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request);
+    Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(AlarmAnalyticsFilter request);
 }
-

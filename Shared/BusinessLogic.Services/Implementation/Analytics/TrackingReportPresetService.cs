@@ -6,7 +6,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
-using Repositories.Repository.RepoModel;
+using Shared.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -35,13 +35,13 @@ namespace BusinessLogic.Services.Implementation.Analytics
         
 
         // 1. APPLY PRESET - Get analytics request from preset
-        public async Task<TrackingAnalyticsRequestRM> ApplyPresetAsync(Guid presetId)
+        public async Task<TrackingAnalyticsFilter> ApplyPresetAsync(Guid presetId)
         {
             var preset = await _repository.GetByIdAsync(presetId);
             if (preset == null)
                 throw new KeyNotFoundException($"Preset with ID {presetId} not found");
 
-            return new TrackingAnalyticsRequestRM
+            return new TrackingAnalyticsFilter
             {
                 TimeRange = preset.TimeRange,
                 From = preset.IsCustomRange ? preset.CustomFromDate : null,

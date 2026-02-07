@@ -35,7 +35,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPost("apply/{presetId}")]
         public async Task<IActionResult> ApplyPresetForVisitorSession(
         Guid presetId,
-        TrackingAnalyticsRequestRM overrideRequest)
+        TrackingAnalyticsFilter overrideRequest)
         {
                 if (!ModelState.IsValid)
             {

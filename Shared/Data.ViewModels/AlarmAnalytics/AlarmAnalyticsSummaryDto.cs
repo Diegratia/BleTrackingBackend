@@ -59,7 +59,7 @@ namespace Data.ViewModels.AlarmAnalytics
     {
         public Guid? AreaId { get; set; }
         public string AreaName { get; set; } = string.Empty;
-        public List<ChartSeriesDto> Series { get; set; } = new();
+        public List<global::Shared.Contracts.ChartSeriesDto> Series { get; set; } = new();
     }
 
     // public class ChartSeriesDto

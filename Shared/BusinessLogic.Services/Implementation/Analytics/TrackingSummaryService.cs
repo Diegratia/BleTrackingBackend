@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels;
-using Data.ViewModels.AlarmAnalytics;
 using Data.ViewModels.ResponseHelper;
 using Helpers.Consumer;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Data.ViewModels.AlarmAnalytics;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
@@ -29,7 +30,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _logger = logger;
         }
 
-        public async Task<object> GetAreaSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -44,7 +45,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetDailySummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetDailySummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -59,7 +60,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetReaderSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -74,7 +75,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetVisitorSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -89,7 +90,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetBuildingSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -121,7 +122,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
         // ===========================================================
         // 🔹 Get Heatmap
         // ===========================================================
-        public async Task<object> GetHeatmapDataAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -135,7 +136,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
-        public async Task<object> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<object> GetCardSummaryAsync(TrackingAnalyticsFilter request)
         {
             try
             {
@@ -162,7 +163,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
         }
 
         public async Task<object> GetAreaAccessedSummaryAsyncV3(
-            TrackingAnalyticsRequestRM request
+            TrackingAnalyticsFilter request
         )
         {
             try
@@ -207,17 +208,17 @@ namespace BusinessLogic.Services.Implementation.Analytics
                         Labels = labels,
                         Series = new()
                     {
-                        new ChartSeriesDto
+                        new Shared.Contracts.ChartSeriesDto
                         {
                             Name = "Accessed Area",
                             Data = accessedArea
                         },
-                        new ChartSeriesDto
+                        new Shared.Contracts.ChartSeriesDto
                         {
                             Name = "With Permission",
                             Data = withPermission
                         },
-                        new ChartSeriesDto
+                        new Shared.Contracts.ChartSeriesDto
                         {
                             Name = "Without Permission",
                             Data = withoutPermission

@@ -34,7 +34,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 1️⃣ Area Summary
         [HttpPost("area")]
-        public async Task<IActionResult> GetArea([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetArea([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetAreaSummaryAsync(request);
             return Ok(response);
@@ -42,7 +42,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 2️⃣ Daily Summary
         [HttpPost("daily")]
-        public async Task<IActionResult> GetDaily([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetDaily([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetDailySummaryAsync(request);
             return Ok(response);
@@ -50,7 +50,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 3️⃣ Reader Summary
         [HttpPost("reader")]
-        public async Task<IActionResult> GetReader([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetReader([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetReaderSummaryAsync(request);
             return Ok(response);
@@ -58,7 +58,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 4️⃣ Visitor Summary
         [HttpPost("visitor")]
-        public async Task<IActionResult> GetVisitor([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetVisitor([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetVisitorSummaryAsync(request);
             return Ok(response);
@@ -66,7 +66,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 5️⃣ Building Summary
         [HttpPost("building")]
-        public async Task<IActionResult> GetBuilding([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetBuilding([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetBuildingSummaryAsync(request);
             return Ok(response);
@@ -82,7 +82,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 7️⃣ Heatmap Data
         [HttpPost("heatmap")]
-        public async Task<IActionResult> GetHeatmap([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetHeatmap([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetHeatmapDataAsync(request);
             return Ok(result);
@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 8️⃣ Latest Position (Card Summary)
         [HttpPost("latest-position")]
-        public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetCardSummaryAsync(request);
             return Ok(result);
@@ -98,7 +98,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // 9️⃣ Area Accessed Summary (with Chart)
         [HttpPost("area-accessed")]
-        public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetAreaAccessedSummaryAsyncV3(request);
             return Ok(result);
@@ -110,15 +110,25 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // Visitor Session Summary
         [HttpPost("visitor-session")]
-        public async Task<IActionResult> GetVisitorSessionSummaryAsync([FromBody] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> GetVisitorSessionSummaryAsync(
+            [FromBody] TrackingAnalyticsFilter request,
+            [FromQuery] bool includeVisualPaths = false)
         {
-            var result = await _sessionService.GetVisitorSessionSummaryAsync(request);
+            var result = await _sessionService.GetVisitorSessionSummaryAsync(request, includeVisualPaths);
+            return Ok(result);
+        }
+
+        // Peak Hours by Area
+        [HttpPost("peak-hours-by-area")]
+        public async Task<IActionResult> GetPeakHoursByArea([FromBody] TrackingAnalyticsFilter request)
+        {
+            var result = await _sessionService.GetPeakHoursByAreaAsync(request);
             return Ok(result);
         }
 
         // Export to PDF
         [HttpGet("export/pdf")]
-        public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsFilter request)
         {
             try
             {
@@ -134,7 +144,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         // Export to Excel
         [HttpGet("export/excel")]
-        public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsRequestRM request)
+        public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsFilter request)
         {
             try
             {
@@ -150,7 +160,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             }
         }
 
-        private string GenerateExportFileName(TrackingAnalyticsRequestRM request, string extension)
+        private string GenerateExportFileName(TrackingAnalyticsFilter request, string extension)
         {
             var parts = new List<string> { "VisitorSessions" };
 
