@@ -24,7 +24,7 @@ namespace Repositories.Repository.Analytics
         }
 
         // total alarm per area
-        // public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
+        // public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsFilter request)
         // {
         //     var range = GetTimeRange(request.TimeRange ?? "weekly");
         //     var (from, to) = (range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7), range?.to ?? request.To ?? DateTime.UtcNow);
@@ -63,7 +63,7 @@ namespace Repositories.Repository.Analytics
         // }
 
         public async Task<List<AlarmAreaDailyAggregateRM>> GetAreaDailySummaryAsync(
-            AlarmAnalyticsRequestRM request
+            AlarmAnalyticsFilter request
         )
         {
             var range = GetTimeRange(request.TimeRange);
@@ -103,7 +103,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per day
-        public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
         {
             // 🕒 Gunakan helper untuk override from-to
             var range = GetTimeRange(request.TimeRange ?? "weekly");
@@ -142,7 +142,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per status
-        public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmStatusSummaryRM>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var (from, to) = (
@@ -197,7 +197,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per visitor
-        public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmVisitorSummaryRM>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -240,7 +240,7 @@ namespace Repositories.Repository.Analytics
 
 
         // alarm per building
-        public async Task<List<AlarmBuildingSummaryRM>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmBuildingSummaryRM>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
 
@@ -274,7 +274,7 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-       public async Task<List<AlarmHourlyStatusSummaryRM>> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+       public async Task<List<AlarmHourlyStatusSummaryRM>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
 {
     // Range penuh 1 hari
     var date = request.From?.Date ?? DateTime.UtcNow.Date;
@@ -346,7 +346,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        //    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
+        //    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         //         {
         //             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
 
@@ -377,7 +377,7 @@ namespace Repositories.Repository.Analytics
         // ===================================================================
         // 6️⃣ Helper Filter
         // ===================================================================
-        private IQueryable<AlarmRecordTracking> ApplyFilters(IQueryable<AlarmRecordTracking> query, AlarmAnalyticsRequestRM request)
+        private IQueryable<AlarmRecordTracking> ApplyFilters(IQueryable<AlarmRecordTracking> query, AlarmAnalyticsFilter request)
         {
             if (request.BuildingId.HasValue)
                 query = query.Where(a => a.FloorplanMaskedArea.Floorplan.Floor.Building.Id == request.BuildingId);
