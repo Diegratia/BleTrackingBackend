@@ -20,14 +20,14 @@ namespace Web.API.Controllers.Controllers.Analytics
     public class TrackingReportPresetController : ControllerBase
     {
         private readonly ITrackingReportPresetService _presetService;
-        private readonly ITrackingAnalyticsV2Service _analyticsV2Service;
+        private readonly ITrackingSessionService _sessionService;
 
         public TrackingReportPresetController(
             ITrackingReportPresetService presetService,
-            ITrackingAnalyticsV2Service analyticsV2Service)
+            ITrackingSessionService analyticsV2Service)
         {
             _presetService = presetService;
-            _analyticsV2Service = analyticsV2Service;
+            _sessionService = analyticsV2Service;
         }
         // ==============================================
         // 1. APPLY PRESET - Get visitor session data
@@ -48,7 +48,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
 
             {
-                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId,  overrideRequest);
+                var result = await _sessionService.GetVisitorSessionSummaryByPresetAsync(presetId,  overrideRequest);
                 return Ok(result);
             }
             catch (Exception ex)

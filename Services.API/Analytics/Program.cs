@@ -87,15 +87,15 @@ builder.Services.AddHttpContextAccessor();
 
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
-builder.Services.AddScoped<ITrackingAnalyticsService, TrackingAnalyticsService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>(); 
-builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
+builder.Services.AddScoped<ITrackingSummaryService, TrackingSummaryService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ITrackingSessionService, TrackingSessionService>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 
-builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
-builder.Services.AddScoped<TrackingAnalyticsRepository>();
+builder.Services.AddScoped<TrackingSessionRepository>();
+builder.Services.AddScoped<TrackingSummaryRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<VisitorRepository>();

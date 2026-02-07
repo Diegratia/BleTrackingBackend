@@ -12,15 +12,15 @@
 
     namespace Repositories.Repository.Analytics
     {
-        public class TrackingAnalyticsV2Repository : BaseRepository
+        public class TrackingSessionRepository : BaseRepository
         {
             private readonly BleTrackingDbContext _context;
-            private readonly ILogger<TrackingAnalyticsV2Repository> _logger;
+            private readonly ILogger<TrackingSessionRepository> _logger;
             private static readonly TimeZoneInfo WibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 
-            public TrackingAnalyticsV2Repository(BleTrackingDbContext context,
+            public TrackingSessionRepository(BleTrackingDbContext context,
             IHttpContextAccessor accessor,
-            ILogger<TrackingAnalyticsV2Repository> logger)
+            ILogger<TrackingSessionRepository> logger)
                 : base(context, accessor)
             {
                 _context = context;
@@ -95,7 +95,7 @@
                 return tables;
             }
 
-            // Di dalam class TrackingAnalyticsV2Repository
+            // Di dalam class TrackingSessionRepository
 
             // === DTO SEMENTARA (internal) ===
             internal class SessionRaw

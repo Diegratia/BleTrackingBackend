@@ -14,125 +14,116 @@ namespace Web.API.Controllers.Controllers.Analytics
     [ApiController]
     [Route("api/[controller]")]
     [MinLevel(LevelPriority.Primary)]
-    
+
     public class TrackingAnalyticsController : ControllerBase
     {
-        private readonly ITrackingAnalyticsService _service;
-        private readonly ITrackingAnalyticsV2Service _serviceV2;
+        private readonly ITrackingSummaryService _summaryService;
+        private readonly ITrackingSessionService _sessionService;
 
-        public TrackingAnalyticsController(ITrackingAnalyticsService service, ITrackingAnalyticsV2Service serviceV2)
+        public TrackingAnalyticsController(
+            ITrackingSummaryService summaryService,
+            ITrackingSessionService sessionService)
         {
-            _service = service;
-            _serviceV2 = serviceV2;
+            _summaryService = summaryService;
+            _sessionService = sessionService;
         }
 
         // ===================================================================
-        // 1️⃣ Area Summary (Incident-level)
+        // SUMMARY ENDPOINTS
         // ===================================================================
+
+        // 1️⃣ Area Summary
         [HttpPost("area")]
         public async Task<IActionResult> GetArea([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var response = await _service.GetAreaSummaryAsync(request);
+            var response = await _summaryService.GetAreaSummaryAsync(request);
             return Ok(response);
         }
 
-        // ===================================================================
-        // 2️⃣ Daily Summary (Incident-level)
-        // ===================================================================
+        // 2️⃣ Daily Summary
         [HttpPost("daily")]
         public async Task<IActionResult> GetDaily([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var response = await _service.GetDailySummaryAsync(request);
+            var response = await _summaryService.GetDailySummaryAsync(request);
             return Ok(response);
         }
 
-        // ===================================================================
-        // 3️⃣ Status Reader (Incident-level)
-        // ===================================================================
+        // 3️⃣ Reader Summary
         [HttpPost("reader")]
         public async Task<IActionResult> GetReader([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var response = await _service.GetReaderSummaryAsync(request);
+            var response = await _summaryService.GetReaderSummaryAsync(request);
             return Ok(response);
         }
 
-        // ===================================================================
-        // 4️⃣ Visitor Summary (Incident-level)
-        // ===================================================================
+        // 4️⃣ Visitor Summary
         [HttpPost("visitor")]
         public async Task<IActionResult> GetVisitor([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var response = await _service.GetVisitorSummaryAsync(request);
+            var response = await _summaryService.GetVisitorSummaryAsync(request);
             return Ok(response);
         }
 
-        // ===================================================================
-        // 5️⃣ Building Summary (Incident-level)
-        // ===================================================================
+        // 5️⃣ Building Summary
         [HttpPost("building")]
         public async Task<IActionResult> GetBuilding([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var response = await _service.GetBuildingSummaryAsync(request);
+            var response = await _summaryService.GetBuildingSummaryAsync(request);
             return Ok(response);
         }
 
-        // 🔹 GET movement by Card ID
+        // 6️⃣ Movement by Card ID
         [HttpGet("movement/{cardId}")]
         public async Task<IActionResult> GetMovement(Guid cardId)
         {
-            var result = await _service.GetTrackingMovementByCardIdAsync(cardId);
+            var result = await _summaryService.GetTrackingMovementByCardIdAsync(cardId);
             return Ok(result);
         }
 
-        // 🔹 POST Heatmap
+        // 7️⃣ Heatmap Data
         [HttpPost("heatmap")]
         public async Task<IActionResult> GetHeatmap([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var result = await _service.GetHeatmapDataAsync(request);
+            var result = await _summaryService.GetHeatmapDataAsync(request);
             return Ok(result);
         }
 
+        // 8️⃣ Latest Position (Card Summary)
         [HttpPost("latest-position")]
         public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var result = await _service.GetCardSummaryAsync(request);
+            var result = await _summaryService.GetCardSummaryAsync(request);
             return Ok(result);
         }
 
-        [HttpPost("visitor-session")]
-        public async Task<IActionResult> GetVisitorSessionSummaryAsync([FromBody] TrackingAnalyticsRequestRM request)
-        {
-            var result = await _serviceV2.GetVisitorSessionSummaryAsync(request);
-            return Ok(result);
-        }
-        // [HttpPost("area-accessed")]
-        // public async Task<IActionResult> GetAreaAccessed([FromBody] TrackingAnalyticsRequestRM request)
-        // {
-        //     var result = await _service.GetAreaAccessedSummaryAsync(request);
-        //     return Ok(result);
-        // }
-        // [HttpPost("area-accessed-v2")]
-        // public async Task<IActionResult> GetAreaAccessedV2([FromBody] TrackingAnalyticsRequestRM request)
-        // {
-        //     var result = await _service.GetAreaAccessedSummaryAsyncV2(request);
-        //     return Ok(result);
-        // }
+        // 9️⃣ Area Accessed Summary (with Chart)
         [HttpPost("area-accessed")]
         public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsRequestRM request)
         {
-            var result = await _service.GetAreaAccessedSummaryAsyncV3(request);
+            var result = await _summaryService.GetAreaAccessedSummaryAsyncV3(request);
             return Ok(result);
         }
+
+        // ===================================================================
+        // SESSION ENDPOINTS
+        // ===================================================================
+
+        // Visitor Session Summary
+        [HttpPost("visitor-session")]
+        public async Task<IActionResult> GetVisitorSessionSummaryAsync([FromBody] TrackingAnalyticsRequestRM request)
+        {
+            var result = await _sessionService.GetVisitorSessionSummaryAsync(request);
+            return Ok(result);
+        }
+
+        // Export to PDF
         [HttpGet("export/pdf")]
         public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsRequestRM request)
         {
             try
             {
-                var pdfBytes = await _serviceV2.ExportVisitorSessionSummaryToPdfAsync(request);
-
-                // Generate filename berdasarkan filter
+                var pdfBytes = await _sessionService.ExportVisitorSessionSummaryToPdfAsync(request);
                 string fileName = GenerateExportFileName(request, "pdf");
-
                 return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
             }
             catch (Exception ex)
@@ -141,16 +132,14 @@ namespace Web.API.Controllers.Controllers.Analytics
             }
         }
 
+        // Export to Excel
         [HttpGet("export/excel")]
         public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsRequestRM request)
         {
             try
             {
-                var excelBytes = await _serviceV2.ExportVisitorSessionSummaryToExcelAsync(request);
-
-                // Generate filename berdasarkan filter
+                var excelBytes = await _sessionService.ExportVisitorSessionSummaryToExcelAsync(request);
                 string fileName = GenerateExportFileName(request, "xlsx");
-
                 return File(excelBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     fileName);

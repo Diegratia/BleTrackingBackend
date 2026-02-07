@@ -129,6 +129,7 @@ builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
 builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 
 
 // Registrasi Repositories

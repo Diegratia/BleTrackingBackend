@@ -12,7 +12,9 @@
       "Bash(code:*)",
       "Bash(Select-String:*)",
       "Bash(dotnet clean:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)"
     ]
   }
 }

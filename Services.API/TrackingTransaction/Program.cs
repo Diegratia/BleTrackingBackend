@@ -160,12 +160,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(TrackingTransactionProfile));
 
 builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
-builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
 
 
 builder.Services.AddScoped<TrackingTransactionRepository>();
-builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
+builder.Services.AddScoped<TrackingSessionRepository>();
 builder.Services.AddScoped<TrackingReportPresetRepository>();
 
 

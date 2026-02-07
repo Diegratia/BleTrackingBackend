@@ -106,6 +106,28 @@ using Shared.Contracts;
         [Column("last_notified_at")]
         public DateTime? LastNotifiedAt { get; set; }
 
+        // Security action timestamps
+        [Column("acknowledged_at")]
+        public DateTime? AcknowledgedAt { get; set; }
+
+        [Column("acknowledged_by")]
+        [MaxLength(50)]
+        public string? AcknowledgedBy { get; set; }
+
+        [Column("en_route_at")]
+        public DateTime? EnRouteAt { get; set; }
+
+        [Column("en_route_by")]
+        [MaxLength(50)]
+        public string? EnRouteBy { get; set; }
+
+        [Column("arrived_at")]
+        public DateTime? ArrivedAt { get; set; }
+
+        [Column("arrived_by")]
+        [MaxLength(50)]
+        public string? ArrivedBy { get; set; }
+
         [Required]
         [ForeignKey("Application")]
         [Column("application_id")]

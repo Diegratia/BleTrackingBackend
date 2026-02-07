@@ -15,12 +15,12 @@ using Microsoft.Data.SqlClient;
 
 namespace Repositories.Repository.Analytics
 {
-    public class TrackingAnalyticsRepository : BaseRepository
+    public class TrackingSummaryRepository : BaseRepository
     {
         private readonly BleTrackingDbContext _context;
         private static readonly TimeZoneInfo WibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 
-        public TrackingAnalyticsRepository(BleTrackingDbContext context, IHttpContextAccessor accessor)
+        public TrackingSummaryRepository(BleTrackingDbContext context, IHttpContextAccessor accessor)
             : base(context, accessor)
         {
             _context = context;

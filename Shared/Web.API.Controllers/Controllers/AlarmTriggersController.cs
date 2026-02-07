@@ -1,11 +1,12 @@
 using System;
+using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
 using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
@@ -24,28 +25,28 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
+        private string CurrentUsername => User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
         [HttpGet("open")]
         [AllowAnonymous]
-
         public async Task<IActionResult> OpenGetAll()
         {
             var alarms = await _service.OpenGetAllAsync();
             return Ok(ApiResponse.Success("Alarm Triggers retrieved successfully", alarms));
         }
 
-         [HttpGet]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-        
-                var alarms = await _service.GetAllAsync();
-                return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
+            var alarms = await _service.GetAllAsync();
+            return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
         }
+
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUp()
         {
-
             var alarms = await _service.GetAllLookUpAsync();
-                return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
+            return Ok(ApiResponse.Success("Alarm Events retrieved successfully", alarms));
         }
 
         [HttpPut("{id}")]
@@ -70,55 +71,46 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                await _service.UpdateAlarmStatusAsync(beaconId, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Trigger updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Card not found",
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _service.UpdateAlarmStatusAsync(beaconId, dto);
+            return Ok(ApiResponse.Success("Trigger updated successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
             var result = await _service.FilterAsync(request);
             return Ok(ApiResponse.Paginated("Alarm Triggers filtered successfully", result));
+        }
+
+        [HttpGet("{id}/timeline")]
+        public async Task<IActionResult> GetIncidentTimeline(Guid id)
+        {
+            var result = await _service.GetIncidentTimelineAsync(id);
+            return Ok(result);
+        }
+
+        [HttpPut("{id}/acknowledge")]
+        public async Task<IActionResult> Acknowledge(Guid id)
+        {
+            await _service.AcknowledgeAsync(id, CurrentUsername);
+            return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
+        }
+
+        [HttpPut("{id}/en-route")]
+        public async Task<IActionResult> EnRoute(Guid id)
+        {
+            await _service.EnRouteAsync(id, CurrentUsername);
+            return Ok(ApiResponse.Success("Security marked as en-route"));
+        }
+
+        [HttpPut("{id}/arrived")]
+        public async Task<IActionResult> Arrived(Guid id)
+        {
+            await _service.ArrivedAsync(id, CurrentUsername);
+            return Ok(ApiResponse.Success("Security arrived at location"));
         }
     }
 }
