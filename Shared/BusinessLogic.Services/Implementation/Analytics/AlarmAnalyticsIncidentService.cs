@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
-using Data.ViewModels;
-using Data.ViewModels.AlarmAnalytics;
-using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Interface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
+using Shared.Contracts.Analytics;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
-    public class AlarmAnalyticsIncidentService : IAlarmAnalyticsIncidentService
+    public class AlarmAnalyticsIncidentService : BaseService, IAlarmAnalyticsIncidentService
     {
         private readonly AlarmAnalyticsIncidentRepository _repository;
         private readonly IMapper _mapper;
@@ -21,150 +23,117 @@ namespace BusinessLogic.Services.Implementation.Analytics
         public AlarmAnalyticsIncidentService(
             AlarmAnalyticsIncidentRepository repository,
             IMapper mapper,
-            ILogger<AlarmAnalyticsIncidentService> logger)
+            IAuditEmitter audit,
+            IHttpContextAccessor http,
+            ILogger<AlarmAnalyticsIncidentService> logger) : base(http)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<object> GetAreaSummaryChartAsync(
-            AlarmAnalyticsRequestRM request
-        )
+        public async Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(AlarmAnalyticsFilter request)
         {
-            try
-            {
-                var rows = await _repository.GetAreaDailySummaryAsync(request);
+            var rows = await _repository.GetAreaDailySummaryAsync(request);
 
-                // labels (dates)
-                var dates = rows
-                    .Select(r => r.Date)
-                    .Distinct()
-                    .OrderBy(d => d)
-                    .ToList();
+            // labels (dates)
+            var dates = rows
+                .Select(r => r.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
 
-                var labels = dates
-                    .Select(d => d.ToString("yyyy-MM-dd"))
-                    .ToList();
+            var labels = dates
+                .Select(d => d.ToString("yyyy-MM-dd"))
+                .ToList();
 
-                // group per area
-                var areas = rows
-                    .GroupBy(r => new { r.AreaId, r.AreaName })
-                    .Select(areaGroup =>
-                    {
-                        var statuses = areaGroup
-                            .Select(x => x.AlarmStatus)
-                            .Distinct();
-
-                        var series = statuses.Select(status => new ChartSeriesDto
-                        {
-                            Name = status,
-                            Data = dates.Select(date =>
-                                areaGroup.FirstOrDefault(r =>
-                                    r.Date == date &&
-                                    r.AlarmStatus == status
-                                )?.Total ?? 0
-                            ).ToList()
-                        }).ToList();
-
-                        return new AlarmAreaChartDto
-                        {
-                            AreaId = areaGroup.Key.AreaId,
-                            AreaName = areaGroup.Key.AreaName,
-                            Series = series
-                        };
-                    })
-                    .ToList();
-
-                var response = new AlarmAreaChartResponseDto
+            // group per area
+            var areas = rows
+                .GroupBy(r => new { r.AreaId, r.AreaName })
+                .Select(areaGroup =>
                 {
-                    Labels = labels,
-                    Areas = areas
-                };
+                    var statuses = areaGroup
+                        .Select(x => x.AlarmStatus)
+                        .Distinct();
 
-                return ApiResponse.Success("Area summary chart retrieved successfully", response);
-            }
-            catch (Exception ex)
+                    var series = statuses.Select(status => new global::Shared.Contracts.ChartSeriesDto
+                    {
+                        Name = status,
+                        Data = dates.Select(date =>
+                            areaGroup.FirstOrDefault(r =>
+                                r.Date == date &&
+                                r.AlarmStatus == status
+                            )?.Total ?? 0
+                        ).ToList()
+                    }).ToList();
+
+                    return new AlarmAreaSeriesRead
+                    {
+                        AreaId = areaGroup.Key.AreaId,
+                        AreaName = areaGroup.Key.AreaName,
+                        Series = series
+                    };
+                })
+                .ToList();
+
+            return new AlarmAreaChartResponseRead
             {
-                _logger.LogError(ex, "Error getting area summary chart");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                Labels = labels,
+                Areas = areas
+            };
         }
 
-
-        public async Task<object> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmDailyRead>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetDailySummaryAsync(request);
+            return data.Select(x => new AlarmDailyRead
             {
-                var data = await _repository.GetDailySummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmDailySummaryDto>>(data);
-                return ApiResponse.Success("Incident daily summary retrieved successfully", dto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident daily summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                Date = x.Date,
+                Total = x.Total
+            }).ToList();
         }
 
-        public async Task<object> GetStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmStatusRead>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetStatusSummaryAsync(request);
+            return data.Select(x => new AlarmStatusRead
             {
-                var data = await _repository.GetStatusSummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmStatusSummaryDto>>(data);
-                return ApiResponse.Success("Incident status summary retrieved successfully", dto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident status summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                Status = x.Status,
+                Total = x.Total
+            }).ToList();
         }
 
-        public async Task<object> GetVisitorSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmVisitorRead>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetVisitorSummaryAsync(request);
+            return data.Select(x => new AlarmVisitorRead
             {
-                var data = await _repository.GetVisitorSummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmVisitorSummaryDto>>(data);
-                return ApiResponse.Success("Incident visitor summary retrieved successfully", dto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident visitor summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                VisitorId = x.VisitorId,
+                VisitorName = x.VisitorName,
+                Total = x.Total
+            }).ToList();
         }
 
-        public async Task<object> GetBuildingSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetBuildingSummaryAsync(request);
+            return data.Select(x => new AlarmBuildingRead
             {
-                var data = await _repository.GetBuildingSummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmBuildingSummaryDto>>(data);
-                return ApiResponse.Success("Incident building summary retrieved successfully", dto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident building summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                BuildingId = x.BuildingId,
+                BuildingName = x.BuildingName,
+                Total = x.Total
+            }).ToList();
         }
 
-        public async Task<object> GetHourlyStatusSummaryAsync(AlarmAnalyticsRequestRM request)
+        public async Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetHourlyStatusSummaryAsync(request);
+            return data.Select(x => new AlarmHourlyStatusRead
             {
-                var data = await _repository.GetHourlyStatusSummaryAsync(request);
-                var dto = _mapper.Map<List<AlarmHourlyStatusSummaryDto>>(data);
-                return ApiResponse.Success("Incident Daily(24 Hours) summary retrieved successfully", dto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting incident Daily(24 Hours) summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+                Hour = x.Hour,
+                HourLabel = x.HourLabel,
+                Status = x.Status
+            }).ToList();
         }
     }
 }
