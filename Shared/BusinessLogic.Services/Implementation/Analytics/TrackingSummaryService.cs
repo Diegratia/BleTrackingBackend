@@ -35,8 +35,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetAreaSummaryAsync(request);
-                var dto = _mapper.Map<List<TrackingAreaSummaryDto>>(data);
-                return ApiResponse.Success("Area summary retrieved successfully", dto);
+                return ApiResponse.Success("Area summary retrieved successfully", data);
             }
             catch (Exception ex)
             {
@@ -50,8 +49,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetDailySummaryAsync(request);
-                var dto = _mapper.Map<List<TrackingDailySummaryDto>>(data);
-                return ApiResponse.Success("Daily summary retrieved successfully", dto);
+                return ApiResponse.Success("Daily summary retrieved successfully", data);
             }
             catch (Exception ex)
             {
@@ -65,8 +63,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetReaderSummaryAsync(request);
-                var dto = _mapper.Map<List<TrackingReaderSummaryDto>>(data);
-                return ApiResponse.Success("Reader summary retrieved successfully", dto);
+                return ApiResponse.Success("Reader summary retrieved successfully", data);
             }
             catch (Exception ex)
             {
@@ -80,8 +77,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetVisitorSummaryAsync(request);
-                var dto = _mapper.Map<List<TrackingVisitorSummaryDto>>(data);
-                return ApiResponse.Success("Visitor summary retrieved successfully", dto);
+                return ApiResponse.Success("Visitor summary retrieved successfully", data);
             }
             catch (Exception ex)
             {
@@ -95,8 +91,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             try
             {
                 var data = await _repository.GetBuildingSummaryAsync(request);
-                var dto = _mapper.Map<List<TrackingBuildingSummaryDto>>(data);
-                return ApiResponse.Success("Building summary retrieved successfully", dto);
+                return ApiResponse.Success("Building summary retrieved successfully", data);
             }
             catch (Exception ex)
             {

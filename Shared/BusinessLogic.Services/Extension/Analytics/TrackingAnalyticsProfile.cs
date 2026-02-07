@@ -18,14 +18,15 @@ namespace BusinessLogic.Services.Extension.Analytics
             CreateMap<Visitor, VisitorDto>();
             CreateMap<MstBleReader, MstBleReaderDto>();
             CreateMap<FloorplanMaskedArea, FloorplanMaskedAreaDto>();
-            CreateMap<TrackingAreaSummaryRM, TrackingAreaSummaryDto>();
-            CreateMap<TrackingVisitorSummaryRM, TrackingVisitorSummaryDto>();
-            CreateMap<TrackingBuildingSummaryRM, TrackingBuildingSummaryDto>();
-            CreateMap<TrackingDailySummaryRM, TrackingDailySummaryDto>();
-            CreateMap<TrackingReaderSummaryRM, TrackingReaderSummaryDto>();
+
+            // NOTE: Mappings for TrackingAreaSummaryRM, TrackingDailySummaryRM, TrackingBuildingSummaryRM,
+            // TrackingVisitorSummaryRM, and TrackingReaderSummaryRM have been removed
+            // because repositories now return Read DTOs directly (TrackingAreaRead, TrackingDailyRead, etc.)
+            // These Dtos are now redundant and can be deprecated in favor of Read DTOs.
+
+            // Keep these mappings for now (still used by other features)
             CreateMap<TrackingPermissionCountRM, TrackingPermissionCountDto>();
             CreateMap<TrackingAccessPermissionSummaryRM, TrackingAccessPermissionSummaryDto>();
-            
         }
     }
 }

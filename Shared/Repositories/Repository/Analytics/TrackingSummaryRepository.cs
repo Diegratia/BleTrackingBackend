@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
 using Helpers.Consumer;
+using Shared.Contracts.Analytics;
 
 using Dapper;
 using Shared.Contracts;
@@ -39,7 +40,7 @@ namespace Repositories.Repository.Analytics
         // apply time tange
 
         // area sum
-        public async Task<List<TrackingAreaSummaryRM>> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingAreaRead>> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -63,7 +64,7 @@ namespace Repositories.Repository.Analytics
                 })
                 .Distinct()
                 .GroupBy(x => new { x.FloorplanMaskedAreaId, x.AreaName })
-                .Select(g => new TrackingAreaSummaryRM
+                .Select(g => new TrackingAreaRead
                 {
                     AreaId = g.Key.FloorplanMaskedAreaId,
                     AreaName = g.Key.AreaName,
@@ -231,7 +232,7 @@ namespace Repositories.Repository.Analytics
 
 
         // daily sum
-        public async Task<List<TrackingDailySummaryRM>> GetDailySummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingDailyRead>> GetDailySummaryAsync(TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
@@ -256,7 +257,7 @@ namespace Repositories.Repository.Analytics
 
             var grouped = incidents
                 .GroupBy(x => x.Date)
-                .Select(g => new TrackingDailySummaryRM
+                .Select(g => new TrackingDailyRead
                 {
                     Date = g.Key,
                     TotalRecords = g.Count()
@@ -269,7 +270,7 @@ namespace Repositories.Repository.Analytics
 
 
         // building sum
-        public async Task<List<TrackingBuildingSummaryRM>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingBuildingRead>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -291,7 +292,7 @@ namespace Repositories.Repository.Analytics
                 })
                 .Distinct()
                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
-                .Select(g => new TrackingBuildingSummaryRM
+                .Select(g => new TrackingBuildingRead
                 {
                     BuildingId = g.Key.BuildingId,
                     BuildingName = g.Key.BuildingName,
@@ -305,7 +306,7 @@ namespace Repositories.Repository.Analytics
 
 
         // visitor sum
-        public async Task<List<TrackingVisitorSummaryRM>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingVisitorRead>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -333,7 +334,7 @@ namespace Repositories.Repository.Analytics
 
             var grouped = incidents
                 .GroupBy(x => new { x.VisitorId, x.VisitorName, x.MemberId, x.MemberName })
-                .Select(g => new TrackingVisitorSummaryRM
+                .Select(g => new TrackingVisitorRead
                 {
                     VisitorId = g.Key.VisitorId,
                     VisitorName = g.Key.VisitorName,
@@ -349,7 +350,7 @@ namespace Repositories.Repository.Analytics
 
 
         // card sum - tracking-sum - latest tracking
-        public async Task<List<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingCardRead>> GetCardSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (
                 request.From ?? DateTime.UtcNow.AddDays(-7),
@@ -400,7 +401,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
 
             if (raw.Count == 0)
-                return new List<TrackingCardSummaryRM>();
+                return new List<TrackingCardRead>();
 
             // Group per Card
             var grouped = raw
@@ -420,7 +421,7 @@ namespace Repositories.Repository.Analytics
                     var first = g.OrderBy(x => x.TransTime).First();
                     var last = g.OrderByDescending(x => x.TransTime).First(); // posisi terakhir
 
-                    return new TrackingCardSummaryRM
+                    return new TrackingCardRead
                     {
                         IdentityId = g.Key.IdentityId,
                         CardId = g.Key.CardId,
@@ -459,7 +460,7 @@ namespace Repositories.Repository.Analytics
         //         // ===========================================================
         //         // 5️⃣ Reader Summary
         //         // ===========================================================
-        public async Task<List<TrackingReaderSummaryRM>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
         {
             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
             var tableName = GetTableNameByDate(DateTime.UtcNow);
@@ -481,7 +482,7 @@ namespace Repositories.Repository.Analytics
                 })
                 .Distinct()
                 .GroupBy(x => new { x.ReaderId, x.ReaderName })
-                .Select(g => new TrackingReaderSummaryRM
+                .Select(g => new TrackingReaderRead
                 {
                     ReaderId = g.Key.ReaderId,
                     ReaderName = g.Key.ReaderName,
@@ -556,7 +557,7 @@ namespace Repositories.Repository.Analytics
 
 
 
-        public async Task<List<TrackingMovementRM>> GetTrackingMovementByCardIdAsync(Guid cardId)
+        public async Task<List<TrackingMovementRead>> GetTrackingMovementByCardIdAsync(Guid cardId)
         {
             var tableName = GetTableNameByDate(DateTime.UtcNow);
             var connectionString = _context.Database.GetConnectionString();
@@ -567,7 +568,7 @@ namespace Repositories.Repository.Analytics
             {
                 var sql = $@"
             WITH TrackingData AS (
-                SELECT 
+                SELECT
                     t.trans_time,
                     t.floorplan_masked_area_id,
                     t.coordinate_x,
@@ -578,18 +579,18 @@ namespace Repositories.Repository.Analytics
                 FROM [dbo].[{tableName}] t
                 WHERE t.card_id = @cardId
             )
-            SELECT 
+            SELECT
                 -- Tracking data
                 td.trans_time AS TransTime,
                 td.floorplan_masked_area_id AS AreaId,
                 td.coordinate_x AS CoordinateX,
                 td.coordinate_y AS CoordinateY,
-                
+
                 -- Person Name Logic (SAMA PERSIS dengan EF Core version)
                 COALESCE(
                     -- Priority 1: Visitor name from Card
                     cv.name,
-                    -- Priority 2: Member name from Card  
+                    -- Priority 2: Member name from Card
                     cm.name,
                     -- Priority 3: Direct visitor name
                     dv.name,
@@ -597,37 +598,37 @@ namespace Repositories.Repository.Analytics
                     dm.name,
                     'Unknown'
                 ) AS PersonName,
-                
+
                 -- Area Hierarchy
                 a.name AS AreaName,
                 fp.name AS FloorplanName,
                 f.name AS FloorName,
                 b.name AS BuildingName
-                
+
             FROM TrackingData td
-            
+
             -- Untuk mendapatkan nama person melalui Card (Priority 1 & 2)
             LEFT JOIN card c ON td.card_id = c.id
             LEFT JOIN visitor cv ON c.visitor_id = cv.id
             LEFT JOIN mst_member cm ON c.member_id = cm.id AND cm.status <> 0
-            
+
             -- Untuk mendapatkan nama person langsung (Priority 3 & 4)
             LEFT JOIN visitor dv ON td.visitor_id = dv.id
             LEFT JOIN mst_member dm ON td.member_id = dm.id AND dm.status <> 0
-            
+
             -- Untuk mendapatkan area hierarchy
             LEFT JOIN floorplan_masked_area a ON td.floorplan_masked_area_id = a.id
             LEFT JOIN mst_floorplan fp ON a.floorplan_id = fp.id
             LEFT JOIN mst_floor f ON fp.floor_id = f.id
             LEFT JOIN mst_building b ON f.building_id = b.id
-            
+
             ORDER BY td.trans_time";
 
                 var results = (await connection.QueryAsync<TrackingFullData>(sql, new { cardId }))
                     .ToList();
 
                 if (!results.Any())
-                    return new List<TrackingMovementRM>();
+                    return new List<TrackingMovementRead>();
 
                 // Group by area ID - SAMA PERSIS dengan logika EF Core
                 var grouped = results
@@ -640,7 +641,7 @@ namespace Repositories.Repository.Analytics
                         // Buat list positions dengan Distinct() - SAMA dengan EF Core
                         var positions = g
                             .Where(p => p.CoordinateX.HasValue && p.CoordinateY.HasValue)
-                            .Select(p => new TrackingPositionPointRM
+                            .Select(p => new TrackingPositionPointRead
                             {
                                 X = (float)Math.Round(p.CoordinateX.Value, 0),
                                 Y = (float)Math.Round(p.CoordinateY.Value, 0)
@@ -648,7 +649,7 @@ namespace Repositories.Repository.Analytics
                             .Distinct()
                             .ToList();
 
-                        return new TrackingMovementRM
+                        return new TrackingMovementRead
                         {
                             CardId = cardId,
                             PersonName = first.PersonName ?? "Unknown",
@@ -687,7 +688,7 @@ namespace Repositories.Repository.Analytics
             public string BuildingName { get; set; }
         }
 
-        public async Task<List<TrackingHeatmapRM>> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingHeatmapRead>> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
         {
             var tableName = GetTableNameByDate(DateTime.UtcNow);
             var (from, to) = (request.From ?? DateTime.UtcNow.AddHours(-2), request.To ?? DateTime.UtcNow);
@@ -719,7 +720,7 @@ namespace Repositories.Repository.Analytics
             // group & count (agar jadi intensitas)
             var grouped = points
                 .GroupBy(p => new { p.FloorplanId, p.MaskedAreaId, p.X, p.Y })
-                .Select(g => new TrackingHeatmapRM
+                .Select(g => new TrackingHeatmapRead
                 {
                     FloorplanId = g.Key.FloorplanId,
                     MaskedAreaId = g.Key.MaskedAreaId,
