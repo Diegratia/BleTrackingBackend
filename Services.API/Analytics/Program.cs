@@ -16,6 +16,8 @@ using Repositories.Repository;
 using Data.ViewModels.Shared.ExceptionHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.AspNetCore.Authorization;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -91,12 +93,17 @@ builder.Services.AddScoped<ITrackingSummaryService, TrackingSummaryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITrackingSessionService, TrackingSessionService>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
+builder.Services.AddScoped<IUserJourneyService, UserJourneyService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 
 builder.Services.AddScoped<TrackingSessionRepository>();
 builder.Services.AddScoped<TrackingSummaryRepository>();
 builder.Services.AddScoped<AlarmAnalyticsIncidentRepository>();
+builder.Services.AddScoped<UserJourneyRepository>();
 builder.Services.AddScoped<CardRepository>();
 builder.Services.AddScoped<VisitorRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
