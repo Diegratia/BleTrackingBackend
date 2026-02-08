@@ -76,7 +76,6 @@ namespace Repositories.DbContexts
         public DbSet<GroupBuildingAccess> GroupBuildingAccesses { get; set; }
         public DbSet<MonitoringConfigBuildingAccess> MonitoringConfigBuildingAccesses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<SecurityZoneMapping> SecurityZoneMappings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -172,25 +171,6 @@ namespace Repositories.DbContexts
                 entity.HasQueryFilter(mcba => mcba.Status != 0);
             });
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
-            modelBuilder.Entity<SecurityZoneMapping>(entity =>
-            {
-                entity.ToTable("security_zone_mapping");
-
-                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.AreaId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.AreaName).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.SecurityZone).IsRequired();
-                entity.Property(e => e.RequiresEscort).IsRequired().HasDefaultValue(false);
-                entity.Property(e => e.AllowedFromZones).HasMaxLength(200);
-
-                entity.Property(e => e.CreatedAt).IsRequired();
-                entity.Property(e => e.UpdatedAt).IsRequired();
-                entity.Property(e => e.Status).IsRequired().HasDefaultValue(1);
-
-                entity.HasIndex(e => e.AreaId);
-                entity.HasQueryFilter(e => e.Status != 0);
-            });
-
             // MstApplication
             modelBuilder.Entity<MstApplication>(entity =>
                 {

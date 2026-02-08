@@ -1222,7 +1222,7 @@ namespace Repositories.Seeding
             //     var logTrackings = logTrackingFaker.Generate(3);
             //     context.MstLogTrackings.AddRange(logTrackings);
             //     context.SaveChanges();
-            // }            
+            // }
         }
     }
 }

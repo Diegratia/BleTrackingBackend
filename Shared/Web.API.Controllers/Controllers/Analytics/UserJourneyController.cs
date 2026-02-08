@@ -13,7 +13,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 {
     /// <summary>
     /// Controller for User Journey Analytics
-    /// Provides endpoints for common paths analysis and security checks
+    /// Provides endpoints for common paths analysis and journey replay
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -57,66 +57,68 @@ namespace Web.API.Controllers.Controllers.Analytics
         }
 
         /// <summary>
-        /// Perform security journey check for a specific visitor
-        /// POST /api/UserJourney/security-check/visitor/{visitorId}
+        /// Get journey replay with incident markers for a specific visitor
+        /// Shows the path taken with areas where incidents occurred marked
+        /// POST /api/UserJourney/journey-replay/visitor/{visitorId}
         /// </summary>
-        /// <param name="visitorId">Visitor ID to check</param>
+        /// <param name="visitorId">Visitor ID to replay journey</param>
         /// <param name="filter">Filter criteria including date range</param>
-        /// <returns>Security check results with violations and risk level</returns>
-        [HttpPost("security-check/visitor/{visitorId}")]
-        public async Task<IActionResult> GetSecurityCheckForVisitor(
+        /// <returns>Journey replay with incident markers and statistics</returns>
+        [HttpPost("journey-replay/visitor/{visitorId}")]
+        public async Task<IActionResult> GetJourneyReplayForVisitor(
             Guid visitorId,
             [FromBody] UserJourneyFilter filter)
         {
             try
             {
-                _logger.LogInformation("Performing security check for visitor {VisitorId}", visitorId);
+                _logger.LogInformation("Getting journey replay for visitor {VisitorId}", visitorId);
 
-                var result = await _service.GetSecurityCheckForVisitorAsync(visitorId, filter);
+                var result = await _service.GetJourneyReplayForVisitorAsync(visitorId, filter);
 
                 if (result == null)
                 {
                     return Ok(ApiResponse.NotFound($"Visitor {visitorId} not found or no journey data available"));
                 }
 
-                return Ok(ApiResponse.Success("Security check completed successfully", result));
+                return Ok(ApiResponse.Success("Journey replay retrieved successfully", result));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error performing security check for visitor {VisitorId}", visitorId);
-                return Ok(ApiResponse.InternalError($"Error performing security check: {ex.Message}"));
+                _logger.LogError(ex, "Error getting journey replay for visitor {VisitorId}", visitorId);
+                return Ok(ApiResponse.InternalError($"Error getting journey replay: {ex.Message}"));
             }
         }
 
         /// <summary>
-        /// Perform security journey check for a specific member
-        /// POST /api/UserJourney/security-check/member/{memberId}
+        /// Get journey replay with incident markers for a specific member
+        /// Shows the path taken with areas where incidents occurred marked
+        /// POST /api/UserJourney/journey-replay/member/{memberId}
         /// </summary>
-        /// <param name="memberId">Member ID to check</param>
+        /// <param name="memberId">Member ID to replay journey</param>
         /// <param name="filter">Filter criteria including date range</param>
-        /// <returns>Security check results with violations and risk level</returns>
-        [HttpPost("security-check/member/{memberId}")]
-        public async Task<IActionResult> GetSecurityCheckForMember(
+        /// <returns>Journey replay with incident markers and statistics</returns>
+        [HttpPost("journey-replay/member/{memberId}")]
+        public async Task<IActionResult> GetJourneyReplayForMember(
             Guid memberId,
             [FromBody] UserJourneyFilter filter)
         {
             try
             {
-                _logger.LogInformation("Performing security check for member {MemberId}", memberId);
+                _logger.LogInformation("Getting journey replay for member {MemberId}", memberId);
 
-                var result = await _service.GetSecurityCheckForMemberAsync(memberId, filter);
+                var result = await _service.GetJourneyReplayForMemberAsync(memberId, filter);
 
                 if (result == null)
                 {
                     return Ok(ApiResponse.NotFound($"Member {memberId} not found or no journey data available"));
                 }
 
-                return Ok(ApiResponse.Success("Security check completed successfully", result));
+                return Ok(ApiResponse.Success("Journey replay retrieved successfully", result));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error performing security check for member {MemberId}", memberId);
-                return Ok(ApiResponse.InternalError($"Error performing security check: {ex.Message}"));
+                _logger.LogError(ex, "Error getting journey replay for member {MemberId}", memberId);
+                return Ok(ApiResponse.InternalError($"Error getting journey replay: {ex.Message}"));
             }
         }
     }

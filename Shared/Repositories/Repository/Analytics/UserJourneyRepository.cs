@@ -15,7 +15,7 @@ namespace Repositories.Repository.Analytics
 {
     /// <summary>
     /// Repository for User Journey Analytics
-    /// Provides methods for common paths analysis, security checks, and next area prediction
+    /// Provides methods for common paths analysis and journey replay
     /// </summary>
     public class UserJourneyRepository : BaseRepository
     {
@@ -105,9 +105,9 @@ namespace Repositories.Repository.Analytics
         }
 
         /// <summary>
-        /// Perform security journey check for a specific visitor/member
+        /// Get journey replay with incident markers for a specific visitor/member
         /// </summary>
-        public async Task<SecurityJourneyCheckRead> GetSecurityCheckAsync(
+        public async Task<JourneyReplayRead> GetJourneyReplayAsync(
             Guid? visitorId,
             Guid? memberId,
             DateTime from,
@@ -125,123 +125,132 @@ namespace Repositories.Repository.Analytics
 
             if (!sessions.Any())
             {
-                return new SecurityJourneyCheckRead
+                return new JourneyReplayRead
                 {
                     VisitorId = visitorId,
                     MemberId = memberId,
-                    RiskLevel = "Low",
-                    RequiresEscort = false,
-                    Violations = new List<SecurityViolation>()
+                    JourneySteps = new List<JourneyStepRead>(),
+                    TotalIncidents = 0
                 };
             }
 
             // Order sessions by enter time
             var orderedSessions = sessions.OrderBy(s => s.EnterTime).ToList();
 
-            // Get security zone mappings
-            var areaIds = orderedSessions.Select(s => s.AreaId).Where(id => id.HasValue).Distinct().ToList();
-            var zoneMappings = await _context.SecurityZoneMappings
-                .Where(z => areaIds.Contains(z.AreaId) && z.Status != 0)
+            // Get alarm triggers for this person within date range
+            var alarmTriggers = await _context.AlarmTriggers
+                .Include(at => at.Visitor)
+                .Include(at => at.Member)
+                .Include(at => at.Floorplan)
+                .ThenInclude(f => f.FloorplanMaskedAreas)
+                .Where(at => at.TriggerTime >= from && at.TriggerTime <= to)
+                .Where(at => visitorId.HasValue && at.VisitorId == visitorId ||
+                             memberId.HasValue && at.MemberId == memberId)
+                .OrderBy(at => at.TriggerTime)
                 .ToListAsync();
 
-            var zoneDict = zoneMappings.ToDictionary(z => z.AreaId);
+            // Build journey steps with incident markers
+            var journeySteps = new List<JourneyStepRead>();
+            var totalIncidents = 0;
 
-            // Build path taken
-            var pathTaken = orderedSessions
-                .Select(s => s.AreaName?.Trim())
-                .Where(n => !string.IsNullOrEmpty(n))
-                .ToList()!;
+            // Precompute all FloorplanMaskedAreaIds from alarms
+            var floorplanMaskedAreaIds = alarmTriggers
+                .Where(at => at.Floorplan != null)
+                .SelectMany(at => at.Floorplan.FloorplanMaskedAreas
+                    .Where(fma => fma.Status != 0)
+                    .Select(fma => fma.Id))
+                .ToHashSet();
 
-            // Check for violations
-            var violations = new List<SecurityViolation>();
-            bool requiresEscort = false;
-            string overallRiskLevel = "Low";
-
-            for (int i = 0; i < orderedSessions.Count; i++)
+            foreach (var session in orderedSessions)
             {
-                var currentSession = orderedSessions[i];
-                var currentAreaId = currentSession.AreaId;
+                // Check if there's an alarm trigger for this area
+                // Match by time proximity (within 5 minutes)
+                var relatedAlarm = alarmTriggers
+                    .Where(at => session.AreaId.HasValue &&
+                                 floorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
+                                 at.TriggerTime.HasValue)
+                    .FirstOrDefault(at =>
+                        Math.Abs((at.TriggerTime.Value - session.EnterTime).TotalSeconds) < 300); // Within 5 minutes
 
-                if (!currentAreaId.HasValue || !zoneDict.ContainsKey(currentAreaId.Value))
+                var step = new JourneyStepRead
                 {
-                    continue; // No zone mapping, skip
-                }
-
-                var currentZone = zoneDict[currentAreaId.Value];
-
-                // Check if zone requires escort
-                if (currentZone.RequiresEscort)
-                {
-                    requiresEscort = true;
-                }
-
-                // Check transition from previous zone
-                if (i > 0)
-                {
-                    var prevSession = orderedSessions[i - 1];
-                    var prevAreaId = prevSession.AreaId;
-
-                    if (prevAreaId.HasValue && zoneDict.ContainsKey(prevAreaId.Value))
+                    AreaId = session.AreaId,
+                    AreaName = session.AreaName,
+                    BuildingName = session.BuildingName,
+                    FloorName = session.FloorName,
+                    EnterTime = session.EnterTime,
+                    ExitTime = session.ExitTime,
+                    DurationMinutes = session.DurationInMinutes,
+                    HasIncident = relatedAlarm != null,
+                    Incident = relatedAlarm != null ? new IncidentMarkerRead
                     {
-                        var prevZone = zoneDict[prevAreaId.Value];
+                        AlarmTriggerId = relatedAlarm.Id,
+                        AlarmRecordTrackingId = null, // Not available in AlarmTriggers
+                        AlarmStatus = relatedAlarm.Alarm?.ToString(),
+                        ActionStatus = relatedAlarm.Action?.ToString(),
+                        IsActive = relatedAlarm.IsActive ?? false,
+                        TriggerTime = relatedAlarm.TriggerTime ?? DateTime.UtcNow,
+                        AcknowledgedBy = relatedAlarm.AcknowledgedBy,
+                        InvestigatedBy = relatedAlarm.InvestigatedBy,
+                        InvestigationResult = relatedAlarm.InvestigatedResult,
+                        SecurityName = relatedAlarm.Security?.Name,
+                        TimelineSummary = BuildTimelineSummary(relatedAlarm)
+                    } : null
+                };
 
-                        // Check if transition is allowed
-                        if (!IsTransitionAllowed(prevZone.SecurityZone, currentZone.SecurityZone, currentZone))
-                        {
-                            violations.Add(new SecurityViolation
-                            {
-                                Type = "Unauthorized Zone Access",
-                                AreaName = currentSession.AreaName,
-                                Description = $"Transition from {prevZone.SecurityZone.GetDisplayName()} to {currentZone.SecurityZone.GetDisplayName()} is not allowed",
-                                ZoneType = currentZone.SecurityZone.GetDisplayName()
-                            });
+                journeySteps.Add(step);
 
-                            overallRiskLevel = "High";
-                        }
-                        else if (currentZone.RequiresEscort)
-                        {
-                            violations.Add(new SecurityViolation
-                            {
-                                Type = "Escort Required",
-                                AreaName = currentSession.AreaName,
-                                Description = $"{currentSession.AreaName} requires escort for access",
-                                ZoneType = currentZone.SecurityZone.GetDisplayName()
-                            });
-
-                            overallRiskLevel = overallRiskLevel == "High" ? "High" : "Medium";
-                        }
-                    }
-                }
-                else if (currentZone.SecurityZone == SecurityZone.Restricted || currentZone.SecurityZone == SecurityZone.Critical)
-                {
-                    // First area is restricted/critical - violation
-                    violations.Add(new SecurityViolation
-                    {
-                        Type = "Unauthorized Direct Access",
-                        AreaName = currentSession.AreaName,
-                        Description = $"Direct access to {currentZone.SecurityZone.GetDisplayName()} zone without proper entry",
-                        ZoneType = currentZone.SecurityZone.GetDisplayName()
-                    });
-
-                    overallRiskLevel = "Critical";
-                }
+                if (relatedAlarm != null)
+                    totalIncidents++;
             }
 
             var firstSession = orderedSessions.First();
             var totalDuration = orderedSessions.Sum(s => s.DurationInMinutes ?? 0);
 
-            return new SecurityJourneyCheckRead
+            return new JourneyReplayRead
             {
                 VisitorId = firstSession.VisitorId,
                 VisitorName = firstSession.VisitorName,
+                VisitorIdentityId = firstSession.IdentityId,
                 MemberId = firstSession.MemberId,
                 MemberName = firstSession.MemberName,
-                PathTaken = pathTaken,
-                RiskLevel = overallRiskLevel,
-                RequiresEscort = requiresEscort || violations.Any(v => v.Type == "Escort Required"),
-                Violations = violations,
-                TotalDurationMinutes = totalDuration
+                MemberIdentityId = firstSession.IdentityId,
+                JourneySteps = journeySteps,
+                TotalIncidents = totalIncidents,
+                TotalDurationMinutes = totalDuration,
+                DateRange = $"{from:yyyy-MM-dd} to {to:yyyy-MM-dd}"
             };
+        }
+
+        /// <summary>
+        /// Build timeline summary for incident marker
+        /// </summary>
+        private string BuildTimelineSummary(Entities.Models.AlarmTriggers alarm)
+        {
+            var timeline = new List<string>();
+
+            if (alarm.AcknowledgedAt.HasValue)
+                timeline.Add($"ACK by {alarm.AcknowledgedBy}");
+
+            if (alarm.EnRouteAt.HasValue)
+                timeline.Add($"EN-ROUTE by {alarm.EnRouteBy}");
+
+            if (alarm.ArrivedAt.HasValue)
+                timeline.Add($"ARRIVED by {alarm.ArrivedBy}");
+
+            if (alarm.WaitingTimestamp.HasValue)
+                timeline.Add($"WAITING by {alarm.WaitingBy}");
+
+            if (alarm.InvestigatedTimestamp.HasValue)
+                timeline.Add($"INVESTIGATED by {alarm.InvestigatedBy}");
+
+            if (alarm.DoneTimestamp.HasValue)
+                timeline.Add($"DONE by {alarm.DoneBy}");
+
+            if (alarm.CancelTimestamp.HasValue)
+                timeline.Add($"CANCELLED by {alarm.CancelBy}");
+
+            return timeline.Count > 0 ? string.Join(" → ", timeline) : "No actions taken";
         }
 
         #region Private Helper Methods
@@ -462,26 +471,6 @@ namespace Repositories.Repository.Analytics
                 FloorplanName = rec.FloorplanName,
                 EnterTime = rec.TransTimeUtc
             };
-        }
-
-        /// <summary>
-        /// Check if transition between zones is allowed
-        /// </summary>
-        private bool IsTransitionAllowed(SecurityZone fromZone, SecurityZone toZone, SecurityZoneMapping toZoneMapping)
-        {
-            // If specific restrictions are defined, check them
-            if (!string.IsNullOrEmpty(toZoneMapping.AllowedFromZones))
-            {
-                var allowedZones = toZoneMapping.AllowedFromZones.Split(',')
-                    .Where(s => int.TryParse(s.Trim(), out _))
-                    .Select(int.Parse)
-                    .ToHashSet();
-
-                return allowedZones.Contains((int)fromZone);
-            }
-
-            // Default behavior: use extension method
-            return SecurityZoneExtensions.IsTransitionAllowed(fromZone, toZone);
         }
 
         /// <summary>

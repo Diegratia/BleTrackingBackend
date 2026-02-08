@@ -64,9 +64,9 @@ namespace Shared.Contracts.Analytics
     }
 
     /// <summary>
-    /// Security journey check result
+    /// Journey replay with incident markers
     /// </summary>
-    public class SecurityJourneyCheckRead
+    public class JourneyReplayRead
     {
         /// <summary>Visitor ID</summary>
         public Guid? VisitorId { get; set; }
@@ -74,83 +74,101 @@ namespace Shared.Contracts.Analytics
         /// <summary>Visitor name</summary>
         public string? VisitorName { get; set; }
 
+        /// <summary>Visitor identity ID</summary>
+        public string? VisitorIdentityId { get; set; }
+
         /// <summary>Member ID (if applicable)</summary>
         public Guid? MemberId { get; set; }
 
         /// <summary>Member name (if applicable)</summary>
         public string? MemberName { get; set; }
 
-        /// <summary>Path of areas taken during journey</summary>
-        public List<string> PathTaken { get; set; } = new();
+        /// <summary>Member identity ID (if applicable)</summary>
+        public string? MemberIdentityId { get; set; }
 
-        /// <summary>Overall risk level: Low, Medium, High, Critical</summary>
-        public string RiskLevel { get; set; } = "Low";
+        /// <summary>Journey steps with incident markers</summary>
+        public List<JourneyStepRead> JourneySteps { get; set; } = new();
 
-        /// <summary>Whether visitor requires escort</summary>
-        public bool RequiresEscort { get; set; }
-
-        /// <summary>List of security violations detected</summary>
-        public List<SecurityViolation> Violations { get; set; } = new();
+        /// <summary>Total number of incidents during journey</summary>
+        public int TotalIncidents { get; set; }
 
         /// <summary>Total journey duration in minutes</summary>
         public int? TotalDurationMinutes { get; set; }
+
+        /// <summary>Date range of journey</summary>
+        public string DateRange { get; set; } = string.Empty;
     }
 
     /// <summary>
-    /// Security violation detail
+    /// Single journey step with incident information
     /// </summary>
-    public class SecurityViolation
+    public class JourneyStepRead
     {
-        /// <summary>Violation type</summary>
-        public string Type { get; set; } = string.Empty;
-
-        /// <summary>Area name where violation occurred</summary>
-        public string? AreaName { get; set; }
-
-        /// <summary>Description of the violation</summary>
-        public string Description { get; set; } = string.Empty;
-
-        /// <summary>Security zone that was violated</summary>
-        public string? ZoneType { get; set; }
-    }
-
-    /// <summary>
-    /// Next area prediction result
-    /// </summary>
-    public class NextAreaPredictionRead
-    {
-        /// <summary>Current area name</summary>
-        public string CurrentArea { get; set; } = string.Empty;
-
-        /// <summary>Current area ID</summary>
-        public Guid? CurrentAreaId { get; set; }
-
-        /// <summary>Total number of journeys from this area</summary>
-        public int TotalFromArea { get; set; }
-
-        /// <summary>Predicted next areas with probabilities</summary>
-        public List<AreaProbability> NextAreas { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Area transition probability
-    /// </summary>
-    public class AreaProbability
-    {
-        /// <summary>Next area name</summary>
-        public string AreaName { get; set; } = string.Empty;
-
-        /// <summary>Next area ID</summary>
+        /// <summary>Area ID</summary>
         public Guid? AreaId { get; set; }
 
-        /// <summary>Transition probability (0-1)</summary>
-        public double Probability { get; set; }
+        /// <summary>Area name</summary>
+        public string? AreaName { get; set; }
 
-        /// <summary>Number of transitions to this area</summary>
-        public int Count { get; set; }
+        /// <summary>Building name</summary>
+        public string? BuildingName { get; set; }
 
-        /// <summary>Average time in minutes to reach this area</summary>
-        public double? AvgTimeToReachMinutes { get; set; }
+        /// <summary>Floor name</summary>
+        public string? FloorName { get; set; }
+
+        /// <summary>Enter time</summary>
+        public DateTime EnterTime { get; set; }
+
+        /// <summary>Exit time (null if still in area)</summary>
+        public DateTime? ExitTime { get; set; }
+
+        /// <summary>Duration in minutes</summary>
+        public int? DurationMinutes { get; set; }
+
+        /// <summary>Whether this area had an incident</summary>
+        public bool HasIncident { get; set; }
+
+        /// <summary>Incident marker (if hasIncident = true)</summary>
+        public IncidentMarkerRead? Incident { get; set; }
+    }
+
+    /// <summary>
+    /// Incident marker for journey step
+    /// </summary>
+    public class IncidentMarkerRead
+    {
+        /// <summary>Alarm trigger ID</summary>
+        public Guid AlarmTriggerId { get; set; }
+
+        /// <summary>Alarm record tracking ID</summary>
+        public Guid? AlarmRecordTrackingId { get; set; }
+
+        /// <summary>Alarm status (Active, Done, etc.)</summary>
+        public string? AlarmStatus { get; set; }
+
+        /// <summary>Action status (Investigated, Done, etc.)</summary>
+        public string? ActionStatus { get; set; }
+
+        /// <summary>Whether alarm is still active</summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>Trigger time</summary>
+        public DateTime TriggerTime { get; set; }
+
+        /// <summary>Person who acknowledged</summary>
+        public string? AcknowledgedBy { get; set; }
+
+        /// <summary>Person who investigated</summary>
+        public string? InvestigatedBy { get; set; }
+
+        /// <summary>Investigation result</summary>
+        public string? InvestigationResult { get; set; }
+
+        /// <summary>Security assigned</summary>
+        public string? SecurityName { get; set; }
+
+        /// <summary>Timeline summary (short)</summary>
+        public string TimelineSummary { get; set; } = string.Empty;
     }
 
     /// <summary>

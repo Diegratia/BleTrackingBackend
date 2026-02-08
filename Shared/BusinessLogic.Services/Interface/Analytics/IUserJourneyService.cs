@@ -6,7 +6,7 @@ namespace BusinessLogic.Services.Interface.Analytics
 {
     /// <summary>
     /// Interface for User Journey Analytics Service
-    /// Provides methods for common paths analysis and security checks
+    /// Provides methods for common paths analysis and journey replay
     /// </summary>
     public interface IUserJourneyService
     {
@@ -18,19 +18,21 @@ namespace BusinessLogic.Services.Interface.Analytics
         Task<CommonPathsResponse> GetCommonPathsAsync(UserJourneyFilter filter);
 
         /// <summary>
-        /// Perform security journey check for a specific visitor
+        /// Get journey replay with incident markers for a specific visitor
+        /// Shows the path taken with areas where incidents occurred marked
         /// </summary>
-        /// <param name="visitorId">Visitor ID to check</param>
+        /// <param name="visitorId">Visitor ID to replay journey</param>
         /// <param name="filter">Filter criteria including date range</param>
-        /// <returns>Security check results with violations and risk level</returns>
-        Task<SecurityJourneyCheckRead> GetSecurityCheckForVisitorAsync(Guid visitorId, UserJourneyFilter filter);
+        /// <returns>Journey replay with incident markers and statistics</returns>
+        Task<JourneyReplayRead> GetJourneyReplayForVisitorAsync(Guid visitorId, UserJourneyFilter filter);
 
         /// <summary>
-        /// Perform security journey check for a specific member
+        /// Get journey replay with incident markers for a specific member
+        /// Shows the path taken with areas where incidents occurred marked
         /// </summary>
-        /// <param name="memberId">Member ID to check</param>
+        /// <param name="memberId">Member ID to replay journey</param>
         /// <param name="filter">Filter criteria including date range</param>
-        /// <returns>Security check results with violations and risk level</returns>
-        Task<SecurityJourneyCheckRead> GetSecurityCheckForMemberAsync(Guid memberId, UserJourneyFilter filter);
+        /// <returns>Journey replay with incident markers and statistics</returns>
+        Task<JourneyReplayRead> GetJourneyReplayForMemberAsync(Guid memberId, UserJourneyFilter filter);
     }
 }
