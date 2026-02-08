@@ -208,20 +208,35 @@
                     sql += $" AND m.id = @p{paramIndex++}";
                     parameters.Add(request.MemberId.Value);
                 }
-                // filter tipe person 
-                if (!string.IsNullOrWhiteSpace(request.PersonType))
-            {
-                var type = request.PersonType.Trim().ToLower();
 
+                // NEW: Type filter (takes precedence over PersonType)
+                var type = (request.Type ?? "visitor").Trim().ToLowerInvariant();
                 if (type == "visitor")
                 {
-                    sql += $" AND v.id IS NOT NULL";
+                    sql += $" AND v.id IS NOT NULL AND m.id IS NULL";
                 }
                 else if (type == "member")
                 {
-                    sql += $" AND m.id IS NOT NULL";
+                    sql += $" AND m.id IS NOT NULL AND v.id IS NULL";
                 }
-            }
+                else if (type == "security")
+                {
+                    // Filter by MstSecurity table
+                    sql += $" AND EXISTS (SELECT 1 FROM mst_security s WHERE s.id = c.security_id)";
+                }
+                // Legacy: PersonType filter (for backward compatibility)
+                else if (!string.IsNullOrWhiteSpace(request.PersonType))
+                {
+                    var personType = request.PersonType.Trim().ToLowerInvariant();
+                    if (personType == "visitor")
+                    {
+                        sql += $" AND v.id IS NOT NULL";
+                    }
+                    else if (personType == "member")
+                    {
+                        sql += $" AND m.id IS NOT NULL";
+                    }
+                }
 
                         if (!string.IsNullOrWhiteSpace(request.IdentityId))
             {
@@ -353,8 +368,6 @@
             if (!raw.Any())
                 return new List<VisitorSessionRead>();
 
-            // var wibZone  = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            // var nowWib   = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             var sessions = new List<VisitorSessionRead>();
 
             // === GROUP BY PERSON + AREA (DWELL SUMMARY) ===
@@ -374,14 +387,6 @@
                 var first = records.First();
                 var last  = records.Last();
 
-
-                // var enterWib = TimeZoneInfo.ConvertTimeFromUtc(
-                //     first.TransTimeUtc, wibZone);
-
-                // var lastWib = TimeZoneInfo.ConvertTimeFromUtc(
-                //     last.TransTimeUtc, wibZone);
-
-                // var session = MapToSession(first, enterWib);
                 var session = MapToSession(first);
 
                 // === HANYA 1 HIT → SESSION MASIH AKTIF ===
@@ -389,24 +394,232 @@
                 {
                     session.ExitTime  = null;
                     session.DurationInMinutes = null;
-                    sessions.Add(session);
-                    continue;
+                    session.DurationFormatted = null;
+                    session.SessionStatus = "active";
+                }
+                else
+                {
+                    // === SESSION SELESAI ===
+                    session.ExitTime = last.TransTimeUtc;
+                    session.DurationInMinutes =
+                        (int)(session.ExitTime.Value - session.EnterTime).TotalMinutes;
+                    session.DurationFormatted = FormatDuration(session.DurationInMinutes.Value);
+                    session.SessionStatus = "completed";
+
+                    // jangan tampilkan session 0 menit
+                    if (session.DurationInMinutes < 1)
+                        continue;
                 }
 
-                // === SESSION SELESAI ===
-                // session.ExitTime  = lastWib;
-                session.ExitTime = last.TransTimeUtc;
-                session.DurationInMinutes =
-                    (int)(session.ExitTime.Value - session.EnterTime).TotalMinutes;
+                sessions.Add(session);
+            }
 
-                // jangan tampilkan session 0 menit
-                if (session.DurationInMinutes >= 1)
-                    sessions.Add(session);
+            // === FILTER: HasIncident ===
+            if (request.HasIncident.HasValue)
+            {
+                var alarmTriggers = await GetAlarmTriggersInRangeAsync(fromUtc, toUtc, request);
+
+                foreach (var session in sessions)
+                {
+                    var hasIncident = CheckSessionHasIncident(session, alarmTriggers);
+                    session.HasIncident = hasIncident;
+
+                    // Include full incident data if requested
+                    if (hasIncident && request.IncludeIncident)
+                    {
+                        session.Incident = GetIncidentForSession(session, alarmTriggers);
+                    }
+                }
+
+                // Filter by HasIncident
+                if (request.HasIncident.Value)
+                {
+                    sessions = sessions.Where(s => s.HasIncident).ToList();
+                }
+                else
+                {
+                    sessions = sessions.Where(s => !s.HasIncident).ToList();
+                }
             }
 
             return sessions
                 .OrderByDescending(x => x.EnterTime)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Get alarm triggers in date range for incident matching
+        /// </summary>
+        private async Task<List<Entities.Models.AlarmTriggers>> GetAlarmTriggersInRangeAsync(
+            DateTime fromUtc,
+            DateTime toUtc,
+            TrackingAnalyticsFilter request)
+        {
+            var query = _context.AlarmTriggers
+                .Include(at => at.Floorplan)
+                .ThenInclude(f => f.FloorplanMaskedAreas)
+                .Where(at => at.TriggerTime >= fromUtc && at.TriggerTime <= toUtc);
+
+            // Filter by person type
+            var type = (request.Type ?? "visitor").ToLowerInvariant();
+            if (type == "visitor" && request.VisitorId.HasValue)
+            {
+                query = query.Where(at => at.VisitorId == request.VisitorId);
+            }
+            else if (type == "member" && request.MemberId.HasValue)
+            {
+                query = query.Where(at => at.MemberId == request.MemberId);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        /// <summary>
+        /// Check if session has an incident
+        /// </summary>
+        private bool CheckSessionHasIncident(
+            VisitorSessionRead session,
+            List<Entities.Models.AlarmTriggers> alarmTriggers)
+        {
+            if (!session.AreaId.HasValue)
+                return false;
+
+            // Get FloorplanMaskedAreaIds from alarm triggers
+            var floorplanMaskedAreaIds = alarmTriggers
+                .Where(at => at.Floorplan != null)
+                .SelectMany(at => at.Floorplan.FloorplanMaskedAreas
+                    .Where(fma => fma.Status != 0)
+                    .Select(fma => fma.Id))
+                .ToHashSet();
+
+            // Check if any alarm matches this session
+            return alarmTriggers
+                .Where(at => session.AreaId.HasValue &&
+                           floorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
+                           at.TriggerTime.HasValue)
+                .Any(at =>
+                    Math.Abs((at.TriggerTime.Value - session.EnterTime).TotalSeconds) < 300); // Within 5 minutes
+        }
+
+        /// <summary>
+        /// Get incident details for a session
+        /// </summary>
+        private IncidentMarkerRead GetIncidentForSession(
+            VisitorSessionRead session,
+            List<Entities.Models.AlarmTriggers> alarmTriggers)
+        {
+            if (!session.AreaId.HasValue)
+                return null;
+
+            // Get FloorplanMaskedAreaIds from alarm triggers
+            var floorplanMaskedAreaIds = alarmTriggers
+                .Where(at => at.Floorplan != null)
+                .SelectMany(at => at.Floorplan.FloorplanMaskedAreas
+                    .Where(fma => fma.Status != 0)
+                    .Select(fma => fma.Id))
+                .ToHashSet();
+
+            // Find matching alarm
+            var alarm = alarmTriggers
+                .Where(at => session.AreaId.HasValue &&
+                           floorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
+                           at.TriggerTime.HasValue)
+                .FirstOrDefault(at =>
+                    Math.Abs((at.TriggerTime.Value - session.EnterTime).TotalSeconds) < 300);
+
+            if (alarm == null)
+                return null;
+
+            // Calculate metrics
+            var responseTimeSeconds = alarm.AcknowledgedAt.HasValue
+                ? (int)(alarm.AcknowledgedAt.Value - alarm.TriggerTime.Value).TotalSeconds
+                : 0;
+
+            var resolutionTimeSeconds = alarm.DoneTimestamp.HasValue
+                ? (int)(alarm.DoneTimestamp.Value - alarm.TriggerTime.Value).TotalSeconds
+                : 0;
+
+            return new IncidentMarkerRead
+            {
+                AlarmTriggerId = alarm.Id,
+                AlarmColor = alarm.AlarmColor,
+                AlarmStatus = alarm.Alarm?.ToString(),
+                ActionStatus = alarm.Action?.ToString(),
+                IsActive = alarm.IsActive ?? false,
+
+                TriggerTime = alarm.TriggerTime ?? DateTime.UtcNow,
+                AcknowledgedAt = alarm.AcknowledgedAt,
+                EnRouteAt = alarm.EnRouteAt,
+                ArrivedAt = alarm.ArrivedAt,
+                InvestigatedAt = alarm.InvestigatedTimestamp,
+                DoneAt = alarm.DoneTimestamp,
+
+                AcknowledgedBy = alarm.AcknowledgedBy,
+                EnRouteBy = alarm.EnRouteBy,
+                ArrivedBy = alarm.ArrivedBy,
+                InvestigatedBy = alarm.InvestigatedBy,
+                DoneBy = alarm.DoneBy,
+
+                SecurityId = alarm.SecurityId,
+                SecurityName = alarm.Security?.Name,
+
+                InvestigationResult = alarm.InvestigatedResult,
+
+                ResponseTimeSeconds = responseTimeSeconds,
+                ResponseTimeFormatted = FormatDuration(responseTimeSeconds),
+                ResolutionTimeSeconds = resolutionTimeSeconds,
+                ResolutionTimeFormatted = FormatDuration(resolutionTimeSeconds),
+
+                TimelineSummary = BuildTimelineSummary(alarm)
+            };
+        }
+
+        /// <summary>
+        /// Build timeline summary for incident
+        /// </summary>
+        private string BuildTimelineSummary(Entities.Models.AlarmTriggers alarm)
+        {
+            var timeline = new List<string>();
+
+            if (alarm.AcknowledgedAt.HasValue)
+                timeline.Add($"ACK by {alarm.AcknowledgedBy}");
+
+            if (alarm.EnRouteAt.HasValue)
+                timeline.Add($"EN-ROUTE by {alarm.EnRouteBy}");
+
+            if (alarm.ArrivedAt.HasValue)
+                timeline.Add($"ARRIVED by {alarm.ArrivedBy}");
+
+            if (alarm.WaitingTimestamp.HasValue)
+                timeline.Add($"WAITING by {alarm.WaitingBy}");
+
+            if (alarm.InvestigatedTimestamp.HasValue)
+                timeline.Add($"INVESTIGATED by {alarm.InvestigatedBy}");
+
+            if (alarm.DoneTimestamp.HasValue)
+                timeline.Add($"DONE by {alarm.DoneBy}");
+
+            if (alarm.CancelTimestamp.HasValue)
+                timeline.Add($"CANCELLED by {alarm.CancelBy}");
+
+            return timeline.Count > 0 ? string.Join(" → ", timeline) : "No actions taken";
+        }
+
+        /// <summary>
+        /// Format duration in human-readable string
+        /// </summary>
+        private string FormatDuration(int minutes)
+        {
+            if (minutes < 60)
+                return $"{minutes} min";
+
+            var hours = minutes / 60;
+            var mins = minutes % 60;
+
+            if (mins == 0)
+                return $"{hours} hour{(hours > 1 ? "s" : "")}";
+
+            return $"{hours} hour{(hours > 1 ? "s" : "")} {mins} min";
         }
 
         // === GET VISUAL PATHS DATA FOR FLOORPLAN VISUALIZATION ===
@@ -441,7 +654,56 @@
                 .SqlQueryRaw<VisualPathRaw>(fullSql, allParams.ToArray())
                 .ToListAsync();
 
+            // Apply sampling if MaxPointsPerFloorplan is set
+            if (request.MaxPointsPerFloorplan.HasValue && request.MaxPointsPerFloorplan.Value > 0)
+            {
+                visualPaths = ApplyMaxPointsSampling(visualPaths, request.MaxPointsPerFloorplan.Value);
+            }
+
             return visualPaths;
+        }
+
+        /// <summary>
+        /// Apply sampling to limit points per floorplan
+        /// Distributes sampled points evenly across time range
+        /// </summary>
+        private List<VisualPathRaw> ApplyMaxPointsSampling(
+            List<VisualPathRaw> visualPaths,
+            int maxPointsPerFloorplan)
+        {
+            // Group by floorplan
+            var groupedByFloorplan = visualPaths
+                .GroupBy(p => new { p.FloorplanId, p.FloorplanName, p.FloorplanImage })
+                .ToList();
+
+            var result = new List<VisualPathRaw>();
+
+            foreach (var group in groupedByFloorplan)
+            {
+                var points = group.ToList();
+
+                // If within limit, keep all
+                if (points.Count <= maxPointsPerFloorplan)
+                {
+                    result.AddRange(points);
+                    continue;
+                }
+
+                // Apply sampling: take N points evenly distributed
+                var sampleRate = (double)points.Count / maxPointsPerFloorplan;
+                var sampledPoints = new List<VisualPathRaw>();
+
+                for (int i = 0; i < maxPointsPerFloorplan; i++)
+                {
+                    // Calculate index to get evenly distributed points
+                    var targetIndex = (int)Math.Floor(i * sampleRate);
+                    sampledPoints.Add(points[targetIndex]);
+                }
+
+                result.AddRange(sampledPoints);
+            }
+
+            return result;
         }
 
         // === GET PEAK HOURS BY AREA ===

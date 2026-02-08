@@ -112,9 +112,33 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPost("visitor-session")]
         public async Task<IActionResult> GetVisitorSessionSummaryAsync(
             [FromBody] TrackingAnalyticsFilter request,
-            [FromQuery] bool includeVisualPaths = false)
+            [FromQuery] bool includeVisualPaths = false,
+            [FromQuery] bool includeSummary = false,
+            [FromQuery] bool includeIncident = true,
+            [FromQuery] string type = null,
+            [FromQuery] bool? hasIncident = null,
+            [FromQuery] int? maxPointsPerFloorplan = null)
         {
-            var result = await _sessionService.GetVisitorSessionSummaryAsync(request, includeVisualPaths);
+            // Set parameters from query string (for backward compatibility)
+            if (includeVisualPaths)
+                request.IncludeVisualPaths = true;
+
+            if (includeSummary)
+                request.IncludeSummary = true;
+
+            if (maxPointsPerFloorplan.HasValue)
+                request.MaxPointsPerFloorplan = maxPointsPerFloorplan.Value;
+
+            if (request.IncludeIncident) // Only override if not explicitly set
+                request.IncludeIncident = includeIncident;
+
+            if (!string.IsNullOrEmpty(type))
+                request.Type = type;
+
+            if (hasIncident.HasValue)
+                request.HasIncident = hasIncident;
+
+            var result = await _sessionService.GetVisitorSessionSummaryAsync(request);
             return Ok(result);
         }
 

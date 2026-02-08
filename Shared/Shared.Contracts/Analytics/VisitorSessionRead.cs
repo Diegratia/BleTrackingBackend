@@ -259,5 +259,30 @@ namespace Shared.Contracts.Analytics
         /// Host name (optional)
         /// </summary>
         public string? HostName { get; set; }
+
+        // =====================================================
+        // NEW FIELDS
+        // =====================================================
+
+        /// <summary>
+        /// Duration formatted in human-readable string
+        /// null if session is still active
+        /// </summary>
+        public string? DurationFormatted { get; set; }
+
+        /// <summary>
+        /// Session status: "active" or "completed"
+        /// </summary>
+        public string SessionStatus { get; set; } = "completed";
+
+        /// <summary>
+        /// Whether this session has an incident
+        /// </summary>
+        public bool HasIncident { get; set; }
+
+        /// <summary>
+        /// Incident marker data (only included if IncludeIncident=true)
+        /// </summary>
+        public IncidentMarkerRead? Incident { get; set; }
     }
 }

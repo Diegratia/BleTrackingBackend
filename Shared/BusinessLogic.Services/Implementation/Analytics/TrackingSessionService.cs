@@ -4,6 +4,7 @@ using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -13,6 +14,7 @@ using QuestPDF.Drawing;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Helpers.Consumer;
 using Shared.Contracts;
 using Shared.Contracts.Analytics;
@@ -25,27 +27,25 @@ namespace BusinessLogic.Services.Implementation.Analytics
         private readonly TrackingSessionRepository _repository;
         private readonly IAuditEmitter _audit;
         private readonly ILogger<TrackingSessionService> _logger;
+        private readonly IDistributedCache _cache;
 
         public TrackingSessionService(
             ITrackingReportPresetService presetService,
             TrackingSessionRepository repository,
             IAuditEmitter audit,
             IHttpContextAccessor http,
-            ILogger<TrackingSessionService> logger) : base(http)
+            ILogger<TrackingSessionService> logger,
+            IDistributedCache cache) : base(http)
         {
             _presetService = presetService;
             _repository = repository;
             _audit = audit;
             _logger = logger;
+            _cache = cache;
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
         public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request)
-        {
-            return await GetVisitorSessionSummaryAsync(request, false);
-        }
-
-        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request, bool includeVisualPaths)
         {
             try
             {
@@ -60,35 +60,134 @@ namespace BusinessLogic.Services.Implementation.Analytics
                         item.EnterTime =
                             TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
 
-                        item.ExitTime =
-                            TimezoneHelper.ConvertFromUtc(item.ExitTime, tz);
+                        if (item.ExitTime.HasValue)
+                            item.ExitTime =
+                                TimezoneHelper.ConvertFromUtc(item.ExitTime.Value, tz);
                     }
                 }
 
-                // Standard response without enhancements
-                if (!includeVisualPaths)
-                {
-                    return ApiResponse.Success("Visitor session summary retrieved successfully", data);
-                }
+                // === GROUP BY PERSON ===
+                var groupedPersons = GroupSessionsByPerson(data);
 
-                // Enhanced response with summary and visual paths
-                var summary = BuildSummary(data);
-                var visualPaths = await BuildVisualPathsAsync(request, tz);
-
-                var enhancedResponse = new VisitorSessionEnhancedResponseRead
+                // === BUILD RESPONSE ===
+                var response = new GroupedSessionsResponse
                 {
-                    Data = data,
-                    Summary = summary,
-                    VisualPaths = visualPaths
+                    Persons = groupedPersons
                 };
 
-                return ApiResponse.Success("Visitor session summary retrieved successfully", enhancedResponse);
+                // Optional: Include summary
+                if (request.IncludeSummary)
+                {
+                    response.Summary = BuildSummary(data);
+                }
+
+                // Optional: Include visual paths
+                if (request.IncludeVisualPaths)
+                {
+                    var visualPaths = await BuildVisualPathsAsync(request, tz);
+                    response.VisualPaths = visualPaths;
+                }
+
+                return ApiResponse.Success("Visitor sessions retrieved successfully", response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetVisitorSessionSummaryAsync");
                 return ApiResponse.InternalError($"Internal server error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Group sessions by person with summary statistics
+        /// </summary>
+        private List<PersonSessionsRead> GroupSessionsByPerson(List<VisitorSessionRead> sessions)
+        {
+            var grouped = sessions
+                .GroupBy(s => new { s.PersonId, s.PersonName, s.PersonType, s.IdentityId, s.CardId, s.CardNumber, s.VisitorId, s.VisitorName, s.MemberId, s.MemberName })
+                .Select(g => new PersonSessionsRead
+                {
+                    PersonId = g.Key.PersonId,
+                    PersonName = g.Key.PersonName,
+                    PersonType = g.Key.PersonType,
+                    IdentityId = g.Key.IdentityId,
+                    CardId = g.Key.CardId,
+                    CardNumber = g.Key.CardNumber,
+                    VisitorId = g.Key.VisitorId,
+                    VisitorName = g.Key.VisitorName,
+                    MemberId = g.Key.MemberId,
+                    MemberName = g.Key.MemberName,
+
+                    TotalSessions = g.Count(),
+                    TotalDurationMinutes = g.Where(s => s.DurationInMinutes.HasValue).Sum(s => s.DurationInMinutes.Value),
+                    TotalDurationFormatted = FormatDuration(g.Where(s => s.DurationInMinutes.HasValue).Sum(s => s.DurationInMinutes.Value)),
+                    TotalIncidents = g.Count(s => s.HasIncident),
+                    RestrictedAreasVisited = g.Count(s => s.AreaName?.ToLower().Contains("server") == true ||
+                                                               s.AreaName?.ToLower().Contains("vault") == true ||
+                                                               s.AreaName?.ToLower().Contains("restricted") == true),
+
+                    AreasVisited = g.Select(s => s.AreaName)
+                        .Where(a => !string.IsNullOrEmpty(a))
+                        .Distinct()
+                        .ToList(),
+
+                    FirstAreaEntered = g.OrderBy(s => s.EnterTime).FirstOrDefault()?.AreaName,
+                    LastAreaExited = g.OrderByDescending(s => s.ExitTime ?? s.EnterTime).FirstOrDefault()?.AreaName,
+                    CurrentArea = g.FirstOrDefault(s => s.ExitTime == null)?.AreaName,
+
+                    // Map to PersonSessionItemRead (exclude person info)
+                    Sessions = g.OrderBy(s => s.EnterTime).Select(s => new PersonSessionItemRead
+                    {
+                        AreaId = s.AreaId,
+                        AreaName = s.AreaName,
+                        BuildingId = s.BuildingId,
+                        BuildingName = s.BuildingName,
+                        FloorId = s.FloorId,
+                        FloorName = s.FloorName,
+                        FloorplanId = s.FloorplanId,
+                        FloorplanName = s.FloorplanName,
+                        FloorplanImage = s.FloorplanImage,
+                        EnterTime = s.EnterTime,
+                        ExitTime = s.ExitTime,
+                        DurationMinutes = s.DurationInMinutes,
+                        DurationFormatted = s.DurationFormatted,
+                        SessionStatus = s.SessionStatus,
+                        HasIncident = s.HasIncident,
+                        Incident = s.Incident
+                    }).ToList()
+                })
+                .ToList();
+
+            return grouped;
+        }
+
+        /// <summary>
+        /// Format duration in human-readable string
+        /// </summary>
+        private string FormatDuration(int totalMinutes)
+        {
+            if (totalMinutes < 60)
+                return $"{totalMinutes} min";
+
+            var hours = totalMinutes / 60;
+            var mins = totalMinutes % 60;
+
+            if (mins == 0)
+                return $"{hours} hour{(hours > 1 ? "s" : "")}";
+
+            return $"{hours} hour{(hours > 1 ? "s" : "")} {mins} min";
+        }
+
+        /// <summary>
+        /// Legacy method for backward compatibility
+        /// Use GetVisitorSessionSummaryAsync(request) with IncludeVisualPaths parameter instead
+        /// </summary>
+        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request, bool includeVisualPaths)
+        {
+            // Set IncludeVisualPaths in request
+            request.IncludeVisualPaths = includeVisualPaths;
+
+            // Call new method
+            return await GetVisitorSessionSummaryAsync(request);
         }
 
         private static VisitorSessionSummaryRead BuildSummary(List<VisitorSessionRead> sessions)
@@ -133,6 +232,20 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         private async Task<VisualPathsRead> BuildVisualPathsAsync(TrackingAnalyticsFilter request, TimeZoneInfo tz)
         {
+            // Generate cache key based on filter parameters
+            var cacheKey = GenerateVisualPathsCacheKey(request);
+
+            // Try get from Redis cache
+            var cachedData = await _cache.GetStringAsync(cacheKey);
+            if (cachedData != null)
+            {
+                _logger.LogInformation("VisualPaths Redis cache hit: {CacheKey}", cacheKey);
+                var deserialized = JsonSerializer.Deserialize<VisualPathsRead>(cachedData);
+                return deserialized ?? new VisualPathsRead();
+            }
+
+            // Cache miss - fetch from repository
+            _logger.LogInformation("VisualPaths Redis cache miss: {CacheKey}", cacheKey);
             var rawPaths = await _repository.GetVisualPathsDataAsync(request);
 
             var visualPaths = new VisualPathsRead();
@@ -172,7 +285,42 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 };
             }
 
+            // Serialize and cache to Redis for 10 minutes
+            var serialized = JsonSerializer.Serialize(visualPaths);
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                SlidingExpiration = TimeSpan.FromMinutes(5)
+            };
+
+            await _cache.SetStringAsync(cacheKey, serialized, cacheOptions);
+            _logger.LogInformation("VisualPaths cached to Redis: {CacheKey} for 10 minutes", cacheKey);
+
             return visualPaths;
+        }
+
+        /// <summary>
+        /// Generate cache key for visual paths based on filter parameters
+        /// </summary>
+        private string GenerateVisualPathsCacheKey(TrackingAnalyticsFilter request)
+        {
+            // Create key from relevant filter parameters
+            var parts = new List<string>
+            {
+                "visualpaths",
+                request.From?.ToString("yyyyMMddHHmm") ?? "none",
+                request.To?.ToString("yyyyMMddHHmm") ?? "none",
+                request.BuildingId?.ToString() ?? "none",
+                request.FloorId?.ToString() ?? "none",
+                request.AreaId?.ToString() ?? "none",
+                request.VisitorId?.ToString() ?? "none",
+                request.MemberId?.ToString() ?? "none",
+                request.PersonType ?? "all",
+                request.IdentityId ?? "none",
+                request.MaxPointsPerFloorplan?.ToString() ?? "none"
+            };
+
+            return string.Join(":", parts);
         }
 
         public async Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)

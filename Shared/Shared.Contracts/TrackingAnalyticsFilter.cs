@@ -87,6 +87,48 @@ namespace Shared.Contracts
         public string? PersonType { get; set; }
 
         // =====================================================
+        // NEW FILTERS
+        // =====================================================
+
+        /// <summary>
+        /// Person type filter: "visitor" (default), "member", "security"
+        /// </summary>
+        public string Type { get; set; } = "visitor";
+
+        /// <summary>
+        /// Filter sessions with/without incidents
+        /// true = only sessions with incidents
+        /// false = only sessions without incidents
+        /// null = all sessions (default)
+        /// </summary>
+        public bool? HasIncident { get; set; }
+
+        /// <summary>
+        /// Include summary statistics in response
+        /// </summary>
+        public bool IncludeSummary { get; set; } = false;
+
+        /// <summary>
+        /// Include visual paths per floorplan in response
+        /// </summary>
+        public bool IncludeVisualPaths { get; set; } = false;
+
+        /// <summary>
+        /// Maximum points per floorplan for visual paths (sampling)
+        /// Reduces data payload for better performance
+        /// Default: 1000 points per floorplan
+        /// Set to 0 or null for no limit (not recommended for large datasets)
+        /// </summary>
+        public int? MaxPointsPerFloorplan { get; set; } = 1000;
+
+        /// <summary>
+        /// Include incident data in sessions
+        /// false = only hasIncident boolean flag
+        /// true = include full incident object (default)
+        /// </summary>
+        public bool IncludeIncident { get; set; } = true;
+
+        // =====================================================
         // EXPORT OPTIONS
         // =====================================================
 
