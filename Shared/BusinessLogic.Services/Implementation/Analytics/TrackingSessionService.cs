@@ -316,19 +316,19 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return string.Join(":", parts);
         }
 
-        public async Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)
-        {
-            var request = await _presetService.ApplyPresetAsync(presetId);
-            request.Timezone = overrideRequest.Timezone;
-            request.PersonType = overrideRequest.PersonType;
-            if (overrideRequest.From.HasValue)
-                request.From = overrideRequest.From;
+        // public async Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)
+        // {
+        //     var request = await _presetService.ApplyPresetAsync(presetId);
+        //     request.Timezone = overrideRequest.Timezone;
+        //     request.PersonType = overrideRequest.PersonType;
+        //     if (overrideRequest.From.HasValue)
+        //         request.From = overrideRequest.From;
 
-            if (overrideRequest.To.HasValue)
-                request.To = overrideRequest.To;
+        //     if (overrideRequest.To.HasValue)
+        //         request.To = overrideRequest.To;
 
-            return await GetVisitorSessionSummaryAsync(request);
-        }
+        //     return await GetVisitorSessionSummaryAsync(request);
+        // }
 
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request)
         {

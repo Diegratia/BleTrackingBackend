@@ -14,7 +14,10 @@
       "Bash(dotnet clean:*)",
       "Bash(findstr:*)",
       "Bash(git rm:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(git -C \"C:\\\\Migrasi\\\\Projects\\\\Projects\\\\BleTrackingBackend\" status:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)"
     ]
   }
 }

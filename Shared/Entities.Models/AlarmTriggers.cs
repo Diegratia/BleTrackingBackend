@@ -114,12 +114,12 @@ using Shared.Contracts;
         [MaxLength(50)]
         public string? AcknowledgedBy { get; set; }
 
-        [Column("en_route_at")]
-        public DateTime? EnRouteAt { get; set; }
+        [Column("dispatched_at")]
+        public DateTime? DispatchedAt { get; set; }
 
-        [Column("en_route_by")]
+        [Column("dispatched_by")]
         [MaxLength(50)]
-        public string? EnRouteBy { get; set; }
+        public string? DispatchedBy { get; set; }
 
         [Column("arrived_at")]
         public DateTime? ArrivedAt { get; set; }

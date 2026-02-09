@@ -9,7 +9,7 @@ public interface ITrackingSessionService
     Task<GroupedSessionsResponse> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request);
     Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request);
     Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsFilter request);
-    Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest);
+    // Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest);
 
     /// <summary>
     /// Get peak hours data grouped by area

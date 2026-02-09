@@ -124,13 +124,13 @@
                 public Guid Id { get; set; }
                 public DateTime? TriggerTime { get; set; }
                 public DateTime? AcknowledgedAt { get; set; }
-                public DateTime? EnRouteAt { get; set; }
+                public DateTime? DispatchedAt { get; set; }
                 public DateTime? ArrivedAt { get; set; }
                 public DateTime? InvestigatedTimestamp { get; set; }
                 public DateTime? DoneTimestamp { get; set; }
                 public DateTime? CancelTimestamp { get; set; }
                 public string? AcknowledgedBy { get; set; }
-                public string? EnRouteBy { get; set; }
+                public string? DispatchedBy { get; set; }
                 public string? ArrivedBy { get; set; }
                 public string? InvestigatedBy { get; set; }
                 public string? DoneBy { get; set; }
@@ -524,13 +524,13 @@
                     at.Id,
                     at.TriggerTime,
                     at.AcknowledgedAt,
-                    at.EnRouteAt,
+                    at.DispatchedAt,
                     at.ArrivedAt,
                     at.InvestigatedTimestamp,
                     at.DoneTimestamp,
                     at.CancelTimestamp,
                     at.AcknowledgedBy,
-                    at.EnRouteBy,
+                    at.DispatchedBy,
                     at.ArrivedBy,
                     at.InvestigatedBy,
                     at.DoneBy,
@@ -578,13 +578,13 @@
                 Id = ad.Id,
                 TriggerTime = ad.TriggerTime,
                 AcknowledgedAt = ad.AcknowledgedAt,
-                EnRouteAt = ad.EnRouteAt,
+                DispatchedAt = ad.DispatchedAt,
                 ArrivedAt = ad.ArrivedAt,
                 InvestigatedTimestamp = ad.InvestigatedTimestamp,
                 DoneTimestamp = ad.DoneTimestamp,
                 CancelTimestamp = ad.CancelTimestamp,
                 AcknowledgedBy = ad.AcknowledgedBy,
-                EnRouteBy = ad.EnRouteBy,
+                DispatchedBy = ad.DispatchedBy,
                 ArrivedBy = ad.ArrivedBy,
                 InvestigatedBy = ad.InvestigatedBy,
                 DoneBy = ad.DoneBy,
@@ -661,13 +661,13 @@
 
                 TriggerTime = alarm.TriggerTime ?? DateTime.UtcNow,
                 AcknowledgedAt = alarm.AcknowledgedAt,
-                EnRouteAt = alarm.EnRouteAt,
+                DispatchedAt = alarm.DispatchedAt,
                 ArrivedAt = alarm.ArrivedAt,
                 InvestigatedAt = alarm.InvestigatedTimestamp,
                 DoneAt = alarm.DoneTimestamp,
 
                 AcknowledgedBy = alarm.AcknowledgedBy,
-                EnRouteBy = alarm.EnRouteBy,
+                DispatchedBy = alarm.DispatchedBy,
                 ArrivedBy = alarm.ArrivedBy,
                 InvestigatedBy = alarm.InvestigatedBy,
                 DoneBy = alarm.DoneBy,
@@ -696,8 +696,8 @@
             if (alarm.AcknowledgedAt.HasValue)
                 timeline.Add($"ACK by {alarm.AcknowledgedBy}");
 
-            if (alarm.EnRouteAt.HasValue)
-                timeline.Add($"EN-ROUTE by {alarm.EnRouteBy}");
+            if (alarm.DispatchedAt.HasValue)
+                timeline.Add($"DISPATCHED by {alarm.DispatchedBy}");
 
             if (alarm.ArrivedAt.HasValue)
                 timeline.Add($"ARRIVED by {alarm.ArrivedBy}");

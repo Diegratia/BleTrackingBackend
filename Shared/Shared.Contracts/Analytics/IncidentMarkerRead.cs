@@ -21,7 +21,7 @@ namespace Shared.Contracts.Analytics
         /// <summary>Alarm status: "Active", "Done", "Cancelled"</summary>
         public string? AlarmStatus { get; set; }
 
-        /// <summary>Action status: "Acknowledged", "EnRoute", "Arrived", "Investigated", "Done"</summary>
+        /// <summary>Action status: "Acknowledged", "Dispatched", "Arrived", "Investigated", "Done"</summary>
         public string? ActionStatus { get; set; }
 
         /// <summary>Whether alarm is still active</summary>
@@ -37,8 +37,8 @@ namespace Shared.Contracts.Analytics
         /// <summary>When alarm was acknowledged</summary>
         public DateTime? AcknowledgedAt { get; set; }
 
-        /// <summary>When security en route</summary>
-        public DateTime? EnRouteAt { get; set; }
+        /// <summary>When security was dispatched</summary>
+        public DateTime? DispatchedAt { get; set; }
 
         /// <summary>When security arrived</summary>
         public DateTime? ArrivedAt { get; set; }
@@ -56,8 +56,8 @@ namespace Shared.Contracts.Analytics
         /// <summary>Person who acknowledged</summary>
         public string? AcknowledgedBy { get; set; }
 
-        /// <summary>Person who went en route</summary>
-        public string? EnRouteBy { get; set; }
+        /// <summary>Person who was dispatched</summary>
+        public string? DispatchedBy { get; set; }
 
         /// <summary>Person who arrived</summary>
         public string? ArrivedBy { get; set; }

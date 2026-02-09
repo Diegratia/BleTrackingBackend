@@ -15,6 +15,10 @@ using DotNetEnv;
 using BusinessLogic.Services.Implementation.Analytics;
 using BusinessLogic.Services.Interface.Analytics;
 using Repositories.Repository.Analytics;
+using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -156,16 +160,27 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddAuthorizationNewPolicies();
+builder.Services.AddRedisExtension(builder.Configuration);
+
 
 builder.Services.AddAutoMapper(typeof(TrackingTransactionProfile));
 
+builder.Services.AddScoped<ITrackingSessionService, TrackingSessionService>();
 builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
+builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
+
 
 
 builder.Services.AddScoped<TrackingTransactionRepository>();
 builder.Services.AddScoped<TrackingSessionRepository>();
 builder.Services.AddScoped<TrackingReportPresetRepository>();
+builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
 
 
 

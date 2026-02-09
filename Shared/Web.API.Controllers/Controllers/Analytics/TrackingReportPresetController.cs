@@ -20,14 +20,15 @@ namespace Web.API.Controllers.Controllers.Analytics
     public class TrackingReportPresetController : ControllerBase
     {
         private readonly ITrackingReportPresetService _presetService;
-        private readonly ITrackingSessionService _sessionService;
+        private readonly ITrackingAnalyticsV2Service _analyticsV2Service;
 
         public TrackingReportPresetController(
             ITrackingReportPresetService presetService,
-            ITrackingSessionService analyticsV2Service)
+            ITrackingAnalyticsV2Service analyticsV2Service)
         {
             _presetService = presetService;
-            _sessionService = analyticsV2Service;
+            _analyticsV2Service = analyticsV2Service;
+
         }
 
         // ==============================================
@@ -38,7 +39,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         Guid presetId,
         TrackingAnalyticsFilter overrideRequest)
         {
-            var result = await _sessionService.GetVisitorSessionSummaryByPresetAsync(presetId, overrideRequest);
+            var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId, overrideRequest);
             return Ok(ApiResponse.Success("Preset applied successfully", result));
         }
 

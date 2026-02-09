@@ -99,11 +99,11 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
         }
 
-        [HttpPut("{id}/en-route")]
-        public async Task<IActionResult> EnRoute(Guid id)
+        [HttpPut("{id}/dispatched")]
+        public async Task<IActionResult> Dispatched(Guid id)
         {
-            await _service.EnRouteAsync(id, CurrentUsername);
-            return Ok(ApiResponse.Success("Security marked as en-route"));
+            await _service.DispatchedAsync(id, CurrentUsername);
+            return Ok(ApiResponse.Success("Security dispatched to location"));
         }
 
         [HttpPut("{id}/arrived")]

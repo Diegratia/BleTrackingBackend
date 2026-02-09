@@ -155,8 +155,8 @@ Analytics service provides comprehensive tracking and alarm analytics for BLE tr
               "triggerTime": "2025-02-08T09:16:30",
               "acknowledgedAt": "2025-02-08T09:16:45",
               "acknowledgedBy": "Admin User",
-              "enRouteAt": "2025-02-08T09:17:00",
-              "enRouteBy": "Security Guard A",
+              "dispatchedAt": "2025-02-08T09:17:00",
+              "dispatchedBy": "Security Guard A",
               "arrivedAt": "2025-02-08T09:19:00",
               "arrivedBy": "Security Guard A",
               "investigatedAt": "2025-02-08T09:25:00",
@@ -173,7 +173,7 @@ Analytics service provides comprehensive tracking and alarm analytics for BLE tr
               "resolutionTimeSeconds": 1710,
               "resolutionTimeFormatted": "28 min 30 sec",
 
-              "timelineSummary": "ACK by Admin User → EN-ROUTE by Security Guard A → ARRIVED → INVESTIGATED → DONE"
+              "timelineSummary": "ACK by Admin User → DISPATCHED by Security Guard A → ARRIVED → INVESTIGATED → DONE"
             }
           }
         ]
@@ -352,20 +352,20 @@ When `hasIncident: true` and `includeIncident: true`, each session includes:
     "alarmTriggerId": Guid,
     "alarmColor": string,          // "red" | "yellow" | "green"
     "alarmStatus": string,         // "Active" | "Done" | "Cancelled"
-    "actionStatus": string,        // "Acknowledged" | "EnRoute" | "Arrived" | "Investigated" | "Done"
+    "actionStatus": string,        // "Acknowledged" | "Dispatched" | "Arrived" | "Investigated" | "Done"
     "isActive": boolean,
 
     // Timestamps
     "triggerTime": DateTime,
     "acknowledgedAt": DateTime | null,
-    "enRouteAt": DateTime | null,
+    "dispatchedAt": DateTime | null,
     "arrivedAt": DateTime | null,
     "investigatedAt": DateTime | null,
     "doneAt": DateTime | null,
 
     // Actors
     "acknowledgedBy": string | null,
-    "enRouteBy": string | null,
+    "dispatchedBy": string | null,
     "arrivedBy": string | null,
     "investigatedBy": string | null,
     "doneBy": string | null,
@@ -384,7 +384,7 @@ When `hasIncident: true` and `includeIncident: true`, each session includes:
     "resolutionTimeFormatted": string,    // "28 min 30 sec"
 
     // Summary
-    "timelineSummary": string             // "ACK by Admin → EN-ROUTE → ARRIVED → INVESTIGATED → DONE"
+    "timelineSummary": string             // "ACK by Admin → DISPATCHED → ARRIVED → INVESTIGATED → DONE"
   }
 }
 ```
@@ -617,7 +617,7 @@ Alarm incidents go through the following workflow states:
 
 1. **Triggered** - Alarm triggered by beacon
 2. **Acknowledged** - Alarm acknowledged by admin
-3. **En Route** - Security personnel en route to location
+3. **Dispatched** - Security personnel dispatched to location
 4. **Arrived** - Security personnel arrived at location
 5. **Waiting** - Put in waiting queue (optional)
 6. **Investigated** - Investigation started
@@ -646,7 +646,7 @@ public enum AlarmRecordStatus
 public enum ActionStatus
 {
     Acknowledged = 1,
-    EnRoute = 2,
+    Dispatched = 2,
     Arrived = 3,
     Investigated = 4,
     Done = 5
@@ -710,14 +710,14 @@ public class IncidentMarkerRead
     // Timestamps
     public DateTime TriggerTime { get; set; }
     public DateTime? AcknowledgedAt { get; set; }
-    public DateTime? EnRouteAt { get; set; }
+    public DateTime? DispatchedAt { get; set; }
     public DateTime? ArrivedAt { get; set; }
     public DateTime? InvestigatedAt { get; set; }
     public DateTime? DoneAt { get; set; }
 
     // Actors
     public string? AcknowledgedBy { get; set; }
-    public string? EnRouteBy { get; set; }
+    public string? DispatchedBy { get; set; }
     public string? ArrivedBy { get; set; }
     public string? InvestigatedBy { get; set; }
     public string? DoneBy { get; set; }

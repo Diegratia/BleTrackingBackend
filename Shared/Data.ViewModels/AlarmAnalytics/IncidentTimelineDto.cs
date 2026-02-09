@@ -87,8 +87,6 @@ namespace Data.ViewModels.AlarmAnalytics
         public double? DurationInSeconds { get; set; }
         public string? DurationFormatted { get; set; }  // "2 minutes 30 seconds"
         public string Description { get; set; }
-        public string? Icon { get; set; }  // Emoji for UI
-        public string? Color { get; set; }  // Color code for UI
     }
 
     /// <summary>

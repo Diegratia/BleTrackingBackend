@@ -216,24 +216,24 @@ namespace BusinessLogic.Services.Implementation
             await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
         }
 
-        public async Task EnRouteAsync(Guid id, string username)
+        public async Task DispatchedAsync(Guid id, string username)
         {
             var alarm = await _repository.GetByIdEntityAsync(id);
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
             if (alarm.AcknowledgedAt == null)
-                throw new BusinessException("Cannot mark en-route: alarm not acknowledged yet");
+                throw new BusinessException("Cannot mark dispatched: alarm not acknowledged yet");
 
-            if (alarm.EnRouteAt.HasValue)
-                throw new BusinessException("Alarm already marked as en-route");
+            if (alarm.DispatchedAt.HasValue)
+                throw new BusinessException("Alarm already marked as dispatched");
 
-            alarm.EnRouteAt = DateTime.UtcNow;
-            alarm.EnRouteBy = username;
+            alarm.DispatchedAt = DateTime.UtcNow;
+            alarm.DispatchedBy = username;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Security {username} en route to location");
+            await _audit.Updated("AlarmTriggers", id, $"Security {username} dispatched to location");
         }
 
         public async Task ArrivedAsync(Guid id, string username)
@@ -242,8 +242,8 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.EnRouteAt == null)
-                throw new BusinessException("Cannot mark arrived: security not en-route yet");
+            if (alarm.DispatchedAt == null)
+                throw new BusinessException("Cannot mark arrived: security not dispatched yet");
 
             if (alarm.ArrivedAt.HasValue)
                 throw new BusinessException("Alarm already marked as arrived");
@@ -345,8 +345,6 @@ namespace BusinessLogic.Services.Implementation
                 DurationInSeconds = 0,
                 DurationFormatted = "0 seconds",
                 Description = $"Alarm triggered by beacon {alarm.BeaconId ?? "Unknown"}",
-                Icon = "🚨",
-                Color = "#FF4444"
             });
 
             // Calculate previous timestamp for duration
@@ -370,36 +368,32 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"Alarm acknowledged by {alarm.AcknowledgedBy ?? "Security"}",
-                    Icon = "✋",
-                    Color = "#2196F3"
                 });
 
                 previousTimestamp = alarm.AcknowledgedAt.Value;
             }
 
-            // Stage 3: En Route (if exists)
-            if (alarm.EnRouteAt.HasValue)
+            // Stage 3: Dispatched (if exists)
+            if (alarm.DispatchedAt.HasValue)
             {
                 double? duration = null;
                 if (previousTimestamp.HasValue)
                 {
-                    duration = (alarm.EnRouteAt.Value - previousTimestamp.Value).TotalSeconds;
+                    duration = (alarm.DispatchedAt.Value - previousTimestamp.Value).TotalSeconds;
                 }
 
                 timeline.Add(new IncidentTimelineEventDto
                 {
-                    Stage = "en-route",
-                    Timestamp = alarm.EnRouteAt.Value,
-                    Actor = alarm.EnRouteBy,
+                    Stage = "dispatched",
+                    Timestamp = alarm.DispatchedAt.Value,
+                    Actor = alarm.DispatchedBy,
                     ActorId = alarm.SecurityId,
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"{alarm.EnRouteBy ?? "Security"} en route to location",
-                    Icon = "🏃",
-                    Color = "#9C27B0"
+                    Description = $"{alarm.DispatchedBy ?? "Security"} dispatched to location",
                 });
 
-                previousTimestamp = alarm.EnRouteAt.Value;
+                previousTimestamp = alarm.DispatchedAt.Value;
             }
 
             // Stage 4: Arrived (if exists)
@@ -420,8 +414,6 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"{alarm.ArrivedBy ?? "Security"} arrived at location",
-                    Icon = "📍",
-                    Color = "#4CAF50"
                 });
 
                 previousTimestamp = alarm.ArrivedAt.Value;
@@ -444,8 +436,6 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"Put in waiting queue by {alarm.WaitingBy ?? "System"}",
-                    Icon = "⏳",
-                    Color = "#FFC107"
                 });
 
                 previousTimestamp = alarm.WaitingTimestamp.Value;
@@ -469,8 +459,6 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"Investigation started by {alarm.InvestigatedBy ?? "Security"}",
-                    Icon = "🔍",
-                    Color = "#2196F3"
                 });
 
                 previousTimestamp = alarm.InvestigatedTimestamp.Value;
@@ -487,14 +475,12 @@ namespace BusinessLogic.Services.Implementation
 
                 timeline.Add(new IncidentTimelineEventDto
                 {
-                    Stage = "resolved",
+                    Stage = "done",
                     Timestamp = alarm.DoneTimestamp.Value,
                     Actor = alarm.DoneBy,
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Marked as resolved by {alarm.DoneBy ?? "System"}",
-                    Icon = "✅",
-                    Color = "#4CAF50"
+                    Description = $"Marked as done by {alarm.DoneBy ?? "System"}",
                 });
 
                 previousTimestamp = alarm.DoneTimestamp.Value;
@@ -517,8 +503,6 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"Cancelled by {alarm.CancelBy ?? "System"}",
-                    Icon = "❌",
-                    Color = "#9E9E9E"
                 });
             }
 
@@ -539,8 +523,6 @@ namespace BusinessLogic.Services.Implementation
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
                     Description = $"Marked as idle by {alarm.IdleBy ?? "System"}",
-                    Icon = "💤",
-                    Color = "#9E9E9E"
                 });
             }
 

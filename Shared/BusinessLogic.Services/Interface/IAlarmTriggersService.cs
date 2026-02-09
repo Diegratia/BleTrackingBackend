@@ -17,7 +17,7 @@ namespace BusinessLogic.Services.Interface
 
         // Security action methods
         Task AcknowledgeAsync(Guid id, string username);
-        Task EnRouteAsync(Guid id, string username);
+        Task DispatchedAsync(Guid id, string username);
         Task ArrivedAsync(Guid id, string username);
     }
 }
