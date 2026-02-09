@@ -199,62 +199,65 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        public async Task AcknowledgeAsync(Guid id, string username)
-        {
-            var alarm = await _repository.GetByIdEntityAsync(id);
-            if (alarm == null)
-                throw new NotFoundException($"Alarm with ID {id} not found");
+        // TODO: Engine belum support - comment dulu
+        // public async Task AcknowledgeAsync(Guid id, string username)
+        // {
+        //     var alarm = await _repository.GetByIdEntityAsync(id);
+        //     if (alarm == null)
+        //         throw new NotFoundException($"Alarm with ID {id} not found");
+        //
+        //     if (alarm.AcknowledgedAt.HasValue)
+        //         throw new BusinessException("Alarm already acknowledged");
+        //
+        //     alarm.AcknowledgedAt = DateTime.UtcNow;
+        //     alarm.AcknowledgedBy = username;
+        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
+        //
+        //     await _repository.UpdateAsync(alarm);
+        //     await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
+        // }
 
-            if (alarm.AcknowledgedAt.HasValue)
-                throw new BusinessException("Alarm already acknowledged");
+        // TODO: Engine belum support - comment dulu
+        // public async Task DispatchedAsync(Guid id, string username)
+        // {
+        //     var alarm = await _repository.GetByIdEntityAsync(id);
+        //     if (alarm == null)
+        //         throw new NotFoundException($"Alarm with ID {id} not found");
+        //
+        //     if (alarm.AcknowledgedAt == null)
+        //         throw new BusinessException("Cannot mark dispatched: alarm not acknowledged yet");
+        //
+        //     if (alarm.DispatchedAt.HasValue)
+        //         throw new BusinessException("Alarm already marked as dispatched");
+        //
+        //     alarm.DispatchedAt = DateTime.UtcNow;
+        //     alarm.DispatchedBy = username;
+        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
+        //
+        //     await _repository.UpdateAsync(alarm);
+        //     await _audit.Updated("AlarmTriggers", id, $"Security {username} dispatched to location");
+        // }
 
-            alarm.AcknowledgedAt = DateTime.UtcNow;
-            alarm.AcknowledgedBy = username;
-            alarm.ActionUpdatedAt = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
-        }
-
-        public async Task DispatchedAsync(Guid id, string username)
-        {
-            var alarm = await _repository.GetByIdEntityAsync(id);
-            if (alarm == null)
-                throw new NotFoundException($"Alarm with ID {id} not found");
-
-            if (alarm.AcknowledgedAt == null)
-                throw new BusinessException("Cannot mark dispatched: alarm not acknowledged yet");
-
-            if (alarm.DispatchedAt.HasValue)
-                throw new BusinessException("Alarm already marked as dispatched");
-
-            alarm.DispatchedAt = DateTime.UtcNow;
-            alarm.DispatchedBy = username;
-            alarm.ActionUpdatedAt = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Security {username} dispatched to location");
-        }
-
-        public async Task ArrivedAsync(Guid id, string username)
-        {
-            var alarm = await _repository.GetByIdEntityAsync(id);
-            if (alarm == null)
-                throw new NotFoundException($"Alarm with ID {id} not found");
-
-            if (alarm.DispatchedAt == null)
-                throw new BusinessException("Cannot mark arrived: security not dispatched yet");
-
-            if (alarm.ArrivedAt.HasValue)
-                throw new BusinessException("Alarm already marked as arrived");
-
-            alarm.ArrivedAt = DateTime.UtcNow;
-            alarm.ArrivedBy = username;
-            alarm.ActionUpdatedAt = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
-        }
+        // TODO: Engine belum support - comment dulu
+        // public async Task ArrivedAsync(Guid id, string username)
+        // {
+        //     var alarm = await _repository.GetByIdEntityAsync(id);
+        //     if (alarm == null)
+        //         throw new NotFoundException($"Alarm with ID {id} not found");
+        //
+        //     if (alarm.DispatchedAt == null)
+        //         throw new BusinessException("Cannot mark arrived: security not dispatched yet");
+        //
+        //     if (alarm.ArrivedAt.HasValue)
+        //         throw new BusinessException("Alarm already marked as arrived");
+        //
+        //     alarm.ArrivedAt = DateTime.UtcNow;
+        //     alarm.ArrivedBy = username;
+        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
+        //
+        //     await _repository.UpdateAsync(alarm);
+        //     await _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
+        // }
 
         public async Task<object> GetIncidentTimelineAsync(Guid alarmTriggerId)
         {
@@ -350,74 +353,74 @@ namespace BusinessLogic.Services.Implementation
             // Calculate previous timestamp for duration
             DateTime? previousTimestamp = alarm.TriggerTime;
 
-            // Stage 2: Acknowledged (if exists)
-            if (alarm.AcknowledgedAt.HasValue)
-            {
-                double? duration = null;
-                if (previousTimestamp.HasValue)
-                {
-                    duration = (alarm.AcknowledgedAt.Value - previousTimestamp.Value).TotalSeconds;
-                }
+            // Stage 2: Acknowledged (if exists) - TODO: Engine belum support - comment dulu
+            // if (alarm.AcknowledgedAt.HasValue)
+            // {
+            //     double? duration = null;
+            //     if (previousTimestamp.HasValue)
+            //     {
+            //         duration = (alarm.AcknowledgedAt.Value - previousTimestamp.Value).TotalSeconds;
+            //     }
+            //
+            //     timeline.Add(new IncidentTimelineEventDto
+            //     {
+            //         Stage = "acknowledged",
+            //         Timestamp = alarm.AcknowledgedAt.Value,
+            //         Actor = alarm.AcknowledgedBy,
+            //         ActorId = UserIdFromToken,
+            //         DurationInSeconds = duration,
+            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+            //         Description = $"Alarm acknowledged by {alarm.AcknowledgedBy ?? "Security"}",
+            //     });
+            //
+            //     previousTimestamp = alarm.AcknowledgedAt.Value;
+            // }
 
-                timeline.Add(new IncidentTimelineEventDto
-                {
-                    Stage = "acknowledged",
-                    Timestamp = alarm.AcknowledgedAt.Value,
-                    Actor = alarm.AcknowledgedBy,
-                    ActorId = alarm.SecurityId,
-                    DurationInSeconds = duration,
-                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Alarm acknowledged by {alarm.AcknowledgedBy ?? "Security"}",
-                });
+            // Stage 3: Dispatched (if exists) - TODO: Engine belum support - comment dulu
+            // if (alarm.DispatchedAt.HasValue)
+            // {
+            //     double? duration = null;
+            //     if (previousTimestamp.HasValue)
+            //     {
+            //         duration = (alarm.DispatchedAt.Value - previousTimestamp.Value).TotalSeconds;
+            //     }
+            //
+            //     timeline.Add(new IncidentTimelineEventDto
+            //     {
+            //         Stage = "dispatched",
+            //         Timestamp = alarm.DispatchedAt.Value,
+            //         Actor = alarm.DispatchedBy,
+            //         ActorId = alarm.SecurityId,
+            //         DurationInSeconds = duration,
+            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+            //         Description = $"{alarm.DispatchedBy ?? "Security"} dispatched to location",
+            //     });
+            //
+            //     previousTimestamp = alarm.DispatchedAt.Value;
+            // }
 
-                previousTimestamp = alarm.AcknowledgedAt.Value;
-            }
-
-            // Stage 3: Dispatched (if exists)
-            if (alarm.DispatchedAt.HasValue)
-            {
-                double? duration = null;
-                if (previousTimestamp.HasValue)
-                {
-                    duration = (alarm.DispatchedAt.Value - previousTimestamp.Value).TotalSeconds;
-                }
-
-                timeline.Add(new IncidentTimelineEventDto
-                {
-                    Stage = "dispatched",
-                    Timestamp = alarm.DispatchedAt.Value,
-                    Actor = alarm.DispatchedBy,
-                    ActorId = alarm.SecurityId,
-                    DurationInSeconds = duration,
-                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"{alarm.DispatchedBy ?? "Security"} dispatched to location",
-                });
-
-                previousTimestamp = alarm.DispatchedAt.Value;
-            }
-
-            // Stage 4: Arrived (if exists)
-            if (alarm.ArrivedAt.HasValue)
-            {
-                double? duration = null;
-                if (previousTimestamp.HasValue)
-                {
-                    duration = (alarm.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds;
-                }
-
-                timeline.Add(new IncidentTimelineEventDto
-                {
-                    Stage = "arrived",
-                    Timestamp = alarm.ArrivedAt.Value,
-                    Actor = alarm.ArrivedBy,
-                    ActorId = alarm.SecurityId,
-                    DurationInSeconds = duration,
-                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"{alarm.ArrivedBy ?? "Security"} arrived at location",
-                });
-
-                previousTimestamp = alarm.ArrivedAt.Value;
-            }
+            // Stage 4: Arrived (if exists) - TODO: Engine belum support - comment dulu
+            // if (alarm.ArrivedAt.HasValue)
+            // {
+            //     double? duration = null;
+            //     if (previousTimestamp.HasValue)
+            //     {
+            //         duration = (alarm.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds;
+            //     }
+            //
+            //     timeline.Add(new IncidentTimelineEventDto
+            //     {
+            //         Stage = "arrived",
+            //         Timestamp = alarm.ArrivedAt.Value,
+            //         Actor = alarm.ArrivedBy,
+            //         ActorId = alarm.SecurityId,
+            //         DurationInSeconds = duration,
+            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+            //         Description = $"{alarm.ArrivedBy ?? "Security"} arrived at location",
+            //     });
+            //
+            //     previousTimestamp = alarm.ArrivedAt.Value;
+            // }
 
             // Stage 5: Waiting (if exists)
             if (alarm.WaitingTimestamp.HasValue)

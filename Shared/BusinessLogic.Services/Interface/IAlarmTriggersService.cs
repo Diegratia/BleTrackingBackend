@@ -15,9 +15,9 @@ namespace BusinessLogic.Services.Interface
         Task UpdateAlarmStatusAsync(string beaconId, AlarmTriggersUpdateDto dto);
         Task<object> GetIncidentTimelineAsync(Guid alarmTriggerId);
 
-        // Security action methods
-        Task AcknowledgeAsync(Guid id, string username);
-        Task DispatchedAsync(Guid id, string username);
-        Task ArrivedAsync(Guid id, string username);
+        // Security action methods - TODO: Engine belum support - comment dulu
+        // Task AcknowledgeAsync(Guid id, string username);
+        // Task DispatchedAsync(Guid id, string username);
+        // Task ArrivedAsync(Guid id, string username);
     }
 }

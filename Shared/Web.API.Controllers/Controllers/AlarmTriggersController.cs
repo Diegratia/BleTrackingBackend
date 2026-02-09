@@ -92,25 +92,26 @@ namespace Web.API.Controllers.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id}/acknowledge")]
-        public async Task<IActionResult> Acknowledge(Guid id)
-        {
-            await _service.AcknowledgeAsync(id, CurrentUsername);
-            return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
-        }
+        // TODO: Engine belum support - comment dulu
+        // [HttpPut("{id}/acknowledge")]
+        // public async Task<IActionResult> Acknowledge(Guid id)
+        // {
+        //     await _service.AcknowledgeAsync(id, CurrentUsername);
+        //     return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
+        // }
 
-        [HttpPut("{id}/dispatched")]
-        public async Task<IActionResult> Dispatched(Guid id)
-        {
-            await _service.DispatchedAsync(id, CurrentUsername);
-            return Ok(ApiResponse.Success("Security dispatched to location"));
-        }
+        // [HttpPut("{id}/dispatched")]
+        // public async Task<IActionResult> Dispatched(Guid id)
+        // {
+        //     await _service.DispatchedAsync(id, CurrentUsername);
+        //     return Ok(ApiResponse.Success("Security dispatched to location"));
+        // }
 
-        [HttpPut("{id}/arrived")]
-        public async Task<IActionResult> Arrived(Guid id)
-        {
-            await _service.ArrivedAsync(id, CurrentUsername);
-            return Ok(ApiResponse.Success("Security arrived at location"));
-        }
+        // [HttpPut("{id}/arrived")]
+        // public async Task<IActionResult> Arrived(Guid id)
+        // {
+        //     await _service.ArrivedAsync(id, CurrentUsername);
+        //     return Ok(ApiResponse.Success("Security arrived at location"));
+        // }
     }
 }

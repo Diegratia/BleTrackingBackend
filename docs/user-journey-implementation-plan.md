@@ -9,6 +9,7 @@
 ## 🎯 Objective
 
 Implement **User Journey Analytics** and **Security Check** features to:
+
 1. Track multi-area journeys across visitors
 2. Identify common paths through facility
 3. Detect unusual/suspicious journeys (security)
@@ -19,12 +20,14 @@ Implement **User Journey Analytics** and **Security Check** features to:
 ## 📊 Current State
 
 ### ✅ What Exists
+
 - **VisitorSession** entity with PersonId, AreaName, EnterTime, ExitTime, DurationInMinutes
 - **TrackingSessionService** - already returns sessions per person
 - **VisualPaths** - X,Y coordinates for floorplan visualization
 - Can query individual journey: `WHERE PersonId='xxx' ORDER BY EnterTime`
 
 ### ❌ What's Missing
+
 - No aggregation across multiple visitors (common paths)
 - No security validation for unusual routes
 - No zone crossing detection
@@ -35,11 +38,13 @@ Implement **User Journey Analytics** and **Security Check** features to:
 ## 🎯 Features to Implement
 
 ### 1. Common Paths Analysis
+
 **Endpoint:** `POST /api/TrackingAnalytics/user-journey/common-paths`
 
 **Purpose:** Discover most popular multi-area journeys
 
 **Example Response:**
+
 ```json
 {
   "data": [
@@ -66,11 +71,13 @@ Implement **User Journey Analytics** and **Security Check** features to:
 ```
 
 ### 2. Security Journey Check
+
 **Endpoint:** `POST /api/TrackingAnalytics/user-journey/security-check`
 
 **Purpose:** Validate journey for security violations
 
 **Example Response:**
+
 ```json
 {
   "visitorId": "abc-123",
@@ -90,18 +97,20 @@ Implement **User Journey Analytics** and **Security Check** features to:
 ```
 
 ### 3. Next Area Prediction
+
 **Endpoint:** `POST /api/TrackingAnalytics/user-journey/next-areas`
 
 **Purpose:** Given current area, predict next likely areas
 
 **Example Response:**
+
 ```json
 {
   "currentArea": "Lobby",
   "nextAreas": [
     { "areaName": "Security Check", "probability": 0.65, "count": 456 },
     { "areaName": "Banking Hall", "probability": 0.25, "count": 178 },
-    { "areaName": "Cafeteria", "probability": 0.10, "count": 67 }
+    { "areaName": "Cafeteria", "probability": 0.1, "count": 67 }
   ]
 }
 ```
@@ -113,11 +122,13 @@ Implement **User Journey Analytics** and **Security Check** features to:
 ### Phase 1: DTOs & Contracts
 
 **File 1: Create UserJourneyRead.cs**
+
 ```
 Shared/Shared.Contracts/Analytics/UserJourneyRead.cs
 ```
 
 **Classes to create:**
+
 ```csharp
 namespace Shared.Contracts.Analytics
 {
@@ -186,6 +197,7 @@ namespace Shared.Contracts.Analytics
 ```
 
 **File 2: Create SecurityZoneMapping (for database)**
+
 ```
 Shared/Entities.Models/SecurityZoneMapping.cs
 ```
@@ -213,11 +225,13 @@ namespace Entities.Models
 ```
 
 **File 3: Update DbContext**
+
 ```
 Shared/Repositories/DbContexts/BleTrackingDbContext.cs
 ```
 
 Add:
+
 ```csharp
 public DbSet<SecurityZoneMapping> SecurityZoneMappings { get; set; }
 ```
@@ -227,11 +241,13 @@ public DbSet<SecurityZoneMapping> SecurityZoneMappings { get; set; }
 ### Phase 2: Repository Layer
 
 **File 4: Create UserJourneyRepository.cs**
+
 ```
 Shared/Repositories/Repository/Analytics/UserJourneyRepository.cs
 ```
 
 **Structure:**
+
 ```csharp
 using Shared.Contracts.Analytics;
 using System;
@@ -457,6 +473,7 @@ namespace Repositories.Repository.Analytics
 ### Phase 3: Service Layer
 
 **File 5: Create UserJourneyService.cs**
+
 ```
 Shared/BusinessLogic.Services/Implementation/Analytics/UserJourneyService.cs
 ```
@@ -537,6 +554,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
 ```
 
 **File 6: Create Interface**
+
 ```
 Shared/BusinessLogic.Services/Interface/Analytics/IUserJourneyService.cs
 ```
@@ -562,6 +580,7 @@ namespace BusinessLogic.Services.Interface.Analytics
 ### Phase 4: Controller Layer
 
 **File 7: Create UserJourneyController.cs**
+
 ```
 Shared/Web.API.Controllers/Controllers/Analytics/UserJourneyController.cs
 ```
@@ -631,6 +650,7 @@ namespace Web.API.Controllers.Controllers.Analytics
 **Step 1: Create SecurityZoneMapping entity**
 
 **Step 2: Add migration**
+
 ```bash
 dotnet ef migrations add AddSecurityZoneMapping \
   --project Shared/Repositories/Repositories.csproj \
@@ -638,6 +658,7 @@ dotnet ef migrations add AddSecurityZoneMapping \
 ```
 
 **Step 3: Seed security zone data**
+
 ```sql
 INSERT INTO SecurityZoneMapping (Id, AreaId, AreaName, SecurityZone, RequiresEscort, CreatedAt, UpdatedAt, Status)
 VALUES
@@ -657,16 +678,19 @@ VALUES
 ### Week 1: Foundation
 
 **Day 1-2: DTOs & Contracts**
+
 - [ ] Create `UserJourneyRead.cs` with all DTOs
 - [ ] Create `SecurityZoneMapping.cs` entity
 - [ ] Update `BleTrackingDbContext.cs` with new DbSet
 
 **Day 3: Database**
+
 - [ ] Add migration for SecurityZoneMapping
 - [ ] Seed initial security zone data
 - [ ] Test zone mapping CRUD
 
 **Day 4-5: Repository Layer**
+
 - [ ] Create `UserJourneyRepository.cs`
 - [ ] Implement `GetCommonPathsAsync()`
 - [ ] Implement `GetSecurityCheckAsync()`
@@ -676,16 +700,19 @@ VALUES
 ### Week 2: Service & Controller
 
 **Day 1-2: Service Layer**
+
 - [ ] Create `IUserJourneyService.cs` interface
 - [ ] Create `UserJourneyService.cs` implementation
 - [ ] Add error handling and logging
 
 **Day 3-4: Controller Layer**
+
 - [ ] Create `UserJourneyController.cs`
 - [ ] Add `[MinLevel]` authorization
 - [ ] Add Swagger documentation
 
 **Day 5: Integration Testing**
+
 - [ ] Test common paths endpoint
 - [ ] Test security check endpoint
 - [ ] Test next areas endpoint
@@ -694,16 +721,19 @@ VALUES
 ### Week 3: Polish & Deploy
 
 **Day 1-2: Performance Optimization**
+
 - [ ] Add caching for common paths (Redis)
 - [ ] Optimize SQL queries
 - [ ] Add database indexes
 
 **Day 3: Documentation**
+
 - [ ] Update API documentation
 - [ ] Create usage examples
 - [ ] Write troubleshooting guide
 
 **Day 4-5: UAT & Deploy**
+
 - [ ] User acceptance testing
 - [ ] Bug fixes
 - [ ] Deploy to staging
@@ -716,30 +746,35 @@ VALUES
 ### Unit Tests
 
 **Test 1: Common Paths - Basic**
+
 ```
 Input: 100 visitors, 2 paths (Lobby→Banking, Lobby→Cafe)
 Expected: Returns 2 paths with correct counts and percentages
 ```
 
 **Test 2: Common Paths - Anomaly Detection**
+
 ```
 Input: 1 visitor goes to Server Room
 Expected: IsAnomaly=true, RiskLevel="High"
 ```
 
 **Test 3: Security Check - Clean Path**
+
 ```
 Input: John goes Lobby→Banking Hall→Cafeteria
 Expected: RiskLevel="Low", Violations=[]
 ```
 
 **Test 4: Security Check - Violation**
+
 ```
 Input: John goes Lobby→Server Room
 Expected: RiskLevel="High", RequiresEscort=true
 ```
 
 **Test 5: Next Area - Prediction**
+
 ```
 Input: Current="Lobby", historical data shows 65%→Security
 Expected: Security Check with probability 0.65
@@ -748,6 +783,7 @@ Expected: Security Check with probability 0.65
 ### Integration Tests
 
 **Test API Endpoints:**
+
 ```bash
 # Common Paths
 curl -X POST http://localhost:5001/api/UserJourney/common-paths \
@@ -770,6 +806,7 @@ curl -X POST http://localhost:5001/api/UserJourney/next-areas/lobby-id \
 ## 📊 Success Criteria
 
 ### Functional Requirements
+
 - ✅ Common paths returns top 20 journeys with counts
 - ✅ Security check detects zone violations
 - ✅ Next area prediction returns probabilities
@@ -777,12 +814,14 @@ curl -X POST http://localhost:5001/api/UserJourney/next-areas/lobby-id \
 - ✅ Anomaly detection flags rare paths (< 5 occurrences)
 
 ### Performance Requirements
+
 - ✅ Common paths query < 3 seconds (100K sessions)
 - ✅ Security check < 500ms per visitor
 - ✅ Next area prediction < 2 seconds
 - ✅ Support concurrent 100 users
 
 ### Security Requirements
+
 - ✅ All endpoints require PrimaryAdmin+ role
 - ✅ Audit logging for security checks
 - ✅ Zone validation uses database configuration
@@ -793,22 +832,28 @@ curl -X POST http://localhost:5001/api/UserJourney/next-areas/lobby-id \
 ## 🚨 Risks & Mitigations
 
 ### Risk 1: Performance with Large Data
+
 **Impact:** Slow queries with 100K+ sessions
 **Mitigation:**
+
 - Add database indexes on (PersonId, EnterTime, AreaId)
 - Cache common paths for 1 hour (Redis)
 - Use pagination for large results
 
 ### Risk 2: Zone Configuration
+
 **Impact:** Wrong zone mapping = false alerts
 **Mitigation:**
+
 - Admin UI for zone management
 - Zone validation before deployment
 - Test with known good paths
 
 ### Risk 3: Data Quality
+
 **Impact:** Missing/inaccurate session data
 **Mitigation:**
+
 - Validate session data before aggregation
 - Log sessions with missing zones
 - Provide data quality dashboard
@@ -818,11 +863,13 @@ curl -X POST http://localhost:5001/api/UserJourney/next-areas/lobby-id \
 ## 📈 Future Enhancements
 
 **Phase 2:**
+
 - Journey funnel analysis
 - Bottleneck detection
 - Staff scheduling optimization
 
 **Phase 3:**
+
 - Real-time journey tracking
 - Anomaly detection (ML-based)
 - Zone capacity alerts
@@ -832,18 +879,21 @@ curl -X POST http://localhost:5001/api/UserJourney/next-areas/lobby-id \
 ## ✅ Checklist
 
 Before implementation:
+
 - [ ] Review plan with stakeholders
 - [ ] Confirm security zone mappings
 - [ ] Define anomaly thresholds
 - [ ] Prepare test data
 
 During implementation:
+
 - [ ] Follow repository pattern (return Read DTOs)
 - [ ] Use direct return in service (no AutoMapper)
 - [ ] Add MinLevel authorization
 - [ ] Include audit logging
 
 After implementation:
+
 - [ ] Load testing (10K+ concurrent users)
 - [ ] Security testing
 - [ ] UAT with Bank Indonesia team
@@ -852,3 +902,28 @@ After implementation:
 ---
 
 **Ready to execute? Review and confirm!**
+
+Tiap Field
+Field: TotalSeconds
+Tipe: double?
+Pengertian: Durasi total insiden dari event pertama sampai event terakhir (dalam detik).
+────────────────────────────────────────
+Field: TotalFormatted
+Tipe: string
+Pengertian: Durasi total dalam format human-readable: "2 hours 30 minutes", "15 seconds", dll.
+────────────────────────────────────────
+Field: ResponseTimeSeconds
+Tipe: double?
+Pengertian: Response Time — waktu dari Triggered sampai first action (Acknowledged/Dispatched/Investigated). Mengukur seberapa cepat sistem merespon alarm.
+────────────────────────────────────────
+Field: ResponseTimeFormatted
+Tipe: string
+Pengertian: Response time dalam format bacaan.
+────────────────────────────────────────
+Field: ResolutionTimeSeconds
+Tipe: double?
+Pengertian: Resolution Time — waktu dari first action sampai event terakhir (Done/Cancelled). Mengukur seberapa lama proses penyelesaian.
+────────────────────────────────────────
+Field: ResolutionTimeFormatted
+Tipe: string
+Pengertian: Resolution time dalam format bacaan.

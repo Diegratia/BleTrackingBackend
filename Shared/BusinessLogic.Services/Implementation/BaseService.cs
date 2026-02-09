@@ -31,6 +31,21 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
+        protected Guid UserIdFromToken
+        {
+            get
+            {
+                var userId = Http.HttpContext?.User
+                    .FindFirst(ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    throw new Exception("UserId missing in token");
+
+                return Guid.Parse(userId);
+            }
+        }
+
         protected string UsernameFormToken
         {
             get
