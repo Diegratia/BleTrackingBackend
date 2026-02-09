@@ -113,6 +113,45 @@
                 public string? PersonName { get; set; }
             }
 
+            // === DTO SEMENTARA (internal) ===
+
+            /// <summary>
+            /// Optimized DTO for alarm trigger data
+            /// Only loads the fields needed for incident matching
+            /// </summary>
+            internal class AlarmTriggerDto
+            {
+                public Guid Id { get; set; }
+                public DateTime? TriggerTime { get; set; }
+                public DateTime? AcknowledgedAt { get; set; }
+                public DateTime? EnRouteAt { get; set; }
+                public DateTime? ArrivedAt { get; set; }
+                public DateTime? InvestigatedTimestamp { get; set; }
+                public DateTime? DoneTimestamp { get; set; }
+                public DateTime? CancelTimestamp { get; set; }
+                public string? AcknowledgedBy { get; set; }
+                public string? EnRouteBy { get; set; }
+                public string? ArrivedBy { get; set; }
+                public string? InvestigatedBy { get; set; }
+                public string? DoneBy { get; set; }
+                public string? CancelBy { get; set; }
+                public string? WaitingBy { get; set; }
+                public DateTime? WaitingTimestamp { get; set; }
+                public string? AlarmColor { get; set; }
+                public Shared.Contracts.AlarmRecordStatus? Alarm { get; set; }
+                public Shared.Contracts.ActionStatus? Action { get; set; }
+                public bool? IsActive { get; set; }
+                public Guid? SecurityId { get; set; }
+                public string? SecurityName { get; set; }
+                public string? InvestigatedResult { get; set; }
+
+                /// <summary>
+                /// FloorplanMaskedArea IDs from the floorplan
+                /// Pre-fetched to avoid N+1 query
+                /// </summary>
+                public HashSet<Guid> FloorplanMaskedAreaIds { get; set; } = new();
+            }
+
             internal class SessionRaw
             {
                 public Guid? PersonId => VisitorId ?? MemberId;
@@ -334,7 +373,7 @@
             }
 
             // === MAIN METHOD: Get Visitor Session Summary ===
-           public async Task<List<VisitorSessionRead>> GetVisitorSessionSummaryAsync(
+           public async Task<(List<VisitorSessionRead> Data, int Total, int Filtered)> GetVisitorSessionSummaryAsync(
             TrackingAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
@@ -343,7 +382,7 @@
 
             var tableNames = GetTableNamesInRange(fromUtc, toUtc);
             if (!tableNames.Any())
-                return new List<VisitorSessionRead>();
+                return (new List<VisitorSessionRead>(), 0, 0);
 
             var unionParts   = new List<string>();
             var allParams    = new List<object>();
@@ -365,8 +404,10 @@
                 .SqlQueryRaw<SessionRaw>(fullSql, allParams.ToArray())
                 .ToListAsync();
 
+            var filtered = raw.Count;
+
             if (!raw.Any())
-                return new List<VisitorSessionRead>();
+                return (new List<VisitorSessionRead>(), 0, 0);
 
             var sessions = new List<VisitorSessionRead>();
 
@@ -442,22 +483,27 @@
                 }
             }
 
-            return sessions
-                .OrderByDescending(x => x.EnterTime)
-                .ToList();
+            // Apply sorting
+            sessions = request.SortDir?.ToLower() == "asc"
+                ? sessions.OrderBy(x => x.EnterTime).ToList()
+                : sessions.OrderByDescending(x => x.EnterTime).ToList();
+
+            // NO PAGINATION here - pagination is done at person level in service
+            // Return all sessions for proper person grouping
+            return (sessions, raw.Count, raw.Count);
         }
 
         /// <summary>
         /// Get alarm triggers in date range for incident matching
+        /// Uses projection to avoid N+1 queries with Include/ThenInclude
         /// </summary>
-        private async Task<List<Entities.Models.AlarmTriggers>> GetAlarmTriggersInRangeAsync(
+        private async Task<List<AlarmTriggerDto>> GetAlarmTriggersInRangeAsync(
             DateTime fromUtc,
             DateTime toUtc,
             TrackingAnalyticsFilter request)
         {
+            // Build base query with filters
             var query = _context.AlarmTriggers
-                .Include(at => at.Floorplan)
-                .ThenInclude(f => f.FloorplanMaskedAreas)
                 .Where(at => at.TriggerTime >= fromUtc && at.TriggerTime <= toUtc);
 
             // Filter by person type
@@ -471,7 +517,91 @@
                 query = query.Where(at => at.MemberId == request.MemberId);
             }
 
-            return await query.ToListAsync();
+            // Use projection to only load needed fields
+            var alarmData = await query
+                .Select(at => new
+                {
+                    at.Id,
+                    at.TriggerTime,
+                    at.AcknowledgedAt,
+                    at.EnRouteAt,
+                    at.ArrivedAt,
+                    at.InvestigatedTimestamp,
+                    at.DoneTimestamp,
+                    at.CancelTimestamp,
+                    at.AcknowledgedBy,
+                    at.EnRouteBy,
+                    at.ArrivedBy,
+                    at.InvestigatedBy,
+                    at.DoneBy,
+                    at.CancelBy,
+                    at.WaitingBy,
+                    at.WaitingTimestamp,
+                    at.AlarmColor,
+                    at.Alarm,
+                    at.Action,
+                    at.IsActive,
+                    at.SecurityId,
+                    SecurityName = at.Security != null ? at.Security.Name : null,
+                    at.InvestigatedResult,
+                    FloorplanId = at.Floorplan != null ? at.Floorplan.Id : (Guid?)null
+                })
+                .ToListAsync();
+
+            // Collect all FloorplanIds that are not null
+            var floorplanIds = alarmData
+                .Where(x => x.FloorplanId.HasValue)
+                .Select(x => x.FloorplanId.Value)
+                .Distinct()
+                .ToList();
+
+            // Fetch FloorplanMaskedAreaIds in a single query (avoid N+1)
+            var floorplanMaskedAreaIds = new Dictionary<Guid, HashSet<Guid>>();
+            if (floorplanIds.Any())
+            {
+                var areas = await _context.FloorplanMaskedAreas
+                    .Where(fma => fma.Status != 0 && floorplanIds.Contains(fma.FloorplanId))
+                    .Select(fma => new { fma.FloorplanId, fma.Id })
+                    .ToListAsync();
+
+                floorplanMaskedAreaIds = areas
+                    .GroupBy(x => x.FloorplanId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(x => x.Id).ToHashSet()
+                    );
+            }
+
+            // Build DTOs with pre-fetched FloorplanMaskedAreaIds
+            return alarmData.Select(ad => new AlarmTriggerDto
+            {
+                Id = ad.Id,
+                TriggerTime = ad.TriggerTime,
+                AcknowledgedAt = ad.AcknowledgedAt,
+                EnRouteAt = ad.EnRouteAt,
+                ArrivedAt = ad.ArrivedAt,
+                InvestigatedTimestamp = ad.InvestigatedTimestamp,
+                DoneTimestamp = ad.DoneTimestamp,
+                CancelTimestamp = ad.CancelTimestamp,
+                AcknowledgedBy = ad.AcknowledgedBy,
+                EnRouteBy = ad.EnRouteBy,
+                ArrivedBy = ad.ArrivedBy,
+                InvestigatedBy = ad.InvestigatedBy,
+                DoneBy = ad.DoneBy,
+                CancelBy = ad.CancelBy,
+                WaitingBy = ad.WaitingBy,
+                WaitingTimestamp = ad.WaitingTimestamp,
+                AlarmColor = ad.AlarmColor,
+                Alarm = ad.Alarm,
+                Action = ad.Action,
+                IsActive = ad.IsActive,
+                SecurityId = ad.SecurityId,
+                SecurityName = ad.SecurityName,
+                InvestigatedResult = ad.InvestigatedResult,
+                FloorplanMaskedAreaIds = ad.FloorplanId.HasValue && floorplanMaskedAreaIds.ContainsKey(ad.FloorplanId.Value)
+                    ? floorplanMaskedAreaIds[ad.FloorplanId.Value]
+                    : new HashSet<Guid>()
+            }).ToList();
         }
 
         /// <summary>
@@ -479,23 +609,14 @@
         /// </summary>
         private bool CheckSessionHasIncident(
             VisitorSessionRead session,
-            List<Entities.Models.AlarmTriggers> alarmTriggers)
+            List<AlarmTriggerDto> alarmTriggers)
         {
             if (!session.AreaId.HasValue)
                 return false;
 
-            // Get FloorplanMaskedAreaIds from alarm triggers
-            var floorplanMaskedAreaIds = alarmTriggers
-                .Where(at => at.Floorplan != null)
-                .SelectMany(at => at.Floorplan.FloorplanMaskedAreas
-                    .Where(fma => fma.Status != 0)
-                    .Select(fma => fma.Id))
-                .ToHashSet();
-
             // Check if any alarm matches this session
             return alarmTriggers
-                .Where(at => session.AreaId.HasValue &&
-                           floorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
+                .Where(at => at.FloorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
                            at.TriggerTime.HasValue)
                 .Any(at =>
                     Math.Abs((at.TriggerTime.Value - session.EnterTime).TotalSeconds) < 300); // Within 5 minutes
@@ -506,23 +627,14 @@
         /// </summary>
         private IncidentMarkerRead GetIncidentForSession(
             VisitorSessionRead session,
-            List<Entities.Models.AlarmTriggers> alarmTriggers)
+            List<AlarmTriggerDto> alarmTriggers)
         {
             if (!session.AreaId.HasValue)
                 return null;
 
-            // Get FloorplanMaskedAreaIds from alarm triggers
-            var floorplanMaskedAreaIds = alarmTriggers
-                .Where(at => at.Floorplan != null)
-                .SelectMany(at => at.Floorplan.FloorplanMaskedAreas
-                    .Where(fma => fma.Status != 0)
-                    .Select(fma => fma.Id))
-                .ToHashSet();
-
             // Find matching alarm
             var alarm = alarmTriggers
-                .Where(at => session.AreaId.HasValue &&
-                           floorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
+                .Where(at => at.FloorplanMaskedAreaIds.Contains(session.AreaId.Value) &&
                            at.TriggerTime.HasValue)
                 .FirstOrDefault(at =>
                     Math.Abs((at.TriggerTime.Value - session.EnterTime).TotalSeconds) < 300);
@@ -561,7 +673,7 @@
                 DoneBy = alarm.DoneBy,
 
                 SecurityId = alarm.SecurityId,
-                SecurityName = alarm.Security?.Name,
+                SecurityName = alarm.SecurityName,
 
                 InvestigationResult = alarm.InvestigatedResult,
 
@@ -577,7 +689,7 @@
         /// <summary>
         /// Build timeline summary for incident
         /// </summary>
-        private string BuildTimelineSummary(Entities.Models.AlarmTriggers alarm)
+        private string BuildTimelineSummary(AlarmTriggerDto alarm)
         {
             var timeline = new List<string>();
 
@@ -814,7 +926,8 @@
 
         public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsFilter request)
         {
-            var sessions = await GetVisitorSessionSummaryAsync(request);
+            // Repository returns all sessions (no pagination applied)
+            var (sessions, _, _) = await GetVisitorSessionSummaryAsync(request);
             
             return sessions.Select(s => new VisitorSessionSummaryExportRM
             {

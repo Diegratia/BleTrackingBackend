@@ -56,8 +56,8 @@ namespace Repositories.Repository
                     SecurityId = b.SecurityId,
                     TriggerTime = b.TriggerTime,
                     AlarmColor = b.AlarmColor,
-                    Alarm = b.Alarm.HasValue ? (int)b.Alarm.Value : null,
-                    Action = b.Action.HasValue ? (int)b.Action.Value : null,
+                    Alarm = b.Alarm,
+                    Action = b.Action,
                     IsActive = b.IsActive,
                     IdleTimestamp = b.IdleTimestamp,
                     DoneTimestamp = b.DoneTimestamp,
@@ -134,10 +134,10 @@ namespace Repositories.Repository
                 query = query.Where(b => b.BeaconId != null && b.BeaconId.Contains(filter.BeaconId));
 
             if (filter.Alarm.HasValue)
-                query = query.Where(b => b.Alarm.HasValue && (int)b.Alarm.Value == filter.Alarm.Value);
+                query = query.Where(b => b.Alarm == filter.Alarm.Value);
 
             if (filter.Action.HasValue)
-                query = query.Where(b => b.Action.HasValue && (int)b.Action.Value == filter.Action.Value);
+                query = query.Where(b => b.Action == filter.Action.Value);
 
             if (filter.IsActive.HasValue)
                 query = query.Where(b => b.IsActive == filter.IsActive.Value);

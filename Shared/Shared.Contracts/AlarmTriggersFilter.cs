@@ -14,8 +14,8 @@ namespace Shared.Contracts
 
         // Entity-specific filters
         public string? BeaconId { get; set; }
-        public int? Alarm { get; set; }
-        public int? Action { get; set; }
+        public AlarmRecordStatus? Alarm { get; set; }
+        public ActionStatus? Action { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsInRestrictedArea { get; set; }
         public string? AlarmColor { get; set; }

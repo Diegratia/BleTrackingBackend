@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<GroupedSessionsResponse> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request)
         {
-            var data = await _repository.GetVisitorSessionSummaryAsync(request);
+            var (data, total, filtered) = await _repository.GetVisitorSessionSummaryAsync(request);
 
             var tz = TimezoneHelper.Resolve(request.Timezone);
 
@@ -64,16 +64,30 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 }
             }
 
-            // === GROUP BY PERSON ===
-            var groupedPersons = GroupSessionsByPerson(data);
+            // === GROUP BY PERSON FIRST (before pagination) ===
+            var allGroupedPersons = GroupSessionsByPerson(data);
 
-            // === BUILD RESPONSE ===
+            // Count unique persons for recordsFiltered
+            var recordsFiltered = allGroupedPersons.Count;
+
+            // === APPLY PAGINATION ON PERSONS ===
+            var start = request.Start >= 0 ? request.Start : 0;
+            var length = request.Length > 0 ? request.Length : 10;
+            var pagedPersons = allGroupedPersons
+                .Skip(start)
+                .Take(length)
+                .ToList();
+
+            // === BUILD RESPONSE WITH DATATABLES FORMAT ===
             var response = new GroupedSessionsResponse
             {
-                Persons = groupedPersons
+                Draw = request.Draw,
+                RecordsTotal = total,
+                RecordsFiltered = recordsFiltered,
+                Persons = pagedPersons
             };
 
-            // Optional: Include summary
+            // Optional: Include summary (calculate from all data, not paged)
             if (request.IncludeSummary)
             {
                 response.Summary = BuildSummary(data);
@@ -318,13 +332,15 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request)
         {
-            var sessions = await _repository.GetVisitorSessionSummaryAsync(request);
+            // Repository returns all sessions (no pagination)
+            var (sessions, _, _) = await _repository.GetVisitorSessionSummaryAsync(request);
             return GeneratePdfReport(sessions, request);
         }
 
         public async Task<byte[]> ExportVisitorSessionSummaryToExcelAsync(TrackingAnalyticsFilter request)
         {
-            var sessions = await _repository.GetVisitorSessionSummaryAsync(request);
+            // Repository returns all sessions (no pagination)
+            var (sessions, _, _) = await _repository.GetVisitorSessionSummaryAsync(request);
             return GenerateExcelReport(sessions, request);
         }
 

@@ -1,14 +1,49 @@
 using System;
-using Shared.Contracts.Read;
 
 namespace Shared.Contracts
 {
     /// <summary>
     /// Filter for tracking analytics queries
     /// Supports time-based filtering, entity filtering, and data export options
+    /// Uses DataTables format for pagination (draw, start, length)
     /// </summary>
-    public class TrackingAnalyticsFilter : BaseFilter
+    public class TrackingAnalyticsFilter
     {
+        // =====================================================
+        // DATATABLES PAGINATION
+        // =====================================================
+
+        /// <summary>
+        /// Draw counter from DataTables request (echoed back in response)
+        /// </summary>
+        public int Draw { get; set; } = 1;
+
+        /// <summary>
+        /// Paging first record indicator (0-based index)
+        /// Calculated as: Page = (Start / Length) + 1
+        /// </summary>
+        public int Start { get; set; } = 0;
+
+        /// <summary>
+        /// Number of records per page
+        /// </summary>
+        public int Length { get; set; } = 10;
+
+        /// <summary>
+        /// Search string for filtering
+        /// </summary>
+        public string? Search { get; set; }
+
+        /// <summary>
+        /// Sort column name
+        /// </summary>
+        public string? SortColumn { get; set; }
+
+        /// <summary>
+        /// Sort direction: "asc" or "desc"
+        /// </summary>
+        public string? SortDir { get; set; }
+
         // =====================================================
         // TIME FILTERS
         // =====================================================

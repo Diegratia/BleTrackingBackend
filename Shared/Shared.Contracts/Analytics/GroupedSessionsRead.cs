@@ -86,11 +86,20 @@ namespace Shared.Contracts.Analytics
     }
 
     /// <summary>
-    /// Response wrapper for grouped sessions
+    /// Response wrapper for grouped sessions - DataTables format
     /// </summary>
     public class GroupedSessionsResponse
     {
-        /// <summary>List of persons with their sessions</summary>
+        /// <summary>Draw counter from DataTables request (echoed back)</summary>
+        public int Draw { get; set; }
+
+        /// <summary>Total records before filtering (recordsTotal)</summary>
+        public int RecordsTotal { get; set; }
+
+        /// <summary>Total records after filtering (recordsFiltered)</summary>
+        public int RecordsFiltered { get; set; }
+
+        /// <summary>List of persons with their sessions (data)</summary>
         public List<PersonSessionsRead> Persons { get; set; } = new();
 
         /// <summary>Summary statistics (optional)</summary>
