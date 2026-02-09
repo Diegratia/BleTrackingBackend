@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Implementation.Analytics;
 using BusinessLogic.Services.Interface.Analytics;
@@ -18,36 +19,16 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.AspNetCore.Authorization;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using Serilog;
+using Serilog.Events;
 
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
-        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
-        "/app/.env"                                                   // path dalam Docker container
-    };
-
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-    if (envFile != null)
-    {
-        Console.WriteLine($"Loading env file: {envFile}");
-        Env.Load(envFile);
-    }
-    else
-    {
-        Console.WriteLine("No .env file found — skipping load");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
+
 // === CORS ===
 builder.Services.AddCors(o => o.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 builder.Services.AddAuthorizationNewPolicies();
@@ -55,38 +36,26 @@ builder.Services.AddAuthorizationNewPolicies();
 // === Config ===
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// === DB Context (Read-only) ===
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-{
-    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection");
-    options.UseSqlServer(conn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-});
-
-// === Authentication ===
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter()
+        );
     });
 
-
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddRedisExtension(builder.Configuration);
-
+builder.Services.AddJwtAuthExtension(builder.Configuration);
+builder.Services.AddSwaggerExtension();
 
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
@@ -98,7 +67,6 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
-
 
 builder.Services.AddScoped<TrackingSessionRepository>();
 builder.Services.AddScoped<TrackingSummaryRepository>();
@@ -113,6 +81,13 @@ builder.Services.AddScoped<TrackingReportPresetRepository>();
 
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));
+
+// === DB Context (Read-only) ===
+builder.Services.AddDbContext<BleTrackingDbContext>(options =>
+{
+    var conn = builder.Configuration.GetConnectionString("BleTrackingDbConnection");
+    options.UseSqlServer(conn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
 
 // === Host config ===
 var port = Environment.GetEnvironmentVariable("ANALYTICS_PORT") ??
@@ -144,22 +119,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-app.UseMiddleware<CustomExceptionMiddleware>(); 
+app.UseMiddleware<CustomExceptionMiddleware>();
+app.UseSerilogRequestLoggingExtension();
 app.UseRouting();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.Use(async (context, next) =>
-{
-    try { await next(); }
-    catch (Exception ex)
-    {
-        context.Response.StatusCode = 500;
-        await context.Response.WriteAsJsonAsync(ResponseCollection<object>.Error(ex.Message));
-    }
-});
-
 app.MapControllers();
 app.Run();
-

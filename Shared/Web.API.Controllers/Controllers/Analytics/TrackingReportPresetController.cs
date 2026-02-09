@@ -29,6 +29,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             _presetService = presetService;
             _sessionService = analyticsV2Service;
         }
+
         // ==============================================
         // 1. APPLY PRESET - Get visitor session data
         // ==============================================
@@ -37,24 +38,8 @@ namespace Web.API.Controllers.Controllers.Analytics
         Guid presetId,
         TrackingAnalyticsFilter overrideRequest)
         {
-                if (!ModelState.IsValid)
-            {
-                var errors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-            }
-            try
-
-            {
-                var result = await _sessionService.GetVisitorSessionSummaryByPresetAsync(presetId,  overrideRequest);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var result = await _sessionService.GetVisitorSessionSummaryByPresetAsync(presetId, overrideRequest);
+            return Ok(ApiResponse.Success("Preset applied successfully", result));
         }
 
         // ==============================================
@@ -63,37 +48,19 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var presets = await _presetService.GetAllAsync();
-                return Ok(ApiResponse.Success("Presets retrieved successfully", presets));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var presets = await _presetService.GetAllAsync();
+            return Ok(ApiResponse.Success("Presets retrieved successfully", presets));
         }
+
         // ==============================================
         // 3. GET BY ID
         // ==============================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var preset = await _presetService.GetByIdAsync(id);
-                if (preset == null)
-                    return NotFound(ApiResponse.NotFound("Preset not found"));
-
-                return Ok(ApiResponse.Success("Preset retrieved successfully", preset));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var preset = await _presetService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Preset retrieved successfully", preset));
         }
-
-          
 
         // ==============================================
         // 4. SAVE PRESET
@@ -101,24 +68,8 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPost]
         public async Task<IActionResult> SavePreset([FromBody] CreateCustomPresetRequest request)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                    );
-                    return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-                }
-
-                var preset = await _presetService.SavePresetAsync(request);
-                return Ok(ApiResponse.Success("Preset saved successfully", preset));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var preset = await _presetService.SavePresetAsync(request);
+            return Ok(ApiResponse.Success("Preset saved successfully", preset));
         }
 
         // ==============================================
@@ -127,28 +78,8 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePreset(Guid id, [FromBody] UpdatePresetRequest request)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                    );
-                    return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
-                }
-
-                var preset = await _presetService.UpdateAsync(id, request);
-                return Ok(ApiResponse.Success("Preset updated successfully", request));
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(ApiResponse.NotFound("Preset not found"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var preset = await _presetService.UpdateAsync(id, request);
+            return Ok(ApiResponse.Success("Preset updated successfully", preset));
         }
 
         // ==============================================
@@ -157,42 +88,8 @@ namespace Web.API.Controllers.Controllers.Analytics
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePreset(Guid id)
         {
-            try
-            {
-                var success = await _presetService.DeleteAsync(id);
-                if (!success)
-                    return NotFound(ApiResponse.NotFound("Preset not found"));
-
-                return Ok(ApiResponse.NoContent("Building deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _presetService.DeleteAsync(id);
+            return Ok(ApiResponse.NoContent("Preset deleted successfully"));
         }
-
-        // ==============================================
-        // 7. SEED SYSTEM PRESETS (ADMIN ONLY)
-        // ==============================================
-        // [HttpPost("seed-system")]
-        // [Authorize(Roles = "Admin")]
-        // public async Task<IActionResult> SeedSystemPresets()
-        // {
-        //     try
-        //     {
-        //         await _presetService.SeedSystemPresetsAsync();
-        //         return Ok(new { message = "System presets seeded successfully" });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new { error = ex.Message });
-        //     }
-        // }
     }
 }

@@ -5,9 +5,9 @@ using Data.ViewModels;
 using System.Threading.Tasks;
 using Repositories.Repository.RepoModel;
 using BusinessLogic.Services.Interface.Analytics;
-using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
@@ -27,17 +27,11 @@ namespace Web.API.Controllers.Controllers.Analytics
         // ===================================================================
         // 1️⃣ Area Summary (Incident-level)
         // ===================================================================
-        // [HttpPost("area")]
-        // public async Task<IActionResult> GetArea([FromBody] AlarmAnalyticsFilter request)
-        // {
-        //     var response = await _service.GetAreaSummaryAsync(request);
-        //     return Ok(response);
-        // }
         [HttpPost("area")]
         public async Task<IActionResult> GetArea([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetAreaSummaryChartAsync(request);
-            return Ok(ApiResponse.Success("Area Summary retrieved successfully", response));
+            return Ok(ApiResponse.Success("Area summary retrieved successfully", response));
         }
 
         // ===================================================================
@@ -47,7 +41,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetDaily([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetDailySummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Daily summary retrieved successfully", response));
         }
 
         // ===================================================================
@@ -57,7 +51,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetStatus([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetStatusSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Status summary retrieved successfully", response));
         }
 
         // ===================================================================
@@ -67,7 +61,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetVisitor([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetVisitorSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Visitor summary retrieved successfully", response));
         }
 
         // ===================================================================
@@ -77,13 +71,17 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetBuilding([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetBuildingSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Building summary retrieved successfully", response));
         }
+
+        // ===================================================================
+        // 6️⃣ Hourly Status Summary
+        // ===================================================================
         [HttpPost("hourly")]
         public async Task<IActionResult> GetHourlyStatusSummaryAsync([FromBody] AlarmAnalyticsFilter request)
         {
             var response = await _service.GetHourlyStatusSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Hourly status summary retrieved successfully", response));
         }
     }
 }

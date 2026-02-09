@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using Shared.Contracts.Analytics;
+using DataView;
 using Data.ViewModels.AlarmAnalytics;
 
 namespace BusinessLogic.Services.Implementation.Analytics
@@ -30,178 +32,108 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _logger = logger;
         }
 
-        public async Task<object> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingAreaRead>> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetAreaSummaryAsync(request);
-                return ApiResponse.Success("Area summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting area summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetAreaSummaryAsync(request);
         }
 
-        public async Task<object> GetDailySummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingDailyRead>> GetDailySummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetDailySummaryAsync(request);
-                return ApiResponse.Success("Daily summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting daily summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetDailySummaryAsync(request);
         }
 
-        public async Task<object> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetReaderSummaryAsync(request);
-                return ApiResponse.Success("Reader summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting reader summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetReaderSummaryAsync(request);
         }
 
-        public async Task<object> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingVisitorRead>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetVisitorSummaryAsync(request);
-                return ApiResponse.Success("Visitor summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting visitor summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetVisitorSummaryAsync(request);
         }
 
-        public async Task<object> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingBuildingRead>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetBuildingSummaryAsync(request);
-                return ApiResponse.Success("Building summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting building summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetBuildingSummaryAsync(request);
         }
 
-        public async Task<object> GetTrackingMovementByCardIdAsync(Guid cardId)
+        public async Task<List<TrackingMovementRead>> GetTrackingMovementByCardIdAsync(Guid cardId)
         {
-            try
-            {
-                var data = await _repository.GetTrackingMovementByCardIdAsync(cardId);
-                return ApiResponse.Success("Tracking movement retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while getting tracking movement by card ID {CardId}", cardId);
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            var data = await _repository.GetTrackingMovementByCardIdAsync(cardId);
+            if (data.Count == 0)
+                throw new NotFoundException($"No tracking movement found for card ID: {cardId}");
+            return data;
         }
 
         // ===========================================================
         // 🔹 Get Heatmap
         // ===========================================================
-        public async Task<object> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingHeatmapRead>> GetHeatmapDataAsync(TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var data = await _repository.GetHeatmapDataAsync(request);
-                return ApiResponse.Success("Tracking heatmap retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while getting heatmap data");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await _repository.GetHeatmapDataAsync(request);
         }
 
-        public async Task<object> GetCardSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<List<TrackingCardRead>> GetCardSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetCardSummaryAsync(request);
+
+            var tz = TimezoneHelper.Resolve(request.Timezone);
+
+            if (tz.Id != TimeZoneInfo.Utc.Id)
             {
-                var data = await _repository.GetCardSummaryAsync(request);
-
-                var tz = TimezoneHelper.Resolve(request.Timezone);
-
-                if (tz.Id != TimeZoneInfo.Utc.Id)
+                foreach (var item in data)
                 {
-                    foreach (var item in data)
-                    {
-                        item.LastDetectedAt =
-                            TimezoneHelper.ConvertFromUtc(item.LastDetectedAt, tz);
-                    }
+                    item.LastDetectedAt =
+                        TimezoneHelper.ConvertFromUtc(item.LastDetectedAt, tz);
                 }
+            }
 
-                return ApiResponse.Success("Tracking summary retrieved successfully", data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting card summary");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return data;
         }
 
-        public async Task<object> GetAreaAccessedSummaryAsyncV3(
+        public async Task<AreaAccessResponseDto> GetAreaAccessedSummaryAsyncV3(
             TrackingAnalyticsFilter request
         )
         {
-            try
+            var rows = await _repository.GetAreaAccessDailyAsync(request);
+
+            var dates = rows
+                .Select(x => x.Date.Date)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            var labels = dates
+                .Select(d => d.ToString("MMM d"))
+                .ToList();
+
+            List<int> BuildSeries(string status) =>
+                dates.Select(d =>
+                    rows.FirstOrDefault(r =>
+                        r.Date.Date == d &&
+                        r.RestrictedStatus == status
+                    )?.Total ?? 0
+                ).ToList();
+
+            var withPermission = BuildSeries("non-restrict");
+            var withoutPermission = BuildSeries("restrict");
+
+            var accessedArea = withPermission
+                .Zip(withoutPermission, (a, b) => a + b)
+                .ToList();
+
+            var response = new AreaAccessResponseDto
             {
-                var rows = await _repository.GetAreaAccessDailyAsync(request);
-
-                var dates = rows
-                    .Select(x => x.Date.Date)
-                    .Distinct()
-                    .OrderBy(x => x)
-                    .ToList();
-
-                var labels = dates
-                    .Select(d => d.ToString("MMM d"))
-                    .ToList();
-
-                List<int> BuildSeries(string status) =>
-                    dates.Select(d =>
-                        rows.FirstOrDefault(r =>
-                            r.Date.Date == d &&
-                            r.RestrictedStatus == status
-                        )?.Total ?? 0
-                    ).ToList();
-
-                var withPermission = BuildSeries("non-restrict");
-                var withoutPermission = BuildSeries("restrict");
-
-                var accessedArea = withPermission
-                    .Zip(withoutPermission, (a, b) => a + b)
-                    .ToList();
-
-                var response = new AreaAccessResponseDto
+                Summary = new AreaAccessSummaryDto
                 {
-                    Summary = new AreaAccessSummaryDto
-                    {
-                        AccessedAreaTotal = accessedArea.Sum(),
-                        WithPermission = withPermission.Sum(),
-                        WithoutPermission = withoutPermission.Sum()
-                    },
-                    Chart = new AreaAccessChartDto
-                    {
-                        Labels = labels,
-                        Series = new()
+                    AccessedAreaTotal = accessedArea.Sum(),
+                    WithPermission = withPermission.Sum(),
+                    WithoutPermission = withoutPermission.Sum()
+                },
+                Chart = new AreaAccessChartDto
+                {
+                    Labels = labels,
+                    Series = new()
                     {
                         new Shared.Contracts.ChartSeriesDto
                         {
@@ -219,16 +151,10 @@ namespace BusinessLogic.Services.Implementation.Analytics
                             Data = withoutPermission
                         }
                     }
-                    }
-                };
+                }
+            };
 
-                return ApiResponse.Success("Success", response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting area accessed summary");
-                return ApiResponse.InternalError("Internal server error");
-            }
+            return response;
         }
     }
 }

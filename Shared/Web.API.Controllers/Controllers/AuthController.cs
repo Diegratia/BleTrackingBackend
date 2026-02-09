@@ -5,10 +5,10 @@ using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers
 {
-    //test
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -26,46 +26,11 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var response = await _authService.LoginAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Login successful",
-                    collection = new { data = response },
-                    code = 200
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new
-                {
-                    success = false,
-                    msg = ex.Message ?? "Invalid credentials",
-                    collection = new { data = (object)null },
-                    code = 401
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var response = await _authService.LoginAsync(dto);
+            return Ok(ApiResponse.Success("Login successful", response));
         }
 
         [HttpPost("logout")]
@@ -73,18 +38,8 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> Logout([FromBody] LogoutRequestDto dto)
         {
             await _authService.LogoutAsync(dto.RefreshToken);
-
-            return Ok(new
-            {
-                success = true,
-                msg = "Logout successful",
-                collection = new { data = (object)null },
-                code = 200
-            });
+            return Ok(ApiResponse.Success("Logout successful"));
         }
-
-
-        
 
         [AllowAnonymous]
         [HttpPost("public/login/visitor")]
@@ -93,48 +48,12 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var response = await _authService.LoginVisitorAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Visitor Login successful",
-                    collection = new { data = response },
-                    code = 200
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new
-                {
-                    success = false,
-                    msg = ex.Message ?? "Invalid credentials",
-                    collection = new { data = (object)null },
-                    code = 401
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var response = await _authService.LoginVisitorAsync(dto);
+            return Ok(ApiResponse.Success("Visitor Login successful", response));
         }
-
 
         [HttpPost("integration-login")]
         public async Task<IActionResult> IntegarationLoginAsync([FromBody] IntegrationLoginDto dto)
@@ -142,46 +61,11 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var response = await _authService.IntegrationLoginAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "User Login successful",
-                    collection = new { data = response },
-                    code = 200
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new
-                {
-                    success = false,
-                    msg = ex.Message ?? "Invalid credentials",
-                    collection = new { data = (object)null },
-                    code = 401
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var response = await _authService.IntegrationLoginAsync(dto);
+            return Ok(ApiResponse.Success("User Login successful", response));
         }
 
         [HttpPost("register")]
@@ -191,36 +75,11 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var response = await _authService.RegisterAsync(dto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Registration successful",
-                    collection = new { data = response },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var response = await _authService.RegisterAsync(dto);
+            return StatusCode(201, ApiResponse.Created("Registration successful", response));
         }
 
         [HttpPost("refresh")]
@@ -229,104 +88,26 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var response = await _authService.RefreshTokenAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Refresh successful",
-                    collection = new { data = response },
-                    code = 200
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new
-                {
-                    success = false,
-                    msg = ex.Message ?? "Invalid credentials",
-                    collection = new { data = (object)null },
-                    code = 401
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var response = await _authService.RefreshTokenAsync(dto);
+            return Ok(ApiResponse.Success("Refresh successful", response));
         }
 
         [HttpPost("confirm-email")]
-            [AllowAnonymous]
+        [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
         {
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                await _authService.ConfirmEmailAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Email confirmed successfully, please set your password",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(400, new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+            await _authService.ConfirmEmailAsync(dto);
+            return Ok(ApiResponse.Success("Email confirmed successfully, please set your password"));
         }
-
-        // [HttpGet("confirm-visitor-invitation")]
-        // [AllowAnonymous]
-        //     public async Task<IActionResult> ConfirmVisitorInvitation(string email, string token)
-        // {
-        //     await _authService.ConfirmVisitorInvitationAsync(email);
-        //     return Ok("Invitation confirmed successfully");
-        // }
 
         [HttpPost("set-password")]
         [AllowAnonymous]
@@ -335,48 +116,11 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                await _authService.SetPasswordAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Password set successfully, you can now login",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(400, new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+            await _authService.SetPasswordAsync(dto);
+            return Ok(ApiResponse.Success("Password set successfully, you can now login"));
         }
     }
 }
-
-

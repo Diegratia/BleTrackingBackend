@@ -8,6 +8,7 @@ using BusinessLogic.Services.Interface.Analytics;
 using System.Net.Mime;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers.Analytics
 {
@@ -37,7 +38,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetArea([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetAreaSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Area summary retrieved successfully", response));
         }
 
         // 2️⃣ Daily Summary
@@ -45,7 +46,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetDaily([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetDailySummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Daily summary retrieved successfully", response));
         }
 
         // 3️⃣ Reader Summary
@@ -53,7 +54,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetReader([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetReaderSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Reader summary retrieved successfully", response));
         }
 
         // 4️⃣ Visitor Summary
@@ -61,7 +62,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetVisitor([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetVisitorSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Visitor summary retrieved successfully", response));
         }
 
         // 5️⃣ Building Summary
@@ -69,7 +70,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetBuilding([FromBody] TrackingAnalyticsFilter request)
         {
             var response = await _summaryService.GetBuildingSummaryAsync(request);
-            return Ok(response);
+            return Ok(ApiResponse.Success("Building summary retrieved successfully", response));
         }
 
         // 6️⃣ Movement by Card ID
@@ -77,7 +78,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetMovement(Guid cardId)
         {
             var result = await _summaryService.GetTrackingMovementByCardIdAsync(cardId);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Tracking movement retrieved successfully", result));
         }
 
         // 7️⃣ Heatmap Data
@@ -85,7 +86,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetHeatmap([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetHeatmapDataAsync(request);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Heatmap data retrieved successfully", result));
         }
 
         // 8️⃣ Latest Position (Card Summary)
@@ -93,7 +94,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetCardSummaryAsync(request);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Card summary retrieved successfully", result));
         }
 
         // 9️⃣ Area Accessed Summary (with Chart)
@@ -101,7 +102,7 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetAreaAccessedSummaryAsyncV3(request);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Area accessed summary retrieved successfully", result));
         }
 
         // ===================================================================
@@ -139,7 +140,7 @@ namespace Web.API.Controllers.Controllers.Analytics
                 request.HasIncident = hasIncident;
 
             var result = await _sessionService.GetVisitorSessionSummaryAsync(request);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Visitor session summary retrieved successfully", result));
         }
 
         // Peak Hours by Area
@@ -147,41 +148,27 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetPeakHoursByArea([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _sessionService.GetPeakHoursByAreaAsync(request);
-            return Ok(result);
+            return Ok(ApiResponse.Success("Peak hours by area retrieved successfully", result));
         }
 
         // Export to PDF
         [HttpGet("export/pdf")]
         public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var pdfBytes = await _sessionService.ExportVisitorSessionSummaryToPdfAsync(request);
-                string fileName = GenerateExportFileName(request, "pdf");
-                return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error generating PDF: {ex.Message}");
-            }
+            var pdfBytes = await _sessionService.ExportVisitorSessionSummaryToPdfAsync(request);
+            string fileName = GenerateExportFileName(request, "pdf");
+            return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
         }
 
         // Export to Excel
         [HttpGet("export/excel")]
         public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsFilter request)
         {
-            try
-            {
-                var excelBytes = await _sessionService.ExportVisitorSessionSummaryToExcelAsync(request);
-                string fileName = GenerateExportFileName(request, "xlsx");
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    fileName);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error generating Excel: {ex.Message}");
-            }
+            var excelBytes = await _sessionService.ExportVisitorSessionSummaryToExcelAsync(request);
+            string fileName = GenerateExportFileName(request, "xlsx");
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
         }
 
         private string GenerateExportFileName(TrackingAnalyticsFilter request, string extension)

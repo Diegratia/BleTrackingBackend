@@ -2,7 +2,6 @@ using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
-using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -18,6 +17,7 @@ using System.Text.Json;
 using Helpers.Consumer;
 using Shared.Contracts;
 using Shared.Contracts.Analytics;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
@@ -45,56 +45,48 @@ namespace BusinessLogic.Services.Implementation.Analytics
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request)
+        public async Task<GroupedSessionsResponse> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request)
         {
-            try
+            var data = await _repository.GetVisitorSessionSummaryAsync(request);
+
+            var tz = TimezoneHelper.Resolve(request.Timezone);
+
+            if (tz.Id != TimeZoneInfo.Utc.Id)
             {
-                var data = await _repository.GetVisitorSessionSummaryAsync(request);
-
-                var tz = TimezoneHelper.Resolve(request.Timezone);
-
-                if (tz.Id != TimeZoneInfo.Utc.Id)
+                foreach (var item in data)
                 {
-                    foreach (var item in data)
-                    {
-                        item.EnterTime =
-                            TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
+                    item.EnterTime =
+                        TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
 
-                        if (item.ExitTime.HasValue)
-                            item.ExitTime =
-                                TimezoneHelper.ConvertFromUtc(item.ExitTime.Value, tz);
-                    }
+                    if (item.ExitTime.HasValue)
+                        item.ExitTime =
+                            TimezoneHelper.ConvertFromUtc(item.ExitTime.Value, tz);
                 }
-
-                // === GROUP BY PERSON ===
-                var groupedPersons = GroupSessionsByPerson(data);
-
-                // === BUILD RESPONSE ===
-                var response = new GroupedSessionsResponse
-                {
-                    Persons = groupedPersons
-                };
-
-                // Optional: Include summary
-                if (request.IncludeSummary)
-                {
-                    response.Summary = BuildSummary(data);
-                }
-
-                // Optional: Include visual paths
-                if (request.IncludeVisualPaths)
-                {
-                    var visualPaths = await BuildVisualPathsAsync(request, tz);
-                    response.VisualPaths = visualPaths;
-                }
-
-                return ApiResponse.Success("Visitor sessions retrieved successfully", response);
             }
-            catch (Exception ex)
+
+            // === GROUP BY PERSON ===
+            var groupedPersons = GroupSessionsByPerson(data);
+
+            // === BUILD RESPONSE ===
+            var response = new GroupedSessionsResponse
             {
-                _logger.LogError(ex, "Error in GetVisitorSessionSummaryAsync");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
+                Persons = groupedPersons
+            };
+
+            // Optional: Include summary
+            if (request.IncludeSummary)
+            {
+                response.Summary = BuildSummary(data);
             }
+
+            // Optional: Include visual paths
+            if (request.IncludeVisualPaths)
+            {
+                var visualPaths = await BuildVisualPathsAsync(request, tz);
+                response.VisualPaths = visualPaths;
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -175,19 +167,6 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 return $"{hours} hour{(hours > 1 ? "s" : "")}";
 
             return $"{hours} hour{(hours > 1 ? "s" : "")} {mins} min";
-        }
-
-        /// <summary>
-        /// Legacy method for backward compatibility
-        /// Use GetVisitorSessionSummaryAsync(request) with IncludeVisualPaths parameter instead
-        /// </summary>
-        public async Task<object> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request, bool includeVisualPaths)
-        {
-            // Set IncludeVisualPaths in request
-            request.IncludeVisualPaths = includeVisualPaths;
-
-            // Call new method
-            return await GetVisitorSessionSummaryAsync(request);
         }
 
         private static VisitorSessionSummaryRead BuildSummary(List<VisitorSessionRead> sessions)
@@ -323,26 +302,18 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return string.Join(":", parts);
         }
 
-        public async Task<object> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)
+        public async Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest)
         {
-            try
-            {
-                var request = await _presetService.ApplyPresetAsync(presetId);
-                request.Timezone = overrideRequest.Timezone;
-                request.PersonType = overrideRequest.PersonType;
-                if (overrideRequest.From.HasValue)
-                    request.From = overrideRequest.From;
+            var request = await _presetService.ApplyPresetAsync(presetId);
+            request.Timezone = overrideRequest.Timezone;
+            request.PersonType = overrideRequest.PersonType;
+            if (overrideRequest.From.HasValue)
+                request.From = overrideRequest.From;
 
-                if (overrideRequest.To.HasValue)
-                    request.To = overrideRequest.To;
+            if (overrideRequest.To.HasValue)
+                request.To = overrideRequest.To;
 
-                return await GetVisitorSessionSummaryAsync(request);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
-                return ApiResponse.InternalError($"Internal server error: {ex.Message}");
-            }
+            return await GetVisitorSessionSummaryAsync(request);
         }
 
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request)
@@ -622,90 +593,78 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(TrackingAnalyticsFilter request)
         {
-            try
+            var rawData = await _repository.GetPeakHoursByAreaAsync(request);
+
+            if (!rawData.Any())
             {
-                var rawData = await _repository.GetPeakHoursByAreaAsync(request);
-
-                if (!rawData.Any())
-                {
-                    return new PeakHoursByAreaRead
-                    {
-                        Labels = GenerateHourLabels(),
-                        Series = new List<ChartSeriesDto>()
-                    };
-                }
-
-                // Group by area and create series
-                var groupedByArea = rawData
-                    .Where(x => !string.IsNullOrEmpty(x.AreaName))
-                    .GroupBy(x => x.AreaName!);
-
-                var series = new List<ChartSeriesDto>();
-
-                foreach (var areaGroup in groupedByArea)
-                {
-                    var areaName = areaGroup.Key;
-                    var hourlyData = new int[24]; // 24 hours
-
-                    // Fill in the data
-                    foreach (var item in areaGroup)
-                    {
-                        if (item.Hour >= 0 && item.Hour < 24)
-                        {
-                            hourlyData[item.Hour] = item.Count;
-                        }
-                    }
-
-                    series.Add(new ChartSeriesDto
-                    {
-                        Name = areaName,
-                        Data = hourlyData.ToList()
-                    });
-                }
-
-                // Sort series by total count (descending) - most active areas first
-                series = series
-                    .OrderByDescending(s => s.Data.Sum())
-                    .ToList();
-
-                // Optional: Limit to top 10 areas to avoid overcrowding the chart
-                const int maxAreas = 10;
-                if (series.Count > maxAreas)
-                {
-                    var otherData = new int[24];
-                    for (int i = 0; i < 24; i++)
-                    {
-                        otherData[i] = series.Skip(maxAreas).Sum(s => s.Data[i]);
-                    }
-
-                    series = series.Take(maxAreas).ToList();
-
-                    // Add "Others" series if there's data
-                    if (otherData.Sum() > 0)
-                    {
-                        series.Add(new ChartSeriesDto
-                        {
-                            Name = "Others",
-                            Data = otherData.ToList()
-                        });
-                    }
-                }
-
-                return new PeakHoursByAreaRead
-                {
-                    Labels = GenerateHourLabels(),
-                    Series = series
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetPeakHoursByAreaAsync");
                 return new PeakHoursByAreaRead
                 {
                     Labels = GenerateHourLabels(),
                     Series = new List<ChartSeriesDto>()
                 };
             }
+
+            // Group by area and create series
+            var groupedByArea = rawData
+                .Where(x => !string.IsNullOrEmpty(x.AreaName))
+                .GroupBy(x => x.AreaName!);
+
+            var series = new List<ChartSeriesDto>();
+
+            foreach (var areaGroup in groupedByArea)
+            {
+                var areaName = areaGroup.Key;
+                var hourlyData = new int[24]; // 24 hours
+
+                // Fill in the data
+                foreach (var item in areaGroup)
+                {
+                    if (item.Hour >= 0 && item.Hour < 24)
+                    {
+                        hourlyData[item.Hour] = item.Count;
+                    }
+                }
+
+                series.Add(new ChartSeriesDto
+                {
+                    Name = areaName,
+                    Data = hourlyData.ToList()
+                });
+            }
+
+            // Sort series by total count (descending) - most active areas first
+            series = series
+                .OrderByDescending(s => s.Data.Sum())
+                .ToList();
+
+            // Optional: Limit to top 10 areas to avoid overcrowding the chart
+            const int maxAreas = 10;
+            if (series.Count > maxAreas)
+            {
+                var otherData = new int[24];
+                for (int i = 0; i < 24; i++)
+                {
+                    otherData[i] = series.Skip(maxAreas).Sum(s => s.Data[i]);
+                }
+
+                series = series.Take(maxAreas).ToList();
+
+                // Add "Others" series if there's data
+                if (otherData.Sum() > 0)
+                {
+                    series.Add(new ChartSeriesDto
+                    {
+                        Name = "Others",
+                        Data = otherData.ToList()
+                    });
+                }
+            }
+
+            return new PeakHoursByAreaRead
+            {
+                Labels = GenerateHourLabels(),
+                Series = series
+            };
         }
 
         private static List<string> GenerateHourLabels()

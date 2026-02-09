@@ -1,18 +1,20 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Data.ViewModels.AlarmAnalytics;
 using Shared.Contracts;
+using Shared.Contracts.Analytics;
 
 namespace BusinessLogic.Services.Interface.Analytics;
 
 public interface ITrackingSummaryService
 {
-    Task<object> GetAreaSummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetDailySummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetReaderSummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetVisitorSummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetBuildingSummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetTrackingMovementByCardIdAsync(Guid cardId);
-    Task<object> GetHeatmapDataAsync(TrackingAnalyticsFilter request);
-    Task<object> GetCardSummaryAsync(TrackingAnalyticsFilter request);
-    Task<object> GetAreaAccessedSummaryAsyncV3(TrackingAnalyticsFilter request);
+    Task<List<TrackingAreaRead>> GetAreaSummaryAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingDailyRead>> GetDailySummaryAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingVisitorRead>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingBuildingRead>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingMovementRead>> GetTrackingMovementByCardIdAsync(Guid cardId);
+    Task<List<TrackingHeatmapRead>> GetHeatmapDataAsync(TrackingAnalyticsFilter request);
+    Task<List<TrackingCardRead>> GetCardSummaryAsync(TrackingAnalyticsFilter request);
+    Task<AreaAccessResponseDto> GetAreaAccessedSummaryAsyncV3(TrackingAnalyticsFilter request);
 }
