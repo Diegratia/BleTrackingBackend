@@ -1,14 +1,14 @@
-        using System;
-        using System.Collections.Generic;
-        using System.Linq;
-        using System.Threading.Tasks;
-        using System.ComponentModel.DataAnnotations;
-        using System.ComponentModel.DataAnnotations.Schema;
-        using Helpers.Consumer;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Helpers.Consumer;
 using Shared.Contracts;
-        
 
-        namespace Entities.Models
+
+namespace Entities.Models
 {
     public class AlarmTriggers : BaseModelOnlyId, IApplicationEntity
     {
@@ -73,8 +73,8 @@ using Shared.Contracts;
         [Column("waiting_timestamp")]
         public DateTime? WaitingTimestamp { get; set; }
 
-        [Column("investigated_timestamp")]
-        public DateTime? InvestigatedTimestamp { get; set; }
+        // [Column("investigated_timestamp")]
+        // public DateTime? InvestigatedTimestamp { get; set; }
 
         [Column("investigated_done_at")]
         public DateTime? InvestigatedDoneAt { get; set; }
@@ -91,9 +91,6 @@ using Shared.Contracts;
         [Column("waiting_by")]
         public string? WaitingBy { get; set; }
 
-        [Column("investigated_by")]
-        public string? InvestigatedBy { get; set; }
-
         [Column("investigated_result")]
         public string? InvestigatedResult { get; set; }
 
@@ -106,7 +103,7 @@ using Shared.Contracts;
         [Column("last_notified_at")]
         public DateTime? LastNotifiedAt { get; set; }
 
-        // Security action timestamps
+        // Security action timestamps - Operator acknowledges
         [Column("acknowledged_at")]
         public DateTime? AcknowledgedAt { get; set; }
 
@@ -114,6 +111,7 @@ using Shared.Contracts;
         [MaxLength(50)]
         public string? AcknowledgedBy { get; set; }
 
+        // Operator dispatches to security
         [Column("dispatched_at")]
         public DateTime? DispatchedAt { get; set; }
 
@@ -121,12 +119,27 @@ using Shared.Contracts;
         [MaxLength(50)]
         public string? DispatchedBy { get; set; }
 
+        // Security accepts the dispatch
+        [Column("accepted_at")]
+        public DateTime? AcceptedAt { get; set; }
+
+        [Column("accepted_by")]
+        [MaxLength(50)]
+        public string? AcceptedBy { get; set; }
+
+        // Security arrives at location
         [Column("arrived_at")]
         public DateTime? ArrivedAt { get; set; }
 
         [Column("arrived_by")]
         [MaxLength(50)]
         public string? ArrivedBy { get; set; }
+
+        // Security completes investigation with result
+
+        [Column("investigated_done_by")]
+        [MaxLength(50)]
+        public string? InvestigatedDoneBy { get; set; }
 
         [Required]
         [ForeignKey("Application")]

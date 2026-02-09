@@ -38,7 +38,7 @@ namespace Shared.Contracts.Read
         public DateTime? DoneTimestamp { get; set; }
         public DateTime? CancelTimestamp { get; set; }
         public DateTime? WaitingTimestamp { get; set; }
-        public DateTime? InvestigatedTimestamp { get; set; }
+        public DateTime? DispatchedAt { get; set; }
         public DateTime? InvestigatedDoneAt { get; set; }
         public DateTime? ActionUpdatedAt { get; set; }
         public DateTime? LastSeenAt { get; set; }
@@ -46,10 +46,12 @@ namespace Shared.Contracts.Read
 
         // Actor info
         public string? IdleBy { get; set; }
+        public string? DispatchedBy { get; set; }
+        public string? AcceptedBy { get; set; }
         public string? DoneBy { get; set; }
         public string? CancelBy { get; set; }
         public string? WaitingBy { get; set; }
-        public string? InvestigatedBy { get; set; }
+        public string? InvestigatedDoneBy { get; set; }
         public string? InvestigatedResult { get; set; }
 
         public Guid ApplicationId { get; set; }

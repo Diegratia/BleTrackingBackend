@@ -126,13 +126,14 @@
                 public DateTime? AcknowledgedAt { get; set; }
                 public DateTime? DispatchedAt { get; set; }
                 public DateTime? ArrivedAt { get; set; }
-                public DateTime? InvestigatedTimestamp { get; set; }
+                public DateTime? InvestigatedDoneAt { get; set; }
                 public DateTime? DoneTimestamp { get; set; }
                 public DateTime? CancelTimestamp { get; set; }
                 public string? AcknowledgedBy { get; set; }
                 public string? DispatchedBy { get; set; }
+                public string? AcceptedBy { get; set; }
                 public string? ArrivedBy { get; set; }
-                public string? InvestigatedBy { get; set; }
+                public string? InvestigatedDoneBy { get; set; }
                 public string? DoneBy { get; set; }
                 public string? CancelBy { get; set; }
                 public string? WaitingBy { get; set; }
@@ -526,13 +527,13 @@
                     at.AcknowledgedAt,
                     at.DispatchedAt,
                     at.ArrivedAt,
-                    at.InvestigatedTimestamp,
+                    at.InvestigatedDoneAt,
                     at.DoneTimestamp,
                     at.CancelTimestamp,
                     at.AcknowledgedBy,
                     at.DispatchedBy,
                     at.ArrivedBy,
-                    at.InvestigatedBy,
+                    at.InvestigatedDoneBy,
                     at.DoneBy,
                     at.CancelBy,
                     at.WaitingBy,
@@ -580,13 +581,13 @@
                 AcknowledgedAt = ad.AcknowledgedAt,
                 DispatchedAt = ad.DispatchedAt,
                 ArrivedAt = ad.ArrivedAt,
-                InvestigatedTimestamp = ad.InvestigatedTimestamp,
+                InvestigatedDoneAt = ad.InvestigatedDoneAt,
                 DoneTimestamp = ad.DoneTimestamp,
                 CancelTimestamp = ad.CancelTimestamp,
                 AcknowledgedBy = ad.AcknowledgedBy,
                 DispatchedBy = ad.DispatchedBy,
                 ArrivedBy = ad.ArrivedBy,
-                InvestigatedBy = ad.InvestigatedBy,
+                InvestigatedDoneBy = ad.InvestigatedDoneBy,
                 DoneBy = ad.DoneBy,
                 CancelBy = ad.CancelBy,
                 WaitingBy = ad.WaitingBy,
@@ -663,13 +664,14 @@
                 AcknowledgedAt = alarm.AcknowledgedAt,
                 DispatchedAt = alarm.DispatchedAt,
                 ArrivedAt = alarm.ArrivedAt,
-                InvestigatedAt = alarm.InvestigatedTimestamp,
+                InvestigatedDoneAt = alarm.InvestigatedDoneAt,
                 DoneAt = alarm.DoneTimestamp,
 
                 AcknowledgedBy = alarm.AcknowledgedBy,
                 DispatchedBy = alarm.DispatchedBy,
+                AcceptedBy = alarm.AcceptedBy,
                 ArrivedBy = alarm.ArrivedBy,
-                InvestigatedBy = alarm.InvestigatedBy,
+                InvestigatedDoneBy = alarm.InvestigatedDoneBy,
                 DoneBy = alarm.DoneBy,
 
                 SecurityId = alarm.SecurityId,
@@ -705,8 +707,8 @@
             if (alarm.WaitingTimestamp.HasValue)
                 timeline.Add($"WAITING by {alarm.WaitingBy}");
 
-            if (alarm.InvestigatedTimestamp.HasValue)
-                timeline.Add($"INVESTIGATED by {alarm.InvestigatedBy}");
+            if (alarm.InvestigatedDoneAt.HasValue)
+                timeline.Add($"INVESTIGATED DONE by {alarm.InvestigatedDoneBy}");
 
             if (alarm.DoneTimestamp.HasValue)
                 timeline.Add($"DONE by {alarm.DoneBy}");

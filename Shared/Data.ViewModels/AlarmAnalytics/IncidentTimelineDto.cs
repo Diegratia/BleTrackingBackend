@@ -108,8 +108,8 @@ namespace Data.ViewModels.AlarmAnalytics
     public class IncidentInvestigationDto
     {
         public string? Result { get; set; }
-        public string? InvestigatedBy { get; set; }
-        public Guid? InvestigatedById { get; set; }
+        public string? DispatchedPerson { get; set; }
+        public Guid? DispatchedPersonId { get; set; }
         public DateTime? InvestigatedAt { get; set; }
         public DateTime? DoneAt { get; set; }
         public string? Notes { get; set; }

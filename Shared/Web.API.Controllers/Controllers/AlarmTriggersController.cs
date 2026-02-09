@@ -65,19 +65,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Alarm updated successfully"));
         }
 
-        [HttpPut("tag/{beaconId}")]
-        public async Task<IActionResult> UpdateAlarmStatus(string beaconId, [FromBody] AlarmTriggersUpdateDto dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
-            }
-
-            await _service.UpdateAlarmStatusAsync(beaconId, dto);
-            return Ok(ApiResponse.Success("Trigger updated successfully"));
-        }
-
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {

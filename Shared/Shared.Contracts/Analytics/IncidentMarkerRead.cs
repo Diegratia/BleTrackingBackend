@@ -43,10 +43,10 @@ namespace Shared.Contracts.Analytics
         /// <summary>When security arrived</summary>
         public DateTime? ArrivedAt { get; set; }
 
-        /// <summary>When investigation started</summary>
-        public DateTime? InvestigatedAt { get; set; }
+        /// <summary>When investigation End</summary>
+        public DateTime? InvestigatedDoneAt { get; set; }
 
-        /// <summary>When incident was resolved</summary>
+        /// <summary>When incident was resolved by operator</summary>
         public DateTime? DoneAt { get; set; }
 
         // =====================================================
@@ -59,11 +59,13 @@ namespace Shared.Contracts.Analytics
         /// <summary>Person who was dispatched</summary>
         public string? DispatchedBy { get; set; }
 
+        /// <summary>Person who accept</summary>
+        public string? AcceptedBy { get; set; }
         /// <summary>Person who arrived</summary>
         public string? ArrivedBy { get; set; }
 
         /// <summary>Person who investigated</summary>
-        public string? InvestigatedBy { get; set; }
+        public string? InvestigatedDoneBy { get; set; }
 
         /// <summary>Person who marked as done</summary>
         public string? DoneBy { get; set; }

@@ -60,121 +60,84 @@ namespace BusinessLogic.Services.Implementation
             if (alarmTriggers == null)
                 throw new NotFoundException($"alarmTriggers with Id {id} not found.");
 
-            if (alarmTriggers.IsActive == false)
+            if (alarmTriggers.IsActive == false && action != "done" && action != "resolve")
                 throw new BusinessException("Alarm is no longer active.");
 
-            if (action == "postponeinvestigated")
+            switch (action)
             {
-                alarmTriggers.IsActive = true;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-            else if (action == "investigated")
-            {
-                if (!dto.AssignedSecurityId.HasValue)
-                    throw new BusinessException("Security must be assigned when investigated.");
+                // New workflow actions
+                case "ack":
+                case "acknowledge":
+                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Idle)
+                        throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {alarmTriggers.Action}");
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Acknowledged;
+                    alarmTriggers.AcknowledgedAt = DateTime.UtcNow;
+                    alarmTriggers.AcknowledgedBy = username;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                if (alarmTriggers.SecurityId != null)
-                    throw new BusinessException("Alarm already assigned to a security.");
+                case "dispatch":
+                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                        throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarmTriggers.Action}");
+                    if (!dto.AssignedSecurityId.HasValue)
+                        throw new BusinessException("SecurityId is required for dispatch");
+                    var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(dto.AssignedSecurityId.Value, AppId);
+                    if (invalidSecurityIds.Any())
+                        throw new UnauthorizedException($"SecurityId does not belong to this Application");
+                    var security = await _repository.GetSecurityByIdAsync(dto.AssignedSecurityId.Value);
+                    if (security == null)
+                        throw new BusinessException("Assigned security not found");
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Dispatched;
+                    alarmTriggers.SecurityId = security.Id;
+                    alarmTriggers.DispatchedAt = DateTime.UtcNow;
+                    alarmTriggers.DispatchedBy = username;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                // Ownership validation for SecurityId
-                var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(dto.AssignedSecurityId.Value, AppId);
-                if (invalidSecurityIds.Any())
-                    throw new UnauthorizedException($"SecurityId does not belong to this Application: {string.Join(", ", invalidSecurityIds)}");
+                case "waiting":
+                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                        throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {alarmTriggers.Action}");
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Waiting;
+                    alarmTriggers.IsActive = false;
+                    alarmTriggers.WaitingBy = username;
+                    alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                var security = await _repository.GetSecurityByIdAsync(dto.AssignedSecurityId.Value);
-                if (security == null)
-                    throw new BusinessException("Assigned security not found.");
+                case "done":
+                case "resolve":
+                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
+                        throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarmTriggers.Action}");
+                    if (string.IsNullOrWhiteSpace(alarmTriggers.InvestigatedResult))
+                        throw new BusinessException("Cannot resolve: no investigation result found");
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Done;
+                    alarmTriggers.IsActive = false;
+                    alarmTriggers.DoneBy = username;
+                    alarmTriggers.DoneTimestamp = DateTime.UtcNow;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                alarmTriggers.IsActive = true;
-                alarmTriggers.SecurityId = security.Id;
-                alarmTriggers.InvestigatedBy = username;
-                alarmTriggers.InvestigatedTimestamp = DateTime.UtcNow;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-            else if (action == "noaction")
-            {
-                alarmTriggers.IsActive = false;
-                alarmTriggers.CancelBy = username;
-                alarmTriggers.CancelTimestamp = DateTime.UtcNow;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-            else if (action == "waiting")
-            {
-                alarmTriggers.IsActive = false;
-                alarmTriggers.WaitingBy = username;
-                alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
-            }
-            else if (action == "done")
-            {
-                if (string.IsNullOrWhiteSpace(dto.InvestigatedResult))
-                    throw new BusinessException("Investigated result must be provided before marking alarm as done.");
+                // Legacy actions
+                case "postponeinvestigated":
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.PostponeInvestigated;
+                    alarmTriggers.IsActive = true;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                if (!string.IsNullOrWhiteSpace(alarmTriggers.InvestigatedResult))
-                    throw new BusinessException("Alarm has already been completed.");
+                case "noaction":
+                    alarmTriggers.Action = Shared.Contracts.ActionStatus.NoAction;
+                    alarmTriggers.IsActive = false;
+                    alarmTriggers.CancelBy = username;
+                    alarmTriggers.CancelTimestamp = DateTime.UtcNow;
+                    alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                    break;
 
-                alarmTriggers.InvestigatedResult = dto.InvestigatedResult;
-                alarmTriggers.IsActive = false;
-                alarmTriggers.DoneBy = username;
-                alarmTriggers.DoneTimestamp = DateTime.UtcNow;
-                alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
+                default:
+                    throw new BusinessException($"Invalid action: {action}. Valid actions: ack, dispatch, waiting, done, postponeinvestigated, noaction");
             }
 
             await _repository.UpdateAsync(alarmTriggers);
             await _audit.Updated("AlarmTriggers", alarmTriggers.Id, $"Alarm {alarmTriggers.BeaconId} updated with action: {action}");
-        }
-        
-        public async Task UpdateAlarmStatusAsync(string beaconId, AlarmTriggersUpdateDto dto)
-        {
-            var username = UsernameFormToken;
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-            var alarmTriggers = await _repository.GetByDmacAsync(beaconId);
-            if (!alarmTriggers.Any())
-                throw new KeyNotFoundException($"alarmTriggers with beaconId {beaconId} not found.");
-
-            foreach (var alarmTrigger in alarmTriggers)
-            {
-                if (alarmTrigger.IsActive == false)
-                    throw new KeyNotFoundException($"alarmTriggers with beaconId {beaconId} has been deleted.");
-
-                if (dto.ActionStatus == "postponeinvestigated")
-                {
-                    alarmTrigger.IsActive = true;
-                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
-                }
-                else if (dto.ActionStatus == "investigated")
-                {
-                    alarmTrigger.IsActive = true;
-                    alarmTrigger.InvestigatedBy = username;
-                    alarmTrigger.InvestigatedTimestamp = DateTime.UtcNow;
-                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
-                }
-                else if (dto.ActionStatus == "noaction")
-                {
-                    alarmTrigger.IsActive = false;
-                    alarmTrigger.CancelBy = username;
-                    alarmTrigger.CancelTimestamp = DateTime.UtcNow;
-                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
-                }
-                else if (dto.ActionStatus == "waiting")
-                {
-                    alarmTrigger.IsActive = false;
-                    alarmTrigger.WaitingBy = username;
-                    alarmTrigger.WaitingTimestamp = DateTime.UtcNow;
-                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
-                }
-                else if (dto.ActionStatus == "done")
-                {
-                    alarmTrigger.IsActive = false;
-                    alarmTrigger.DoneBy = username;
-                    alarmTrigger.DoneTimestamp = DateTime.UtcNow;
-                    alarmTrigger.ActionUpdatedAt = DateTime.UtcNow;
-                }
-            }
-
-            await _repository.UpdateBatchAsync(alarmTriggers);
-            await _audit.Updated("AlarmTriggers", Guid.Empty, $"Alarm batch for beacon {beaconId} updated with action: {dto.ActionStatus}");
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request)
@@ -199,65 +162,238 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        // TODO: Engine belum support - comment dulu
-        // public async Task AcknowledgeAsync(Guid id, string username)
-        // {
-        //     var alarm = await _repository.GetByIdEntityAsync(id);
-        //     if (alarm == null)
-        //         throw new NotFoundException($"Alarm with ID {id} not found");
-        //
-        //     if (alarm.AcknowledgedAt.HasValue)
-        //         throw new BusinessException("Alarm already acknowledged");
-        //
-        //     alarm.AcknowledgedAt = DateTime.UtcNow;
-        //     alarm.AcknowledgedBy = username;
-        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
-        //
-        //     await _repository.UpdateAsync(alarm);
-        //     await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
-        // }
+        // =====================================================
+        // NEW WORKFLOW METHODS
+        // =====================================================
 
-        // TODO: Engine belum support - comment dulu
-        // public async Task DispatchedAsync(Guid id, string username)
-        // {
-        //     var alarm = await _repository.GetByIdEntityAsync(id);
-        //     if (alarm == null)
-        //         throw new NotFoundException($"Alarm with ID {id} not found");
-        //
-        //     if (alarm.AcknowledgedAt == null)
-        //         throw new BusinessException("Cannot mark dispatched: alarm not acknowledged yet");
-        //
-        //     if (alarm.DispatchedAt.HasValue)
-        //         throw new BusinessException("Alarm already marked as dispatched");
-        //
-        //     alarm.DispatchedAt = DateTime.UtcNow;
-        //     alarm.DispatchedBy = username;
-        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
-        //
-        //     await _repository.UpdateAsync(alarm);
-        //     await _audit.Updated("AlarmTriggers", id, $"Security {username} dispatched to location");
-        // }
+        /// <summary>
+        /// Operator acknowledges the alarm
+        /// Flow: Idle → Acknowledged
+        /// </summary>
+        public async Task AcknowledgeAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
 
-        // TODO: Engine belum support - comment dulu
-        // public async Task ArrivedAsync(Guid id, string username)
-        // {
-        //     var alarm = await _repository.GetByIdEntityAsync(id);
-        //     if (alarm == null)
-        //         throw new NotFoundException($"Alarm with ID {id} not found");
-        //
-        //     if (alarm.DispatchedAt == null)
-        //         throw new BusinessException("Cannot mark arrived: security not dispatched yet");
-        //
-        //     if (alarm.ArrivedAt.HasValue)
-        //         throw new BusinessException("Alarm already marked as arrived");
-        //
-        //     alarm.ArrivedAt = DateTime.UtcNow;
-        //     alarm.ArrivedBy = username;
-        //     alarm.ActionUpdatedAt = DateTime.UtcNow;
-        //
-        //     await _repository.UpdateAsync(alarm);
-        //     await _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
-        // }
+            // Validate: can only acknowledge Idle alarms
+            if (alarm.Action != Shared.Contracts.ActionStatus.Idle)
+                throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {alarm.Action}");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Acknowledged;
+            alarm.AcknowledgedAt = DateTime.UtcNow;
+            alarm.AcknowledgedBy = username;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
+        }
+
+        /// <summary>
+        /// Operator dispatches alarm to specific security
+        /// Flow: Acknowledged → Dispatched
+        /// </summary>
+        public async Task DispatchAsync(Guid id, Guid securityId)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in Acknowledged status
+            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarm.Action}");
+
+            // Ownership validation for SecurityId
+            var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(securityId, AppId);
+            if (invalidSecurityIds.Any())
+                throw new UnauthorizedException($"SecurityId does not belong to this Application: {string.Join(", ", invalidSecurityIds)}");
+
+            var security = await _repository.GetSecurityByIdAsync(securityId);
+            if (security == null)
+                throw new BusinessException("Assigned security not found");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Dispatched;
+            alarm.SecurityId = security.Id;
+            alarm.DispatchedAt = DateTime.UtcNow;
+            alarm.DispatchedBy = username;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Alarm dispatched to {security.Name} by {username}");
+        }
+
+        /// <summary>
+        /// Operator puts alarm in waiting queue (no security available)
+        /// Flow: Acknowledged → Waiting
+        /// </summary>
+        public async Task WaitingAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in Acknowledged status
+            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {alarm.Action}");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Waiting;
+            alarm.IsActive = false;
+            alarm.WaitingBy = username;
+            alarm.WaitingTimestamp = DateTime.UtcNow;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Alarm put in waiting queue by {username}");
+        }
+
+        /// <summary>
+        /// Security accepts the dispatch
+        /// Flow: Dispatched → Accepted
+        /// </summary>
+        public async Task AcceptAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in Dispatched status
+            if (alarm.Action != Shared.Contracts.ActionStatus.Dispatched)
+                throw new BusinessException($"Cannot accept: alarm must be dispatched first. Current: {alarm.Action}");
+
+            // Validate: accepting security must be the assigned security
+            if (alarm.SecurityId == null)
+                throw new BusinessException("Cannot accept: alarm has no assigned security");
+
+            // Get current user's security ID (from JWT token claims or Security entity)
+            var currentSecurityId = GetCurrentSecurityUserId();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId.Value)
+                throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Accepted;
+            alarm.AcceptedAt = DateTime.UtcNow;
+            alarm.AcceptedBy = username;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Alarm accepted by security {username}");
+        }
+
+        /// <summary>
+        /// Security arrives at location
+        /// Flow: Accepted → Arrived
+        /// </summary>
+        public async Task ArrivedAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in Accepted status
+            if (alarm.Action != Shared.Contracts.ActionStatus.Accepted)
+                throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {alarm.Action}");
+
+            // Validate: assigned security
+            var currentSecurityId = GetCurrentSecurityUserId();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
+                throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Arrived;
+            alarm.ArrivedAt = DateTime.UtcNow;
+            alarm.ArrivedBy = username;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
+        }
+
+        /// <summary>
+        /// Security completes investigation with result
+        /// Flow: Arrived → DoneInvestigated
+        /// </summary>
+        public async Task DoneInvestigatedAsync(Guid id, string result)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in Arrived status
+            if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
+                throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
+
+            // Validate: result is required
+            if (string.IsNullOrWhiteSpace(result))
+                throw new BusinessException("Investigation result is required");
+
+            // Validate: assigned security
+            var currentSecurityId = GetCurrentSecurityUserId();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
+                throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
+
+            alarm.Action = Shared.Contracts.ActionStatus.DoneInvestigated;
+            alarm.InvestigatedResult = result;
+            alarm.InvestigatedDoneAt = DateTime.UtcNow;
+            alarm.InvestigatedDoneBy = username;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Investigation completed by {username}. Result: {result}");
+        }
+
+        /// <summary>
+        /// Operator marks alarm as resolved
+        /// Flow: DoneInvestigated → Done (final state)
+        /// </summary>
+        public async Task ResolveAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            // Validate: must be in DoneInvestigated status (has investigation result)
+            if (alarm.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
+                throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarm.Action}");
+
+            if (string.IsNullOrWhiteSpace(alarm.InvestigatedResult))
+                throw new BusinessException("Cannot resolve: no investigation result found");
+
+            alarm.Action = Shared.Contracts.ActionStatus.Done;
+            alarm.IsActive = false;
+            alarm.DoneBy = username;
+            alarm.DoneTimestamp = DateTime.UtcNow;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            await _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
+        }
+
+        // =====================================================
+        // HELPER METHODS
+        // =====================================================
+
+        private Guid? GetCurrentSecurityUserId()
+        {
+            // Try to get SecurityId from JWT token claims
+            var securityIdClaim = Http.HttpContext?.User?.FindFirst("SecurityId")?.Value;
+            if (Guid.TryParse(securityIdClaim, out var securityId))
+                return securityId;
+
+            // Alternative: get from UsernameFormToken and lookup security
+            var username = UsernameFormToken;
+            // This would require a repository call to get Security by Username
+            // For now, return null and let the caller handle validation
+            return null;
+        }
+
+        // =====================================================
+        // INCIDENT TIMELINE
+        // =====================================================
 
         public async Task<object> GetIncidentTimelineAsync(Guid alarmTriggerId)
         {
@@ -316,11 +452,11 @@ namespace BusinessLogic.Services.Implementation
             var investigation = new IncidentInvestigationDto
             {
                 Result = alarmTrigger.InvestigatedResult,
-                InvestigatedBy = alarmTrigger.InvestigatedBy,
-                InvestigatedById = alarmTrigger.SecurityId,
-                InvestigatedAt = alarmTrigger.InvestigatedTimestamp,
+                DispatchedPerson = alarmTrigger.InvestigatedDoneBy ?? alarmTrigger.AcceptedBy,
+                DispatchedPersonId = alarmTrigger.SecurityId,
+                InvestigatedAt = alarmTrigger.InvestigatedDoneAt ?? alarmTrigger.ArrivedAt,
                 DoneAt = alarmTrigger.DoneTimestamp,
-                WasInvestigated = alarmTrigger.InvestigatedTimestamp.HasValue
+                WasInvestigated = alarmTrigger.InvestigatedDoneAt.HasValue || alarmTrigger.ArrivedAt.HasValue
             };
 
             var response = new IncidentTimelineResponseDto
@@ -353,76 +489,53 @@ namespace BusinessLogic.Services.Implementation
             // Calculate previous timestamp for duration
             DateTime? previousTimestamp = alarm.TriggerTime;
 
-            // Stage 2: Acknowledged (if exists) - TODO: Engine belum support - comment dulu
-            // if (alarm.AcknowledgedAt.HasValue)
-            // {
-            //     double? duration = null;
-            //     if (previousTimestamp.HasValue)
-            //     {
-            //         duration = (alarm.AcknowledgedAt.Value - previousTimestamp.Value).TotalSeconds;
-            //     }
-            //
-            //     timeline.Add(new IncidentTimelineEventDto
-            //     {
-            //         Stage = "acknowledged",
-            //         Timestamp = alarm.AcknowledgedAt.Value,
-            //         Actor = alarm.AcknowledgedBy,
-            //         ActorId = UserIdFromToken,
-            //         DurationInSeconds = duration,
-            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-            //         Description = $"Alarm acknowledged by {alarm.AcknowledgedBy ?? "Security"}",
-            //     });
-            //
-            //     previousTimestamp = alarm.AcknowledgedAt.Value;
-            // }
+            // Stage 2: Acknowledged (if exists)
+            if (alarm.AcknowledgedAt.HasValue)
+            {
+                double? duration = null;
+                if (previousTimestamp.HasValue)
+                {
+                    duration = (alarm.AcknowledgedAt.Value - previousTimestamp.Value).TotalSeconds;
+                }
 
-            // Stage 3: Dispatched (if exists) - TODO: Engine belum support - comment dulu
-            // if (alarm.DispatchedAt.HasValue)
-            // {
-            //     double? duration = null;
-            //     if (previousTimestamp.HasValue)
-            //     {
-            //         duration = (alarm.DispatchedAt.Value - previousTimestamp.Value).TotalSeconds;
-            //     }
-            //
-            //     timeline.Add(new IncidentTimelineEventDto
-            //     {
-            //         Stage = "dispatched",
-            //         Timestamp = alarm.DispatchedAt.Value,
-            //         Actor = alarm.DispatchedBy,
-            //         ActorId = alarm.SecurityId,
-            //         DurationInSeconds = duration,
-            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-            //         Description = $"{alarm.DispatchedBy ?? "Security"} dispatched to location",
-            //     });
-            //
-            //     previousTimestamp = alarm.DispatchedAt.Value;
-            // }
+                timeline.Add(new IncidentTimelineEventDto
+                {
+                    Stage = "acknowledged",
+                    Timestamp = alarm.AcknowledgedAt.Value,
+                    Actor = alarm.AcknowledgedBy,
+                    ActorId = UserIdFromToken,
+                    DurationInSeconds = duration,
+                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+                    Description = $"Alarm acknowledged by {alarm.AcknowledgedBy ?? "Operator"}",
+                });
 
-            // Stage 4: Arrived (if exists) - TODO: Engine belum support - comment dulu
-            // if (alarm.ArrivedAt.HasValue)
-            // {
-            //     double? duration = null;
-            //     if (previousTimestamp.HasValue)
-            //     {
-            //         duration = (alarm.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds;
-            //     }
-            //
-            //     timeline.Add(new IncidentTimelineEventDto
-            //     {
-            //         Stage = "arrived",
-            //         Timestamp = alarm.ArrivedAt.Value,
-            //         Actor = alarm.ArrivedBy,
-            //         ActorId = alarm.SecurityId,
-            //         DurationInSeconds = duration,
-            //         DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-            //         Description = $"{alarm.ArrivedBy ?? "Security"} arrived at location",
-            //     });
-            //
-            //     previousTimestamp = alarm.ArrivedAt.Value;
-            // }
+                previousTimestamp = alarm.AcknowledgedAt.Value;
+            }
 
-            // Stage 5: Waiting (if exists)
+            // Stage 3: Dispatched (if exists)
+            if (alarm.DispatchedAt.HasValue)
+            {
+                double? duration = null;
+                if (previousTimestamp.HasValue)
+                {
+                    duration = (alarm.DispatchedAt.Value - previousTimestamp.Value).TotalSeconds;
+                }
+
+                timeline.Add(new IncidentTimelineEventDto
+                {
+                    Stage = "dispatched",
+                    Timestamp = alarm.DispatchedAt.Value,
+                    Actor = alarm.DispatchedBy,
+                    ActorId = alarm.SecurityId,
+                    DurationInSeconds = duration,
+                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+                    Description = $"Dispatched to {alarm.AcceptedBy ?? "Security"} by {alarm.DispatchedBy ?? "Operator"}",
+                });
+
+                previousTimestamp = alarm.DispatchedAt.Value;
+            }
+
+            // Stage 4: Waiting (if exists)
             if (alarm.WaitingTimestamp.HasValue)
             {
                 double? duration = null;
@@ -444,30 +557,76 @@ namespace BusinessLogic.Services.Implementation
                 previousTimestamp = alarm.WaitingTimestamp.Value;
             }
 
-            // Stage 4: Investigated (if exists)
-            if (alarm.InvestigatedTimestamp.HasValue)
+            // Stage 5: Accepted (if exists)
+            if (alarm.AcceptedAt.HasValue)
             {
                 double? duration = null;
                 if (previousTimestamp.HasValue)
                 {
-                    duration = (alarm.InvestigatedTimestamp.Value - previousTimestamp.Value).TotalSeconds;
+                    duration = (alarm.AcceptedAt.Value - previousTimestamp.Value).TotalSeconds;
                 }
 
                 timeline.Add(new IncidentTimelineEventDto
                 {
-                    Stage = "investigating",
-                    Timestamp = alarm.InvestigatedTimestamp.Value,
-                    Actor = alarm.InvestigatedBy,
+                    Stage = "accepted",
+                    Timestamp = alarm.AcceptedAt.Value,
+                    Actor = alarm.AcceptedBy,
                     ActorId = alarm.SecurityId,
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Investigation started by {alarm.InvestigatedBy ?? "Security"}",
+                    Description = $"Dispatch accepted by {alarm.AcceptedBy ?? "Security"}",
                 });
 
-                previousTimestamp = alarm.InvestigatedTimestamp.Value;
+                previousTimestamp = alarm.AcceptedAt.Value;
             }
 
-            // Stage 5: Done/Resolved (if exists)
+            // Stage 6: Arrived (if exists)
+            if (alarm.ArrivedAt.HasValue)
+            {
+                double? duration = null;
+                if (previousTimestamp.HasValue)
+                {
+                    duration = (alarm.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds;
+                }
+
+                timeline.Add(new IncidentTimelineEventDto
+                {
+                    Stage = "arrived",
+                    Timestamp = alarm.ArrivedAt.Value,
+                    Actor = alarm.ArrivedBy,
+                    ActorId = alarm.SecurityId,
+                    DurationInSeconds = duration,
+                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+                    Description = $"{alarm.ArrivedBy ?? "Security"} arrived at location",
+                });
+
+                previousTimestamp = alarm.ArrivedAt.Value;
+            }
+
+            // Stage 7: DoneInvestigated (if exists)
+            if (alarm.InvestigatedDoneAt.HasValue)
+            {
+                double? duration = null;
+                if (previousTimestamp.HasValue)
+                {
+                    duration = (alarm.InvestigatedDoneAt.Value - previousTimestamp.Value).TotalSeconds;
+                }
+
+                timeline.Add(new IncidentTimelineEventDto
+                {
+                    Stage = "done_investigated",
+                    Timestamp = alarm.InvestigatedDoneAt.Value,
+                    Actor = alarm.InvestigatedDoneBy,
+                    ActorId = alarm.SecurityId,
+                    DurationInSeconds = duration,
+                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
+                    Description = $"Investigation completed by {alarm.InvestigatedDoneBy ?? "Security"}",
+                });
+
+                previousTimestamp = alarm.InvestigatedDoneAt.Value;
+            }
+
+            // Stage 8: Done/Resolved (if exists)
             if (alarm.DoneTimestamp.HasValue)
             {
                 double? duration = null;
@@ -478,18 +637,18 @@ namespace BusinessLogic.Services.Implementation
 
                 timeline.Add(new IncidentTimelineEventDto
                 {
-                    Stage = "done",
+                    Stage = "resolved",
                     Timestamp = alarm.DoneTimestamp.Value,
                     Actor = alarm.DoneBy,
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Marked as done by {alarm.DoneBy ?? "System"}",
+                    Description = $"Marked as resolved by {alarm.DoneBy ?? "System"}",
                 });
 
                 previousTimestamp = alarm.DoneTimestamp.Value;
             }
 
-            // Stage 6: Cancelled (if exists)
+            // Stage 9: Cancelled (if exists)
             if (alarm.CancelTimestamp.HasValue)
             {
                 double? duration = null;
@@ -509,26 +668,6 @@ namespace BusinessLogic.Services.Implementation
                 });
             }
 
-            // Stage 7: Idle (if exists)
-            if (alarm.IdleTimestamp.HasValue)
-            {
-                double? duration = null;
-                if (previousTimestamp.HasValue)
-                {
-                    duration = (alarm.IdleTimestamp.Value - previousTimestamp.Value).TotalSeconds;
-                }
-
-                timeline.Add(new IncidentTimelineEventDto
-                {
-                    Stage = "idle",
-                    Timestamp = alarm.IdleTimestamp.Value,
-                    Actor = alarm.IdleBy,
-                    DurationInSeconds = duration,
-                    DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Marked as idle by {alarm.IdleBy ?? "System"}",
-                });
-            }
-
             return timeline.OrderBy(t => t.Timestamp).ToList();
         }
 
@@ -544,7 +683,7 @@ namespace BusinessLogic.Services.Implementation
 
             var totalSeconds = (lastEvent.Timestamp - firstEvent.Timestamp).TotalSeconds;
 
-            // Response time: Trigger to first action (notified, waiting, or investigated)
+            // Response time: Trigger to first action (acknowledged, waiting, or dispatched)
             var firstActionEvent = timeline.Skip(1).FirstOrDefault();
             var responseSeconds = firstActionEvent != null
                 ? (firstActionEvent.Timestamp - firstEvent.Timestamp).TotalSeconds
@@ -589,6 +728,5 @@ namespace BusinessLogic.Services.Implementation
                     : $"{hours} hours";
             }
         }
-
     }
 }

@@ -209,12 +209,16 @@ namespace Shared.Contracts
 
     public enum ActionStatus
     {
-        Idle, // default
-        Done, // sudah selesai
-        NoAction, // tidak ada tindakan
-        Waiting, // satpam habis menunggu giliran
-        Investigated, // 5 menit
-        PostponeInvestigated // 1 minggu 
+        Idle,               // default - alarm triggered by system
+        Acknowledged,       // operator acknowledged the alarm
+        Dispatched,         // operator dispatched to security
+        Waiting,            // operator put in waiting queue (no security available)
+        Accepted,           // security accepted the dispatch
+        Arrived,            // security arrived at location
+        DoneInvestigated,   // security submitted investigation result
+        Done,               // operator marked as resolved
+        NoAction,           // operator marked as no action needed
+        PostponeInvestigated // operator postponed investigation (1 week)
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
