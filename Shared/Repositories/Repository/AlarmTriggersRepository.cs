@@ -81,6 +81,7 @@ namespace Repositories.Repository
                     // Navigation properties
                     FloorplanName = b.Floorplan != null ? b.Floorplan.Name : null,
                     FloorName = b.Floorplan != null && b.Floorplan.Floor != null ? b.Floorplan.Floor.Name : null,
+                    FloorplanImage = b.Floorplan != null ? b.Floorplan.FloorplanImage : null,
                     BuildingId = b.Floorplan != null && b.Floorplan.Floor != null ? b.Floorplan.Floor.BuildingId : null,
                     BuildingName = b.Floorplan != null && b.Floorplan.Floor != null && b.Floorplan.Floor.Building != null ? b.Floorplan.Floor.Building.Name : null,
 
@@ -241,6 +242,7 @@ namespace Repositories.Repository
                     MemberFaceImage = b.Member.FaceImage, 
                     PersonImage = b.Visitor.FaceImage ?? b.Member.FaceImage,
                     CardNumber = b.Visitor.CardNumber ?? b.Member.CardNumber,
+                    Dmac = b.Visitor.BleCardNumber ?? b.Member.BleCardNumber,
                     TriggerTime = b.TriggerTime,
                     ApplicationId = b.ApplicationId
                 })

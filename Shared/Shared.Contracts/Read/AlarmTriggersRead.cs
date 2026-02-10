@@ -59,6 +59,7 @@ namespace Shared.Contracts.Read
         // Navigation properties
         public string? FloorplanName { get; set; }
         public string? FloorName { get; set; }
+        public string? FloorplanImage { get; set; }
         public Guid? BuildingId { get; set; }
         public string? BuildingName { get; set; }
 
