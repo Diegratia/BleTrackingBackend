@@ -456,8 +456,8 @@
                 sessions.Add(session);
             }
 
-            // === FILTER: HasIncident ===
-            if (request.HasIncident.HasValue)
+            // === LOAD INCIDENT DATA (independent of HasIncident filter) ===
+            if (request.IncludeIncident || request.HasIncident.HasValue)
             {
                 var alarmTriggers = await GetAlarmTriggersInRangeAsync(fromUtc, toUtc, request);
 
@@ -472,8 +472,11 @@
                         session.Incident = GetIncidentForSession(session, alarmTriggers);
                     }
                 }
+            }
 
-                // Filter by HasIncident
+            // === FILTER: HasIncident (separate from loading) ===
+            if (request.HasIncident.HasValue)
+            {
                 if (request.HasIncident.Value)
                 {
                     sessions = sessions.Where(s => s.HasIncident).ToList();
