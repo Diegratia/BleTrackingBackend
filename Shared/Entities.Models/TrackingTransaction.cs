@@ -25,6 +25,8 @@ namespace Entities.Models
         public Guid? VisitorId { get; set; }
         [Column("member_id")]
         public Guid? MemberId { get; set; }
+        [Column("security_id")]
+        public Guid? SecurityId { get; set; }
 
         [Column("floorplan_masked_area_id")]
         public Guid? FloorplanMaskedAreaId { get; set; }
@@ -54,6 +56,7 @@ namespace Entities.Models
         public MstApplication Application { get; set; }
         public MstBleReader Reader { get; set; }
         public MstMember Member { get; set; }
+        public MstSecurity? Security { get; set; }
         public Visitor Visitor { get; set; }
         public Card Card { get; set; }
         public FloorplanMaskedArea FloorplanMaskedArea { get; set; }

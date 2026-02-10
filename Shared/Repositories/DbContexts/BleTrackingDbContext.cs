@@ -650,6 +650,7 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.ReaderId).HasMaxLength(36);
                 entity.Property(e => e.VisitorId).HasMaxLength(36);
                 entity.Property(e => e.MemberId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.CardId).HasMaxLength(36);
                 entity.Property(e => e.AlarmStatus)
@@ -677,6 +678,11 @@ namespace Repositories.DbContexts
                 entity.HasOne(t => t.Member)
                     .WithMany()
                     .HasForeignKey(t => t.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Security)
+                    .WithMany()
+                    .HasForeignKey(t => t.SecurityId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(t => t.FloorplanMaskedArea)

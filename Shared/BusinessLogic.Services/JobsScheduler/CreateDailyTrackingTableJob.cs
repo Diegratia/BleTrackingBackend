@@ -41,6 +41,7 @@ namespace BusinessLogic.Services.JobsScheduler
                             [card_id] [uniqueidentifier] NULL,
                             [visitor_id] [uniqueidentifier] NULL,
                             [member_id] [uniqueidentifier] NULL,
+                            [security_id] [uniqueidentifier] NULL,
                             [floorplan_masked_area_id] [uniqueidentifier] NULL,
                             [coordinate_x] [real] NULL,
                             [coordinate_y] [real] NULL,
@@ -56,6 +57,7 @@ namespace BusinessLogic.Services.JobsScheduler
                         CREATE NONCLUSTERED INDEX [IX_{tableName}_application_id] ON [dbo].[{tableName}] ([application_id] ASC);
                         CREATE NONCLUSTERED INDEX [IX_{tableName}_reader_id] ON [dbo].[{tableName}] ([reader_id] ASC);
                         CREATE NONCLUSTERED INDEX [IX_{tableName}_visitor_id] ON [dbo].[{tableName}] ([visitor_id] ASC);
+                        CREATE NONCLUSTERED INDEX [IX_{tableName}_security_id] ON [dbo].[{tableName}] ([security_id] ASC);
 
                         PRINT 'Table {tableName} created successfully';
                     END
