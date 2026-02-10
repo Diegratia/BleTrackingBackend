@@ -64,7 +64,8 @@ namespace Repositories.Repository.Analytics
         // }
 
         public async Task<List<AlarmAreaDailyAggregateRM>> GetAreaDailySummaryAsync(
-            AlarmAnalyticsFilter request
+            AlarmAnalyticsFilter request,
+            AlarmGroupByMode groupByMode = AlarmGroupByMode.Area
         )
         {
             var range = GetTimeRange(request.TimeRange);
@@ -73,33 +74,81 @@ namespace Repositories.Repository.Analytics
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
-                .Include(a => a.FloorplanMaskedArea)
+                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
                 .Where(a => a.Timestamp >= from && a.Timestamp <= to);
 
             query = ApplyFilters(query, request);
 
-            return await query
-                .Where(a => a.Timestamp.HasValue)  
-                .GroupBy(a => new
+            // Get raw data first, then group in memory based on mode
+            var rawData = await query
+                .Where(a => a.Timestamp.HasValue)
+                .Select(a => new
                 {
                     Date = a.Timestamp.Value.Date,
-                    a.FloorplanMaskedAreaId,
+                    a.AlarmTriggersId,
+                    a.Alarm,
+                    AreaId = a.FloorplanMaskedAreaId,
                     AreaName = a.FloorplanMaskedArea.Name,
-                    AlarmStatus = a.Alarm
+                    FloorplanId = a.FloorplanMaskedArea.FloorplanId,
+                    FloorplanName = a.FloorplanMaskedArea.Floorplan.Name,
+                    FloorId = a.FloorplanMaskedArea.Floorplan.FloorId,
+                    FloorName = a.FloorplanMaskedArea.Floorplan.Floor.Name,
+                    BuildingId = a.FloorplanMaskedArea.Floorplan.Floor.BuildingId,
+                    BuildingName = a.FloorplanMaskedArea.Floorplan.Floor.Building.Name
                 })
-                .Select(g => new AlarmAreaDailyAggregateRM
-                {
-                    Date = g.Key.Date,
-                    AreaId = g.Key.FloorplanMaskedAreaId,
-                    AreaName = g.Key.AreaName ?? "Unknown",
-                    AlarmStatus = g.Key.AlarmStatus.ToString(),
-                    Total = g
-                    .Select(x => x.AlarmTriggersId)
-                    .Distinct()
-                    .Count()
-                })
-                .OrderBy(x => x.Date)
                 .ToListAsync();
+
+            // Group by entity based on mode
+            var grouped = groupByMode switch
+            {
+                AlarmGroupByMode.Building => rawData
+                    .GroupBy(x => new { x.Date, x.BuildingId, x.BuildingName, x.Alarm })
+                    .Select(g => new AlarmAreaDailyAggregateRM
+                    {
+                        Date = g.Key.Date,
+                        EntityId = g.Key.BuildingId,
+                        Name = g.Key.BuildingName ?? "Unknown",
+                        AlarmStatus = g.Key.Alarm.ToString(),
+                        Total = g.Select(x => x.AlarmTriggersId).Distinct().Count()
+                    }),
+
+                AlarmGroupByMode.Floor => rawData
+                    .GroupBy(x => new { x.Date, x.FloorId, x.FloorName, x.Alarm })
+                    .Select(g => new AlarmAreaDailyAggregateRM
+                    {
+                        Date = g.Key.Date,
+                        EntityId = g.Key.FloorId,
+                        Name = g.Key.FloorName ?? "Unknown",
+                        AlarmStatus = g.Key.Alarm.ToString(),
+                        Total = g.Select(x => x.AlarmTriggersId).Distinct().Count()
+                    }),
+
+                AlarmGroupByMode.Floorplan => rawData
+                    .GroupBy(x => new { x.Date, x.FloorplanId, x.FloorplanName, x.Alarm })
+                    .Select(g => new AlarmAreaDailyAggregateRM
+                    {
+                        Date = g.Key.Date,
+                        EntityId = g.Key.FloorplanId,
+                        Name = g.Key.FloorplanName ?? "Unknown",
+                        AlarmStatus = g.Key.Alarm.ToString(),
+                        Total = g.Select(x => x.AlarmTriggersId).Distinct().Count()
+                    }),
+
+                _ => rawData // Area (default)
+                    .GroupBy(x => new { x.Date, x.AreaId, x.AreaName, x.Alarm })
+                    .Select(g => new AlarmAreaDailyAggregateRM
+                    {
+                        Date = g.Key.Date,
+                        EntityId = g.Key.AreaId,
+                        Name = g.Key.AreaName ?? "Unknown",
+                        AlarmStatus = g.Key.Alarm.ToString(),
+                        Total = g.Select(x => x.AlarmTriggersId).Distinct().Count()
+                    })
+            };
+
+            return grouped
+                .OrderBy(x => x.Date)
+                .ToList();
         }
 
 

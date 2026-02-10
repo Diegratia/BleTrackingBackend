@@ -63,12 +63,13 @@ namespace Shared.Contracts.Analytics
     }
 
     /// <summary>
-    /// Individual area chart series data
+    /// Individual entity chart series data.
+    /// EntityId and Name are populated based on GroupByMode (Area, Building, Floor, or Floorplan).
     /// </summary>
     public class AlarmAreaSeriesRead
     {
-        public Guid? AreaId { get; set; }
-        public string AreaName { get; set; } = string.Empty;
+        public Guid? EntityId { get; set; }
+        public string Name { get; set; } = string.Empty;
         public List<global::Shared.Contracts.ChartSeriesDto> Series { get; set; } = new();
     }
 

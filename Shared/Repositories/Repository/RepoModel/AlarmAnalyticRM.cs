@@ -99,11 +99,15 @@ namespace Repositories.Repository.RepoModel
         public List<AlarmRecordLog> Data { get; set; } = new();
     }
 
-     public class AlarmAreaDailyAggregateRM
+    /// <summary>
+    /// Daily aggregate data for alarm analytics.
+    /// EntityId and Name are populated based on GroupByMode (Area, Building, Floor, or Floorplan).
+    /// </summary>
+    public class AlarmAreaDailyAggregateRM
     {
         public DateTime Date { get; set; }
-        public Guid? AreaId { get; set; }
-        public string AreaName { get; set; } = string.Empty;
+        public Guid? EntityId { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string AlarmStatus { get; set; } = string.Empty;
         public int Total { get; set; }
     }

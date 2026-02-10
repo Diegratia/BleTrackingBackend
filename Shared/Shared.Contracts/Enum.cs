@@ -306,4 +306,12 @@ namespace Shared.Contracts
         Floor = 2,
         Floorplan = 3
     }
+
+        public enum AlarmGroupByMode
+    {
+        Area = 0,
+        Building = 1,
+        Floor = 2,
+        Floorplan = 3
+    }
 }

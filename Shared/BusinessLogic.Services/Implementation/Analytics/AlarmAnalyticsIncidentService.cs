@@ -32,9 +32,11 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _logger = logger;
         }
 
-        public async Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(AlarmAnalyticsFilter request)
+        public async Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(
+            AlarmAnalyticsFilter request,
+            AlarmGroupByMode groupByMode = AlarmGroupByMode.Area)
         {
-            var rows = await _repository.GetAreaDailySummaryAsync(request);
+            var rows = await _repository.GetAreaDailySummaryAsync(request, groupByMode);
 
             // labels (dates)
             var dates = rows
@@ -47,12 +49,12 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 .Select(d => d.ToString("yyyy-MM-dd"))
                 .ToList();
 
-            // group per area
-            var areas = rows
-                .GroupBy(r => new { r.AreaId, r.AreaName })
-                .Select(areaGroup =>
+            // group per entity (area/building/floor/floorplan based on mode)
+            var entities = rows
+                .GroupBy(r => new { r.EntityId, r.Name })
+                .Select(entityGroup =>
                 {
-                    var statuses = areaGroup
+                    var statuses = entityGroup
                         .Select(x => x.AlarmStatus)
                         .Distinct();
 
@@ -60,7 +62,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     {
                         Name = status,
                         Data = dates.Select(date =>
-                            areaGroup.FirstOrDefault(r =>
+                            entityGroup.FirstOrDefault(r =>
                                 r.Date == date &&
                                 r.AlarmStatus == status
                             )?.Total ?? 0
@@ -69,8 +71,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
                     return new AlarmAreaSeriesRead
                     {
-                        AreaId = areaGroup.Key.AreaId,
-                        AreaName = areaGroup.Key.AreaName,
+                        EntityId = entityGroup.Key.EntityId,
+                        Name = entityGroup.Key.Name,
                         Series = series
                     };
                 })
@@ -79,7 +81,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return new AlarmAreaChartResponseRead
             {
                 Labels = labels,
-                Areas = areas
+                Areas = entities
             };
         }
 
