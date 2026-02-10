@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,6 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Repositories;
 using Microsoft.Extensions.Logging;
-using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -29,13 +29,13 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<AlarmCategorySettings> _logger;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
 
         public AlarmCategorySettingsService(AlarmCategorySettingsRepository repository,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         ILogger<AlarmCategorySettings> logger,
-        IMqttClientService mqttClient
+        IMqttPubQueue mqttQueue
 
         )
         {
@@ -43,7 +43,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
         }
 
         public async Task<AlarmCategorySettingsDto> GetByIdAsync(Guid id)
@@ -92,7 +92,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, category);
             await _repository.UpdateAsync(category);
-            await _mqttClient.PublishAsync("engine/refresh/alarm-related", "");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
         }
 
         public async Task DeleteAsync(Guid id)
