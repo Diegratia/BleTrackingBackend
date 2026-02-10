@@ -12,7 +12,7 @@
     using Shared.Contracts;
     using Shared.Contracts.Analytics;
 
-    namespace Repositories.Repository.Analytics
+namespace Repositories.Repository.Analytics
     {
         public class TrackingSessionRepository : BaseRepository
         {
@@ -825,7 +825,8 @@
 
         // === GET PEAK HOURS BY AREA ===
         public async Task<List<PeakHoursRawRead>> GetPeakHoursByAreaAsync(
-            TrackingAnalyticsFilter request)
+            TrackingAnalyticsFilter request,
+            PeakHoursGroupByMode groupByMode = PeakHoursGroupByMode.Area)
         {
             var range = GetTimeRange(request.TimeRange);
             var fromUtc = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-1);
@@ -841,7 +842,7 @@
 
             foreach (var table in tableNames)
             {
-                var (sql, parameters) = BuildPeakHoursSql(table, fromUtc, toUtc, request, paramIndex);
+                var (sql, parameters) = BuildPeakHoursSql(table, fromUtc, toUtc, request, groupByMode, paramIndex);
                 unionParts.Add(sql);
                 allParams.AddRange(parameters);
                 paramIndex += parameters.Count;
@@ -859,14 +860,23 @@
         // === BUILD SQL FOR PEAK HOURS BY AREA ===
         private (string sql, List<object> parameters) BuildPeakHoursSql(
             string tableName, DateTime fromUtc, DateTime toUtc,
-            TrackingAnalyticsFilter request, int startParamIndex)
+            TrackingAnalyticsFilter request, PeakHoursGroupByMode groupByMode, int startParamIndex)
         {
-            // SQL to count visitors per hour per area
+            // Determine GROUP BY column based on mode
+            string groupByColumn = groupByMode switch
+            {
+                PeakHoursGroupByMode.Building => "b.name",
+                PeakHoursGroupByMode.Floor => "fl.name",
+                PeakHoursGroupByMode.Floorplan => "fp.name",
+                _ => "ma.name"  // Default: Area
+            };
+
+            // SQL to count visitors per hour per area/building/floor/floorplan
             // Uses DATEADD(HOUR, DATEDIFF(HOUR, 0, t.trans_time), 0) to group by hour
             // Adjusts for WIB timezone (UTC+7) by adding 7 hours before extracting hour
             var sql = $@"
             SELECT
-                ma.name AS AreaName,
+                {groupByColumn} AS Name,
                 (DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))) AS Hour,
                 COUNT(DISTINCT COALESCE(v.id, m.id)) AS Count
             FROM [dbo].[{tableName}] t
@@ -924,7 +934,7 @@
                 }
             }
 
-            sql += "\nGROUP BY ma.name, DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))";
+            sql += $"\nGROUP BY {groupByColumn}, DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))";
 
             return (sql, parameters);
         }

@@ -8,6 +8,7 @@ using BusinessLogic.Services.Interface.Analytics;
 using System.Net.Mime;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using Shared.Contracts.Analytics;
 using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers.Analytics
@@ -143,15 +144,15 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(ApiResponse.Success("Visitor session summary retrieved successfully", result));
         }
 
-        // Peak Hours by Area
         [HttpPost("peak-hours-by-area")]
-        public async Task<IActionResult> GetPeakHoursByArea([FromBody] TrackingAnalyticsFilter request)
+        public async Task<IActionResult> GetPeakHoursByArea(
+            [FromBody] TrackingAnalyticsFilter request,
+            [FromQuery] PeakHoursGroupByMode groupByMode = PeakHoursGroupByMode.Area)
         {
-            var result = await _sessionService.GetPeakHoursByAreaAsync(request);
+            var result = await _sessionService.GetPeakHoursByAreaAsync(request, groupByMode);
             return Ok(ApiResponse.Success("Peak hours by area retrieved successfully", result));
         }
 
-        // Export to PDF
         [HttpGet("export/pdf")]
         public async Task<IActionResult> ExportVisitorSessionSummaryPdf([FromQuery] TrackingAnalyticsFilter request)
         {
@@ -160,7 +161,6 @@ namespace Web.API.Controllers.Controllers.Analytics
             return File(pdfBytes, MediaTypeNames.Application.Pdf, fileName);
         }
 
-        // Export to Excel
         [HttpGet("export/excel")]
         public async Task<IActionResult> ExportVisitorSessionSummaryExcel([FromQuery] TrackingAnalyticsFilter request)
         {

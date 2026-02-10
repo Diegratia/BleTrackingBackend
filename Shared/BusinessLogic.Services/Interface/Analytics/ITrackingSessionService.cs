@@ -12,8 +12,10 @@ public interface ITrackingSessionService
     // Task<GroupedSessionsResponse> GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsFilter overrideRequest);
 
     /// <summary>
-    /// Get peak hours data grouped by area
-    /// Returns hourly distribution of visitors across different areas
+    /// Get peak hours data grouped by area/building/floor/floorplan
+    /// Returns hourly distribution of visitors across different entities
     /// </summary>
-    Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(TrackingAnalyticsFilter request);
+    Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(
+        TrackingAnalyticsFilter request,
+        PeakHoursGroupByMode groupByMode = PeakHoursGroupByMode.Area);
 }

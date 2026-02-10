@@ -6,7 +6,10 @@ namespace Shared.Contracts.Analytics
     /// </summary>
     public class PeakHoursRawRead
     {
-        public string? AreaName { get; set; }
+        /// <summary>
+        /// Name of the entity based on GroupByMode (AreaName, BuildingName, FloorName, or FloorplanName)
+        /// </summary>
+        public string? Name { get; set; }
         public int Hour { get; set; }
         public int Count { get; set; }
     }

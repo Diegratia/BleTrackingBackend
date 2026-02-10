@@ -298,4 +298,12 @@ namespace Shared.Contracts
         Video,
         Document
     }
+
+        public enum PeakHoursGroupByMode
+    {
+        Area = 0,
+        Building = 1,
+        Floor = 2,
+        Floorplan = 3
+    }
 }

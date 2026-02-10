@@ -607,9 +607,11 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 .PaddingHorizontal(6);
         }
 
-        public async Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(TrackingAnalyticsFilter request)
+        public async Task<PeakHoursByAreaRead> GetPeakHoursByAreaAsync(
+            TrackingAnalyticsFilter request,
+            PeakHoursGroupByMode groupByMode = PeakHoursGroupByMode.Area)
         {
-            var rawData = await _repository.GetPeakHoursByAreaAsync(request);
+            var rawData = await _repository.GetPeakHoursByAreaAsync(request, groupByMode);
 
             if (!rawData.Any())
             {
@@ -620,20 +622,20 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 };
             }
 
-            // Group by area and create series
-            var groupedByArea = rawData
-                .Where(x => !string.IsNullOrEmpty(x.AreaName))
-                .GroupBy(x => x.AreaName!);
+            // Group by name (generic based on mode)
+            var groupedData = rawData
+                .Where(x => !string.IsNullOrEmpty(x.Name))
+                .GroupBy(x => x.Name!);
 
             var series = new List<ChartSeriesDto>();
 
-            foreach (var areaGroup in groupedByArea)
+            foreach (var group in groupedData)
             {
-                var areaName = areaGroup.Key;
+                var name = group.Key;
                 var hourlyData = new int[24]; // 24 hours
 
                 // Fill in the data
-                foreach (var item in areaGroup)
+                foreach (var item in group)
                 {
                     if (item.Hour >= 0 && item.Hour < 24)
                     {
@@ -643,27 +645,27 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
                 series.Add(new ChartSeriesDto
                 {
-                    Name = areaName,
+                    Name = name,
                     Data = hourlyData.ToList()
                 });
             }
 
-            // Sort series by total count (descending) - most active areas first
+            // Sort series by total count (descending) - most active entities first
             series = series
                 .OrderByDescending(s => s.Data.Sum())
                 .ToList();
 
-            // Optional: Limit to top 10 areas to avoid overcrowding the chart
-            const int maxAreas = 10;
-            if (series.Count > maxAreas)
+            // Optional: Limit to top 10 to avoid overcrowding the chart
+            const int maxItems = 10;
+            if (series.Count > maxItems)
             {
                 var otherData = new int[24];
                 for (int i = 0; i < 24; i++)
                 {
-                    otherData[i] = series.Skip(maxAreas).Sum(s => s.Data[i]);
+                    otherData[i] = series.Skip(maxItems).Sum(s => s.Data[i]);
                 }
 
-                series = series.Take(maxAreas).ToList();
+                series = series.Take(maxItems).ToList();
 
                 // Add "Others" series if there's data
                 if (otherData.Sum() > 0)
