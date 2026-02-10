@@ -130,6 +130,9 @@ builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsS
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 
 
 // Registrasi Repositories

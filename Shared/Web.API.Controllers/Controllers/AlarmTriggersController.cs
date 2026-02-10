@@ -89,12 +89,12 @@ namespace Web.API.Controllers.Controllers
         }
 
         // TODO: Engine belum support - comment dulu
-        // [HttpPut("{id}/acknowledge")]
-        // public async Task<IActionResult> Acknowledge(Guid id)
-        // {
-        //     await _service.AcknowledgeAsync(id, CurrentUsername);
-        //     return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
-        // }
+            [HttpPut("{id}/acknowledge")]
+            public async Task<IActionResult> Acknowledge(Guid id)
+            {
+                await _service.AcknowledgeAsync(id);
+                return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
+            }
 
         // [HttpPut("{id}/dispatched")]
         // public async Task<IActionResult> Dispatched(Guid id)
