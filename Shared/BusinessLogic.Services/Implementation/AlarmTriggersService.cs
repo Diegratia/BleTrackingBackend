@@ -138,7 +138,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(alarmTriggers);
-            await _audit.Updated("AlarmTriggers", alarmTriggers.Id, $"Alarm {alarmTriggers.BeaconId} updated with action: {action}");
+            _audit.Updated("AlarmTriggers", alarmTriggers.Id, $"Alarm {alarmTriggers.BeaconId} updated with action: {action}");
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, AlarmTriggersFilter filter)
@@ -194,7 +194,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
+             _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm dispatched to {security.Name} by {username}");
+             _audit.Updated("AlarmTriggers", id, $"Alarm dispatched to {security.Name} by {username}");
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm put in waiting queue by {username}");
+             _audit.Updated("AlarmTriggers", id, $"Alarm put in waiting queue by {username}");
         }
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm accepted by security {username}");
+             _audit.Updated("AlarmTriggers", id, $"Alarm accepted by security {username}");
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
+             _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Investigation completed by {username}. Result: {result}");
+             _audit.Updated("AlarmTriggers", id, $"Investigation completed by {username}. Result: {result}");
         }
 
         /// <summary>
@@ -365,7 +365,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            await _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
+             _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
         }
 
         // =====================================================
