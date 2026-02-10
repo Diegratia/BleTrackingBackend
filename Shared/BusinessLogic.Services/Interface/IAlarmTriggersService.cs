@@ -1,6 +1,7 @@
 using Data.ViewModels;
 using Data.ViewModels.AlarmAnalytics;
 using Repositories.Repository.RepoModel;
+using Shared.Contracts;
 using Shared.Contracts.Read;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<AlarmTriggersRead>> GetAllAsync();
         Task<IEnumerable<AlarmTriggersOpenDto>> OpenGetAllAsync();
         Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto);
-        Task<object> FilterAsync(DataTablesProjectedRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, AlarmTriggersFilter filter);
         Task<IEnumerable<AlarmTriggersLookUp>> GetAllLookUpAsync();
         Task<object> GetIncidentTimelineAsync(Guid alarmTriggerId);
 

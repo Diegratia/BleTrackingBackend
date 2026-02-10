@@ -162,7 +162,6 @@ namespace Repositories.Repository
             if (filter.ActionUpdatedAtTo.HasValue)
                 query = query.Where(b => b.ActionUpdatedAt <= filter.ActionUpdatedAtTo.Value);
 
-            // Filter by FloorplanId (supports both single Guid and Guid array)
             if (filter.FloorplanId.ValueKind != JsonValueKind.Undefined && filter.FloorplanId.ValueKind != JsonValueKind.Null)
             {
                 var floorplanIds = ExtractIds(filter.FloorplanId);
@@ -170,15 +169,12 @@ namespace Repositories.Repository
                     query = query.Where(b => b.FloorplanId.HasValue && floorplanIds.Contains(b.FloorplanId.Value));
             }
 
-            // Filter by VisitorId (supports both single Guid and Guid array)
             if (filter.VisitorId.ValueKind != JsonValueKind.Undefined && filter.VisitorId.ValueKind != JsonValueKind.Null)
             {
                 var visitorIds = ExtractIds(filter.VisitorId);
                 if (visitorIds.Any())
                     query = query.Where(b => b.VisitorId.HasValue && visitorIds.Contains(b.VisitorId.Value));
             }
-
-            // Filter by MemberId (supports both single Guid and Guid array)
             if (filter.MemberId.ValueKind != JsonValueKind.Undefined && filter.MemberId.ValueKind != JsonValueKind.Null)
             {
                 var memberIds = ExtractIds(filter.MemberId);
@@ -186,7 +182,6 @@ namespace Repositories.Repository
                     query = query.Where(b => b.MemberId.HasValue && memberIds.Contains(b.MemberId.Value));
             }
 
-            // Filter by SecurityId (supports both single Guid and Guid array)
             if (filter.SecurityId.ValueKind != JsonValueKind.Undefined && filter.SecurityId.ValueKind != JsonValueKind.Null)
             {
                 var securityIds = ExtractIds(filter.SecurityId);
@@ -196,10 +191,8 @@ namespace Repositories.Repository
 
             var filtered = await query.CountAsync();
 
-            // Apply sorting and paging using extension methods
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
 
-            // Apply default ordering if still not ordered
             if (string.IsNullOrEmpty(filter.SortColumn))
             {
                 query = query.OrderByDescending(b => b.TriggerTime);
@@ -207,7 +200,6 @@ namespace Repositories.Repository
 
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);

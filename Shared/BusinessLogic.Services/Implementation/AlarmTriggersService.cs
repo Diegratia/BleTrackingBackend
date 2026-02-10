@@ -14,6 +14,7 @@ using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using Shared.Contracts.Read;
 using DataView;
+using System.Text.Json;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -140,16 +141,27 @@ namespace BusinessLogic.Services.Implementation
             await _audit.Updated("AlarmTriggers", alarmTriggers.Id, $"Alarm {alarmTriggers.BeaconId} updated with action: {action}");
         }
 
-        public async Task<object> FilterAsync(DataTablesProjectedRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, AlarmTriggersFilter filter)
         {
-            var filter = new AlarmTriggersFilter
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "TriggerTime";
+            filter.SortDir = request.SortDir ?? "desc";
+            filter.Search = request.SearchValue;
+
+            if (request.DateFilters != null)
             {
-                Search = request.SearchValue,
-                Page = request.Start / request.Length + 1,
-                PageSize = request.Length,
-                SortColumn = request.SortColumn,
-                SortDir = request.SortDir ?? "desc"
-            };
+                if (request.DateFilters.TryGetValue("TriggerTime", out var dateFilter))
+                {
+                    filter.TriggerTimeFrom = dateFilter.DateFrom;
+                    filter.TriggerTimeTo = dateFilter.DateTo;
+                }
+                if (request.DateFilters.TryGetValue("ActionUpdatedAt", out var actionDateFilter))
+                {
+                    filter.ActionUpdatedAtFrom = actionDateFilter.DateFrom;
+                    filter.ActionUpdatedAtTo = actionDateFilter.DateTo;
+                }
+            }
 
             var result = await _repository.FilterAsync(filter);
 
@@ -166,10 +178,6 @@ namespace BusinessLogic.Services.Implementation
         // NEW WORKFLOW METHODS
         // =====================================================
 
-        /// <summary>
-        /// Operator acknowledges the alarm
-        /// Flow: Idle → Acknowledged
-        /// </summary>
         public async Task AcknowledgeAsync(Guid id)
         {
             var username = UsernameFormToken;
@@ -177,7 +185,6 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: can only acknowledge Idle alarms
             if (alarm.Action != Shared.Contracts.ActionStatus.Idle)
                 throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {alarm.Action}");
 
@@ -201,11 +208,9 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in Acknowledged status
             if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarm.Action}");
 
-            // Ownership validation for SecurityId
             var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(securityId, AppId);
             if (invalidSecurityIds.Any())
                 throw new UnauthorizedException($"SecurityId does not belong to this Application: {string.Join(", ", invalidSecurityIds)}");
@@ -235,7 +240,6 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in Acknowledged status
             if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {alarm.Action}");
 
@@ -260,15 +264,12 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in Dispatched status
             if (alarm.Action != Shared.Contracts.ActionStatus.Dispatched)
                 throw new BusinessException($"Cannot accept: alarm must be dispatched first. Current: {alarm.Action}");
 
-            // Validate: accepting security must be the assigned security
             if (alarm.SecurityId == null)
                 throw new BusinessException("Cannot accept: alarm has no assigned security");
 
-            // Get current user's security ID (from JWT token claims or Security entity)
             var currentSecurityId = GetCurrentSecurityUserId();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId.Value)
                 throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
@@ -293,11 +294,9 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in Accepted status
             if (alarm.Action != Shared.Contracts.ActionStatus.Accepted)
                 throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {alarm.Action}");
 
-            // Validate: assigned security
             var currentSecurityId = GetCurrentSecurityUserId();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
@@ -322,15 +321,12 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in Arrived status
             if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
                 throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
 
-            // Validate: result is required
             if (string.IsNullOrWhiteSpace(result))
                 throw new BusinessException("Investigation result is required");
 
-            // Validate: assigned security
             var currentSecurityId = GetCurrentSecurityUserId();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
@@ -356,7 +352,6 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // Validate: must be in DoneInvestigated status (has investigation result)
             if (alarm.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
                 throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarm.Action}");
 
@@ -384,10 +379,8 @@ namespace BusinessLogic.Services.Implementation
             if (Guid.TryParse(securityIdClaim, out var securityId))
                 return securityId;
 
-            // Alternative: get from UsernameFormToken and lookup security
             var username = UsernameFormToken;
-            // This would require a repository call to get Security by Username
-            // For now, return null and let the caller handle validation
+
             return null;
         }
 
@@ -402,7 +395,6 @@ namespace BusinessLogic.Services.Implementation
             if (alarmTrigger == null)
                 throw new NotFoundException($"Alarm trigger with ID {alarmTriggerId} not found");
 
-            // Build incident info
             var incidentInfo = new IncidentInfoDto
             {
                 AlarmTriggerId = alarmTrigger.Id,
@@ -442,13 +434,10 @@ namespace BusinessLogic.Services.Implementation
                 }
             };
 
-            // Build timeline events
             var timeline = BuildTimelineEvents(alarmTrigger);
 
-            // Calculate durations
             var duration = CalculateDurations(timeline);
 
-            // Build investigation info
             var investigation = new IncidentInvestigationDto
             {
                 Result = alarmTrigger.InvestigatedResult,
@@ -486,10 +475,8 @@ namespace BusinessLogic.Services.Implementation
                 Description = $"Alarm triggered by beacon {alarm.BeaconId ?? "Unknown"}",
             });
 
-            // Calculate previous timestamp for duration
             DateTime? previousTimestamp = alarm.TriggerTime;
 
-            // Stage 2: Acknowledged (if exists)
             if (alarm.AcknowledgedAt.HasValue)
             {
                 double? duration = null;
@@ -512,7 +499,6 @@ namespace BusinessLogic.Services.Implementation
                 previousTimestamp = alarm.AcknowledgedAt.Value;
             }
 
-            // Stage 3: Dispatched (if exists)
             if (alarm.DispatchedAt.HasValue)
             {
                 double? duration = null;

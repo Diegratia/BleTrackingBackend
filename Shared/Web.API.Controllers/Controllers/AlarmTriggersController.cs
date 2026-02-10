@@ -10,6 +10,7 @@ using BusinessLogic.Services.Interface;
 using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using System.Text.Json.Serialization;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -68,7 +69,15 @@ namespace Web.API.Controllers.Controllers
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            var result = await _service.FilterAsync(request);
+            var filter = new AlarmTriggersFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<AlarmTriggersFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new AlarmTriggersFilter();
+            }
+
+            var result = await _service.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Alarm Triggers filtered successfully", result));
         }
 
