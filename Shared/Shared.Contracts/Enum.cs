@@ -207,6 +207,8 @@ namespace Shared.Contracts
         CardAccess
     }
 
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ActionStatus
     {
         Idle,               // default - alarm triggered by system
