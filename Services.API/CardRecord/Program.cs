@@ -156,6 +156,9 @@ builder.Services.AddAutoMapper(typeof(CardRecordProfile));
 // Registrasi Services
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 // builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 // builder.Services.AddScoped<ICardService, CardService>();
 

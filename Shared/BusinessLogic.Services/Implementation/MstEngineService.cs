@@ -75,7 +75,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _engineRepository.AddAsync(engine);
 
-            await _audit.Created(
+             _audit.Created(
                 "MstEngine",
                 engine.Id,
                 $"Engine {engine.Name} created",
@@ -109,7 +109,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _engineRepository.UpdateAsync(engine);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "MstEngine",
                 engine.Id,
                 $"Engine {engine.Name} updated",
@@ -137,7 +137,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _engineRepository.UpdateByEngineStringAsync(engine);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "MstEngine",
                 engine.Id,
                 $"Engine {engine.Name} updated by tracking ID",
@@ -156,7 +156,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _engineRepository.UpdateAsync(engine);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "MstEngine",
                 engine.Id,
                 $"Engine {engine.Name} deleted",
@@ -177,7 +177,7 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClientService.PublishAsync(topic, payload);
             Console.WriteLine($"Sent stop command to {topic}");
 
-            await _audit.Action(
+             _audit.Action(
                 AuditEmitter.AuditAction.ACTION,
                 "MstEngine",
                 $"Stop command sent to engine {engineTrackingId}"
@@ -197,7 +197,7 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClientService.PublishAsync(topic, payload);
             Console.WriteLine($"Sent start command to {topic}");
 
-            await _audit.Action(
+             _audit.Action(
                 AuditEmitter.AuditAction.ACTION,
                 "MstEngine",
                 $"Start command sent to engine {engineTrackingId}"

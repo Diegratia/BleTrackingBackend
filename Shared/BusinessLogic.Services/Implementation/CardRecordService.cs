@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,7 +21,6 @@ using QuestPDF.Drawing;
 using Bogus.DataSets;
 using Shared.Contracts;
 using Microsoft.Extensions.Logging;
-using Helpers.Consumer.Mqtt;
 using Repositories.Repository.RepoModel;
 using DataView;
 using BusinessLogic.Services.Extension.RootExtension;
@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<CardRecord> _logger;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
 
         public CardRecordService
         (
@@ -45,7 +45,7 @@ namespace BusinessLogic.Services.Implementation
             VisitorRepository visitorRepository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             ILogger<CardRecord> logger
         )
         {
@@ -55,7 +55,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
 
         }
 
@@ -113,7 +113,7 @@ namespace BusinessLogic.Services.Implementation
             await _cardRepository.UpdateAsync(card);
             await _visitorRepository.UpdateAsync(visitor);
             var createdCardRecord = await _repository.AddAsync(cardRecord);
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
             return _mapper.Map<CardRecordDto>(createdCardRecord);
         }
 
@@ -157,7 +157,7 @@ namespace BusinessLogic.Services.Implementation
             await _cardRepository.UpdateAsync(card);
             await _visitorRepository.UpdateAsync(visitor);
             await _repository.UpdateAsync(cardRecord);
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
         }
 
         

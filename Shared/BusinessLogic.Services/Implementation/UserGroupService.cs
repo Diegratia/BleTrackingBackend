@@ -82,7 +82,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(userGroup);
 
-            await _audit.Created(
+             _audit.Created(
                 "UserGroup",
                 userGroup.Id,
                 "Created UserGroup",
@@ -123,7 +123,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(dto, userGroup);
             await _repository.UpdateAsync(userGroup);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "UserGroup",
                 userGroup.Id,
                 "Updated UserGroup",
@@ -153,7 +153,7 @@ namespace BusinessLogic.Services.Implementation
             userGroup.UpdatedBy = UsernameFormToken;
             await _repository.SoftDeleteAsync(id);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "UserGroup",
                 userGroup.Id,
                 "Deleted UserGroup",

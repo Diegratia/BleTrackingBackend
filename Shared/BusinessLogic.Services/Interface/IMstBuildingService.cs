@@ -21,5 +21,6 @@ namespace BusinessLogic.Services.Interface
         Task<object> FilterAsync(DataTablesProjectedRequest request, MstBuildingFilter filter); 
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
+        
     }
 }

@@ -176,6 +176,9 @@ builder.Services.AddScoped<ICardRecordService, CardRecordService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddScoped<TrxVisitorRepository>();
 
 

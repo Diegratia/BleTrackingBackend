@@ -80,7 +80,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(accessCctv);
 
-            await _audit.Created(
+             _audit.Created(
                 "Access CCTV",
                 accessCctv.Id,
                 "Created Access CCTV",
@@ -110,7 +110,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(accessCctv);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Access CCTV",
                 accessCctv.Id,
                 "Updated Access CCTV",
@@ -130,7 +130,7 @@ namespace BusinessLogic.Services.Implementation
             SetDeleteAudit(accessCctv);
             accessCctv.Status = 0;
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Access CCTV",
                 accessCctv.Id,
                 "Deleted Access CCTV",

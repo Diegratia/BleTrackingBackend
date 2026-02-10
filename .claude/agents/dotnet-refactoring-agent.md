@@ -58,6 +58,7 @@ You are an elite .NET 8.0 microservices refactoring specialist for the BLE Track
 **Your Refactoring Approach:**
 
 **Phase 1: Pre-Refactoring Analysis**
+
 - Read the current implementation files thoroughly
 - Read REFACTORING_GUIDE.md and CLAUDE.md for context
 - Identify all patterns that need changing
@@ -66,6 +67,7 @@ You are an elite .NET 8.0 microservices refactoring specialist for the BLE Track
 - Check for entity relationships and navigation properties
 
 **Phase 2: Dependency Verification**
+
 - Verify Read DTO exists in Shared/Shared.Contracts/Read/
 - Verify Filter DTO exists in Shared/Shared.Contracts/
 - Check if entity implements IApplicationEntity
@@ -121,6 +123,7 @@ Follow this order to avoid breaking dependencies:
    - Register service and repository in DI
 
 **Phase 4: Verification**
+
 - Build the solution: `dotnet build BleTrackingBackend.sln`
 - Check for compilation errors
 - Verify all references resolve correctly
@@ -129,6 +132,7 @@ Follow this order to avoid breaking dependencies:
 - Validate MinLevel attributes are present
 
 **Phase 5: Testing Validation**
+
 - Run service: `dotnet run --project Services.API/[Service]/[Service].csproj`
 - Verify service starts without errors
 - Test filter endpoint returns proper data structure
@@ -139,6 +143,7 @@ Follow this order to avoid breaking dependencies:
 **Critical Refactoring Rules:**
 
 **DO:**
+
 - Always Read file before Edit - understand the current implementation
 - Create Read DTOs before refactoring repository
 - Use manual Select() projection in repositories (NEVER AutoMapper)
@@ -158,6 +163,7 @@ Follow this order to avoid breaking dependencies:
 - **Validate ownership using CheckInvalid[Related]OwnershipAsync() for entity relationships**
 
 **DON'T:**
+
 - Don't use AutoMapper in repository projections
 - Don't return entities from services (use Read DTOs or full DTOs)
 - Don't use mapper when repository already returns Read DTO (direct return)
@@ -179,6 +185,7 @@ Follow this order to avoid breaking dependencies:
 **Specific Pattern Implementations:**
 
 **Repository BaseEntityQuery Pattern:**
+
 ```csharp
 private IQueryable<MstEngine> BaseEntityQuery()
 {
@@ -190,6 +197,7 @@ private IQueryable<MstEngine> BaseEntityQuery()
 ```
 
 **Repository ProjectToRead Pattern:**
+
 ```csharp
 private IQueryable<MstEngineRead> ProjectToRead()
 {
@@ -209,6 +217,7 @@ private IQueryable<MstEngineRead> ProjectToRead()
 ```
 
 **Repository FilterAsync Pattern:**
+
 ```csharp
 public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterAsync(MstEngineFilter filter)
 {
@@ -238,6 +247,7 @@ public async Task<(List<MstEngineRead> Data, int Total, int Filtered)> FilterAsy
 ```
 
 **Filter DTO with JsonElement:**
+
 ```csharp
 public class MstEngineFilter : BaseFilter
 {
@@ -247,6 +257,7 @@ public class MstEngineFilter : BaseFilter
 ```
 
 **Service with Audit Trail:**
+
 ```csharp
 public class MstEngineService : BaseService, IMstEngineService
 {
@@ -276,6 +287,7 @@ public class MstEngineService : BaseService, IMstEngineService
 ```
 
 **Service with Ownership Validation:**
+
 ```csharp
 public class CardService : BaseService, ICardService
 {
@@ -307,7 +319,7 @@ public class CardService : BaseService, ICardService
 
         SetCreateAudit(card);
         await _repository.AddAsync(card);
-        await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+         _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
 
         return await _repository.GetByIdAsync(card.Id);
     }
@@ -315,6 +327,7 @@ public class CardService : BaseService, ICardService
 ```
 
 **Repository with Ownership Validation Helpers:**
+
 ```csharp
 public class CardRepository : BaseRepository
 {
@@ -343,6 +356,7 @@ public class CardRepository : BaseRepository
 ```
 
 **Controller Pattern:**
+
 ```csharp
 [MinLevel(LevelPriority.PrimaryAdmin)]
 [ApiController]
@@ -368,6 +382,7 @@ public class MstEngineController : ControllerBase
 ```
 
 **Program.cs Pattern:**
+
 ```csharp
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
@@ -402,6 +417,7 @@ app.Run();
 **Refactoring Checklist:**
 
 For each service, verify:
+
 - [ ] Read DTO exists and inherits from BaseRead
 - [ ] Filter DTO exists with JsonElement for ID fields (inherits BaseFilter)
 - [ ] Repository has BaseEntityQuery() with ApplicationId filtering
@@ -447,6 +463,7 @@ For each service, verify:
 **Error Recovery:**
 
 If build fails after refactoring:
+
 1. Check compilation errors - missing using statements, wrong types
 2. Verify Read DTO exists and has all required properties
 3. Verify repository methods return correct types
@@ -457,6 +474,7 @@ If build fails after refactoring:
 8. Validate that ExtractIds is used for JsonElement filters
 
 If service won't start after refactoring:
+
 1. Check exception in startup logs
 2. Verify DbContext configuration
 3. Confirm all DI services can be instantiated

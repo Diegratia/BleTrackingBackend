@@ -99,7 +99,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.Status = 1;
 
             var createdBleReader = await _repository.AddAsync(bleReader);
-            await _audit.Created(
+             _audit.Created(
                 "BLE Reader",
                 createdBleReader.Id,
                 "Created BLE Reader",
@@ -140,7 +140,7 @@ namespace BusinessLogic.Services.Implementation
                 bleReader.Status = 1;
 
                 await _repository.AddAsync(bleReader);
-                await _audit.Created(
+                 _audit.Created(
                     "BLE Reader",
                     bleReader.Id,
                     "Created BLE Reader in batch",
@@ -179,7 +179,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.UpdatedBy = username ?? "";
             bleReader.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(bleReader);
-            await _audit.Updated(
+             _audit.Updated(
                 "BLE Reader",
                 bleReader.Id,
                 "Updated BLE Reader",
@@ -201,7 +201,7 @@ namespace BusinessLogic.Services.Implementation
             bleReader.Status = 0;
 
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "BLE Reader",
                 bleReader.Id,
                 "Deleted BLE Reader",

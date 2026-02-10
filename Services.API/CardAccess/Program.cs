@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Repositories.DbContexts;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
 using Microsoft.Extensions.FileProviders;
@@ -162,6 +163,9 @@ builder.Services.AddScoped<ICardGroupService, CardGroupService>();
 builder.Services.AddScoped<ICardAccessService, CardAccessService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 // builder.Services.AddScoped<ICardService, CardService>();
 

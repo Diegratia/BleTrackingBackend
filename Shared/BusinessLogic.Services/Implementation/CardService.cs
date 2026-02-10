@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,6 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.Extensions.Logging;
-using Helpers.Consumer.Mqtt;
 using DataView;
 
 namespace BusinessLogic.Services.Implementation
@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly MstMemberRepository _mstMemberRepository;
         private readonly ILogger<Card> _logger;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private readonly IAuditEmitter _audit;
 
         public CardService(
@@ -46,7 +46,7 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<Card> logger,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -54,7 +54,7 @@ namespace BusinessLogic.Services.Implementation
             _mstMemberRepository = mstMemberRepository;
             _mapper = mapper;
             _logger = logger;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _audit = audit;
         }
 
@@ -156,8 +156,8 @@ namespace BusinessLogic.Services.Implementation
 
             var createdCard = await _repository.AddAsync(card);
             card.QRCode = createdCard.CardNumber;
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+            _mqttQueue.Enqueue("engine/refresh/card-related","");
+             _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
             return await _repository.GetByIdAsync(card.Id);
         }
         
@@ -228,8 +228,8 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
             var result = await _repository.AddAsync(entity);
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            await _audit.Created("Card", result.Id, $"Card {result.CardNumber} created");
+            _mqttQueue.Enqueue("engine/refresh/card-related","");
+             _audit.Created("Card", result.Id, $"Card {result.CardNumber} created");
             return await _repository.GetByIdAsync(result.Id);
         }
 
@@ -309,8 +309,8 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} updated");
+            _mqttQueue.Enqueue("engine/refresh/card-related","");
+             _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} updated");
         }
 
         public async Task UpdateAccessAsync(Guid id, CardAccessEdit dto)
@@ -355,7 +355,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
-            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated");
+             _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated");
         }
         
         public async Task UpdateAccessByVMSAsync(string cardNumber, CardAccessEdit dto)
@@ -389,7 +389,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
-            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated by VMS");
+             _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} access updated by VMS");
         }
 
         public async Task SwapCard(Guid id, CardAccessEdit dto)
@@ -421,7 +421,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(entity);
-            await _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} swapped");
+             _audit.Updated("Card", entity.Id, $"Card {entity.CardNumber} swapped");
         }
 
         public async Task UpdateAsync(Guid id, CardUpdateDto updateDto)
@@ -489,8 +489,8 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(card);
             _mapper.Map(updateDto, card);
             await _repository.UpdateAsync(card);
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
-            await _audit.Updated("Card", card.Id, $"Card {card.CardNumber} updated");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
+             _audit.Updated("Card", card.Id, $"Card {card.CardNumber} updated");
         }
 
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
@@ -516,7 +516,7 @@ namespace BusinessLogic.Services.Implementation
             member.BleCardNumber = card.Dmac;
             _mapper.Map(dto, card);
             await _repository.UpdateAsync(card);
-            await _audit.Updated("Card", card.Id, $"Card {card.CardNumber} assigned to member {member.Name}");
+             _audit.Updated("Card", card.Id, $"Card {card.CardNumber} assigned to member {member.Name}");
         }
 
         public async Task DeleteAsync(Guid id)
@@ -528,7 +528,7 @@ namespace BusinessLogic.Services.Implementation
             SetDeleteAudit(card);
             card.StatusCard = 0;
             await _repository.DeleteAsync(id);
-            await _audit.Deleted("Card", id, $"Card {card.CardNumber} deleted");
+             _audit.Deleted("Card", id, $"Card {card.CardNumber} deleted");
         }
 
         public async Task<IEnumerable<CardRead>> ImportAsync(IFormFile file)
@@ -585,8 +585,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _repository.AddAsync(card);
             }
-            await _mqttClient.PublishAsync("engine/refresh/card-related","");
-            await _audit.Created("Card", cards.Count, $"Imported {cards.Count} cards");
+            _mqttQueue.Enqueue("engine/refresh/card-related","");
+             _audit.Created("Card", cards.Count, $"Imported {cards.Count} cards");
             return await _repository.GetAllExportAsync();
         }
 

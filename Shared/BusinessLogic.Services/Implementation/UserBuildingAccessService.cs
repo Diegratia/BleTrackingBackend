@@ -142,7 +142,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.AddAccessRangeAsync(newAccesses);
 
             // Emit audit
-            await _audit.Updated(
+             _audit.Updated(
                 "UserBuildingAccess",
                 userId,
                 $"Assigned {buildingIds.Count} buildings to user {user.Username}",
@@ -173,7 +173,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.RemoveAccessAsync(userId, buildingId);
 
             // Emit audit
-            await _audit.Deleted(
+             _audit.Deleted(
                 "UserBuildingAccess",
                 $"{userId}_{buildingId}",
                 $"Revoked building {building?.Name} access from user {user?.Username}",
@@ -208,7 +208,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.RemoveAllAccessesByUserAsync(userId);
 
             // Emit audit
-            await _audit.Deleted(
+             _audit.Deleted(
                 "UserBuildingAccess",
                 userId,
                 $"Revoked all building access from user {user.Username}",

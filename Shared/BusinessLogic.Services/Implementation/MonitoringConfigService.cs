@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
             SetCreateAudit(config);
 
             config = await _repository.AddAsync(config, createDto.BuildingIds);
-            await _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
+             _audit.Created(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
             var result = await _repository.GetByIdAsync(config.Id);
 
             return result ?? throw new Exception("Failed to reload MonitoringConfig after create");
@@ -68,7 +68,7 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(config);
 
             await _repository.UpdateAsync(config, updateDto.BuildingIds);
-            await _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
+             _audit.Updated(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
         }
 
         public async Task DeleteAsync(Guid id)
@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
 
             SetDeleteAudit(config);
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
+             _audit.Deleted(config.Id.ToString(), config.Name ?? "Config", "MonitoringConfig");
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MonitoringConfigFilter filter)

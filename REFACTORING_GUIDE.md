@@ -6,7 +6,9 @@ Goal: Replace generic/reflection DataTables and standardize Auth + Middleware.
 ---
 
 ## Target Scope
+
 Refactor a Service/Entity stack to:
+
 1. Use Specific Repository Pattern (manual projection).
 2. Use typed DataTables filters.
 3. Standardize Controller responses + MinLevel auth.
@@ -17,7 +19,9 @@ Refactor a Service/Entity stack to:
 ## Step-by-Step Checklist
 
 ### 1. Analyze & Prepare
+
 Identify target entity and files:
+
 - Shared/Shared.Contracts/Read/[Entity]Read.cs
 - Shared/Shared.Contracts/[Entity]Filter.cs
 - Shared/Repositories/Repository/[Entity]Repository.cs
@@ -26,6 +30,7 @@ Identify target entity and files:
 - Services.API/[Service]/Program.cs
 
 ### 2. Create Filter DTO
+
 Add file: Shared/Shared.Contracts/[Entity]Filter.cs
 
 **IMPORTANT**: Always inherit from `BaseFilter` for consistency:
@@ -47,16 +52,20 @@ public class EntityFilter : BaseFilter
 ```
 
 `BaseFilter` already includes:
+
 - `Search`, `Page`, `PageSize`, `SortColumn`, `SortDir`, `DateFrom`, `DateTo`
 
 **Important**: For ID filters that need to support both single value and array, use `JsonElement` type and the `ExtractIds` helper method from `BaseRepository` (see section 8 for details).
 
 ### 3. Create Read DTO
+
 Add file: Shared/Shared.Contracts/Read/[Entity]Read.cs
 Used for projection + response.
 
 ### 4. Repository Refactor
+
 Update file: [Entity]Repository.cs
+
 - Add BaseEntityQuery() if needed.
 - Add ProjectToRead(...) using AsNoTracking() + manual Select.
 - Add FilterAsync(FilterDto) returning (List, int, int).
@@ -69,6 +78,7 @@ Update file: [Entity]Repository.cs
 **NEVER duplicate the Select() projection inside FilterAsync! This creates TWO sources of truth for the same mapping.**
 
 **WRONG ❌ (DO NOT DO THIS):**
+
 ```csharp
 public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
 {
@@ -96,6 +106,7 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
 ```
 
 **CORRECT ✅ (USE THIS PATTERN):**
+
 ```csharp
 public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(EntityFilter filter)
 {
@@ -127,6 +138,7 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
 ```
 
 **Why This Rule Exists:**
+
 1. **Single Source of Truth**: All projection logic lives in ONE place (ProjectToRead method)
 2. **Maintainability**: When fields change, you only update ProjectToRead, not multiple places
 3. **Consistency**: GetByIdAsync, GetAllAsync, and FilterAsync all use the exact same projection
@@ -134,11 +146,13 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
 5. **Bug Prevention**: If you add a field to ProjectToRead but forget to update FilterAsync's manual Select, responses become inconsistent
 
 **Reference Implementations:**
+
 - ✅ `Shared/Repositories/Repository/CardRepository.cs` - **GOLDEN STANDARD** - Complete pattern with BaseFilter inheritance, JsonElement for ID filters, ExtractIds helper
 - ✅ `Shared/Repositories/Repository/RepoModel/PatrolCaseRepository.cs:198-250` - CORRECT pattern
 - ✅ `Shared/Repositories/Repository/MstFloorplanRepository.cs` - CORRECT pattern
 
 Ownership helper (example):
+
 ```csharp
 public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
     Guid buildingId,
@@ -153,7 +167,9 @@ public async Task<IReadOnlyCollection<Guid>> CheckInvalidBuildingOwnershipAsync(
 ```
 
 ### 5. Service Refactor
+
 Update file: [Entity]Service.cs
+
 - Inherit from `BaseService`
 - Inject `IAuditEmitter` for audit logging
 - Use DataTablesProjectedRequest + typed filter.
@@ -208,7 +224,7 @@ public class EntityService : BaseService, IEntityService
 
         await _repo.AddAsync(entity);
 
-        await _audit.Created(
+         _audit.Created(
             "Entity",
             entity.Id,
             "Created Entity",
@@ -268,28 +284,31 @@ public interface IEntityService
 4. **No double mapping** → Entity → Read → DTO is redundant
 
 **Why?**
+
 - Repository's `ProjectToRead()` already does the projection (Entity → Read DTO)
 - Adding mapper again would be: Entity → Read DTO → Entity DTO (inefficient)
 - Read operations should return Read DTOs for consistency
-        var entity = _mapper.Map<Entity>(dto);
-        entity.Id = Guid.NewGuid();
-        entity.ApplicationId = AppId;
-        SetCreateAudit(entity);
+  var entity = \_mapper.Map<Entity>(dto);
+  entity.Id = Guid.NewGuid();
+  entity.ApplicationId = AppId;
+  SetCreateAudit(entity);
 
-        await _repo.AddAsync(entity);
+          await _repo.AddAsync(entity);
 
-        await _audit.Created(
-            "Entity",
-            entity.Id,
-            "Created Entity",
-            new { entity.Name }
-        );
+           _audit.Created(
+              "Entity",
+              entity.Id,
+              "Created Entity",
+              new { entity.Name }
+          );
 
-        var result = await _repo.GetByIdAsync(entity.Id);
-        return result;
-    }
-}
-```
+          var result = await _repo.GetByIdAsync(entity.Id);
+          return result;
+      }
+
+  }
+
+````
 
 Ownership validation (example):
 ```csharp
@@ -299,10 +318,12 @@ if (invalidBuildingId.Any())
     throw new UnauthorizedException(
         $"BuildingId does not belong to this Application: {string.Join(", ", invalidBuildingId)}"
     );
-```
+````
 
 ### 6. Controller Refactor
+
 Update file: [Entity]Controller.cs
+
 - Apply [MinLevel(LevelPriority.SuperAdmin)] at class level.
 - Remove manual try/catch.
 - Use ApiResponse helper.
@@ -327,8 +348,10 @@ public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest re
 ```
 
 ### 7. Program.cs Refactor
+
 Update file: Services.API/[Service]/Program.cs
 Must include:
+
 - RootExtension methods
 - MinLevelHandler
 - CustomExceptionMiddleware
@@ -352,14 +375,22 @@ app.UseMiddleware<CustomExceptionMiddleware>();
 ---
 
 ## Additional Patterns Observed in MstFloorService (include when relevant)
+
 1. Cache + Redis grouping:
+
 - `Key()` + `GroupKey` pattern.
 - `RemoveGroupAsync()` clears all cache keys in group.
+
 2. MQTT refresh:
+
 - After create/update/delete: publish `"engine/refresh/area-related"`.
+
 3. Audit:
+
 - Use `_audit.Created/Updated/Deleted` after DB changes.
+
 4. Cascade delete:
+
 - Use transaction in DeleteAsync for child entities.
 - Provide `CascadeDeleteAsync` for internal-only deletions (no audit/mqtt).
 
@@ -372,6 +403,7 @@ app.UseMiddleware<CustomExceptionMiddleware>();
 **CRITICAL**: When entity has relationship to another entity (e.g., Floor → Building, Floorplan → Floor), ALWAYS validate ownership using `CheckInvalidOwnershipIdsAsync` pattern.
 
 #### Why This Pattern?
+
 - Ensures the related entity belongs to the same Application (multi-tenancy safety)
 - Prevents users from referencing entities from other applications
 - Provides consistent error messages for invalid ownership
@@ -456,7 +488,7 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
     SetCreateAudit(entity);
     await _repository.AddAsync(entity);
 
-    await _audit.Created("Entity", entity.Id, "Created entity", new { entity.Name });
+     _audit.Created("Entity", entity.Id, "Created entity", new { entity.Name });
 
     var result = await _repository.GetByIdAsync(entity.Id);
     return result!;
@@ -465,24 +497,24 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
 
 #### Pattern Summary for Relationships
 
-| Step | Repository Method | Service Usage |
-|------|-------------------|---------------|
-| 1. Check existence | `FloorExistsAsync(Guid id)` | `if (!await _repo.FloorExistsAsync(dto.FloorId))` |
-| 2. Check ownership | `CheckInvalidFloorOwnershipAsync(id, appId)` | `var invalid = await _repo.CheckInvalid...()` |
-| 3. Get related entity | `GetFloorByIdAsync(Guid id)` | `var floor = await _repo.GetFloorByIdAsync(dto.FloorId)` |
-| 4. Inherit ApplicationId | N/A | `entity.ApplicationId = floor.ApplicationId` |
+| Step                     | Repository Method                            | Service Usage                                            |
+| ------------------------ | -------------------------------------------- | -------------------------------------------------------- |
+| 1. Check existence       | `FloorExistsAsync(Guid id)`                  | `if (!await _repo.FloorExistsAsync(dto.FloorId))`        |
+| 2. Check ownership       | `CheckInvalidFloorOwnershipAsync(id, appId)` | `var invalid = await _repo.CheckInvalid...()`            |
+| 3. Get related entity    | `GetFloorByIdAsync(Guid id)`                 | `var floor = await _repo.GetFloorByIdAsync(dto.FloorId)` |
+| 4. Inherit ApplicationId | N/A                                          | `entity.ApplicationId = floor.ApplicationId`             |
 
 #### Common Relationships & Validation
 
-| Entity | Related To | Repository Method to Create |
-|--------|-----------|----------------------------|
-| Floorplan | Floor | `CheckInvalidFloorOwnershipAsync` |
-| Floor | Building | `CheckInvalidBuildingOwnershipAsync` |
-| PatrolArea | Floor | `CheckInvalidFloorOwnershipAsync` |
-| MaskedArea | Floorplan | `CheckInvalidFloorplanOwnershipAsync` |
-| **Card** | **Member** | `CheckInvalidMemberOwnershipAsync` |
-| **Card** | **Visitor** | `CheckInvalidVisitorOwnershipAsync` |
-| **Card** | **CardGroup** | `CheckInvalidCardGroupOwnershipAsync` |
+| Entity     | Related To    | Repository Method to Create           |
+| ---------- | ------------- | ------------------------------------- |
+| Floorplan  | Floor         | `CheckInvalidFloorOwnershipAsync`     |
+| Floor      | Building      | `CheckInvalidBuildingOwnershipAsync`  |
+| PatrolArea | Floor         | `CheckInvalidFloorOwnershipAsync`     |
+| MaskedArea | Floorplan     | `CheckInvalidFloorplanOwnershipAsync` |
+| **Card**   | **Member**    | `CheckInvalidMemberOwnershipAsync`    |
+| **Card**   | **Visitor**   | `CheckInvalidVisitorOwnershipAsync`   |
+| **Card**   | **CardGroup** | `CheckInvalidCardGroupOwnershipAsync` |
 
 #### Example: CardService Ownership Validation
 
@@ -560,13 +592,14 @@ public async Task<CardRead> CreateAsync(CardCreateDto createDto)
 
     SetCreateAudit(card);
     await _repository.AddAsync(card);
-    await _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
+     _audit.Created("Card", card.Id, $"Card {card.CardNumber} created");
 
     return await _repository.GetByIdAsync(card.Id);
 }
 ```
 
 **Key Points for Card Ownership Pattern:**
+
 - Card tidak perlu inherit ApplicationId dari Member/Visitor (punya ApplicationId sendiri)
 - Validasi mencegah user assign Card ke Member/Visitor/CardGroup dari application lain
 - Untuk Update, cek hanya jika nilai berubah: `if (dto.MemberId.HasValue && dto.MemberId.Value != entity.MemberId)`
@@ -602,6 +635,7 @@ public class BaseRead
 ```
 
 **Key Points**:
+
 - Audit fields are stored in DB but NOT sent in JSON response
 - `Status` IS included in response (needed for frontend display)
 - `ApplicationId` IS included (needed for multi-tenancy)
@@ -614,11 +648,13 @@ public class BaseRead
 When filtering by ID fields that need to support both single values and arrays, use the `ExtractIds` helper method from `BaseRepository`.
 
 #### Why This Pattern?
+
 - Frontend may send single ID as string: `"integrationId": "123-456..."`
 - Or multiple IDs as array: `"integrationId": ["123-456...", "789-012..."]`
 - Using `JsonElement` + `ExtractIds` handles both cases seamlessly
 
 #### Implementation in Filter DTO:
+
 ```csharp
 using System.Text.Json;
 
@@ -631,6 +667,7 @@ public class EntityFilter
 ```
 
 #### Implementation in Repository:
+
 ```csharp
 // ExtractIds is inherited from BaseRepository
 public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
@@ -653,7 +690,9 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
 ```
 
 #### ExtractIds Method (in BaseRepository):
+
 The `ExtractIds` method automatically handles:
+
 - String → Single Guid
 - Array of strings → Multiple Guids
 - Invalid values → Filtered out
@@ -690,6 +729,7 @@ public static List<Guid> ExtractIds(JsonElement element)
 ---
 
 ## Definition of Done
+
 - Repository has FilterAsync returning (List, int, int)
 - Projection uses manual Select only (no AutoMapper in query)
 - Filter inherits from `BaseFilter`
@@ -711,6 +751,7 @@ public static List<Guid> ExtractIds(JsonElement element)
 ---
 
 ## Reference Implementations (Golden Standard)
+
 - **Shared/Repositories/Repository/CardRepository.cs** - **PRIMARY STANDARD** - BaseFilter inheritance, JsonElement ID filters, ExtractIds, complete pattern
 - Shared/BusinessLogic.Services/Implementation/CardService.cs
 - Shared/Web.API.Controllers/Controllers/CardController.cs

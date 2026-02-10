@@ -82,6 +82,9 @@ builder.Services.AddScoped<IUserBuildingAccessService, UserBuildingAccessService
 builder.Services.AddScoped<IGroupBuildingAccessService, GroupBuildingAccessService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 

@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,6 @@ using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using  Data.ViewModels.Dto.Helpers.MinimalDto;
-using Helpers.Consumer.Mqtt;
 using Microsoft.Extensions.Logging;
 // using Data.ViewModels.Dto.Helpers.MinimalDto;
 // using Helpers.Consumer.Mqtt;
@@ -38,7 +38,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TrxVisitor> _logger;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
 
         public TrxVisitorService(
             TrxVisitorRepository repository,
@@ -50,7 +50,7 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TrxVisitor> logger,
-            IMqttClientService mqttClient)
+            IMqttPubQueue mqttQueue)
         {
             _repository = repository;
             _cardRecordRepository = cardRecordRepository;
@@ -61,7 +61,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
         }
 
         public async Task<IEnumerable<TrxVisitorDto>> GetAllTrxVisitorsAsync()
@@ -208,7 +208,7 @@ namespace BusinessLogic.Services.Implementation
                 await transaction.RollbackAsync();
                 throw;
             }
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+            _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         // public async Task CheckinVisitorAsync(TrxVisitorCheckinDto dto)
@@ -308,7 +308,7 @@ namespace BusinessLogic.Services.Implementation
                 await transaction.RollbackAsync();
                 throw;
             }
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+             _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         public async Task CheckoutWithVisitorIdAsync(Guid visitorId)
@@ -371,7 +371,7 @@ namespace BusinessLogic.Services.Implementation
                 await transaction.RollbackAsync();
                 throw;
             }
-        await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+        _mqttQueue.Enqueue("engine/refresh/visitor-related","");
 }
 
 
@@ -395,7 +395,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(denyReasonDto, trx);
             await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+             _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
@@ -414,7 +414,7 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(blockVisitorDto, trx);
             await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+             _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         public async Task UnblockVisitorAsync(Guid trxVisitorId)
@@ -434,7 +434,7 @@ namespace BusinessLogic.Services.Implementation
             // visitorCard.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             await _repository.UpdateAsync(trx);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+            _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -532,7 +532,7 @@ namespace BusinessLogic.Services.Implementation
             trx.UpdatedBy = username;
             trx.ExtendedVisitorTime = dto.ExtendedVisitorTime;
             await _repository.UpdateAsync(trx);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+            _mqttQueue.Enqueue("engine/refresh/visitor-related","");
         }
 
         public async Task<byte[]> ExportPdfAsync()

@@ -1,4 +1,5 @@
 using Repositories.DbContexts;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
@@ -52,6 +53,9 @@ builder.Services.AddSwaggerExtension();
 builder.Services.AddScoped<IMstEngineService, MstEngineService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddHostedService<EngineMqttListener>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 

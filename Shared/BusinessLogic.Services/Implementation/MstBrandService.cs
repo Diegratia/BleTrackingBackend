@@ -69,7 +69,7 @@ namespace BusinessLogic.Services.Implementation
             // No audit fields to set
 
             await _repository.AddAsync(brand);
-            await _audit.Created(
+             _audit.Created(
                 "Brand",
                 brand.Id,
                 "Created Brand",
@@ -95,7 +95,7 @@ namespace BusinessLogic.Services.Implementation
             if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
             _mapper.Map(updateDto, brand);
-            await _audit.Updated(
+             _audit.Updated(
                 "Brand",
                 brand.Id,
                 "Updated Brand",
@@ -109,7 +109,7 @@ namespace BusinessLogic.Services.Implementation
             var brand = await _repository.GetByIdAsync(id);
             if (brand == null)
                 throw new NotFoundException($"Brand with ID {id} not found");
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Brand",
                 brand.Id,
                 "Deleted Brand",

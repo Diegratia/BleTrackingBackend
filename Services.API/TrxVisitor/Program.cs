@@ -174,6 +174,9 @@ builder.Services.AddAutoMapper(typeof(TrxVisitorProfile));
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 
 

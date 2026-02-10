@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Helpers.Consumer.Mqtt;
 
 
 namespace BusinessLogic.Services.Implementation
@@ -39,7 +39,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<FloorplanDevice> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private bool cacheDisabled = false;
         private readonly IAuditEmitter _audit;
 
@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
         ILogger<FloorplanDevice> logger,
         IDistributedCache cache,
         IConnectionMultiplexer redis,
-        IMqttClientService mqttClient,
+        IMqttPubQueue mqttQueue,
         IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
@@ -65,7 +65,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _redis = redis?.GetDatabase();
             _cache = cache;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _audit = audit;
         }
         
@@ -212,7 +212,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
@@ -239,7 +239,7 @@ namespace BusinessLogic.Services.Implementation
 
                 await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
                 await _repository.AddAsync(device);
-                await _audit.Created(
+                 _audit.Created(
                     "Floorplan Device",
                     device.Id,
                     "Created floorplan device",
@@ -286,7 +286,7 @@ namespace BusinessLogic.Services.Implementation
 
                 await _repository.UpdateAsync(device);
                 await transaction.CommitAsync();
-                await _audit.Updated(
+                 _audit.Updated(
                     "Floorplan Device",
                     device.Id,
                     "Updated floorplan device",
@@ -299,7 +299,7 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
         //     // ===========================================================
@@ -330,14 +330,14 @@ namespace BusinessLogic.Services.Implementation
                     await transaction.RollbackAsync();
                     throw;
                 }
-                await _audit.Deleted(
+                 _audit.Deleted(
                         "Floorplan Device",
                         device.Id,
                         "Deleted floorplan device",
                         new { device.Name }
                     );
                 await RemoveGroupAsync();
-                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+                _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
     
 

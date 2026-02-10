@@ -86,7 +86,7 @@ namespace BusinessLogic.Services.Implementation
             district.Status = 1;
 
             var createdDistrict = await _repository.AddAsync(district);
-            await _audit.Created(
+             _audit.Created(
                 "District",
                 createdDistrict.Id,
                 "Created District",
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, district);
             _cache.Remove("MstDistrictService_GetAll");
             await _repository.UpdateAsync(district);
-            await _audit.Updated(
+             _audit.Updated(
                 "District",
                 district.Id,
                 "Updated District",
@@ -145,7 +145,7 @@ namespace BusinessLogic.Services.Implementation
             district.UpdatedBy = username;
             _cache.Remove("MstDistrictService_GetAll");
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "District",
                 district.Id,
                 "Deleted District",

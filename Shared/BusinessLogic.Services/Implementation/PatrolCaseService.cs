@@ -132,7 +132,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repo.AddAsync(patrolCase);
-            await _audit.Created(
+             _audit.Created(
                 "Patrol Case",
                 patrolCase.Id,
                 "Created Patrol Case",
@@ -212,7 +212,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdAsync(patrolCase!.Id)
                 ?? throw new Exception("Failed to reload PatrolCase after update");
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Case",
                 result.Id,
                 "Updated Patrol Case",
@@ -227,7 +227,7 @@ namespace BusinessLogic.Services.Implementation
             if (patrolCase == null)
                 throw new NotFoundException($"PatrolCase with id {id} not found");
             SetDeleteAudit(patrolCase);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Patrol Area",
                 patrolCase.Id,
                 "Deleted patrolArea",
@@ -266,7 +266,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
                 ?? throw new Exception("Failed to reload PatrolCase after approve");
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Case",
                 result.Id,
                 $"Approved{(string.IsNullOrEmpty(dto.Reason) ? "" : $" - {dto.Reason}")}",
@@ -309,7 +309,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
                 ?? throw new Exception("Failed to reload PatrolCase after reject");
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Case",
                 result.Id,
                 $"Rejected - {dto.Reason}",
@@ -343,7 +343,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdForApprovalAsync(patrolCase!.Id)
                 ?? throw new Exception("Failed to reload PatrolCase after close");
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Case",
                 result.Id,
                 $"Closed{(string.IsNullOrEmpty(dto.Notes) ? "" : $" - {dto.Notes}")}",
@@ -367,7 +367,7 @@ namespace BusinessLogic.Services.Implementation
             if (!deleted)
                 throw new NotFoundException($"Attachment with id {attachmentId} not found");
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Patrol Case Attachment",
                 attachmentId,
                 $"Deleted attachment from case: {patrolCase.Title}",

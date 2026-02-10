@@ -63,7 +63,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(boundary);
 
-            await _audit.Created(
+             _audit.Created(
                 "Boundary",
                 boundary.Id,
                 "Created Boundary",
@@ -84,7 +84,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, boundary);
             await _repository.UpdateAsync(boundary);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Boundary",
                 boundary.Id,
                 "Updated Boundary",
@@ -102,7 +102,7 @@ namespace BusinessLogic.Services.Implementation
             boundary.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Boundary",
                 boundary.Id,
                 "Deleted Boundary",

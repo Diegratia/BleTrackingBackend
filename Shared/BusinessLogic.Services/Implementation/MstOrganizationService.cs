@@ -81,7 +81,7 @@ namespace BusinessLogic.Services.Implementation
             organization.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(organization);
-            await _audit.Created(
+             _audit.Created(
                 "Organization",
                 organization.Id,
                 "Created organization",
@@ -107,7 +107,7 @@ namespace BusinessLogic.Services.Implementation
 
             _cache.Remove("MstOrganizationService_GetAll");
             await _repository.UpdateAsync(organization);
-            await _audit.Updated(
+             _audit.Updated(
                 "Organization",
                 organization.Id,
                 "Updated organization",
@@ -127,7 +127,7 @@ namespace BusinessLogic.Services.Implementation
 
             _cache.Remove("MstOrganizationService_GetAll");
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Organization",
                 organization.Id,
                 "Deleted organization",

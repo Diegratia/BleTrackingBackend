@@ -58,7 +58,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(onArea);
 
-            await _audit.Created(
+             _audit.Created(
                 "StayOnArea",
                 onArea.Id,
                 "Created StayOnArea",
@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, onArea);
             await _repository.UpdateAsync(onArea);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "StayOnArea",
                 onArea.Id,
                 "Updated StayOnArea",
@@ -97,7 +97,7 @@ namespace BusinessLogic.Services.Implementation
             onArea.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "StayOnArea",
                 onArea.Id,
                 "Deleted StayOnArea",

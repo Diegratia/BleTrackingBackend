@@ -5,12 +5,12 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using ClosedXML.Excel;
 using Data.ViewModels;
 using DataView;
 using Entities.Models;
-using Helpers.Consumer.Mqtt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -34,7 +34,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<FloorplanMaskedArea> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private readonly IAuditEmitter _audit;
         private bool cacheDisabled = false;
 
@@ -47,7 +47,7 @@ namespace BusinessLogic.Services.Implementation
             ILogger<FloorplanMaskedArea> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
@@ -59,7 +59,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _cache = cache;
             _redis = redis?.GetDatabase();
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _audit = audit;
         }
 
@@ -213,7 +213,7 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(area);
-            await _audit.Created(
+             _audit.Created(
                 "Masked Area",
                 area.Id,
                 "Created masked area",
@@ -221,7 +221,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
 
             var result = await _repository.GetByIdAsync(area.Id);
             return result!;
@@ -266,13 +266,13 @@ namespace BusinessLogic.Services.Implementation
 
             await RemoveGroupAsync();
             await _repository.UpdateAsync(area);
-            await _audit.Updated(
+             _audit.Updated(
                 "Masked Area",
                 area.Id,
                 "Updated masked area",
                 new { area.Name }
             );
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
 
@@ -292,7 +292,7 @@ namespace BusinessLogic.Services.Implementation
 
         //     await RemoveGroupAsync();
         //     await _repository.SoftDeleteAsync(id);
-        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
         // }
 
 
@@ -339,14 +339,14 @@ namespace BusinessLogic.Services.Implementation
                     a.readerId, a.cctvId, a.accessId,
                     false, username);
             }
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Masked Area",
                 area.Id,
                 "Deleted masked area",
                 new { area.Name }
             );
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
         //     public async Task SoftDeleteAsync(Guid id)
@@ -380,14 +380,14 @@ namespace BusinessLogic.Services.Implementation
         //         await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
         //     }
 
-        //     await _audit.Deleted(
+        //      _audit.Deleted(
         //         "Masked Area",
         //         area.Id,
         //         "Deleted masked area",
         //         new { area.Name }
         //     );
         //     await RemoveGroupAsync();
-        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
         // }
 
         // ============================================================

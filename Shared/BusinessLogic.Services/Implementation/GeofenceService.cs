@@ -80,7 +80,7 @@ namespace BusinessLogic.Services.Implementation
             geofence.Status = 1;
 
             await _repository.AddAsync(geofence);
-            await _audit.Created(
+             _audit.Created(
                 "Geofence",
                 geofence.Id,
                 "Created geofence",
@@ -122,7 +122,7 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(geofence);
             _mapper.Map(updateDto, geofence);
             await _repository.UpdateAsync(geofence);
-            await _audit.Updated(
+             _audit.Updated(
                 "Geofence",
                 geofence.Id,
                 "Updated geofence",
@@ -153,7 +153,7 @@ namespace BusinessLogic.Services.Implementation
             // It seems BaseService DOES NOT set Status. So I must set it.
 
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Geofence",
                 geofence.Id,
                 "Deleted geofence",

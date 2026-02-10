@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,6 @@ using Bogus.DataSets;
 using Shared.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
 using CsvHelper;
 using System.Globalization;
@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
         private const long MaxFileSize = 5 * 1024 * 1024; // Max 5 MB
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<MstMemberService> _logger;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private readonly IFileStorageService _fileStorageService;
         private readonly IEncryptService _encryptService;
 
@@ -46,7 +46,7 @@ namespace BusinessLogic.Services.Implementation
         IHttpContextAccessor httpContextAccessor,
         CardRepository cardRepository,
         ILogger<MstMemberService> logger,
-        IMqttClientService mqttClient,
+        IMqttPubQueue mqttQueue,
         IFileStorageService fileStorageService,
         IEncryptService encryptService
         ) : base(httpContextAccessor)
@@ -56,7 +56,7 @@ namespace BusinessLogic.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
             _cardRepository = cardRepository;
             _logger = logger;
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
             _encryptService = encryptService;
         }
@@ -187,7 +187,7 @@ namespace BusinessLogic.Services.Implementation
                 await _cardRepository.UpdateAsync(card);
 
                 await transaction.CommitAsync();
-                await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+                _mqttQueue.Enqueue("engine/refresh/card-related", "");
 
             }
             catch
@@ -280,7 +280,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.UpdateAsync(member);
 
                 await transaction.CommitAsync();
-                await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+                _mqttQueue.Enqueue("engine/refresh/card-related", "");
 
             }
             catch
@@ -301,7 +301,7 @@ namespace BusinessLogic.Services.Implementation
             member.UpdatedAt = DateTime.UtcNow;
             member.Status = 0;
             await _repository.DeleteAsync(id);
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
 
         }
 
@@ -317,7 +317,7 @@ namespace BusinessLogic.Services.Implementation
             Member.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(Member);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+            _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
             return _mapper.Map<MstMemberDto>(Member);
         }
 
@@ -333,7 +333,7 @@ namespace BusinessLogic.Services.Implementation
             member.IsBlacklist = false;
 
             await _repository.UpdateAsync(member);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+            _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)
@@ -726,7 +726,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
             return result;
         }
 

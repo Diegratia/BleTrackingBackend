@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
             department.Status = 1;
 
             var createdDepartment = await _repository.AddAsync(department);
-            await _audit.Created(
+             _audit.Created(
                 "Department",
                 createdDepartment.Id,
                 "Created department",
@@ -103,7 +103,7 @@ namespace BusinessLogic.Services.Implementation
             department.UpdatedAt = DateTime.UtcNow;
             _cache.Remove("MstDepartmentService_GetAll");
             await _repository.UpdateAsync(department);
-            await _audit.Updated(
+             _audit.Updated(
                 "Department",
                 department.Id,
                 "Updated department",
@@ -123,7 +123,7 @@ namespace BusinessLogic.Services.Implementation
 
             _cache.Remove("MstDepartmentService_GetAll");
             await _repository.DeleteAsync(id);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Department",
                 department.Id,
                 "Deleted department",

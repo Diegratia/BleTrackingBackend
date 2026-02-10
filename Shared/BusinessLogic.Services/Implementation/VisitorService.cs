@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,6 @@ using DocumentFormat.OpenXml.ExtendedProperties;
 using AutoMapper.Execution;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
-using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
 
@@ -45,7 +45,7 @@ public class VisitorService : IVisitorService
     private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
     private readonly string _invitationBaseUrl;
-    private readonly IMqttClientService _mqttClient;
+    private readonly IMqttPubQueue _mqttQueue;
     private readonly IFileStorageService _fileStorageService;
 
         public VisitorService(
@@ -63,7 +63,7 @@ public class VisitorService : IVisitorService
             CardAccessRepository cardAccessRepository,
             IEmailService emailService,
             IConfiguration configuration,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             IFileStorageService fileStorageService)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -80,7 +80,7 @@ public class VisitorService : IVisitorService
             _cardAccessRepository = cardAccessRepository ?? throw new ArgumentNullException(nameof(cardAccessRepository));
             _mstmemberRepository = mstmemberRepository ?? throw new ArgumentNullException(nameof(mstmemberRepository));
             _invitationBaseUrl = configuration["InvitationBaseUrl"] ?? "null";
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
         }
     
@@ -312,8 +312,8 @@ public class VisitorService : IVisitorService
             var result = _mapper.Map<VisitorDto>(visitor);
             if (result == null)
                 throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/visitor-related", "");
             return result;
         }
         
@@ -603,8 +603,8 @@ public class VisitorService : IVisitorService
                 if (result == null)
                 throw new InvalidOperationException("Failed to map Visitor to VisitorDto");
                     
-                await _mqttClient.PublishAsync("engine/refresh/card-related", "");
-                await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
+                _mqttQueue.Enqueue("engine/refresh/card-related", "");
+                _mqttQueue.Enqueue("engine/refresh/visitor-related", "");
                 return result;
             }
 
@@ -677,8 +677,8 @@ public class VisitorService : IVisitorService
             // Mapping ke Visitor
             _mapper.Map(updateDto, visitor);
             await _visitorRepository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/card-related", "");
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related", "");
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
+            _mqttQueue.Enqueue("engine/refresh/visitor-related", "");
             return _mapper.Map<VisitorDto>(visitor);
         }
 
@@ -697,7 +697,7 @@ public class VisitorService : IVisitorService
 
             _mapper.Map(dto, visitor);
             await _visitorRepository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+            _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
             return _mapper.Map<VisitorDto>(visitor);
         }
 
@@ -713,7 +713,7 @@ public class VisitorService : IVisitorService
             visitor.IsBlacklist = false;
 
             await _visitorRepository.UpdateAsync(visitor);
-            await _mqttClient.PublishAsync("engine/refresh/blacklist-related", "");
+            _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
         }
 
         // konfirmasi email visitor

@@ -119,7 +119,7 @@
        57 -            overpopulating.UpdatedAt = DateTime.UtcNow;      
        58 -                                                             
        59 -            await _repository.AddAsync(overpopulating);      
-       60 -            await _audit.Created(                            
+       60 -             _audit.Created(                            
        61 -                "Overpopulating",                            
        62 -                overpopulating.Id,                           
        63 -                "Created Overpopulating",                    
@@ -145,7 +145,7 @@
        78 -                                                             
        79 -            _mapper.Map(updateDto, overpopulating);          
        80 -            await _repository.UpdateAsync(overpopulating);   
-       81 -            await _audit.Updated(                            
+       81 -             _audit.Updated(                            
        82 -                "Overpopulating",                            
        83 -                overpopulating.Id,                           
        84 -                "Updated Overpopulating",                    
@@ -169,7 +169,7 @@
        99 -            overpopulating.Status = 0;                       
       100 -            overpopulating.IsActive = 0;                     
       101 -            await _repository.DeleteAsync(id);               
-      102 -            await _audit.Deleted(                            
+      102 -             _audit.Deleted(                            
       103 -                "Overpopulating",                            
       104 -                overpopulating.Id,                           
       105 -                "Deleted Overpopulating",                    
@@ -270,7 +270,7 @@
        59 +                                                              
        60 +            await _repository.AddAsync(overpopulating);       
        61 +                                                              
-       62 +            await _audit.Created(                             
+       62 +             _audit.Created(                             
        63 +                "Overpopulating",                             
        64 +                overpopulating.Id,                            
        65 +                "Created Overpopulating",                     
@@ -295,7 +295,7 @@
        80 +            _mapper.Map(updateDto, overpopulating);           
        81 +            await _repository.UpdateAsync(overpopulating);    
        82 +                                                              
-       83 +            await _audit.Updated(                             
+       83 +             _audit.Updated(                             
        84 +                "Overpopulating",                             
        85 +                overpopulating.Id,                            
        86 +                "Updated Overpopulating",                     
@@ -314,7 +314,7 @@
        97 +            SetDeleteAudit(overpopulating);                   
        98 +            await _repository.SoftDeleteAsync(id);            
        99 +                                                              
-      100 +            await _audit.Deleted(                             
+      100 +             _audit.Deleted(                             
       101 +                "Overpopulating",                             
       102 +                overpopulating.Id,                            
       103 +                "Deleted Overpopulating",                     

@@ -1,5 +1,6 @@
 
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
 using Shared.Contracts.Read;
@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<MstFloorplan> _logger;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private bool cacheDisabled = false;
         private IFileStorageService _fileStorageService;
         private readonly IAuditEmitter _audit;
@@ -78,7 +78,7 @@ namespace BusinessLogic.Services.Implementation
             ILogger<MstFloorplan> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             IFileStorageService fileStorageService,
             IAuditEmitter audit
 
@@ -103,7 +103,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _cache = cache;
             _redis = redis?.GetDatabase();
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
             _audit = audit;
         }
@@ -248,8 +248,8 @@ namespace BusinessLogic.Services.Implementation
 
             var createdFloorplan = await _repository.AddAsync(floorplan);
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _audit.Created(
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+             _audit.Created(
                 "Floorplan",
                 createdFloorplan.Id,
                 "Created floorplan",
@@ -299,14 +299,14 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, floorplan);
             await _repository.UpdateAsync(floorplan);
-            await _audit.Updated(
+             _audit.Updated(
                 "Floorplan",
                 floorplan.Id,
                 "Updated floorplan",
                 new { floorplan.Name }
             );
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
         public async Task DeleteAsync(Guid id)
@@ -354,7 +354,7 @@ namespace BusinessLogic.Services.Implementation
             floorplan.Status = 0;
             await _repository.DeleteAsync(id);
         });
-            await _audit.Deleted (
+             _audit.Deleted (
                 "Floorplan",
                 floorplan.Id,
                 "Deleted floorplan",
@@ -362,7 +362,7 @@ namespace BusinessLogic.Services.Implementation
             );
             await RemoveGroupAsync();
             await _maskedAreaService.RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
         // public async Task DeleteAsync(Guid id)
@@ -372,13 +372,13 @@ namespace BusinessLogic.Services.Implementation
         //         await CascadeDeleteAsync(id);
         //     });
 
-        //     await _audit.Deleted(
+        //      _audit.Deleted(
         //         "Floorplan",
         //         id,
         //         "Deleted floorplan"
         //     );
         //     await RemoveGroupAsync();
-        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
         // }
 
         

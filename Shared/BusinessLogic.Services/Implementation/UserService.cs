@@ -102,7 +102,7 @@ namespace BusinessLogic.Services.Implementation
             // Send confirmation email
             await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
 
-            await _audit.Created(
+             _audit.Created(
                 "User",
                 newUser.Id,
                 "Created User",
@@ -145,7 +145,7 @@ namespace BusinessLogic.Services.Implementation
             
             await _repository.UpdateAsync(user);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "User",
                 user.Id,
                 "Updated User",
@@ -174,7 +174,7 @@ namespace BusinessLogic.Services.Implementation
             
             await _repository.SoftDeleteAsync(id);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "User",
                 user.Id,
                 "Deleted User",

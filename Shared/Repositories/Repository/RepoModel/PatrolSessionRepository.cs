@@ -226,5 +226,30 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
+        /// <summary>
+        /// Gets patrol route areas with their patrol area data for checkpoint log creation.
+        /// </summary>
+        public async Task<List<PatrolRouteAreas>> GetPatrolRouteAreasAsync(Guid routeId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.PatrolRouteAreas
+                .Include(x => x.PatrolArea)
+                .Where(x => x.PatrolRouteId == routeId && x.status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.OrderBy(x => x.OrderIndex).ToListAsync();
+        }
+
+        /// <summary>
+        /// Adds checkpoint logs in batch for a patrol session.
+        /// </summary>
+        public async Task AddCheckpointLogsAsync(IEnumerable<PatrolCheckpointLog> checkpointLogs)
+        {
+            await _context.PatrolCheckpointLogs.AddRangeAsync(checkpointLogs);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

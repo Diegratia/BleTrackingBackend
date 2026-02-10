@@ -72,6 +72,9 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<ICardSwapTransactionService, CardSwapTransactionService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 // Registrasi Repositories

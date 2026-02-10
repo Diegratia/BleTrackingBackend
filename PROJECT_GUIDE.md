@@ -1293,7 +1293,7 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
 
     SetCreateAudit(entity);
     await _repository.AddAsync(entity);
-    await _audit.Created("Entity", entity.Id, "Created", new { entity.Name });
+     _audit.Created("Entity", entity.Id, "Created", new { entity.Name });
 
     var result = await _repository.GetByIdAsync(entity.Id);
     return result!;
@@ -1302,14 +1302,14 @@ public async Task<EntityRead> CreateAsync(EntityCreateDto dto)
 
 #### Common Relationships & Validation
 
-| Entity     | Related To | Repository Method                     |
-| ---------- | ---------- | ------------------------------------- |
-| Floorplan  | Floor      | `CheckInvalidFloorOwnershipAsync`     |
-| Floor      | Building   | `CheckInvalidBuildingOwnershipAsync`  |
-| PatrolArea | Floor      | `CheckInvalidFloorOwnershipAsync`     |
-| MaskedArea | Floorplan  | `CheckInvalidFloorplanOwnershipAsync` |
-| **Card**   | **Member** | `CheckInvalidMemberOwnershipAsync`    |
-| **Card**   | **Visitor** | `CheckInvalidVisitorOwnershipAsync`   |
+| Entity     | Related To    | Repository Method                     |
+| ---------- | ------------- | ------------------------------------- |
+| Floorplan  | Floor         | `CheckInvalidFloorOwnershipAsync`     |
+| Floor      | Building      | `CheckInvalidBuildingOwnershipAsync`  |
+| PatrolArea | Floor         | `CheckInvalidFloorOwnershipAsync`     |
+| MaskedArea | Floorplan     | `CheckInvalidFloorplanOwnershipAsync` |
+| **Card**   | **Member**    | `CheckInvalidMemberOwnershipAsync`    |
+| **Card**   | **Visitor**   | `CheckInvalidVisitorOwnershipAsync`   |
 | **Card**   | **CardGroup** | `CheckInvalidCardGroupOwnershipAsync` |
 
 **Contoh Implementasi - CardService:**
@@ -1402,7 +1402,7 @@ public class MstAccessCctvService : BaseService, IMstAccessCctvService
         SetCreateAudit(entity);
         await _repo.AddAsync(entity);
 
-        await _audit.Created(
+         _audit.Created(
             "Access CCTV",
             entity.Id,
             "Created Access CCTV",
@@ -1419,7 +1419,7 @@ public class MstAccessCctvService : BaseService, IMstAccessCctvService
 
         await _repo.UpdateAsync(entity);
 
-        await _audit.Updated(
+         _audit.Updated(
             "Access CCTV",
             entity.Id,
             "Updated Access CCTV",
@@ -1435,7 +1435,7 @@ public class MstAccessCctvService : BaseService, IMstAccessCctvService
         SetDeleteAudit(entity);
         await _repo.SoftDeleteAsync(id);
 
-        await _audit.Deleted(
+         _audit.Deleted(
             "Access CCTV",
             entity.Id,
             "Deleted Access CCTV",
@@ -1797,7 +1797,7 @@ public async Task<GeofenceDto> CreateAsync(GeofenceCreateDto dto)
     SetCreateAudit(entity);
     await _repository.AddAsync(entity);
 
-    await _audit.Created("Geofence", entity.Id, "Created", new { entity.Name });
+     _audit.Created("Geofence", entity.Id, "Created", new { entity.Name });
 
     // Return DTO untuk response
     var result = await _repository.GetByIdAsync(entity.Id);

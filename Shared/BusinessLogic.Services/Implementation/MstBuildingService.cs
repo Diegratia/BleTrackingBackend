@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
-using Helpers.Consumer.Mqtt;
 using DataView;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
@@ -37,7 +37,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IFileStorageService _fileStorageService;
         private const long MaxFileSize = 5 * 1024 * 1024; // Maksimal 5 MB
-        private readonly IMqttClientService _mqttClient;
+        private readonly IMqttPubQueue _mqttQueue;
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IAuditEmitter _audit;
@@ -53,7 +53,7 @@ namespace BusinessLogic.Services.Implementation
             IDistributedCache cache,
             IConnectionMultiplexer redis,
             ILogger<MstBuilding> logger,
-            IMqttClientService mqttClient,
+            IMqttPubQueue mqttQueue,
             IFileStorageService fileStorageService,
             IAuditEmitter audit
             ) : base(httpContextAccessor)
@@ -65,7 +65,7 @@ namespace BusinessLogic.Services.Implementation
             _floorRepository = floorRepository;
             _cache = cache;
             _redis = redis?.GetDatabase();
-            _mqttClient = mqttClient;
+            _mqttQueue = mqttQueue;
             _logger = logger;
             _fileStorageService = fileStorageService;
             _audit = audit;
@@ -156,8 +156,8 @@ namespace BusinessLogic.Services.Implementation
 
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _audit.Created(
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+             _audit.Created(
                 "Building Area",
                 building.Id,
                 "Created building",
@@ -189,8 +189,8 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(building);
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
-            await _audit.Updated(
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+            _audit.Updated(
                 "Building Area",
                 building.Id,
                 "Updated building",
@@ -218,7 +218,7 @@ namespace BusinessLogic.Services.Implementation
                 building.Status = 0;
                 await _repository.UpdateAsync(building);
             });
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Building Area",
                 building.Id,
                 "Deleted building",
@@ -226,7 +226,7 @@ namespace BusinessLogic.Services.Implementation
             );
             await _floorService.RemoveGroupAsync();
             await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
         public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)

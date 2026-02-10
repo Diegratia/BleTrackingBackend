@@ -115,7 +115,7 @@ namespace BusinessLogic.Services.Interface
 
             await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
 
-            await _audit.Action(
+             _audit.Action(
                 AuditEmitter.AuditAction.LOGIN,
                 "User",
                 "User login successfully",

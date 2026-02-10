@@ -85,7 +85,7 @@ namespace BusinessLogic.Services.Implementation
                     result = await _repo.GetByIdAsync(entity.Id)
                         ?? throw new Exception("Failed to reload PatrolRoute");
                 });
-                await _audit.Created(
+                 _audit.Created(
                     "Patrol Route",
                     result.Id,
                     "Created Patrol Route",
@@ -156,7 +156,7 @@ namespace BusinessLogic.Services.Implementation
             var result = await _repo.GetByIdAsync(id)
                     ?? throw new Exception("Failed to reload PatrolRoute after update");
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Route",
                 result.Id,
                 "Updated Patrol Route",
@@ -179,7 +179,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repo.DeleteByRouteIdAsync(id);
                 await _repo.DeleteAsync(id);
             });
-            await _audit.Deleted(
+             _audit.Deleted(
                     "Patrol Route",
                     entity.Id,
                     "Deleted Patrol Route",

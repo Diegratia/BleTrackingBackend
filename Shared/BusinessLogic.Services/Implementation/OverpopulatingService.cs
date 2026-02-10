@@ -57,7 +57,7 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(overpopulating);
 
-            await _audit.Created(
+             _audit.Created(
                 "Overpopulating",
                 overpopulating.Id,
                 "Created Overpopulating",
@@ -78,7 +78,7 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, overpopulating);
             await _repository.UpdateAsync(overpopulating);
 
-            await _audit.Updated(
+             _audit.Updated(
                 "Overpopulating",
                 overpopulating.Id,
                 "Updated Overpopulating",
@@ -96,7 +96,7 @@ namespace BusinessLogic.Services.Implementation
             overpopulating.IsActive = 0;
             await _repository.SoftDeleteAsync(id);
 
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Overpopulating",
                 overpopulating.Id,
                 "Deleted Overpopulating",

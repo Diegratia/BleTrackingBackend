@@ -83,7 +83,7 @@ namespace BusinessLogic.Services.Implementation
             var patrolArea = _mapper.Map<PatrolArea>(createDto);
             SetCreateAudit(patrolArea);
             await _repository.AddAsync(patrolArea);
-            await _audit.Created(
+             _audit.Created(
                 "Patrol Area",
                 patrolArea.Id,
                 "Created patrolArea",
@@ -124,7 +124,7 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(patrolArea);
             _mapper.Map(updateDto, patrolArea);
             await _repository.UpdateAsync(patrolArea);
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Area",
                 patrolArea.Id,
                 "Updated patrolArea",
@@ -144,7 +144,7 @@ namespace BusinessLogic.Services.Implementation
             // patrolArea.UpdatedBy = username;
             // patrolArea.UpdatedAt = DateTime.UtcNow;
             SetDeleteAudit(patrolArea);
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Patrol Area",
                 patrolArea.Id,
                 "Deleted patrolArea",

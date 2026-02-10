@@ -61,7 +61,7 @@ namespace BusinessLogic.Services.Implementation
             var attachment = _mapper.Map<PatrolCaseAttachment>(createDto);
             SetCreateAudit(attachment);
             await _repository.AddAsync(attachment);
-            await _audit.Created(
+             _audit.Created(
                 "Patrol Area",
                 attachment.Id,
                 "Created attachment",
@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(attachment);
             _mapper.Map(updateDto, attachment);
             await _repository.UpdateAsync(attachment);
-            await _audit.Updated(
+             _audit.Updated(
                 "Patrol Area",
                 attachment.Id,
                 "Updated attachment",

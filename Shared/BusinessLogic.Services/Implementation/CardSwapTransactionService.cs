@@ -65,7 +65,7 @@ namespace BusinessLogic.Services.Implementation
             
             await _repo.AddAsync(entity);
             
-            await _audit.Created(
+             _audit.Created(
                 "Card Swap Transaction",
                 entity.Id,
                 "Created swap transaction",

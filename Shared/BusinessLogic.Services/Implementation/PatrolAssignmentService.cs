@@ -123,7 +123,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.AddAsync(patrolAssignment);
-            await _audit.Created(
+             _audit.Created(
                 "Patrol Assignment",
                 patrolAssignment.Id,
                 "Created patrolAssignment",
@@ -219,7 +219,7 @@ namespace BusinessLogic.Services.Implementation
             await _repository.UpdateAsync(assignment);
 
             var result = await _repository.GetByIdAsync(id);
-            await _audit.Updated("Patrol Assignment", id, "Updated", new { result!.Name });
+             _audit.Updated("Patrol Assignment", id, "Updated", new { result!.Name });
 
             return result!;
         }
@@ -238,7 +238,7 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.RemoveAssignmentSecurities(id);
                 await _repository.DeleteAsync(id);
             });
-            await _audit.Deleted(
+             _audit.Deleted(
                 "Patrol Assignment",
                 patrolAssignment.Id,
                 "Deleted patrolAssignment",

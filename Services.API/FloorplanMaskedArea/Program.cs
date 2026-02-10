@@ -47,6 +47,9 @@ builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();

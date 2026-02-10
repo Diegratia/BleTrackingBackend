@@ -152,7 +152,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.AddAccessRangeAsync(newAccesses);
 
             // Emit audit
-            await _audit.Updated(
+             _audit.Updated(
                 "GroupBuildingAccess",
                 groupId,
                 $"Assigned {buildingIds.Count} buildings to group {group.Name}",
@@ -183,7 +183,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.RemoveAccessAsync(groupId, buildingId);
 
             // Emit audit
-            await _audit.Deleted(
+             _audit.Deleted(
                 "GroupBuildingAccess",
                 $"{groupId}_{buildingId}",
                 $"Revoked building {building?.Name} access from group {group?.Name}",
@@ -218,7 +218,7 @@ namespace BusinessLogic.Services.Implementation
             await _accessRepository.RemoveAllAccessesByGroupAsync(groupId);
 
             // Emit audit
-            await _audit.Deleted(
+             _audit.Deleted(
                 "GroupBuildingAccess",
                 groupId,
                 $"Revoked all building access from group {group.Name}",
