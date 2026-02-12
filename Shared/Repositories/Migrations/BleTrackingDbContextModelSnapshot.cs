@@ -3148,6 +3148,14 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("approved_by_head_2_id");
 
+                    b.Property<DateTime?>("ApprovedByHead1At")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("approved_by_head_1_at");
+
+                    b.Property<DateTime?>("ApprovedByHead2At")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("approved_by_head_2_at");
+
                     b.Property<string>("ApprovalType")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")

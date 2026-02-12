@@ -132,15 +132,19 @@ namespace Entities.Models
         [Column("security_id")]
         public Guid? SecurityId { get; set; }
         [Column("security_head_1")]
-        public Guid? SecurityHead1Id { get; set; }
+        public Guid? SecurityHead1Id { get; set; } //snapshot
         [Column("security_head_2")]
-        public Guid? SecurityHead2Id { get; set; }
+        public Guid? SecurityHead2Id { get; set; } //snapshot
         [Column("approval_type")]
         public PatrolApprovalType ApprovalType { get; set; }
         [Column("approved_by_head_1_id")]
         public Guid? ApprovedByHead1Id { get; set; }
         [Column("approved_by_head_2_id")]
         public Guid? ApprovedByHead2Id { get; set; }
+        [Column("approved_by_head_1_at")]
+        public DateTime? ApprovedByHead1At { get; set; }
+        [Column("approved_by_head_2_at")]
+        public DateTime? ApprovedByHead2At { get; set; }
         [Column("patrol_assignment_id")]
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         [Column("patrol_route_id")]

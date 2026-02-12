@@ -283,6 +283,7 @@ namespace BusinessLogic.Services.Implementation
 
                     patrolCase.CaseStatus = CaseStatus.Approved;
                     patrolCase.ApprovedByHead1Id ??= currentSecurityId;
+                    patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
                     SetUpdateAudit(patrolCase);
                     await _repo.UpdateAsync(patrolCase);
                     return;
@@ -302,9 +303,15 @@ namespace BusinessLogic.Services.Implementation
                 }
 
                 if (isHead1)
+                {
                     patrolCase.ApprovedByHead1Id = currentSecurityId;
+                    patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
+                }
                 if (isHead2)
+                {
                     patrolCase.ApprovedByHead2Id = currentSecurityId;
+                    patrolCase.ApprovedByHead2At ??= DateTime.UtcNow;
+                }
 
                 switch (patrolCase.ApprovalType)
                 {
@@ -386,6 +393,7 @@ namespace BusinessLogic.Services.Implementation
 
                     patrolCase.CaseStatus = CaseStatus.Rejected;
                     patrolCase.ApprovedByHead1Id ??= currentSecurityId;
+                    patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
                     SetUpdateAudit(patrolCase);
                     await _repo.UpdateAsync(patrolCase);
                     return;
@@ -399,9 +407,15 @@ namespace BusinessLogic.Services.Implementation
 
                 patrolCase.CaseStatus = CaseStatus.Rejected;
                 if (isHead1)
+                {
                     patrolCase.ApprovedByHead1Id = currentSecurityId;
+                    patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
+                }
                 if (isHead2)
+                {
                     patrolCase.ApprovedByHead2Id = currentSecurityId;
+                    patrolCase.ApprovedByHead2At ??= DateTime.UtcNow;
+                }
                 SetUpdateAudit(patrolCase);
 
                 await _repo.UpdateAsync(patrolCase);

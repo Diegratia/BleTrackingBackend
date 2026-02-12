@@ -18,7 +18,13 @@ namespace Shared.Contracts.Read
         public Guid? SecurityHead2Id { get; set; }
         public PatrolApprovalType? ApprovalType { get; set; }
         public Guid? ApprovedByHead1Id { get; set; }
+        public string? ApprovedByHead1Name { get; set; }
+        public string? ApprovedByHead1Identity { get; set; }
         public Guid? ApprovedByHead2Id { get; set; }
+        public string? ApprovedByHead2Name { get; set; }
+        public string? ApprovedByHead2Identity { get; set; }
+        public DateTime? ApprovedByHead1At { get; set; }
+        public DateTime? ApprovedByHead2At { get; set; }
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
         public MstSecurityLookUpRead? Security { get; set; }
