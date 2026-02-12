@@ -23,7 +23,10 @@ namespace Repositories.Repository
 
         public IQueryable<AlarmTriggers> BaseEntityQuery()
         {
+            var userEmail = GetUserEmail();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
 
             var query = _context.AlarmTriggers
                 .Include(b => b.Floorplan)
@@ -32,6 +35,17 @@ namespace Repositories.Repository
                 .Include(b => b.Member)
                 .Include(b => b.Security)
                 .AsSplitQuery();
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pc =>
+                    (pc.Security != null && pc.Security.Email == userEmail)
+                    || _context.MstSecurities.Any(pas =>
+                        pas.Id == pc.SecurityId
+                        && pas.Email == userEmail
+                    )
+                );
+            }
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
