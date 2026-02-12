@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Shared.Contracts;
 
 namespace Shared.Contracts.Read
 {
@@ -14,6 +15,7 @@ namespace Shared.Contracts.Read
         public DateTime? EndDate { get; set; }
         public Guid? PatrolRouteId { get; set; }
         public Guid? TimeGroupId { get; set; }
+        public PatrolApprovalType? ApprovalType { get; set; }
         public PatrolRouteLookUpRead? PatrolRoute { get; set; }
         public AssignmentTimeGroupRead? TimeGroup { get; set; }
         public List<SecurityListRead>? Securities { get; set; } = new();

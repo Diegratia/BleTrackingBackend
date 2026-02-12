@@ -220,6 +220,7 @@ namespace Repositories.Repository
                 Description = pa.Description,
                 PatrolRouteId = pa.PatrolRouteId,
                 TimeGroupId = pa.TimeGroupId,
+                ApprovalType = pa.ApprovalType,
                 StartDate = pa.StartDate,
                 EndDate = pa.EndDate,
                 ApplicationId = pa.ApplicationId,

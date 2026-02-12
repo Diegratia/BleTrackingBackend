@@ -205,7 +205,11 @@ namespace Repositories.Repository
                 CaseStatus = t.CaseStatus,
                 PatrolSessionId = t.PatrolSessionId,
                 SecurityId = t.SecurityId,
-                ApprovedByHeadId = t.ApprovedByHeadId,
+                SecurityHead1Id = t.SecurityHead1Id,
+                SecurityHead2Id = t.SecurityHead2Id,
+                ApprovalType = t.ApprovalType,
+                ApprovedByHead1Id = t.ApprovedByHead1Id,
+                ApprovedByHead2Id = t.ApprovedByHead2Id,
                 PatrolAssignmentId = t.PatrolAssignmentId,
                 PatrolRouteId = t.PatrolRouteId,
                 ApplicationId = t.ApplicationId,
@@ -241,19 +245,6 @@ namespace Repositories.Repository
                         .OrderByDescending(x => x.OrderIndex)
                         .Select(x => x.PatrolArea.Name)
                         .FirstOrDefault()
-                },
-                Approver = t.ApprovedByHead == null ? null : new MstSecurityLookUpRead
-                {
-                    Id = t.ApprovedByHead.Id,
-                    Name = t.ApprovedByHead.Name,
-                    PersonId = t.ApprovedByHead.PersonId,
-                    CardNumber = t.ApprovedByHead.CardNumber,
-                    OrganizationId = t.ApprovedByHead.OrganizationId,
-                    DepartmentId = t.ApprovedByHead.DepartmentId,
-                    DistrictId = t.ApprovedByHead.DistrictId,
-                    OrganizationName = t.ApprovedByHead.Organization.Name,
-                    DepartmentName = t.ApprovedByHead.Department.Name,
-                    DistrictName = t.ApprovedByHead.District.Name,
                 },
                 Attachments = t.PatrolCaseAttachments.Select(x => new PatrolAttachmentRead
                 {
@@ -304,10 +295,6 @@ namespace Repositories.Repository
             if (routeIds.Count > 0)
                 query = query.Where(x => x.PatrolRouteId.HasValue && routeIds.Contains(x.PatrolRouteId.Value));
 
-            var approverIds = ExtractIds(filter.ApprovedByHeadId);
-            if (approverIds.Count > 0)
-                query = query.Where(x => x.ApprovedByHeadId.HasValue && approverIds.Contains(x.ApprovedByHeadId.Value));
-
             if (filter.DateFrom.HasValue)
                 query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
 
@@ -357,6 +344,19 @@ namespace Repositories.Repository
                 throw new Exception($"Security with email {email} not found");
 
             return security.Id;
+        }
+
+        public async Task<MstSecurity?> GetSecurityByIdAsync(Guid securityId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstSecurities
+                .AsNoTracking()
+                .Where(s => s.Id == securityId && s.Status != 0);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<bool> SessionExistsAsync(Guid sessionId)

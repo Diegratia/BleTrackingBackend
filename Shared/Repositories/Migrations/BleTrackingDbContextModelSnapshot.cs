@@ -1057,6 +1057,12 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
+                    b.Property<string>("ApprovalType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("approval_type")
+                        .HasDefaultValue("withoutapproval");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
@@ -2508,6 +2514,16 @@ namespace Repositories.Migrations
                         .HasColumnType("date")
                         .HasColumnName("exit_date");
 
+                    b.Property<Guid?>("SecurityHead1Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_head_1");
+
+                    b.Property<Guid?>("SecurityHead2Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_head_2");
+
                     b.Property<string>("FaceImage")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("face_image");
@@ -2607,6 +2623,10 @@ namespace Repositories.Migrations
                     b.HasIndex("DistrictId");
 
                     b.HasIndex("Email");
+
+                    b.HasIndex("SecurityHead1Id");
+
+                    b.HasIndex("SecurityHead2Id");
 
                     b.HasIndex("MstApplicationId");
 
@@ -3118,10 +3138,21 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("application_id");
 
-                    b.Property<Guid?>("ApprovedByHeadId")
+                    b.Property<Guid?>("ApprovedByHead1Id")
                         .HasMaxLength(36)
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("approved_by_head_id");
+                        .HasColumnName("approved_by_head_1_id");
+
+                    b.Property<Guid?>("ApprovedByHead2Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("approved_by_head_2_id");
+
+                    b.Property<string>("ApprovalType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("approval_type")
+                        .HasDefaultValue("withoutapproval");
 
                     b.Property<string>("CaseStatus")
                         .IsRequired()
@@ -3165,6 +3196,16 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("security_id");
 
+                    b.Property<Guid?>("SecurityHead1Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_head_1");
+
+                    b.Property<Guid?>("SecurityHead2Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_head_2");
+
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
@@ -3185,7 +3226,9 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("ApprovedByHeadId");
+                    b.HasIndex("ApprovedByHead1Id");
+
+                    b.HasIndex("ApprovedByHead2Id");
 
                     b.HasIndex("PatrolAssignmentId");
 
@@ -3194,6 +3237,10 @@ namespace Repositories.Migrations
                     b.HasIndex("PatrolSessionId");
 
                     b.HasIndex("SecurityId");
+
+                    b.HasIndex("SecurityHead1Id");
+
+                    b.HasIndex("SecurityHead2Id");
 
                     b.ToTable("patrol_case", (string)null);
                 });
@@ -5397,6 +5444,16 @@ namespace Repositories.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead1")
+                        .WithMany()
+                        .HasForeignKey("SecurityHead1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead2")
+                        .WithMany()
+                        .HasForeignKey("SecurityHead2Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Application");
 
                     b.Navigation("Department");
@@ -5404,6 +5461,10 @@ namespace Repositories.Migrations
                     b.Navigation("District");
 
                     b.Navigation("Organization");
+
+                    b.Navigation("SecurityHead1");
+
+                    b.Navigation("SecurityHead2");
                 });
 
             modelBuilder.Entity("Entities.Models.MstOrganization", b =>
@@ -5563,14 +5624,19 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Entities.Models.MstSecurity", "ApprovedByHead")
-                        .WithMany("HeadPatrolCases")
-                        .HasForeignKey("ApprovedByHeadId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Entities.Models.PatrolAssignment", "PatrolAssignment")
                         .WithMany()
                         .HasForeignKey("PatrolAssignmentId");
+
+                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead1")
+                        .WithMany()
+                        .HasForeignKey("SecurityHead1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead2")
+                        .WithMany()
+                        .HasForeignKey("SecurityHead2Id")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Entities.Models.PatrolRoute", "PatrolRoute")
                         .WithMany("PatrolCases")
@@ -5587,17 +5653,33 @@ namespace Repositories.Migrations
                         .HasForeignKey("SecurityId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.MstSecurity", "ApprovedByHead1")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByHead1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstSecurity", "ApprovedByHead2")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByHead2Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Application");
 
-                    b.Navigation("ApprovedByHead");
-
                     b.Navigation("PatrolAssignment");
+
+                    b.Navigation("SecurityHead1");
+
+                    b.Navigation("SecurityHead2");
 
                     b.Navigation("PatrolRoute");
 
                     b.Navigation("PatrolSession");
 
                     b.Navigation("Security");
+
+                    b.Navigation("ApprovedByHead1");
+
+                    b.Navigation("ApprovedByHead2");
                 });
 
             modelBuilder.Entity("Entities.Models.PatrolCaseAttachment", b =>
@@ -6151,8 +6233,6 @@ namespace Repositories.Migrations
                     b.Navigation("AlarmTriggers");
 
                     b.Navigation("CardRecords");
-
-                    b.Navigation("HeadPatrolCases");
 
                     b.Navigation("PatrolAssignmentSecurities");
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Extension.FileStorageService;
@@ -110,7 +111,17 @@ namespace BusinessLogic.Services.Implementation
             patrolCase.SecurityId = session.SecurityId;
             patrolCase.PatrolAssignmentId = session.PatrolAssignmentId;
             patrolCase.PatrolRouteId = session.PatrolRouteId;
-            patrolCase.CaseStatus = CaseStatus.Submitted;  // Auto-submit on create
+
+            var approvalType = session.PatrolAssignment?.ApprovalType ?? PatrolApprovalType.WithoutApproval;
+            var creatorSecurity = await _repo.GetSecurityByIdAsync(session.SecurityId)
+                ?? throw new NotFoundException($"Security with id {session.SecurityId} not found");
+
+            patrolCase.SecurityHead1Id = creatorSecurity.SecurityHead1Id;
+            patrolCase.SecurityHead2Id = creatorSecurity.SecurityHead2Id;
+            patrolCase.ApprovalType = approvalType;
+            patrolCase.CaseStatus = approvalType == PatrolApprovalType.WithoutApproval
+                ? CaseStatus.Approved
+                : CaseStatus.Submitted;
             if (dto.Attachments?.Any() == true)
             {
                 foreach (var att in dto.Attachments)
@@ -241,6 +252,7 @@ namespace BusinessLogic.Services.Implementation
             // Get current user's security ID
             var currentUserEmail = EmailFormToken;
             var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
+            var isPrimaryAdmin = IsPrimaryAdminOrHigher();
 
             PatrolCase? patrolCase = null;
 
@@ -250,14 +262,66 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
+                if (patrolCase.ApprovalType == PatrolApprovalType.WithoutApproval)
+                    throw new BusinessException("This case does not require approval.");
+
                 // Validate status - only Submitted can be approved
                 if (patrolCase.CaseStatus != CaseStatus.Submitted)
                     throw new BusinessException(
                         $"Only Submitted cases can be approved. Current status: {patrolCase.CaseStatus}");
 
-                // Update status and approver
-                patrolCase.CaseStatus = CaseStatus.Approved;
-                patrolCase.ApprovedByHeadId = currentSecurityId;
+                var head1Id = patrolCase.SecurityHead1Id;
+                var head2Id = patrolCase.SecurityHead2Id;
+                var headsMissing = patrolCase.ApprovalType == PatrolApprovalType.Or
+                    ? !head1Id.HasValue && !head2Id.HasValue
+                    : !head1Id.HasValue || !head2Id.HasValue;
+
+                if (headsMissing)
+                {
+                    if (!isPrimaryAdmin)
+                        throw new UnauthorizedException("Only PrimaryAdmin can approve cases without assigned heads.");
+
+                    patrolCase.CaseStatus = CaseStatus.Approved;
+                    patrolCase.ApprovedByHead1Id ??= currentSecurityId;
+                    SetUpdateAudit(patrolCase);
+                    await _repo.UpdateAsync(patrolCase);
+                    return;
+                }
+
+                var isHead1 = head1Id.HasValue && head1Id.Value == currentSecurityId;
+                var isHead2 = head2Id.HasValue && head2Id.Value == currentSecurityId;
+
+                if (!isHead1 && !isHead2)
+                    throw new UnauthorizedException("Only assigned heads can approve this case.");
+
+                if (patrolCase.ApprovalType == PatrolApprovalType.Sequential
+                    && isHead2
+                    && !patrolCase.ApprovedByHead1Id.HasValue)
+                {
+                    throw new BusinessException("Head 1 must approve before Head 2.");
+                }
+
+                if (isHead1)
+                    patrolCase.ApprovedByHead1Id = currentSecurityId;
+                if (isHead2)
+                    patrolCase.ApprovedByHead2Id = currentSecurityId;
+
+                switch (patrolCase.ApprovalType)
+                {
+                    case PatrolApprovalType.Or:
+                        patrolCase.CaseStatus = CaseStatus.Approved;
+                        break;
+                    case PatrolApprovalType.And:
+                        if (patrolCase.ApprovedByHead1Id.HasValue && patrolCase.ApprovedByHead2Id.HasValue)
+                            patrolCase.CaseStatus = CaseStatus.Approved;
+                        break;
+                    case PatrolApprovalType.Sequential:
+                        if (patrolCase.ApprovedByHead1Id.HasValue && patrolCase.ApprovedByHead2Id.HasValue)
+                            patrolCase.CaseStatus = CaseStatus.Approved;
+                        break;
+                    default:
+                        throw new BusinessException("Invalid approval type.");
+                }
                 SetUpdateAudit(patrolCase);
 
                 await _repo.UpdateAsync(patrolCase);
@@ -270,7 +334,14 @@ namespace BusinessLogic.Services.Implementation
                 "Patrol Case",
                 result.Id,
                 $"Approved{(string.IsNullOrEmpty(dto.Reason) ? "" : $" - {dto.Reason}")}",
-                new { result.CaseStatus, result.ApprovedByHeadId, result.Title });
+                new
+                {
+                    result.CaseStatus,
+                    result.ApprovalType,
+                    result.ApprovedByHead1Id,
+                    result.ApprovedByHead2Id,
+                    result.Title
+                });
 
             return result;
         }
@@ -284,6 +355,7 @@ namespace BusinessLogic.Services.Implementation
             // Get current user's security ID
             var currentUserEmail = EmailFormToken;
             var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
+            var isPrimaryAdmin = IsPrimaryAdminOrHigher();
 
             PatrolCase? patrolCase = null;
 
@@ -293,14 +365,43 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
+                if (patrolCase.ApprovalType == PatrolApprovalType.WithoutApproval)
+                    throw new BusinessException("This case does not require approval.");
+
                 // Validate status - only Submitted can be rejected
                 if (patrolCase.CaseStatus != CaseStatus.Submitted)
                     throw new BusinessException(
                         $"Only Submitted cases can be rejected. Current status: {patrolCase.CaseStatus}");
 
-                // Update status and approver
+                var head1Id = patrolCase.SecurityHead1Id;
+                var head2Id = patrolCase.SecurityHead2Id;
+                var headsMissing = patrolCase.ApprovalType == PatrolApprovalType.Or
+                    ? !head1Id.HasValue && !head2Id.HasValue
+                    : !head1Id.HasValue || !head2Id.HasValue;
+
+                if (headsMissing)
+                {
+                    if (!isPrimaryAdmin)
+                        throw new UnauthorizedException("Only PrimaryAdmin can reject cases without assigned heads.");
+
+                    patrolCase.CaseStatus = CaseStatus.Rejected;
+                    patrolCase.ApprovedByHead1Id ??= currentSecurityId;
+                    SetUpdateAudit(patrolCase);
+                    await _repo.UpdateAsync(patrolCase);
+                    return;
+                }
+
+                var isHead1 = head1Id.HasValue && head1Id.Value == currentSecurityId;
+                var isHead2 = head2Id.HasValue && head2Id.Value == currentSecurityId;
+
+                if (!isHead1 && !isHead2)
+                    throw new UnauthorizedException("Only assigned heads can reject this case.");
+
                 patrolCase.CaseStatus = CaseStatus.Rejected;
-                patrolCase.ApprovedByHeadId = currentSecurityId;
+                if (isHead1)
+                    patrolCase.ApprovedByHead1Id = currentSecurityId;
+                if (isHead2)
+                    patrolCase.ApprovedByHead2Id = currentSecurityId;
                 SetUpdateAudit(patrolCase);
 
                 await _repo.UpdateAsync(patrolCase);
@@ -313,7 +414,14 @@ namespace BusinessLogic.Services.Implementation
                 "Patrol Case",
                 result.Id,
                 $"Rejected - {dto.Reason}",
-                new { result.CaseStatus, result.ApprovedByHeadId, result.Title });
+                new
+                {
+                    result.CaseStatus,
+                    result.ApprovalType,
+                    result.ApprovedByHead1Id,
+                    result.ApprovedByHead2Id,
+                    result.Title
+                });
 
             return result;
         }
@@ -367,13 +475,23 @@ namespace BusinessLogic.Services.Implementation
             if (!deleted)
                 throw new NotFoundException($"Attachment with id {attachmentId} not found");
 
-             _audit.Deleted(
+            _audit.Deleted(
                 "Patrol Case Attachment",
                 attachmentId,
                 $"Deleted attachment from case: {patrolCase.Title}",
                 new { caseId, attachmentId });
         }
 
+        private bool IsPrimaryAdminOrHigher()
+        {
+            var role = Http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(role))
+                return false;
+
+            return role.Equals(LevelPriority.PrimaryAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                || role.Equals(LevelPriority.SuperAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                || role.Equals(LevelPriority.System.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
 
     }
 }

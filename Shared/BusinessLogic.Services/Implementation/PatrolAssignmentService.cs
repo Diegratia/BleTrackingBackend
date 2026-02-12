@@ -104,6 +104,8 @@ namespace BusinessLogic.Services.Implementation
 
 
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
+            if (!createDto.ApprovalType.HasValue)
+                patrolAssignment.ApprovalType = PatrolApprovalType.WithoutApproval;
             SetCreateAudit(patrolAssignment);
 
             patrolAssignment.PatrolAssignmentSecurities = new List<PatrolAssignmentSecurity>();
@@ -214,6 +216,8 @@ namespace BusinessLogic.Services.Implementation
 
             // 2. Update parent scalar only
             _mapper.Map(dto, assignment);
+            if (!dto.ApprovalType.HasValue)
+                assignment.ApprovalType = PatrolApprovalType.WithoutApproval;
             SetUpdateAudit(assignment);
 
             await _repository.UpdateAsync(assignment);

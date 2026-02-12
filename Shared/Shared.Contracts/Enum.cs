@@ -274,6 +274,14 @@ namespace Shared.Contracts
         BtoA // 2
     }
     [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolApprovalType
+    {
+        WithoutApproval,
+        Or,
+        And,
+        Sequential
+    }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CaseStatus
     {
         Open,

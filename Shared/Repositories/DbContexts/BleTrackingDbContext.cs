@@ -470,6 +470,8 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.OrganizationId).HasMaxLength(36);
                 entity.Property(e => e.DepartmentId).HasMaxLength(36);
                 entity.Property(e => e.DistrictId).HasMaxLength(36);
+                entity.Property(e => e.SecurityHead1Id).HasMaxLength(36);
+                entity.Property(e => e.SecurityHead2Id).HasMaxLength(36);
                 entity.Property(e => e.Gender)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -502,6 +504,16 @@ namespace Repositories.DbContexts
                 entity.HasOne(m => m.District)
                     .WithMany()
                     .HasForeignKey(m => m.DistrictId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.SecurityHead1)
+                    .WithMany()
+                    .HasForeignKey(m => m.SecurityHead1Id)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.SecurityHead2)
+                    .WithMany()
+                    .HasForeignKey(m => m.SecurityHead2Id)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(m => m.PatrolAssignmentSecurities)
@@ -972,6 +984,12 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
                 entity.Property(e => e.TimeGroupId).HasMaxLength(36);
+                entity.Property(e => e.ApprovalType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (PatrolApprovalType)Enum.Parse(typeof(PatrolApprovalType), v, true)
+                    );
                 entity.HasOne(m => m.Application)
                     .WithMany(m => m.PatrolAssignments)
                     .HasForeignKey(m => m.ApplicationId)
@@ -1061,7 +1079,10 @@ namespace Repositories.DbContexts
                 entity.Property(e => e.PatrolSessionId).HasMaxLength(36);
                 entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
                 entity.Property(e => e.SecurityId).HasMaxLength(36);
-                entity.Property(e => e.ApprovedByHeadId).HasMaxLength(36);
+                entity.Property(e => e.SecurityHead1Id).HasMaxLength(36);
+                entity.Property(e => e.SecurityHead2Id).HasMaxLength(36);
+                entity.Property(e => e.ApprovedByHead1Id).HasMaxLength(36);
+                entity.Property(e => e.ApprovedByHead2Id).HasMaxLength(36);
                 entity.Property(e => e.CaseType)
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
@@ -1073,6 +1094,12 @@ namespace Repositories.DbContexts
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (CaseStatus)Enum.Parse(typeof(CaseStatus), v, true)
+                    );
+                entity.Property(e => e.ApprovalType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (PatrolApprovalType)Enum.Parse(typeof(PatrolApprovalType), v, true)
                     );
 
                 entity.HasOne(m => m.Application)
@@ -1087,13 +1114,25 @@ namespace Repositories.DbContexts
                     .WithMany(m => m.PatrolCases)
                     .HasForeignKey(m => m.PatrolRouteId)
                     .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.SecurityHead1)
+                    .WithMany()
+                    .HasForeignKey(m => m.SecurityHead1Id)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.SecurityHead2)
+                    .WithMany()
+                    .HasForeignKey(m => m.SecurityHead2Id)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.ApprovedByHead1)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApprovedByHead1Id)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.ApprovedByHead2)
+                    .WithMany()
+                    .HasForeignKey(m => m.ApprovedByHead2Id)
+                    .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(m => m.Security)
                     .WithMany(m => m.SecuritiesPatrolCases)
                     .HasForeignKey(m => m.SecurityId)
-                    .OnDelete(DeleteBehavior.NoAction);
-                entity.HasOne(m => m.ApprovedByHead)
-                    .WithMany(m => m.HeadPatrolCases)
-                    .HasForeignKey(m => m.ApprovedByHeadId)
                     .OnDelete(DeleteBehavior.NoAction);
         });
 

@@ -64,6 +64,12 @@ namespace Entities.Models
         [Column("exit_date")]
         public DateOnly? ExitDate { get; set; }
 
+        [Column("security_head_1")]
+        public Guid? SecurityHead1Id { get; set; }
+
+        [Column("security_head_2")]
+        public Guid? SecurityHead2Id { get; set; }
+
         [Required]
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
@@ -78,13 +84,14 @@ namespace Entities.Models
         public MstOrganization Organization { get; set; }
         public MstDepartment Department { get; set; }
         public MstDistrict District { get; set; }
+        public MstSecurity? SecurityHead1 { get; set; }
+        public MstSecurity? SecurityHead2 { get; set; }
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<AlarmTriggers> AlarmTriggers { get; set; } = new List<AlarmTriggers>();
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
         public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
         public ICollection<PatrolCase> SecuritiesPatrolCases { get; set; } = new List<PatrolCase>();
-        public ICollection<PatrolCase> HeadPatrolCases { get; set; } = new List<PatrolCase>();
         public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
     }
     //SecurityGroup

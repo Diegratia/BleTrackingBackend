@@ -93,6 +93,8 @@ namespace Entities.Models
         public Guid? PatrolRouteId { get; set; }
         [Column("time_group_id")]
         public Guid? TimeGroupId { get; set; }
+        [Column("approval_type")]
+        public PatrolApprovalType ApprovalType { get; set; } = PatrolApprovalType.WithoutApproval;
         [Column("start_date")]
         public DateTime? StartDate { get; set; }
         [Column("end_date")]
@@ -129,15 +131,26 @@ namespace Entities.Models
         public Guid? PatrolSessionId { get; set; }
         [Column("security_id")]
         public Guid? SecurityId { get; set; }
-        [Column("approved_by_head_id")]
-        public Guid? ApprovedByHeadId { get; set; }
+        [Column("security_head_1")]
+        public Guid? SecurityHead1Id { get; set; }
+        [Column("security_head_2")]
+        public Guid? SecurityHead2Id { get; set; }
+        [Column("approval_type")]
+        public PatrolApprovalType ApprovalType { get; set; }
+        [Column("approved_by_head_1_id")]
+        public Guid? ApprovedByHead1Id { get; set; }
+        [Column("approved_by_head_2_id")]
+        public Guid? ApprovedByHead2Id { get; set; }
         [Column("patrol_assignment_id")]
         public Guid? PatrolAssignmentId { get; set; } // snapshot dari assignment
         [Column("patrol_route_id")]
         public Guid? PatrolRouteId { get; set; }    // snapshot dari assignment
         public PatrolAssignment? PatrolAssignment { get; set; }
         public MstSecurity? Security { get; set; }
-        public MstSecurity? ApprovedByHead { get; set; }
+        public MstSecurity? SecurityHead1 { get; set; }
+        public MstSecurity? SecurityHead2 { get; set; }
+        public MstSecurity? ApprovedByHead1 { get; set; }
+        public MstSecurity? ApprovedByHead2 { get; set; }
         public PatrolSession? PatrolSession { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
         public MstApplication? Application { get; set; }

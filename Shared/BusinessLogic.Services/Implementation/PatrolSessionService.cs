@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension.FileStorageService;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
@@ -24,17 +25,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor? _httpContextAccessor;
         private readonly IAuditEmitter _audit;
+        private readonly IMqttPubQueue _mqttQueue;
+
 
 
         public PatrolSessionService(
             PatrolSessionRepository repo,
             IMapper mapper,
             IAuditEmitter audit,
+            IMqttPubQueue mqttQueue,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
             _mapper = mapper;
             _audit = audit;
+            _mqttQueue = mqttQueue;
         }
         public async Task<object> FilterAsync(
             DataTablesProjectedRequest request,
@@ -142,6 +147,8 @@ namespace BusinessLogic.Services.Implementation
             }).ToList();
 
             await _repo.AddCheckpointLogsAsync(checkpointLogs);
+            _mqttQueue.Enqueue("patrol/session/started", "");
+
 
             return await _repo.GetByIdAsync(patrolSession.Id)
                 ?? throw new Exception("Failed to load created PatrolSession");
@@ -165,6 +172,8 @@ namespace BusinessLogic.Services.Implementation
         session.EndedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(session);
+        _mqttQueue.Enqueue("patrol/session/ended", "");
+
 
         return await _repo.GetByIdAsync(session.Id)
             ?? throw new Exception("Failed to load stopped PatrolSession");
