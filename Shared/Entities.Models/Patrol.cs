@@ -127,6 +127,8 @@ namespace Entities.Models
         public CaseType CaseType { get; set; }
         [Column("case_status")]
         public CaseStatus CaseStatus { get; set; }
+        [Column("threat_level")]
+        public ThreatLevel? ThreatLevel { get; set; }
         [Column("patrol_session_id")]
         public Guid? PatrolSessionId { get; set; }
         [Column("security_id")]

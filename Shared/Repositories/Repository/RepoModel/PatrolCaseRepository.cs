@@ -193,7 +193,7 @@ namespace Repositories.Repository
         }
 
         public IQueryable<PatrolCaseRead> ProjectToRead(
-            IQueryable<PatrolCase> query 
+            IQueryable<PatrolCase> query
         )
         {
             var projected = query.AsNoTracking().Select(t => new PatrolCaseRead
@@ -202,6 +202,7 @@ namespace Repositories.Repository
                 Title = t.Title,
                 Description = t.Description,
                 CaseType = t.CaseType,
+                ThreatLevel = t.ThreatLevel,
                 CaseStatus = t.CaseStatus,
                 PatrolSessionId = t.PatrolSessionId,
                 SecurityId = t.SecurityId,

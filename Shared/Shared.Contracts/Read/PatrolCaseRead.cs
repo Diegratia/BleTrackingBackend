@@ -11,6 +11,7 @@ namespace Shared.Contracts.Read
         public string? Title { get; set; }
         public string? Description { get; set; }
         public CaseType? CaseType { get; set; }
+        public ThreatLevel? ThreatLevel { get; set; }
         public CaseStatus? CaseStatus { get; set; }
         public Guid? PatrolSessionId { get; set; }
         public Guid? SecurityId { get; set; }

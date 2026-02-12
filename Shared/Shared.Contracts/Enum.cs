@@ -266,7 +266,6 @@ namespace Shared.Contracts
         Secondary, // member /employee
         UserCreated // visitor
     }
-
     public enum BoundaryType
     {
         Both, // 0
@@ -276,11 +275,30 @@ namespace Shared.Contracts
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum PatrolApprovalType
     {
+        ByThreatLevel, //ThreatLevel
         WithoutApproval,
         Or,
         And,
-        Sequential
+        Sequential,
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum CaseApprovalType // auto by threat level
+    {
+        WithoutApproval,
+        Or, // default
+        And,
+        Sequential,
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum ThreatLevel
+    {
+        Low, // without approval
+        Medium, // or
+        High, // and
+        Critical, // sequential
+    }
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CaseStatus
     {
@@ -298,7 +316,7 @@ namespace Shared.Contracts
         Hazard,
         Damage,
         Theft,
-        Report,
+        Report, // other
         PatrolSummary
     }
     [JsonConverter(typeof(JsonStringEnumConverter))]

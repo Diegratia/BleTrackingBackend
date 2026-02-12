@@ -14,6 +14,7 @@ namespace Data.ViewModels
         public string? Title { get; set; }
         public string? Description { get; set; }
         public CaseType? CaseType { get; set; }
+        public ThreatLevel? ThreatLevel { get; set; }
         public Guid? PatrolSessionId { get; set; }
         public List<PatrolAttachmentCreateDto>? Attachments { get; set; }
     }

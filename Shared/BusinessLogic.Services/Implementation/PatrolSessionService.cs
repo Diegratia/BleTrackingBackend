@@ -128,7 +128,6 @@ namespace BusinessLogic.Services.Implementation
             };
             patrolSession = await _repo.AddAsync(patrolSession);
 
-            // Create checkpoint logs for each area in the route
             var routeAreas = await _repo.GetPatrolRouteAreasAsync(patrolSession.PatrolRouteId);
 
             var checkpointLogs = routeAreas.Select(area => new PatrolCheckpointLog
@@ -138,7 +137,7 @@ namespace BusinessLogic.Services.Implementation
                 AreaNameSnap = area.PatrolArea?.Name,
                 OrderIndex = area.OrderIndex,
                 DistanceFromPrevMeters = area.EstimatedDistance,
-                ArrivedAt = null, // Will be set when security arrives at checkpoint
+                ArrivedAt = null,
                 LeftAt = null,
                 ApplicationId = patrolSession.ApplicationId,
                 Status = 1,

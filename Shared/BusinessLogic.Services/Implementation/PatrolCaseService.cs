@@ -112,14 +112,57 @@ namespace BusinessLogic.Services.Implementation
             patrolCase.PatrolAssignmentId = session.PatrolAssignmentId;
             patrolCase.PatrolRouteId = session.PatrolRouteId;
 
-            var approvalType = session.PatrolAssignment?.ApprovalType ?? PatrolApprovalType.WithoutApproval;
+            // Resolve approval mode based on CaseType, Assignment.ApprovalType, and ThreatLevel
+            var assignmentApprovalType = session.PatrolAssignment?.ApprovalType ?? PatrolApprovalType.WithoutApproval;
+            PatrolApprovalType resolvedApprovalType;
+
+            if (dto.CaseType == CaseType.PatrolSummary)
+            {
+                // Rule 1: PatrolSummary - auto OR, ignore ThreatLevel even if provided
+                // Use Assignment type if not ByThreatLevel, otherwise fallback to OR
+                resolvedApprovalType = assignmentApprovalType == PatrolApprovalType.ByThreatLevel
+                    ? PatrolApprovalType.Or  // Auto OR for PatrolSummary
+                    : assignmentApprovalType;
+
+                patrolCase.ThreatLevel = null; // PatrolSummary doesn't use ThreatLevel
+            }
+            else
+            {
+                // Rule 2: Operational cases (Incident, Hazard, Damage, Theft, Report)
+                // ThreatLevel is REQUIRED for all operational cases
+                if (!dto.ThreatLevel.HasValue)
+                    throw new BusinessException(
+                        "ThreatLevel is required for operational cases (Incident, Hazard, Damage, Theft, Report)");
+
+                if (assignmentApprovalType == PatrolApprovalType.ByThreatLevel)
+                {
+                    // Rule 3: Assignment is ByThreatLevel - resolve from ThreatLevel
+                    resolvedApprovalType = dto.ThreatLevel.Value switch
+                    {
+                        ThreatLevel.Low => PatrolApprovalType.WithoutApproval,
+                        ThreatLevel.Medium => PatrolApprovalType.Or,
+                        ThreatLevel.High => PatrolApprovalType.And,
+                        ThreatLevel.Critical => PatrolApprovalType.Sequential,
+                        _ => PatrolApprovalType.Or
+                    };
+                }
+                else
+                {
+                    // Rule 4: Assignment has specific approval type - use it
+                    // ThreatLevel is still stored for reference, but doesn't affect approval
+                    resolvedApprovalType = assignmentApprovalType;
+                }
+
+                patrolCase.ThreatLevel = dto.ThreatLevel.Value;
+            }
+
+            patrolCase.ApprovalType = resolvedApprovalType;
             var creatorSecurity = await _repo.GetSecurityByIdAsync(session.SecurityId)
                 ?? throw new NotFoundException($"Security with id {session.SecurityId} not found");
 
             patrolCase.SecurityHead1Id = creatorSecurity.SecurityHead1Id;
             patrolCase.SecurityHead2Id = creatorSecurity.SecurityHead2Id;
-            patrolCase.ApprovalType = approvalType;
-            patrolCase.CaseStatus = approvalType == PatrolApprovalType.WithoutApproval
+            patrolCase.CaseStatus = resolvedApprovalType == PatrolApprovalType.WithoutApproval
                 ? CaseStatus.Approved
                 : CaseStatus.Submitted;
             if (dto.Attachments?.Any() == true)
