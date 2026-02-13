@@ -427,6 +427,8 @@ namespace Repositories.Repository
                 .Include(b => b.Floorplan)
                     .ThenInclude(f => f.Floor);
 
+            // query = ApplyAccessibleBuildingFilter(query);
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
