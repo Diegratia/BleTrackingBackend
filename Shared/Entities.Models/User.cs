@@ -75,5 +75,11 @@ namespace Entities.Models
 
         [Column("can_alarm_action")]
         public bool? CanAlarmAction { get; set; }
+
+        [Column("can_create_monitoring_config")]
+        public bool? CanCreateMonitoringConfig { get; set; }
+
+        [Column("can_update_monitoring_config")]
+        public bool? CanUpdateMonitoringConfig { get; set; }
     }
 }

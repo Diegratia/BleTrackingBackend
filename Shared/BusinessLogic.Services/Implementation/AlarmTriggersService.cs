@@ -1,5 +1,5 @@
 using AutoMapper;
-using BusinessLogic.Services.Extension;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -63,7 +63,7 @@ namespace BusinessLogic.Services.Implementation
 
             if (!currentUser.HasAlarmActionPermission())
                 throw new UnauthorizedException("User does not have alarm action permission");
-                
+
             var username = UsernameFormToken;
             var action = dto.ActionStatus?.Trim().ToLowerInvariant();
             if (dto == null) throw new ArgumentNullException(nameof(dto));

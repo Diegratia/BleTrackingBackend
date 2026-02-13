@@ -81,9 +81,13 @@ namespace Repositories.Repository
                 // Layer 3: Permission override (nullable = inherit dari Group)
                 CanApprovePatrol = x.CanApprovePatrol,
                 CanAlarmAction = x.CanAlarmAction,
+                CanCreateMonitoringConfig = x.CanCreateMonitoringConfig,
+                CanUpdateMonitoringConfig = x.CanUpdateMonitoringConfig,
                 // Effective value (resolved dari User override atau Group.IsHead)
                 EffectiveCanApprovePatrol = x.CanApprovePatrol ?? x.Group.IsHead,
-                EffectiveCanAlarmAction = x.CanAlarmAction ?? x.Group.IsHead
+                EffectiveCanAlarmAction = x.CanAlarmAction ?? x.Group.IsHead,
+                EffectiveCanCreateMonitoringConfig = x.CanCreateMonitoringConfig ?? x.Group.IsHead,
+                EffectiveCanUpdateMonitoringConfig = x.CanUpdateMonitoringConfig ?? x.Group.IsHead
             });
         }
 

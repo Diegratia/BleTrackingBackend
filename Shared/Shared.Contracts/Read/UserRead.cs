@@ -21,9 +21,13 @@ namespace Shared.Contracts.Read
         // Layer 3: Permission override (nullable = inherit dari Group)
         public bool? CanApprovePatrol { get; set; }
         public bool? CanAlarmAction { get; set; }
+        public bool? CanCreateMonitoringConfig { get; set; }
+        public bool? CanUpdateMonitoringConfig { get; set; }
 
         // Effective value (resolved dari User override atau Group.IsHead)
         public bool EffectiveCanApprovePatrol { get; set; }
         public bool EffectiveCanAlarmAction { get; set; }
+        public bool EffectiveCanCreateMonitoringConfig { get; set; }
+        public bool EffectiveCanUpdateMonitoringConfig { get; set; }
     }
 }

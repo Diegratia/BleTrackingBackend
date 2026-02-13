@@ -5,6 +5,7 @@ using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Extension.FileStorageService;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
@@ -25,17 +26,20 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
+        private readonly IUserService _userService;
 
 
         public PatrolCaseService(
             PatrolCaseRepository repo,
             IMapper mapper,
             IAuditEmitter audit,
-            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IUserService userService) : base(httpContextAccessor)
         {
             _repo = repo;
             _mapper = mapper;
             _audit = audit;
+            _userService = userService;
         }
         public async Task<object> FilterAsync(
             DataTablesProjectedRequest request,
@@ -292,6 +296,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolCaseRead> ApproveAsync(Guid id, PatrolCaseApprovalDto dto)
         {
+            // Cek permission menggunakan extension method
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasPatrolApprovalPermission())
+                throw new UnauthorizedException("User does not have patrol approval permission");
+
             // Get current user's security ID
             var currentUserEmail = EmailFormToken;
             var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);

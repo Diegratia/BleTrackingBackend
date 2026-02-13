@@ -137,6 +137,16 @@ namespace Data.ViewModels
         /// Permission override: null = inherit dari Group.IsHead, true/false = override
         /// </summary>
         public bool? CanAlarmAction { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanCreateMonitoringConfig { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanUpdateMonitoringConfig { get; set; }
     }
 
 }

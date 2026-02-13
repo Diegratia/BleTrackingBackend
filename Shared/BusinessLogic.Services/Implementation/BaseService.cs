@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -22,7 +23,6 @@ namespace BusinessLogic.Services.Implementation
             get
             {
                 var appId = Http.HttpContext?.User.FindFirst("ApplicationId")?.Value;
-
 
                 if (string.IsNullOrEmpty(appId))
                     throw new Exception("ApplicationId missing in token");
@@ -57,6 +57,7 @@ namespace BusinessLogic.Services.Implementation
                 return username;
             }
         }
+
         protected string EmailFormToken
         {
             get
@@ -69,6 +70,15 @@ namespace BusinessLogic.Services.Implementation
             }
         }
 
+        protected bool IsSystemAdminOrHigher()
+        {
+            var role = Http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(role))
+                return false;
+
+            return role.Equals(LevelPriority.System.ToString(), StringComparison.OrdinalIgnoreCase)
+                || role.Equals(LevelPriority.SuperAdmin.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
 
         protected void SetCreateAudit(BaseModelWithTime entity)
         {
@@ -106,17 +116,18 @@ namespace BusinessLogic.Services.Implementation
             entity.UpdatedAt = DateTime.UtcNow;
         }
 
-
         protected void SetUpdateAudit(BaseModelWithTime entity)
         {
             entity.UpdatedBy = UsernameFormToken;
             entity.UpdatedAt = DateTime.UtcNow;
         }
+
         protected void SetUpdateAudit(BaseModelOnlyIdWithTime entity)
         {
             entity.UpdatedBy = UsernameFormToken;
             entity.UpdatedAt = DateTime.UtcNow;
         }
+
         protected void SetUpdateAudit(BaseModelWithTimeApp entity)
         {
             entity.UpdatedBy = UsernameFormToken;
@@ -126,23 +137,28 @@ namespace BusinessLogic.Services.Implementation
         protected void SetDeleteAudit(BaseModelWithTime entity)
         {
             // entity.Status = 0;
-            entity.UpdatedBy = UsernameFormToken;
-            entity.UpdatedAt = DateTime.UtcNow;
-        }
-        protected void SetDeleteAudit(BaseModelOnlyIdWithTime entity)
-        {
-            // entity.Status = 0;
-            entity.UpdatedBy = UsernameFormToken;
-            entity.UpdatedAt = DateTime.UtcNow;
-        }
-        protected void SetDeleteAudit(BaseModelWithTimeApp entity)
-        {
-            entity.Status = 0;
+
             entity.UpdatedBy = UsernameFormToken;
             entity.UpdatedAt = DateTime.UtcNow;
         }
 
-         public static class FileMimePresets
+        protected void SetDeleteAudit(BaseModelOnlyIdWithTime entity)
+        {
+            // entity.Status = 0;
+
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        protected void SetDeleteAudit(BaseModelWithTimeApp entity)
+        {
+            entity.Status = 0;
+
+            entity.UpdatedBy = UsernameFormToken;
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        public static class FileMimePresets
         {
             public static readonly string[] Documents =
             {
@@ -158,6 +174,5 @@ namespace BusinessLogic.Services.Implementation
                 "video/quicktime"
             };
         }
-
     }
 }

@@ -20,16 +20,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly MonitoringConfigRepository _repository;
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
+        private readonly IUserService _userService;
 
         public MonitoringConfigService(
             MonitoringConfigRepository repository,
             IMapper mapper,
             IAuditEmitter audit,
-            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IUserService userService) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _audit = audit;
+            _userService = userService;
         }
 
         public async Task<MonitoringConfigRead> GetByIdAsync(Guid id)
@@ -48,6 +51,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MonitoringConfigRead> CreateAsync(MonitoringConfigCreateDto createDto)
         {
+            // Cek permission menggunakan extension method
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasCreateMonitoringConfigPermission())
+                throw new UnauthorizedException("Anda tidak memiliki akses create monitoring config");
+
             var config = _mapper.Map<MonitoringConfig>(createDto);
             SetCreateAudit(config);
 
@@ -60,6 +71,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, MonitoringConfigUpdateDto updateDto)
         {
+            // Cek permission menggunakan extension method
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasUpdateMonitoringConfigPermission())
+                throw new UnauthorizedException("Anda tidak memiliki akses update monitoring config");
+
             var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
                 throw new NotFoundException($"MonitoringConfig with id {id} not found");
@@ -73,6 +92,10 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
+            // Hanya System dan SuperAdmin yang bisa delete
+            if (!IsSystemAdminOrHigher())
+                throw new UnauthorizedAccessException("Hanya System dan SuperAdmin yang bisa menghapus monitoring config");
+
             var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
                 throw new NotFoundException($"MonitoringConfig with id {id} not found");

@@ -100,7 +100,9 @@ namespace BusinessLogic.Services.Implementation
                 GroupId = dto.GroupId,
                 // Permission flags - default null (inherit dari Group)
                 CanApprovePatrol = null,
-                CanAlarmAction = null
+                CanAlarmAction = null,
+                CanCreateMonitoringConfig = null,
+                CanUpdateMonitoringConfig = null
             };
 
             await _repository.AddAsync(newUser);
@@ -148,6 +150,10 @@ namespace BusinessLogic.Services.Implementation
                 user.CanApprovePatrol = dto.CanApprovePatrol.Value;
             if (dto.CanAlarmAction.HasValue)
                 user.CanAlarmAction = dto.CanAlarmAction.Value;
+            if (dto.CanCreateMonitoringConfig.HasValue)
+                user.CanCreateMonitoringConfig = dto.CanCreateMonitoringConfig.Value;
+            if (dto.CanUpdateMonitoringConfig.HasValue)
+                user.CanUpdateMonitoringConfig = dto.CanUpdateMonitoringConfig.Value;
 
             await _repository.UpdateAsync(user);
 
