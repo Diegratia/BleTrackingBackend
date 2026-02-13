@@ -113,7 +113,7 @@ namespace BusinessLogic.Services.Implementation
             patrolCase.PatrolRouteId = session.PatrolRouteId;
 
             // Resolve approval mode based on CaseType, Assignment.ApprovalType, and ThreatLevel
-            var assignmentApprovalType = session.PatrolAssignment?.ApprovalType ?? PatrolApprovalType.WithoutApproval;
+            var assignmentApprovalType = session.PatrolAssignment?.ApprovalType ?? PatrolApprovalType.ByThreatLevel;
             PatrolApprovalType resolvedApprovalType;
 
             if (dto.CaseType == CaseType.PatrolSummary)

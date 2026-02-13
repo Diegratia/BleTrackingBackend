@@ -156,6 +156,27 @@ namespace Repositories.Repository
         }
 
         /// <summary>
+        /// Hard delete all building accesses for a monitoring config
+        /// </summary>
+        public async Task HardDeleteAllAccessesByConfigAsync(Guid monitoringConfigId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MonitoringConfigBuildingAccesses
+                .IgnoreQueryFilters()
+                .Where(mcba => mcba.MonitoringConfigId == monitoringConfigId);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var accesses = await query.ToListAsync();
+            if (accesses.Count == 0)
+                return;
+
+            _context.MonitoringConfigBuildingAccesses.RemoveRange(accesses);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
         /// Remove all monitoring config accesses for a building (soft delete)
         /// </summary>
         public async Task RemoveAllAccessesByBuildingAsync(Guid buildingId)

@@ -94,7 +94,7 @@ namespace Entities.Models
         [Column("time_group_id")]
         public Guid? TimeGroupId { get; set; }
         [Column("approval_type")]
-        public PatrolApprovalType ApprovalType { get; set; } = PatrolApprovalType.WithoutApproval;
+        public PatrolApprovalType ApprovalType { get; set; } = PatrolApprovalType.ByThreatLevel;
         [Column("start_date")]
         public DateTime? StartDate { get; set; }
         [Column("end_date")]

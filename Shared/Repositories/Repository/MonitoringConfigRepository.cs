@@ -284,8 +284,8 @@ namespace Repositories.Repository
             if (config == null)
                 return;
 
-            // Soft delete all building accesses
-            await _buildingAccessRepository.RemoveAllAccessesByConfigAsync(id);
+            // Hard delete all building accesses to avoid FK required relationship error
+            await _buildingAccessRepository.HardDeleteAllAccessesByConfigAsync(id);
 
             _context.MonitoringConfigs.Remove(config);
             await _context.SaveChangesAsync();

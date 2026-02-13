@@ -105,7 +105,7 @@ namespace BusinessLogic.Services.Implementation
 
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
             if (!createDto.ApprovalType.HasValue)
-                patrolAssignment.ApprovalType = PatrolApprovalType.WithoutApproval;
+                patrolAssignment.ApprovalType = PatrolApprovalType.ByThreatLevel;
             SetCreateAudit(patrolAssignment);
 
             patrolAssignment.PatrolAssignmentSecurities = new List<PatrolAssignmentSecurity>();
