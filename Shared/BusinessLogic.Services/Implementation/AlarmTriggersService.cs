@@ -57,6 +57,13 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, AlarmTriggersUpdateDto dto)
         {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("User does not have alarm action permission");
+                
             var username = UsernameFormToken;
             var action = dto.ActionStatus?.Trim().ToLowerInvariant();
             if (dto == null) throw new ArgumentNullException(nameof(dto));
