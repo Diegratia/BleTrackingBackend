@@ -57,6 +57,9 @@ namespace Entities.Models
         [Column("status")]
         public int? Status { get; set; } = 1;
 
+        [Required]
+        [Column("is_head")]
+        public bool IsHead { get; set; } = false;
 
         [ForeignKey("ApplicationId")]
         public MstApplication Application { get; set; } // Navigation property

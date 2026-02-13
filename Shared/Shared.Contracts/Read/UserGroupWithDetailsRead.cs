@@ -14,6 +14,11 @@ namespace Shared.Contracts.Read
         public Guid ApplicationId { get; set; }
 
         /// <summary>
+        /// Role modifier: true = Head Security (bisa action + approval), false = Operator Biasa (view only)
+        /// </summary>
+        public bool IsHead { get; set; }
+
+        /// <summary>
         /// List of buildings accessible to this group
         /// </summary>
         public List<MstBuildingRead> AccessibleBuildings { get; set; } = new();

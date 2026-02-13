@@ -69,5 +69,11 @@ namespace Entities.Models
 
         [ForeignKey("ApplicationId")]
         public MstApplication Application { get; set; } // Navigation property
+
+        [Column("can_approve_patrol")]
+        public bool? CanApprovePatrol { get; set; }
+
+        [Column("can_alarm_action")]
+        public bool? CanAlarmAction { get; set; }
     }
 }

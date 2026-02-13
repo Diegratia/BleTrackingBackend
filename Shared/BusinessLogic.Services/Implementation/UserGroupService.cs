@@ -79,6 +79,8 @@ namespace BusinessLogic.Services.Implementation
             userGroup.CreatedAt = DateTime.UtcNow;
             userGroup.UpdatedBy = UsernameFormToken;
             userGroup.UpdatedAt = DateTime.UtcNow;
+            // IsHead default to false (Operator Biasa)
+            userGroup.IsHead = dto.IsHead;
 
             await _repository.AddAsync(userGroup);
 
@@ -119,6 +121,10 @@ namespace BusinessLogic.Services.Implementation
 
             userGroup.UpdatedAt = DateTime.UtcNow;
             userGroup.UpdatedBy = UsernameFormToken;
+
+            // Update IsHead if provided
+            if (dto.IsHead.HasValue)
+                userGroup.IsHead = dto.IsHead.Value;
 
             _mapper.Map(dto, userGroup);
             await _repository.UpdateAsync(userGroup);

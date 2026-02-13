@@ -283,6 +283,7 @@ namespace Repositories.Repository
                 Name = group.Name,
                 LevelPriority = group.LevelPriority.ToString(),
                 ApplicationId = group.ApplicationId,
+                IsHead = group.IsHead,
                 AccessibleBuildings = buildings,
                 Members = membersList,
                 MemberCount = membersList.Count,

@@ -48,6 +48,12 @@ namespace BusinessLogic.Services.Implementation
             return user;
         }
 
+        public async Task<UserRead?> GetFromTokenAsync()
+        {
+            var userId = UserIdFromToken;
+            return await _repository.GetByIdAsync(userId);
+        }
+
         public async Task<IEnumerable<UserRead>> GetAllAsync()
         {
             var users = await _repository.GetAllAsync();
@@ -62,11 +68,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<UserDto> CreateAsync(RegisterDto dto)
         {
-            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId))
-                throw new UnauthorizedAccessException("User not authenticated");
-
-            var currentUser = await _repository.GetByIdAsyncRaw(Guid.Parse(currentUserId));
+            var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
             if (currentUser == null)
                 throw new UnauthorizedAccessException("Current user not found");
 
@@ -80,6 +82,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new Exception("Email is already registered");
 
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+            var userGroup = await _userGroupRepository.GetByIdAsync(dto.GroupId);
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
@@ -93,11 +96,13 @@ namespace BusinessLogic.Services.Implementation
                 EmailConfirmationAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.MinValue,
                 Status = 1,
-                ApplicationId = (await _userGroupRepository.GetByIdAsync(dto.GroupId)).ApplicationId,
-                GroupId = dto.GroupId
+                ApplicationId = userGroup.ApplicationId,
+                GroupId = dto.GroupId,
+                // Permission flags - default null (inherit dari Group)
+                CanApprovePatrol = null,
+                CanAlarmAction = null
             };
 
-            
             await _repository.AddAsync(newUser);
             // Send confirmation email
             await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
@@ -115,11 +120,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task UpdateAsync(Guid id, UpdateUserDto dto)
         {
-            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId))
-                throw new UnauthorizedAccessException("User not authenticated");
-
-            var currentUser = await _repository.GetByIdAsyncRaw(Guid.Parse(currentUserId));
+            var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
             if (currentUser == null)
                 throw new UnauthorizedAccessException("Current user not found");
 
@@ -142,7 +143,12 @@ namespace BusinessLogic.Services.Implementation
                 user.IsCreatedPassword = 1;
             }
 
-            
+            // Permission override flags (nullable = inherit dari Group)
+            if (dto.CanApprovePatrol.HasValue)
+                user.CanApprovePatrol = dto.CanApprovePatrol.Value;
+            if (dto.CanAlarmAction.HasValue)
+                user.CanAlarmAction = dto.CanAlarmAction.Value;
+
             await _repository.UpdateAsync(user);
 
              _audit.Updated(
@@ -155,11 +161,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId))
-                throw new UnauthorizedAccessException("User not authenticated");
-
-            var currentUser = await _repository.GetByIdAsyncRaw(Guid.Parse(currentUserId));
+            var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
             if (currentUser == null)
                 throw new UnauthorizedAccessException("Current user not found");
 

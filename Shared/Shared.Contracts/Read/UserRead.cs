@@ -14,5 +14,16 @@ namespace Shared.Contracts.Read
         public string? profilePicture { get; set; }
         public DateTime LastLoginAt { get; set; }
         public StatusEmployee StatusActive { get; set; }
+
+        // Layer 2: Role Modifier dari Group
+        public bool GroupIsHead { get; set; }
+
+        // Layer 3: Permission override (nullable = inherit dari Group)
+        public bool? CanApprovePatrol { get; set; }
+        public bool? CanAlarmAction { get; set; }
+
+        // Effective value (resolved dari User override atau Group.IsHead)
+        public bool EffectiveCanApprovePatrol { get; set; }
+        public bool EffectiveCanAlarmAction { get; set; }
     }
 }

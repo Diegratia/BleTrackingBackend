@@ -126,6 +126,9 @@ builder.Services.AddAutoMapper(typeof(AlarmCategorySettingsProfile));
 
 // Registrasi Services
 builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserGroupService, UserGroupService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
@@ -138,6 +141,8 @@ builder.Services.AddHostedService<MqttPubBackgroundService>();
 // Registrasi Repositories
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<AlarmCategorySettingsRepository>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserGroupRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_TRIGGERS_PORT") ??
            builder.Configuration["Ports:AlarmTriggersService"] ?? "5027";

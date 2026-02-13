@@ -11,6 +11,7 @@ namespace BusinessLogic.Services.Interface
     public interface IUserService
     {
         Task<UserRead> GetByIdAsync(Guid id);
+        Task<UserRead?> GetFromTokenAsync();
         Task<IEnumerable<UserRead>> GetAllAsync();
         Task<IEnumerable<UserRead>> GetAllIntegrationAsync();
         Task<UserDto> CreateAsync(RegisterDto dto);

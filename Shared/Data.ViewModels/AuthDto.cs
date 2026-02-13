@@ -86,6 +86,11 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
+
+        /// <summary>
+        /// Role modifier: true = Head Security (bisa action + approval), false = Operator Biasa (view only)
+        /// </summary>
+        public bool IsHead { get; set; } = false;
     }
 
     public class UpdateUserGroupDto
@@ -93,6 +98,11 @@ namespace Data.ViewModels
         public string? Name { get; set; }
         public string? LevelPriority { get; set; }
         public Guid ApplicationId { get; set; }
+
+        /// <summary>
+        /// Role modifier: true = Head Security (bisa action + approval), false = Operator Biasa (view only)
+        /// </summary>
+        public bool? IsHead { get; set; }
     }
 
     public class UserDto
@@ -117,8 +127,18 @@ namespace Data.ViewModels
         public string Password { get; set; }
         public string Email { get; set; }
         public Guid GroupId { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanApprovePatrol { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanAlarmAction { get; set; }
     }
-    
+
 }
 
 

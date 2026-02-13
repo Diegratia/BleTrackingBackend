@@ -75,7 +75,15 @@ namespace Repositories.Repository
                     ?? _context.MstSecurities
                     .Where(s => s.Email.ToLower() == x.Email.ToLower() && s.Status != 0)
                     .Select(s => s.FaceImage)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+                // Layer 2: Role Modifier dari Group
+                GroupIsHead = x.Group.IsHead,
+                // Layer 3: Permission override (nullable = inherit dari Group)
+                CanApprovePatrol = x.CanApprovePatrol,
+                CanAlarmAction = x.CanAlarmAction,
+                // Effective value (resolved dari User override atau Group.IsHead)
+                EffectiveCanApprovePatrol = x.CanApprovePatrol ?? x.Group.IsHead,
+                EffectiveCanAlarmAction = x.CanAlarmAction ?? x.Group.IsHead
             });
         }
 

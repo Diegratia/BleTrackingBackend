@@ -1,4 +1,5 @@
 using AutoMapper;
+using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -23,16 +24,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly AlarmTriggersRepository _repository;
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
+        private readonly IUserService _userService;
 
         public AlarmTriggersService(
             AlarmTriggersRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IAuditEmitter audit) : base(httpContextAccessor)
+            IAuditEmitter audit,
+            IUserService userService) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _audit = audit;
+            _userService = userService;
         }
 
         public async Task<IEnumerable<AlarmTriggersRead>> GetAllAsync()
@@ -180,6 +184,14 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task AcknowledgeAsync(Guid id)
         {
+            // Cek permission menggunakan extension method
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
             if (alarm == null)
@@ -203,6 +215,14 @@ namespace BusinessLogic.Services.Implementation
         /// </summary>
         public async Task DispatchAsync(Guid id, Guid securityId)
         {
+            // Cek permission menggunakan extension method
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
             if (alarm == null)
@@ -347,6 +367,13 @@ namespace BusinessLogic.Services.Implementation
         /// </summary>
         public async Task ResolveAsync(Guid id)
         {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("User does not have alarm action permission");
+
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
             if (alarm == null)
