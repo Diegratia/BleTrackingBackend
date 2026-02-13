@@ -104,6 +104,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MonitoringConfigProfile));
 // Registrasi Services
 builder.Services.AddScoped<IMonitoringConfigService, MonitoringConfigService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserGroupService, UserGroupService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();

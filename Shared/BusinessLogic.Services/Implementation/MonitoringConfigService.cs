@@ -51,7 +51,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MonitoringConfigRead> CreateAsync(MonitoringConfigCreateDto createDto)
         {
-            // Cek permission menggunakan extension method
             var currentUser = await _userService.GetFromTokenAsync();
             if (currentUser == null)
                 throw new UnauthorizedException("User not found");
