@@ -47,7 +47,23 @@ namespace Repositories.Repository
                 );
             }
 
+            query = ApplyAccessibleBuildingFilter(query);
+
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        private IQueryable<AlarmTriggers> ApplyAccessibleBuildingFilter(IQueryable<AlarmTriggers> query)
+        {
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(b =>
+                    b.Floorplan != null &&
+                    b.Floorplan.Floor != null &&
+                    accessibleBuildingIds.Contains(b.Floorplan.Floor.BuildingId));
+            }
+
+            return query;
         }
 
         private IQueryable<AlarmTriggersRead> ProjectToRead(IQueryable<AlarmTriggers> query)
@@ -279,6 +295,8 @@ namespace Repositories.Repository
                        b.Alarm.HasValue &&
                        (b.VisitorId.HasValue || b.MemberId.HasValue));
 
+            query = ApplyAccessibleBuildingFilter(query);
+
             if (!isSystemAdmin)
             {
                 query = query.Where(b => b.ApplicationId == applicationId);
@@ -340,6 +358,7 @@ namespace Repositories.Repository
                 .AsNoTracking()
                 .Where(c => c.IsActive == true && c.DoneTimestamp == null && c.Action != ActionStatus.Done && c.Action != ActionStatus.NoAction);
 
+            q = ApplyAccessibleBuildingFilter(q);
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q.CountAsync();
@@ -353,6 +372,7 @@ namespace Repositories.Repository
                 .AsNoTracking()
                 .Where(c => c.IsActive == true && c.DoneTimestamp == null && c.Action != ActionStatus.Done && c.Action != ActionStatus.NoAction);
 
+            q = ApplyAccessibleBuildingFilter(q);
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return await q
@@ -425,14 +445,18 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            return await _context.AlarmTriggers
+            var query = _context.AlarmTriggers
                 .Include(b => b.Visitor)
                 .Include(b => b.Member)
                 .Include(b => b.Security)
                 .Include(b => b.Floorplan)
                     .ThenInclude(f => f.Floor)
-                .Where(b => b.Id == alarmTriggerId)
-                .FirstOrDefaultAsync();
+                .Where(b => b.Id == alarmTriggerId);
+
+            query = ApplyAccessibleBuildingFilter(query);
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.FirstOrDefaultAsync();
         }
 
         // ===========================================================
