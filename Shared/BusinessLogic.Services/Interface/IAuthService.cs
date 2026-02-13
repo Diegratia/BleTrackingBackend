@@ -133,6 +133,7 @@ namespace BusinessLogic.Services.Interface
                 Username = user.Username,
                 Email = user.Email,
                 GroupId = user.GroupId,
+                IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
                 LevelPriority = user.Group.LevelPriority.ToString(),
                 IsEmailConfirmed = user.IsEmailConfirmation,

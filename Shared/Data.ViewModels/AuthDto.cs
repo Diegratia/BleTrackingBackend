@@ -30,6 +30,7 @@ namespace Data.ViewModels
         public Guid GroupId { get; set; }
         public Guid ApplicationId { get; set; }
         public string LevelPriority { get; set; }
+        public bool IsHead { get; set; }
         public int IsEmailConfirmed { get; set; }
         public int Status { get; set; }
     }
