@@ -11,7 +11,7 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers
 {
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/[controller]")]
     [ApiController]
     public class MonitoringConfigController : ControllerBase
