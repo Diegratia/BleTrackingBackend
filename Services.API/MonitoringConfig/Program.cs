@@ -119,6 +119,7 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<MonitoringConfigBuildingAccessRepository>();
 builder.Services.AddScoped<MonitoringConfigRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserGroupRepository>();
 
 
 builder.UseDefaultHostExtension("MONITORING_CONFIG_PORT", "5029");
