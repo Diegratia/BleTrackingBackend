@@ -45,8 +45,30 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("User retrieved successfully", user));
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] RegisterDto dto)
+        /// <summary>
+        /// Register a new user with email verification (user must set password via email link)
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+
+            var user = await _service.RegisterAsync(dto);
+            return StatusCode(201, ApiResponse.Created("User registered successfully. Please check email for confirmation.", user));
+        }
+
+        /// <summary>
+        /// Create a new user directly with password (no email verification required)
+        /// </summary>
+        [HttpPost("create-direct")]
+        public async Task<IActionResult> CreateDirect([FromBody] CreateUserDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -58,7 +80,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var user = await _service.CreateAsync(dto);
-            return StatusCode(201, ApiResponse.Created("User created successfully", user));
+            return StatusCode(201, ApiResponse.Created("User created successfully. User can login immediately.", user));
         }
 
         [HttpPut("{id}")]
