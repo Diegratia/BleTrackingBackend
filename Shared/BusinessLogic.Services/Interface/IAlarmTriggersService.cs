@@ -59,5 +59,17 @@ namespace BusinessLogic.Services.Interface
         /// Flow: DoneInvestigated → Done (final state)
         /// </summary>
         Task ResolveAsync(Guid id);
+
+        /// <summary>
+        /// Operator postpones investigation - alarm stays active
+        /// Flow: Acknowledged → PostponeInvestigated
+        /// </summary>
+        Task PostponeInvestigatedAsync(Guid id);
+
+        /// <summary>
+        /// Operator cancels alarm without action - alarm becomes inactive
+        /// Flow: Any → NoAction (final state)
+        /// </summary>
+        Task NoActionAsync(Guid id);
     }
 }

@@ -14,7 +14,6 @@ namespace BusinessLogic.Services.Interface
         Task<UserRead?> GetFromTokenAsync();
         Task<IEnumerable<UserRead>> GetAllAsync();
         Task<IEnumerable<UserRead>> GetAllIntegrationAsync();
-        Task<UserDto> RegisterAsync(RegisterDto dto);
         Task<UserDto> CreateAsync(CreateUserDto dto);
         Task UpdateAsync(Guid id, UpdateUserDto dto);
         Task DeleteAsync(Guid id);

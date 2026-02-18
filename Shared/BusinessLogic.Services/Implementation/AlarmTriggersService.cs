@@ -405,6 +405,63 @@ namespace BusinessLogic.Services.Implementation
             _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
         }
 
+        /// <summary>
+        /// Operator postpones investigation - alarm stays active
+        /// Flow: Acknowledged → PostponeInvestigated
+        /// </summary>
+        public async Task PostponeInvestigatedAsync(Guid id)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("User does not have alarm action permission");
+
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot postpone: alarm must be acknowledged first. Current: {alarm.Action}");
+
+            alarm.Action = Shared.Contracts.ActionStatus.PostponeInvestigated;
+            alarm.IsActive = true;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            _audit.Updated("AlarmTriggers", id, $"Alarm investigation postponed by {username}");
+        }
+
+        /// <summary>
+        /// Operator cancels alarm without action - alarm becomes inactive
+        /// Flow: Any → NoAction (final state)
+        /// </summary>
+        public async Task NoActionAsync(Guid id)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null)
+                throw new UnauthorizedException("User not found");
+
+            if (!currentUser.HasAlarmActionPermission())
+                throw new UnauthorizedException("User does not have alarm action permission");
+
+            var username = UsernameFormToken;
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null)
+                throw new NotFoundException($"Alarm with ID {id} not found");
+
+            alarm.Action = Shared.Contracts.ActionStatus.NoAction;
+            alarm.IsActive = false;
+            alarm.CancelBy = username;
+            alarm.CancelTimestamp = DateTime.UtcNow;
+            alarm.ActionUpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(alarm);
+            _audit.Updated("AlarmTriggers", id, $"Alarm cancelled (no action) by {username}");
+        }
+
         // =====================================================
         // HELPER METHODS
         // =====================================================

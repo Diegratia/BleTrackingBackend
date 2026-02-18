@@ -314,7 +314,7 @@ namespace BusinessLogic.Services.Interface
                 Id = Guid.NewGuid(),
                 Username = dto.Username.ToLower(),
                 Email = dto.Email.ToLower(),
-                Password = null ?? "",
+                Password = null,
                 IsCreatedPassword = 0,
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = confirmationCode,
@@ -402,7 +402,8 @@ namespace BusinessLogic.Services.Interface
                 throw new Exception("23 User not found");
             if (user.IsEmailConfirmation == 1)
                 throw new Exception("Email already confirmed");
-            if (user.EmailConfirmationCode != dto.ConfirmationCode)
+
+            if (user.EmailConfirmationCode.Trim() != dto.ConfirmationCode.Trim().ToUpper())
                 throw new Exception("Invalid confirmation code");
             if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
                 throw new Exception("Confirmation code expired");

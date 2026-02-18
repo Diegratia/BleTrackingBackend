@@ -50,10 +50,10 @@ namespace BusinessLogic.Services.Implementation
             return patrolArea == null ? null : _mapper.Map<PatrolAreaDto>(patrolArea);
         }
 
-        public async Task<IEnumerable<PatrolAreaDto>> GetAllAsync()
+        public async Task<IEnumerable<PatrolAreaRead>> GetAllAsync()
         {
             var patrolAreas = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<PatrolAreaDto>>(patrolAreas);
+            return patrolAreas;
         }
 
         public async Task<PatrolAreaDto> CreateAsync(PatrolAreaCreateDto createDto)

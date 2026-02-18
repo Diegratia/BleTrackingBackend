@@ -22,22 +22,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
-        private readonly IEmailService _emailService;
 
         public UserService(
             UserRepository repository,
             UserGroupRepository userGroupRepository,
             IMapper mapper,
             IAuditEmitter audit,
-            IHttpContextAccessor httpContextAccessor,
-            IEmailService emailService) : base(httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repository = repository;
             _userGroupRepository = userGroupRepository;
             _mapper = mapper;
             _audit = audit;
             _httpContextAccessor = httpContextAccessor;
-            _emailService = emailService;
         }
 
         public async Task<UserRead> GetByIdAsync(Guid id)
@@ -64,60 +61,6 @@ namespace BusinessLogic.Services.Implementation
         {
             var users = await _repository.GetAllIntegrationAsync();
             return _mapper.Map<IEnumerable<UserRead>>(users);
-        }
-
-        public async Task<UserDto> RegisterAsync(RegisterDto dto)
-        {
-            var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
-            if (currentUser == null)
-                throw new UnauthorizedAccessException("Current user not found");
-
-            var currentUserRole = currentUser.Group?.LevelPriority;
-            if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
-            {
-                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated, LevelPriority.Primary, LevelPriority.PrimaryAdmin);
-            }
-
-            if (await _repository.EmailExistsAsync(dto.Email.ToLower()))
-                throw new Exception("Email is already registered");
-
-            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-            var userGroup = await _userGroupRepository.GetByIdAsync(dto.GroupId);
-            var newUser = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = dto.Username.ToLower(),
-                Email = dto.Email.ToLower(),
-                Password = null,
-                IsCreatedPassword = 0,
-                IsEmailConfirmation = 0,
-                EmailConfirmationCode = confirmationCode,
-                EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
-                EmailConfirmationAt = DateTime.UtcNow,
-                LastLoginAt = DateTime.MinValue,
-                Status = 0,
-                ApplicationId = userGroup.ApplicationId,
-                GroupId = dto.GroupId,
-                // Permission flags - default null (inherit dari Group)
-                CanApprovePatrol = null,
-                CanAlarmAction = null,
-                CanCreateMonitoringConfig = null,
-                CanUpdateMonitoringConfig = null
-            };
-
-            await _repository.AddAsync(newUser);
-            // Send confirmation email
-            await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
-
-             _audit.Created(
-                "User",
-                newUser.Id,
-                "Created User",
-                new { newUser.Username, newUser.Email }
-            );
-
-            var result = await _repository.GetByIdAsync(newUser.Id);
-            return _mapper.Map<UserDto>(result);
         }
 
         public async Task<UserDto> CreateAsync(CreateUserDto dto)

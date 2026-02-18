@@ -178,5 +178,27 @@ namespace Web.API.Controllers.Controllers
             await _service.ResolveAsync(id);
             return Ok(ApiResponse.Success("Alarm resolved successfully"));
         }
+
+        /// <summary>
+        /// Operator postpones investigation - alarm stays active
+        /// Flow: Acknowledged → PostponeInvestigated
+        /// </summary>
+        [HttpPut("{id}/postpone-investigated")]
+        public async Task<IActionResult> PostponeInvestigated(Guid id)
+        {
+            await _service.PostponeInvestigatedAsync(id);
+            return Ok(ApiResponse.Success("Alarm investigation postponed"));
+        }
+
+        /// <summary>
+        /// Operator cancels alarm without action - alarm becomes inactive
+        /// Flow: Any → NoAction (final state)
+        /// </summary>
+        [HttpPut("{id}/no-action")]
+        public async Task<IActionResult> NoAction(Guid id)
+        {
+            await _service.NoActionAsync(id);
+            return Ok(ApiResponse.Success("Alarm cancelled successfully"));
+        }
     }
 }
