@@ -89,7 +89,7 @@ namespace Data.ViewModels
 
     public class AlarmDispatchDto
     {
-        public Guid SecurityId { get; set; }
+        public Guid AssignedSecurityId { get; set; }
     }
 
     public class AlarmInvestigationResultDto

@@ -110,12 +110,12 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}/dispatch")]
         public async Task<IActionResult> Dispatch(Guid id, [FromBody] AlarmDispatchDto dto)
         {
-            if (dto == null || dto.SecurityId == Guid.Empty)
+            if (dto == null || dto.AssignedSecurityId == Guid.Empty)
             {
                 return BadRequest(ApiResponse.BadRequest("SecurityId is required"));
             }
 
-            await _service.DispatchAsync(id, dto.SecurityId);
+            await _service.DispatchAsync(id, dto.AssignedSecurityId);
             return Ok(ApiResponse.Success("Security dispatched to location"));
         }
 

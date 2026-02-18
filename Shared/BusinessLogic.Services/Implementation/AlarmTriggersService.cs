@@ -220,7 +220,7 @@ namespace BusinessLogic.Services.Implementation
         /// Operator dispatches alarm to specific security
         /// Flow: Acknowledged → Dispatched
         /// </summary>
-        public async Task DispatchAsync(Guid id, Guid securityId)
+        public async Task DispatchAsync(Guid id, Guid assignedSecurityId)
         {
             // Cek permission menggunakan extension method
             var currentUser = await _userService.GetFromTokenAsync();
@@ -238,11 +238,11 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarm.Action}");
 
-            var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(securityId, AppId);
+            var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(assignedSecurityId, AppId);
             if (invalidSecurityIds.Any())
                 throw new UnauthorizedException($"SecurityId does not belong to this Application: {string.Join(", ", invalidSecurityIds)}");
 
-            var security = await _repository.GetSecurityByIdAsync(securityId);
+            var security = await _repository.GetSecurityByIdAsync(assignedSecurityId);
             if (security == null)
                 throw new BusinessException("Assigned security not found");
 

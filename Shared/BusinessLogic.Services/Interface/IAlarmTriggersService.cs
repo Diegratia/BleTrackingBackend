@@ -28,7 +28,7 @@ namespace BusinessLogic.Services.Interface
         /// Operator dispatches alarm to specific security - changes ActionStatus to Dispatched
         /// Flow: Acknowledged → Dispatched
         /// </summary>
-        Task DispatchAsync(Guid id, Guid securityId);
+        Task DispatchAsync(Guid id, Guid assignedSecurityId);
 
         /// <summary>
         /// Operator puts alarm in waiting queue (no security available) - changes ActionStatus to Waiting
