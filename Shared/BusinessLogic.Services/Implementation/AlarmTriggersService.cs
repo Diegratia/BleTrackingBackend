@@ -297,8 +297,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.SecurityId == null)
                 throw new BusinessException("Cannot accept: alarm has no assigned security");
 
-            var currentSecurityId = GetCurrentSecurityUserId();
-            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId.Value)
+            if (UserIdFromToken != alarm.SecurityId.Value)
                 throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.Accepted;
@@ -324,8 +323,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.Action != Shared.Contracts.ActionStatus.Accepted)
                 throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {alarm.Action}");
 
-            var currentSecurityId = GetCurrentSecurityUserId();
-            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
+            if (UserIdFromToken != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.Arrived;
@@ -354,8 +352,7 @@ namespace BusinessLogic.Services.Implementation
             if (string.IsNullOrWhiteSpace(result))
                 throw new BusinessException("Investigation result is required");
 
-            var currentSecurityId = GetCurrentSecurityUserId();
-            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
+            if (UserIdFromToken != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.DoneInvestigated;
@@ -399,24 +396,9 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
+            _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
         }
 
-        // =====================================================
-        // HELPER METHODS
-        // =====================================================
-
-        private Guid? GetCurrentSecurityUserId()
-        {
-            // Try to get SecurityId from JWT token claims
-            var securityIdClaim = Http.HttpContext?.User?.FindFirst("SecurityId")?.Value;
-            if (Guid.TryParse(securityIdClaim, out var securityId))
-                return securityId;
-
-            var username = UsernameFormToken;
-
-            return null;
-        }
 
         // =====================================================
         // INCIDENT TIMELINE
