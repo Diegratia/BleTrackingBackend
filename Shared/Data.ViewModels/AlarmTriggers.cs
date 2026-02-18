@@ -86,5 +86,10 @@ namespace Data.ViewModels
         public Guid Id { get; set; }
         public string BeaconId { get; set; }
     }
-    
+
+    public class AlarmDispatchDto
+    {
+        public Guid SecurityId { get; set; }
+    }
+
 }

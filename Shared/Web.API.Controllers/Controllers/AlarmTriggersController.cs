@@ -96,18 +96,23 @@ namespace Web.API.Controllers.Controllers
                 return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
             }
 
-        // [HttpPut("{id}/dispatched")]
-        // public async Task<IActionResult> Dispatched(Guid id)
-        // {
-        //     await _service.DispatchedAsync(id, CurrentUsername);
-        //     return Ok(ApiResponse.Success("Security dispatched to location"));
-        // }
+        [HttpPut("{id}/dispatched")]
+        public async Task<IActionResult> Dispatched(Guid id, [FromBody] AlarmDispatchDto dto)
+        {
+            if (dto == null || dto.SecurityId == Guid.Empty)
+            {
+                return BadRequest(ApiResponse.BadRequest("SecurityId is required"));
+            }
 
-        // [HttpPut("{id}/arrived")]
-        // public async Task<IActionResult> Arrived(Guid id)
-        // {
-        //     await _service.ArrivedAsync(id, CurrentUsername);
-        //     return Ok(ApiResponse.Success("Security arrived at location"));
-        // }
+            await _service.DispatchAsync(id, dto.SecurityId);
+            return Ok(ApiResponse.Success("Security dispatched to location"));
+        }
+
+        [HttpPut("{id}/arrived")]
+        public async Task<IActionResult> Arrived(Guid id)
+        {
+            await _service.ArrivedAsync(id);
+            return Ok(ApiResponse.Success("Security arrived at location"));
+        }
     }
 }
