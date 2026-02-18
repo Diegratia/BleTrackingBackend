@@ -6,6 +6,8 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -69,7 +71,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.SuperAdmin)]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             if (!ModelState.IsValid)
