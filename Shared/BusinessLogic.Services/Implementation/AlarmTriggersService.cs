@@ -25,18 +25,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
         private readonly IUserService _userService;
+        private readonly MstSecurityRepository _securityRepository;
 
         public AlarmTriggersService(
             AlarmTriggersRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IAuditEmitter audit,
-            IUserService userService) : base(httpContextAccessor)
+            IUserService userService,
+            MstSecurityRepository securityRepository) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _audit = audit;
             _userService = userService;
+            _securityRepository = securityRepository;
         }
 
         public async Task<IEnumerable<AlarmTriggersRead>> GetAllAsync()
@@ -297,7 +300,8 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.SecurityId == null)
                 throw new BusinessException("Cannot accept: alarm has no assigned security");
 
-            if (UserIdFromToken != alarm.SecurityId.Value)
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId.Value)
                 throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.Accepted;
@@ -323,7 +327,8 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.Action != Shared.Contracts.ActionStatus.Accepted)
                 throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {alarm.Action}");
 
-            if (UserIdFromToken != alarm.SecurityId)
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.Arrived;
@@ -352,7 +357,8 @@ namespace BusinessLogic.Services.Implementation
             if (string.IsNullOrWhiteSpace(result))
                 throw new BusinessException("Investigation result is required");
 
-            if (UserIdFromToken != alarm.SecurityId)
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.DoneInvestigated;
@@ -397,6 +403,28 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.UpdateAsync(alarm);
             _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
+        }
+
+        // =====================================================
+        // HELPER METHODS
+        // =====================================================
+
+        /// <summary>
+        /// Gets the current security user's ID (MstSecurity.Id) based on email from JWT token
+        /// Returns null if the current user is not a security personnel
+        /// </summary>
+        private async Task<Guid?> GetCurrentSecurityIdAsync()
+        {
+            try
+            {
+                var email = EmailFormToken;
+                var security = await _securityRepository.GetByEmailAsync(email);
+                return security?.Id;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
 

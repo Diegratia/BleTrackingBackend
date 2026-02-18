@@ -141,6 +141,7 @@ builder.Services.AddHostedService<MqttPubBackgroundService>();
 // Registrasi Repositories
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<AlarmCategorySettingsRepository>();
+builder.Services.AddScoped<MstSecurityRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 

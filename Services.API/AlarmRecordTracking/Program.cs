@@ -165,6 +165,7 @@ builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
+builder.Services.AddScoped<MstSecurityRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "5002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];
