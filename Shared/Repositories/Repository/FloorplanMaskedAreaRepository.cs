@@ -27,9 +27,20 @@ namespace Repositories.Repository
 
             var q = _context.FloorplanMaskedAreas
                 .AsNoTracking()
+                .Include(ma => ma.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(ma => ma.Floorplan != null
+                    && ma.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(ma.Floorplan.Floor.BuildingId));
+            }
 
             return await q
                 .OrderByDescending(x => x.UpdatedAt)
@@ -48,9 +59,20 @@ namespace Repositories.Repository
 
             var q = _context.FloorplanMaskedAreas
                 .AsNoTracking()
+                .Include(ma => ma.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(ma => ma.Floorplan != null
+                    && ma.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(ma.Floorplan.Floor.BuildingId));
+            }
 
             return await q.CountAsync();
         }

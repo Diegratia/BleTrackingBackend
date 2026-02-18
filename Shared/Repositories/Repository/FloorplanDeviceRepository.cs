@@ -25,9 +25,20 @@ namespace Repositories.Repository
 
             var q = _context.FloorplanDevices
                 .AsNoTracking()
+                .Include(fd => fd.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0 && c.DeviceStatus == DeviceStatus.Active && c.Type == DeviceType.BleReader);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(fd => fd.Floorplan != null
+                    && fd.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(fd.Floorplan.Floor.BuildingId));
+            }
 
             return await q.CountAsync();
         }
@@ -38,9 +49,20 @@ namespace Repositories.Repository
 
             var q = _context.FloorplanDevices
                 .AsNoTracking()
+                .Include(fd => fd.Floorplan)
+                    .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0 && c.DeviceStatus == DeviceStatus.Active && c.Type == DeviceType.BleReader);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(fd => fd.Floorplan != null
+                    && fd.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(fd.Floorplan.Floor.BuildingId));
+            }
 
             return await q
                 .OrderByDescending(x => x.UpdatedAt)

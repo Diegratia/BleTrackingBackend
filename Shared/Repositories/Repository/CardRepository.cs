@@ -127,12 +127,25 @@ namespace Repositories.Repository
 
             var q = _context.Cards
                 .AsNoTracking()
+                .Include(c => c.RegisteredMaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(c => c.RegisteredMaskedArea != null
+                    && c.RegisteredMaskedArea.Floorplan != null
+                    && c.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(c.RegisteredMaskedArea.Floorplan.Floor.BuildingId));
+            }
+
             return await q
-                .OrderByDescending(x => x.UpdatedAt) 
+                .OrderByDescending(x => x.UpdatedAt)
                 .Take(topCount)
                 .Select(x => new CardDashboardRM
                 {
@@ -149,12 +162,25 @@ namespace Repositories.Repository
 
             var q = _context.Cards
                 .AsNoTracking()
+                .Include(c => c.RegisteredMaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0 && c.IsUsed == true);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(c => c.RegisteredMaskedArea != null
+                    && c.RegisteredMaskedArea.Floorplan != null
+                    && c.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(c.RegisteredMaskedArea.Floorplan.Floor.BuildingId));
+            }
+
             return await q
-                .OrderByDescending(x => x.UpdatedAt) 
+                .OrderByDescending(x => x.UpdatedAt)
                 .Take(topCount)
                 .Select(x => new CardDashboardRM
                 {
@@ -172,10 +198,23 @@ namespace Repositories.Repository
             // Query langsung tanpa include untuk performa
             var q = _context.Cards
                 .AsNoTracking()
+                .Include(c => c.RegisteredMaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0 && c.IsUsed == true);
 
             // Apply application filter jika perlu (gemstone: ApplyApplicationIdFilter menerima IQueryable<Card>)
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(c => c.RegisteredMaskedArea != null
+                    && c.RegisteredMaskedArea.Floorplan != null
+                    && c.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(c.RegisteredMaskedArea.Floorplan.Floor.BuildingId));
+            }
 
             return await q.CountAsync();
         }
@@ -221,9 +260,22 @@ namespace Repositories.Repository
 
             var q = _context.Cards
                 .AsNoTracking()
+                .Include(c => c.RegisteredMaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0 && (c.IsUsed == false || c.IsUsed == null));
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk PrimaryAdmin
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(c => c.RegisteredMaskedArea != null
+                    && c.RegisteredMaskedArea.Floorplan != null
+                    && c.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(c.RegisteredMaskedArea.Floorplan.Floor.BuildingId));
+            }
 
             return await q.CountAsync();
         }
