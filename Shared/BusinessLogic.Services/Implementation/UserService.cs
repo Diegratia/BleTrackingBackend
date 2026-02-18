@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<UserRead>>(users);
         }
 
-        public async Task<UserDto> CreateAsync(RegisterDto dto)
+        public async Task<UserDto> RegisterAsync(RegisterDto dto)
         {
             var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
             if (currentUser == null)
@@ -88,14 +88,14 @@ namespace BusinessLogic.Services.Implementation
                 Id = Guid.NewGuid(),
                 Username = dto.Username.ToLower(),
                 Email = dto.Email.ToLower(),
-                Password = null ?? "",
+                Password = null,
                 IsCreatedPassword = 0,
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = confirmationCode,
                 EmailConfirmationExpiredAt = DateTime.UtcNow.AddDays(7),
                 EmailConfirmationAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.MinValue,
-                Status = 1,
+                Status = 0,
                 ApplicationId = userGroup.ApplicationId,
                 GroupId = dto.GroupId,
                 // Permission flags - default null (inherit dari Group)
@@ -113,6 +113,61 @@ namespace BusinessLogic.Services.Implementation
                 "User",
                 newUser.Id,
                 "Created User",
+                new { newUser.Username, newUser.Email }
+            );
+
+            var result = await _repository.GetByIdAsync(newUser.Id);
+            return _mapper.Map<UserDto>(result);
+        }
+
+        public async Task<UserDto> CreateAsync(CreateUserDto dto)
+        {
+            var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("Current user not found");
+
+            var currentUserRole = currentUser.Group?.LevelPriority;
+            if (currentUserRole == LevelPriority.Primary || currentUserRole == LevelPriority.PrimaryAdmin)
+            {
+                await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId,
+                    LevelPriority.UserCreated, LevelPriority.Primary, LevelPriority.PrimaryAdmin);
+            }
+
+            if (await _repository.EmailExistsAsync(dto.Email.ToLower()))
+                throw new Exception("Email is already registered");
+
+            if (string.IsNullOrEmpty(dto.Password))
+                throw new ArgumentException("Password is required for direct user creation");
+
+            var userGroup = await _userGroupRepository.GetByIdAsync(dto.GroupId);
+            var newUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = dto.Username.ToLower(),
+                Email = dto.Email.ToLower(),
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hash password
+                IsCreatedPassword = 1,  // Password already set
+                IsEmailConfirmation = 1, // Auto-confirmed
+                EmailConfirmationCode = null,
+                EmailConfirmationExpiredAt = DateTime.UtcNow, // Set to current time since already confirmed
+                EmailConfirmationAt = DateTime.UtcNow,
+                LastLoginAt = DateTime.MinValue,
+                Status = 1, // Active
+                ApplicationId = userGroup.ApplicationId,
+                GroupId = dto.GroupId,
+                // Permission flags - default null (inherit dari Group)
+                CanApprovePatrol = null,
+                CanAlarmAction = null,
+                CanCreateMonitoringConfig = null,
+                CanUpdateMonitoringConfig = null
+            };
+
+            await _repository.AddAsync(newUser);
+
+            _audit.Created(
+                "User",
+                newUser.Id,
+                "Created User (Direct - No Email Verification)",
                 new { newUser.Username, newUser.Email }
             );
 

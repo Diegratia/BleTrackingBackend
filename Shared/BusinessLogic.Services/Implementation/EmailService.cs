@@ -103,21 +103,18 @@ public class EmailService : IEmailService
         var fromEmail = _configuration["Email:FromEmail"];
         var fromName = _configuration["Email:FromName"];
 
+        var template = await LoadEmailTemplateAsync("UserAccountConfirmation.html");
+
+        var bodyHtml = template
+            .Replace("%username%", username)
+            .Replace("%code%", confirmationCode);
+
         var message = new MailMessage
         {
             From = new MailAddress(fromEmail, fromName),
             Subject = "Email Confirmation",
-            Body = $@"Dear {username},
-
-            Please confirm your email by entering the following code in the confirmation page:
-
-            Confirmation Code: {confirmationCode}
-
-            This code will expire in 7 days.
-
-            Thank you,
-            Your Application Team",
-            IsBodyHtml = false
+            Body = bodyHtml,
+            IsBodyHtml = true
         };
         message.To.Add(toEmail);
 

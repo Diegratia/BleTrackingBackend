@@ -150,6 +150,17 @@ namespace Data.ViewModels
         public bool? CanUpdateMonitoringConfig { get; set; }
     }
 
+    /// <summary>
+    /// DTO for direct user creation with password (no email verification required)
+    /// </summary>
+    public class CreateUserDto
+    {
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }  // Required for direct creation
+        public Guid GroupId { get; set; }
+    }
+
 }
 
 
