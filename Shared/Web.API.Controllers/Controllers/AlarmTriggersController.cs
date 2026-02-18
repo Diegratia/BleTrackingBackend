@@ -88,16 +88,27 @@ namespace Web.API.Controllers.Controllers
             return Ok(result);
         }
 
-        // TODO: Engine belum support - comment dulu
-            [HttpPut("{id}/acknowledge")]
-            public async Task<IActionResult> Acknowledge(Guid id)
-            {
-                await _service.AcknowledgeAsync(id);
-                return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
-            }
+        // =====================================================
+        // NEW WORKFLOW ENDPOINTS
+        // =====================================================
 
-        [HttpPut("{id}/dispatched")]
-        public async Task<IActionResult> Dispatched(Guid id, [FromBody] AlarmDispatchDto dto)
+        /// <summary>
+        /// Operator acknowledges the alarm
+        /// Flow: Idle → Acknowledged
+        /// </summary>
+        [HttpPut("{id}/acknowledge")]
+        public async Task<IActionResult> Acknowledge(Guid id)
+        {
+            await _service.AcknowledgeAsync(id);
+            return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
+        }
+
+        /// <summary>
+        /// Operator dispatches alarm to specific security
+        /// Flow: Acknowledged → Dispatched
+        /// </summary>
+        [HttpPut("{id}/dispatch")]
+        public async Task<IActionResult> Dispatch(Guid id, [FromBody] AlarmDispatchDto dto)
         {
             if (dto == null || dto.SecurityId == Guid.Empty)
             {
@@ -108,11 +119,64 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Security dispatched to location"));
         }
 
+        /// <summary>
+        /// Operator puts alarm in waiting queue (no security available)
+        /// Flow: Acknowledged → Waiting
+        /// </summary>
+        [HttpPut("{id}/waiting")]
+        public async Task<IActionResult> Waiting(Guid id)
+        {
+            await _service.WaitingAsync(id);
+            return Ok(ApiResponse.Success("Alarm put in waiting queue"));
+        }
+
+        /// <summary>
+        /// Security accepts the dispatch
+        /// Flow: Dispatched → Accepted
+        /// </summary>
+        [HttpPut("{id}/accept")]
+        public async Task<IActionResult> Accept(Guid id)
+        {
+            await _service.AcceptAsync(id);
+            return Ok(ApiResponse.Success("Dispatch accepted successfully"));
+        }
+
+        /// <summary>
+        /// Security arrives at location
+        /// Flow: Accepted → Arrived
+        /// </summary>
         [HttpPut("{id}/arrived")]
         public async Task<IActionResult> Arrived(Guid id)
         {
             await _service.ArrivedAsync(id);
             return Ok(ApiResponse.Success("Security arrived at location"));
+        }
+
+        /// <summary>
+        /// Security completes investigation with result
+        /// Flow: Arrived → DoneInvestigated
+        /// </summary>
+        [HttpPut("{id}/done-investigated")]
+        public async Task<IActionResult> DoneInvestigated(Guid id, [FromBody] AlarmInvestigationResultDto dto)
+        {
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Result))
+            {
+                return BadRequest(ApiResponse.BadRequest("Investigation result is required"));
+            }
+
+            await _service.DoneInvestigatedAsync(id, dto.Result);
+            return Ok(ApiResponse.Success("Investigation completed successfully"));
+        }
+
+        /// <summary>
+        /// Operator marks alarm as resolved
+        /// Flow: DoneInvestigated → Done (final state)
+        /// </summary>
+        [HttpPut("{id}/resolve")]
+        public async Task<IActionResult> Resolve(Guid id)
+        {
+            await _service.ResolveAsync(id);
+            return Ok(ApiResponse.Success("Alarm resolved successfully"));
         }
     }
 }

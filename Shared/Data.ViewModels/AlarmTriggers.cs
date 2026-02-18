@@ -92,4 +92,9 @@ namespace Data.ViewModels
         public Guid SecurityId { get; set; }
     }
 
+    public class AlarmInvestigationResultDto
+    {
+        public string Result { get; set; } = string.Empty;
+    }
+
 }
