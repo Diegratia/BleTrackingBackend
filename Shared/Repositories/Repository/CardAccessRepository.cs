@@ -175,6 +175,20 @@ namespace Repositories.Repository
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Validates that TimeGroupIds belong to the same Application
+        /// </summary>
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidTimeGroupOwnershipAsync(
+            List<Guid?> timeGroupIds, Guid applicationId)
+        {
+            var validIds = timeGroupIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
+            if (!validIds.Any())
+                return Array.Empty<Guid>();
+
+            return await CheckInvalidOwnershipIdsAsync<TimeGroup>(
+                validIds, applicationId);
+        }
+
         
         // non list overload
         // public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
