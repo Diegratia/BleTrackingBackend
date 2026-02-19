@@ -15,7 +15,6 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/patrol-area")]
     [ApiController]
 
@@ -30,12 +29,14 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/PatrolArea
         [HttpGet]
+        [MinLevel(LevelPriority.Primary)]
         public async Task<IActionResult> GetAll()
         {
             var patrolareas = await _PatrolAreaService.GetAllAsync();
             return Ok(ApiResponse.Success("Patrol Area retrieved successfully", patrolareas));
         }
         [HttpGet("lookup")]
+        [MinLevel(LevelPriority.Primary)]
         public async Task<IActionResult> GetAllLookUpAsync()
         {
             var patrolareas = await _PatrolAreaService.GetAllLookUpAsync();
@@ -44,6 +45,7 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/PatrolArea/{id}
         [HttpGet("{id}")]
+        [MinLevel(LevelPriority.Primary)]
         public async Task<IActionResult> GetById(Guid id)
         {
             var security = await _PatrolAreaService.GetByIdAsync(id);

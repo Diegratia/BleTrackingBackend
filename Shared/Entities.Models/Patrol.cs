@@ -41,6 +41,29 @@ namespace Entities.Models
         public MstFloorplan Floorplan { get; set; }
         public ICollection<PatrolRouteAreas> PatrolRouteAreas { get; set; } = new List<PatrolRouteAreas>();
     }
+
+     //PatrolCheckpointLog
+    public class PatrolCheckpointLog : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("patrol_session_id")]
+        public Guid? PatrolSessionId { get; set; }
+        [Column("patrol_area_id")]
+        public Guid? PatrolAreaId { get; set; }
+        [Column("area_name_snapshot")]
+        public string? AreaNameSnap { get; set; }
+        [Column("order_index")]
+        public int? OrderIndex { get; set; }
+        [Column("arrived_at")]
+        public DateTime? ArrivedAt { get; set; }
+        [Column("left_at")]
+        public DateTime? LeftAt { get; set; }
+
+        [Column("distance_from_prev_meters")]
+        public double? DistanceFromPrevMeters { get; set; }
+        public PatrolSession? PatrolSession { get; set; }
+        public PatrolArea? PatrolArea { get; set; }
+        public MstApplication? Application { get; set; }
+    }
     //PatrolRoute
     public class PatrolRoute : BaseModelOnlyIdWithTime, IApplicationEntity
     {
@@ -197,28 +220,7 @@ namespace Entities.Models
         public ICollection<PatrolCase> PatrolCases { get; set; } = new List<PatrolCase>();
         public ICollection<PatrolCheckpointLog> PatrolCheckpointLogs { get; set; } = new List<PatrolCheckpointLog>();
     }
-    //PatrolCheckpointLog
-    public class PatrolCheckpointLog : BaseModelWithTimeApp, IApplicationEntity
-    {
-        [Column("patrol_session_id")]
-        public Guid? PatrolSessionId { get; set; }
-        [Column("patrol_area_id")]
-        public Guid? PatrolAreaId { get; set; }
-        [Column("area_name_snapshot")]
-        public string? AreaNameSnap { get; set; }
-        [Column("order_index")]
-        public int? OrderIndex { get; set; }
-        [Column("arrived_at")]
-        public DateTime? ArrivedAt { get; set; }
-        [Column("left_at")]
-        public DateTime? LeftAt { get; set; }
-
-        [Column("distance_from_prev_meters")]
-        public double? DistanceFromPrevMeters { get; set; }
-        public PatrolSession? PatrolSession { get; set; }
-        public PatrolArea? PatrolArea { get; set; }
-        public MstApplication? Application { get; set; }
-    }
+   
     //PatrolCaseAttachment
     public class PatrolCaseAttachment : BaseModelWithTimeApp, IApplicationEntity
     {
