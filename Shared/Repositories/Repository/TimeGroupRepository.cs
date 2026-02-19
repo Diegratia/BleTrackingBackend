@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Helpers.Consumer.DtoHelpers.MinimalDto;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -18,20 +19,102 @@ namespace Repositories.Repository
         {
         }
 
-            public async Task<TimeGroup?> GetByIdAsync(Guid id)
-            {
-                return await _context.TimeGroups
-                    .Include(t => t.TimeBlocks)
-                    .Include(t => t.CardAccessTimeGroups)
-                    .FirstOrDefaultAsync(t => t.Id == id);
+        /// <summary>
+        /// Base query for TimeGroup with multi-tenancy filtering and status check
+        /// </summary>
+        public IQueryable<TimeGroup> BaseEntityQuery()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.TimeGroups
+                .Include(t => t.TimeBlocks)
+                .Include(t => t.CardAccessTimeGroups)
+                .Where(t => t.Status != 0);
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
 
-            }
-
-            public async Task<IEnumerable<TimeGroup>> GetAllAsync()
+        /// <summary>
+        /// Manual projection to TimeGroupRead DTO
+        /// </summary>
+        private IQueryable<TimeGroupRead> ProjectToRead(IQueryable<TimeGroup> query)
+        {
+            return query.Select(tg => new TimeGroupRead
             {
-                return await GetAllQueryable()
-                .ToListAsync();
-            }
+                Id = tg.Id,
+                Name = tg.Name,
+                Description = tg.Description,
+                ScheduleType = tg.ScheduleType,
+                ApplicationId = tg.ApplicationId,
+                Status = tg.Status,
+                CreatedBy = tg.CreatedBy,
+                CreatedAt = tg.CreatedAt,
+                UpdatedBy = tg.UpdatedBy,
+                UpdatedAt = tg.UpdatedAt,
+                CardAccessIds = tg.CardAccessTimeGroups
+                    .Select(x => (Guid?)x.CardAccessId)
+                    .ToList(),
+                TimeBlocks = tg.TimeBlocks
+                    .Where(tb => tb.Status != 0)
+                    .Select(tb => new TimeBlockRead
+                    {
+                        Id = tb.Id,
+                        DayOfWeek = tb.DayOfWeek,
+                        StartTime = tb.StartTime,
+                        EndTime = tb.EndTime
+                    })
+                    .ToList()
+            });
+        }
+
+        /// <summary>
+        /// Validates that CardAccessIds belong to the same Application
+        /// </summary>
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardAccessOwnershipAsync(
+            List<Guid?> cardAccessIds, Guid applicationId)
+        {
+            var validIds = cardAccessIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
+            if (!validIds.Any())
+                return Array.Empty<Guid>();
+
+            return await CheckInvalidOwnershipIdsAsync<CardAccess>(
+                validIds, applicationId);
+        }
+
+        /// <summary>
+        /// Validates that TimeGroupIds belong to the same Application
+        /// </summary>
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidTimeGroupOwnershipAsync(
+            List<Guid?> timeGroupIds, Guid applicationId)
+        {
+            var validIds = timeGroupIds.Where(x => x.HasValue).Select(x => x.Value).ToList();
+            if (!validIds.Any())
+                return Array.Empty<Guid>();
+
+            return await CheckInvalidOwnershipIdsAsync<TimeGroup>(
+                validIds, applicationId);
+        }
+
+        /// <summary>
+        /// Gets TimeGroup as entity (for update/delete operations)
+        /// </summary>
+        public async Task<TimeGroup?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(t => t.Id == id);
+        }
+
+        /// <summary>
+        /// Gets TimeGroup as TimeGroupRead DTO
+        /// </summary>
+        public async Task<TimeGroupRead?> GetByIdAsync(Guid id)
+        {
+            var query = BaseEntityQuery().Where(t => t.Id == id);
+            return await ProjectToRead(query).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<TimeGroupRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
 
         public async Task<TimeGroup> AddAsync(TimeGroup entity)
         {
@@ -64,12 +147,6 @@ namespace Repositories.Repository
             await ValidateApplicationIdAsync(entity.ApplicationId);
             ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
 
-            _context.TimeGroups.Update(entity); // Optional
-                foreach (var entry in _context.ChangeTracker.Entries())
-            {
-                Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
-            }
-
             await _context.SaveChangesAsync();
         }
 
@@ -77,32 +154,18 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            var query = _context.TimeGroups
-                .Include(d => d.TimeBlocks)
-                .Include(ca => ca.CardAccessTimeGroups)
-                .Where(d => d.Id == id && d.Status != 0);
+            var entity = await BaseEntityQuery()
+                .FirstOrDefaultAsync(t => t.Id == id);
 
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            var entity = await query.FirstOrDefaultAsync();
             if (entity == null)
                 throw new KeyNotFoundException("TimeGroup not found");
-                
+
+            // Soft delete - set Status to 0
+            entity.Status = 0;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            _context.TimeGroups.Update(entity);
             await _context.SaveChangesAsync();
-        }
-
-        public IQueryable<TimeGroup> GetAllQueryable()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.TimeGroups
-                .Include(d => d.TimeBlocks)
-                .Include(ca => ca.CardAccessTimeGroups)
-                .Where(d => d.Status != 0);
-
-                
-
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
         public IQueryable<TimeGroupMinimalDto> MinimalGetAllQueryable()
@@ -123,14 +186,12 @@ namespace Repositories.Repository
                 ApplicationId = tg.ApplicationId,
                 UpdatedAt = tg.UpdatedAt,
 
-                // langsung ambil list CardAccessId
                 CardAccessIds = tg.CardAccessTimeGroups
                     .Select(x => (Guid?)x.CardAccessId)
                     .ToList(),
 
-                // kalau mau minimal juga bisa expose TimeBlocks
                 TimeBlocks = tg.TimeBlocks
-                    .Where(tb => tb.Status != 0) // filter only active
+                    .Where(tb => tb.Status != 0)
                     .Select(tb => new TimeBlockMinimalDto
                     {
                         Id = tb.Id,
@@ -142,60 +203,6 @@ namespace Repositories.Repository
                     })
                     .ToList()
             });
-        }
-        
-public void RemoveTimeBlock(TimeBlock block)
-{
-    if (block == null) return;
-
-    var entry = _context.Entry(block);
-
-    if (entry.State == EntityState.Detached)
-        _context.TimeBlocks.Attach(block);
-
-    _context.TimeBlocks.Remove(block);
-}
-
-public void AddTimeBlock(TimeBlock block)
-{
-    _context.TimeBlocks.Add(block);
-}
-
-
-
-         public IQueryable<CardAccessMinimalDto> MinimalGetAllQueryableDto()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.CardAccesses
-            .Include(ca => ca.CardAccessTimeGroups)
-                .ThenInclude(ca => ca.TimeGroup)
-            .Include(ca => ca.CardAccessMaskedAreas)
-                .ThenInclude(cam => cam.MaskedArea)
-            .Where(ca => ca.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            return query.Select(ca => new CardAccessMinimalDto
-            {
-                Id = ca.Id,
-                Name = ca.Name,
-                AccessNumber = ca.AccessNumber ?? 0,
-                AccessScope = ca.AccessScope.ToString(),
-                Remarks = ca.Remarks,
-                UpdatedAt = ca.UpdatedAt,
-                ApplicationId = ca.ApplicationId,
-
-                MaskedAreaIds = ca.CardAccessMaskedAreas
-                        .Select(x => (Guid?)x.MaskedAreaId)
-                        .ToList(),
-
-                TimeGroupIds = ca.CardAccessTimeGroups
-                        .Select(x => (Guid?)x.TimeGroupId)
-                        .ToList()
-            });
-
-
         }
 
         public async Task<IEnumerable<TimeGroup>> GetAllExportAsync()
