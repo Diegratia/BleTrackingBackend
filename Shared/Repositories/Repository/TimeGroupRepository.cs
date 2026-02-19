@@ -140,6 +140,83 @@ namespace Repositories.Repository
             return entity;
         }
 
+        /// <summary>
+        /// Adds TimeGroup and returns the TimeGroupRead DTO directly
+        /// </summary>
+        public async Task<TimeGroupRead> AddAndReturnAsync(TimeGroup entity)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var targetApplicationId = applicationId;
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId not found in context");
+
+                entity.ApplicationId = applicationId.Value;
+                targetApplicationId = applicationId.Value;
+            }
+            else if (entity.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System admin must provide a valid ApplicationId");
+            }
+            else
+            {
+                targetApplicationId = entity.ApplicationId;
+            }
+
+            await ValidateApplicationIdAsync(entity.ApplicationId);
+            ValidateApplicationIdForEntity(entity, applicationId, isSystemAdmin);
+
+            // Set ApplicationId on child entities
+            foreach (var block in entity.TimeBlocks)
+            {
+                if (block.ApplicationId == Guid.Empty)
+                    block.ApplicationId = targetApplicationId.Value;
+            }
+
+            foreach (var catg in entity.CardAccessTimeGroups ?? Enumerable.Empty<CardAccessTimeGroups>())
+            {
+                if (catg.ApplicationId == Guid.Empty)
+                    catg.ApplicationId = targetApplicationId.Value;
+            }
+
+            _context.TimeGroups.Add(entity);
+            await _context.SaveChangesAsync();
+
+            // Reload the entity with includes to ensure complete data
+            await _context.Entry(entity).Collection(t => t.TimeBlocks).LoadAsync();
+            await _context.Entry(entity).Collection(t => t.CardAccessTimeGroups).LoadAsync();
+
+            // Project manually to avoid query issues
+            return new TimeGroupRead
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Description = entity.Description,
+                ScheduleType = entity.ScheduleType,
+                ApplicationId = entity.ApplicationId,
+                Status = entity.Status,
+                CreatedBy = entity.CreatedBy,
+                CreatedAt = entity.CreatedAt,
+                UpdatedBy = entity.UpdatedBy,
+                UpdatedAt = entity.UpdatedAt,
+                CardAccessIds = entity.CardAccessTimeGroups?
+                    .Select(x => (Guid?)x.CardAccessId)
+                    .ToList() ?? new List<Guid?>(),
+                TimeBlocks = entity.TimeBlocks?
+                    .Where(tb => tb.Status != 0)
+                    .Select(tb => new TimeBlockRead
+                    {
+                        Id = tb.Id,
+                        DayOfWeek = tb.DayOfWeek,
+                        StartTime = tb.StartTime,
+                        EndTime = tb.EndTime
+                    })
+                    .ToList() ?? new List<TimeBlockRead>()
+            };
+        }
+
         public async Task UpdateAsync(TimeGroup entity)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

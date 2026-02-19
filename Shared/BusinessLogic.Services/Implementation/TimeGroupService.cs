@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation
                     .ToList();
             }
 
-            // Set audit for nested TimeBlocks
+            // Set audit and properties for nested TimeBlocks
             foreach (var block in entity.TimeBlocks)
             {
                 block.Status = 1;
@@ -90,12 +90,16 @@ namespace BusinessLogic.Services.Implementation
                 block.CreatedAt = DateTime.UtcNow;
                 block.UpdatedAt = DateTime.UtcNow;
             }
+            entity.CreatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.CreatedBy = UsernameFormToken;
+            entity.UpdatedBy = UsernameFormToken;
+            entity.Status = 1;
 
-            await _repository.AddAsync(entity);
+            var result = await _repository.AddAndReturnAsync(entity);
             _audit.Created("TimeGroup", entity.Id, $"TimeGroup {entity.Name} created");
 
-            return await _repository.GetByIdAsync(entity.Id)
-                ?? throw new KeyNotFoundException("Failed to retrieve created TimeGroup");
+            return result;
         }
 
         public async Task UpdateAsync(Guid id, TimeGroupUpdateDto dto)
