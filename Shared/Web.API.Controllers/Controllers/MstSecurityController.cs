@@ -24,7 +24,6 @@ namespace Web.API.Controllers.Controllers
             _MstSecurityService = MstSecurityService;
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstSecurity
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -32,7 +31,6 @@ namespace Web.API.Controllers.Controllers
             var securities = await _MstSecurityService.GetAllSecuritiesAsync();
             return Ok(ApiResponse.Success("Securities retrieved successfully", securities));
         }
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstSecurity
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
@@ -41,7 +39,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Securities retrieved successfully", securities));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstSecurity/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -51,7 +48,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstSecurity
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstSecurityCreateDto MstSecurityDto)
@@ -69,7 +65,6 @@ namespace Web.API.Controllers.Controllers
             
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         // DELETE: api/MstSecurity/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -79,7 +74,6 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -90,7 +84,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Paginated("Securities filtered successfully", result));
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // PUT: api/MstSecurity/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstSecurityUpdateDto updateDto)
@@ -127,7 +120,6 @@ namespace Web.API.Controllers.Controllers
                     "MstSecurity_Report.xlsx");
         }
 
-       [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
             [HttpPost("import")]
             public async Task<IActionResult> Import([FromForm] IFormFile file)
             {
