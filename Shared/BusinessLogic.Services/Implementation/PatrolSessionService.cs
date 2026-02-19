@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Background;
@@ -145,8 +146,14 @@ namespace BusinessLogic.Services.Implementation
                 UpdatedAt = DateTime.UtcNow
             }).ToList();
 
+            
+
             await _repo.AddCheckpointLogsAsync(checkpointLogs);
-            _mqttQueue.Enqueue("patrol/session/started", "");
+            _mqttQueue.Enqueue("patrol/session/started", JsonSerializer.Serialize(new {
+            sessionId = patrolSession.Id.ToString(),
+            securityId = security.Id.ToString()
+        }));
+            
 
 
             return await _repo.GetByIdAsync(patrolSession.Id)
