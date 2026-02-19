@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts;
 using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
@@ -20,6 +21,7 @@ namespace BusinessLogic.Services.Interface
         Task<MstSecurityDto> UpdateSecurityAsync(Guid id, MstSecurityUpdateDto updateDto);
         Task DeleteSecurityAsync(Guid id);
         Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, SecurityFilter filter);
         Task<IEnumerable<MstSecurityDto>> ImportAsync(IFormFile file);
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();

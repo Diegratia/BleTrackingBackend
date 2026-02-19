@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Data.ViewModels.ResponseHelper;
 using DataView;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -74,13 +76,30 @@ namespace Web.API.Controllers.Controllers
         }
 
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter-datatables")]
+        public async Task<IActionResult> FilterDataTables([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
 
             var result = await _MstSecurityService.FilterAsync(request);
+            return Ok(ApiResponse.Paginated("Securities filtered successfully", result));
+        }
+
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
+        {
+            var filter = new SecurityFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<SecurityFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new SecurityFilter();
+            }
+
+            var result = await _MstSecurityService.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Securities filtered successfully", result));
         }
 

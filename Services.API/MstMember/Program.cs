@@ -17,6 +17,7 @@ using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Data.ViewModels.Shared.ExceptionHelper;
 using BusinessLogic.Services.Extension.Encrypt;
+using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
@@ -137,7 +138,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireUserCreatedRole", policy =>
         policy.RequireRole("UserCreated"));
 });
-
+builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

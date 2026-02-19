@@ -376,6 +376,35 @@ namespace BusinessLogic.Services.Implementation
             return await filterService.FilterAsync(request);
         }
 
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, SecurityFilter filter)
+        {
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            // Map Date Filters (Generic Dictionary -> Specific Prop)
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
+        }
+
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;

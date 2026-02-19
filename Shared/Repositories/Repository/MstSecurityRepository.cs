@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Repositories.Extensions;
+using Shared.Contracts;
 using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
@@ -16,6 +18,138 @@ namespace Repositories.Repository
         public MstSecurityRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+        }
+
+        public IQueryable<MstSecurity> BaseEntityQuery()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstSecurities
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Where(x => x.Status != 0);
+
+            query = query.WithActiveRelations();
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        private IQueryable<MstSecurityRead> ProjectToRead(IQueryable<MstSecurity> query)
+        {
+            return query
+                .GroupJoin(
+                    _context.Users.Include(u => u.Group),
+                    s => s.Email,
+                    u => u.Email,
+                    (s, users) => new { s, user = users.FirstOrDefault() })
+                .Select(x => new MstSecurityRead
+                {
+                    Id = x.s.Id,
+                    PersonId = x.s.PersonId,
+                    OrganizationId = x.s.OrganizationId,
+                    DepartmentId = x.s.DepartmentId,
+                    DistrictId = x.s.DistrictId,
+                    IdentityId = x.s.IdentityId,
+                    CardNumber = x.s.CardNumber,
+                    BleCardNumber = x.s.BleCardNumber,
+                    Name = x.s.Name,
+                    Phone = x.s.Phone,
+                    Email = x.s.Email,
+                    Gender = x.s.Gender.ToString(),
+                    Address = x.s.Address,
+                    FaceImage = x.s.FaceImage,
+                    UploadFr = x.s.UploadFr,
+                    UploadFrError = x.s.UploadFrError,
+                    BirthDate = x.s.BirthDate,
+                    JoinDate = x.s.JoinDate,
+                    ExitDate = x.s.ExitDate,
+                    HeadMember1 = x.s.SecurityHead1Id.ToString(),
+                    HeadMember2 = x.s.SecurityHead2Id.ToString(),
+                    IsBlacklist = null,
+                    BlacklistAt = null,
+                    BlacklistReason = null,
+                    ApplicationId = x.s.ApplicationId,
+                    StatusEmployee = x.s.StatusEmployee.ToString(),
+                    Status = x.s.Status,
+                    IsHead = x.user != null && x.user.Group != null ? x.user.Group.IsHead : null,
+                    Organization = x.s.Organization != null ? new OrganizationRead
+                    {
+                        Id = x.s.Organization.Id,
+                        Name = x.s.Organization.Name
+                    } : null,
+                    Department = x.s.Department != null ? new DepartmentRead
+                    {
+                        Id = x.s.Department.Id,
+                        Name = x.s.Department.Name
+                    } : null,
+                    District = x.s.District != null ? new DistrictRead
+                    {
+                        Id = x.s.District.Id,
+                        Name = x.s.District.Name
+                    } : null
+                });
+        }
+
+        public async Task<(List<MstSecurityRead> Data, int Total, int Filtered)> FilterAsync(SecurityFilter filter)
+        {
+            var query = BaseEntityQuery();
+            var total = await query.CountAsync();
+
+            // Apply filters
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+                query = query.Where(x => x.Name.ToLower().Contains(filter.Search.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.Email))
+                query = query.Where(x => x.Email != null && x.Email.ToLower().Contains(filter.Email.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                query = query.Where(x => x.Name != null && x.Name.ToLower().Contains(filter.Name.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.CardNumber))
+                query = query.Where(x => x.CardNumber != null && x.CardNumber.ToLower().Contains(filter.CardNumber.ToLower()));
+
+            if (filter.OrganizationId.HasValue)
+                query = query.Where(x => x.OrganizationId == filter.OrganizationId);
+
+            if (filter.DepartmentId.HasValue)
+                query = query.Where(x => x.DepartmentId == filter.DepartmentId);
+
+            if (filter.DistrictId.HasValue)
+                query = query.Where(x => x.DistrictId == filter.DistrictId);
+
+            // IsHead filter requires joining with User table
+            if (filter.IsHead.HasValue)
+            {
+                if (filter.IsHead.Value)
+                {
+                    // Filter only securities whose matching user has IsHead = true
+                    query = query.Where(s => _context.Users
+                        .Include(u => u.Group)
+                        .Any(u => u.Email.ToLower() == s.Email.ToLower() && u.Group.IsHead == true));
+                }
+                else
+                {
+                    // Filter only securities whose matching user has IsHead = false or no user found
+                    query = query.Where(s => !_context.Users
+                        .Include(u => u.Group)
+                        .Any(u => u.Email.ToLower() == s.Email.ToLower() && u.Group.IsHead == true));
+                }
+            }
+
+            var filtered = await query.CountAsync();
+
+            // Apply default ordering if no sort column specified
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderByDescending(x => x.UpdatedAt);
+            }
+
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
         }
 
             public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
