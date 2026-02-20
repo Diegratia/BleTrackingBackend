@@ -278,7 +278,8 @@ namespace Repositories.Repository
                 var search = filter.Search.ToLower();
                 query = query.Where(s =>
                     (s.SecurityNameSnap != null && s.SecurityNameSnap.ToLower().Contains(search)) ||
-                    (s.PatrolRouteNameSnap != null && s.PatrolRouteNameSnap.ToLower().Contains(search))
+                    (s.PatrolRouteNameSnap != null && s.PatrolRouteNameSnap.ToLower().Contains(search)) ||
+                    (s.PatrolAssignmentNameSnap != null && s.PatrolAssignmentNameSnap.ToLower().Contains(search))
                 );
             }
 
@@ -290,6 +291,10 @@ namespace Repositories.Repository
             var routeIds = ExtractIds(filter.RouteId);
             if (routeIds.Count > 0)
                 query = query.Where(s => routeIds.Contains(s.PatrolRouteId));
+
+            var assignmentIds = ExtractIds(filter.AssignmentId);
+            if (assignmentIds.Count > 0)
+                query = query.Where(s => assignmentIds.Contains(s.PatrolAssignmentId));
 
             var areaIds = ExtractIds(filter.AreaId);
             if (areaIds.Count > 0)
@@ -317,6 +322,7 @@ namespace Repositories.Repository
                 .Include(s => s.PatrolCheckpointLogs)
                 .Include(s => s.PatrolCases)
                 .Include(s => s.PatrolRoute)
+                .Include(s => s.PatrolAssignment)
                 .Include(s => s.Security);
 
             var total = await query.CountAsync();
@@ -337,6 +343,7 @@ namespace Repositories.Repository
                     .ThenInclude(l => l.PatrolArea)
                 .Include(s => s.PatrolCases)
                 .Include(s => s.PatrolRoute)
+                .Include(s => s.PatrolAssignment)
                 .Include(s => s.Security)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
         }

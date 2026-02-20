@@ -7,8 +7,8 @@ namespace BusinessLogic.Services.Interface.Analytics
 {
     public interface IPatrolSessionAnalyticsService
     {
-        Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter);
-        Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId);
-        Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter);
+        Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter, bool includeTimeline = true, bool includeIncidents = true);
+        Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId, bool includeTimeline = true, bool includeIncidents = true);
+        Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter, bool includeTimeline = false, bool includeIncidents = false);
     }
 }

@@ -16,15 +16,9 @@ namespace Shared.Contracts
 
         public JsonElement SecurityId { get; set; }
         public JsonElement RouteId { get; set; }
+        public JsonElement AssignmentId { get; set; }
         public JsonElement AreaId { get; set; }
         public JsonElement IsCompleted { get; set; }
-
-        // =====================================================
-        // INCLUDE OPTIONS (for shaping response)
-        // =====================================================
-
-        public bool IncludeTimeline { get; set; } = true;
-        public bool IncludeIncidents { get; set; } = true;
 
         // =====================================================
         // EXPORT OPTIONS

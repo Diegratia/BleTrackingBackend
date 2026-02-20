@@ -30,6 +30,10 @@ namespace Shared.Contracts.Analytics
         public string SecurityName { get; set; }
         public string? SecurityEmployeeNumber { get; set; }
 
+        // Assignment info
+        public Guid AssignmentId { get; set; }
+        public string AssignmentName { get; set; }
+
         // Route info
         public Guid RouteId { get; set; }
         public string RouteName { get; set; }

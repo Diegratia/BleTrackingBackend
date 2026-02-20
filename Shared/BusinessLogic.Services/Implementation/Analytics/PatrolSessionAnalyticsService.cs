@@ -41,7 +41,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter)
+        public async Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter, bool includeTimeline = true, bool includeIncidents = true)
         {
             // Map DataTables request to filter
             filter.Page = (request.Start / request.Length) + 1;
@@ -68,7 +68,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             foreach (var session in sessions)
             {
-                var sessionRead = BuildSessionRead(session, filter);
+                var sessionRead = BuildSessionRead(session, includeTimeline, includeIncidents);
                 sessionReads.Add(sessionRead);
             }
 
@@ -99,20 +99,16 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return response;
         }
 
-        public async Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId)
+        public async Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId, bool includeTimeline = true, bool includeIncidents = true)
         {
             var session = await _repository.GetSessionForTimelineAsync(sessionId);
             if (session == null)
                 return null;
 
-            return BuildSessionRead(session, new PatrolSessionAnalyticsFilter
-            {
-                IncludeTimeline = true,
-                IncludeIncidents = true
-            });
+            return BuildSessionRead(session, includeTimeline, includeIncidents);
         }
 
-        public async Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter)
+        public async Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter, bool includeTimeline = false, bool includeIncidents = false)
         {
             // Get ALL data (no pagination) - set PageSize to a large number
             var originalPageSize = filter.PageSize;
@@ -122,14 +118,15 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             filter.PageSize = originalPageSize;
 
-            var sessionReads = sessions.Select(s => BuildSessionRead(s, filter)).ToList();
+            var sessionReads = sessions.Select(s => BuildSessionRead(s, includeTimeline, includeIncidents)).ToList();
 
             return GeneratePdfReport(sessionReads, filter);
         }
 
         private PatrolSessionAnalyticsRead BuildSessionRead(
             PatrolSession session,
-            PatrolSessionAnalyticsFilter filter)
+            bool includeTimeline = false,
+            bool includeIncidents = false)
         {
             var read = new PatrolSessionAnalyticsRead
             {
@@ -139,6 +136,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 SecurityId = session.SecurityId,
                 SecurityName = session.Security?.Name ?? session.SecurityNameSnap ?? "Unknown",
                 SecurityEmployeeNumber = session.Security?.IdentityId ?? session.SecurityIdentityIdSnap,
+                AssignmentId = session.PatrolAssignmentId,
+                AssignmentName = session.PatrolAssignment?.Name ?? session.PatrolAssignmentNameSnap ?? "Unknown",
                 RouteId = session.PatrolRouteId,
                 RouteName = session.PatrolRoute?.Name ?? session.PatrolRouteNameSnap ?? "Unknown",
                 Metrics = BuildMetrics(session)
@@ -152,13 +151,13 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
 
             // Build timeline if requested
-            if (filter.IncludeTimeline)
+            if (includeTimeline)
             {
                 read.Timeline = BuildTimeline(session);
             }
 
             // Build incidents if requested
-            if (filter.IncludeIncidents)
+            if (includeIncidents)
             {
                 read.Incidents = session.PatrolCases?
                     .Where(c => c.Status != 0)
