@@ -27,6 +27,7 @@ namespace Data.ViewModels
         public DateOnly? ExitDate { get; set; }
         public string? HeadMember1 { get; set; }
         public string? HeadMember2 { get; set; }
+        public bool? IsHead { get; set; }
         public bool? IsBlacklist { get; set; }
         public DateTime? BlacklistAt { get; set; }
         public string? BlacklistReason { get; set; }

@@ -2,6 +2,7 @@ using System;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
@@ -249,6 +250,95 @@ namespace Repositories.Repository
         {
             await _context.PatrolCheckpointLogs.AddRangeAsync(checkpointLogs);
             await _context.SaveChangesAsync();
+        }
+
+        // =====================================================
+        // ANALYTICS METHODS
+        // =====================================================
+
+        /// <summary>
+        /// Gets raw patrol session data for analytics
+        /// Uses DataTables Pattern with BaseFilter
+        /// </summary>
+        public async Task<(List<PatrolSession> Data, int Total, int Filtered)> GetAnalyticsDataAsync(
+            PatrolSessionAnalyticsFilter filter)
+        {
+            IQueryable<PatrolSession> query = BaseEntityQuery();
+
+            // Apply time filters from BaseFilter (DateFrom, DateTo)
+            if (filter.DateFrom.HasValue)
+                query = query.Where(s => s.StartedAt >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(s => s.StartedAt <= filter.DateTo.Value);
+
+            // Apply search from BaseFilter
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(s =>
+                    (s.SecurityNameSnap != null && s.SecurityNameSnap.ToLower().Contains(search)) ||
+                    (s.PatrolRouteNameSnap != null && s.PatrolRouteNameSnap.ToLower().Contains(search))
+                );
+            }
+
+            // Apply entity filters using ExtractIds for JsonElement
+            var securityIds = ExtractIds(filter.SecurityId);
+            if (securityIds.Count > 0)
+                query = query.Where(s => securityIds.Contains(s.SecurityId));
+
+            var routeIds = ExtractIds(filter.RouteId);
+            if (routeIds.Count > 0)
+                query = query.Where(s => routeIds.Contains(s.PatrolRouteId));
+
+            var areaIds = ExtractIds(filter.AreaId);
+            if (areaIds.Count > 0)
+                query = query.Where(s => s.PatrolCheckpointLogs
+                    .Any(l => areaIds.Contains(l.PatrolAreaId.Value)));
+
+            // Filter by completion status
+            if (filter.IsCompleted.ValueKind != JsonValueKind.Undefined && filter.IsCompleted.ValueKind != JsonValueKind.Null)
+            {
+                if (filter.IsCompleted.ValueKind == JsonValueKind.True || filter.IsCompleted.ValueKind == JsonValueKind.False)
+                {
+                    var isCompleted = filter.IsCompleted.GetBoolean();
+                    query = isCompleted
+                        ? query.Where(s => s.EndedAt != null)
+                        : query.Where(s => s.EndedAt == null);
+                }
+            }
+
+            // Apply sorting and paging from BaseFilter
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // Now apply includes for the final query
+            query = query
+                .Include(s => s.PatrolCheckpointLogs)
+                .Include(s => s.PatrolCases)
+                .Include(s => s.PatrolRoute)
+                .Include(s => s.Security);
+
+            var total = await query.CountAsync();
+            var filtered = await query.CountAsync();
+
+            var data = await query.ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        /// <summary>
+        /// Gets single patrol session for timeline
+        /// </summary>
+        public async Task<PatrolSession?> GetSessionForTimelineAsync(Guid sessionId)
+        {
+            return await BaseEntityQuery()
+                .Include(s => s.PatrolCheckpointLogs)
+                    .ThenInclude(l => l.PatrolArea)
+                .Include(s => s.PatrolCases)
+                .Include(s => s.PatrolRoute)
+                .Include(s => s.Security)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
 
     }

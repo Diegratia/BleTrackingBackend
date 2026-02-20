@@ -189,37 +189,6 @@ namespace Repositories.Repository
                 validIds, applicationId);
         }
 
-        
-        // non list overload
-        // public async Task<List<Guid>> GetCardAccessIdsByLocationAsync(
-        //     Guid? buildingId,
-        //     Guid? floorId,
-        //     Guid? floorplanId)
-        // {
-        //     var query = _context.CardAccessMaskedAreas.AsQueryable();
-
-        //     if (floorplanId.HasValue)
-        //     {
-        //         query = query.Where(cam => cam.MaskedArea.FloorplanId == floorplanId.Value);
-        //     }
-        //     else if (floorId.HasValue)
-        //     {
-        //         query = query.Where(cam => cam.MaskedArea.Floorplan.FloorId == floorId.Value);
-        //     }
-        //     else if (buildingId.HasValue)
-        //     {
-        //         query = query.Where(cam => cam.MaskedArea.Floorplan.Floor.BuildingId == buildingId.Value);
-        //     }
-        //     else
-        //     {
-        //         return new List<Guid>(); // no filter
-        //     }
-
-        //     return await query
-        //         .Select(cam => cam.CardAccessId)
-        //         .Distinct()
-        //         .ToListAsync();
-        // }
 
     }
 }
