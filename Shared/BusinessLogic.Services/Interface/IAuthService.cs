@@ -473,7 +473,8 @@ namespace BusinessLogic.Services.Interface
                 new Claim("ApplicationId", user.Group.ApplicationId.ToString()),
                 new Claim("groupName", user.Group.Name),
                 new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()),
-                new Claim("level", ((int)user.Group.LevelPriority).ToString())
+                new Claim("level", ((int)user.Group.LevelPriority).ToString()),
+                new Claim("isHead", user.Group.IsHead.ToString())
             };
 
             // Add accessible buildings claim for non-System and non-SuperAdmin users
