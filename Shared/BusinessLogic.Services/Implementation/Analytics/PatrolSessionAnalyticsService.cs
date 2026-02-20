@@ -41,7 +41,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter, bool includeTimeline = true, bool includeIncidents = true)
+        public async Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter, bool includeTimeline = true, bool includeCases = true)
         {
             // Map DataTables request to filter
             filter.Page = (request.Start / request.Length) + 1;
@@ -68,7 +68,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             foreach (var session in sessions)
             {
-                var sessionRead = BuildSessionRead(session, includeTimeline, includeIncidents);
+                var sessionRead = BuildSessionRead(session, includeTimeline, includeCases);
                 sessionReads.Add(sessionRead);
             }
 
@@ -99,16 +99,16 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return response;
         }
 
-        public async Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId, bool includeTimeline = true, bool includeIncidents = true)
+        public async Task<PatrolSessionAnalyticsRead?> GetSessionTimelineAsync(Guid sessionId, bool includeTimeline = true, bool includeCases = true)
         {
             var session = await _repository.GetSessionForTimelineAsync(sessionId);
             if (session == null)
                 return null;
 
-            return BuildSessionRead(session, includeTimeline, includeIncidents);
+            return BuildSessionRead(session, includeTimeline, includeCases);
         }
 
-        public async Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter, bool includeTimeline = false, bool includeIncidents = false)
+        public async Task<byte[]> ExportToPdfAsync(PatrolSessionAnalyticsFilter filter, bool includeTimeline = false, bool includeCases = false)
         {
             // Get ALL data (no pagination) - set PageSize to a large number
             var originalPageSize = filter.PageSize;
@@ -118,7 +118,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             filter.PageSize = originalPageSize;
 
-            var sessionReads = sessions.Select(s => BuildSessionRead(s, includeTimeline, includeIncidents)).ToList();
+            var sessionReads = sessions.Select(s => BuildSessionRead(s, includeTimeline, includeCases)).ToList();
 
             return GeneratePdfReport(sessionReads, filter);
         }
@@ -126,7 +126,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
         private PatrolSessionAnalyticsRead BuildSessionRead(
             PatrolSession session,
             bool includeTimeline = false,
-            bool includeIncidents = false)
+            bool includeCases = false)
         {
             var read = new PatrolSessionAnalyticsRead
             {
@@ -156,12 +156,12 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 read.Timeline = BuildTimeline(session);
             }
 
-            // Build incidents if requested
-            if (includeIncidents)
+            // Build Cases if requested
+            if (includeCases)
             {
-                read.Incidents = session.PatrolCases?
+                read.Cases = session.PatrolCases?
                     .Where(c => c.Status != 0)
-                    .Select(c => new PatrolIncidentSummary
+                    .Select(c => new PatrolCaseSummary
                     {
                         CaseId = c.Id,
                         ReportedAt = c.CreatedAt,  // UTC from database
@@ -171,7 +171,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                         CaseStatus = c.CaseStatus.ToString(),
                         AreaName = null  // TODO: Get area from PatrolCaseArea junction if needed
                     })
-                    .ToList() ?? new List<PatrolIncidentSummary>();
+                    .ToList() ?? new List<PatrolCaseSummary>();
             }
 
             return read;
@@ -262,7 +262,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 TotalCheckpoints = totalCheckpoints,
                 CompletedCheckpoints = completedCheckpoints,
                 CompletionPercentage = completionPercentage,
-                TotalIncidents = session.PatrolCases?.Count(c => c.Status != 0) ?? 0,
+                TotalCases = session.PatrolCases?.Count(c => c.Status != 0) ?? 0,
                 TotalDuration = session.EndedAt.HasValue
                     ? FormatDuration(session.EndedAt.Value - session.StartedAt)
                     : null,
@@ -325,7 +325,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                             header.Cell().Element(CellStyle).Text("Duration").SemiBold();
                             header.Cell().Element(CellStyle).Text("Checkpoints").SemiBold();
                             header.Cell().Element(CellStyle).Text("Complete").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Incidents").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Cases").SemiBold();
                         });
 
                         int index = 1;
@@ -338,7 +338,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                             table.Cell().Element(CellStyle).Text(session.DurationFormatted ?? "Active");
                             table.Cell().Element(CellStyle).Text($"{session.Metrics.CompletedCheckpoints}/{session.Metrics.TotalCheckpoints}");
                             table.Cell().Element(CellStyle).Text($"{session.Metrics.CompletionPercentage}%");
-                            table.Cell().Element(CellStyle).Text($"{session.Metrics.TotalIncidents}");
+                            table.Cell().Element(CellStyle).Text($"{session.Metrics.TotalCases}");
                         }
                     });
 

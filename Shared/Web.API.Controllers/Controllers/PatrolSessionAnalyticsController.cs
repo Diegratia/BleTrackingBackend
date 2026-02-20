@@ -27,13 +27,13 @@ namespace Web.API.Controllers.Controllers
 
         /// <summary>
         /// Gets patrol session report with filters (POST - DataTables Pattern)
-        /// POST /api/patrol-analytics/report?includeTimeline=true&includeIncidents=true
+        /// POST /api/patrol-analytics/report?includeTimeline=true&includeCases=true
         /// </summary>
         [HttpPost("report")]
         public async Task<IActionResult> GetReport(
             [FromBody] DataTablesProjectedRequest request,
             [FromQuery] bool includeTimeline = true,
-            [FromQuery] bool includeIncidents = true)
+            [FromQuery] bool includeCases = true)
         {
             // Deserialize filters from request.Filters
             var filter = new PatrolSessionAnalyticsFilter();
@@ -45,21 +45,21 @@ namespace Web.API.Controllers.Controllers
                 ) ?? new PatrolSessionAnalyticsFilter();
             }
 
-            var result = await _service.GetReportAsync(request, filter, includeTimeline, includeIncidents);
+            var result = await _service.GetReportAsync(request, filter, includeTimeline, includeCases);
             return Ok(ApiResponse.Paginated("Patrol report retrieved successfully", result));
         }
 
         /// <summary>
         /// Gets single patrol session timeline
-        /// GET /api/patrol-analytics/timeline/{sessionId}?includeTimeline=true&includeIncidents=true
+        /// GET /api/patrol-analytics/timeline/{sessionId}?includeTimeline=true&includeCases=true
         /// </summary>
         [HttpGet("timeline/{sessionId}")]
         public async Task<IActionResult> GetTimeline(
             Guid sessionId,
             [FromQuery] bool includeTimeline = true,
-            [FromQuery] bool includeIncidents = true)
+            [FromQuery] bool includeCases = true)
         {
-            var result = await _service.GetSessionTimelineAsync(sessionId, includeTimeline, includeIncidents);
+            var result = await _service.GetSessionTimelineAsync(sessionId, includeTimeline, includeCases);
             if (result == null)
                 return NotFound(ApiResponse.NotFound("Session not found"));
 
@@ -68,15 +68,15 @@ namespace Web.API.Controllers.Controllers
 
         /// <summary>
         /// Exports patrol report to PDF (Flat body - no nested filters)
-        /// POST /api/patrol-analytics/export/pdf?includeTimeline=false&includeIncidents=false
+        /// POST /api/patrol-analytics/export/pdf?includeTimeline=false&includeCases=false
         /// </summary>
         [HttpPost("export/pdf")]
         public async Task<IActionResult> ExportToPdf(
             [FromBody] PatrolSessionAnalyticsFilter filter,
             [FromQuery] bool includeTimeline = false,
-            [FromQuery] bool includeIncidents = false)
+            [FromQuery] bool includeCases = false)
         {
-            var pdfBytes = await _service.ExportToPdfAsync(filter, includeTimeline, includeIncidents);
+            var pdfBytes = await _service.ExportToPdfAsync(filter, includeTimeline, includeCases);
 
             return File(pdfBytes,
                 "application/pdf",

@@ -44,8 +44,8 @@ namespace Shared.Contracts.Analytics
         // Timeline (optional)
         public List<PatrolTimelineEvent>? Timeline { get; set; }
 
-        // Incidents (optional)
-        public List<PatrolIncidentSummary>? Incidents { get; set; }
+        // Cases (optional)
+        public List<PatrolCaseSummary>? Cases { get; set; }
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ namespace Shared.Contracts.Analytics
     /// <summary>
     /// Incident summary during patrol
     /// </summary>
-    public class PatrolIncidentSummary
+    public class PatrolCaseSummary
     {
         public Guid CaseId { get; set; }
         public DateTime ReportedAt { get; set; }
@@ -85,7 +85,7 @@ namespace Shared.Contracts.Analytics
         public int TotalCheckpoints { get; set; }
         public int CompletedCheckpoints { get; set; }
         public int CompletionPercentage { get; set; }
-        public int TotalIncidents { get; set; }
+        public int TotalCases { get; set; }
         public string? TotalDuration { get; set; }
         public string? AverageCheckpointTime { get; set; }
         public bool IsCompletedOnTime { get; set; }
