@@ -12,9 +12,10 @@ using System.Threading.Tasks;
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.Primary)]
     [Route("api/patrol-analytics")]
     [ApiController]
-    [MinLevel(LevelPriority.Primary)]
+
     public class PatrolSessionAnalyticsController : ControllerBase
     {
         private readonly IPatrolSessionAnalyticsService _service;
