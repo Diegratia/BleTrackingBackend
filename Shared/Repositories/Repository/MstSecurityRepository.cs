@@ -185,87 +185,7 @@ namespace Repositories.Repository
             return await GetAllQueryable().ToListAsync();
         }
 
-        // public async Task<List<MstSecurityBlacklistLogRM>> GetBlacklistedAsync()
-        // {
-        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-        //     var query = _context.MstSecurities
-        //                 .AsNoTracking()
-        //                 .Where(fd => fd.Status != 0 && fd.IsBlacklist == true);
-        //     query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-        //     var projected = query.Select(t => new MstSecurityBlacklistLogRM
-        //         {
-        //             Id = t.Id,
-        //             Name = t.Name,
-        //             CardNumber = t.CardNumber,
-        //             PersonId = t.PersonId,
-        //         });
-        //         return await projected.ToListAsync();                 
-        // }
-
-        //     public async Task<List<BlacklistLogRM>> GetBlacklistLogsAsync()
-        // {
-        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-        //     // === Query MEMBER ===
-        //     var memberQuery = _context.MstSecurities
-        //         .AsNoTracking()
-        //         .Where(x => x.Status != 0 && x.IsBlacklist == true);
-
-        //     memberQuery = ApplyApplicationIdFilter(memberQuery, applicationId, isSystemAdmin);
-
-        //     var memberLogs = await memberQuery
-        //         .Select(t => new BlacklistLogRM
-        //         {
-        //             Id = t.Id,
-        //             Type = "Member",
-        //             Name = t.Name,
-        //             CardNumber = t.CardNumber,
-        //             PersonId = t.PersonId,
-        //         })
-        //         .ToListAsync();
-
-
-        //     // === Query VISITOR ===
-        //     var visitorQuery = _context.Visitors
-        //         .AsNoTracking()
-        //         .Where(x => x.Status != 0 && x.IsBlacklist == true);
-
-        //     visitorQuery = ApplyApplicationIdFilter(visitorQuery, applicationId, isSystemAdmin);
-
-        //     var visitorLogs = await visitorQuery
-        //         .Select(t => new BlacklistLogRM
-        //         {
-        //             Id = t.Id,
-        //             Type = "Visitor",
-        //             Name = t.Name,
-        //             CardNumber = t.CardNumber,
-        //             PersonId = t.PersonId,
-        //         })
-        //         .ToListAsync();
-
-        //     // === Kombinasikan ===
-        //     return memberLogs
-        //         .Concat(visitorLogs)
-        //         .OrderByDescending(x => x.Id)   // optional: sorting gabungan
-        //         .ToList();
-        // }
-
         
-
-        // public async Task<int> GetBlacklistedCountAsync()
-        // {
-        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-        //     var q = _context.MstSecurities
-        //         .AsNoTracking()
-        //         .Where(c => c.Status != 0 && c.IsBlacklist == true);
-
-        //     q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
-
-        //     return await q.CountAsync();
-        // }
 
         public async Task<List<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
@@ -288,6 +208,7 @@ namespace Repositories.Repository
                 OrganizationName = t.Organization.Name,
                 DepartmentName = t.Department.Name,
                 DistrictName = t.District.Name,
+                // IsHead = t.user != null && t.user.Group != null ? t.user.Group.IsHead : null,
             }); 
             return await projected.ToListAsync();
         }

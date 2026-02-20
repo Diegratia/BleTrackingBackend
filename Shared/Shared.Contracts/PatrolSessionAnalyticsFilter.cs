@@ -31,6 +31,5 @@ namespace Shared.Contracts
         // =====================================================
 
         public string? ReportTitle { get; set; }
-        public string? Timezone { get; set; }  // "WIB", "UTC+7", "Asia/Jakarta"
     }
 }

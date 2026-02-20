@@ -60,29 +60,27 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 }
             }
 
-            // 1. Get raw data from repository
+            // 1. Get raw data from repository (UTC from database)
             var (sessions, total, filtered) = await _repository.GetAnalyticsDataAsync(filter);
 
-            // 2. Apply timezone conversion if needed
-            var tz = TimezoneHelper.Resolve(filter.Timezone);
+            // 2. Build session reads (UTC - no timezone conversion)
             var sessionReads = new List<PatrolSessionAnalyticsRead>();
 
             foreach (var session in sessions)
             {
-                var sessionRead = BuildSessionRead(session, tz, filter);
+                var sessionRead = BuildSessionRead(session, filter);
                 sessionReads.Add(sessionRead);
             }
 
-            // 3. Apply sorting (already applied in repository, but sort transformed data if needed)
+            // 3. Apply sorting
             if (!string.IsNullOrWhiteSpace(filter.SortColumn))
             {
-                // Default sorting by StartedAt descending
                 sessionReads = filter.SortDir?.ToLower() == "asc"
                     ? sessionReads.OrderBy(s => s.StartedAt).ToList()
                     : sessionReads.OrderByDescending(s => s.StartedAt).ToList();
             }
 
-            // 4. Apply pagination on transformed data
+            // 4. Apply pagination
             var start = (filter.Page - 1) * filter.PageSize;
             var pagedData = sessionReads
                 .Skip(start)
@@ -107,8 +105,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             if (session == null)
                 return null;
 
-            var tz = TimeZoneInfo.Utc;
-            return BuildSessionRead(session, tz, new PatrolSessionAnalyticsFilter
+            return BuildSessionRead(session, new PatrolSessionAnalyticsFilter
             {
                 IncludeTimeline = true,
                 IncludeIncidents = true
@@ -125,24 +122,20 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             filter.PageSize = originalPageSize;
 
-            var tz = TimezoneHelper.Resolve(filter.Timezone);
-            var sessionReads = sessions.Select(s => BuildSessionRead(s, tz, filter)).ToList();
+            var sessionReads = sessions.Select(s => BuildSessionRead(s, filter)).ToList();
 
             return GeneratePdfReport(sessionReads, filter);
         }
 
         private PatrolSessionAnalyticsRead BuildSessionRead(
             PatrolSession session,
-            TimeZoneInfo tz,
             PatrolSessionAnalyticsFilter filter)
         {
             var read = new PatrolSessionAnalyticsRead
             {
                 SessionId = session.Id,
-                StartedAt = TimezoneHelper.ConvertFromUtc(session.StartedAt, tz),
-                EndedAt = session.EndedAt.HasValue
-                    ? TimezoneHelper.ConvertFromUtc(session.EndedAt.Value, tz)
-                    : null,
+                StartedAt = session.StartedAt,  // UTC from database
+                EndedAt = session.EndedAt,         // UTC from database
                 SecurityId = session.SecurityId,
                 SecurityName = session.Security?.Name ?? session.SecurityNameSnap ?? "Unknown",
                 SecurityEmployeeNumber = session.Security?.IdentityId ?? session.SecurityIdentityIdSnap,
@@ -161,7 +154,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             // Build timeline if requested
             if (filter.IncludeTimeline)
             {
-                read.Timeline = BuildTimeline(session, tz);
+                read.Timeline = BuildTimeline(session);
             }
 
             // Build incidents if requested
@@ -172,7 +165,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     .Select(c => new PatrolIncidentSummary
                     {
                         CaseId = c.Id,
-                        ReportedAt = TimezoneHelper.ConvertFromUtc(c.CreatedAt, tz),
+                        ReportedAt = c.CreatedAt,  // UTC from database
                         Title = c.Title,
                         CaseType = c.CaseType.ToString(),
                         ThreatLevel = c.ThreatLevel?.ToString() ?? "Unknown",
@@ -185,7 +178,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return read;
         }
 
-        private List<PatrolTimelineEvent> BuildTimeline(PatrolSession session, TimeZoneInfo tz)
+        private List<PatrolTimelineEvent> BuildTimeline(PatrolSession session)
         {
             var timeline = new List<PatrolTimelineEvent>();
 
@@ -194,7 +187,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 Stage = "started",
                 StageName = "Patrol Started",
-                Timestamp = TimezoneHelper.ConvertFromUtc(session.StartedAt, tz)
+                Timestamp = session.StartedAt  // UTC
             });
 
             // 2. Checkpoint events (ordered by OrderIndex)
@@ -226,7 +219,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 {
                     Stage = $"checkpoint_{log.OrderIndex}",
                     StageName = $"Checkpoint: {log.AreaNameSnap}",
-                    Timestamp = TimezoneHelper.ConvertFromUtc(log.ArrivedAt.Value, tz),
+                    Timestamp = log.ArrivedAt.Value,  // UTC
                     DurationSeconds = durationSeconds ?? duration,
                     DurationFormatted = durationFormatted,
                     IsDelayed = false,  // TODO: Calculate delay based on estimated time
@@ -247,7 +240,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 {
                     Stage = "completed",
                     StageName = "Patrol Completed",
-                    Timestamp = TimezoneHelper.ConvertFromUtc(session.EndedAt.Value, tz),
+                    Timestamp = session.EndedAt.Value,  // UTC
                     DurationSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(TimeSpan.FromSeconds(duration.Value)) : null
                 });
@@ -329,7 +322,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
                             header.Cell().Element(CellStyle).Text("Security").SemiBold();
                             header.Cell().Element(CellStyle).Text("Route").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Started").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Started (UTC)").SemiBold();
                             header.Cell().Element(CellStyle).Text("Duration").SemiBold();
                             header.Cell().Element(CellStyle).Text("Checkpoints").SemiBold();
                             header.Cell().Element(CellStyle).Text("Complete").SemiBold();
