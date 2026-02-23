@@ -17,6 +17,7 @@ using Helpers.Consumer.Mqtt;
 using Data.ViewModels.Shared.ExceptionHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.Json.Serialization;
 
 try
 {
@@ -64,7 +65,20 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+        options.JsonSerializerOptions.Converters.Add(
+            new UtcDateTimeConverter()
+        );
+    });
 
 builder.Services.AddDbContext<BleTrackingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ??

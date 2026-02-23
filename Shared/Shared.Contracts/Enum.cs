@@ -275,7 +275,7 @@ namespace Shared.Contracts
         SuspiciousActivity,
         TrepassingWarning,
         EscortedOut,
-        Apprhended,
+        Apprehended,
         HandedOverToPolice,
         EscalatedToLawEnforcement,
         Other
