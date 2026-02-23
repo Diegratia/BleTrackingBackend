@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -33,6 +34,29 @@ namespace Web.API.Controllers.Controllers
 
             var response = await _authService.LoginAsync(dto);
             return Ok(ApiResponse.Success("Login successful", response));
+        }
+
+        [HttpGet("login-sso")]
+        [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> LoginSso()
+        {
+            var windowsUsername = User.Identity?.Name;
+            if (string.IsNullOrEmpty(windowsUsername))
+                return Unauthorized(ApiResponse.Unauthorized("Windows Identity is missing. Browser may not have passed credentials."));
+
+            try 
+            {
+                var response = await _authService.LoginSsoAsync(windowsUsername);
+                return Ok(ApiResponse.Success("SSO Login successful", response));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse.Unauthorized(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse.BadRequest(ex.Message));
+            }
         }
 
         [HttpPost("logout")]

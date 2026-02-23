@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-
+using Microsoft.AspNetCore.Authentication.Negotiate;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -32,7 +32,8 @@ namespace BusinessLogic.Services.Extension.RootExtension
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
                     };
-                });
+                })
+                .AddNegotiate();
             services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
             return services;
         }

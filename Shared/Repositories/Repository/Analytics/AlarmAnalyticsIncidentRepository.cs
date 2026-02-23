@@ -447,10 +447,6 @@ namespace Repositories.Repository.Analytics
             return query;
         }
 
-        /// <summary>
-        /// Alarm per InvestigatedResult - counts each enum value
-        /// Uses AlarmTriggers table for accurate investigation results
-        /// </summary>
         public async Task<List<AlarmInvestigatedResultRead>> GetInvestigatedResultSummaryAsync(AlarmAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
@@ -459,12 +455,10 @@ namespace Repositories.Repository.Analytics
                 range?.to ?? request.To ?? DateTime.UtcNow
             );
 
-            // Use AlarmTriggers directly since it has the InvestigatedResult enum
             var query = _context.AlarmTriggers
                 .AsNoTracking()
                 .Where(a => a.TriggerTime >= from && a.TriggerTime <= to);
 
-            // Apply filters (similar pattern as other queries)
             if (request.BuildingId.HasValue)
             {
                 query = query.Where(a => a.Floorplan != null &&
@@ -480,7 +474,6 @@ namespace Repositories.Repository.Analytics
 
             if (request.FloorplanMaskedAreaId.HasValue)
             {
-                // Filter through FloorplanMaskedArea relationship
                 var areaFloorplanIds = await _context.FloorplanMaskedAreas
                     .Where(fma => fma.Id == request.FloorplanMaskedAreaId && fma.Status != 0)
                     .Select(fma => fma.FloorplanId)
@@ -499,7 +492,6 @@ namespace Repositories.Repository.Analytics
                 query = query.Where(a => a.DoneBy == request.OperatorName);
             }
 
-            // Only get alarms that have investigation results
             var incidents = await query
                 .Where(a => a.InvestigatedResult.HasValue)
                 .Select(a => new

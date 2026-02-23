@@ -34,6 +34,7 @@ namespace BusinessLogic.Services.Interface
          Task LogoutAsync(string refreshToken);
         Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto);
         Task<AuthResponseDto> IntegrationLoginAsync(IntegrationLoginDto dto);
+        Task<AuthResponseDto> LoginSsoAsync(string windowsUsername);
 
         
             // Task ConfirmVisitorInvitationAsync(string email); 
@@ -233,6 +234,71 @@ namespace BusinessLogic.Services.Interface
                 Username = user.Username,
                 Email = user.Email,
                 IsIntegration = user.IsIntegration,
+                GroupId = user.GroupId,
+                IsHead = user.Group.IsHead,
+                ApplicationId = user.Group.ApplicationId,
+                LevelPriority = user.Group.LevelPriority.ToString(),
+                IsEmailConfirmed = user.IsEmailConfirmation,
+                Status = user.Status
+            };
+        }
+
+        public async Task<AuthResponseDto> LoginSsoAsync(string windowsUsername)
+        {
+            if (string.IsNullOrWhiteSpace(windowsUsername))
+                throw new UnauthorizedAccessException("Windows identity not provided");
+
+            // Extract just the username if it's in the format DOMAIN\username or username@domain
+            string username = windowsUsername;
+            if (username.Contains("\\"))
+                username = username.Split('\\').Last();
+            else if (username.Contains("@"))
+                username = username.Split('@').First();
+
+            var user = await _userRepository.GetByUsernameAsync(username.ToLower());
+            if (user == null)
+                throw new UnauthorizedAccessException("User not found or not registered in CMS");
+
+            if (user.Status != 1)
+                throw new UnauthorizedAccessException("Account is not active");
+            if (user.IsEmailConfirmation == 0)
+                throw new UnauthorizedAccessException("Email not confirmed");
+
+            user.LastLoginAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            var accessToken = await GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken();
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Token = refreshToken,
+                ExpiryDate = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshTokenExpiryInDays")),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
+
+            _audit.Action(
+                AuditEmitter.AuditAction.LOGIN,
+                "User",
+                "User SSO login successfully",
+                new {
+                    username = user.Username,
+                    windowsIdentity = windowsUsername,
+                    ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString()
+                }
+            );
+
+            return new AuthResponseDto
+            {
+                Token = accessToken,
+                RefreshToken = refreshToken,
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
                 GroupId = user.GroupId,
                 IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
