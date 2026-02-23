@@ -103,4 +103,14 @@ namespace Shared.Contracts.Analytics
         public string AlarmStatus { get; set; } = string.Empty;
         public int Total { get; set; }
     }
+
+    /// <summary>
+    /// InvestigatedResult summary for alarm analytics
+    /// Shows count of each investigation result type
+    /// </summary>
+    public class AlarmInvestigatedResultRead
+    {
+        public string Result { get; set; } = string.Empty;
+        public int Total { get; set; }
+    }
 }

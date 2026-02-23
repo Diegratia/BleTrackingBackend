@@ -447,6 +447,96 @@ namespace Repositories.Repository.Analytics
             return query;
         }
 
+        /// <summary>
+        /// Alarm per InvestigatedResult - counts each enum value
+        /// Uses AlarmTriggers table for accurate investigation results
+        /// </summary>
+        public async Task<List<AlarmInvestigatedResultRead>> GetInvestigatedResultSummaryAsync(AlarmAnalyticsFilter request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var (from, to) = (
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
+            );
+
+            // Use AlarmTriggers directly since it has the InvestigatedResult enum
+            var query = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(a => a.TriggerTime >= from && a.TriggerTime <= to);
+
+            // Apply filters (similar pattern as other queries)
+            if (request.BuildingId.HasValue)
+            {
+                query = query.Where(a => a.Floorplan != null &&
+                    a.Floorplan.Floor != null &&
+                    a.Floorplan.Floor.BuildingId == request.BuildingId);
+            }
+
+            if (request.FloorId.HasValue)
+            {
+                query = query.Where(a => a.Floorplan != null &&
+                    a.Floorplan.FloorId == request.FloorId);
+            }
+
+            if (request.FloorplanMaskedAreaId.HasValue)
+            {
+                // Filter through FloorplanMaskedArea relationship
+                var areaFloorplanIds = await _context.FloorplanMaskedAreas
+                    .Where(fma => fma.Id == request.FloorplanMaskedAreaId && fma.Status != 0)
+                    .Select(fma => fma.FloorplanId)
+                    .ToListAsync();
+
+                query = query.Where(a => areaFloorplanIds.Contains(a.FloorplanId.Value));
+            }
+
+            if (request.VisitorId.HasValue)
+            {
+                query = query.Where(a => a.VisitorId == request.VisitorId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.OperatorName))
+            {
+                query = query.Where(a => a.DoneBy == request.OperatorName);
+            }
+
+            // Only get alarms that have investigation results
+            var incidents = await query
+                .Where(a => a.InvestigatedResult.HasValue)
+                .Select(a => new
+                {
+                    a.InvestigatedResult
+                })
+                .ToListAsync();
+
+            // Group by InvestigatedResult and count
+            var grouped = incidents
+                .GroupBy(x => x.InvestigatedResult)
+                .Select(g => new AlarmInvestigatedResultRead
+                {
+                    Result = g.Key.HasValue ? g.Key.Value.ToString().ToLower() : "unknown",
+                    Total = g.Count()
+                })
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            // If no results, return all enum values with 0 count
+            if (grouped.Count == 0)
+            {
+                var allResults = Enum.GetValues(typeof(InvestigatedResult))
+                    .Cast<InvestigatedResult>()
+                    .Select(e => new AlarmInvestigatedResultRead
+                    {
+                        Result = e.ToString().ToLower(),
+                        Total = 0
+                    })
+                    .ToList();
+
+                return allResults;
+            }
+
+            return grouped;
+        }
+
             // time range
 //             private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
 //             {
