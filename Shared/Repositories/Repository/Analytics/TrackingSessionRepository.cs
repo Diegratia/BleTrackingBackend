@@ -601,7 +601,7 @@ namespace Repositories.Repository.Analytics
                 IsActive = ad.IsActive,
                 SecurityId = ad.SecurityId,
                 SecurityName = ad.SecurityName,
-                InvestigatedResult = ad.InvestigatedResult,
+                InvestigatedResult = ad.InvestigatedResult.HasValue ? ad.InvestigatedResult.ToString() : null,
                 FloorplanMaskedAreaIds = ad.FloorplanId.HasValue && floorplanMaskedAreaIds.ContainsKey(ad.FloorplanId.Value)
                     ? floorplanMaskedAreaIds[ad.FloorplanId.Value]
                     : new HashSet<Guid>()

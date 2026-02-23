@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Shared.Contracts;
 
 namespace Data.ViewModels.AlarmAnalytics
 {
@@ -107,12 +108,12 @@ namespace Data.ViewModels.AlarmAnalytics
     /// </summary>
     public class IncidentInvestigationDto
     {
-        public string? Result { get; set; }
+        public InvestigatedResult? Result { get; set; }
         public string? DispatchedPerson { get; set; }
         public Guid? DispatchedPersonId { get; set; }
         public DateTime? InvestigatedAt { get; set; }
         public DateTime? DoneAt { get; set; }
-        public string? Notes { get; set; }
+        public string? InvestigationNotes { get; set; }
         public bool? WasInvestigated { get; set; }
     }
 }

@@ -159,12 +159,12 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}/done-investigated")]
         public async Task<IActionResult> DoneInvestigated(Guid id, [FromBody] AlarmInvestigationResultDto dto)
         {
-            if (dto == null || string.IsNullOrWhiteSpace(dto.Result))
+            if (dto == null)
             {
-                return BadRequest(ApiResponse.BadRequest("Investigation result is required"));
+                return BadRequest(ApiResponse.BadRequest("Request body is required"));
             }
 
-            await _service.DoneInvestigatedAsync(id, dto.Result);
+            await _service.DoneInvestigatedAsync(id, dto.Result, dto.Notes);
             return Ok(ApiResponse.Success("Investigation completed successfully"));
         }
 

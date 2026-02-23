@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Shared.Contracts;
 
 namespace Data.ViewModels
 {
@@ -34,7 +36,7 @@ namespace Data.ViewModels
         public string? CancelBy { get; set; }
         public string? WaitingBy { get; set; }
         public string? InvestigatedBy { get; set; }
-        public string? InvestigatedResult { get; set; }
+        public InvestigatedResult? InvestigatedResult { get; set; }
         public Guid? AssignedSecurityId { get; set; }
         public Guid ApplicationId { get; set; }
         public MstFloorplanDto Floorplan { get; set; }
@@ -70,7 +72,8 @@ namespace Data.ViewModels
         public string? CancelBy { get; set; }
         public string? WaitingBy { get; set; }
         public string? InvestigatedBy { get; set; }
-        public string? InvestigatedResult { get; set; }
+        public InvestigatedResult? InvestigatedResult { get; set; }
+        public string? InvestigatedNotes { get; set; }
         public Guid ApplicationId { get; set; }
     }
 
@@ -78,7 +81,8 @@ namespace Data.ViewModels
     {
         public string? ActionStatus { get; set; }
         public Guid? AssignedSecurityId { get; set; }
-        public string? InvestigatedResult { get; set; }
+        public InvestigatedResult? InvestigatedResult { get; set; }
+        public string? InvestigatedNotes { get; set; }
     }
 
     public class AlarmTriggersSummary
@@ -94,7 +98,10 @@ namespace Data.ViewModels
 
     public class AlarmInvestigationResultDto
     {
-        public string Result { get; set; } = string.Empty;
+        [Required]
+        public InvestigatedResult Result { get; set; }
+        [MaxLength(4000)]
+        public string? Notes { get; set; }
     }
 
 }

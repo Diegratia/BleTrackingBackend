@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.Interface
         /// Security completes investigation with result - changes ActionStatus to DoneInvestigated
         /// Flow: Arrived → DoneInvestigated
         /// </summary>
-        Task DoneInvestigatedAsync(Guid id, string result);
+        Task DoneInvestigatedAsync(Guid id, InvestigatedResult result, string? notes = null);
 
         /// <summary>
         /// Operator marks alarm as resolved - changes ActionStatus to Done

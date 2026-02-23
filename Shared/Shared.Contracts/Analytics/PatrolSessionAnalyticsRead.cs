@@ -16,7 +16,7 @@ namespace Shared.Contracts.Analytics
     }
 
     /// <summary>
-    /// Patrol session read with timeline, metrics, and incidents
+    /// Patrol session read with timeline, metrics, and Cases
     /// </summary>
     public class PatrolSessionAnalyticsRead
     {
@@ -100,7 +100,7 @@ namespace Shared.Contracts.Analytics
         public int CompletedSessions { get; set; }
         public int IncompleteSessions { get; set; }
         public double AverageCompletionRate { get; set; }
-        public int TotalIncidents { get; set; }
+        public int TotalCases { get; set; }
         public int TotalCheckpointsVisited { get; set; }
     }
 }

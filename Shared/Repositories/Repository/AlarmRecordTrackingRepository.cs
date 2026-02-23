@@ -202,7 +202,7 @@ namespace Repositories.Repository
 
                     TriggeredAt = a.TriggerTime,
                     DoneAt = a.DoneTimestamp,
-                    InvestigatedResult = a.InvestigatedResult,
+                    InvestigatedResult = a.InvestigatedResult.ToString(),
                     LastNotifiedAt = a.LastNotifiedAt,
 
                     AssignedSecurityName = a.Security.Name,

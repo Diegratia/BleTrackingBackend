@@ -1295,12 +1295,19 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                 entity.Property(e => e.Alarm)
+                entity.Property(e => e.Alarm)
                     .HasColumnName("alarm_record_status")
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (AlarmRecordStatus)Enum.Parse(typeof(AlarmRecordStatus), v, true)
+                    );
+                entity.Property(e => e.InvestigatedResult)
+                    .HasColumnName("investigated_result")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (InvestigatedResult)Enum.Parse(typeof(InvestigatedResult), v, true)
                     );
 
                 entity.Property(e => e.Action)

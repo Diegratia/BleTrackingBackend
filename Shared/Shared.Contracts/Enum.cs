@@ -266,6 +266,21 @@ namespace Shared.Contracts
         Secondary, // member /employee
         UserCreated // visitor
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum InvestigatedResult
+    {
+        TestTrigger,
+        FalseAlarm,
+        AuthorizedAccess,
+        SuspiciousActivity,
+        TrepassingWarning,
+        EscortedOut,
+        Apprhended,
+        HandedOverToPolice,
+        EscalatedToLawEnforcement,
+        Other
+    }
+
     public enum BoundaryType
     {
         Both, // 0

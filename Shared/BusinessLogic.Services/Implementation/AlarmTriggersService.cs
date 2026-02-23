@@ -123,7 +123,7 @@ namespace BusinessLogic.Services.Implementation
                 case "resolve":
                     if (alarmTriggers.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
                         throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarmTriggers.Action}");
-                    if (string.IsNullOrWhiteSpace(alarmTriggers.InvestigatedResult))
+                    if (!alarmTriggers.InvestigatedResult.HasValue)
                         throw new BusinessException("Cannot resolve: no investigation result found");
                     alarmTriggers.Action = Shared.Contracts.ActionStatus.Done;
                     alarmTriggers.IsActive = false;
@@ -344,7 +344,7 @@ namespace BusinessLogic.Services.Implementation
         /// Security completes investigation with result
         /// Flow: Arrived → DoneInvestigated
         /// </summary>
-        public async Task DoneInvestigatedAsync(Guid id, string result)
+        public async Task DoneInvestigatedAsync(Guid id, InvestigatedResult result, string? notes = null)
         {
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
@@ -354,15 +354,13 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
                 throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
 
-            if (string.IsNullOrWhiteSpace(result))
-                throw new BusinessException("Investigation result is required");
-
             var currentSecurityId = await GetCurrentSecurityIdAsync();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
 
             alarm.Action = Shared.Contracts.ActionStatus.DoneInvestigated;
             alarm.InvestigatedResult = result;
+            alarm.InvestigatedNotes = notes;
             alarm.InvestigatedDoneAt = DateTime.UtcNow;
             alarm.InvestigatedDoneBy = username;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
@@ -392,7 +390,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
                 throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarm.Action}");
 
-            if (string.IsNullOrWhiteSpace(alarm.InvestigatedResult))
+            if (!alarm.InvestigatedResult.HasValue)
                 throw new BusinessException("Cannot resolve: no investigation result found");
 
             alarm.Action = Shared.Contracts.ActionStatus.Done;
@@ -546,6 +544,7 @@ namespace BusinessLogic.Services.Implementation
                 DispatchedPersonId = alarmTrigger.SecurityId,
                 InvestigatedAt = alarmTrigger.InvestigatedDoneAt ?? alarmTrigger.ArrivedAt,
                 DoneAt = alarmTrigger.DoneTimestamp,
+                InvestigationNotes = alarmTrigger.InvestigatedNotes,
                 WasInvestigated = alarmTrigger.InvestigatedDoneAt.HasValue || alarmTrigger.ArrivedAt.HasValue
             };
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Shared.Contracts;
 
 namespace Data.ViewModels
 {
@@ -9,9 +10,15 @@ namespace Data.ViewModels
     public class AlarmTriggersSecurityActionDto
     {
         /// <summary>
-        /// Required for DoneInvestigated action - the investigation result text
+        /// Required for DoneInvestigated action - the investigation result
         /// </summary>
-        [StringLength(4000)]
-        public string? InvestigationResult { get; set; }
+        [Required]
+        public InvestigatedResult InvestigationResult { get; set; }
+
+        /// <summary>
+        /// Optional free text notes for additional investigation details
+        /// </summary>
+        [MaxLength(4000)]
+        public string? InvestigationNotes { get; set; }
     }
 }

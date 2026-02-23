@@ -12,7 +12,7 @@ namespace Entities.Models
 {
     public class AlarmRecordTracking : BaseModel, IApplicationEntity
     {
-        
+
         [Column("timestamp")]
         public DateTime? Timestamp { get; set; }
 
@@ -61,19 +61,19 @@ namespace Entities.Models
 
         [StringLength(255)]
         [Column("idle_by")]
-        public string? IdleBy { get; set; } 
+        public string? IdleBy { get; set; }
 
         [StringLength(255)]
         [Column("done_by")]
-        public string? DoneBy { get; set; } 
+        public string? DoneBy { get; set; }
 
         [StringLength(255)]
         [Column("cancel_by")]
-        public string? CancelBy { get; set; } 
+        public string? CancelBy { get; set; }
 
         [StringLength(255)]
         [Column("waiting_by")]
-        public string? WaitingBy { get; set; } 
+        public string? WaitingBy { get; set; }
 
         [StringLength(255)]
         [Column("investigated_by")]
@@ -82,11 +82,15 @@ namespace Entities.Models
         [Column("investigated_result")]
         public string? InvestigatedResult { get; set; }
 
+        [Column("investigated_notes")]
+        [StringLength(4000)]
+        public string? InvestigatedNotes { get; set; }
+
         public MstApplication Application { get; set; }
         public Visitor Visitor { get; set; }
         public MstMember Member { get; set; }
         public MstBleReader Reader { get; set; }
-        public FloorplanMaskedArea FloorplanMaskedArea{ get; set; } 
-        public AlarmTriggers AlarmTriggers{ get; set; } 
+        public FloorplanMaskedArea FloorplanMaskedArea{ get; set; }
+        public AlarmTriggers AlarmTriggers{ get; set; }
     }
 }

@@ -52,7 +52,8 @@ namespace Shared.Contracts.Read
         public string? CancelBy { get; set; }
         public string? WaitingBy { get; set; }
         public string? InvestigatedDoneBy { get; set; }
-        public string? InvestigatedResult { get; set; }
+        public InvestigatedResult? InvestigatedResult { get; set; }
+        public string? InvestigatedNotes { get; set; }
 
         public Guid ApplicationId { get; set; }
 

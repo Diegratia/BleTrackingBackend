@@ -92,7 +92,11 @@ namespace Entities.Models
         public string? WaitingBy { get; set; }
 
         [Column("investigated_result")]
-        public string? InvestigatedResult { get; set; }
+        public InvestigatedResult? InvestigatedResult { get; set; } = null;
+
+        [Column("investigated_notes")]
+        [MaxLength(4000)]
+        public string? InvestigatedNotes { get; set; }
 
         [Column("action_updated_at")]
         public DateTime? ActionUpdatedAt { get; set; }
