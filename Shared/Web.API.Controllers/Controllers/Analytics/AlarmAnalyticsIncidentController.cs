@@ -86,5 +86,15 @@ namespace Web.API.Controllers.Controllers.Analytics
             var response = await _service.GetHourlyStatusSummaryAsync(request);
             return Ok(ApiResponse.Success("Hourly status summary retrieved successfully", response));
         }
+
+        // ===================================================================
+        // 7️⃣ InvestigatedResult Summary - Count each investigation result type
+        // ===================================================================
+        [HttpPost("investigated-result")]
+        public async Task<IActionResult> GetInvestigatedResultSummaryAsync([FromBody] AlarmAnalyticsFilter request)
+        {
+            var response = await _service.GetInvestigatedResultSummaryAsync(request);
+            return Ok(ApiResponse.Success("Investigated result summary retrieved successfully", response));
+        }
     }
 }
