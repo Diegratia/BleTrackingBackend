@@ -510,10 +510,11 @@ namespace Repositories.Repository.Analytics
 
             // Group by InvestigatedResult and count
             var grouped = incidents
-                .GroupBy(x => x.InvestigatedResult)
+                .Where(x => x.InvestigatedResult.HasValue)
+                .GroupBy(x => x.InvestigatedResult!.Value)
                 .Select(g => new AlarmInvestigatedResultRead
                 {
-                    Result = g.Key.HasValue ? g.Key.Value.ToString().ToLower() : "unknown",
+                    InvestigatedResult = g.Key,
                     Total = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
@@ -526,7 +527,7 @@ namespace Repositories.Repository.Analytics
                     .Cast<InvestigatedResult>()
                     .Select(e => new AlarmInvestigatedResultRead
                     {
-                        Result = e.ToString().ToLower(),
+                        InvestigatedResult = e,
                         Total = 0
                     })
                     .ToList();

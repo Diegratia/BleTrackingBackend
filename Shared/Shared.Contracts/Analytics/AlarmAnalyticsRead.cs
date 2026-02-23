@@ -110,7 +110,7 @@ namespace Shared.Contracts.Analytics
     /// </summary>
     public class AlarmInvestigatedResultRead
     {
-        public string Result { get; set; } = string.Empty;
+        public InvestigatedResult InvestigatedResult { get; set; } 
         public int Total { get; set; }
     }
 }
