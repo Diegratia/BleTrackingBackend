@@ -41,22 +41,12 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> LoginSso()
         {
             var windowsUsername = User.Identity?.Name;
+            Console.WriteLine("windowsUsername",windowsUsername);
             if (string.IsNullOrEmpty(windowsUsername))
                 return Unauthorized(ApiResponse.Unauthorized("Windows Identity is missing. Browser may not have passed credentials."));
 
-            try 
-            {
                 var response = await _authService.LoginSsoAsync(windowsUsername);
                 return Ok(ApiResponse.Success("SSO Login successful", response));
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ApiResponse.Unauthorized(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponse.BadRequest(ex.Message));
-            }
         }
 
         [HttpPost("logout")]

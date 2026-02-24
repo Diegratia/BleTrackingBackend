@@ -250,12 +250,14 @@ namespace BusinessLogic.Services.Interface
 
             // Extract just the username if it's in the format DOMAIN\username or username@domain
             string username = windowsUsername;
+            Console.WriteLine("ini username",username);
             if (username.Contains("\\"))
                 username = username.Split('\\').Last();
             else if (username.Contains("@"))
                 username = username.Split('@').First();
 
             var user = await _userRepository.GetByUsernameAsync(username.ToLower());
+            Console.WriteLine("ini user dari db",user);
             if (user == null)
                 throw new UnauthorizedAccessException("User not found or not registered in CMS");
 
