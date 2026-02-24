@@ -42,9 +42,6 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> LoginSso()
         {
             var windowsUsername = User.Identity?.Name;
-            Console.WriteLine("windowsUsername",windowsUsername);
-            Debug.WriteLine("windowsUsername",windowsUsername);
-            Debug.WriteLine("test22222222222222222222222222222222222");
             if (string.IsNullOrEmpty(windowsUsername))
                 return Unauthorized(ApiResponse.Unauthorized("Windows Identity is missing. Browser may not have passed credentials."));
 
