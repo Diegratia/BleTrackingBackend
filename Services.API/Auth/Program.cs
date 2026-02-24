@@ -25,7 +25,7 @@ using System.Text.RegularExpressions;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
-builder.UseSerilogExtension();
+// builder.UseSerilogExtension();
 
 // Konfigurasi CORS
 builder.Services.AddCorsExtension();
@@ -138,7 +138,7 @@ app.UseCors("AllowAll");
 // // app.UseHttpsRedirection();
 app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
-app.UseSerilogRequestLoggingExtension();
+// app.UseSerilogRequestLoggingExtension();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();

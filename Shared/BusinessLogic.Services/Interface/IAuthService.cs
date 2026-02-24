@@ -19,8 +19,10 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using BusinessLogic.Services.Implementation;
 using Bogus.DataSets;
+using Microsoft.Extensions.Logging;
 using Shared.Contracts;
 using Helpers.Consumer.Mqtt;
+using System.Diagnostics;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -35,6 +37,7 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto);
         Task<AuthResponseDto> IntegrationLoginAsync(IntegrationLoginDto dto);
         Task<AuthResponseDto> LoginSsoAsync(string windowsUsername);
+        
 
         
             // Task ConfirmVisitorInvitationAsync(string email); 
@@ -52,6 +55,7 @@ namespace BusinessLogic.Services.Interface
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEmailService _emailService;
         private readonly IAuditEmitter _audit;
+        private readonly ILogger<User> _logger;
 
 
 
@@ -65,6 +69,7 @@ namespace BusinessLogic.Services.Interface
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
             IAuditEmitter audit,
+            ILogger<User> logger,
             IEmailService emailService)
         {
             _userRepository = userRepository;
@@ -86,16 +91,23 @@ namespace BusinessLogic.Services.Interface
             if (user == null || string.IsNullOrEmpty(user.Password) || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             {
                 Console.WriteLine("Invalid username or password");
+                Debug.WriteLine("Invalid username or password");
+                _logger.LogDebug("Invalid username or password");
+
                 throw new UnauthorizedAccessException("Invalid username or password");
             }
             if (user.Status != 1)
             {
                 Console.WriteLine("Account is not active");
+                Debug.WriteLine("Account is not active");
+                _logger.LogDebug("Account is not active");
                 throw new UnauthorizedAccessException("Account is not active");
             }
             if (user.IsEmailConfirmation == 0)
             {
                 Console.WriteLine("Email not confirmed");
+                Debug.WriteLine("Email not confirmed");
+                _logger.LogDebug("Email not confirmed");
                 throw new UnauthorizedAccessException("Email not confirmed");
             }
 

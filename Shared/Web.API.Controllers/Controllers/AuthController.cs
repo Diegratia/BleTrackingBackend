@@ -9,6 +9,7 @@ using Data.ViewModels.ResponseHelper;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using System.Diagnostics;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -42,6 +43,8 @@ namespace Web.API.Controllers.Controllers
         {
             var windowsUsername = User.Identity?.Name;
             Console.WriteLine("windowsUsername",windowsUsername);
+            Debug.WriteLine("windowsUsername",windowsUsername);
+            Debug.WriteLine("test22222222222222222222222222222222222");
             if (string.IsNullOrEmpty(windowsUsername))
                 return Unauthorized(ApiResponse.Unauthorized("Windows Identity is missing. Browser may not have passed credentials."));
 
