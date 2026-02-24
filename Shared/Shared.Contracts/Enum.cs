@@ -357,4 +357,39 @@ namespace Shared.Contracts
         Floor = 2,
         Floorplan = 3
     }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum EvacuationAlertStatus
+    {
+        Draft,
+        Active,
+        Paused,
+        Completed,
+        Cancelled
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum EvacuationTriggerType
+    {
+        Manual,
+        FireAlarm,
+        Earthquake,
+        OtherEmergency
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum EvacuationPersonStatus
+    {
+        Remaining,
+        Evacuated,
+        Confirmed
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum EvacuationPersonCategory
+    {
+        Member,
+        Visitor,
+        Security
+    }
 }

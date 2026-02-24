@@ -77,6 +77,11 @@ namespace Repositories.DbContexts
         public DbSet<MonitoringConfigBuildingAccess> MonitoringConfigBuildingAccesses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        // Evacuation
+        public DbSet<EvacuationAssemblyPoint> EvacuationAssemblyPoints { get; set; }
+        public DbSet<EvacuationAlert> EvacuationAlerts { get; set; }
+        public DbSet<EvacuationTransaction> EvacuationTransactions { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -1914,9 +1919,117 @@ namespace Repositories.DbContexts
                 Entity.HasOne(rt => rt.User)
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId);
-            });   
+            });
 
-            
+            // Evacuation
+            modelBuilder.Entity<EvacuationAssemblyPoint>(entity =>
+            {
+                entity.ToTable("evacuation_assembly_points");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.HasOne(e => e.FloorplanMaskedArea)
+                    .WithMany()
+                    .HasForeignKey(e => e.FloorplanMaskedAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Floorplan)
+                    .WithMany()
+                    .HasForeignKey(e => e.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Floor)
+                    .WithMany()
+                    .HasForeignKey(e => e.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasQueryFilter(e => e.Status != 0);
+            });
+
+            modelBuilder.Entity<EvacuationAlert>(entity =>
+            {
+                entity.ToTable("evacuation_alerts");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.AlertStatus)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (EvacuationAlertStatus)Enum.Parse(typeof(EvacuationAlertStatus), v, true)
+                    );
+
+                entity.Property(e => e.TriggerType)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (EvacuationTriggerType)Enum.Parse(typeof(EvacuationTriggerType), v, true)
+                    );
+
+                entity.HasQueryFilter(e => e.Status != 0);
+            });
+
+            modelBuilder.Entity<EvacuationTransaction>(entity =>
+            {
+                entity.ToTable("evacuation_transactions");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.EvacuationAlertId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.EvacuationAssemblyPointId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.MemberId).HasMaxLength(36);
+                entity.Property(e => e.VisitorId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.Property(e => e.CardId).HasMaxLength(36);
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.PersonCategory)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (EvacuationPersonCategory)Enum.Parse(typeof(EvacuationPersonCategory), v, true)
+                    );
+
+                entity.Property(e => e.PersonStatus)
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (EvacuationPersonStatus)Enum.Parse(typeof(EvacuationPersonStatus), v, true)
+                    );
+
+                entity.HasOne(e => e.EvacuationAlert)
+                    .WithMany(a => a.Transactions)
+                    .HasForeignKey(e => e.EvacuationAlertId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.EvacuationAssemblyPoint)
+                    .WithMany()
+                    .HasForeignKey(e => e.EvacuationAssemblyPointId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Member)
+                    .WithMany()
+                    .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Visitor)
+                    .WithMany()
+                    .HasForeignKey(e => e.VisitorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Security)
+                    .WithMany()
+                    .HasForeignKey(e => e.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Card)
+                    .WithMany()
+                    .HasForeignKey(e => e.CardId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+
         }
     }
 }

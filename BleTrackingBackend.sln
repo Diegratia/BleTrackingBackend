@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayHealthApi", "Service
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geofence", "Services.API\Geofence\Geofence.csproj", "{ABEC9C2E-D52B-4B96-8D21-7D2856E9761A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evacuation", "Services.API\Evacuation\Evacuation.csproj", "{A1B2C3D4-E5F6-4A5B-8C9D-1E2F3A4B5C6D}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobsScheduler", "Services.API\JobsScheduler\JobsScheduler.csproj", "{5371251B-FFCB-4224-96F7-C221999F747C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseChecker", "Services.API\LicenseChecker\LicenseChecker.csproj", "{F38D0A04-8720-4864-B458-C95880A44055}"
