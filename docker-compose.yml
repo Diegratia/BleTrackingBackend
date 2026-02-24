@@ -327,7 +327,7 @@ services:
       dockerfile: Services.API/Evacuation/Dockerfile
     image: dev1pci2025/bletrackingbackend-evacuation:dev
     ports:
-      - "5040:5040"
+      - "5021:5021"
     volumes:
       - ./.env:/app/.env
     restart: always

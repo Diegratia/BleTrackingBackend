@@ -12,7 +12,7 @@ using Shared.Contracts.Read;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/evacuation-assembly-point")]
     [ApiController]
     [MinLevel(LevelPriority.PrimaryAdmin)]
     public class EvacuationAssemblyPointController : ControllerBase

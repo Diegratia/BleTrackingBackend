@@ -322,47 +322,6 @@ namespace BusinessLogic.Services.Interface
             };
         }
 
-        //     public async Task<AuthResponseDto> IntegrationLoginAsync(IntegrationLoginDto dto)
-        // {
-        //     var user = await _userRepository.GetByIntegrationUsername(dto.IntegrationUsername.ToLower());
-        //     if (user == null)
-        //         throw new UnauthorizedAccessException("Invalid Username");
-        //     if (user.Group.LevelPriority != LevelPriority.SuperAdmin)
-        //         throw new UnauthorizedAccessException("Only Integration Level can login");
-
-        //     user.LastLoginAt = DateTime.UtcNow;
-        //     await _userRepository.UpdateAsync(user);
-
-        //     var accessToken = GenerateJwtToken(user);
-        //     var refreshToken = GenerateRefreshToken();
-
-        //     var refreshTokenEntity = new RefreshToken
-        //     {
-        //         Id = Guid.NewGuid(),
-        //         UserId = user.Id,
-        //         Token = refreshToken,
-        //         ExpiryDate = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshTokenExpiryInDays")),
-        //         CreatedAt = DateTime.UtcNow
-        //     };
-
-        //     await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
-
-        //     return new AuthResponseDto
-        //     {
-        //         Token = accessToken,
-        //         RefreshToken = refreshToken,
-        //         Id = user.Id,
-        //         Username = user.Username,
-        //         Email = user.Email,
-        //         IsIntegration = user.IsIntegration,
-        //         GroupId = user.GroupId,
-        //         ApplicationId = user.Group.ApplicationId,
-        //         LevelPriority = user.Group.LevelPriority.ToString(),
-        //         IsEmailConfirmed = user.IsEmailConfirmation,
-        //         Status = user.Status.ToString()
-        //     };
-        // }
-
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
             if (await _userRepository.EmailExistsAsync(dto.Email.ToLower()))

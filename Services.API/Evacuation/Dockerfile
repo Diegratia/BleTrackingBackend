@@ -1,20 +1,44 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY ["Services.API/Evacuation/Evacuation.csproj", "Services.API/Evacuation/"]
-RUN dotnet restore "Services.API/Evacuation/Evacuation.csproj"
-COPY . .
-WORKDIR "/src/Services.API/Evacuation"
-RUN dotnet build "Evacuation.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "Evacuation.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Evuation.dll"]
+
+  COPY *.sln ./
+  COPY Directory.Packages.props ./
+  COPY global.json ./
+  COPY Services.API/Evacuation/Evacuation.csproj Services.API/Evacuation/
+  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj Shared/BusinessLogic.Services/
+  COPY Shared/Shared.Contracts/Shared.Contracts.csproj Shared/Shared.Contracts/
+  COPY Shared/Data.ViewModels/Data.ViewModels.csproj Shared/Data.ViewModels/
+  COPY Shared/Entities.Models/Entities.Models.csproj Shared/Entities.Models/
+  COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj Shared/Helpers.Consumer/
+  COPY Shared/Repositories/Repositories.csproj Shared/Repositories/
+  COPY Shared/Web.API.Controllers/Web.API.Controllers.csproj Shared/Web.API.Controllers/
+
+# WORKDIR /app/Services.API/Evacuation
+# RUN dotnet restore
+RUN dotnet restore Services.API/Evacuation/Evacuation.csproj
+
+
+WORKDIR /app
+COPY . .
+
+WORKDIR /app/Services.API/Evacuation
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS runtime
+WORKDIR /app
+
+COPY --from=build /app/Services.API/Evacuation/out ./
+
+EXPOSE 5021
+ENTRYPOINT ["dotnet", "Evacuation.dll"]
+
+
+
+
+
+
+
+
+
+

@@ -13,21 +13,19 @@ using Repositories.DbContexts;
 using Repositories.Repository;
 using Serilog;
 
-// 1. Load Env
+
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 2. Setup Serilog & Host
 builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();
 
-// 3. Setup Services
 builder.Services.AddCorsExtension();
 builder.Services.AddDbContextExtension(builder.Configuration);
 
-// 4. Setup Controllers
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -38,15 +36,13 @@ builder.Services.AddControllers()
 builder.Services.AddValidatorExtensions();
 builder.Services.AddMemoryCache();
 
-// 5. Auth & Swagger
 builder.Services.AddJwtAuthExtension(builder.Configuration);
 builder.Services.AddAuthorizationNewPolicies();
 builder.Services.AddSwaggerExtension();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
-// 6. Application Services & Repos
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddAutoMapper(typeof(Program).Assembly); // Will find profiles in BusinessLogic.Services
+builder.Services.AddAutoMapper(typeof(Program).Assembly); 
 builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.EvacuationProfile));
 
 builder.Services.AddScoped<IEvacuationAssemblyPointService, EvacuationAssemblyPointService>();
@@ -64,7 +60,6 @@ builder.Services.AddScoped<EvacuationAssemblyPointRepository>();
 builder.Services.AddScoped<EvacuationAlertRepository>();
 builder.Services.AddScoped<EvacuationTransactionRepository>();
 
-// 7. Rate Limit
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("fixed", opt =>
@@ -77,12 +72,10 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-// 8. Port config
-builder.UseDefaultHostExtension("EVACUATION_PORT", "5040");
+builder.UseDefaultHostExtension("EVACUATION_PORT", "5021");
 
 var app = builder.Build();
 
-// 9. Pipeline
 app.UseHealthCheckExtension();
 
 using (var scope = app.Services.CreateScope())

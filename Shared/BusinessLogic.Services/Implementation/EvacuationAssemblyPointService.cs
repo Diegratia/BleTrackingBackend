@@ -48,7 +48,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<EvacuationAssemblyPointRead> CreateAsync(EvacuationAssemblyPointCreateDto createDto)
         {
-            // Validate floor ownership
             if (createDto.FloorId.HasValue)
             {
                 if (!await _repository.FloorExistsAsync(createDto.FloorId.Value))
@@ -59,7 +58,6 @@ namespace BusinessLogic.Services.Implementation
                     throw new UnauthorizedException($"FloorId does not belong to this Application");
             }
 
-            // Validate floorplan ownership
             if (createDto.FloorplanId.HasValue)
             {
                 if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId.Value))
@@ -70,7 +68,6 @@ namespace BusinessLogic.Services.Implementation
                     throw new UnauthorizedException($"FloorplanId does not belong to this Application");
             }
 
-            // Validate masked area ownership
             if (createDto.FloorplanMaskedAreaId.HasValue)
             {
                 if (!await _repository.FloorplanMaskedAreaExistsAsync(createDto.FloorplanMaskedAreaId.Value))

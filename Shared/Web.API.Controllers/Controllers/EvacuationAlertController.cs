@@ -10,7 +10,7 @@ using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/evacuation-alert")]
     [ApiController]
     [MinLevel(LevelPriority.PrimaryAdmin)]
     public class EvacuationAlertController : ControllerBase
