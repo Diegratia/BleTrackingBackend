@@ -57,7 +57,9 @@ namespace BusinessLogic.Services.Extension.RootExtension
                 await _defaultHandler.HandleAsync(next, context, policy, authorizeResult);
                 
                 // Set Custom error Message logic ONLY if we haven't started sending response AND the response doesn't contain a WWW-Authenticate header (e.g., from Negotiate/NTLM)
-                if (!context.Response.HasStarted && !context.Response.Headers.ContainsKey("WWW-Authenticate"))
+                if (!context.Response.HasStarted && 
+                    !context.Request.Path.Value.Contains("/login-sso", StringComparison.OrdinalIgnoreCase) &&
+                    !context.Response.Headers.ContainsKey("WWW-Authenticate"))
                 {
                     context.Response.ContentType = "application/json";
                     var result = ApiResponse.Unauthorized(
