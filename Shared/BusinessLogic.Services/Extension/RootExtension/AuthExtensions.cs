@@ -54,13 +54,18 @@ namespace BusinessLogic.Services.Extension.RootExtension
         {
             if (authorizeResult.Challenged)
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-
-                var result = ApiResponse.Unauthorized(
-                    "Unauthorized: Token or API Key is missing or invalid"
-                );
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+                await _defaultHandler.HandleAsync(next, context, policy, authorizeResult);
+                
+                // Set Custom error Message logic ONLY if we haven't started sending response
+                // Negotiate usually just sets headers and Status Code 401, so writing to Body is still fine
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.ContentType = "application/json";
+                    var result = ApiResponse.Unauthorized(
+                        "Unauthorized: Token or API Key is missing or invalid"
+                    );
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+                }
                 return;
             }
 
