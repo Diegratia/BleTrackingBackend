@@ -37,9 +37,9 @@ public static class ApiKeyMiddlewareExtensions
             if (path.Contains("/export", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/refresh", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/public", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/login-sso", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/hc", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/integration-login", StringComparison.OrdinalIgnoreCase) ||
-                path.Contains("/login", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
