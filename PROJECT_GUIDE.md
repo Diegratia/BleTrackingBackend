@@ -194,8 +194,6 @@ BleTrackingBackend/
 │   ├── BleReaderNode/                 # BLE Reader node service
 │   ├── MqttPublisher/                 # MQTT message publisher
 │   ├── LicenseChecker/                # License validation
-│   ├── BlacklistArea/                 # Blacklist area management
-│   └── ExtAlarm/                      # External alarm integration
 │
 ├── Shared/                            # Shared libraries
 │   ├── Entities.Models/               # Domain entities

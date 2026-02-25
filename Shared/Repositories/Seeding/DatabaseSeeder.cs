@@ -22,6 +22,17 @@ namespace Repositories.Seeding
                     ApplicationName = "BIO PEOPLE TRACKING",
                     OrganizationType = OrganizationType.Single,
                     ApplicationType = ApplicationType.Tracking,
+                    ApplicationCustomDomain = "localhost",
+                    ApplicationCustomPort = "8080",
+                    ApplicationCustomName = "BioPeopleTracking",
+                    ApplicationExpired = DateTime.UtcNow.AddYears(10),
+                    ApplicationRegistered = DateTime.UtcNow,
+                    OrganizationAddress = "Jl. Default No 1",
+                    HostName = "Admin",
+                    HostPhone = "08123456789",
+                    HostEmail = "admin@example.com",
+                    HostAddress = "Jl. Host No 1",
+                    LicenseCode = "PERPETUAL-001",
                     LicenseType = LicenseType.Perpetual,
                     ApplicationStatus = 1
                 };
@@ -36,8 +47,8 @@ namespace Repositories.Seeding
             {
                 var groups = new[]
                 {
-                    new UserGroup { Id = Guid.NewGuid(), Name = "System", LevelPriority = LevelPriority.System, ApplicationId = appId, CreatedBy = "System", CreatedAt = DateTime.UtcNow, Status = 1 },
-                    new UserGroup { Id = Guid.NewGuid(), Name = "Super Admin", LevelPriority = LevelPriority.SuperAdmin, ApplicationId = appId, CreatedBy = "System", CreatedAt = DateTime.UtcNow, Status = 1 }
+                    new UserGroup { Id = Guid.NewGuid(), Name = "System", LevelPriority = LevelPriority.System, ApplicationId = appId, CreatedBy = "System", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, UpdatedBy = "System", Status = 1 },
+                    new UserGroup { Id = Guid.NewGuid(), Name = "Super Admin", LevelPriority = LevelPriority.SuperAdmin, ApplicationId = appId, CreatedBy = "System", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, UpdatedBy = "System", Status = 1 }
                 };
                 context.UserGroups.AddRange(groups);
                 context.SaveChanges();
@@ -56,13 +67,41 @@ namespace Repositories.Seeding
                         Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
                         IsCreatedPassword = 1,
                         Email = "superadmin@test.com",
+                        IsEmailConfirmation = 1,
+                        EmailConfirmationCode = "CONFIRMED",
+                        EmailConfirmationExpiredAt = DateTime.UtcNow,
+                        EmailConfirmationAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.UtcNow,
                         Status = 1,
                         GroupId = superadminGroup.Id,
                         ApplicationId = appId,
                     };
                     context.Users.Add(superadmin);
-                    context.SaveChanges();
                 }
+
+                var systemGroup = context.UserGroups.FirstOrDefault(ug => ug.LevelPriority == LevelPriority.System && ug.Status != 0);
+                if (systemGroup != null)
+                {
+                    var systemadmin = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        Username = "systemadmin",
+                        Password = BCrypt.Net.BCrypt.HashPassword("P@ssw0rd"),
+                        IsCreatedPassword = 1,
+                        Email = "systemadmin@test.com",
+                        IsEmailConfirmation = 1,
+                        EmailConfirmationCode = "CONFIRMED",
+                        EmailConfirmationExpiredAt = DateTime.UtcNow,
+                        EmailConfirmationAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.UtcNow,
+                        Status = 1,
+                        GroupId = systemGroup.Id,
+                        ApplicationId = appId,
+                    };
+                    context.Users.Add(systemadmin);
+                }
+
+                context.SaveChanges();
             }
 
             // Seed Brand
@@ -150,6 +189,94 @@ namespace Repositories.Seeding
                 context.SaveChanges();
             }
 
+            // Seed Floorplan
+            if (!context.MstFloorplans.Any(f => f.Status != 0))
+            {
+                var floorplan = new MstFloorplan
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "1st Floorplan",
+                    FloorId = context.MstFloors.First().Id,
+                    ApplicationId = appId,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.MstFloorplans.Add(floorplan);
+                context.SaveChanges();
+            }
+
+            var floorplanId = context.MstFloorplans.First().Id;
+
+            // Seed Masked Area
+            if (!context.FloorplanMaskedAreas.Any(a => a.Status != 0))
+            {
+                var area = new FloorplanMaskedArea
+                {
+                    Id = Guid.NewGuid(),
+                    FloorplanId = floorplanId,
+                    FloorId = context.MstFloors.First().Id,
+                    ApplicationId = appId,
+                    Name = "Lobby Area",
+                    AreaShape = "[{\"id\":\"1\",\"x\":100,\"y\":100,\"x_px\":100,\"y_px\":100},{\"id\":\"2\",\"x\":300,\"y\":100,\"x_px\":300,\"y_px\":100},{\"id\":\"3\",\"x\":300,\"y\":300,\"x_px\":300,\"y_px\":300},{\"id\":\"4\",\"x\":100,\"y\":300,\"x_px\":100,\"y_px\":300}]",
+                    ColorArea = "#FF0000",
+                    RestrictedStatus = RestrictedStatus.NonRestrict,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.FloorplanMaskedAreas.Add(area);
+                context.SaveChanges();
+            }
+
+            var areaId = context.FloorplanMaskedAreas.First().Id;
+
+            // Seed Ble Reader
+            if (!context.MstBleReaders.Any(r => r.Status != 0))
+            {
+                var reader = new MstBleReader
+                {
+                    Id = Guid.NewGuid(),
+                    BrandId = context.MstBrands.First().Id,
+                    ApplicationId = appId,
+                    Name = "Lobby Reader 1",
+                    Ip = "192.168.1.100",
+                    Gmac = "0123456789ABCDEF",
+                    ReaderType = ReaderType.Indoor, // Assuming default enum type
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.MstBleReaders.Add(reader);
+                context.SaveChanges();
+            }
+
+            var readerId = context.MstBleReaders.First().Id;
+
+            // Seed Floorplan Device
+            if (!context.FloorplanDevices.Any(d => d.Status != 0))
+            {
+                var device = new FloorplanDevice
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Lobby Reader Device",
+                    Type = DeviceType.BleReader,
+                    FloorplanId = floorplanId,
+                    FloorplanMaskedAreaId = areaId,
+                    ReaderId = readerId,
+                    ApplicationId = appId,
+                    PosX = 150,
+                    PosY = 150,
+                    PosPxX = 150,
+                    PosPxY = 150,
+                    DeviceStatus = DeviceStatus.Active,
+                    CreatedBy = "System",
+                    CreatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+                context.FloorplanDevices.Add(device);
+                context.SaveChanges();
+            }
             // Seed Cards with specific MACs
             if (!context.Cards.Any())
             {
@@ -162,8 +289,8 @@ namespace Repositories.Seeding
                     new Card
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Card 1",
-                        CardNumber = "CARD-001",
+                        Name = "Card Member",
+                        CardNumber = "465757",
                         Dmac = "BC572905D5B9",
                         MemberId = memberId,
                         ApplicationId = appId,
@@ -172,81 +299,133 @@ namespace Repositories.Seeding
                     new Card
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Card 2",
-                        CardNumber = "CARD-002",
+                        Name = "Card Visitor",
+                        CardNumber = "677028",
                         Dmac = "BC57291F5FD0",
-                        VisitorId = visitorId, // assign to visitor instead (to cover all 3 types)
+                        VisitorId = visitorId, 
                         ApplicationId = appId,
                         StatusCard = 1
                     },
                     new Card
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Card 3",
-                        CardNumber = "CARD-003",
+                        Name = "Card Security",
+                        CardNumber = "677013",
                         Dmac = "BC57291F5FC1",
-                        MemberId = securityId, // Assuming Security entity uses MemberId or creates a separate mapping, but let's just make it unassigned or simulate security
-                        // Actually, looking at Card it has VisitorId and MemberId. Sec is often treated as Member in this context or it has its own mapping. We'll map to memberId for now if no SecurityId in Card. 
+                        SecurityId = securityId, 
                         ApplicationId = appId,
                         StatusCard = 1
                     }
                 };
                 context.Cards.AddRange(cards);
                 context.SaveChanges();
+
+                // Add TrxVisitor to simulate Visitor checkin
+                if (visitorId != null && !context.TrxVisitors.Any())
+                {
+                    var trxVisitor = new TrxVisitor
+                    {
+                        Id = Guid.NewGuid(),
+                        ApplicationId = appId,
+                        VisitorId = visitorId,
+                        CheckedInAt = DateTime.UtcNow,
+                        CheckinBy = "System",
+                        Status = VisitorStatus.Checkin,
+                        VisitorActiveStatus = VisitorActiveStatus.Active,
+                        InvitationCreatedAt = DateTime.UtcNow.AddDays(-1),
+                        Remarks = "Auto-seeded checkin for demonstration",
+                        VisitorPeriodStart = DateTime.UtcNow,
+                        VisitorPeriodEnd = DateTime.UtcNow.AddDays(1),
+                        IsInvitationAccepted = true,
+                        CardNumber = "677028",
+                        TrxStatus = 1,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System"
+                    };
+                    context.TrxVisitors.Add(trxVisitor);
+                    context.SaveChanges();
+                }
+
+                // Add CardRecords to simulate card assignment / tapped
+                if (!context.CardRecords.Any())
+                {
+                    var cardRecords = cards.Select(c => new CardRecord
+                    {
+                        Id = Guid.NewGuid(),
+                        ApplicationId = appId,
+                        CardId = c.Id,
+                        Name = $"Assign to {c.Name}",
+                        Timestamp = DateTime.UtcNow,
+                        CheckinAt = DateTime.UtcNow,
+                        CheckinBy = "System",
+                        VisitorId = c.VisitorId,
+                        MemberId = c.MemberId, // Reusing MemberId field for simplicity if it handles both or just to simulate. Let's map if appropriate. CardRecord has MemberId and VisitorId.
+                        Status = 1,
+                        VisitorActiveStatus = c.VisitorId != null ? VisitorActiveStatus.Active : null,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = "System",
+                        UpdatedAt = DateTime.UtcNow,
+                        UpdatedBy = "System"
+                    }).ToList();
+
+                    context.CardRecords.AddRange(cardRecords);
+                    context.SaveChanges();
+                }
             }         
 
-
              // // 14. MstSecurity
-            if (!context.MstSecurities.Any(m => m.Status != 0))
-            {
-                var securityFaker = new Faker<MstSecurity>()
-                    .RuleFor(m => m.Id, f => Guid.NewGuid())
-                    .RuleFor(m => m.PersonId, f => "SEC" + f.Random.Number(1000, 9999))
-                    .RuleFor(m => m.OrganizationId, f => context.MstOrganizations
-                        .Where(o => o.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(m => m.DepartmentId, f => context.MstDepartments
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(m => m.DistrictId, f => context.MstDistricts
-                        .Where(d => d.Status != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(m => m.IdentityId, f => "ID" + f.Random.Number(100, 999))
-                    .RuleFor(m => m.CardNumber, f => "CARD" + f.Random.Number(1000, 9999))
-                    .RuleFor(m => m.BleCardNumber, f => "BLE" + f.Random.Number(100, 999))
-                    .RuleFor(m => m.Name, f => f.Name.FullName())
-                    .RuleFor(m => m.Phone, f => f.Phone.PhoneNumber())
-                    .RuleFor(m => m.Email, f => f.Internet.Email())
-                    .RuleFor(m => m.Gender, f => f.PickRandom<Gender>())
-                    .RuleFor(m => m.Address, f => f.Address.FullAddress())
-                    .RuleFor(m => m.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
-                    .RuleFor(m => m.UploadFr, f => f.Random.Int(0, 2))
-                    .RuleFor(m => m.UploadFrError, f => f.Random.Bool() ? "" : "Upload failed")
-                    .RuleFor(m => m.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(yearsToGoBack: 30, refDate: DateTime.Today.AddYears(-18))))
-                    .RuleFor(m => m.JoinDate, f => DateOnly.FromDateTime(DateTime.Today))
-                    .RuleFor(m => m.ExitDate, f => DateOnly.MaxValue)
-                    .RuleFor(m => m.ApplicationId, f => context.MstApplications
-                        .Where(a => a.ApplicationStatus != 0)
-                        .OrderBy(r => Guid.NewGuid())
-                        .First()
-                        .Id)
-                    .RuleFor(m => m.StatusEmployee, f => f.PickRandom<StatusEmployee>())
-                    .RuleFor(m => m.CreatedBy, f => "System")
-                    .RuleFor(m => m.CreatedAt, f => DateTime.UtcNow)
-                    .RuleFor(m => m.UpdatedBy, f => "System")
-                    .RuleFor(m => m.UpdatedAt, f => DateTime.UtcNow)
-                    .RuleFor(m => m.Status, f => 1);
+            // if (!context.MstSecurities.Any(m => m.Status != 0))
+            // {
+            //     var securityFaker = new Faker<MstSecurity>()
+            //         .RuleFor(m => m.Id, f => Guid.NewGuid())
+            //         .RuleFor(m => m.PersonId, f => "SEC" + f.Random.Number(1000, 9999))
+            //         .RuleFor(m => m.OrganizationId, f => context.MstOrganizations
+            //             .Where(o => o.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(m => m.DepartmentId, f => context.MstDepartments
+            //             .Where(d => d.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(m => m.DistrictId, f => context.MstDistricts
+            //             .Where(d => d.Status != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(m => m.IdentityId, f => "ID" + f.Random.Number(100, 999))
+            //         .RuleFor(m => m.CardNumber, f => "CARD" + f.Random.Number(1000, 9999))
+            //         .RuleFor(m => m.BleCardNumber, f => "BLE" + f.Random.Number(100, 999))
+            //         .RuleFor(m => m.Name, f => f.Name.FullName())
+            //         .RuleFor(m => m.Phone, f => f.Phone.PhoneNumber())
+            //         .RuleFor(m => m.Email, f => f.Internet.Email())
+            //         .RuleFor(m => m.Gender, f => f.PickRandom<Gender>())
+            //         .RuleFor(m => m.Address, f => f.Address.FullAddress())
+            //         .RuleFor(m => m.FaceImage, f => $"https://example.com/faces/{f.Random.Word()}.jpg")
+            //         .RuleFor(m => m.UploadFr, f => f.Random.Int(0, 2))
+            //         .RuleFor(m => m.UploadFrError, f => f.Random.Bool() ? "" : "Upload failed")
+            //         .RuleFor(m => m.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(yearsToGoBack: 30, refDate: DateTime.Today.AddYears(-18))))
+            //         .RuleFor(m => m.JoinDate, f => DateOnly.FromDateTime(DateTime.Today))
+            //         .RuleFor(m => m.ExitDate, f => DateOnly.MaxValue)
+            //         .RuleFor(m => m.ApplicationId, f => context.MstApplications
+            //             .Where(a => a.ApplicationStatus != 0)
+            //             .OrderBy(r => Guid.NewGuid())
+            //             .First()
+            //             .Id)
+            //         .RuleFor(m => m.StatusEmployee, f => f.PickRandom<StatusEmployee>())
+            //         .RuleFor(m => m.CreatedBy, f => "System")
+            //         .RuleFor(m => m.CreatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(m => m.UpdatedBy, f => "System")
+            //         .RuleFor(m => m.UpdatedAt, f => DateTime.UtcNow)
+            //         .RuleFor(m => m.Status, f => 1);
 
-                var securities = securityFaker.Generate(5);
-                context.MstSecurities.AddRange(securities);
-                context.SaveChanges();
-            }
+            //     var securities = securityFaker.Generate(5);
+            //     context.MstSecurities.AddRange(securities);
+            //     context.SaveChanges();
+            // }
 
         }
     }

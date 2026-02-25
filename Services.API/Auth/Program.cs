@@ -114,8 +114,8 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
     try
     {
-        // context.Database.Migrate();
-        // DatabaseSeeder.Seed(context);
+        context.Database.Migrate();
+        DatabaseSeeder.Seed(context);
     }
     catch (Exception ex)
     {

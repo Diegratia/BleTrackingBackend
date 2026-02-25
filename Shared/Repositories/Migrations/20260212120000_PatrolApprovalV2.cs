@@ -79,17 +79,17 @@ namespace Repositories.Migrations
                 maxLength: 36,
                 nullable: true);
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "approved_by_head_1_at",
-                table: "patrol_case",
-                type: "datetime2",
-                nullable: true);
+            // migrationBuilder.AddColumn<DateTime>(
+            //     name: "approved_by_head_1_at",
+            //     table: "patrol_case",
+            //     type: "datetime2",
+            //     nullable: true);
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "approved_by_head_2_at",
-                table: "patrol_case",
-                type: "datetime2",
-                nullable: true);
+            // migrationBuilder.AddColumn<DateTime>(
+            //     name: "approved_by_head_2_at",
+            //     table: "patrol_case",
+            //     type: "datetime2",
+            //     nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_mst_security_security_head_1",
