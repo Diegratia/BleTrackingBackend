@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using Bogus.DataSets;
 using Shared.Contracts;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories.Seeding
 {
@@ -13,7 +13,21 @@ namespace Repositories.Seeding
     {
         public static void Seed(BleTrackingDbContext context)
         {
-            // Seed Application
+            // If the database is completely empty, run the SQL dump from setup_people_tracking_db.sql
+            if (!context.MstApplications.Any())
+            {
+                try 
+                {
+                    context.Database.ExecuteSqlRaw(SqlDumpData.SqlQuery);    
+                    return; // Skip the rest of the generated dummy data since we just imported the full raw backup
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error migrating Seeder Dump: " + ex.Message);
+                }
+            }
+
+            // Fallback: Default Seed Application
             if (!context.MstApplications.Any(a => a.ApplicationStatus != 0))
             {
                 var app = new MstApplication
@@ -101,6 +115,65 @@ namespace Repositories.Seeding
                     context.Users.Add(systemadmin);
                 }
 
+                context.SaveChanges();
+            }
+            // Seed Organization
+            if (!context.MstOrganizations.Any(o => o.Status != 0))
+            {
+                var organization = new MstOrganization
+                {
+                    Id = new Guid("9AD17645-8D52-414B-A770-82C8FC1E187E"),
+                    Code = "1",
+                    Name = "BIO - Org",
+                    OrganizationHost = "BIO - Host",
+                    ApplicationId = appId,
+                    Status = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System"
+                };
+                context.MstOrganizations.Add(organization);
+                context.SaveChanges();
+            }
+
+            // Seed District
+            if (!context.MstDistricts.Any(d => d.Status != 0))
+            {
+                var district = new MstDistrict
+                {
+                    Id = new Guid("0CF11396-56F5-4946-9DD8-F02B0EF6F1AD"),
+                    Code = "1",
+                    Name = "BIO - District",
+                    DistrictHost = "BIO - Host",
+                    ApplicationId = appId,
+                    Status = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System"
+                };
+                context.MstDistricts.Add(district);
+                context.SaveChanges();
+            }
+
+            // Seed Department
+            if (!context.MstDepartments.Any(d => d.Status != 0))
+            {
+                var department = new MstDepartment
+                {
+                    Id = new Guid("F99CF1F7-789E-4C75-A044-BDB10C773881"),
+                    Code = "1",
+                    Name = "BIO - Department",
+                    DepartmentHost = "BIO - Host",
+                    ApplicationId = appId,
+                    Status = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System"
+                };
+                context.MstDepartments.Add(department);
                 context.SaveChanges();
             }
 

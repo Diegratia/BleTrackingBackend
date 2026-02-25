@@ -11,6 +11,13 @@ namespace Repositories.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<int>(
+                name: "extended_visitor_time",
+                table: "trx_visitor",
+                type: "int",
+                nullable: true);
+
+            // Create evacuation alerts
             migrationBuilder.CreateTable(
                 name: "evacuation_alerts",
                 columns: table => new

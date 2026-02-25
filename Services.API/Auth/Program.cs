@@ -114,8 +114,13 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
     try
     {
-        context.Database.Migrate();
-        DatabaseSeeder.Seed(context);
+        // Jalankan Seeding hanya jika ada flag --seed-db
+        if (args.Contains("--seed-db"))
+        {
+            Console.WriteLine("Applying Database Seeding...");
+            DatabaseSeeder.Seed(context);
+            Console.WriteLine("Database Seeding Completed.");
+        }
     }
     catch (Exception ex)
     {
