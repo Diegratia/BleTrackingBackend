@@ -118,6 +118,28 @@ namespace Repositories.Seeding
                 context.MstBrands.Add(brand);
                 context.SaveChanges();
             }
+            
+            // Seed Integration
+            if (!context.MstIntegrations.Any(i => i.Status != 0))
+            {
+                var integration = new MstIntegration
+                {
+                    Id = Guid.NewGuid(),
+                    BrandId = new Guid("824264AF-036F-4AB1-8179-469F1BCC8813"),
+                    ApplicationId = appId,
+                    IntegrationType = IntegrationType.Api,
+                    ApiTypeAuth = ApiTypeAuth.ApiKey,
+                    ApiKeyField = "X-BIOPEOPLETRACKING-API-KEY",
+                    ApiKeyValue = "FujDuGTsyEXVwkKrtRgn52APwAVRGmPOiIRX8cffynDvIW35bJaGeH3NcH6HcSeK",
+                    Status = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System"
+                };
+                context.MstIntegrations.Add(integration);
+                context.SaveChanges();
+            }
 
             // Seed Building and Floor
             if (!context.MstBuildings.Any(b => b.Status != 0))

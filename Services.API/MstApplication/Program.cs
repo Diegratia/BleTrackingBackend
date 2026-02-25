@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -154,6 +155,8 @@ builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
 builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IMqttPubQueue, MqttPubQueue>();
 
 
 builder.Services.AddScoped<MstApplicationRepository>();
@@ -162,6 +165,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<MstBrandRepository>();
 builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+builder.Services.AddScoped<GroupBuildingAccessRepository>();
 
 
 builder.Services.AddScoped<IEmailService, EmailService>();

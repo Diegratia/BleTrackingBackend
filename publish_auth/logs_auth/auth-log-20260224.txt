@@ -1,6 +1,0 @@
-2026-02-24 11:52:40.467 | INF | auth | [MqttPubBG] Service started
-2026-02-24 11:52:40.467 | INF | auth | [MQTT] Connected, subscribing engine/#
-2026-02-24 11:52:40.511 | INF | auth | [MQTT] Startup connect OK
-2026-02-24 12:42:12.191 | INF | auth | [MqttPubBG] Service started
-2026-02-24 12:42:12.209 | INF | auth | [MQTT] Connected, subscribing engine/#
-2026-02-24 12:42:12.222 | INF | auth | [MQTT] Startup connect OK

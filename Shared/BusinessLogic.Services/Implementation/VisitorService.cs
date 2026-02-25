@@ -83,7 +83,17 @@ public class VisitorService : IVisitorService
             _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
         }
-    
+
+        private void ValidateVisitorNotBlacklisted(Visitor? visitor, string email, string? identityId, string? personId)
+        {
+            if (visitor != null && visitor.IsBlacklist == true)
+            {
+                throw new UnauthorizedAccessException(
+                    $"Visitor is blacklisted and cannot be invited. " +
+                    $"Email: {email}, IdentityId: {identityId}, PersonId: {personId}. " +
+                    $"Blacklist Reason: {visitor.BlacklistReason ?? "Not specified"}");
+            }
+        }
 
         //latest vms create
         public async Task<VisitorDto> CreateVisitorAsync(VMSOpenVisitorCreateDto createDto)
@@ -165,6 +175,8 @@ public class VisitorService : IVisitorService
 
             if (existingVisitor != null)
             {
+                // VALIDASI: Cek blacklist sebelum lanjut
+                ValidateVisitorNotBlacklisted(existingVisitor, createDto.Email, createDto.IdentityId, createDto.PersonId);
                 visitor = existingVisitor;
             }
             else
@@ -396,6 +408,8 @@ public class VisitorService : IVisitorService
 
                 if (existingVisitor != null)
                 {
+                    // VALIDASI: Cek blacklist sebelum lanjut
+                    ValidateVisitorNotBlacklisted(existingVisitor, createDto.Email, createDto.IdentityId, createDto.PersonId);
                     visitor = existingVisitor;
                 }
                 else
@@ -1669,7 +1683,7 @@ public class VisitorService : IVisitorService
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var BlacklistAreas = await _visitorRepository.GetAllAsync();
+            var ExportedVisitors = await _visitorRepository.GetAllAsync();
 
             var document = Document.Create(container =>
             {
@@ -1713,7 +1727,7 @@ public class VisitorService : IVisitorService
                         });
 
                         int index = 1;
-                        foreach (var visitor in BlacklistAreas)
+                        foreach (var visitor in ExportedVisitors)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(visitor.PersonId ?? "-");

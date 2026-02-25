@@ -277,7 +277,6 @@ namespace Web.API.Controllers.Controllers
 
         
 
-        // PUT: api/BlacklistArea/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] VisitorUpdateDto visitorDto)
@@ -453,7 +452,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/BlacklistArea/{id}
         [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
@@ -976,7 +974,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // DELETE: api/BlacklistArea/{id}
         [AllowAnonymous]
         [HttpDelete("open/{id}")]
         public async Task<IActionResult> OpenDelete(Guid id)

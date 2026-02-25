@@ -12,6 +12,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -159,13 +160,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(AlarmRecordTrackingProfile));
 builder.Services.AddScoped<IAlarmRecordTrackingService, AlarmRecordTrackingService>();
 builder.Services.AddScoped<IAlarmTriggersService, AlarmTriggersService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IMqttPubQueue, MqttPubQueue>();
 // builder.Services.AddScoped<IVisitorService, VisitorService>();
 // builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
 // builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<MstSecurityRepository>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserGroupRepository>();
 
 var port = Environment.GetEnvironmentVariable("ALARM_RECORD_TRACKING_PORT") ?? "5002" ??
            builder.Configuration["Ports:AlarmRecordTrackingService"];
