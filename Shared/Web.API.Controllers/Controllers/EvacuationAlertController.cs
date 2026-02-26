@@ -97,22 +97,6 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(204, ApiResponse.NoContent("Evacuation Alert deleted successfully"));
         }
 
-        // POST: api/EvacuationAlert/{id}/start
-        [HttpPost("{id}/start")]
-        public async Task<IActionResult> Start(Guid id)
-        {
-            var alert = await _service.StartAsync(id);
-            return Ok(ApiResponse.Success("Evacuation started successfully", alert));
-        }
-
-        // POST: api/EvacuationAlert/{id}/pause
-        [HttpPost("{id}/pause")]
-        public async Task<IActionResult> Pause(Guid id)
-        {
-            var alert = await _service.PauseAsync(id);
-            return Ok(ApiResponse.Success("Evacuation paused successfully", alert));
-        }
-
         // POST: api/EvacuationAlert/{id}/complete
         [HttpPost("{id}/complete")]
         public async Task<IActionResult> Complete(Guid id, [FromBody] EvacuationCompleteDto? dto)

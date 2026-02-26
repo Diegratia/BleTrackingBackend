@@ -62,16 +62,31 @@ namespace BusinessLogic.Services.Implementation
             // Check if there's an active evacuation
             var activeAlert = await _repository.GetActiveAlertAsync(AppId);
             if (activeAlert != null)
-                throw new BusinessException("Cannot create new evacuation while another is active or paused");
+                throw new BusinessException("Cannot create new evacuation while another is active");
 
             var alert = _mapper.Map<EvacuationAlert>(createDto);
             SetCreateAudit(alert);
             alert.Status = 1;
-            alert.AlertStatus = EvacuationAlertStatus.Draft;
+            alert.AlertStatus = EvacuationAlertStatus.Active; 
+            alert.StartedAt = DateTime.UtcNow;
             alert.ApplicationId = AppId;
             alert.TriggeredBy = UsernameFormToken;
 
             await _repository.AddAsync(alert);
+
+            // Publish trigger to MQTT immediately
+            var triggerDto = new
+            {
+                EvacuationAlertId = alert.Id.ToString(),
+                Status = "Active",
+                TriggerType = alert.TriggerType.ToString(),
+                TriggeredAt = alert.StartedAt?.ToString("o"),
+                ApplicationId = alert.ApplicationId.ToString()
+            };
+            var topic = $"evacuation/trigger/{alert.ApplicationId}";
+            var payload = JsonSerializer.Serialize(triggerDto);
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Created and started evacuation {alert.Id}, published to topic: {topic}");
 
             _audit.Created(
                 "EvacuationAlert",
@@ -89,9 +104,9 @@ namespace BusinessLogic.Services.Implementation
             if (alert == null)
                 throw new KeyNotFoundException("Evacuation Alert not found");
 
-            // Only allow update if draft
-            if (alert.AlertStatus != EvacuationAlertStatus.Draft && alert.AlertStatus != EvacuationAlertStatus.Paused)
-                throw new BusinessException("Can only update draft or paused evacuations");
+            // Only allow update if active
+            if (alert.AlertStatus != EvacuationAlertStatus.Active)
+                throw new BusinessException("Can only update active evacuations");
 
             SetUpdateAudit(alert);
             _mapper.Map(updateDto, alert);
@@ -113,10 +128,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new KeyNotFoundException("Evacuation Alert not found");
             }
 
-            // Only allow delete if draft
-            if (alert.AlertStatus != EvacuationAlertStatus.Draft)
-                throw new BusinessException("Can only delete draft evacuations");
-
+            // Allow delete active evacuations (for cleanup)
             SetDeleteAudit(alert);
             alert.Status = 0;
 
@@ -126,7 +138,7 @@ namespace BusinessLogic.Services.Implementation
                 "EvacuationAlert",
                 alert.Id,
                 "Deleted evacuation alert",
-                new { alert.Title }
+                new { alert.Title, alert.AlertStatus }
             );
         }
 
@@ -149,76 +161,14 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        public async Task<EvacuationAlertRead> StartAsync(Guid id)
-        {
-            var alert = await _repository.GetByIdEntityAsync(id);
-            if (alert == null)
-                throw new NotFoundException("Evacuation Alert not found");
-
-            if (alert.AlertStatus != EvacuationAlertStatus.Draft && alert.AlertStatus != EvacuationAlertStatus.Paused)
-                throw new BusinessException("Can only start draft or paused evacuations");
-
-            // Update status - engine will provide total via its own tracking
-            alert.AlertStatus = EvacuationAlertStatus.Active;
-            alert.StartedAt = DateTime.UtcNow;
-            SetUpdateAudit(alert);
-            await _repository.UpdateAsync(alert);
-
-            // Publish trigger to MQTT for engine
-            var triggerDto = new
-            {
-                EvacuationAlertId = alert.Id.ToString(),
-                Status = "Active",
-                TriggerType = alert.TriggerType.ToString(),
-                TriggeredAt = alert.StartedAt?.ToString("o"),
-                ApplicationId = alert.ApplicationId.ToString()
-            };
-            var topic = $"evacuation/trigger/{alert.ApplicationId}";
-            var payload = JsonSerializer.Serialize(triggerDto);
-            _mqttPubQueue.Enqueue(topic, payload);
-            _logger.LogInformation($"[Evacuation] Started evacuation {alert.Id}, published to topic: {topic}");
-
-            _audit.Updated(
-                "EvacuationAlert",
-                alert.Id,
-                "Started evacuation",
-                new { alert.Title, alert.StartedAt }
-            );
-
-            return _mapper.Map<EvacuationAlertRead>(alert);
-        }
-
-        public async Task<EvacuationAlertRead> PauseAsync(Guid id)
-        {
-            var alert = await _repository.GetByIdEntityAsync(id);
-            if (alert == null)
-                throw new NotFoundException("Evacuation Alert not found");
-
-            if (alert.AlertStatus != EvacuationAlertStatus.Active)
-                throw new BusinessException("Can only pause active evacuations");
-
-            alert.AlertStatus = EvacuationAlertStatus.Paused;
-            SetUpdateAudit(alert);
-            await _repository.UpdateAsync(alert);
-
-            _audit.Updated(
-                "EvacuationAlert",
-                alert.Id,
-                "Paused evacuation",
-                new { alert.Title }
-            );
-
-            return _mapper.Map<EvacuationAlertRead>(alert);
-        }
-
         public async Task<EvacuationAlertRead> CompleteAsync(Guid id, string? completionNotes)
         {
             var alert = await _repository.GetByIdEntityAsync(id);
             if (alert == null)
                 throw new NotFoundException("Evacuation Alert not found");
 
-            if (alert.AlertStatus != EvacuationAlertStatus.Active && alert.AlertStatus != EvacuationAlertStatus.Paused)
-                throw new BusinessException("Can only complete active or paused evacuations");
+            if (alert.AlertStatus != EvacuationAlertStatus.Active)
+                throw new BusinessException("Can only complete active evacuations");
 
             alert.AlertStatus = EvacuationAlertStatus.Completed;
             alert.CompletedAt = DateTime.UtcNow;
@@ -257,11 +207,14 @@ namespace BusinessLogic.Services.Implementation
             if (alert == null)
                 throw new NotFoundException("Evacuation Alert not found");
 
-            if (alert.AlertStatus == EvacuationAlertStatus.Completed)
+            if (alert.AlertStatus == EvacuationAlertStatus.Cancelled)
                 throw new BusinessException("Cannot cancel completed evacuations");
 
+            // Cancel = Complete with cancellation notes
             alert.AlertStatus = EvacuationAlertStatus.Cancelled;
             alert.CompletedAt = DateTime.UtcNow;
+            alert.CompletionNotes = "Cancelled by user";
+            alert.CompletedBy = UsernameFormToken;
             SetUpdateAudit(alert);
             await _repository.UpdateAsync(alert);
 
@@ -316,7 +269,6 @@ namespace BusinessLogic.Services.Implementation
                 TotalRequired = alert.TotalRequired,
                 TotalEvacuated = alert.TotalEvacuated,
                 TotalConfirmed = alert.TotalConfirmed,
-                TotalSafe = alert.TotalSafe,
                 TotalRemaining = alert.TotalRemaining,
                 ByAssemblyPoint = byAssemblyPoint
             };

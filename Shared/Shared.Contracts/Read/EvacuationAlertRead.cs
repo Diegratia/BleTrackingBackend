@@ -16,7 +16,6 @@ namespace Shared.Contracts.Read
         public int TotalRequired { get; set; }
         public int TotalEvacuated { get; set; }
         public int TotalConfirmed { get; set; }
-        public int TotalSafe { get; set; }
         public int TotalRemaining { get; set; }
     }
 }

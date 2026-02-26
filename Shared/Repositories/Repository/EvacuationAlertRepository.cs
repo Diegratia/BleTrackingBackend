@@ -51,7 +51,6 @@ namespace Repositories.Repository
                     TotalRequired = e.TotalRequired,
                     TotalEvacuated = e.TotalEvacuated,
                     TotalConfirmed = e.TotalConfirmed,
-                    TotalSafe = e.TotalSafe,
                     TotalRemaining = e.TotalRemaining,
                     CreatedBy = e.CreatedBy,
                     CreatedAt = e.CreatedAt,
@@ -84,7 +83,7 @@ namespace Repositories.Repository
             return await _context.EvacuationAlerts
                 .Where(e => e.ApplicationId == applicationId
                     && e.Status != 0
-                    && (e.AlertStatus == EvacuationAlertStatus.Active || e.AlertStatus == EvacuationAlertStatus.Paused))
+                    && (e.AlertStatus == EvacuationAlertStatus.Active))
                 .OrderByDescending(e => e.StartedAt)
                 .FirstOrDefaultAsync();
         }
@@ -170,7 +169,7 @@ namespace Repositories.Repository
         }
 
         public async Task UpdateCountersAsync(Guid alertId,
-            int totalRequired, int totalEvacuated, int totalConfirmed, int totalSafe, int totalRemaining)
+            int totalRequired, int totalEvacuated, int totalConfirmed, int totalRemaining)
         {
             var alert = await _context.EvacuationAlerts.FindAsync(alertId);
             if (alert != null)
@@ -178,7 +177,6 @@ namespace Repositories.Repository
                 alert.TotalRequired = totalRequired;
                 alert.TotalEvacuated = totalEvacuated;
                 alert.TotalConfirmed = totalConfirmed;
-                alert.TotalSafe = totalSafe;
                 alert.TotalRemaining = totalRemaining;
                 await _context.SaveChangesAsync();
             }

@@ -9,7 +9,6 @@ namespace Data.ViewModels
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
         public string? Remarks { get; set; }
-        public Guid? FloorplanMaskedAreaId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
         public int IsActive { get; set; } = 1;
@@ -21,7 +20,6 @@ namespace Data.ViewModels
         public string? AreaShape { get; set; }
         public string? Color { get; set; }
         public string? Remarks { get; set; }
-        public Guid? FloorplanMaskedAreaId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
         public int? IsActive { get; set; }
@@ -39,7 +37,6 @@ namespace Data.ViewModels
     {
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public EvacuationAlertStatus? AlertStatus { get; set; }
     }
 
     // EvacuationTransaction DTOs
@@ -59,7 +56,6 @@ namespace Data.ViewModels
         public int TotalRequired { get; set; }
         public int TotalEvacuated { get; set; }
         public int TotalConfirmed { get; set; }
-        public int TotalSafe { get; set; }
         public int TotalRemaining { get; set; }
         public List<AssemblyPointSummaryDto> ByAssemblyPoint { get; set; } = new();
     }

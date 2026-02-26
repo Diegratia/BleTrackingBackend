@@ -17,8 +17,6 @@ namespace BusinessLogic.Services.Interface
         Task<object> FilterAsync(DataTablesProjectedRequest request, EvacuationAlertFilter filter);
 
         // Evacuation actions
-        Task<EvacuationAlertRead> StartAsync(Guid id);
-        Task<EvacuationAlertRead> PauseAsync(Guid id);
         Task<EvacuationAlertRead> CompleteAsync(Guid id, string? completionNotes);
         Task<EvacuationAlertRead> CancelAsync(Guid id);
 

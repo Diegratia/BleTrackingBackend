@@ -361,9 +361,7 @@ namespace Shared.Contracts
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EvacuationAlertStatus
     {
-        Draft,
         Active,
-        Paused,
         Completed,
         Cancelled
     }

@@ -15,7 +15,7 @@ namespace Entities.Models
         public string? Description { get; set; }
 
         [Column("alert_status")]
-        public EvacuationAlertStatus AlertStatus { get; set; } = EvacuationAlertStatus.Draft;
+        public EvacuationAlertStatus AlertStatus { get; set; } = EvacuationAlertStatus.Active;
 
         [Column("trigger_type")]
         public EvacuationTriggerType TriggerType { get; set; } = EvacuationTriggerType.Manual;
@@ -43,9 +43,6 @@ namespace Entities.Models
 
         [Column("total_confirmed")]
         public int TotalConfirmed { get; set; } = 0;
-
-        [Column("total_safe")]
-        public int TotalSafe { get; set; } = 0;
 
         [Column("total_remaining")]
         public int TotalRemaining { get; set; } = 0;

@@ -25,7 +25,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.EvacuationAssemblyPoints
-                .Include(e => e.FloorplanMaskedArea)
                 .Include(e => e.Floorplan)
                     .ThenInclude(f => f!.Floor)
                 .Where(e => e.Status != 0)
@@ -44,7 +43,6 @@ namespace Repositories.Repository
                     AreaShape = e.AreaShape,
                     Color = e.Color,
                     Remarks = e.Remarks,
-                    FloorplanMaskedAreaId = e.FloorplanMaskedAreaId,
                     FloorplanId = e.FloorplanId,
                     FloorId = e.FloorId,
                     IsActive = e.IsActive,
@@ -54,7 +52,6 @@ namespace Repositories.Repository
                     UpdatedAt = e.UpdatedAt,
                     Status = e.Status,
                     ApplicationId = e.ApplicationId,
-                    FloorplanMaskedAreaName = e.FloorplanMaskedArea != null ? e.FloorplanMaskedArea.Name : null,
                     FloorplanName = e.Floorplan != null ? e.Floorplan.Name : null,
                     FloorName = e.Floorplan != null && e.Floorplan.Floor != null ? e.Floorplan.Floor.Name : null,
                     BuildingName = e.Floorplan != null && e.Floorplan.Floor != null ? e.Floorplan.Floor.Building.Name : null
@@ -108,12 +105,6 @@ namespace Repositories.Repository
                 query = query.Where(x => x.FloorplanId.HasValue && floorplanIds.Contains(x.FloorplanId.Value));
             }
 
-            var maskedAreaIds = ExtractIds(filter.FloorplanMaskedAreaId);
-            if (maskedAreaIds.Count > 0)
-            {
-                query = query.Where(x => x.FloorplanMaskedAreaId.HasValue && maskedAreaIds.Contains(x.FloorplanMaskedAreaId.Value));
-            }
-
             if (filter.IsActive.HasValue)
             {
                 query = query.Where(x => x.IsActive == filter.IsActive.Value);
@@ -122,7 +113,7 @@ namespace Repositories.Repository
             var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir ?? "desc");
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
             var data = await ProjectToRead(query).ToListAsync();
@@ -167,13 +158,6 @@ namespace Repositories.Repository
                 new[] { floorplanId }, applicationId);
         }
 
-        public async Task<IReadOnlyCollection<Guid>> CheckInvalidFloorplanMaskedAreaOwnershipAsync(
-            Guid maskedAreaId, Guid applicationId)
-        {
-            return await CheckInvalidOwnershipIdsAsync<FloorplanMaskedArea>(
-                new[] { maskedAreaId }, applicationId);
-        }
-
         public async Task<bool> FloorExistsAsync(Guid floorId)
         {
             return await _context.MstFloors.AnyAsync(f => f.Id == floorId && f.Status != 0);
@@ -182,11 +166,6 @@ namespace Repositories.Repository
         public async Task<bool> FloorplanExistsAsync(Guid floorplanId)
         {
             return await _context.MstFloorplans.AnyAsync(f => f.Id == floorplanId && f.Status != 0);
-        }
-
-        public async Task<bool> FloorplanMaskedAreaExistsAsync(Guid maskedAreaId)
-        {
-            return await _context.FloorplanMaskedAreas.AnyAsync(f => f.Id == maskedAreaId && f.Status != 0);
         }
     }
 }

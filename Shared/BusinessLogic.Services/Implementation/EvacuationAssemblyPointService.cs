@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using BusinessLogic.Services.Interface;
@@ -68,16 +67,6 @@ namespace BusinessLogic.Services.Implementation
                     throw new UnauthorizedException($"FloorplanId does not belong to this Application");
             }
 
-            if (createDto.FloorplanMaskedAreaId.HasValue)
-            {
-                if (!await _repository.FloorplanMaskedAreaExistsAsync(createDto.FloorplanMaskedAreaId.Value))
-                    throw new NotFoundException($"Floorplan Masked Area with id {createDto.FloorplanMaskedAreaId} not found");
-
-                var invalidIds = await _repository.CheckInvalidFloorplanMaskedAreaOwnershipAsync(createDto.FloorplanMaskedAreaId.Value, AppId);
-                if (invalidIds.Any())
-                    throw new UnauthorizedException($"FloorplanMaskedAreaId does not belong to this Application");
-            }
-
             var assemblyPoint = _mapper.Map<EvacuationAssemblyPoint>(createDto);
             SetCreateAudit(assemblyPoint);
             assemblyPoint.Status = 1;
@@ -121,17 +110,6 @@ namespace BusinessLogic.Services.Implementation
                 var invalidFloorplanIds = await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId.Value, AppId);
                 if (invalidFloorplanIds.Any())
                     throw new UnauthorizedException($"FloorplanId does not belong to this Application");
-            }
-
-            // Validate masked area ownership
-            if (updateDto.FloorplanMaskedAreaId.HasValue && updateDto.FloorplanMaskedAreaId != assemblyPoint.FloorplanMaskedAreaId)
-            {
-                if (!await _repository.FloorplanMaskedAreaExistsAsync(updateDto.FloorplanMaskedAreaId.Value))
-                    throw new NotFoundException($"Floorplan Masked Area with id {updateDto.FloorplanMaskedAreaId} not found");
-
-                var invalidIds = await _repository.CheckInvalidFloorplanMaskedAreaOwnershipAsync(updateDto.FloorplanMaskedAreaId.Value, AppId);
-                if (invalidIds.Any())
-                    throw new UnauthorizedException($"FloorplanMaskedAreaId does not belong to this Application");
             }
 
             SetUpdateAudit(assemblyPoint);

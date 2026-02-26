@@ -20,10 +20,6 @@ namespace Entities.Models
         [Column("remarks")]
         public string? Remarks { get; set; }
 
-        [ForeignKey(nameof(FloorplanMaskedArea))]
-        [Column("floorplan_masked_area_id")]
-        public Guid? FloorplanMaskedAreaId { get; set; }
-
         [ForeignKey(nameof(Floorplan))]
         [Column("floorplan_id")]
         public Guid? FloorplanId { get; set; }
@@ -42,7 +38,6 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public FloorplanMaskedArea? FloorplanMaskedArea { get; set; }
         public MstFloorplan? Floorplan { get; set; }
         public MstFloor? Floor { get; set; }
     }

@@ -1926,15 +1926,9 @@ namespace Repositories.DbContexts
             {
                 entity.ToTable("evacuation_assembly_points");
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.FloorplanMaskedAreaId).HasMaxLength(36);
                 entity.Property(e => e.FloorplanId).HasMaxLength(36);
                 entity.Property(e => e.FloorId).HasMaxLength(36);
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-
-                entity.HasOne(e => e.FloorplanMaskedArea)
-                    .WithMany()
-                    .HasForeignKey(e => e.FloorplanMaskedAreaId)
-                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Floorplan)
                     .WithMany()
