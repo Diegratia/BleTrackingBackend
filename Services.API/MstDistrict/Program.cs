@@ -1,3 +1,4 @@
+using Shared.Config;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.RootExtension;
 using BusinessLogic.Services.Implementation;
@@ -20,6 +21,7 @@ using BusinessLogic.Services.Background; // For StatusCodes
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 
 // 2. Setup Serilog & Host
 builder.UseSerilogExtension();

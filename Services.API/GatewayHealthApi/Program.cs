@@ -1,3 +1,4 @@
+using Shared.Config;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using BusinessLogic.Services.Extension.RootExtension;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();
 
 builder.Services.AddHttpClient();

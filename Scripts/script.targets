@@ -2,7 +2,7 @@
 
     <!-- 🧭 Temukan semua project di folder Services.API -->
     <ItemGroup>
-      <ServiceProjects Include="Services.API\**\*.csproj" />
+      <ServiceProjects Include="..\Services.API\**\*.csproj" />
     </ItemGroup>
 
     <!-- 🏗️ Target build semua service -->
@@ -34,15 +34,17 @@
     <Target Name="PublishAllService">
       <Message Text="🚀 Publishing all Services.API projects into ROOT publish folder..." Importance="High" />
 
-      <!-- Pastikan folder publish ada -->
-      <MakeDir Directories='$(MSBuildProjectDirectory)\publish' />
+      <!-- Pastikan folder publish ada (root project) -->
+      <MakeDir Directories='$(MSBuildThisFileDirectory)..\publish' />
 
       <!-- Jalankan publish untuk semua service -->
       <MSBuild
         Projects="@(ServiceProjects)"
         Targets="Publish"
+        StopOnFirstFailure="true"
+        ContinueOnError="false"
         Properties="Configuration=Release;
-                    PublishDir=$(MSBuildProjectDirectory)\publish;
+                    PublishDir=$(MSBuildThisFileDirectory)..\publish;
                     RuntimeIdentifier=win-x64;
                     SelfContained=true;
                     DeleteExistingFiles=true;

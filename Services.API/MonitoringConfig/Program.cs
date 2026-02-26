@@ -1,4 +1,5 @@
 
+using Shared.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +28,7 @@ EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();   
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();

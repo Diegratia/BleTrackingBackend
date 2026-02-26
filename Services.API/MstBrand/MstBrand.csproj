@@ -34,10 +34,6 @@
     <ProjectReference Include="..\..\Shared\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
   <ItemGroup>
-  <Content Include="../../.env" CopyToOutputDirectory="Always">
-    <Link>.env</Link>
-  </Content>
-  <Content Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
 </ItemGroup>
 
 </Project>

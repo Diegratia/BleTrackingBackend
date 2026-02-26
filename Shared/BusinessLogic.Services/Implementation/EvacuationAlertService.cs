@@ -8,6 +8,7 @@ using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using DataView;
 using Entities.Models;
+using BusinessLogic.Services.Background;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly EvacuationTransactionRepository _transactionRepository;
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
-        private readonly EvacuationMqttService _evacuationMqtt;
+        private readonly IMqttPubQueue _mqttPubQueue;
         private readonly ILogger<EvacuationAlertService> _logger;
 
         public EvacuationAlertService(
@@ -32,14 +33,14 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IAuditEmitter audit,
-            EvacuationMqttService evacuationMqtt,
+            IMqttPubQueue mqttPubQueue,
             ILogger<EvacuationAlertService> logger) : base(httpContextAccessor)
         {
             _repository = repository;
             _transactionRepository = transactionRepository;
             _mapper = mapper;
             _audit = audit;
-            _evacuationMqtt = evacuationMqtt;
+            _mqttPubQueue = mqttPubQueue;
             _logger = logger;
         }
 
@@ -157,29 +158,14 @@ namespace BusinessLogic.Services.Implementation
             if (alert.AlertStatus != EvacuationAlertStatus.Draft && alert.AlertStatus != EvacuationAlertStatus.Paused)
                 throw new BusinessException("Can only start draft or paused evacuations");
 
-            // Request total active persons from engine
-            int totalRequired = 0;
-            try
-            {
-                totalRequired = await _evacuationMqtt.RequestTotalActiveAsync(AppId);
-                _logger.LogInformation($"[Evacuation] Got total active from engine: {totalRequired}");
-            }
-            catch (TimeoutException)
-            {
-                _logger.LogWarning("[Evacuation] Engine timeout for total active, using 0");
-                // Security can update manually via UI
-                totalRequired = 0;
-            }
-
-            // Update status
+            // Update status - engine will provide total via its own tracking
             alert.AlertStatus = EvacuationAlertStatus.Active;
             alert.StartedAt = DateTime.UtcNow;
-            alert.TotalRequired = totalRequired;
             SetUpdateAudit(alert);
             await _repository.UpdateAsync(alert);
 
-            // Publish to MQTT for engine
-            var triggerDto = new EvacuationTriggerMqttDto
+            // Publish trigger to MQTT for engine
+            var triggerDto = new
             {
                 EvacuationAlertId = alert.Id.ToString(),
                 Status = "Active",
@@ -187,15 +173,16 @@ namespace BusinessLogic.Services.Implementation
                 TriggeredAt = alert.StartedAt?.ToString("o"),
                 ApplicationId = alert.ApplicationId.ToString()
             };
-
-            await _evacuationMqtt.PublishEvacuationTriggerAsync(alert.ApplicationId, triggerDto);
-            _logger.LogInformation($"[Evacuation] Started evacuation {alert.Id}, TotalRequired: {totalRequired}");
+            var topic = $"evacuation/trigger/{alert.ApplicationId}";
+            var payload = JsonSerializer.Serialize(triggerDto);
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Started evacuation {alert.Id}, published to topic: {topic}");
 
             _audit.Updated(
                 "EvacuationAlert",
                 alert.Id,
                 "Started evacuation",
-                new { alert.Title, alert.StartedAt, totalRequired }
+                new { alert.Title, alert.StartedAt }
             );
 
             return _mapper.Map<EvacuationAlertRead>(alert);
@@ -240,8 +227,8 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(alert);
             await _repository.UpdateAsync(alert);
 
-            // Publish to MQTT for engine
-            var completeDto = new EvacuationCompleteMqttDto
+            // Publish complete to MQTT for engine
+            var completeDto = new
             {
                 EvacuationAlertId = alert.Id.ToString(),
                 Status = "Completed",
@@ -249,9 +236,10 @@ namespace BusinessLogic.Services.Implementation
                 CompletedBy = alert.CompletedBy,
                 CompletionNotes = completionNotes
             };
-
-            await _evacuationMqtt.PublishEvacuationCompleteAsync(alert.ApplicationId, completeDto);
-            _logger.LogInformation($"[Evacuation] Completed evacuation {alert.Id}, published to MQTT");
+            var topic = $"evacuation/complete/{alert.ApplicationId}";
+            var payload = JsonSerializer.Serialize(completeDto);
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Completed evacuation {alert.Id}, published to topic: {topic}");
 
             _audit.Updated(
                 "EvacuationAlert",
@@ -277,16 +265,17 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(alert);
             await _repository.UpdateAsync(alert);
 
-            // Publish to MQTT for engine
-            var cancelDto = new EvacuationCancelMqttDto
+            // Publish cancel to MQTT for engine
+            var cancelDto = new
             {
                 EvacuationAlertId = alert.Id.ToString(),
                 Status = "Cancelled",
                 CancelledAt = alert.CompletedAt?.ToString("o")
             };
-
-            await _evacuationMqtt.PublishEvacuationCancelAsync(alert.ApplicationId, cancelDto);
-            _logger.LogInformation($"[Evacuation] Cancelled evacuation {alert.Id}, published to MQTT");
+            var topic = $"evacuation/cancel/{alert.ApplicationId}";
+            var payload = JsonSerializer.Serialize(cancelDto);
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Cancelled evacuation {alert.Id}, published to topic: {topic}");
 
             _audit.Updated(
                 "EvacuationAlert",
@@ -357,36 +346,6 @@ namespace BusinessLogic.Services.Implementation
                 ConfirmedAt = t.ConfirmedAt,
                 ConfirmedBy = t.ConfirmedBy
             }).ToList();
-        }
-
-        private async Task UpdateAndPublishStatusAsync(Guid alertId)
-        {
-            var alert = await _repository.GetByIdEntityAsync(alertId);
-            if (alert == null) return;
-
-            // Publish status to frontend via MQTT
-            var statusDto = new EvacuationStatusMqttDto
-            {
-                EvacuationAlertId = alert.Id.ToString(),
-                Status = alert.AlertStatus.ToString(),
-                Timestamp = DateTime.UtcNow.ToString("o"),
-                TotalRequired = alert.TotalRequired,
-                TotalEvacuated = alert.TotalEvacuated,
-                TotalConfirmed = alert.TotalConfirmed,
-                TotalRemaining = alert.TotalRemaining
-            };
-
-            await _evacuationMqtt.PublishEvacuationStatusAsync(alert.ApplicationId, statusDto);
-        }
-
-        public async Task UpdateAlertCountersAsync(Guid alertId,
-            int totalRequired, int totalEvacuated, int totalConfirmed, int totalRemaining)
-        {
-            await _repository.UpdateCountersAsync(
-                alertId, totalRequired, totalEvacuated, totalConfirmed, 0, totalRemaining);
-
-            // Publish status to frontend
-            await UpdateAndPublishStatusAsync(alertId);
         }
     }
 }

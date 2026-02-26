@@ -9,12 +9,14 @@ using Microsoft.AspNetCore.Authorization;
 using Entities.Models;
 using Repositories.Repository.RepoModel;
 using Data.ViewModels.ResponseHelper;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequireSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     public class CardRecordController : ControllerBase
     {
         private readonly ICardRecordService _cardRecordService;

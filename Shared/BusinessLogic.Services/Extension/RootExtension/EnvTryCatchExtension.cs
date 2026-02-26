@@ -1,42 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using DotNetEnv;
+using Shared.Config;
 
 namespace BusinessLogic.Services.Extension.RootExtension
 {
+    /// <summary>
+    /// Extension for loading environment configuration.
+    /// Delegates to Shared.Config.ConfigLoader.
+    /// </summary>
     public static class EnvTryCatchExtension
     {
+        /// <summary>
+        /// Load .env configuration from embedded resource or file.
+        /// Priority: Embedded Resource (production) > File (development)
+        /// </summary>
         public static void LoadEnvWithTryCatch()
         {
-            try
-            {
-                var possiblePaths = new[]
-                {
-                    Path.Combine(Directory.GetCurrentDirectory(), ".env"),
-                    Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),
-                    Path.Combine(AppContext.BaseDirectory, ".env"),
-                    "/app/.env"
-                };
-
-                var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-                if (envFile != null)
-                {
-                    Console.WriteLine($"Loading env file: {envFile}");
-                    Env.Load(envFile);
-                }
-                else
-                {
-                    Console.WriteLine("No .env file found — skipping load");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to load .env file: {ex.Message}");
-            }
+            ConfigLoader.LoadConfig();
         }
     }
 }

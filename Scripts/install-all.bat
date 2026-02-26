@@ -8,7 +8,7 @@ rem Installs all services from publish/ folder
 rem ============================================
 
 set "BASE_PATH=%~dp0"
-set "PUBLISH_PATH=%BASE_PATH%publish"
+set "PUBLISH_PATH=%BASE_PATH%..\publish"
 
 echo.
 echo ==============================================

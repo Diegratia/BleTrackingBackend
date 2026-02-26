@@ -1,3 +1,4 @@
+using Shared.Config;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();

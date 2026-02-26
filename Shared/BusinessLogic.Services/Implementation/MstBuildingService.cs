@@ -157,7 +157,7 @@ namespace BusinessLogic.Services.Implementation
             var createdBuilding = await _repository.AddAsync(building);
             await RemoveGroupAsync();
             _mqttQueue.Enqueue("engine/refresh/area-related", "");
-             _audit.Created(
+            _audit.Created(
                 "Building Area",
                 building.Id,
                 "Created building",

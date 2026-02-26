@@ -131,7 +131,7 @@ namespace BusinessLogic.Services.Implementation
 
             public async Task<IEnumerable<MstFloorRead>> GetAllAsync()
         {
-            var cacheKey = Key("getall");
+        var cacheKey = Key("getall");
 
         if (IsRedisAlive())
             {

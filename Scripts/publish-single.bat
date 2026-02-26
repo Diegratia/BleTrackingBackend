@@ -22,7 +22,7 @@ set "SERVICE_NAME=Auth"
 
 set "BASE_PATH=%~dp0"
 set "PROJECT_PATH=%BASE_PATH%Services.API\%SERVICE_NAME%\%SERVICE_NAME%.csproj"
-set "PUBLISH_PATH=%BASE_PATH%publish"
+set "PUBLISH_PATH=%BASE_PATH%..\publish"
 
 echo.
 echo ==============================================
@@ -41,7 +41,7 @@ if not exist "%PUBLISH_PATH%" (
     mkdir "%PUBLISH_PATH%"
 )
 
-msbuild "%PROJECT_PATH%" -t:Publish -p:Configuration=Release;PublishDir="%PUBLISH_PATH%";RuntimeIdentifier=win-x64;SelfContained=true -verbosity:minimal
+dotnet msbuild "%PROJECT_PATH%" -t:Publish -p:Configuration=Release;PublishDir="%PUBLISH_PATH%";RuntimeIdentifier=win-x64;SelfContained=true -verbosity:minimal
 
 if %errorlevel% == 0 (
     echo.

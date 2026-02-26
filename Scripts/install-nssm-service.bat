@@ -8,7 +8,7 @@ rem Pastikan nssm.exe ada di folder root yang sama
 rem ============================================
 
 set "BASE_PATH=%~dp0"
-set "PUBLISH_PATH=%BASE_PATH%publish"
+set "PUBLISH_PATH=%BASE_PATH%..\publish"
 set "NSSM_EXE=%BASE_PATH%nssm.exe"
 set "LOG_DIR=%BASE_PATH%logs"
 

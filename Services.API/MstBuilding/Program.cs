@@ -1,3 +1,4 @@
+using Shared.Config;
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessLogic.Services.Background;
@@ -30,6 +31,7 @@ using StackExchange.Redis;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();

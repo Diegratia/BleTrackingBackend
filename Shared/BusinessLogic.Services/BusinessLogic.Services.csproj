@@ -48,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shared.Config\Shared.Config.csproj" />
     <ProjectReference Include="..\Data.ViewModels\Data.ViewModels.csproj" />
     <ProjectReference Include="..\Repositories\Repositories.csproj" />
     <ProjectReference Include="..\Entities.Models\Entities.Models.csproj" />

@@ -76,23 +76,5 @@ namespace Web.API.Controllers.Controllers
             var result = await _service.FilterAsync(request, filter);
             return Ok(ApiResponse.Paginated("Evacuation Transaction filtered successfully", result));
         }
-
-        // POST: api/EvacuationTransaction/process-detection (internal endpoint for MQTT listener)
-        [HttpPost("process-detection")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> ProcessDetection([FromBody] EvacuationDetectionDto dto)
-        {
-            await _service.ProcessDetectionAsync(dto);
-            return Ok(ApiResponse.Success("Detection processed successfully", null));
-        }
-
-        // PUT: api/EvacuationTransaction/update-summary (internal endpoint for MQTT listener)
-        [HttpPut("update-summary")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> UpdateSummary(Guid alertId, [FromBody] EvacuationSummaryUpdateDto dto)
-        {
-            await _service.UpdateSummaryAsync(alertId, dto);
-            return Ok(ApiResponse.Success("Summary updated successfully", null));
-        }
     }
 }

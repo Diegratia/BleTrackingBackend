@@ -6,12 +6,14 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize("RequireAllAndUserCreated")]
+    [MinLevel(LevelPriority.Primary)]
     public class TrackingTransactionController : ControllerBase
     {
         private readonly ITrackingTransactionService _trackingTransactionService;
@@ -20,45 +22,6 @@ namespace Web.API.Controllers.Controllers
         {
             _trackingTransactionService = trackingTransactionService;
         }
-
-        // POST: api/TrackingTransaction
-        // [HttpPost]
-        // public async Task<IActionResult> Create([FromBody] TrackingTransactionCreateDto dto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var createdTransaction = await _trackingTransactionService.CreateTrackingTransactionAsync(dto);
-        //         return StatusCode(201, new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transaction created successfully",
-        //             collection = new { data = createdTransaction },
-        //             code = 201
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
 
         // GET: api/TrackingTransaction/{id}
         [HttpGet("{id}")]

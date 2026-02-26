@@ -1,4 +1,5 @@
 ﻿using System;
+using Shared.Config;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;

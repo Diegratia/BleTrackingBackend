@@ -1,3 +1,4 @@
+using Shared.Config;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.FileStorageService;
@@ -18,6 +19,7 @@ using System.Threading.RateLimiting;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 
 // 2. Setup Serilog & Host
 builder.UseSerilogExtension();

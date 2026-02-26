@@ -1,3 +1,4 @@
+using Shared.Config;
 using System.Threading.RateLimiting;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
@@ -17,6 +18,7 @@ using Serilog;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 
 builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
@@ -42,6 +44,8 @@ builder.Services.AddSwaggerExtension();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(Program).Assembly); 
 builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.EvacuationProfile));
 
@@ -50,7 +54,7 @@ builder.Services.AddScoped<IEvacuationAlertService, EvacuationAlertService>();
 builder.Services.AddScoped<IEvacuationTransactionService, EvacuationTransactionService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
-builder.Services.AddSingleton<EvacuationMqttService>();
+
 builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<MqttPubQueue>();
 builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());

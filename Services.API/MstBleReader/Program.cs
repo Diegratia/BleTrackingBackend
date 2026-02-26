@@ -1,3 +1,4 @@
+using Shared.Config;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Extension.RootExtension;
@@ -14,6 +15,7 @@ using System.Text.Json.Serialization;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 
 builder.UseSerilogExtension();
 builder.Host.UseWindowsService();

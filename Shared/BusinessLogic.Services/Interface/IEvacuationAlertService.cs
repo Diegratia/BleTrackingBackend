@@ -25,8 +25,5 @@ namespace BusinessLogic.Services.Interface
         // Summary and status
         Task<EvacuationSummaryDto> GetSummaryAsync(Guid id);
         Task<List<EvacuationPersonStatusDto>> GetPersonStatusAsync(Guid id);
-
-        // Internal method for updating counters
-        Task UpdateAlertCountersAsync(Guid alertId, int totalRequired, int totalEvacuated, int totalConfirmed, int totalRemaining);
     }
 }

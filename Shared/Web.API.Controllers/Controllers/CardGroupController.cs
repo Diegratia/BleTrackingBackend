@@ -7,12 +7,14 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Entities.Models;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequireSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class CardGroupController : ControllerBase
     {
         private readonly ICardGroupService _cardGroupService;

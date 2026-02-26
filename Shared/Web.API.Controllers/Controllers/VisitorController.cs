@@ -6,11 +6,14 @@
     using BusinessLogic.Services.Interface;
     using System.Linq;
     using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [MinLevel(LevelPriority.SuperAdmin)]
 
     public class VisitorController : ControllerBase
     {
@@ -73,7 +76,7 @@ namespace Web.API.Controllers.Controllers
         
 
         // GET: api/Visitor/{id}
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -221,7 +224,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/Visitor
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -248,7 +251,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
         // GET: api/Visitor/lookup
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUp()
         {
@@ -277,7 +280,7 @@ namespace Web.API.Controllers.Controllers
 
         
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] VisitorUpdateDto visitorDto)
         {
@@ -335,7 +338,7 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("{id}/blacklist")]
         public async Task<IActionResult> VisitorBlacklist(Guid id, [FromBody] BlacklistReasonDto visitorDto)
         {
@@ -393,7 +396,7 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("{id}/unblacklist")]
         public async Task<IActionResult> VisitorUnBlacklist(Guid id)
         {
@@ -452,7 +455,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -489,7 +492,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -603,7 +606,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpPost("{id}/send-invitation")]
         public async Task<IActionResult> SendInvitationVisitorAsync(Guid id, [FromBody] CreateInvitationDto CreateInvitationDto)
         {
@@ -624,7 +627,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpPost("send-invitation")]
         public async Task<IActionResult> SendInvitationByEmailAsync([FromBody] SendEmailInvitationDto dto)
         {
@@ -645,7 +648,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+        [MinLevel(LevelPriority.Primary)]
         [HttpPost("batch/send-invitation")]
         public async Task<IActionResult> SendBatchInvitationByEmailAsync([FromBody] List<SendEmailInvitationDto> dto)
         {

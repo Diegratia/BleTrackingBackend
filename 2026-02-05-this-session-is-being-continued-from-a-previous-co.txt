@@ -381,7 +381,7 @@
        13 -    [Route("api/[controller]")]                              
        14 -    [ApiController]                                          
        15 -                                                              
-          -[Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]   
+          -[MinLevel(LevelPriority.PrimaryAdmin)]   
        16 -    public class OverpopulatingController : ControllerBase   
        17 -    {                                                        
        18 -        private readonly IOverpopulatingService _service;    
@@ -3584,7 +3584,7 @@
       273                                                                
       274 -        [HttpGet("users")]                                    
       275 -                                                              
-          -[Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]    
+          -[MinLevel(LevelPriority.PrimaryAdmin)]    
       276 -            public async Task<IActionResult> GetAll()         
       277 -        {                                                     
       278 -            try                                               
@@ -3615,7 +3615,7 @@
       301 -        [AllowAnonymous]                                      
       302 -        [HttpGet("integration-users")]                        
       303 -                                                              
-          -[Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]    
+          -[MinLevel(LevelPriority.PrimaryAdmin)]    
       304 -        public async Task<IActionResult>                      
           -GetAllIntegrationUsers()                                      
       305 -        {                                                     
@@ -3687,7 +3687,7 @@
       365 -                                                              
       366 -    [HttpPut("users/{id}")]                                   
       367 -                                                              
-          -[Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]    
+          -[MinLevel(LevelPriority.PrimaryAdmin)]    
       368 -    public async Task<IActionResult> Update(Guid id,          
           -[FromBody] UpdateUserDto dto)                                 
       369 -    {                                                         
@@ -3742,7 +3742,7 @@
       416 -                                                              
       417 -    [HttpDelete("users/{id}")]                                
       418 -                                                              
-          -[Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]    
+          -[MinLevel(LevelPriority.PrimaryAdmin)]    
       419 -    public async Task<IActionResult> Delete(Guid id)          
       420 -    {                                                         
       421 -        try                                                   

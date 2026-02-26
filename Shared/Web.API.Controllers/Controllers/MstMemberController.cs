@@ -7,11 +7,14 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [MinLevel(LevelPriority.PrimaryAdmin)]
 
     public class MstMemberController : ControllerBase
     {
@@ -22,7 +25,6 @@ namespace Web.API.Controllers.Controllers
             _mstMemberService = mstMemberService;
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -49,7 +51,6 @@ namespace Web.API.Controllers.Controllers
                 });
             }
         }
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
@@ -77,7 +78,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
         // GET: api/MstMember/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -115,8 +115,9 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
+        [MinLevel(LevelPriority.SuperAdmin)]
+
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] MstMemberCreateDto mstMemberDto)
         {
@@ -155,7 +156,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.SuperAdmin)]
         // POST: api/MstMember
         [HttpPost("{id}/blacklist")]
         public async Task<IActionResult> BlacklistMember(Guid id, [FromBody] BlacklistReasonDto dto)
@@ -194,7 +195,6 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
         // POST: api/MstMember
         [HttpPost("{id}/unblacklist")]
         public async Task<IActionResult> UnBlacklistMember(Guid id)
@@ -233,7 +233,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.SuperAdmin)]
         // PUT: api/MstMember/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto mstMemberDto)
@@ -283,7 +283,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
         // DELETE: api/MstMember/{id}
         public async Task<IActionResult> Delete(Guid id)
@@ -321,7 +321,8 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole")]
+
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
@@ -414,66 +415,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        // [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
-        // [HttpPost("import")]
-        // public async Task<IActionResult> Import([FromForm] IFormFile file)
-        // {
-        //     if (file == null || file.Length == 0)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "No file uploaded or file is empty",
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Only .xlsx files are allowed",
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var floors = await _mstMemberService.ImportAsync(file);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Members imported successfully",
-        //             collection = new { data = floors },
-        //             code = 200
-        //         });
-        //     }
-        //     catch (ArgumentException ex)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("import-csv")]
         public async Task<IActionResult> ImportCsv([FromForm] IFormFile file)
         {
@@ -532,7 +474,7 @@ namespace Web.API.Controllers.Controllers
             }
         }
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("import-xlsx")]
         public async Task<IActionResult> ImportExcel([FromForm] IFormFile file)
         {

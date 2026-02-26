@@ -6,13 +6,14 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("RequireAllAndUserCreated")]
-    [Authorize("RequireAll")]
+    [MinLevel(LevelPriority.UserCreated)]
     public class TrxVisitorController : ControllerBase
     {
         private readonly ITrxVisitorService _trxVisitorService;
@@ -23,18 +24,18 @@ namespace Web.API.Controllers.Controllers
         }
 
         // POST: api/TrxVisitor
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] TrxVisitorCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -56,7 +57,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -66,14 +67,14 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
         // GET: api/TrxVisitor/{id}
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -86,7 +87,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "TrxVisitor not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -104,7 +105,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -123,7 +124,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "TrxVisitor not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -141,7 +142,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -149,7 +150,7 @@ namespace Web.API.Controllers.Controllers
 
         // GET: api/TrxVisitor
         [HttpGet]
-        [Authorize("RequireAllAndUserCreated")]
+        [MinLevel(LevelPriority.UserCreated)]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -169,14 +170,14 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
         [HttpGet("minimal")]
-        [Authorize("RequireAllAndUserCreated")]
+        [MinLevel(LevelPriority.UserCreated)]
         public async Task<IActionResult> GetAllMinimal()
         {
             try
@@ -196,24 +197,24 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
         [HttpPut("{id}")]
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         public async Task<IActionResult> Update(Guid id, [FromForm] TrxVisitorUpdateDto trxVisitorDto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -225,7 +226,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "TrxVisitor updated successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -235,7 +236,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -245,7 +246,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -255,24 +256,24 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAllAndUserCreated")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -294,7 +295,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -304,24 +305,24 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAllAndUserCreated")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("minimal/{filter}")]
         public async Task<IActionResult> MinimalFilter([FromBody] DataTablesRequest request)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -343,7 +344,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -353,7 +354,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -374,7 +375,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -397,13 +398,13 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("checkin")]
         public async Task<IActionResult> Checkin([FromBody] TrxVisitorCheckinDto request)
         {
@@ -414,7 +415,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor checked in successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -424,7 +425,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -434,7 +435,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -442,7 +443,7 @@ namespace Web.API.Controllers.Controllers
 
 
         // POST: api/Visitor/{id}/checkout
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{id}/checkout")]
         public async Task<IActionResult> Checkout(Guid id)
         {
@@ -453,7 +454,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor checked out successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -463,7 +464,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -473,13 +474,13 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{id}/denied")]
         public async Task<IActionResult> Denied(Guid id, DenyReasonDto denyReasonDto)
         {
@@ -490,7 +491,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor denied successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -500,7 +501,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -510,23 +511,23 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{trxVisitorId}/extend")]
         public async Task<IActionResult> ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -537,7 +538,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = $"Extended by {dto.ExtendedVisitorTime} minutes." ,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -547,7 +548,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -557,13 +558,13 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{id}/blocked")]
         public async Task<IActionResult> Blocked(Guid id, BlockReasonDto blockReason)
         {
@@ -574,7 +575,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor blocked successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -584,7 +585,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -594,13 +595,13 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
         }
 
-        [Authorize("RequireAll")]
+        [MinLevel(LevelPriority.UserCreated)]
         [HttpPost("{id}/unblocked")]
         public async Task<IActionResult> Unblocked(Guid id)
         {
@@ -611,7 +612,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor Unblocked successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -621,7 +622,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -631,7 +632,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -661,7 +662,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -673,12 +674,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -700,7 +701,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -710,7 +711,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -728,7 +729,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor checked out successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -738,7 +739,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -748,7 +749,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -764,7 +765,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor checked out successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -774,7 +775,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -784,7 +785,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -801,7 +802,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor denied successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -811,7 +812,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -821,7 +822,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -838,7 +839,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor blocked successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -848,7 +849,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -858,7 +859,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -875,7 +876,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = true,
                         msg = "Visitor Unblocked successfully",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 200
                     });
                 }
@@ -885,7 +886,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = ex.Message,
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 400
                     });
                 }
@@ -895,7 +896,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = $"Internal server error: {ex.Message}",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 500
                     });
                 }

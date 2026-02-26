@@ -1,3 +1,4 @@
+using Shared.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -25,6 +26,7 @@ using System.Text.RegularExpressions;
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();
 
 // Konfigurasi CORS

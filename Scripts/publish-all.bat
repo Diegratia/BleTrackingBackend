@@ -16,7 +16,7 @@ echo ==============================================
 echo.
 
 rem Jalankan MSBuild dengan script.targets
-msbuild "%BASE_PATH%script.targets" -t:PublishAllService -p:Configuration=Release -m -verbosity:minimal
+dotnet msbuild "%BASE_PATH%script.targets" -t:PublishAllService -p:Configuration=Release -m -verbosity:minimal
 
 if %errorlevel% == 0 (
     echo.

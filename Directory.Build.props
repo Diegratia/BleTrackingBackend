@@ -1,0 +1,4 @@
+<Project>
+  <!-- Global build properties for all projects -->
+  <!-- .env is now embedded only in Shared.Config.dll -->
+</Project>

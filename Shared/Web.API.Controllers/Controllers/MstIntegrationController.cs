@@ -6,12 +6,14 @@ using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.Extension.RootExtension;
+using Shared.Contracts;
 
 namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize ("RequireSystemOrSuperAdminRole")]
+    [MinLevel(LevelPriority.SuperAdmin)]
     public class MstIntegrationController : ControllerBase
     {
         private readonly IMstIntegrationService _mstIntegrationService;
