@@ -10,6 +10,9 @@ using Helpers.Consumer;
 using Data.ViewModels;
 using Repositories.Repository.RepoModel;
 using Repositories.Models;
+using Repositories.Extensions;
+using Shared.Contracts.Read;
+using Shared.Contracts;
 
 namespace Repositories.Repository
 {
@@ -18,21 +21,83 @@ namespace Repositories.Repository
         public CardRecordRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
-           
+
         }
 
-        public async Task<CardRecord?> GetByIdAsync(Guid id)
+        public IQueryable<CardRecord> BaseEntityQuery()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.CardRecords
-                .Include(a => a.Visitor)
-                .Include(a => a.Card)
-                .Include(a => a.Member)
-                .Include(a => a.Application)
-                .Where(b => b.Id == id);
+                .Include(c => c.Card)
+                .Include(c => c.Visitor)
+                .Include(c => c.Member)
+                .Include(c => c.Application)
+                .Where(c => c.Status != 0);
 
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        private IQueryable<CardRecordRead> ProjectToRead(IQueryable<CardRecord> query)
+        {
+            return query
+                .Select(cr => new CardRecordRead
+                {
+                    Id = cr.Id,
+                    Name = cr.Name,
+                    CardId = cr.CardId,
+                    VisitorId = cr.VisitorId,
+                    MemberId = cr.MemberId,
+                    Timestamp = cr.Timestamp,
+                    CheckinAt = cr.CheckinAt,
+                    CheckoutAt = cr.CheckoutAt,
+                    CheckinBy = cr.CheckinBy,
+                    CheckoutBy = cr.CheckoutBy,
+                    CheckoutMaskedArea = cr.CheckoutMaskedArea,
+                    CheckinMaskedArea = cr.CheckinMaskedArea,
+                    IsActive = cr.CheckoutAt == null,
+                    VisitorActiveStatus = cr.VisitorActiveStatus,
+                    Status = cr.Status,
+                    ApplicationId = cr.ApplicationId,
+                    CreatedBy = cr.CreatedBy,
+                    CreatedAt = cr.CreatedAt,
+                    UpdatedBy = cr.UpdatedBy,
+                    UpdatedAt = cr.UpdatedAt,
+
+                    // Navigation properties
+                    Card = cr.Card != null ? new CardNavigationRead
+                    {
+                        Id = cr.Card.Id,
+                        CardNumber = cr.Card.CardNumber,
+                        Dmac = cr.Card.Dmac
+                    } : null,
+                    Visitor = cr.Visitor != null ? new VisitorNavigationRead
+                    {
+                        Id = cr.Visitor.Id,
+                        Name = cr.Visitor.Name,
+                        IdentityId = cr.Visitor.IdentityId,
+                        FaceImage = cr.Visitor.FaceImage
+                    } : null,
+                    Member = cr.Member != null ? new MemberNavigationRead
+                    {
+                        Id = cr.Member.Id,
+                        Name = cr.Member.Name,
+                        IdentityId = cr.Member.IdentityId,
+                        FaceImage = cr.Member.FaceImage
+                    } : null
+                });
+        }
+
+        public async Task<CardRecordRead?> GetByIdAsync(Guid id)
+        {
+            return await ProjectToRead(BaseEntityQuery())
+                .FirstOrDefaultAsync(cr => cr.Id == id);
+        }
+
+        public async Task<CardRecord?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(cr => cr.Id == id);
         }
 
         //  public IQueryable<CardRecordDtoz> GetAllQueryableMinimal()
@@ -164,9 +229,99 @@ namespace Repositories.Repository
                     .ToListAsync();
             }
 
-        public async Task<IEnumerable<CardRecord>> GetAllAsync()
+        public async Task<IEnumerable<CardRecordRead>> GetAllAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        public async Task<(List<CardRecordRead> Data, int Total, int Filtered)> FilterAsync(
+            CardRecordFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            // Apply filters
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.ToLower();
+                query = query.Where(x =>
+                    (x.Name != null && x.Name.ToLower().Contains(search)) ||
+                    (x.Visitor != null && x.Visitor.Name != null && x.Visitor.Name.ToLower().Contains(search)) ||
+                    (x.Member != null && x.Member.Name != null && x.Member.Name.ToLower().Contains(search)));
+            }
+
+            if (filter.CardId.HasValue)
+                query = query.Where(x => x.CardId == filter.CardId.Value);
+
+            if (filter.VisitorId.HasValue)
+                query = query.Where(x => x.VisitorId == filter.VisitorId.Value);
+
+            if (filter.MemberId.HasValue)
+                query = query.Where(x => x.MemberId == filter.MemberId.Value);
+
+            if (filter.IsActive.HasValue)
+            {
+                if (filter.IsActive.Value)
+                    query = query.Where(x => x.CheckoutAt == null);
+                else
+                    query = query.Where(x => x.CheckoutAt != null);
+            }
+
+            // Date filters for Timestamp
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.Timestamp >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.Timestamp <= filter.DateTo.Value);
+
+            var total = await query.CountAsync();
+            var filtered = await query.CountAsync();
+
+            // Apply sorting and paging using extension methods
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+
+            // Apply default ordering if still not ordered
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderByDescending(x => x.Timestamp);
+            }
+
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // Use ProjectToRead for single source of truth
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        // Ownership validation helpers for service layer
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardOwnershipAsync(
+            Guid cardId,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<Card>(
+                new[] { cardId },
+                applicationId
+            );
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidVisitorOwnershipAsync(
+            Guid visitorId,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<Visitor>(
+                new[] { visitorId },
+                applicationId
+            );
+        }
+
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+            Guid memberId,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstMember>(
+                new[] { memberId },
+                applicationId
+            );
         }
 
          public async Task<CardRecord> AddAsync(CardRecord cardRecord)

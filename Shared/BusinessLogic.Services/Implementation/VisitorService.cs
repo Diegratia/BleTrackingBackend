@@ -247,23 +247,23 @@ public class VisitorService : IVisitorService
             if (createDto.MaskedAreaId.HasValue)
             {
                 var cardAccess = await _cardAccessRepository.GetAllQueryable()
-                    .FirstOrDefaultAsync(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value));
+                    .FirstOrDefaultAsync(ca => ca.CardAccessMaskedAreas.Any(cam => cam!.MaskedAreaId == createDto.MaskedAreaId.Value));
 
                 if (cardAccess == null)
                     throw new KeyNotFoundException($"CardAccess for MaskedAreaId {createDto.MaskedAreaId} not found");
 
                 var card = await _cardRepository.GetAllQueryable()
-                    .FirstOrDefaultAsync(ca => ca.CardCardAccesses.Any(cam => cam.Card.CardNumber == createDto.CardNumber));
+                    .FirstOrDefaultAsync(ca => ca.CardCardAccesses.Any(cam => cam!.Card.CardNumber == createDto.CardNumber));
 
                 if (card == null)
                     throw new KeyNotFoundException($"Card with CardNumber {createDto.CardNumber} not found");
 
                 // sync card access
-                var accessesToRemove = card.CardCardAccesses.Where(cca => cca.CardAccessId != cardAccess.Id).ToList();
+                var accessesToRemove = card.CardCardAccesses.Where(cca => cca!.CardAccessId != cardAccess.Id).ToList();
                 foreach (var access in accessesToRemove)
                     card.CardCardAccesses.Remove(access);
 
-                if (!card.CardCardAccesses.Any(cca => cca.CardAccessId == cardAccess.Id))
+                if (!card.CardCardAccesses.Any(cca => cca!.CardAccessId == cardAccess.Id))
                 {
                     card.CardCardAccesses.Add(new CardCardAccess
                     {
@@ -520,7 +520,7 @@ public class VisitorService : IVisitorService
                     if (createDto.MaskedAreaId.HasValue)
                     {
                         var cardAccessFromArea = await _cardAccessRepository.GetAllQueryable()
-                            .Where(ca => ca.CardAccessMaskedAreas.Any(cam => cam.MaskedAreaId == createDto.MaskedAreaId.Value))
+                            .Where(ca => ca.CardAccessMaskedAreas.Any(cam => cam!.MaskedAreaId == createDto.MaskedAreaId.Value))
                             .Select(ca => ca.Id)
                             .ToListAsync();
 
@@ -531,7 +531,7 @@ public class VisitorService : IVisitorService
 
                     // remove relasi lama
                     var toRemove = card.CardCardAccesses
-                        .Where(ca => !newCardAccessIds.Contains(ca.CardAccessId))
+                        .Where(ca => !newCardAccessIds.Contains(ca!.CardAccessId))
                         .ToList();
                     foreach (var old in toRemove)
                         card.CardCardAccesses.Remove(old);
@@ -539,7 +539,7 @@ public class VisitorService : IVisitorService
                     // add relasi baru
                     foreach (var accessId in newCardAccessIds)
                     {
-                        if (!card.CardCardAccesses.Any(cca => cca.CardAccessId == accessId))
+                        if (!card.CardCardAccesses.Any(cca => cca!.CardAccessId == accessId))
                         {
                             card.CardCardAccesses.Add(new CardCardAccess
                             {
@@ -813,7 +813,7 @@ public class VisitorService : IVisitorService
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
             var newTrx = _mapper.Map<TrxVisitor>(createInvitationDto);
 
-            newTrx.VisitorId = visitor.Id;
+            newTrx.VisitorId = visitor!.Id;
             newTrx.Status = VisitorStatus.Preregist;
             // newTrx.IsInvitationAccepted = false;
             newTrx.TrxStatus = 1;
@@ -864,7 +864,7 @@ public class VisitorService : IVisitorService
                 visitor = existingVisitor;
             }
              bool exists = await _trxVisitorRepository.ExistsOverlappingTrxAsync(
-                        existingVisitor.Id,
+                        existingVisitor!.Id,
                             dto.VisitorPeriodStart.Value,
                             dto.VisitorPeriodEnd.Value
                     );
@@ -876,7 +876,7 @@ public class VisitorService : IVisitorService
 
             // Buat undangan baru
             var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
-            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+            var applicationIdClaim = _httpContextAccessor.HttpContext!.User.FindFirst("ApplicationId")?.Value;
             // var memberEmail = await _mstmemberRepository.GetByEmailAsync(dto.Email.ToLower());
             // var userEmail = await _userRepository.GetByEmailAsync(dto.Email.ToLower());
 
@@ -958,7 +958,7 @@ public class VisitorService : IVisitorService
                 throw new ArgumentException("Invitation list cannot be empty");
 
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var applicationIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("ApplicationId")?.Value;
+            var applicationIdClaim = _httpContextAccessor.HttpContext!.User.FindFirst("ApplicationId")?.Value;
             var loggedInUserEmail = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
             
 
@@ -1339,7 +1339,7 @@ public class VisitorService : IVisitorService
             
             var visitor = trx.Visitor ?? throw new InvalidOperationException("Visitor not found.");
             
-            var user = await _userRepository.GetByEmailConfirmPasswordAsyncRaw(visitor.Email.ToLower());
+            var user = await _userRepository.GetByEmailConfirmPasswordAsyncRaw(visitor.Email!.ToLower());
             Console.WriteLine("user", user);
 
             if (trx.InvitationTokenExpiredAt != null && trx.InvitationTokenExpiredAt < DateTime.UtcNow)

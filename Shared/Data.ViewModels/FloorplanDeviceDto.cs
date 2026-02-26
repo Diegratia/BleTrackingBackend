@@ -28,11 +28,11 @@ namespace Data.ViewModels
         public DeviceStatus? DeviceStatus { get; set; }
         public int? Status { get; set; }
 
-        public MstFloorplanDto Floorplan { get; set; }
-        public MstAccessCctvDto AccessCctv { get; set; }
-        public MstBleReaderDto Reader { get; set; }
-        public MstAccessControlDto AccessControl { get; set; }
-        public FloorplanMaskedAreaDto FloorplanMaskedArea { get; set; }
+        public MstFloorplanDto? Floorplan { get; set; }
+        public MstAccessCctvDto? AccessCctv { get; set; }
+        public MstBleReaderDto? Reader { get; set; }
+        public MstAccessControlDto? AccessControl { get; set; }
+        public FloorplanMaskedAreaDto? FloorplanMaskedArea { get; set; }
     }
 
     public class OpenFloorplanDeviceDto : BaseModelDto

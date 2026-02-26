@@ -30,12 +30,12 @@ namespace Web.API.Controllers.Controllers
         // {
         //     if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
         //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+        //         var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
         //         return BadRequest(new
         //         {
         //             success = false,
         //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
+        //             collection = new { data = (object?)null },
         //             code = 400
         //         });
         //     }
@@ -57,7 +57,7 @@ namespace Web.API.Controllers.Controllers
         //         {
         //             success = false,
         //             msg = ex.Message,
-        //             collection = new { data = (object)null },
+        //             collection = new { data = (object?)null },
         //             code = 400
         //         });
         //     }
@@ -67,7 +67,7 @@ namespace Web.API.Controllers.Controllers
         //         {
         //             success = false,
         //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
+        //             collection = new { data = (object?)null },
         //             code = 500
         //         });
         //     }
@@ -89,7 +89,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "Visitor blacklist area not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -107,7 +107,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -126,7 +126,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "Visitor not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -144,7 +144,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -160,7 +160,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor declined in successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -170,7 +170,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -180,7 +180,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -197,7 +197,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor accepted in successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 200
                 });
             }
@@ -207,7 +207,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -217,7 +217,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -245,7 +245,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -272,7 +272,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -286,12 +286,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -303,7 +303,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor updated successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -313,7 +313,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -323,7 +323,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -333,7 +333,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -344,12 +344,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid )
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -361,7 +361,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor blacklisted successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -371,7 +371,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -381,7 +381,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -391,7 +391,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -402,12 +402,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid )
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -419,7 +419,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor unblacklisted successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -429,7 +429,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -439,7 +439,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -449,7 +449,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -466,7 +466,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor deleted successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -476,7 +476,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -486,7 +486,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -498,12 +498,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -525,7 +525,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -535,7 +535,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -556,7 +556,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -579,7 +579,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -591,7 +591,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object?)null }, code = 400 });
             }
 
             try
@@ -602,7 +602,7 @@ namespace Web.API.Controllers.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object?)null }, code = 500 });
             }
         }
 
@@ -612,7 +612,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object?)null }, code = 400 });
             }
 
             try
@@ -623,7 +623,7 @@ namespace Web.API.Controllers.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object?)null }, code = 500 });
             }
         }
 
@@ -633,7 +633,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object?)null }, code = 400 });
             }
 
             try
@@ -644,7 +644,7 @@ namespace Web.API.Controllers.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object?)null }, code = 500 });
             }
         }
 
@@ -654,7 +654,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object?)null }, code = 400 });
             }
 
             try
@@ -665,7 +665,7 @@ namespace Web.API.Controllers.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object?)null }, code = 500 });
             }
         }
 
@@ -677,12 +677,12 @@ namespace Web.API.Controllers.Controllers
 
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -705,7 +705,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -715,7 +715,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -728,12 +728,12 @@ namespace Web.API.Controllers.Controllers
 
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -756,7 +756,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -766,7 +766,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -794,7 +794,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -805,12 +805,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -832,7 +832,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -842,7 +842,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -855,7 +855,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object)null }, code = 400 });
+                return BadRequest(new { success = false, msg = "Invalid input", collection = new { data = (object?)null }, code = 400 });
             }
             try
             {
@@ -865,7 +865,7 @@ namespace Web.API.Controllers.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object)null }, code = 500 });
+                return StatusCode(500, new { success = false, msg = $"Internal server error: {ex.Message}", collection = new { data = (object?)null }, code = 500 });
             }
         }
 
@@ -875,12 +875,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -902,7 +902,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -912,7 +912,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -924,12 +924,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid || (visitorDto.FaceImage != null && visitorDto.FaceImage.Length == 0))
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -941,7 +941,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor updated successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -951,7 +951,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -961,7 +961,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -971,7 +971,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -988,7 +988,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Visitor deleted successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -998,7 +998,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -1008,7 +1008,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -1028,7 +1028,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "Visitor blacklist area not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -1046,7 +1046,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }

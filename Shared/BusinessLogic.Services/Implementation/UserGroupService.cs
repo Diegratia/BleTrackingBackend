@@ -66,7 +66,7 @@ namespace BusinessLogic.Services.Implementation
             if (currentUserRole != LevelPriority.System && currentUserRole != LevelPriority.SuperAdmin && currentUserRole != LevelPriority.PrimaryAdmin)
                 throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can create groups");
 
-            if (!Enum.TryParse<LevelPriority>(dto.LevelPriority.ToString(), out var targetPriority))
+            if (!Enum.TryParse<LevelPriority>(dto.LevelPriority!.ToString(), out var targetPriority))
                 throw new ArgumentException("Invalid level priority");
 
             if ((int)targetPriority < (int)currentUserRole)
@@ -92,7 +92,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(userGroup.Id);
-            return result;
+            return result!;
         }
 
         public async Task UpdateAsync(Guid id, UpdateUserGroupDto dto)
@@ -109,7 +109,7 @@ namespace BusinessLogic.Services.Implementation
             if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
                 throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Update groups");
 
-            if (!Enum.TryParse<LevelPriority>(dto.LevelPriority.ToString(), out var targetPriority))
+            if (!Enum.TryParse<LevelPriority>(dto.LevelPriority!.ToString(), out var targetPriority))
                 throw new ArgumentException("Invalid level priority");
 
             if ((int)targetPriority < (int)currentUserRole)

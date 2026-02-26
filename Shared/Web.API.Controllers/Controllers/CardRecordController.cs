@@ -1,16 +1,18 @@
 using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
+using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Authorization;
-using Entities.Models;
-using Repositories.Repository.RepoModel;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Data.ViewModels;
 using Data.ViewModels.ResponseHelper;
-using BusinessLogic.Services.Extension.RootExtension;
+using Entities.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Repositories.Repository.RepoModel;
 using Shared.Contracts;
+using Shared.Contracts.Read;
+using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Extension.RootExtension;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -29,100 +31,15 @@ namespace Web.API.Controllers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var cardRecords = await _cardRecordService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Records retrieved successfully",
-                    collection = new { data = cardRecords },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var cardRecords = await _cardRecordService.GetAllAsync();
+            return Ok(ApiResponse.Success("Card Records retrieved successfully", cardRecords));
         }
 
-        // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var cardRecord = await _cardRecordService.GetByIdAsync(id);
-                if (cardRecord == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Card Record not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = " Card Record retrieved successfully",
-                    collection = new { data = cardRecord },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
-        }
-
-        [HttpPost("{id}/checkout")]
-        public async Task<IActionResult> Checkout(Guid id)
-        {
-            try
-            {
-                await _cardRecordService.CheckoutCard(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card checked out successfully",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var cardRecord = await _cardRecordService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Card Record retrieved successfully", cardRecord));
         }
 
         [HttpPost]
@@ -130,132 +47,40 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var createdCardRecord = await _cardRecordService.CreateAsync(createDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Card Record created successfully",
-                    collection = new { data = createdCardRecord },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var createdCardRecord = await _cardRecordService.CreateAsync(createDto);
+            return StatusCode(201, ApiResponse.Created("Card Record created successfully", createdCardRecord));
         }
 
-        // [HttpPost("{filter}")]
-        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var result = await _cardRecordService.FilterAsync(request);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Card Records filtered successfully",
-        //             collection = result,
-        //             code = 200
-        //         });
-        //     }
-        //     catch (ArgumentException ex)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object)null },
-        //             code = 400
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
+        [HttpPost("{id}/checkout")]
+        public async Task<IActionResult> Checkout(Guid id)
+        {
+            await _cardRecordService.CheckoutCard(id);
+            return Ok(ApiResponse.NoContent("Card checked out successfully"));
+        }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _cardRecordService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "CardRecord_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _cardRecordService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "CardRecord_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _cardRecordService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "CardRecord_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _cardRecordService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "CardRecord_Report.xlsx");
         }
 
-          // ============================
+        // ============================
         // 1️⃣ Berapa kali kartu dipakai
         // ============================
         [HttpGet("usage")]
@@ -266,10 +91,17 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpPost("filter")]
-        public async Task<IActionResult> GetFiltered( [FromBody] DataTablesRequest request
-        )
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            var result = await _cardRecordService.ProjectionFilterAsync(request);
+            var filter = new Shared.Contracts.CardRecordFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<Shared.Contracts.CardRecordFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Shared.Contracts.CardRecordFilter();
+            }
+
+            var result = await _cardRecordService.FilterAsync(request, filter);
             return Ok(ApiResponse.Success("Card Record filtered successfully", result));
         }
 
@@ -277,11 +109,8 @@ namespace Web.API.Controllers.Controllers
         // 2️⃣ Historis kartu dipakai siapa
         // ============================
         [HttpPost("history")]
-        public async Task<IActionResult> GetHistory(
-            [FromBody] CardRecordRequestRM request
-        )
+        public async Task<IActionResult> GetHistory([FromBody] CardRecordRequestRM request)
         {
-
             var result = await _cardRecordService.GetCardUsageHistoryAsync(request);
             return Ok(ApiResponse.Success("Card usage history retrieved", result));
         }
@@ -290,49 +119,8 @@ namespace Web.API.Controllers.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _cardRecordService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Records filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _cardRecordService.ProjectionFilterAsync(request);
+            return Ok(ApiResponse.Success("Card Records filtered successfully", result));
         }
     }
 }

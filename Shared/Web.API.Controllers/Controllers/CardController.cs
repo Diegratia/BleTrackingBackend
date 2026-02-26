@@ -56,7 +56,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -69,7 +69,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -82,7 +82,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -95,7 +95,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -109,7 +109,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -122,7 +122,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -210,7 +210,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -224,7 +224,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 

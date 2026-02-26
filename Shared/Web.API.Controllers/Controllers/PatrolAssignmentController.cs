@@ -46,7 +46,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var assignment = await _PatrolAssignmentService.GetByIdAsync(id);
-            return Ok(ApiResponse.Success("Patrol Assignment retrieved successfully", assignment));
+            return Ok(ApiResponse.Success("Patrol Assignment retrieved successfully", assignment!));
         }
 
         // POST: api/PatrolArea
@@ -57,7 +57,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
@@ -100,7 +100,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }

@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Repositories.Extensions;
+using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Shared.Contracts;
 
 namespace Repositories.Repository
 {
@@ -17,7 +20,200 @@ namespace Repositories.Repository
         {
         }
 
-            public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
+        #region Base Query & Projection
+
+        /// <summary>
+        /// Base query with multi-tenancy filtering and active status check
+        /// </summary>
+        private IQueryable<MstMember> BaseEntityQuery()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var query = _context.MstMembers
+                .Include(x => x.Department)
+                .Include(x => x.District)
+                .Include(x => x.Organization)
+                .Where(x => x.Status != 0);
+
+            query = query.WithActiveRelations();
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        /// <summary>
+        /// Manual projection to MstMemberRead - single source of truth for read operations
+        /// </summary>
+        private IQueryable<MstMemberRead> ProjectToRead(IQueryable<MstMember> query)
+        {
+            return query
+                .Select(m => new MstMemberRead
+                {
+                    Id = m.Id,
+                    Generate = m.Generate,
+                    PersonId = m.PersonId,
+                    OrganizationId = m.OrganizationId,
+                    DepartmentId = m.DepartmentId,
+                    DistrictId = m.DistrictId,
+                    IdentityId = m.IdentityId,
+                    CardNumber = m.CardNumber,
+                    BleCardNumber = m.BleCardNumber,
+                    Name = m.Name,
+                    Phone = m.Phone,
+                    Email = m.Email,
+                    Gender = m.Gender.ToString(),
+                    Address = m.Address,
+                    FaceImage = m.FaceImage,
+                    UploadFr = m.UploadFr,
+                    UploadFrError = m.UploadFrError,
+                    BirthDate = m.BirthDate,
+                    JoinDate = m.JoinDate,
+                    ExitDate = m.ExitDate,
+                    HeadMember1 = m.HeadMember1,
+                    HeadMember2 = m.HeadMember2,
+                    IsBlacklist = m.IsBlacklist,
+                    BlacklistAt = m.BlacklistAt,
+                    BlacklistReason = m.BlacklistReason,
+                    StatusEmployee = m.StatusEmployee.ToString(),
+                    Status = m.Status,
+                    ApplicationId = m.ApplicationId,
+                    CreatedBy = m.CreatedBy,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedBy = m.UpdatedBy,
+                    UpdatedAt = m.UpdatedAt,
+                    Organization = m.Organization != null ? new OrganizationRead
+                    {
+                        Id = m.Organization.Id,
+                        Name = m.Organization.Name
+                    } : null,
+                    Department = m.Department != null ? new DepartmentRead
+                    {
+                        Id = m.Department.Id,
+                        Name = m.Department.Name
+                    } : null,
+                    District = m.District != null ? new DistrictRead
+                    {
+                        Id = m.District.Id,
+                        Name = m.District.Name
+                    } : null
+                });
+        }
+
+        #endregion
+
+        #region Read Operations (Return Read DTOs)
+
+        /// <summary>
+        /// Get member by ID - returns Read DTO
+        /// </summary>
+        public async Task<MstMemberRead?> GetByIdAsync(Guid id)
+        {
+            return await ProjectToRead(BaseEntityQuery())
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        /// <summary>
+        /// Get all members - returns Read DTOs
+        /// </summary>
+        public async Task<IEnumerable<MstMemberRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        /// <summary>
+        /// Get member as entity (for update/delete operations)
+        /// </summary>
+        public async Task<MstMember?> GetByIdEntityAsync(Guid id)
+        {
+            return await GetAllQueryable()
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        /// <summary>
+        /// Filter members with pagination and sorting
+        /// </summary>
+        public async Task<(List<MstMemberRead> Data, int Total, int Filtered)> FilterAsync(MemberFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var s = filter.Search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(s)
+                    || (x.PersonId != null && x.PersonId.ToLower().Contains(s))
+                    || (x.Email != null && x.Email.ToLower().Contains(s))
+                    || (x.CardNumber != null && x.CardNumber.ToLower().Contains(s))
+                    || (x.IdentityId != null && x.IdentityId.ToLower().Contains(s)));
+            }
+
+            // Specific filters
+            if (filter.IsBlacklist.HasValue)
+                query = query.Where(x => x.IsBlacklist == filter.IsBlacklist.Value);
+
+            if (filter.OrganizationId.HasValue)
+                query = query.Where(x => x.OrganizationId == filter.OrganizationId.Value);
+
+            if (filter.DepartmentId.HasValue)
+                query = query.Where(x => x.DepartmentId == filter.DepartmentId.Value);
+
+            if (filter.DistrictId.HasValue)
+                query = query.Where(x => x.DistrictId == filter.DistrictId.Value);
+
+            if (!string.IsNullOrWhiteSpace(filter.Email))
+                query = query.Where(x => x.Email.ToLower().Contains(filter.Email.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                query = query.Where(x => x.Name.ToLower().Contains(filter.Name.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.CardNumber))
+                query = query.Where(x => x.CardNumber.ToLower().Contains(filter.CardNumber.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.PersonId))
+                query = query.Where(x => x.PersonId.ToLower().Contains(filter.PersonId.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(filter.StatusEmployee))
+                query = query.Where(x => x.StatusEmployee.ToString() == filter.StatusEmployee);
+
+            // Date range filter
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+
+            var total = await query.CountAsync();
+            var filtered = await query.CountAsync();
+
+            // Use extension methods for sorting and paging
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // Use ProjectToRead for single source of truth
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        #endregion
+
+        #region Ownership Validation
+
+        /// <summary>
+        /// Validate Card ownership for Member-Card relationship
+        /// </summary>
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardOwnershipAsync(
+            Guid cardId, Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<Card>(
+                new[] { cardId },
+                applicationId);
+        }
+
+        #endregion
+
+        #region Legacy Methods (Preserved for backward compatibility)
+
+        public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
@@ -45,7 +241,9 @@ namespace Repositories.Repository
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
 
-        public async Task<List<MstMember>> GetAllAsync()
+        // Legacy: Returns entities for export operations
+        // Use GetAllAsync() (returns MstMemberRead) for normal read operations
+        public async Task<List<MstMember>> GetAllEntitiesAsync()
         {
             return await GetAllQueryable().ToListAsync();
         }
@@ -132,14 +330,14 @@ namespace Repositories.Repository
             return await q.CountAsync();
         }
 
-          public async Task<List<MstMemberLookUpRM>> GetAllLookUpAsync()
+          public async Task<List<MstMemberLookUpRead>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstMembers
             .AsNoTracking()
             .Where(fd => fd.Status != 0 && fd.CardNumber != null);
 
-            var projected = query.Select(t => new MstMemberLookUpRM
+            var projected = query.Select(t => new MstMemberLookUpRead
             {
                 Id = t.Id,
                 Name = t.Name,
@@ -151,20 +349,16 @@ namespace Repositories.Repository
                 OrganizationName = t.Organization.Name,
                 DepartmentName = t.Department.Name,
                 DistrictName = t.District.Name,
-                ApplicationId = t.ApplicationId
-            }); 
+                Email = t.Email
+            });
             return await projected.ToListAsync();
         }
         
 
 
-        public async Task<MstMember?> GetByIdAsync(Guid id)
-        {
-
-            return await GetAllQueryable()
-            .Where(x => x.Id == id && x.Status != 0)
-            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Member not found");
-        }
+        // Renamed old GetByIdAsync to GetByIdLegacy for backward compatibility if needed
+        // Use GetByIdAsync (returns MstMemberRead) for read operations
+        // Use GetByIdEntityAsync (returns MstMember) for update/delete operations
 
         public async Task<MstMember?> GetByIdRawAsync(Guid id)
         {
@@ -253,7 +447,7 @@ namespace Repositories.Repository
 
        public async Task<IEnumerable<MstMember>> GetAllExportAsync()
         {
-            return await GetAllQueryable().ToListAsync();
+            return await GetAllEntitiesAsync();
         }
 
                 public async Task<MstMember> GetByEmailAsync(string email)
@@ -306,5 +500,6 @@ namespace Repositories.Repository
             if (org == null)
                 throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");
         }
+        #endregion
     }
 }

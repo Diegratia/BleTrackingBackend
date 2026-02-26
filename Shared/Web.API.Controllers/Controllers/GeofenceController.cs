@@ -52,7 +52,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
@@ -69,7 +69,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
@@ -93,7 +93,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }

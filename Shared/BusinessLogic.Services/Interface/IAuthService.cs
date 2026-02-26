@@ -134,7 +134,7 @@ namespace BusinessLogic.Services.Interface
                 "User login successfully",
                 new {
                     username = user.Username,
-                    ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString()
+                    ip = _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress?.ToString()
                 }
             );
 
@@ -148,7 +148,7 @@ namespace BusinessLogic.Services.Interface
                 GroupId = user.GroupId,
                 IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
-                LevelPriority = user.Group.LevelPriority.ToString(),
+                LevelPriority = user.Group.LevelPriority.ToString()!,
                 IsEmailConfirmed = user.IsEmailConfirmation,
                 Status = user.Status
             };
@@ -191,7 +191,7 @@ namespace BusinessLogic.Services.Interface
                 GroupId = user.GroupId,
                 IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
-                LevelPriority = user.Group.LevelPriority.ToString(),
+                LevelPriority = user.Group.LevelPriority.ToString()!,
                 IsEmailConfirmed = user.IsEmailConfirmation,
                 Status = user.Status
             };
@@ -249,7 +249,7 @@ namespace BusinessLogic.Services.Interface
                 GroupId = user.GroupId,
                 IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
-                LevelPriority = user.Group.LevelPriority.ToString(),
+                LevelPriority = user.Group.LevelPriority.ToString()!,
                 IsEmailConfirmed = user.IsEmailConfirmation,
                 Status = user.Status
             };
@@ -302,7 +302,7 @@ namespace BusinessLogic.Services.Interface
                 new {
                     username = user.Username,
                     windowsIdentity = windowsUsername,
-                    ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString()
+                    ip = _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress?.ToString()
                 }
             );
 
@@ -316,7 +316,7 @@ namespace BusinessLogic.Services.Interface
                 GroupId = user.GroupId,
                 IsHead = user.Group.IsHead,
                 ApplicationId = user.Group.ApplicationId,
-                LevelPriority = user.Group.LevelPriority.ToString(),
+                LevelPriority = user.Group.LevelPriority.ToString()!,
                 IsEmailConfirmed = user.IsEmailConfirmation,
                 Status = user.Status
             };
@@ -353,7 +353,7 @@ namespace BusinessLogic.Services.Interface
                 Id = Guid.NewGuid(),
                 Username = dto.Username.ToLower(),
                 Email = dto.Email.ToLower(),
-                Password = null,
+                Password = null!,
                 IsCreatedPassword = 0,
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = confirmationCode,
@@ -500,7 +500,7 @@ namespace BusinessLogic.Services.Interface
 
         private async Task<string> GenerateJwtToken(User user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -510,9 +510,9 @@ namespace BusinessLogic.Services.Interface
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim("groupId", user.GroupId.ToString()),
                 new Claim("ApplicationId", user.Group.ApplicationId.ToString()),
-                new Claim("groupName", user.Group.Name),
-                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()),
-                new Claim("level", ((int)user.Group.LevelPriority).ToString()),
+                new Claim("groupName", user.Group.Name!),
+                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()!),
+                new Claim("level", ((int)user.Group.LevelPriority!).ToString()),
                 new Claim("isHead", user.Group.IsHead.ToString())
             };
 
@@ -557,7 +557,7 @@ namespace BusinessLogic.Services.Interface
         public async Task<UserDto> GetUserByIdAsync(Guid id)
         {
             var user = await _userRepository.GetByIdAsync(id);
-            return user == null ? null : _mapper.Map<UserDto>(user);
+            return user == null ? null! : _mapper.Map<UserDto>(user);
         }
 
         public async Task LogoutAsync(string refreshToken)

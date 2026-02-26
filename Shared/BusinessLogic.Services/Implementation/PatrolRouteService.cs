@@ -106,7 +106,7 @@ namespace BusinessLogic.Services.Implementation
                 // =====================================================
                 var newAreaIds = dto.PatrolAreaIds?
                     .Where(x => x.HasValue)
-                    .Select(x => x.Value)
+                    .Select(x => x!.Value)
                     .Distinct()
                     .ToList() ?? new List<Guid>();
                 

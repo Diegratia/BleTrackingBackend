@@ -41,7 +41,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<MstOrganizationDto>> GetAllOrganizationsAsync()
         {
             const string cacheKey = "MstOrganizationService_GetAll";
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstOrganizationDto> cachedData))
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstOrganizationDto>? cachedData) && cachedData != null)
                 return cachedData;
             var organizations = await _repository.GetAllAsync();
             var mapped = _mapper.Map<IEnumerable<MstOrganizationDto>>(organizations);

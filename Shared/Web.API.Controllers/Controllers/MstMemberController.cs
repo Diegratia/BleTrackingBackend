@@ -1,14 +1,13 @@
 using System;
 using System.Threading.Tasks;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Mvc;
-using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
 using BusinessLogic.Services.Interface;
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using BusinessLogic.Services.Extension.RootExtension;
+using Data.ViewModels;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -25,394 +24,90 @@ namespace Web.API.Controllers.Controllers
             _mstMemberService = mstMemberService;
         }
 
-        // GET: api/MstMember
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var members = await _mstMemberService.GetAllMembersAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members retrieved successfully",
-                    collection = new { data = members },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var members = await _mstMemberService.GetAllMembersAsync();
+            return Ok(ApiResponse.Success("Members retrieved successfully", members));
         }
-        // GET: api/MstMember
+
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
         {
-            try
-            {
-                var members = await _mstMemberService.GetAllLookUpAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members retrieved successfully",
-                    collection = new { data = members },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var members = await _mstMemberService.GetAllLookUpAsync();
+            return Ok(ApiResponse.Success("Members retrieved successfully", members));
         }
 
-        // GET: api/MstMember/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var member = await _mstMemberService.GetMemberByIdAsync(id);
-                if (member == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Member not found",
-                        collection = new { data = (object)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Member retrieved successfully",
-                    collection = new { data = member },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var member = await _mstMemberService.GetMemberByIdAsync(id);
+            return Ok(ApiResponse.Success("Member retrieved successfully", member));
         }
 
-        // POST: api/MstMember
         [MinLevel(LevelPriority.SuperAdmin)]
-
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] MstMemberCreateDto mstMemberDto)
+        public async Task<IActionResult> Create([FromForm] MstMemberCreateDto dto)
         {
-            if (!ModelState.IsValid || (mstMemberDto.FaceImage != null && mstMemberDto.FaceImage.Length == 0))
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdMember = await _mstMemberService.CreateMemberAsync(mstMemberDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Member created successfully",
-                    collection = new { data = createdMember },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstMemberService.CreateMemberAsync(dto);
+            return Ok(ApiResponse.Created("Member created successfully", result));
         }
 
         [MinLevel(LevelPriority.SuperAdmin)]
-        // POST: api/MstMember
         [HttpPost("{id}/blacklist")]
         public async Task<IActionResult> BlacklistMember(Guid id, [FromBody] BlacklistReasonDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-             try
-            {
-                await _mstMemberService.MemberBlacklistAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Member Blacklisted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.MemberBlacklistAsync(id, dto);
+            return Ok(ApiResponse.NoContent("Member blacklisted successfully"));
         }
 
-        // POST: api/MstMember
         [HttpPost("{id}/unblacklist")]
         public async Task<IActionResult> UnBlacklistMember(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-             try
-            {
-                await _mstMemberService.UnBlacklistMemberAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Member Unblacklist successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.UnBlacklistMemberAsync(id);
+            return Ok(ApiResponse.NoContent("Member unblacklisted successfully"));
         }
 
         [MinLevel(LevelPriority.SuperAdmin)]
-        // PUT: api/MstMember/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto mstMemberDto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] MstMemberUpdateDto dto)
         {
-            if (!ModelState.IsValid || (mstMemberDto.FaceImage != null && mstMemberDto.FaceImage.Length == 0))
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                await _mstMemberService.UpdateMemberAsync(id, mstMemberDto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Member updated successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.UpdateMemberAsync(id, dto);
+            return Ok(ApiResponse.Success("Member updated successfully"));
         }
 
         [MinLevel(LevelPriority.SuperAdmin)]
         [HttpDelete("{id}")]
-        // DELETE: api/MstMember/{id}
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstMemberService.DeleteMemberAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Member marked as deleted successfully",
-                    collection = new { data = (object)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.DeleteMemberAsync(id);
+            return Ok(ApiResponse.Success("Member deleted successfully"));
         }
 
-
         [MinLevel(LevelPriority.PrimaryAdmin)]
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _mstMemberService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var result = await _mstMemberService.FilterAsync(request);
+            return Ok(ApiResponse.Paginated("Members retrieved successfully", result));
         }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstMemberService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstMember_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstMemberService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstMember_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstMemberService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstMember_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstMemberService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstMember_Report.xlsx");
         }
 
         [MinLevel(LevelPriority.PrimaryAdmin)]
@@ -420,58 +115,13 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> ImportCsv([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("No file uploaded or file is empty"));
 
             if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .csv files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("Only .csv files are allowed"));
 
-            try
-            {
-                await _mstMemberService.ImportCsvAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members imported successfully",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.ImportCsvAsync(file);
+            return Ok(ApiResponse.Success("Members imported successfully"));
         }
 
         [MinLevel(LevelPriority.PrimaryAdmin)]
@@ -479,88 +129,21 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> ImportExcel([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "No file uploaded or file is empty",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("No file uploaded or file is empty"));
 
             if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Only .xlsx files are allowed",
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
+                return BadRequest(ApiResponse.BadRequest("Only .xlsx files are allowed"));
 
-            try
-            {
-                await _mstMemberService.ImportExcelAsync(file);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members imported successfully",
-                    collection = new { data = (object)null },
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            await _mstMemberService.ImportExcelAsync(file);
+            return Ok(ApiResponse.Success("Members imported successfully"));
         }
 
-        //OPEN
-
-        // GET: api/MstMember
         [HttpGet("open")]
         [AllowAnonymous]
         public async Task<IActionResult> OpenGetAll()
         {
-            try
-            {
-                var members = await _mstMemberService.OpenGetAllMembersAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Members retrieved successfully",
-                    collection = new { data = members },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
-                    code = 500
-                });
-            }
+            var members = await _mstMemberService.OpenGetAllMembersAsync();
+            return Ok(ApiResponse.Success("Members retrieved successfully", members));
         }
     }
 }

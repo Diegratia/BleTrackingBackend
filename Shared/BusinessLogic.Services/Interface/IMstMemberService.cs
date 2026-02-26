@@ -4,22 +4,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IMstMemberService
     {
-        Task<IEnumerable<MstMemberDto>> GetAllMembersAsync();
+        Task<IEnumerable<MstMemberRead>> GetAllMembersAsync();
         Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync();
-        Task<IEnumerable<MstMemberLookUpDto>> GetAllLookUpAsync();
-        Task<MstMemberDto> MemberBlacklistAsync(Guid id, BlacklistReasonDto dto);
-         Task UnBlacklistMemberAsync(Guid id) ;
-        Task<MstMemberDto> GetMemberByIdAsync(Guid id);
-        Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto);
-        Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);
+        Task<IEnumerable<MstMemberLookUpRead>> GetAllLookUpAsync();
+        Task<MstMemberRead> MemberBlacklistAsync(Guid id, BlacklistReasonDto dto);
+        Task UnBlacklistMemberAsync(Guid id);
+        Task<MstMemberRead> GetMemberByIdAsync(Guid id);
+        Task<MstMemberRead> CreateMemberAsync(MstMemberCreateDto createDto);
+        Task<MstMemberRead> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto);
         Task DeleteMemberAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
-        // Task<IEnumerable<MstMemberDto>> ImportAsync(IFormFile file);
+        Task<object> FilterAsync(DataTablesProjectedRequest request);
         Task<IEnumerable<MstMemberDto>> ImportCsvAsync(IFormFile file);
         Task<IEnumerable<MstMemberDto>> ImportExcelAsync(IFormFile file);
         Task<byte[]> ExportPdfAsync();

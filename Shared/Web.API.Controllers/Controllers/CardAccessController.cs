@@ -43,7 +43,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -62,7 +62,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "Card Access not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -80,7 +80,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -97,7 +97,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Card Access deleted successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -107,7 +107,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = "Card Access not found",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -117,7 +117,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -128,12 +128,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -155,7 +155,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -166,12 +166,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -193,7 +193,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -203,7 +203,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -214,12 +214,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -231,7 +231,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Card Access updated successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 });
             }
@@ -241,7 +241,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = "Card not found",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 404
                 });
             }
@@ -251,7 +251,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -262,12 +262,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -279,7 +279,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = true,
                     msg = "Card Access Assigned successfully",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 201
                 });
             }
@@ -289,7 +289,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -316,7 +316,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }

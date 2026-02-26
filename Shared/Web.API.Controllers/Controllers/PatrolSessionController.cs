@@ -45,7 +45,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var session = await _PatrolSessionService.GetByIdAsync(id);
-            return Ok(ApiResponse.Success("Patrol Session retrieved successfully", session));
+            return Ok(ApiResponse.Success("Patrol Session retrieved successfully", session!));
         }
         [HttpPost("{id}/stop")]
         public async Task<IActionResult> StopSession(Guid id)
@@ -62,7 +62,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }

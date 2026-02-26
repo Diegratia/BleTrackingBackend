@@ -45,7 +45,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -71,7 +71,7 @@ namespace Web.API.Controllers.Controllers
                     {
                         success = false,
                         msg = "Alarm not found",
-                        collection = new { data = (object)null },
+                        collection = new { data = (object?)null },
                         code = 404
                     });
                 }
@@ -89,7 +89,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -110,7 +110,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -133,7 +133,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }
@@ -148,12 +148,12 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
                     msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -175,7 +175,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = ex.Message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 400
                 });
             }
@@ -185,7 +185,7 @@ namespace Web.API.Controllers.Controllers
                 {
                     success = false,
                     msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 500
                 });
             }

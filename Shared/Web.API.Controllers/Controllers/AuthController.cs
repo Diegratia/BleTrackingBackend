@@ -29,7 +29,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -53,7 +53,7 @@ namespace Web.API.Controllers.Controllers
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutRequestDto dto)
         {
-            await _authService.LogoutAsync(dto.RefreshToken);
+            await _authService.LogoutAsync(dto.RefreshToken );
             return Ok(ApiResponse.Success("Logout successful"));
         }
 
@@ -63,7 +63,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -76,7 +76,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
@@ -103,7 +103,7 @@ namespace Web.API.Controllers.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage);
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 

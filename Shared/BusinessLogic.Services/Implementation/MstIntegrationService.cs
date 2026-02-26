@@ -34,7 +34,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<MstIntegrationDto> GetByIdAsync(Guid id)
         {
             var integration = await _repository.GetByIdAsync(id);
-            return integration == null ? null : _mapper.Map<MstIntegrationDto>(integration);
+            return integration == null ? null! : _mapper.Map<MstIntegrationDto>(integration);
         }
 
         public async Task<IEnumerable<MstIntegrationDto>> GetAllAsync()
@@ -129,6 +129,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var integration = await _repository.GetByIdAsync(id);
+            if (integration == null) throw new KeyNotFoundException("Integration not found");
             integration.UpdatedBy = username;
             integration.UpdatedAt = DateTime.UtcNow;
             await _repository.SoftDeleteAsync(id);

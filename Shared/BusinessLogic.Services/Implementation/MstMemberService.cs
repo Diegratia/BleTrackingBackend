@@ -1,9 +1,11 @@
 using AutoMapper;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
+using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using Entities.Models;
@@ -24,6 +26,7 @@ using CsvHelper;
 using System.Globalization;
 using CsvHelper.Configuration;
 using BusinessLogic.Services.Extension.Encrypt;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -39,7 +42,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMqttPubQueue _mqttQueue;
         private readonly IFileStorageService _fileStorageService;
         private readonly IEncryptService _encryptService;
-
+        private readonly IAuditEmitter _audit;
 
         public MstMemberService(MstMemberRepository repository,
         IMapper mapper,
@@ -48,7 +51,8 @@ namespace BusinessLogic.Services.Implementation
         ILogger<MstMemberService> logger,
         IMqttPubQueue mqttQueue,
         IFileStorageService fileStorageService,
-        IEncryptService encryptService
+        IEncryptService encryptService,
+        IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -59,38 +63,51 @@ namespace BusinessLogic.Services.Implementation
             _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
             _encryptService = encryptService;
+            _audit = audit;
         }
 
-        public async Task<IEnumerable<MstMemberDto>> GetAllMembersAsync()
+        public async Task<IEnumerable<MstMemberRead>> GetAllMembersAsync()
         {
             var members = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstMemberDto>>(members);
+            return members; // Direct return from repository
         }
 
-        public async Task<IEnumerable<MstMemberLookUpDto>> GetAllLookUpAsync()
+        public async Task<IEnumerable<MstMemberLookUpRead>> GetAllLookUpAsync()
         {
             var members = await _repository.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<MstMemberLookUpDto>>(members);
+            return members; // Direct return from repository
         }
 
         public async Task<IEnumerable<OpenMstMemberDto>> OpenGetAllMembersAsync()
         {
-            var members = await _repository.GetAllAsync();
+            var members = await _repository.GetAllEntitiesAsync();
             return _mapper.Map<IEnumerable<OpenMstMemberDto>>(members);
         }
 
-        public async Task<MstMemberDto> GetMemberByIdAsync(Guid id)
+        public async Task<MstMemberRead> GetMemberByIdAsync(Guid id)
         {
             var member = await _repository.GetByIdAsync(id);
-            return member == null ? null : _mapper.Map<MstMemberDto>(member);
+            if (member == null)
+                throw new NotFoundException($"Member with id {id} not found");
+            return member; // Direct return from repository
         }
 
-        public async Task<MstMemberDto> CreateMemberAsync(MstMemberCreateDto createDto)
+        public async Task<MstMemberRead> CreateMemberAsync(MstMemberCreateDto createDto)
         {
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
-            var username = UsernameFormToken;
-            var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId.Value);
+
+            // Validate card ownership
+            if (createDto.CardId.HasValue)
+            {
+                var invalidCardIds = await _repository.CheckInvalidCardOwnershipAsync(
+                    createDto.CardId.Value, AppId);
+                if (invalidCardIds.Any())
+                    throw new UnauthorizedException(
+                        $"CardId does not belong to this Application: {string.Join(", ", invalidCardIds)}");
+            }
+
+            var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId!.Value);
             if (card == null)
                 throw new InvalidOperationException("Card not found.");
 
@@ -109,43 +126,24 @@ namespace BusinessLogic.Services.Implementation
                     throw new ArgumentException($"Member with PersonId {createDto.PersonId} already exists.");
             }
 
-
             if (card.IsUsed == true)
                 throw new InvalidOperationException("Card already checked in by another visitor.");
-            // if (card == null)
-            //     throw new InvalidOperationException("Card not found.");
 
-            // Validasi relasi
-            // var department = await _repository.GetDepartmentByIdAsync(createDto.DepartmentId);
-            // if (department == null)
-            //     throw new ArgumentException($"Department with ID {createDto.DepartmentId} not found.");
+            var member = _mapper.Map<MstMember>(createDto); 
 
-            // var organization = await _repository.GetOrganizationByIdAsync(createDto.OrganizationId);
-            // if (organization == null)
-            //     throw new ArgumentException($"Organization with ID {createDto.OrganizationId} not found.");
-
-            // var district = await _repository.GetDistrictByIdAsync(createDto.DistrictId);
-            // if (district == null)
-            //     throw new ArgumentException($"District with ID {createDto.DistrictId} not found.");
-
-            var member = _mapper.Map<MstMember>(createDto);
-
-            // Tangani upload gambar
+            // Handle file upload
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
                 try
                 {
-
                     member.FaceImage = await _fileStorageService
-                        .SaveImageAsync(createDto.FaceImage, "MemberFaceImages", MaxFileSize, ImagePurpose.Photo );
-
-
-                    member.UploadFr = 1; // Sukses
+                        .SaveImageAsync(createDto.FaceImage, "MemberFaceImages", MaxFileSize, ImagePurpose.Photo);
+                    member.UploadFr = 1;
                     member.UploadFrError = "Upload successful";
                 }
                 catch (Exception ex)
                 {
-                    member.UploadFr = 2; // Gagal
+                    member.UploadFr = 2;
                     member.UploadFrError = ex.Message;
                     member.FaceImage = null;
                 }
@@ -157,23 +155,10 @@ namespace BusinessLogic.Services.Implementation
                 member.FaceImage = null;
             }
 
-            // member.IdentityId = _encryptService.Encrypt(createDto.IdentityId);
-            // member.Phone      = _encryptService.Encrypt(createDto.Phone);
-            // member.Email      = _encryptService.Encrypt(createDto.Email);
-            // member.Address    = _encryptService.Encrypt(createDto.Address);
-            // member.PersonId   = _encryptService.Encrypt(createDto.PersonId);
-
-            member.Id = Guid.NewGuid();
-            member.Status = 1;
-            member.CreatedBy = username;
-            member.CreatedAt = DateTime.UtcNow;
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
+            // Use BaseService helper
+            SetCreateAudit(member);
             member.BleCardNumber = card.Dmac;
             member.CardNumber = card.CardNumber;
-
-            // member.JoinDate = createDto.JoinDate;
-            // member.BirthDate = createDto.BirthDate;
 
             using var transaction = await _repository.BeginTransactionAsync();
             try
@@ -187,8 +172,11 @@ namespace BusinessLogic.Services.Implementation
                 await _cardRepository.UpdateAsync(card);
 
                 await transaction.CommitAsync();
-                _mqttQueue.Enqueue("engine/refresh/card-related", "");
 
+                _audit.Created("Member", member.Id, "Created Member",
+                    new { member.Name, member.PersonId });
+
+                _mqttQueue.Enqueue("engine/refresh/card-related", "");
             }
             catch
             {
@@ -196,33 +184,37 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstMemberDto>(member);
+            return await _repository.GetByIdAsync(member.Id) ?? throw new NotFoundException($"Member with ID {member.Id} not found.");
         }
 
-        public async Task<MstMemberDto> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto)
+        public async Task<MstMemberRead> UpdateMemberAsync(Guid id, MstMemberUpdateDto updateDto)
         {
-            // if (updateDto == null)
-            //     throw new ArgumentNullException(nameof(updateDto));
-
-            var member = await _repository.GetByIdAsync(id);
+            var member = await _repository.GetByIdEntityAsync(id);
             if (member == null)
-                throw new KeyNotFoundException($"Member with ID {id} not found or has been deleted.");
+                throw new NotFoundException($"Member with ID {id} not found or has been deleted.");
 
             var cardId = updateDto.CardId ?? Guid.Empty;
             var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdEntityAsync(cardId) : null;
             if (updateDto.CardId.HasValue && card == null)
-                throw new KeyNotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
+                throw new NotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            // Validate card ownership if changed
+            if (updateDto.CardId.HasValue)
+            {
+                var invalidCardIds = await _repository.CheckInvalidCardOwnershipAsync(
+                    updateDto.CardId.Value, AppId);
+                if (invalidCardIds.Any())
+                    throw new UnauthorizedException(
+                        $"CardId does not belong to this Application: {string.Join(", ", invalidCardIds)}");
+            }
 
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {
                 try
                 {
                     await _fileStorageService.DeleteAsync(member.FaceImage);
-
                     member.FaceImage = await _fileStorageService
-                        .SaveImageAsync(updateDto.FaceImage, "MemberFaceImages", MaxFileSize, ImagePurpose.Photo );
+                        .SaveImageAsync(updateDto.FaceImage, "MemberFaceImages", MaxFileSize, ImagePurpose.Photo);
                     member.UploadFr = 1;
                     member.UploadFrError = "Upload successful";
                 }
@@ -230,20 +222,18 @@ namespace BusinessLogic.Services.Implementation
                 {
                     member.UploadFr = 2;
                     member.UploadFrError = ex.Message;
-                    // member.FaceImage = null;
                 }
             }
             else
             {
                 member.UploadFr = 0;
                 member.UploadFrError = "No file uploaded";
-                // member.FaceImage = null;
             }
 
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                // Reset card lama (jika beda dengan card baru)
+                // Reset old card
                 var oldCard = await _cardRepository.GetAllQueryable()
                     .FirstOrDefaultAsync(c => c.MemberId == member.Id && c.StatusCard != 0);
 
@@ -256,7 +246,7 @@ namespace BusinessLogic.Services.Implementation
                     await _cardRepository.UpdateAsync(oldCard);
                 }
 
-                // Assign card baru
+                // Assign new card
                 if (updateDto.CardId.HasValue)
                 {
                     if (card!.MemberId.HasValue && card.MemberId != member.Id)
@@ -268,20 +258,21 @@ namespace BusinessLogic.Services.Implementation
                     card.MemberId = member.Id;
                     card.CheckinAt = DateTime.UtcNow;
                     await _cardRepository.UpdateAsync(card);
+
+                    member.BleCardNumber = card.Dmac;
+                    member.CardNumber = card.CardNumber;
                 }
 
-                // Update member
                 _mapper.Map(updateDto, member);
-                member.BleCardNumber = card.Dmac;
-                member.CardNumber = card.CardNumber;
-                member.UpdatedBy = username;
-                member.UpdatedAt = DateTime.UtcNow;
-
+                SetUpdateAudit(member);
                 await _repository.UpdateAsync(member);
 
                 await transaction.CommitAsync();
-                _mqttQueue.Enqueue("engine/refresh/card-related", "");
 
+                _audit.Updated("Member", member.Id, "Updated Member",
+                    new { member.Name, member.PersonId });
+
+                _mqttQueue.Enqueue("engine/refresh/card-related", "");
             }
             catch
             {
@@ -289,80 +280,118 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstMemberDto>(member);
+            return await _repository.GetByIdAsync(member.Id) ?? throw new NotFoundException($"Member with ID {member.Id} not found.");
         }
 
 
         public async Task DeleteMemberAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var member = await _repository.GetByIdAsync(id);
-            member.UpdatedBy = username;
-            member.UpdatedAt = DateTime.UtcNow;
-            member.Status = 0;
-            await _repository.DeleteAsync(id);
-            _mqttQueue.Enqueue("engine/refresh/card-related", "");
+            var member = await _repository.GetByIdEntityAsync(id);
+            if (member == null)
+                throw new KeyNotFoundException($"Member with ID {id} not found.");
 
+            // Reset card
+            var oldCard = await _cardRepository.GetAllQueryable()
+                .FirstOrDefaultAsync(c => c.MemberId == id && c.StatusCard != 0);
+            if (oldCard != null)
+            {
+                oldCard.IsUsed = false;
+                oldCard.CardStatus = CardStatus.Available;
+                oldCard.MemberId = null;
+                oldCard.CheckinAt = null;
+                await _cardRepository.UpdateAsync(oldCard);
+            }
+
+            // Use BaseService helper
+            SetDeleteAudit(member);
+            await _repository.DeleteAsync(id);
+
+            _audit.Deleted("Member", id, "Deleted Member",
+                new { member.Name, member.PersonId });
+
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
         }
 
-        public async Task<MstMemberDto> MemberBlacklistAsync(Guid id, BlacklistReasonDto dto)
+        public async Task<MstMemberRead> MemberBlacklistAsync(Guid id, BlacklistReasonDto dto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var Member = await _repository.GetByIdAsync(id);
+            var member = await _repository.GetByIdEntityAsync(id);
+            if (member == null)
+                throw new NotFoundException($"Member with ID {id} not found.");
 
-            _mapper.Map(dto, Member);
-            Member.UpdatedBy = username;
-            Member.BlacklistAt = DateTime.UtcNow;
-            Member.IsBlacklist = true;
-            Member.UpdatedAt = DateTime.UtcNow;
+            _mapper.Map(dto, member);
+            SetUpdateAudit(member);
+            member.BlacklistAt = DateTime.UtcNow;
+            member.IsBlacklist = true;
 
-            await _repository.UpdateAsync(Member);
+            await _repository.UpdateAsync(member);
+
+            _audit.Updated("Member", member.Id, "Blacklisted Member",
+                new { member.Name, member.PersonId, Reason = dto.BlacklistReason });
+
             _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
-            return _mapper.Map<MstMemberDto>(Member);
+
+            return await _repository.GetByIdAsync(member.Id) ?? throw new NotFoundException($"Member with ID {id} not found.");
         }
 
         public async Task UnBlacklistMemberAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var member = await _repository.GetByIdAsync(id);
+            var member = await _repository.GetByIdEntityAsync(id);
             if (member == null)
-                throw new KeyNotFoundException($"Member with ID {id} not found.");
+                throw new NotFoundException($"Member with ID {id} not found.");
 
-            member.UpdatedBy = username ?? "System";
-            member.UpdatedAt = DateTime.UtcNow;
+            SetUpdateAudit(member);
             member.IsBlacklist = false;
 
             await _repository.UpdateAsync(member);
+
+            _audit.Updated("Member", member.Id, "Unblacklisted Member",
+                new { member.Name, member.PersonId });
+
             _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request)
         {
-            var query = _repository.GetAllQueryable().AsNoTracking();
-
-            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            var filter = new MemberFilter();
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                { "Gender", typeof(Gender) },
-                // { "IdentityType", typeof(IdentityType) }
+                filter = JsonSerializer.Deserialize<MemberFilter>(
+                    request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new MemberFilter();
+            }
+
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            // Map Date Filters
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
             };
-
-            var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadMember1", "HeadMember2", "Status", "Brand.Name", "CardNumber" };
-
-            var filterService = new GenericDataTableService<MstMember, MstMemberDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
-
-            return await filterService.FilterAsync(request);
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var members = await _repository.GetAllAsync();
+            var members = await _repository.GetAllEntitiesAsync();
 
             var document = Document.Create(container =>
             {

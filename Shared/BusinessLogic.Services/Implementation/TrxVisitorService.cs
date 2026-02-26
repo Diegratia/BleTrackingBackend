@@ -85,13 +85,13 @@ namespace BusinessLogic.Services.Implementation
         public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
         {
             var trxvisitor = await _repository.GetByIdAsync(id);
-            return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
+            return trxvisitor == null ? null! : _mapper.Map<TrxVisitorDto>(trxvisitor);
         }
 
             public async Task<TrxVisitorDto> GetTrxVisitorByPublicIdAsync(Guid id)
         {
             var trxvisitor = await _repository.GetByPublicIdAsync(id);
-            return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
+            return trxvisitor == null ? null! : _mapper.Map<TrxVisitorDto>(trxvisitor);
         }
 
         public async Task<TrxVisitorDto> CreateTrxVisitorAsync(TrxVisitorCreateDto createDto)
@@ -169,7 +169,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new InvalidOperationException("VisitorId is null");
 
             var allowedStatuses = new[] { VisitorStatus.Precheckin, VisitorStatus.Waiting }.Cast<VisitorStatus>().ToList();
-            if (!allowedStatuses.Contains(trx.Status.Value))
+            if (!allowedStatuses.Contains(trx.Status!.Value))
                 throw new InvalidOperationException($"Visitor status is not valid for checkin. Current status: {trx.Status}. Allowed statuses: {string.Join(", ", allowedStatuses)}.");
 
             var activeTrx = await _repository.GetAllQueryable()
@@ -259,7 +259,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new Exception("No active session found");
 
             var allowedStatuses = new[] { VisitorStatus.Checkin, VisitorStatus.Unblock, VisitorStatus.Block }.Cast<VisitorStatus>().ToList();
-            if (!allowedStatuses.Contains(trx.Status.Value))
+            if (!allowedStatuses.Contains(trx.Status!.Value))
                 throw new InvalidOperationException($"Visitor status is not valid for checkout. Current status: {trx.Status}. Allowed statuses: {string.Join(", ", allowedStatuses)}.");
 
             // if (trx.Status != VisitorStatus.Checkin || trx.Status !=VisitorStatus.Block ||  trx.Status !=VisitorStatus.Denied || trx.Status !=VisitorStatus.Unblock)
@@ -525,7 +525,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new Exception("No active session found");
             var additionalTime = TimeSpan.FromMinutes(dto.ExtendedVisitorTime);
             trx.ExtendedVisitorTime += dto.ExtendedVisitorTime;
-            trx.VisitorPeriodEnd = trx.VisitorPeriodEnd.Value.Add(additionalTime);
+            trx.VisitorPeriodEnd = trx.VisitorPeriodEnd!.Value.Add(additionalTime);
 
             // trx.VisitorActiveStatus = VisitorActiveStatus.Extended;
             trx.UpdatedAt = DateTime.UtcNow;

@@ -87,7 +87,7 @@ namespace BusinessLogic.Services.Implementation
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
             var username = UsernameFormToken;
-            var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId.Value);
+            var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId!.Value);
             if (card == null)
                 throw new NotFoundException($"Card {createDto.CardId} not found.");
 
@@ -210,7 +210,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 try
                 {
-                     await _fileStorageService.DeleteAsync(security.FaceImage);
+                     await _fileStorageService.DeleteAsync(security.FaceImage!);
 
                     security.FaceImage = await _fileStorageService
                         .SaveImageAsync(updateDto.FaceImage, "SecurityFaceImages", MaxFileSize, ImagePurpose.Photo);
@@ -263,7 +263,7 @@ namespace BusinessLogic.Services.Implementation
 
                 // Update security
                 _mapper.Map(updateDto, security);
-                security.BleCardNumber = card.Dmac;
+                security.BleCardNumber = card!.Dmac;
                 security.CardNumber = card.CardNumber;
                 security.UpdatedBy = username;
                 security.UpdatedAt = DateTime.UtcNow;

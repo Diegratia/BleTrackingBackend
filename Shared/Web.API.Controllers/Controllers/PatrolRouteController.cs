@@ -55,7 +55,7 @@ namespace Web.API.Controllers.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var patrolroute = await _PatrolRouteService.GetByIdAsync(id);
-            return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroute));
+            return Ok(ApiResponse.Success("Patrol Route retrieved successfully", patrolroute!));
         }
 
 
@@ -67,7 +67,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }
@@ -110,7 +110,7 @@ namespace Web.API.Controllers.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
                 return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
             }

@@ -415,7 +415,7 @@
        44 -                    success = false,                         
        45 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-       46 -                    collection = new { data = (object)null },
+       46 -                    collection = new { data = (object?)null },
        47 -                    code = 500                               
        48 -                });                                          
        49 -            }                                                
@@ -456,7 +456,7 @@
        81 -                    success = false,                         
        82 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-       83 -                    collection = new { data = (object)null },
+       83 -                    collection = new { data = (object?)null },
        84 -                    code = 500                               
        85 -                });                                          
        86 -            }                                                
@@ -476,7 +476,7 @@
        98 -                    success = false,                         
        99 -                    msg = "Validation failed: " +             
           -string.Join(", ", errors),                                   
-      100 -                    collection = new { data = (object)null },
+      100 -                    collection = new { data = (object?)null },
       101 -                    code = 400                               
       102 -                });                                          
       103 -            }                                                
@@ -501,7 +501,7 @@
       120 -                    success = false,                         
       121 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      122 -                    collection = new { data = (object)null },
+      122 -                    collection = new { data = (object?)null },
       123 -                    code = 500                               
       124 -                });                                          
       125 -            }                                                
@@ -521,7 +521,7 @@
       137 -                    success = false,                         
       138 -                    msg = "Validation failed: " +             
           -string.Join(", ", errors),                                   
-      139 -                    collection = new { data = (object)null },
+      139 -                    collection = new { data = (object?)null },
       140 -                    code = 400                               
       141 -                });                                          
       142 -            }                                                
@@ -534,7 +534,7 @@
       149 -                    success = true,                          
       150 -                    msg = "Overpopulating updated             
           -successfully",                                               
-      151 -                    collection = new { data = (object)null },
+      151 -                    collection = new { data = (object?)null },
       152 -                    code = 204                               
       153 -                });                                          
       154 -            }                                                
@@ -544,7 +544,7 @@
       158 -                {                                            
       159 -                    success = false,                         
       160 -                    msg = "Overpopulating not found",        
-      161 -                    collection = new { data = (object)null },
+      161 -                    collection = new { data = (object?)null },
       162 -                    code = 404                               
       163 -                });                                          
       164 -            }                                                
@@ -555,7 +555,7 @@
       169 -                    success = false,                         
       170 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      171 -                    collection = new { data = (object)null },
+      171 -                    collection = new { data = (object?)null },
       172 -                    code = 500                               
       173 -                });                                          
       174 -            }                                                
@@ -573,7 +573,7 @@
       186 -                    success = true,                          
       187 -                    msg = "Overpopulating deleted             
           -successfully",                                               
-      188 -                    collection = new { data = (object)null },
+      188 -                    collection = new { data = (object?)null },
       189 -                    code = 204                               
       190 -                });                                          
       191 -            }                                                
@@ -583,7 +583,7 @@
       195 -                {                                            
       196 -                    success = false,                         
       197 -                    msg = "Overpopulating not found",        
-      198 -                    collection = new { data = (object)null },
+      198 -                    collection = new { data = (object?)null },
       199 -                    code = 404                               
       200 -                });                                          
       201 -            }                                                
@@ -594,7 +594,7 @@
       206 -                    success = false,                         
       207 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      208 -                    collection = new { data = (object)null },
+      208 -                    collection = new { data = (object?)null },
       209 -                    code = 500                               
       210 -                });                                          
       211 -            }                                                
@@ -613,7 +613,7 @@
       222 -                    success = false,                         
       223 -                    msg = "Validation failed: " +             
           -string.Join(", ", errors),                                   
-      224 -                    collection = new { data = (object)null },
+      224 -                    collection = new { data = (object?)null },
       225 -                    code = 400                               
       226 -                });                                          
       227 -            }                                                
@@ -637,7 +637,7 @@
       243 -                {                                            
       244 -                    success = false,                         
       245 -                    msg = ex.Message,                        
-      246 -                    collection = new { data = (object)null },
+      246 -                    collection = new { data = (object?)null },
       247 -                    code = 400                               
       248 -                });                                          
       249 -            }                                                
@@ -648,7 +648,7 @@
       254 -                    success = false,                         
       255 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      256 -                    collection = new { data = (object)null },
+      256 -                    collection = new { data = (object?)null },
       257 -                    code = 500                               
       258 -                });                                          
       259 -            }                                                
@@ -2135,7 +2135,7 @@
        36 -                    success = false,                         
        37 -                    msg = "Validation failed: " +             
           -string.Join(", ", errors),                                   
-       38 -                    collection = new { data = (object)null },
+       38 -                    collection = new { data = (object?)null },
        39 -                    code = 400                               
        40 -                });                                          
        41 -            }                                                
@@ -2159,7 +2159,7 @@
        58 -                    success = false,                         
        59 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-       60 -                    collection = new { data = (object)null },
+       60 -                    collection = new { data = (object?)null },
        61 -                    code = 500                               
        62 -                });                                          
        63 -            }                                                
@@ -2188,7 +2188,7 @@
        84 -                    success = false,                         
        85 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-       86 -                    collection = new { data = (object)null },
+       86 -                    collection = new { data = (object?)null },
        87 -                    code = 500                               
        88 -                });                                          
        89 -            }                                                
@@ -2228,7 +2228,7 @@
       120 -                    success = false,                         
       121 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      122 -                    collection = new { data = (object)null },
+      122 -                    collection = new { data = (object?)null },
       123 -                    code = 500                               
       124 -                });                                          
       125 -            }                                                
@@ -2247,7 +2247,7 @@
       136 -                    success = false,                         
       137 -                    msg = "Validation failed: " +             
           -string.Join(", ", errors),                                   
-      138 -                    collection = new { data = (object)null },
+      138 -                    collection = new { data = (object?)null },
       139 -                    code = 400                               
       140 -                });                                          
       141 -            }                                                
@@ -2260,7 +2260,7 @@
       148 -                {                                            
       149 -                    success = true,                          
       150 -                    msg = "User group updated successfully", 
-      151 -                    collection = new { data = (object)null },
+      151 -                    collection = new { data = (object?)null },
       152 -                    code = 200                               
       153 -                });                                          
       154 -            }                                                
@@ -2270,7 +2270,7 @@
       158 -                {                                            
       159 -                    success = false,                         
       160 -                    msg = ex.Message,                        
-      161 -                    collection = new { data = (object)null },
+      161 -                    collection = new { data = (object?)null },
       162 -                    code = 404                               
       163 -                });                                          
       164 -            }                                                
@@ -2281,7 +2281,7 @@
       169 -                    success = false,                         
       170 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      171 -                    collection = new { data = (object)null },
+      171 -                    collection = new { data = (object?)null },
       172 -                    code = 500                               
       173 -                });                                          
       174 -            }                                                
@@ -2297,7 +2297,7 @@
       184 -                {                                            
       185 -                    success = true,                          
       186 -                    msg = "User group deleted successfully", 
-      187 -                    collection = new { data = (object)null },
+      187 -                    collection = new { data = (object?)null },
       188 -                    code = 200                               
       189 -                });                                          
       190 -            }                                                
@@ -2307,7 +2307,7 @@
       194 -                {                                            
       195 -                    success = false,                         
       196 -                    msg = ex.Message,                        
-      197 -                    collection = new { data = (object)null },
+      197 -                    collection = new { data = (object?)null },
       198 -                    code = 404                               
       199 -                });                                          
       200 -            }                                                
@@ -2317,7 +2317,7 @@
       204 -                {                                            
       205 -                    success = false,                         
       206 -                    msg = ex.Message,                        
-      207 -                    collection = new { data = (object)null },
+      207 -                    collection = new { data = (object?)null },
       208 -                    code = 400                               
       209 -                });                                          
       210 -            }                                                
@@ -2328,7 +2328,7 @@
       215 -                    success = false,                         
       216 -                    msg = $"Internal server error:            
           -{ex.Message}",                                               
-      217 -                    collection = new { data = (object)null },
+      217 -                    collection = new { data = (object?)null },
       218 -                    code = 500                               
       219 -                });                                          
       220 -            }                                                
@@ -3606,7 +3606,7 @@
       293 -                    success = false,                          
       294 -                    msg = $"Internal server error:            
           -{ex.Message}",                                                
-      295 -                    collection = new { data = (object)null }, 
+      295 -                    collection = new { data = (object?)null }, 
       296 -                    code = 500                                
       297 -                });                                           
       298 -            }                                                 
@@ -3638,7 +3638,7 @@
       321 -                    success = false,                          
       322 -                    msg = $"Internal server error:            
           -{ex.Message}",                                                
-      323 -                    collection = new { data = (object)null }, 
+      323 -                    collection = new { data = (object?)null }, 
       324 -                    code = 500                                
       325 -                });                                           
       326 -            }                                                 
@@ -3679,7 +3679,7 @@
       358 -                    success = false,                          
       359 -                    msg = $"Internal server error:            
           -{ex.Message}",                                                
-      360 -                    collection = new { data = (object)null }, 
+      360 -                    collection = new { data = (object?)null }, 
       361 -                    code = 500                                
       362 -                });                                           
       363 -            }                                                 
@@ -3700,7 +3700,7 @@
       375 -                success = false,                              
       376 -                msg = "Validation failed: " + string.Join(",  
           -", errors),                                                   
-      377 -                collection = new { data = (object)null },     
+      377 -                collection = new { data = (object?)null },     
       378 -                code = 400                                    
       379 -            });                                               
       380 -        }                                                     
@@ -3712,7 +3712,7 @@
       386 -            {                                                 
       387 -                success = true,                               
       388 -                msg = "User updated successfully",            
-      389 -                collection = new { data = (object)null },     
+      389 -                collection = new { data = (object?)null },     
       390 -                code = 200                                    
       391 -            });                                               
       392 -        }                                                     
@@ -3722,7 +3722,7 @@
       396 -            {                                                 
       397 -                success = false,                              
       398 -                msg = ex.Message,                             
-      399 -                collection = new { data = (object)null },     
+      399 -                collection = new { data = (object?)null },     
       400 -                code = 404                                    
       401 -            });                                               
       402 -        }                                                     
@@ -3732,7 +3732,7 @@
       406 -            {                                                 
       407 -                success = false,                              
       408 -                msg = $"Internal server error: {ex.Message}", 
-      409 -                collection = new { data = (object)null },     
+      409 -                collection = new { data = (object?)null },     
       410 -                code = 500                                    
       411 -            });                                               
       412 -        }                                                     
@@ -3752,7 +3752,7 @@
       425 -            {                                                 
       426 -                success = true,                               
       427 -                msg = "User deleted successfully",            
-      428 -                collection = new { data = (object)null },     
+      428 -                collection = new { data = (object?)null },     
       429 -                code = 200                                    
       430 -            });                                               
       431 -        }                                                     
@@ -3762,7 +3762,7 @@
       435 -            {                                                 
       436 -                success = false,                              
       437 -                msg = ex.Message,                             
-      438 -                collection = new { data = (object)null },     
+      438 -                collection = new { data = (object?)null },     
       439 -                code = 404                                    
       440 -            });                                               
       441 -        }                                                     
@@ -3772,7 +3772,7 @@
       445 -            {                                                 
       446 -                success = false,                              
       447 -                msg = $"Internal server error: {ex.Message}", 
-      448 -                collection = new { data = (object)null },     
+      448 -                collection = new { data = (object?)null },     
       449 -                code = 500                                    
       450 -            });                                               
       451 -        }                                                     

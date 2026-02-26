@@ -1,6 +1,7 @@
 using AutoMapper;
 using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Extension.RootExtension;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,144 +21,177 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
 using Bogus.DataSets;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.RepoModel;
 using DataView;
-using BusinessLogic.Services.Extension.RootExtension;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class CardRecordService : ICardRecordService
+    public class CardRecordService : BaseService, ICardRecordService
     {
         private readonly CardRecordRepository _repository;
         private readonly CardRepository _cardRepository;
         private readonly VisitorRepository _visitorRepository;
-        // private readonly TrxVisitorRepository _trxVisitorRepository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<CardRecord> _logger;
         private readonly IMqttPubQueue _mqttQueue;
+        private readonly IAuditEmitter _audit;
 
-        public CardRecordService
-        (
+        public CardRecordService(
             CardRecordRepository repository,
             CardRepository cardRepository,
             VisitorRepository visitorRepository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IMqttPubQueue mqttQueue,
-            ILogger<CardRecord> logger
-        )
+            ILogger<CardRecord> logger,
+            IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
             _cardRepository = cardRepository;
             _visitorRepository = visitorRepository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _mqttQueue = mqttQueue;
-
+            _audit = audit;
         }
 
-        public async Task<CardRecordDto> GetByIdAsync(Guid id)
+        public async Task<CardRecordRead> GetByIdAsync(Guid id)
         {
             var cardRecord = await _repository.GetByIdAsync(id);
-            return cardRecord == null ? null : _mapper.Map<CardRecordDto>(cardRecord);
+            if (cardRecord == null)
+                throw new NotFoundException($"CardRecord with id {id} not found");
+            return cardRecord; // Direct return, no mapper needed
         }
 
-        public async Task<IEnumerable<CardRecordDto>> GetAllAsync()
+        public async Task<IEnumerable<CardRecordRead>> GetAllAsync()
         {
-            var cardRecord = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CardRecordDto>>(cardRecord);
+            var cardRecords = await _repository.GetAllAsync();
+            return cardRecords; // Direct return
         }
 
-      public async Task<CardRecordDto> CreateAsync(CardRecordCreateDto createDto)
+      public async Task<CardRecordRead> CreateAsync(CardRecordCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var cardRecord = _mapper.Map<CardRecord>(createDto);
 
-            cardRecord.Id = Guid.NewGuid();
-            cardRecord.CreatedBy = username;
-            cardRecord.UpdatedBy = username;
-            cardRecord.CreatedAt = DateTime.UtcNow;
-            cardRecord.UpdatedAt = DateTime.UtcNow;
+            // Ownership validation for Card
+            if (cardRecord.CardId.HasValue)
+            {
+                var invalidCardIds = await _repository.CheckInvalidCardOwnershipAsync(
+                    cardRecord.CardId.Value, AppId);
+                if (invalidCardIds.Any())
+                    throw new UnauthorizedException(
+                        $"CardId does not belong to this Application: {string.Join(", ", invalidCardIds)}");
+            }
+
+            // Ownership validation for Visitor
+            if (cardRecord.VisitorId.HasValue)
+            {
+                var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(
+                    cardRecord.VisitorId.Value, AppId);
+                if (invalidVisitorIds.Any())
+                    throw new UnauthorizedException(
+                        $"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+            }
+
+            // Ownership validation for Member
+            if (cardRecord.MemberId.HasValue)
+            {
+                var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(
+                    cardRecord.MemberId.Value, AppId);
+                if (invalidMemberIds.Any())
+                    throw new UnauthorizedException(
+                        $"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+            }
+
             cardRecord.Timestamp = DateTime.UtcNow;
-            cardRecord.Status = 1;
-            cardRecord.CheckinBy = username;
+            cardRecord.CheckinAt = DateTime.UtcNow;
+            cardRecord.CheckinBy = UsernameFormToken;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Active;
+            cardRecord.ApplicationId = AppId;
+
+            SetCreateAudit(cardRecord);
 
             var card = await _cardRepository.GetByIdEntityAsync(cardRecord.CardId!.Value);
             if (card == null)
-                throw new InvalidOperationException("Card not found.");
+                throw new NotFoundException("Card not found.");
 
-            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value);
-            if (visitor == null)
-                throw new InvalidOperationException("Visitor not found.");
+            var visitor = cardRecord.VisitorId.HasValue
+                ? await _visitorRepository.GetByIdAsync(cardRecord.VisitorId.Value)
+                : null;
 
             if (card.IsUsed == true)
-                throw new InvalidOperationException("Card already checked in by another visitor.");
+                throw new BusinessException("Card already checked in by another visitor.");
 
             card.IsUsed = true;
             card.CardStatus = CardStatus.Used;
-            card.LastUsed = visitor.Name;
-            card.VisitorId = visitor.Id;
+            card.LastUsed = visitor?.Name ?? cardRecord.Name;
+            card.VisitorId = cardRecord.VisitorId;
             card.CheckinAt = DateTime.UtcNow;
 
-            visitor.BleCardNumber = card.Dmac;
-            visitor.CardNumber = card.CardNumber;
+            if (visitor != null)
+            {
+                visitor.BleCardNumber = card.Dmac;
+                visitor.CardNumber = card.CardNumber;
+                await _visitorRepository.UpdateAsync(visitor);
+            }
 
-            cardRecord.Name = visitor.Name;
-            cardRecord.CheckinAt = card.CheckinAt;
+            cardRecord.Name = visitor?.Name ?? cardRecord.Name;
             cardRecord.CheckinMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
 
             await _cardRepository.UpdateAsync(card);
-            await _visitorRepository.UpdateAsync(visitor);
             var createdCardRecord = await _repository.AddAsync(cardRecord);
             _mqttQueue.Enqueue("engine/refresh/card-related", "");
-            return _mapper.Map<CardRecordDto>(createdCardRecord);
+            _audit.Created("CardRecord", createdCardRecord.Id, $"CardRecord {createdCardRecord.Name} created");
+
+            return await _repository.GetByIdAsync(createdCardRecord.Id);
         }
 
 
         public async Task CheckoutCard(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            var cardRecord = await _repository.GetByIdAsync(id);
+            var cardRecord = await _repository.GetByIdEntityAsync(id);
             if (cardRecord is null)
-                throw new InvalidOperationException("Card record not found.");
+                throw new NotFoundException("Card record not found.");
 
             var card = await _cardRepository.GetByIdEntityAsync(cardRecord.CardId!.Value)
-                    ?? throw new InvalidOperationException("Card not found.");
+                    ?? throw new NotFoundException("Card not found.");
 
-            var visitor = await _visitorRepository.GetByIdAsync(cardRecord.VisitorId!.Value)
-                        ?? throw new InvalidOperationException("Visitor not found.");
+            var visitor = cardRecord.VisitorId.HasValue
+                ? await _visitorRepository.GetByIdAsync(cardRecord.VisitorId.Value)
+                : null;
 
             if (card.IsUsed == false)
-                throw new InvalidOperationException("Card already checked out.");
+                throw new BusinessException("Card already checked out.");
 
             var now = DateTime.UtcNow;
 
             cardRecord.CheckoutAt = now;
-            cardRecord.CheckoutBy = username;
+            cardRecord.CheckoutBy = UsernameFormToken;
             cardRecord.CheckoutMaskedArea = (card.IsMultiMaskedArea == false) ? card.RegisteredMaskedAreaId : (Guid?)null;
-            cardRecord.UpdatedAt = now;
             cardRecord.Timestamp = now;
-            cardRecord.UpdatedBy = username;
             cardRecord.VisitorActiveStatus = VisitorActiveStatus.Expired;
+
+            SetUpdateAudit(cardRecord);
 
             card.CheckinAt = null;
             card.IsUsed = false;
             card.CardStatus = CardStatus.Available;
             card.VisitorId = null;
-            card.LastUsed = visitor.Name;
+            card.LastUsed = visitor?.Name ?? cardRecord.Name;
 
-            visitor.BleCardNumber = null;
-            visitor.CardNumber = null;
+            if (visitor != null)
+            {
+                visitor.BleCardNumber = null;
+                visitor.CardNumber = null;
+                await _visitorRepository.UpdateAsync(visitor);
+            }
 
             await _cardRepository.UpdateAsync(card);
-            await _visitorRepository.UpdateAsync(visitor);
             await _repository.UpdateAsync(cardRecord);
             _mqttQueue.Enqueue("engine/refresh/card-related", "");
+            _audit.Updated("CardRecord", cardRecord.Id, $"CardRecord {cardRecord.Name} checked out");
         }
 
         
@@ -230,20 +264,40 @@ namespace BusinessLogic.Services.Implementation
             return await _repository.GetCardUsageHistoryAsync(request);
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, Shared.Contracts.CardRecordFilter filter)
         {
-            var query = _repository.GetAllQueryable().AsNoTracking();
+            // Map Standard DataTables params
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "Timestamp";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "VisitorName" };
-            var validSortColumns = new[] { "Name", "VisitorName", "Visitor.Name", "Member.Name", "CheckinAt", "CheckoutAt", "TimeStamp", "VisitorActiveStatus", "Status", "VisitorActiveStatus" };
+            // Map Date Filters if present
+            if (request.DateFilters != null && request.DateFilters.Count > 0)
+            {
+                if (request.DateFilters.TryGetValue("Timestamp", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+                else if (request.DateFilters.TryGetValue("CheckinAt", out dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
 
-            var filterService = new GenericDataTableService<CardRecord, CardRecordDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
+            // Call repository FilterAsync (using ProjectToRead)
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
          public async Task<object> ProjectionFilterAsync(DataTablesRequest request)

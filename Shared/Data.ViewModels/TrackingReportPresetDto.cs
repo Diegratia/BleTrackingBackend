@@ -17,7 +17,7 @@ namespace Data.ViewModels
     /// </summary>
     public class CreateCustomPresetRequest
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public Guid? BuildingId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
@@ -31,9 +31,9 @@ namespace Data.ViewModels
     
         public class UpdatePresetRequest
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string TimeRange { get; set; }
+        public string? TimeRange { get; set; }
         public Guid? BuildingId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }
@@ -52,8 +52,8 @@ namespace Data.ViewModels
     public class PresetDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string TimeRange { get; set; }
+        public string? Name { get; set; }
+        public string? TimeRange { get; set; }
         public Guid? BuildingId { get; set; }
         public Guid? FloorplanId { get; set; }
         public Guid? FloorId { get; set; }

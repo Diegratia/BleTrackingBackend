@@ -55,7 +55,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<MstDistrictRead>> GetAllAsync()
         {
             const string cacheKey = "MstDistrictService_GetAll";
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDistrictRead> cachedData))
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<MstDistrictRead> cachedData )&& cachedData != null)
                 return cachedData;
             var districts = await _repository.GetAllAsync();
 

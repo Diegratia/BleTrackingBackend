@@ -98,7 +98,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(ApiResponse.Success("Card summary retrieved successfully", result));
         }
 
-        // 9️⃣ Area Accessed Summary (with Chart)
+        // Area Accessed Summary (with Chart)
         [HttpPost("area-accessed")]
         public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsFilter request)
         {

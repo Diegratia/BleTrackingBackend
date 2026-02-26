@@ -165,7 +165,7 @@ public class EmailService : IEmailService
 
         var message = new MailMessage
         {
-            From = new MailAddress(fromEmail, fromName),
+            From = new MailAddress(fromEmail!, fromName),
             Subject = $"Visitor Invitation - {invitationAgenda}",
             Body = bodyHtml,
             IsBodyHtml = true

@@ -37,7 +37,7 @@ namespace Data.ViewModels.ResponseHelper
                 {
                     success = true,
                     msg = message,
-                    collection = new { data = (object)null },
+                    collection = new { data = (object?)null },
                     code = 204
                 };
             }

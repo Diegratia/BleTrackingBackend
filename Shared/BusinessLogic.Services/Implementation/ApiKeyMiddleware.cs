@@ -46,7 +46,7 @@ public static class ApiKeyMiddlewareExtensions
                 return;
             }
 
-            string apiKeyValue = null;
+            string apiKeyValue = null!;
 
             if (context.Request.Headers.TryGetValue(KeyField, out var headerApiKey))
             {
