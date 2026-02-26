@@ -124,7 +124,6 @@ namespace BusinessLogic.Services.Implementation
                     AreaCount = areaCount,
                     AlarmCount = alarmCount,
                     BlacklistedCount = visitorBlacklistCount + memberBlacklistCount,
-
                     TopActiveBeacon = topActiveBeaconDto,
                     TopNonActiveBeacon = topNonActiveBeaconDto,
                     TopReaders = topReadersDto,

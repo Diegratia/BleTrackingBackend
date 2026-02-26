@@ -11,5 +11,6 @@ namespace Repositories.Repository.RepoModel
         public string? PersonId { get; set; }
         public string? Name { get; set; }
         public string? CardNumber { get; set; }
+        public string? FaceImage { get; set; }
     }
 }

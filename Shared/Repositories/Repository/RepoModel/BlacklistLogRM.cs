@@ -5,4 +5,5 @@
       public string? Name { get; set; }
       public string? CardNumber { get; set; }
       public string? PersonId { get; set; }   // Bisa null untuk visitor
+      public string? FaceImage { get; set; }
   }

@@ -12,7 +12,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/evacuation-transaction")]
     [ApiController]
-    [MinLevel(LevelPriority.Primary)]
+    [MinLevel(LevelPriority.UserCreated)]
     public class EvacuationTransactionController : ControllerBase
     {
         private readonly IEvacuationTransactionService _service;
@@ -23,6 +23,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/EvacuationTransaction
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -31,6 +32,7 @@ namespace Web.API.Controllers.Controllers
         }
 
         // GET: api/EvacuationTransaction/{id}
+        [MinLevel(LevelPriority.Primary)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -54,6 +56,7 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(204, ApiResponse.NoContent("Evacuation Transaction confirmed successfully"));
         }
 
+        [MinLevel(LevelPriority.Primary)]
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {

@@ -172,12 +172,14 @@ namespace Repositories.Repository
                 {
                     Id = v.Member.Id,
                     Name = v.Member.Name,
+                    FaceImage = v.Member.FaceImage,
                     ApplicationId = v.ApplicationId,
                 },
                 Visitor = v.Visitor == null ? null : new VisitorDto
                 {
                     Id = v.Visitor.Id,
                     Name = v.Visitor.Name,
+                    FaceImage = v.Visitor.FaceImage,
                     ApplicationId = v.ApplicationId,
                 },
                 Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDto

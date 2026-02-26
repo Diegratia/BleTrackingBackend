@@ -24,7 +24,7 @@ namespace Data.ViewModels.Dto.Helpers.MinimalDto
         // public string? Email { get; set; }
         // public string? Gender { get; set; } // Enum sebagai string
         // public string? Address { get; set; }
-        // public string? FaceImage { get; set; }
+        public string? FaceImage { get; set; }
         // public int? UploadFr { get; set; }
         // public string? UploadFrError { get; set; }
         // public DateOnly? BirthDate { get; set; }

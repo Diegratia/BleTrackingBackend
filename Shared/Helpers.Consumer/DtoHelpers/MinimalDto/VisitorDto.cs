@@ -30,7 +30,7 @@ namespace Data.ViewModels.Dto.Helpers.MinimalDto
         // public string? DistrictName { get; set; }
         // public string? DepartmentName { get; set; }
         // public bool? IsVip { get; set; }
-        // public string? FaceImage { get; set; }
+        public string? FaceImage { get; set; }
         // public int? UploadFr { get; set; } = 0;
         // public string? UploadFrError { get; set; }
         // public DateTime? CreatedAt { get; set; }

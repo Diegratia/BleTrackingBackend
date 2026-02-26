@@ -263,6 +263,7 @@ namespace Repositories.Repository
                     Name = t.Name,
                     CardNumber = t.CardNumber,
                     PersonId = t.PersonId,
+                    FaceImage = t.FaceImage
                 });
                 return await projected.ToListAsync();                 
         }
@@ -286,6 +287,7 @@ namespace Repositories.Repository
                     Name = t.Name,
                     CardNumber = t.CardNumber,
                     PersonId = t.PersonId,
+                    FaceImage = t.FaceImage
                 })
                 .ToListAsync();
 
@@ -305,6 +307,7 @@ namespace Repositories.Repository
                     Name = t.Name,
                     CardNumber = t.CardNumber,
                     PersonId = t.PersonId,
+                    FaceImage = t.FaceImage
                 })
                 .ToListAsync();
 

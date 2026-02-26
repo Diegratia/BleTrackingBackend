@@ -37,7 +37,6 @@ public class AssemblyPointMqttDto
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public string? FloorplanMaskedAreaId { get; set; }
     public string? AreaShape { get; set; }
     public int PriorityOrder { get; set; }
 }
