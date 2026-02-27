@@ -103,10 +103,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
         }
 
-        /// <summary>
-        /// Operator dispatches alarm to specific security
-        /// Flow: Acknowledged → Dispatched
-        /// </summary>
         [HttpPut("{id}/dispatch")]
         public async Task<IActionResult> Dispatch(Guid id, [FromBody] AlarmDispatchDto dto)
         {
@@ -119,10 +115,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Security dispatched to location"));
         }
 
-        /// <summary>
-        /// Operator puts alarm in waiting queue (no security available)
-        /// Flow: Acknowledged → Waiting
-        /// </summary>
         [HttpPut("{id}/waiting")]
         public async Task<IActionResult> Waiting(Guid id)
         {
@@ -130,10 +122,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Alarm put in waiting queue"));
         }
 
-        /// <summary>
-        /// Security accepts the dispatch
-        /// Flow: Dispatched → Accepted
-        /// </summary>
         [HttpPut("{id}/accept")]
         public async Task<IActionResult> Accept(Guid id)
         {
@@ -141,10 +129,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Dispatch accepted successfully"));
         }
 
-        /// <summary>
-        /// Security arrives at location
-        /// Flow: Accepted → Arrived
-        /// </summary>
         [HttpPut("{id}/arrived")]
         public async Task<IActionResult> Arrived(Guid id)
         {
@@ -152,10 +136,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Security arrived at location"));
         }
 
-        /// <summary>
-        /// Security completes investigation with result
-        /// Flow: Arrived → DoneInvestigated
-        /// </summary>
         [HttpPut("{id}/done-investigated")]
         public async Task<IActionResult> DoneInvestigated(Guid id, [FromBody] AlarmInvestigationResultDto dto)
         {
@@ -168,10 +148,6 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Investigation completed successfully"));
         }
 
-        /// <summary>
-        /// Operator marks alarm as resolved
-        /// Flow: DoneInvestigated → Done (final state)
-        /// </summary>
         [HttpPut("{id}/resolve")]
         public async Task<IActionResult> Resolve(Guid id)
         {

@@ -75,6 +75,13 @@ namespace Repositories.Repository
             return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
 
+        public async Task<List<EvacuationAssemblyPointRead>> GetByApplicationIdAsync(Guid applicationId)
+        {
+            return await ProjectToRead(BaseEntityQuery())
+                .Where(e => e.ApplicationId == applicationId)
+                .ToListAsync();
+        }
+
         public async Task<List<EvacuationAssemblyPointRead>> GetByFloorplanIdAsync(Guid floorplanId)
         {
             return await ProjectToRead(BaseEntityQuery())

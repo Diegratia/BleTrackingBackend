@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using DataView;
 using Entities.Models;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Repositories.Repository;
 using Shared.Contracts;
 using Shared.Contracts.Read;
@@ -21,18 +24,24 @@ namespace BusinessLogic.Services.Implementation
         private readonly EvacuationAlertRepository _alertRepository;
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
+        private readonly IMqttPubQueue _mqttPubQueue;
+        private readonly ILogger<EvacuationTransactionService> _logger;
 
         public EvacuationTransactionService(
             EvacuationTransactionRepository repository,
             EvacuationAlertRepository alertRepository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IAuditEmitter audit) : base(httpContextAccessor)
+            IAuditEmitter audit,
+            IMqttPubQueue mqttPubQueue,
+            ILogger<EvacuationTransactionService> logger) : base(httpContextAccessor)
         {
             _repository = repository;
             _alertRepository = alertRepository;
             _mapper = mapper;
             _audit = audit;
+            _mqttPubQueue = mqttPubQueue;
+            _logger = logger;
         }
 
         public async Task<EvacuationTransactionRead> GetByIdAsync(Guid id)
@@ -91,6 +100,23 @@ namespace BusinessLogic.Services.Implementation
             SetUpdateAudit(transaction);
 
             await _repository.UpdateAsync(transaction);
+
+            var confirmMqttDto = new
+            {
+                TransactionId = transaction.Id.ToString(),
+                EvacuationAlertId = transaction.EvacuationAlertId.ToString(),
+                PersonStatus = ((int)confirmDto.PersonStatus).ToString(),
+                ConfirmedAt = transaction.ConfirmedAt?.ToString("o"),
+                ConfirmedBy = transaction.ConfirmedBy,
+                MemberId = transaction.MemberId?.ToString(),
+                VisitorId = transaction.VisitorId?.ToString(),
+                SecurityId = transaction.SecurityId?.ToString(),
+                PersonCategory = ((int)transaction.PersonCategory).ToString()
+            };
+            var topic = $"evacuation/person-confirm/{transaction.ApplicationId}";
+            var payload = JsonSerializer.Serialize(confirmMqttDto);
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Confirmed transaction {transaction.Id}, published to topic: {topic}");
 
             _audit.Updated(
                 "EvacuationTransaction",

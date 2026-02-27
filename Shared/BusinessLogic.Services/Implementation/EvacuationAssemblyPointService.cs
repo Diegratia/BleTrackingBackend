@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
+using BusinessLogic.Services.Background;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using DataView;
 using Entities.Models;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Repositories.Repository;
 using Shared.Contracts;
 using Shared.Contracts.Read;
@@ -20,16 +23,31 @@ namespace BusinessLogic.Services.Implementation
         private readonly EvacuationAssemblyPointRepository _repository;
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
+        private readonly IMqttPubQueue _mqttPubQueue;
+        private readonly ILogger<EvacuationAssemblyPointService> _logger;
 
         public EvacuationAssemblyPointService(
             EvacuationAssemblyPointRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IAuditEmitter audit) : base(httpContextAccessor)
+            IAuditEmitter audit,
+            IMqttPubQueue mqttPubQueue,
+            ILogger<EvacuationAssemblyPointService> logger) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _audit = audit;
+            _mqttPubQueue = mqttPubQueue;
+            _logger = logger;
+        }
+
+        private void PublishAssemblyPointsRefresh()
+        {
+            // Publish empty payload to trigger engine refresh
+            var topic = "engine/refresh/evacuation-assembly-points";
+            var payload = "{}"; // Empty payload - engine will fetch from DB
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Published assembly points refresh to {topic}");
         }
 
         public async Task<EvacuationAssemblyPointRead> GetByIdAsync(Guid id)
@@ -74,6 +92,8 @@ namespace BusinessLogic.Services.Implementation
 
             await _repository.AddAsync(assemblyPoint);
 
+            PublishAssemblyPointsRefresh();
+
             _audit.Created(
                 "EvacuationAssemblyPoint",
                 assemblyPoint.Id,
@@ -116,6 +136,8 @@ namespace BusinessLogic.Services.Implementation
             _mapper.Map(updateDto, assemblyPoint);
             await _repository.UpdateAsync(assemblyPoint);
 
+            PublishAssemblyPointsRefresh();
+
             _audit.Updated(
                 "EvacuationAssemblyPoint",
                 assemblyPoint.Id,
@@ -136,6 +158,8 @@ namespace BusinessLogic.Services.Implementation
             assemblyPoint.Status = 0;
 
             await _repository.DeleteAsync(id);
+
+            PublishAssemblyPointsRefresh();
 
             _audit.Deleted(
                 "EvacuationAssemblyPoint",
