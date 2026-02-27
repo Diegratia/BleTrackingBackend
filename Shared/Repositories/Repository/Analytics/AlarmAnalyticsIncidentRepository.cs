@@ -609,26 +609,23 @@ namespace Repositories.Repository.Analytics
 
                     var triggerTime = incident.TriggerTime.Value;
 
-                    // Determine first action time
-                    DateTime? firstActionTime = null;
-                    var actionTimes = new List<DateTime?> { incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp };
-                    var validActionTimes = actionTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
-                    if (validActionTimes.Any())
-                    {
-                        firstActionTime = validActionTimes.Min();
-                    }
-
-                    // Determine last event time
-                    DateTime? lastEventTime = null;
+                    // Gather all potential subsequent event timestamps
                     var allEventTimes = new List<DateTime?> {
                         incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp,
                         incident.AcceptedAt, incident.ArrivedAt, incident.InvestigatedDoneAt,
                         incident.DoneTimestamp, incident.CancelTimestamp
                     };
+                    
                     var validAllEventTimes = allEventTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
+                    
+                    DateTime? firstActionTime = null;
+                    DateTime? lastEventTime = null;
+
                     if (validAllEventTimes.Any())
                     {
-                        lastEventTime = validAllEventTimes.Max();
+                        var sortedEvents = validAllEventTimes.OrderBy(t => t).ToList();
+                        firstActionTime = sortedEvents.First(); // This acts as timeline.Skip(1).First() since TriggerTime is excluded
+                        lastEventTime = sortedEvents.Last();    // This acts as timeline.OrderByDescending(t => t.Timestamp).First()
                     }
 
                     if (lastEventTime.HasValue)
