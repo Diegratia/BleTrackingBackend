@@ -402,7 +402,7 @@ namespace BusinessLogic.Services.Implementation
 
             //update cardaccess - join table
             var existingAccessIds = entity.CardCardAccesses.Select(ca => ca.CardAccessId).ToList();
-            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+            var newAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id!.Value).ToList();
 
             // Tambah yang baru
             var toAdd = newAccessIds.Except(existingAccessIds).ToList();
@@ -496,7 +496,7 @@ namespace BusinessLogic.Services.Implementation
         public async Task AssignToMemberAsync(Guid id, CardAssignDto dto)
         {
             var card = await _repository.GetByIdEntityAsync(id);
-            var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId.Value);
+            var member = await _mstMemberRepository.GetByIdAsync(dto.MemberId!.Value);
             if (card == null)
                 throw new KeyNotFoundException("Card not found");
 

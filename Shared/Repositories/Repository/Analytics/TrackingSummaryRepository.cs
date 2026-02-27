@@ -31,9 +31,7 @@ namespace Repositories.Repository.Analytics
         // get wib table name
         private static string GetTableNameByDate(DateTime utcDate)
         {
-            var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var wibDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-            // var wibDate = utcDate.AddHours(7);
+            var wibDate = TimeZoneInfo.ConvertTimeFromUtc(utcDate, WibZone);
             return $"tracking_transaction_{wibDate:yyyyMMdd}";
         }
 
@@ -453,45 +451,6 @@ namespace Repositories.Repository.Analytics
                 .ToList();
 
             return grouped;
-        }
-
-
-
-        //         // ===========================================================
-        //         // 5️⃣ Reader Summary
-        //         // ===========================================================
-        public async Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
-        {
-            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-            var tableName = GetTableNameByDate(DateTime.UtcNow);
-
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking()
-                .Include(t => t.Reader)
-                .Where(t => t.TransTime >= from && t.TransTime <= to);
-
-            query = ApplyFilters(query, request);
-
-            var data = await query
-                .Select(t => new
-                {
-                    t.ReaderId,
-                    ReaderName = t.Reader.Name,
-                    t.CardId
-                })
-                .Distinct()
-                .GroupBy(x => new { x.ReaderId, x.ReaderName })
-                .Select(g => new TrackingReaderRead
-                {
-                    ReaderId = g.Key.ReaderId,
-                    ReaderName = g.Key.ReaderName,
-                    TotalRecords = g.Count() // Total card unik yang pernah dibaca reader itu
-                })
-                .OrderByDescending(x => x.TotalRecords)
-                .ToListAsync();
-
-            return data;
         }
 
 
@@ -956,7 +915,6 @@ namespace Repositories.Repository.Analytics
             var tables = new List<string>();
             for (var d = fromWib; d <= toWib; d = d.AddDays(1))
             {
-                // tables.Add($"tracking_transaction_{d:yyyyMMdd}");
                 var table = $"tracking_transaction_{d:yyyyMMdd}";
                 if (TableExists(table))
                     tables.Add(table);

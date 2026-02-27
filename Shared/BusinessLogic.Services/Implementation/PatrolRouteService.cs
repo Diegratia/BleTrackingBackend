@@ -17,7 +17,6 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly PatrolRouteRepository _repo;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
 
 
@@ -38,7 +37,7 @@ namespace BusinessLogic.Services.Implementation
 
             var areaIds = dto.PatrolAreaIds
                 .Where(x => x.HasValue)
-                .Select(x => x.Value)
+                .Select(x => x!.Value)
                 .Distinct()
                 .ToList();
 

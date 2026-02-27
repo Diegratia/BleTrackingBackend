@@ -23,22 +23,16 @@ namespace BusinessLogic.Services.Implementation
     public class PatrolSessionService : BaseService, IPatrolSessionService
     {
         private readonly PatrolSessionRepository _repo;
-        private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor? _httpContextAccessor;
         private readonly IAuditEmitter _audit;
         private readonly IMqttPubQueue _mqttQueue;
 
-
-
         public PatrolSessionService(
             PatrolSessionRepository repo,
-            IMapper mapper,
             IAuditEmitter audit,
             IMqttPubQueue mqttQueue,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
-            _mapper = mapper;
             _audit = audit;
             _mqttQueue = mqttQueue;
         }
@@ -100,7 +94,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolSessionRead> CreateAsync(PatrolSessionStartDto dto)
         {
-            var assignment = await _repo.GetAssignmentByIdAsync(dto.PatrolAssignmentId.Value);
+            var assignment = await _repo.GetAssignmentByIdAsync(dto.PatrolAssignmentId!.Value);
 
             if (assignment == null)
                 throw new NotFoundException("PatrolAssignment not found");
@@ -149,6 +143,15 @@ namespace BusinessLogic.Services.Implementation
             
 
             await _repo.AddCheckpointLogsAsync(checkpointLogs);
+            _audit.Action(
+                AuditEmitter.AuditAction.SESSION_START,
+                "Session",
+                "Session Started",
+                new {
+                    securityId = security.Id,
+                    security = security.Name
+                }
+            );
             _mqttQueue.Enqueue("patrol/session/started", JsonSerializer.Serialize(new {
             sessionId = patrolSession.Id.ToString(),
             securityId = security.Id.ToString()
@@ -178,6 +181,15 @@ namespace BusinessLogic.Services.Implementation
         session.EndedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(session);
+        _audit.Action(
+                AuditEmitter.AuditAction.SESSION_STOP,
+                "Session",
+                "Session Stopped",
+                new {
+                    securityId = security.Id,
+                    security = security.Name
+                }
+            );
         _mqttQueue.Enqueue("patrol/session/ended", "");
 
 

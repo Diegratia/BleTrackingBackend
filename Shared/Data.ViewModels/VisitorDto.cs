@@ -37,7 +37,6 @@ namespace Data.ViewModels
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
-        public Guid ApplicationId { get; set; }
         public string Status { get; set; }
 
         public CardDto Card { get; set; }
@@ -74,7 +73,6 @@ namespace Data.ViewModels
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
-        public Guid ApplicationId { get; set; }
         public string Status { get; set; }
         [JsonPropertyName("trx_visitor_id")]
         public Guid TrxVisitorId { get; set; }
@@ -114,8 +112,6 @@ namespace Data.ViewModels
         public string? VisitorCode { get; set; }
         public bool? IsVip { get; set; }
         public IFormFile? FaceImage { get; set; }
-
-        public Guid ApplicationId { get; set; }
     }
 
 
@@ -164,7 +160,6 @@ namespace Data.ViewModels
         public bool? IsVip { get; set; }
         public IFormFile? FaceImage { get; set; }
         public string CardNumber { get; set; }
-        public Guid ApplicationId { get; set; }
 
     }
 

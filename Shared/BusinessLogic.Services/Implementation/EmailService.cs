@@ -132,15 +132,15 @@ public class EmailService : IEmailService
      string name,
      string invitationCode,
      string invitationUrl,
-     string visitorPeriodStartDate,
-     string visitorPeriodEndDate,
-     string visitorPeriodStartTime,
-     string visitorPeriodEndTime,
-     string invitationAgenda,
-     string maskedAreaName,
-     string memberName,
-     string floorName,
-     string buildingName)
+     string? visitorPeriodStartDate,
+     string? visitorPeriodEndDate,
+     string? visitorPeriodStartTime,
+     string? visitorPeriodEndTime,
+     string? invitationAgenda,
+     string? maskedAreaName,
+     string? memberName,
+     string? floorName,
+     string? buildingName)
     {
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");

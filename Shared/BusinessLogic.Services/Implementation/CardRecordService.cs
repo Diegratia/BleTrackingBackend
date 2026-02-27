@@ -376,10 +376,10 @@ namespace BusinessLogic.Services.Implementation
                         foreach (var record in records)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(record.Name);
-                            table.Cell().Element(CellStyle).Text(record.CardId);
-                            table.Cell().Element(CellStyle).Text(record.Visitor);
-                            table.Cell().Element(CellStyle).Text(record.Member);
+                            table.Cell().Element(CellStyle).Text(record.Name.ToString());
+                            table.Cell().Element(CellStyle).Text(record.CardId.ToString());
+                            table.Cell().Element(CellStyle).Text(record.Visitor.ToString());
+                            table.Cell().Element(CellStyle).Text(record.Member.ToString());
                             table.Cell().Element(CellStyle).Text(record.VisitorActiveStatus.ToString());
                             table.Cell().Element(CellStyle).Text(record.CheckinAt?.ToString("yyyy-MM-dd HH:mm:ss"));
                             table.Cell().Element(CellStyle).Text(record.CheckinBy);

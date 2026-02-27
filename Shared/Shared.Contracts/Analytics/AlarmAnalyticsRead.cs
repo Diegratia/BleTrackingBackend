@@ -113,4 +113,18 @@ namespace Shared.Contracts.Analytics
         public InvestigatedResult InvestigatedResult { get; set; } 
         public int Total { get; set; }
     }
+
+    /// <summary>
+    /// Average duration statistics for alarms
+    /// </summary>
+    public class AlarmDurationAnalyticsRead
+    {
+        public string AlarmStatus { get; set; } = string.Empty;
+        public double? TotalSeconds { get; set; }
+        public string TotalFormatted { get; set; } 
+        public double? ResponseTimeSeconds { get; set; } 
+        public string ResponseTimeFormatted { get; set; }
+        public double? ResolutionTimeSeconds { get; set; } 
+        public string ResolutionTimeFormatted { get; set; }
+    }
 }

@@ -242,14 +242,14 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(trackingtransaction.TransTime?.ToString("yyyy-MM-dd") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.Reader.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.CardId);
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.CardId?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.FloorplanMaskedArea.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateX?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateY?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxX?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxY?.ToString("") ?? "");
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.AlarmStatus);
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.Battery);
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.AlarmStatus?.ToString("") ?? "");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.Battery?.ToString("") ?? "");
                         }
 
                         static IContainer CellStyle(IContainer container) =>

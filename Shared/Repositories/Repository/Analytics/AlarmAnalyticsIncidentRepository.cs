@@ -530,44 +530,163 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-            // time range
-//             private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
-//             {
-//                 if (string.IsNullOrWhiteSpace(timeReport))
-//                     return null;
+        public async Task<List<AlarmDurationAnalyticsRead>> GetAverageDurationSummaryAsync(AlarmAnalyticsFilter request)
+        {
+            var range = GetTimeRange(request.TimeRange);
+            var (from, to) = (
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
+            );
 
-//                 // Gunakan UTC agar konsisten untuk server analytics
-//                 var now = DateTime.UtcNow;
+            var query = _context.AlarmTriggers
+                .AsNoTracking()
+                .Where(a => a.TriggerTime >= from && a.TriggerTime <= to && a.Alarm.HasValue);
 
-//                 // Pastikan format switch case aman (lowercase)
-//                 return timeReport.Trim().ToLower() switch
-//                 {
-//                     "daily" => (
-//                         now.Date,
-//                         now.Date.AddDays(1).AddTicks(-1)
-//                     ),
+            if (request.BuildingId.HasValue)
+            {
+                query = query.Where(a => a.Floorplan != null &&
+                    a.Floorplan.Floor != null &&
+                    a.Floorplan.Floor.BuildingId == request.BuildingId);
+            }
 
-//                     "weekly" => (
-//                         now.Date.AddDays(-(int)now.DayOfWeek + 1),                // Senin awal minggu
-//                         now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu akhir
-//                     ),
+            if (request.FloorId.HasValue)
+            {
+                query = query.Where(a => a.Floorplan != null &&
+                    a.Floorplan.FloorId == request.FloorId);
+            }
 
-//                     "monthly" => (
-//                         new DateTime(now.Year, now.Month, 1),
-//                         new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
-//                             .AddDays(1).AddTicks(-1)
-//                     ),
+            if (request.FloorplanMaskedAreaId.HasValue)
+            {
+                var areaFloorplanIds = await _context.FloorplanMaskedAreas
+                    .Where(fma => fma.Id == request.FloorplanMaskedAreaId && fma.Status != 0)
+                    .Select(fma => fma.FloorplanId)
+                    .ToListAsync();
 
-//                     "yearly" => (
-//                         new DateTime(now.Year, 1, 1),
-//                         new DateTime(now.Year, 12, 31)
-//                             .AddDays(1).AddTicks(-1)
-//                     ),
+                query = query.Where(a => a.FloorplanId.HasValue && areaFloorplanIds.Contains(a.FloorplanId.Value));
+            }
 
-//                     _ => null
-//                 };
-// }
+            if (request.VisitorId.HasValue)
+            {
+                query = query.Where(a => a.VisitorId == request.VisitorId);
+            }
 
+            if (!string.IsNullOrWhiteSpace(request.OperatorName))
+            {
+                query = query.Where(a => a.DoneBy == request.OperatorName);
+            }
+
+            var incidents = await query
+                .Select(a => new
+                {
+                    AlarmStatus = a.Alarm.Value.ToString(),
+                    TriggerTime = a.TriggerTime,
+                    AcknowledgedAt = a.AcknowledgedAt,
+                    DispatchedAt = a.DispatchedAt,
+                    WaitingTimestamp = a.WaitingTimestamp,
+                    AcceptedAt = a.AcceptedAt,
+                    ArrivedAt = a.ArrivedAt,
+                    InvestigatedDoneAt = a.InvestigatedDoneAt,
+                    DoneTimestamp = a.DoneTimestamp,
+                    CancelTimestamp = a.CancelTimestamp
+                })
+                .ToListAsync();
+
+            if (!incidents.Any())
+                return new List<AlarmDurationAnalyticsRead>();
+
+            var groupedIncidents = incidents.GroupBy(x => x.AlarmStatus);
+            var resultList = new List<AlarmDurationAnalyticsRead>();
+
+            foreach (var group in groupedIncidents)
+            {
+                var totalDurations = new List<double>();
+                var responseDurations = new List<double>();
+                var resolutionDurations = new List<double>();
+
+                foreach (var incident in group)
+                {
+                    if (!incident.TriggerTime.HasValue) continue;
+
+                    var triggerTime = incident.TriggerTime.Value;
+
+                    // Determine first action time
+                    DateTime? firstActionTime = null;
+                    var actionTimes = new List<DateTime?> { incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp };
+                    var validActionTimes = actionTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
+                    if (validActionTimes.Any())
+                    {
+                        firstActionTime = validActionTimes.Min();
+                    }
+
+                    // Determine last event time
+                    DateTime? lastEventTime = null;
+                    var allEventTimes = new List<DateTime?> {
+                        incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp,
+                        incident.AcceptedAt, incident.ArrivedAt, incident.InvestigatedDoneAt,
+                        incident.DoneTimestamp, incident.CancelTimestamp
+                    };
+                    var validAllEventTimes = allEventTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
+                    if (validAllEventTimes.Any())
+                    {
+                        lastEventTime = validAllEventTimes.Max();
+                    }
+
+                    if (lastEventTime.HasValue)
+                    {
+                        totalDurations.Add((lastEventTime.Value - triggerTime).TotalSeconds);
+                    }
+
+                    if (firstActionTime.HasValue)
+                    {
+                        responseDurations.Add((firstActionTime.Value - triggerTime).TotalSeconds);
+                        
+                        if (lastEventTime.HasValue && lastEventTime > firstActionTime)
+                        {
+                            resolutionDurations.Add((lastEventTime.Value - firstActionTime.Value).TotalSeconds);
+                        }
+                    }
+                }
+
+                var avgTotalSeconds = totalDurations.Any() ? totalDurations.Average() : 0;
+                var avgResponseSeconds = responseDurations.Any() ? responseDurations.Average() : 0;
+                var avgResolutionSeconds = resolutionDurations.Any() ? resolutionDurations.Average() : 0;
+
+                resultList.Add(new AlarmDurationAnalyticsRead
+                {
+                    AlarmStatus = group.Key,
+                    TotalSeconds = avgTotalSeconds,
+                    TotalFormatted = FormatDuration(avgTotalSeconds),
+                    ResponseTimeSeconds = avgResponseSeconds,
+                    ResponseTimeFormatted = FormatDuration(avgResponseSeconds),
+                    ResolutionTimeSeconds = avgResolutionSeconds,
+                    ResolutionTimeFormatted = FormatDuration(avgResolutionSeconds)
+                });
+            }
+
+            return resultList;
+
+
+        }
+
+        private string FormatDuration(double seconds)
+        {
+            if (seconds < 60)
+            {
+                return $"{(int)seconds} seconds";
+            }
+            else if (seconds < 3600)
+            {
+                var minutes = (int)(seconds / 60);
+                var remainingSeconds = (int)(seconds % 60);
+                return remainingSeconds > 0 ? $"{minutes} minutes {remainingSeconds} seconds" : $"{minutes} minutes";
+            }
+            else
+            {
+                var hours = (int)(seconds / 3600);
+                var remainingMinutes = (int)((seconds % 3600) / 60);
+                return remainingMinutes > 0 ? $"{hours} hours {remainingMinutes} minutes" : $"{hours} hours";
+            }
+        }
     }
     
     

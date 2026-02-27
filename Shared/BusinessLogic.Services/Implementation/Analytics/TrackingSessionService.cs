@@ -131,7 +131,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                                                                s.AreaName?.ToLower().Contains("vault") == true ||
                                                                s.AreaName?.ToLower().Contains("restricted") == true),
 
-                    AreasVisited = g.Select(s => s.AreaName)
+                    AreasVisited = g.Select(s => s.AreaName!)
                         .Where(a => !string.IsNullOrEmpty(a))
                         .Distinct()
                         .ToList(),

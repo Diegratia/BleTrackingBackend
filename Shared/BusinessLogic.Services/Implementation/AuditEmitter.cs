@@ -63,7 +63,9 @@ namespace BusinessLogic.Services.Implementation
             REJECT,
             SYNC,
             ALARM,
-            ACTION
+            ACTION,
+            SESSION_START,
+            SESSION_STOP
         }
 
         public void Created(string entity, object id, string details, object? meta = null)

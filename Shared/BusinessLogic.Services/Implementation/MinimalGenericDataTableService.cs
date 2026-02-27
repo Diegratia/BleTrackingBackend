@@ -118,7 +118,7 @@ namespace BusinessLogic.Services.Implementation
                                 var guidValues = jsonElement.EnumerateArray()
                                     .Select(e => Guid.TryParse(e.GetString(), out var guid) ? guid : (Guid?)null)
                                     .Where(g => g.HasValue)
-                                    .Select(g => g.Value)
+                                    .Select(g => g!.Value)
                                     .ToArray();
                                 if (guidValues.Any())
                                 {

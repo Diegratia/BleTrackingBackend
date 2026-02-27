@@ -24,7 +24,6 @@ namespace BusinessLogic.Services.Implementation
     {
         private readonly PatrolCaseRepository _repo;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
         private readonly IUserService _userService;
 
@@ -99,9 +98,9 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // EF STYLE
-        public async Task<PatrolCaseRead?> CreateAsync(PatrolCaseCreateDto dto)
+        public async Task<PatrolCaseRead> CreateAsync(PatrolCaseCreateDto dto)
         {
-            var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId.Value)
+            var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId!.Value)
                 ?? throw new NotFoundException(
                     $"PatrolSession with id {dto.PatrolSessionId} not found");
 

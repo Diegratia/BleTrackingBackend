@@ -13,6 +13,7 @@ public interface IAlarmAnalyticsIncidentService
     Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request);
     Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request);
     Task<List<AlarmInvestigatedResultRead>> GetInvestigatedResultSummaryAsync(AlarmAnalyticsFilter request);
+    Task<List<AlarmDurationAnalyticsRead>> GetAverageDurationSummaryAsync(AlarmAnalyticsFilter request);
     Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(
         AlarmAnalyticsFilter request,
         AlarmGroupByMode groupByMode = AlarmGroupByMode.Area);

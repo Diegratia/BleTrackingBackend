@@ -50,14 +50,6 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(ApiResponse.Success("Daily summary retrieved successfully", response));
         }
 
-        // 3️⃣ Reader Summary
-        [HttpPost("reader")]
-        public async Task<IActionResult> GetReader([FromBody] TrackingAnalyticsFilter request)
-        {
-            var response = await _summaryService.GetReaderSummaryAsync(request);
-            return Ok(ApiResponse.Success("Reader summary retrieved successfully", response));
-        }
-
         // 4️⃣ Visitor Summary
         [HttpPost("visitor")]
         public async Task<IActionResult> GetVisitor([FromBody] TrackingAnalyticsFilter request)

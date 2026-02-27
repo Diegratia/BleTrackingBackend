@@ -42,11 +42,6 @@ namespace BusinessLogic.Services.Implementation.Analytics
             return await _repository.GetDailySummaryAsync(request);
         }
 
-        public async Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request)
-        {
-            return await _repository.GetReaderSummaryAsync(request);
-        }
-
         public async Task<List<TrackingVisitorRead>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request)
         {
             return await _repository.GetVisitorSummaryAsync(request);

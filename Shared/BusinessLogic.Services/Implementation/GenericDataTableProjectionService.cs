@@ -442,7 +442,7 @@ namespace BusinessLogic.Services.Implementation
                     var guids = json.EnumerateArray()
                         .Select(e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null)
                         .Where(g => g.HasValue)
-                        .Select(g => g.Value)
+                        .Select(g => g!.Value)
                         .ToArray();
                     if (guids.Any())
                     {

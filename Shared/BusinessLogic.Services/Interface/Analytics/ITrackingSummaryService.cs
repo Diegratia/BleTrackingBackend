@@ -10,7 +10,6 @@ public interface ITrackingSummaryService
 {
     Task<List<TrackingAreaRead>> GetAreaSummaryAsync(TrackingAnalyticsFilter request);
     Task<List<TrackingDailyRead>> GetDailySummaryAsync(TrackingAnalyticsFilter request);
-    Task<List<TrackingReaderRead>> GetReaderSummaryAsync(TrackingAnalyticsFilter request);
     Task<List<TrackingVisitorRead>> GetVisitorSummaryAsync(TrackingAnalyticsFilter request);
     Task<List<TrackingBuildingRead>> GetBuildingSummaryAsync(TrackingAnalyticsFilter request);
     Task<List<TrackingMovementRead>> GetTrackingMovementByCardIdAsync(Guid cardId);

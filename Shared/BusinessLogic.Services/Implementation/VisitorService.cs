@@ -1436,7 +1436,7 @@ public class VisitorService : IVisitorService
                 var usernameAudit = "VisitorForm";
 
 
-                var expiredInvitation = trx.VisitorPeriodStart.Value.AddDays(3);
+                var expiredInvitation = trx.VisitorPeriodStart!.Value.AddDays(3);
                 var userConfirmationCode = trx.InvitationCode;
                 if (user == null)
                 {

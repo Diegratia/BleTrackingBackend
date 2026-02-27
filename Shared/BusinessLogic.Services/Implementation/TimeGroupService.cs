@@ -68,12 +68,12 @@ namespace BusinessLogic.Services.Implementation
                     throw new UnauthorizedException(
                         $"CardAccessIds do not belong to this Application: {string.Join(", ", invalidIds)}");
 
-                entity.CardAccessTimeGroups = dto.CardAccessIds
+                entity.CardAccessTimeGroups = dto.CardAccessIds 
                     .Where(x => x.HasValue)
                     .Select(id => new CardAccessTimeGroups
                     {
                         TimeGroupId = entity.Id,
-                        CardAccessId = id.Value,
+                        CardAccessId = id!.Value,
                         ApplicationId = AppId
                     })
                     .ToList();
@@ -162,7 +162,7 @@ namespace BusinessLogic.Services.Implementation
                     entity.CardAccessTimeGroups.Add(new CardAccessTimeGroups
                     {
                         TimeGroupId = entity.Id,
-                        CardAccessId = idAccess.Value,
+                        CardAccessId = idAccess!.Value,
                         ApplicationId = AppId
                     });
                 }

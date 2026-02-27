@@ -1726,7 +1726,7 @@ namespace Repositories.DbContexts
                 entity.HasKey(e => new { e.CardAccessId, e.MaskedAreaId });
 
                 entity.HasOne(e => e.CardAccess)
-                    .WithMany(e => e.CardAccessMaskedAreas)
+                    .WithMany(e => e.CardAccessMaskedAreas!)
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
 
@@ -1744,12 +1744,12 @@ namespace Repositories.DbContexts
                 entity.HasKey(e => new { e.CardAccessId, e.TimeGroupId });
 
                 entity.HasOne(e => e.CardAccess)
-                    .WithMany(e => e.CardAccessTimeGroups)
+                    .WithMany(e => e.CardAccessTimeGroups!)
                     .HasForeignKey(e => e.CardAccessId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.TimeGroup)
-                    .WithMany(ma => ma.CardAccessTimeGroups)
+                    .WithMany(ma => ma.CardAccessTimeGroups!)
                     .HasForeignKey(e => e.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
@@ -1762,7 +1762,7 @@ namespace Repositories.DbContexts
                 entity.HasKey(e => new { e.CardId, e.CardAccessId });
 
                 entity.HasOne(e => e.Card)
-                    .WithMany(e => e.CardCardAccesses)
+                    .WithMany(e => e.CardCardAccesses!)
                     .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
 

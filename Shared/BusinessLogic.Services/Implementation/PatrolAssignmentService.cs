@@ -175,7 +175,7 @@ namespace BusinessLogic.Services.Implementation
 
             var newSecurityIds = dto.SecurityIds?
                 .Where(x => x.HasValue)
-                .Select(x => x.Value)
+                .Select(x => x!.Value)
                 .Distinct()
                 .ToList() ?? new List<Guid>();
 
@@ -205,7 +205,7 @@ namespace BusinessLogic.Services.Implementation
                     new PatrolAssignmentSecurity
                     {
                         PatrolAssignmentId = assignment.Id,
-                        SecurityId = secId.Value,
+                        SecurityId = secId!.Value,
                         ApplicationId = assignment.ApplicationId,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,

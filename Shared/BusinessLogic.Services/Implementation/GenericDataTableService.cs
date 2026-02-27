@@ -396,7 +396,7 @@ namespace BusinessLogic.Services.Implementation
                 var guids = json.EnumerateArray()
                     .Select(x => Guid.TryParse(x.GetString(), out var g) ? g : (Guid?)null)
                     .Where(g => g.HasValue)
-                    .Select(g => g.Value)
+                    .Select(g => g!.Value)
                     .ToArray();
                 if (guids.Any())
                     return query.Where($"@0.Contains({key})", guids);

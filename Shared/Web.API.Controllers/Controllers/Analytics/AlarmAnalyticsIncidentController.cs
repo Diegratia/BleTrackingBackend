@@ -96,5 +96,15 @@ namespace Web.API.Controllers.Controllers.Analytics
             var response = await _service.GetInvestigatedResultSummaryAsync(request);
             return Ok(ApiResponse.Success("Investigated result summary retrieved successfully", response));
         }
+
+        // ===================================================================
+        // 8️⃣ Average Duration Summary - Average response and resolution time
+        // ===================================================================
+        [HttpPost("average-duration")]
+        public async Task<IActionResult> GetAverageDurationSummaryAsync([FromBody] AlarmAnalyticsFilter request)
+        {
+            var response = await _service.GetAverageDurationSummaryAsync(request);
+            return Ok(ApiResponse.Success("Average duration summary retrieved successfully", response));
+        }
     }
 }

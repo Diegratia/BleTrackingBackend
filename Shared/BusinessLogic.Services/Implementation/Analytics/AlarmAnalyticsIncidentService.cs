@@ -114,5 +114,10 @@ namespace BusinessLogic.Services.Implementation.Analytics
         {
             return await _repository.GetInvestigatedResultSummaryAsync(request);
         }
+
+        public async Task<List<AlarmDurationAnalyticsRead>> GetAverageDurationSummaryAsync(AlarmAnalyticsFilter request)
+        {
+            return await _repository.GetAverageDurationSummaryAsync(request);
+        }
     }
 }
