@@ -530,7 +530,7 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-        public async Task<List<AlarmDurationAnalyticsRead>> GetAverageDurationSummaryAsync(AlarmAnalyticsFilter request)
+        public async Task<List<RawAlarmIncidentDurationRM>> GetRawIncidentDurationsAsync(AlarmAnalyticsFilter request)
         {
             var range = GetTimeRange(request.TimeRange);
             var (from, to) = (
@@ -576,7 +576,7 @@ namespace Repositories.Repository.Analytics
             }
 
             var incidents = await query
-                .Select(a => new
+                .Select(a => new RawAlarmIncidentDurationRM
                 {
                     AlarmStatus = a.Alarm.Value.ToString(),
                     TriggerTime = a.TriggerTime,
@@ -591,98 +591,7 @@ namespace Repositories.Repository.Analytics
                 })
                 .ToListAsync();
 
-            if (!incidents.Any())
-                return new List<AlarmDurationAnalyticsRead>();
-
-            var groupedIncidents = incidents.GroupBy(x => x.AlarmStatus);
-            var resultList = new List<AlarmDurationAnalyticsRead>();
-
-            foreach (var group in groupedIncidents)
-            {
-                var totalDurations = new List<double>();
-                var responseDurations = new List<double>();
-                var resolutionDurations = new List<double>();
-
-                foreach (var incident in group)
-                {
-                    if (!incident.TriggerTime.HasValue) continue;
-
-                    var triggerTime = incident.TriggerTime.Value;
-
-                    // Gather all potential subsequent event timestamps
-                    var allEventTimes = new List<DateTime?> {
-                        incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp,
-                        incident.AcceptedAt, incident.ArrivedAt, incident.InvestigatedDoneAt,
-                        incident.DoneTimestamp, incident.CancelTimestamp
-                    };
-                    
-                    var validAllEventTimes = allEventTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
-                    
-                    DateTime? firstActionTime = null;
-                    DateTime? lastEventTime = null;
-
-                    if (validAllEventTimes.Any())
-                    {
-                        var sortedEvents = validAllEventTimes.OrderBy(t => t).ToList();
-                        firstActionTime = sortedEvents.First(); // This acts as timeline.Skip(1).First() since TriggerTime is excluded
-                        lastEventTime = sortedEvents.Last();    // This acts as timeline.OrderByDescending(t => t.Timestamp).First()
-                    }
-
-                    if (lastEventTime.HasValue)
-                    {
-                        totalDurations.Add((lastEventTime.Value - triggerTime).TotalSeconds);
-                    }
-
-                    if (firstActionTime.HasValue)
-                    {
-                        responseDurations.Add((firstActionTime.Value - triggerTime).TotalSeconds);
-                        
-                        if (lastEventTime.HasValue && lastEventTime > firstActionTime)
-                        {
-                            resolutionDurations.Add((lastEventTime.Value - firstActionTime.Value).TotalSeconds);
-                        }
-                    }
-                }
-
-                var avgTotalSeconds = totalDurations.Any() ? totalDurations.Average() : 0;
-                var avgResponseSeconds = responseDurations.Any() ? responseDurations.Average() : 0;
-                var avgResolutionSeconds = resolutionDurations.Any() ? resolutionDurations.Average() : 0;
-
-                resultList.Add(new AlarmDurationAnalyticsRead
-                {
-                    AlarmStatus = group.Key,
-                    TotalSeconds = avgTotalSeconds,
-                    TotalFormatted = FormatDuration(avgTotalSeconds),
-                    ResponseTimeSeconds = avgResponseSeconds,
-                    ResponseTimeFormatted = FormatDuration(avgResponseSeconds),
-                    ResolutionTimeSeconds = avgResolutionSeconds,
-                    ResolutionTimeFormatted = FormatDuration(avgResolutionSeconds)
-                });
-            }
-
-            return resultList;
-
-
-        }
-
-        private string FormatDuration(double seconds)
-        {
-            if (seconds < 60)
-            {
-                return $"{(int)seconds} seconds";
-            }
-            else if (seconds < 3600)
-            {
-                var minutes = (int)(seconds / 60);
-                var remainingSeconds = (int)(seconds % 60);
-                return remainingSeconds > 0 ? $"{minutes} minutes {remainingSeconds} seconds" : $"{minutes} minutes";
-            }
-            else
-            {
-                var hours = (int)(seconds / 3600);
-                var remainingMinutes = (int)((seconds % 3600) / 60);
-                return remainingMinutes > 0 ? $"{hours} hours {remainingMinutes} minutes" : $"{hours} hours";
-            }
+            return incidents;
         }
     }
     
