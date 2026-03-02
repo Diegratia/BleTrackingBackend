@@ -173,5 +173,13 @@ namespace Repositories.Repository
         {
             return await GetAllQueryable().ToListAsync();
         }
+
+        public async Task<IEnumerable<MstBuilding>> GetPaginatedExportAsync(int page, int pageSize)
+        {
+            var query = GetAllQueryable();
+            query = query.OrderBy(x => x.Name);
+            query = query.Skip((page - 1) * pageSize).Take(pageSize);
+            return await query.ToListAsync();
+        }
     }
 }
