@@ -1,11 +1,11 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
 
@@ -23,306 +23,46 @@ namespace Web.API.Controllers.Controllers
             _trackingTransactionService = trackingTransactionService;
         }
 
-        // GET: api/TrackingTransaction/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var transaction = await _trackingTransactionService.GetTrackingTransactionByIdAsync(id);
-                if (transaction == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Tracking transaction not found",
-                        collection = new { data = (object?)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Tracking transaction retrieved successfully",
-                    collection = new { data = transaction },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var transaction = await _trackingTransactionService.GetByIdAsync(id);
+            if (transaction == null)
+                return NotFound(ApiResponse.NotFound("Tracking transaction not found"));
+            return Ok(ApiResponse.Success("Tracking transaction retrieved successfully", transaction));
         }
 
-        // GET: api/TrackingTransaction
-        // [HttpGet]
-        // public async Task<IActionResult> GetAll()
-        // {
-        //     try
-        //     {
-        //         var transactions = await _trackingTransactionService.GetAllTrackingTransactionsAsync();
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transactions retrieved successfully",
-        //             collection = new { data = transactions },
-        //             code = 200
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object?)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        [HttpPost("with-alarm/filter")]
-        public async Task<IActionResult> FilterWithAlarm([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            var result = await _trackingTransactionService.FilterWithAlarmAsync(request);
-            return Ok(result);
+            var filter = new TrackingTransactionFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<TrackingTransactionFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new TrackingTransactionFilter();
+            }
+
+            var result = await _trackingTransactionService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Success("Tracking transactions filtered successfully", result));
         }
-
-
-
-
-        // PUT: api/TrackingTransaction/{id}
-        // [HttpPut("{id}")]
-        // public async Task<IActionResult> Update(Guid id, [FromBody] TrackingTransactionUpdateDto dto)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object?)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         await _trackingTransactionService.UpdateTrackingTransactionAsync(id, dto);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transaction updated successfully",
-        //             collection = new { data = (object?)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (KeyNotFoundException ex)
-        //     {
-        //         return NotFound(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object?)null },
-        //             code = 404
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object?)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        // // DELETE: api/TrackingTransaction/{id}
-        // [HttpDelete("{id}")]
-        // public async Task<IActionResult> Delete(Guid id)
-        // {
-        //     try
-        //     {
-        //         await _trackingTransactionService.DeleteTrackingTransactionAsync(id);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transaction deleted successfully",
-        //             collection = new { data = (object?)null },
-        //             code = 204
-        //         });
-        //     }
-        //     catch (KeyNotFoundException ex)
-        //     {
-        //         return NotFound(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object?)null },
-        //             code = 404
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object?)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
-
-        // [HttpPost("{filter}")]
-        // public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object?)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var result = await _trackingTransactionService.FilterAsync(request);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transactions filtered successfully",
-        //             collection = result,
-        //             code = 200
-        //         });
-        //     }
-        //     catch (ArgumentException ex)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object?)null },
-        //             code = 400
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object?)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
 
         [HttpGet("export/pdf")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _trackingTransactionService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "TrackingTransaction_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _trackingTransactionService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "TrackingTransaction_Report.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _trackingTransactionService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "TrackingTransaction_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _trackingTransactionService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "TrackingTransaction_Report.xlsx");
         }
-
-        //OPEN
-        
-        // [HttpPost("open/{filter}")]
-        // public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = "Validation failed: " + string.Join(", ", errors),
-        //             collection = new { data = (object?)null },
-        //             code = 400
-        //         });
-        //     }
-
-        //     try
-        //     {
-        //         var result = await _trackingTransactionService.FilterAsync(request);
-        //         return Ok(new
-        //         {
-        //             success = true,
-        //             msg = "Tracking transactions filtered successfully",
-        //             collection = result,
-        //             code = 200
-        //         });
-        //     }
-        //     catch (ArgumentException ex)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             success = false,
-        //             msg = ex.Message,
-        //             collection = new { data = (object?)null },
-        //             code = 400
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             success = false,
-        //             msg = $"Internal server error: {ex.Message}",
-        //             collection = new { data = (object?)null },
-        //             code = 500
-        //         });
-        //     }
-        // }
     }
 }

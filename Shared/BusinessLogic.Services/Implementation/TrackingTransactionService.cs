@@ -1,190 +1,64 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using ClosedXML.Excel;
 using Data.ViewModels;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Repositories.Repository;
 using Shared.Contracts;
-using Microsoft.EntityFrameworkCore;
-using Repositories.Repository.RepoModel;
+using Shared.Contracts.Read;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class TrackingTransactionService : ITrackingTransactionService
+    public class TrackingTransactionService : BaseService, ITrackingTransactionService
     {
         private readonly TrackingTransactionRepository _repository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public TrackingTransactionService(TrackingTransactionRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public TrackingTransactionService(
+            TrackingTransactionRepository repository,
+            IMapper mapper,
+            IAuditEmitter audit,
+            IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
-        // public async Task<TrackingTransactionDto> CreateTrackingTransactionAsync(TrackingTransactionCreateDto createDto)
-        // {
-        //     if (createDto == null) throw new ArgumentNullException(nameof(createDto));
-
-        //     var transaction = _mapper.Map<TrackingTransaction>(createDto);
-        //     transaction.Id = Guid.NewGuid();
-
-        //     await _repository.AddAsync(transaction);
-        //     return _mapper.Map<TrackingTransactionDto>(transaction);
-        // }
-
-        public async Task<TrackingTransactionDto> GetTrackingTransactionByIdAsync(Guid id)
+        public async Task<TrackingTransactionRead?> GetByIdAsync(Guid id)
         {
-            var transaction = await _repository.GetByIdWithIncludesAsync(id);
-            return transaction == null ? null : _mapper.Map<TrackingTransactionDto>(transaction);
+            return await _repository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<TrackingTransactionDto>> GetAllTrackingTransactionsAsync()
+        public async Task<List<TrackingTransactionRead>> GetAllAsync()
         {
-            var transactions = await _repository.GetAllWithIncludesAsync();
-            return _mapper.Map<IEnumerable<TrackingTransactionDto>>(transactions);
+            return await _repository.GetAllAsync();
         }
 
-        // public async Task UpdateTrackingTransactionAsync(Guid id, TrackingTransactionUpdateDto updateDto)
-        // {
-        //     if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
-
-        //     var transaction = await _repository.GetByIdAsync(id);
-        //     if (transaction == null)
-        //         throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
-
-        //     _mapper.Map(updateDto, transaction);
-        //     await _repository.UpdateAsync(transaction);
-        // }
-
-        // public async Task DeleteTrackingTransactionAsync(Guid id)
-        // {
-        //     var transaction = await _repository.GetByIdAsync(id);
-        //     if (transaction == null)
-        //         throw new KeyNotFoundException($"TrackingTransaction with ID {id} not found.");
-
-        //     await _repository.DeleteAsync(transaction);
-        // }
-
-            public async Task<object> FilterAsync(DataTablesRequest request)
-            {
-                // Query dari repository sudah projection manual (langsung ke RM)
-                var query = _repository.GetProjectionQueryableManual();
-
-                var searchableColumns = new[]
-                {
-                    "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName"
-                };
-
-                var validSortColumns = new[]
-                {
-                    "TransTime", "ReaderName", "FloorplanMaskedAreaName", "VisitorName", "MemberName", "CardId", "AlarmStatus"
-                };
-
-                // 🧠 Di sini kita tidak butuh AutoMapper, karena source dan target sama (TModel == TDto)
-                var filterService = new GenericDataTableProjectionService<TrackingTransactionRM, TrackingTransactionRM>(
-                    query,
-                    _mapper, // masih bisa dikirim, tapi tidak akan dipakai
-                    searchableColumns,
-                    validSortColumns
-                );
-
-                return await filterService.FilterAsync(request);
-            }
-
-        // public async Task<object> FilterAsync(DataTablesRequest request)
-        // {
-        //     var timeRange = GetTimeRange(request.TimeReport);
-        //     var query = _repository.GetProjectionQueryable(timeRange?.from, timeRange?.to);
-
-
-        //     var searchableColumns = new[] { "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
-        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
-
-        //     var filterService = new GenericDataTableService<TrackingTransactionRM, TrackingTransactionRM>(
-        //         query,
-        //         _mapper,
-        //         searchableColumns,
-        //         validSortColumns);
-
-
-
-        //     return await filterService.FilterAsync(request);
-        // }
-
-        //  public async Task<object> FilterAsync(DataTablesRequest request)
-        // {
-        //     var query = _repository.GetAllQueryable().AsNoTracking();
-
-        //     var searchableColumns = new[] {"Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name" };
-        //     var validSortColumns = new[] { "TransTime", "Reader.Name", "FloorplanMaskedArea.Name", "Visitor.Name", "Member.Name", "CardId", "AlarmStatus" };
-
-        //     var filterService = new GenericDataTableService<TrackingTransaction, TrackingTransactionDto>(
-        //         query,
-        //         _mapper,
-        //         searchableColumns,
-        //         validSortColumns);
-
-        //     return await filterService.FilterAsync(request);
-        // }
-
-
-
-        public async Task<object> FilterWithAlarmAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, TrackingTransactionFilter filter)
         {
-            var query = _repository.GetAllWithAlarmQueryable();
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var searchableColumns = new[]
+            return new
             {
-                "Tracking.Reader.Name",
-                "Tracking.FloorplanMaskedArea.Name",
-                "Tracking.Visitor.Name",
-                "Tracking.Member.Name",
-                "AlarmRecord.Reader.Name",
-                "AlarmRecord.Action",
-                "AlarmRecord.Alarm"
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data = data
             };
-
-            var validSortColumns = new[]
-            {
-                "Tracking.TransTime",
-                "Tracking.Reader.Name",
-                "Tracking.FloorplanMaskedArea.Name",
-                "Tracking.Visitor.Name",
-                "AlarmRecord.Timestamp",
-                "AlarmRecord.Action",
-                "AlarmRecord.Alarm"
-            };
-
-            var enumColumns = new Dictionary<string, Type>
-            {
-                { "Tracking.AlarmStatus", typeof(AlarmStatus) },
-                { "AlarmRecord.Alarm", typeof(AlarmRecordStatus) },
-                { "AlarmRecord.Action", typeof(ActionStatus) }
-            };
-
-            var filterService = new GenericDataTableService<TrackingTransactionWithAlarm, TrackingTransactionWithAlarm>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns
-            );
-
-            return await filterService.FilterAsync(request);
         }
-
 
         public async Task<byte[]> ExportPdfAsync()
         {
@@ -206,7 +80,6 @@ namespace BusinessLogic.Services.Implementation
 
                     page.Content().Table(table =>
                     {
-                        // Define columns
                         table.ColumnsDefinition(columns =>
                         {
                             columns.ConstantColumn(35);
@@ -219,7 +92,6 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                         });
 
-                        // Table header
                         table.Header(header =>
                         {
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
@@ -235,15 +107,14 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Battery").SemiBold();
                         });
 
-                        // Table body
                         int index = 1;
                         foreach (var trackingtransaction in trackingTransactions)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
                             table.Cell().Element(CellStyle).Text(trackingtransaction.TransTime?.ToString("yyyy-MM-dd") ?? "");
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.Reader.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.Reader?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CardId?.ToString("") ?? "");
-                            table.Cell().Element(CellStyle).Text(trackingtransaction.FloorplanMaskedArea.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(trackingtransaction.FloorplanMaskedArea?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateX?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinateY?.ToString("") ?? "");
                             table.Cell().Element(CellStyle).Text(trackingtransaction.CoordinatePxX?.ToString("") ?? "");
@@ -272,6 +143,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
+
         public async Task<byte[]> ExportExcelAsync()
         {
             var trackingTransactions = await _repository.GetAllExportAsync();
@@ -279,7 +151,6 @@ namespace BusinessLogic.Services.Implementation
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Tracking Transaction");
 
-            // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "TransTime";
             worksheet.Cell(1, 3).Value = "Reader Name";
@@ -298,8 +169,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = trackingtransaction.TransTime;
-                worksheet.Cell(row, 3).Value = trackingtransaction.Reader.Name ?? "-";
-                worksheet.Cell(row, 4).Value = trackingtransaction.Card.Dmac ?? "-";
+                worksheet.Cell(row, 3).Value = trackingtransaction.Reader?.Name ?? "-";
+                worksheet.Cell(row, 4).Value = trackingtransaction.Card?.Dmac ?? "-";
                 worksheet.Cell(row, 5).Value = trackingtransaction.CoordinateX;
                 worksheet.Cell(row, 6).Value = trackingtransaction.CoordinateY;
                 worksheet.Cell(row, 7).Value = trackingtransaction.CoordinatePxX;
@@ -315,35 +186,5 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-        
-        private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
-{
-    if (string.IsNullOrEmpty(timeReport))
-        return null;
-
-    var now = DateTime.UtcNow; // gunakan UTC agar konsisten lintas zona waktu
-
-    return timeReport.ToLower() switch
-    {
-        "daily" => (
-            now.Date,
-            now.Date.AddDays(1).AddTicks(-1)
-        ),
-        "weekly" => (
-            now.Date.AddDays(-(int)now.DayOfWeek + 1), // Senin
-            now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1) // Minggu
-        ),
-        "monthly" => (
-            new DateTime(now.Year, now.Month, 1),
-            new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)).AddDays(1).AddTicks(-1)
-        ),
-        "yearly" => (
-            new DateTime(now.Year, 1, 1),
-            new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
-        ),
-        _ => null // CustomDate akan diabaikan (gunakan DateFilters manual)
-    };
-}
-
     }
 }

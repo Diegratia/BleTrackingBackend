@@ -151,6 +151,55 @@ public async Task<(List<EntityRead> Data, int Total, int Filtered)> FilterAsync(
 - ✅ `Shared/Repositories/Repository/RepoModel/PatrolCaseRepository.cs:198-250` - CORRECT pattern
 - ✅ `Shared/Repositories/Repository/MstFloorplanRepository.cs` - CORRECT pattern
 
+**Repository Method Naming Pattern:**
+
+| Method | Returns | Purpose |
+|--------|---------|---------|
+| `GetByIdAsync(Guid id)` | `EntityRead?` | Query operations - returns Read DTO via ProjectToRead |
+| `GetByIdEntityAsync(Guid id)` | `Entity?` | Update/Delete operations - returns entity object |
+| `GetAllAsync()` | `IEnumerable<EntityRead>` | Query operations - returns Read DTOs |
+| `FilterAsync(EntityFilter filter)` | `(List<EntityRead>, int, int)` | Query with pagination - returns Read DTOs |
+| `AddAsync(Entity entity)` | `Entity` | Insert only - no validation logic |
+| `UpdateAsync(Entity entity)` | `Task` | Update only - no validation logic |
+| `DeleteAsync(Entity entity)` | `Task` | Delete only - accepts entity, not ID |
+
+**Key Point:** Repository should ONLY do data access. All validation (null checks, ownership checks, business rules) belongs in the Service layer.
+
+```csharp
+// ❌ WRONG - Validation in Repository
+public async Task DeleteAsync(Guid id)
+{
+    var entity = await GetByIdAsync(id);
+    if (entity == null)
+        throw new NotFoundException("Entity not found");  // ❌ Business logic in repo
+
+    if (!isSystemAdmin && entity.ApplicationId != applicationId)
+        throw new UnauthorizedAccessException();  // ❌ Validation in repo
+
+    _context.Remove(entity);
+    await _context.SaveChangesAsync();
+}
+
+// ✅ CORRECT - Data access only in Repository
+public async Task DeleteAsync(Entity entity)
+{
+    _context.Remove(entity);  // ✅ Only data access
+    await _context.SaveChangesAsync();
+}
+
+// ✅ CORRECT - Validation in Service
+public async Task DeleteAsync(Guid id)
+{
+    var entity = await _repository.GetByIdEntityAsync(id);
+    if (entity == null)
+        throw new NotFoundException("Entity not found");  // ✅ Validation in service
+
+    SetDeleteAudit(entity);
+    await _repository.DeleteAsync(entity);  // Pass entity, not ID
+    _audit.Deleted("Entity", id, $"Entity {entity.Name} deleted");
+}
+```
+
 Ownership helper (example):
 
 ```csharp

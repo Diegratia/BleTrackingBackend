@@ -1,120 +1,147 @@
 using Entities.Models;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
-using Repositories.Repository.RepoModel;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper.QueryableExtensions;
 
 namespace Repositories.Repository
 {
     public class TrackingTransactionRepository : BaseRepository
     {
-        private readonly IMapper _mapper;
         private readonly BleTrackingDbContext _context;
 
-        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public TrackingTransactionRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
-            _mapper = mapper;
             _context = context;
         }
 
         private string GetCurrentTableName()
         {
-            // var wibNow = DateTime.UtcNow.AddHours(7);
             var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            // var wibDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
             return $"tracking_transaction_{wibZone:yyyyMMdd}";
         }
 
-        
-
-
-        public async Task<TrackingTransaction?> GetByIdAsync(Guid id)
-        {
-            var tableName = GetCurrentTableName();
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE Id = @p0", id)
-                .Include(t => t.Reader)
-                .Include(t => t.FloorplanMaskedArea);
-
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-        }
-
-        public async Task<TrackingTransaction?> GetByIdWithIncludesAsync(Guid id)
-        {
-            return await GetByIdAsync(id); // Sudah include
-        }
-
-        public async Task<IEnumerable<TrackingTransaction>> GetAllWithIncludesAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
-        }
-
-        public async Task<IEnumerable<TrackingTransaction>> GetAllExportAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
-        }
-
-        public IQueryable<TrackingTransaction> GetAllQueryable()
+        private IQueryable<TrackingTransaction> BaseEntityQuery()
         {
             var tableName = GetCurrentTableName();
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.Set<TrackingTransaction>()
                 .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .IgnoreQueryFilters()
+                .Include(t => t.Reader)
                 .Include(t => t.Member)
                 .Include(t => t.Visitor)
-                .Include(t => t.Reader)
                 .Include(t => t.Card)
                 .Include(t => t.FloorplanMaskedArea);
 
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public IQueryable<TrackingTransactionRM> GetProjectionQueryable(DateTime? from = null, DateTime? to = null)
+        private IQueryable<TrackingTransactionRead> ProjectToRead(IQueryable<TrackingTransaction> query)
         {
-            var tableName = GetCurrentTableName();
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking();
-
-            if (from.HasValue && to.HasValue)
-                query = query.Where(a => a.TransTime >= from && a.TransTime <= to);
-
-            return query.ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
+            return query.Select(t => new TrackingTransactionRead
+            {
+                Id = t.Id,
+                ApplicationId = t.ApplicationId,
+                TransTime = t.TransTime,
+                ReaderId = t.ReaderId,
+                ReaderName = t.Reader != null ? t.Reader.Name : null,
+                CardId = t.CardId,
+                VisitorId = t.VisitorId,
+                VisitorName = t.Visitor != null ? t.Visitor.Name : null,
+                MemberId = t.MemberId,
+                MemberName = t.Member != null ? t.Member.Name : null,
+                FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
+                FloorplanMaskedAreaName = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.Name : null,
+                AreaShape = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.AreaShape : null,
+                CoordinateX = t.CoordinateX,
+                CoordinateY = t.CoordinateY,
+                CoordinatePxX = t.CoordinatePxX,
+                CoordinatePxY = t.CoordinatePxY,
+                AlarmStatus = t.AlarmStatus.HasValue ? t.AlarmStatus.ToString() : null,
+                Battery = t.Battery
+            });
         }
 
-        public IQueryable<TrackingTransactionRM> GetProjectionQueryableManual()
+        public async Task<TrackingTransactionRead?> GetByIdAsync(Guid id)
         {
-            var tableName = GetCurrentTableName();
-            return _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking()
-                .Select(t => new TrackingTransactionRM
-                {
-                    Id = t.Id,
-                    TransTime = t.TransTime,
-                    ReaderId = t.ReaderId,
-                    ReaderName = t.Reader != null ? t.Reader.Name : null,
-                    VisitorId = t.VisitorId,
-                    VisitorName = t.Visitor != null ? t.Visitor.Name : null,
-                    MemberId = t.MemberId,
-                    MemberName = t.Member != null ? t.Member.Name : null,
-                    FloorplanMaskedAreaId = t.FloorplanMaskedAreaId,
-                    FloorplanMaskedAreaName = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.Name : null,
-                    AreaShape = t.FloorplanMaskedArea != null ? t.FloorplanMaskedArea.AreaShape : null,
-                    AlarmStatus = t.AlarmStatus.HasValue ? t.AlarmStatus.ToString() : null,
-                    Battery = t.Battery
-                });
+            var query = BaseEntityQuery();
+            return await ProjectToRead(query).FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<TrackingTransaction?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery().FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<List<TrackingTransactionRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        public async Task<(List<TrackingTransactionRead> Data, int Total, int Filtered)> FilterAsync(TrackingTransactionFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+                query = query.Where(x =>
+                    (x.Reader != null && x.Reader.Name.ToLower().Contains(filter.Search.ToLower())) ||
+                    (x.Visitor != null && x.Visitor.Name.ToLower().Contains(filter.Search.ToLower())) ||
+                    (x.Member != null && x.Member.Name.ToLower().Contains(filter.Search.ToLower())) ||
+                    (x.FloorplanMaskedArea != null && x.FloorplanMaskedArea.Name.ToLower().Contains(filter.Search.ToLower())));
+
+            if (filter.ReaderId.HasValue)
+                query = query.Where(x => x.ReaderId == filter.ReaderId.Value);
+
+            if (filter.CardId.HasValue)
+                query = query.Where(x => x.CardId == filter.CardId.Value);
+
+            if (filter.VisitorId.HasValue)
+                query = query.Where(x => x.VisitorId == filter.VisitorId.Value);
+
+            if (filter.MemberId.HasValue)
+                query = query.Where(x => x.MemberId == filter.MemberId.Value);
+
+            if (filter.FloorplanMaskedAreaId.HasValue)
+                query = query.Where(x => x.FloorplanMaskedAreaId == filter.FloorplanMaskedAreaId.Value);
+
+            if (!string.IsNullOrWhiteSpace(filter.AlarmStatus))
+                query = query.Where(x => x.AlarmStatus.ToString() == filter.AlarmStatus);
+
+            if (filter.DateFrom.HasValue)
+                query = query.Where(x => x.TransTime >= filter.DateFrom.Value);
+
+            if (filter.DateTo.HasValue)
+                query = query.Where(x => x.TransTime <= filter.DateTo.Value);
+
+            var total = await query.CountAsync();
+            var filtered = total;
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        public async Task<List<TrackingTransaction>> GetAllWithIncludesAsync()
+        {
+            return await BaseEntityQuery().ToListAsync();
+        }
+
+        public async Task<List<TrackingTransaction>> GetAllExportAsync()
+        {
+            return await BaseEntityQuery()
+                .Include(t => t.Card)
+                .ToListAsync();
         }
 
         public IQueryable<TrackingTransactionWithAlarm> GetAllWithAlarmQueryable()
@@ -124,7 +151,6 @@ namespace Repositories.Repository
 
             var trackingQuery = _context.Set<TrackingTransaction>()
                 .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .IgnoreQueryFilters()
                 .Include(t => t.Reader)
                 .Include(t => t.Card)
                 .Include(t => t.Visitor)
@@ -132,7 +158,6 @@ namespace Repositories.Repository
                 .Include(t => t.FloorplanMaskedArea);
 
             var alarmQuery = _context.AlarmRecordTrackings
-                .IgnoreQueryFilters()
                 .Include(a => a.Reader)
                 .Include(a => a.Visitor)
                 .Include(a => a.Member)
@@ -150,37 +175,5 @@ namespace Repositories.Repository
 
             return joined;
         }
-
-        public IQueryable<TrackingTransactionRM> GetTodayQueryable(DateTime? from = null, DateTime? to = null)
-        {
-            var tableName = GetCurrentTableName();
-            var query = _context.Set<TrackingTransaction>()
-                .FromSqlRaw($"SELECT * FROM [dbo].[{tableName}] WHERE 1=1")
-                .AsNoTracking();
-
-            if (from.HasValue) query = query.Where(t => t.TransTime >= from);
-            if (to.HasValue) query = query.Where(t => t.TransTime <= to);
-
-            return query.ProjectTo<TrackingTransactionRM>(_mapper.ConfigurationProvider);
-        }
-
-        private async Task ValidateRelatedEntitiesAsync(TrackingTransaction transaction, Guid? applicationId, bool isSystemAdmin)
-        {
-            if (isSystemAdmin) return;
-
-            if (!applicationId.HasValue)
-                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
-
-            var reader = await _context.MstBleReaders
-                .FirstOrDefaultAsync(r => r.Id == transaction.ReaderId && r.ApplicationId == applicationId);
-            if (reader == null)
-                throw new UnauthorizedAccessException("Invalid ReaderId for this application.");
-
-            var area = await _context.FloorplanMaskedAreas
-                .FirstOrDefaultAsync(f => f.Id == transaction.FloorplanMaskedAreaId && f.ApplicationId == applicationId);
-            if (area == null)
-                throw new UnauthorizedAccessException("Invalid FloorplanMaskedAreaId for this application.");
-        }
-
     }
 }
