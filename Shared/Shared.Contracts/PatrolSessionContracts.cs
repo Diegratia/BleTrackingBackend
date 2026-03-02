@@ -21,6 +21,7 @@ namespace Shared.Contracts
         // 📅 Date range
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
+        public DateTime? EndedAt { get; set; }
 
         // 📄 Paging
         public int Page { get; set; } = 1;

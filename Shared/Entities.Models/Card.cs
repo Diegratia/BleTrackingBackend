@@ -26,6 +26,9 @@ namespace Entities.Models
         [Column("card_number")]
         public string? CardNumber { get; set; }
 
+        // [Column("battery")]
+        // public long? Battery { get; set; }
+
         [Column("qr_code")]
         public string? QRCode { get; set; }
 
@@ -42,21 +45,6 @@ namespace Entities.Models
 
         [Column("is_used")]
         public bool? IsUsed { get; set; } = false;
-
-        //WIP
-        // [Column("is_swapped")]
-        // public bool? IsSwapped { get; set; } = false;
-
-        // [Column("swapped_with_card_id")]
-        // public Guid? SwappedWithCardId { get; set; }
-
-        // [Column("swapped_at")]
-        // public DateTime? SwappedAt { get; set; }
-
-        // [Column("current_swap_transaction_id")]
-        // public Guid? CurrentSwapTransactionId { get; set; }
-        // [Column("is_tracking-active")]
-        // public bool? IsTrackingActive  { get; set; }
 
         [Column("last_used_by")]
         public string? LastUsed { get; set; }

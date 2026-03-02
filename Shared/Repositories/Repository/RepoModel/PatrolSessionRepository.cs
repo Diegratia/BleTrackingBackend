@@ -63,6 +63,7 @@ namespace Repositories.Repository
                 .Include(x => x.PatrolRoute)
                 .Include(x => x.PatrolAssignmentSecurities)
                 .Include(x => x.TimeGroup)
+                    .ThenInclude(tg => tg.TimeBlocks)
             .FirstOrDefaultAsync(x => x.Id == id);
             return query;
         }
@@ -346,6 +347,17 @@ namespace Repositories.Repository
                 .Include(s => s.PatrolAssignment)
                 .Include(s => s.Security)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
+        }
+
+        /// <summary>
+        /// Check if security has an active (uncompleted) patrol session for specific assignment
+        /// </summary>
+        public async Task<bool> HasActiveSessionAsync(Guid securityId, Guid patrolAssignmentId)
+        {
+            return await BaseEntityQuery()
+                .AnyAsync(s => s.SecurityId == securityId
+                    && s.PatrolAssignmentId == patrolAssignmentId
+                    && s.EndedAt == null);
         }
 
     }

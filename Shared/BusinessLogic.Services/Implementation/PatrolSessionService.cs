@@ -103,6 +103,41 @@ namespace BusinessLogic.Services.Implementation
             if (security == null)
                 throw new UnauthorizedAccessException("Security not found");
 
+            var nowUtc = DateTime.UtcNow;
+
+            // 1. Validate Date Range (StartDate and EndDate)
+            if (assignment.StartDate.HasValue && nowUtc < assignment.StartDate.Value)
+                throw new BusinessException($"Patrol Assignment has not started yet. Starts at: {assignment.StartDate.Value:yyyy-MM-dd HH:mm} UTC");
+
+            if (assignment.EndDate.HasValue && nowUtc > assignment.EndDate.Value)
+                throw new BusinessException($"Patrol Assignment has expired. Ended at: {assignment.EndDate.Value:yyyy-MM-dd HH:mm} UTC");
+
+            // 2. Validate TimeGroup and TimeBlocks
+            if (assignment.TimeGroup != null && assignment.TimeGroup.TimeBlocks != null && assignment.TimeGroup.TimeBlocks.Any())
+            {
+                var timeBlocks = assignment.TimeGroup.TimeBlocks;
+                var currentDayOfWeek = nowUtc.DayOfWeek;
+                var currentTimeOfDay = nowUtc.TimeOfDay;
+
+                // Check if there is any TimeBlock that matches the current day and time
+                var isValidTime = timeBlocks.Any(tb => 
+                    tb.DayOfWeek == currentDayOfWeek &&
+                    tb.StartTime.HasValue && tb.EndTime.HasValue &&
+                    currentTimeOfDay >= tb.StartTime.Value && 
+                    currentTimeOfDay <= tb.EndTime.Value
+                );
+
+                if (!isValidTime)
+                {
+                    throw new BusinessException("Current time is outside the scheduled Time Group for this assignment.");
+                }
+            }
+
+            // 3. Prevent Double-Start (Check for existing active session)
+            var hasActiveSession = await _repo.HasActiveSessionAsync(security.Id, assignment.Id);
+            if (hasActiveSession)
+                throw new BusinessException("You already have an active patrol session for this assignment. Please complete it first.");
+
             var patrolSession = new PatrolSession
             {
                 PatrolAssignmentId = assignment.Id,

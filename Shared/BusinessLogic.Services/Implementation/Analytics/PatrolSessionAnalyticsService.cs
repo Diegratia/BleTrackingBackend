@@ -43,14 +43,12 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<object> GetReportAsync(DataTablesProjectedRequest request, PatrolSessionAnalyticsFilter filter, bool includeTimeline = true, bool includeCases = true)
         {
-            // Map DataTables request to filter
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
             filter.SortColumn = request.SortColumn ?? "StartedAt";
             filter.SortDir = request.SortDir ?? "desc";
             filter.Search = request.SearchValue;
 
-            // Handle date filters from request
             if (request.DateFilters != null)
             {
                 if (request.DateFilters.TryGetValue("StartedAt", out var dateFilter))
