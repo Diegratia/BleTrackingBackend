@@ -351,8 +351,8 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
-                throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
+            // if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
+            //     throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
 
             var currentSecurityId = await GetCurrentSecurityIdAsync();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
