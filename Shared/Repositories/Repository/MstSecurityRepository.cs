@@ -25,9 +25,6 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
             var query = _context.MstSecurities
-                .Include(x => x.Department)
-                .Include(x => x.District)
-                .Include(x => x.Organization)
                 .Where(x => x.Status != 0);
 
             query = query.WithActiveRelations();
@@ -44,7 +41,12 @@ namespace Repositories.Repository
                     (s, users) => new { s, user = users.FirstOrDefault() })
                 .Select(x => new MstSecurityRead
                 {
+                    // BaseRead properties
                     Id = x.s.Id,
+                    Status = x.s.Status,
+                    ApplicationId = x.s.ApplicationId,
+
+                    // MstSecurity-specific properties
                     PersonId = x.s.PersonId,
                     OrganizationId = x.s.OrganizationId,
                     DepartmentId = x.s.DepartmentId,
@@ -68,9 +70,7 @@ namespace Repositories.Repository
                     IsBlacklist = null,
                     BlacklistAt = null,
                     BlacklistReason = null,
-                    ApplicationId = x.s.ApplicationId,
                     StatusEmployee = x.s.StatusEmployee.ToString(),
-                    Status = x.s.Status,
                     IsHead = x.user != null && x.user.Group != null ? x.user.Group.IsHead : null,
                     Organization = x.s.Organization != null ? new OrganizationRead
                     {
@@ -90,10 +90,26 @@ namespace Repositories.Repository
                 });
         }
 
+        public async Task<MstSecurityRead?> GetByIdAsync(Guid id)
+        {
+            return await ProjectToRead(BaseEntityQuery())
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<MstSecurity?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<IEnumerable<MstSecurityRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
         public async Task<(List<MstSecurityRead> Data, int Total, int Filtered)> FilterAsync(SecurityFilter filter)
         {
             var query = BaseEntityQuery();
-            var total = await query.CountAsync();
 
             // Apply filters
             if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -122,77 +138,43 @@ namespace Repositories.Repository
             {
                 if (filter.IsHead.Value)
                 {
-                    // Filter only securities whose matching user has IsHead = true
                     query = query.Where(s => _context.Users
                         .Include(u => u.Group)
                         .Any(u => u.Email.ToLower() == s.Email.ToLower() && u.Group.IsHead == true));
                 }
                 else
                 {
-                    // Filter only securities whose matching user has IsHead = false or no user found
                     query = query.Where(s => !_context.Users
                         .Include(u => u.Group)
                         .Any(u => u.Email.ToLower() == s.Email.ToLower() && u.Group.IsHead == true));
                 }
             }
 
+            var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            // Apply default ordering if no sort column specified
+            // Apply sorting - use ApplySorting with default fallback
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             if (string.IsNullOrEmpty(filter.SortColumn))
             {
                 query = query.OrderByDescending(x => x.UpdatedAt);
             }
 
+            // Apply paging
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
+            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
         }
 
-            public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstOrganizations
-                .Where(b => b.Id == id && b.Status != 0);
-                query = query.WithActiveRelations();
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-        }
-            public async Task<MstDistrict?> GetDistrictByIdAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstDistricts
-                .Where(b => b.Id == id && b.Status != 0);
-                // query = query.WithActiveRelations();
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-        }
-            public async Task<MstDepartment?> GetDepartmentByIdAsync(Guid id)
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.MstDepartments
-                .Where(b => b.Id == id && b.Status != 0);
-                query = query.WithActiveRelations();
-            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
-        }
-
-        public async Task<List<MstSecurity>> GetAllAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
-        }
-
-        
-
         public async Task<List<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
-            .AsNoTracking()
-            .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+                .AsNoTracking()
+                .Where(fd => fd.Status != 0 && fd.CardNumber != null);
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
@@ -208,19 +190,8 @@ namespace Repositories.Repository
                 OrganizationName = t.Organization.Name,
                 DepartmentName = t.Department.Name,
                 DistrictName = t.District.Name,
-                // IsHead = t.user != null && t.user.Group != null ? t.user.Group.IsHead : null,
-            }); 
+            });
             return await projected.ToListAsync();
-        }
-        
-
-
-        public async Task<MstSecurity?> GetByIdAsync(Guid id)
-        {
-
-            return await GetAllQueryable()
-            .Where(x => x.Id == id && x.Status != 0)
-            .FirstOrDefaultAsync();
         }
 
         public async Task<MstSecurity?> GetByIdRawAsync(Guid id)
@@ -229,12 +200,12 @@ namespace Repositories.Repository
                 .Include(x => x.Department)
                 .Include(x => x.District)
                 .Include(x => x.Organization)
-            .Where(x => x.Id == id && x.Status != 0);
+                .Where(x => x.Id == id && x.Status != 0);
 
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<User> GetByIdAsyncRaw(Guid id)
+        public async Task<User> GetUserByIdAsync(Guid id)
         {
             var query = _context.Users
                 .Include(u => u.Group)
@@ -242,54 +213,20 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync() ?? throw new KeyNotFoundException("User not found");
         }
 
-        public async Task AddAsync(MstSecurity member)
+        public async Task AddAsync(MstSecurity security)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            if (!isSystemAdmin)
-            {
-                if (!applicationId.HasValue)
-                    throw new UnauthorizedAccessException("ApplicationId required for non-admin users.");
-
-                member.ApplicationId = applicationId.Value;
-            }
-            else if (member.ApplicationId == Guid.Empty)
-            {
-                throw new ArgumentException("SystemAdmin Must specify ApplicationId explicitly.");
-            }
-
-            await ValidateApplicationIdAsync(member.ApplicationId);
-            ValidateApplicationIdForEntity(member, applicationId, isSystemAdmin);
-            await ValidateRelatedEntitiesAsync(member, applicationId, isSystemAdmin);
-
-            await _context.MstSecurities.AddAsync(member);
+            await _context.MstSecurities.AddAsync(security);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(MstSecurity member)
+        public async Task UpdateAsync(MstSecurity security)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            await ValidateApplicationIdAsync(member.ApplicationId);
-            ValidateApplicationIdForEntity(member, applicationId, isSystemAdmin);
-            await ValidateRelatedEntitiesAsync(member, applicationId, isSystemAdmin);
-
-            // _context.MstSecurities.Update(member);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(MstSecurity security)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.MstSecurities
-                .Where(d => d.Id == id && d.Status != 0);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-            var member = await query.FirstOrDefaultAsync();
-
-            if (!isSystemAdmin && member.ApplicationId != applicationId)
-                throw new UnauthorizedAccessException("Cannot delete Security from a different application.");
-
-            // _context.MstSecurities.Update(member);
+            _context.MstSecurities.Remove(security);
             await _context.SaveChangesAsync();
         }
 
@@ -307,12 +244,12 @@ namespace Repositories.Repository
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-       public async Task<IEnumerable<MstSecurity>> GetAllExportAsync()
+        public async Task<IEnumerable<MstSecurity>> GetAllExportAsync()
         {
             return await GetAllQueryable().ToListAsync();
         }
 
-                public async Task<MstSecurity?> GetByEmailAsync(string email)
+        public async Task<MstSecurity?> GetByEmailAsync(string email)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
@@ -328,39 +265,62 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-        // public async Task<MstSecurity> GetByEmailAsyncRaw(string email)
-        // {
-        //     return await _context.MstSecurities
-        //         .FirstOrDefaultAsync(m => m.Email == email);
-        // }
-
-        private async Task ValidateRelatedEntitiesAsync(MstSecurity security, Guid? applicationId, bool isSystemAdmin)
+        // Ownership validation helpers for service layer
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidOrganizationOwnershipAsync(
+            Guid organizationId,
+            Guid applicationId)
         {
-            if (isSystemAdmin) return;
+            return await CheckInvalidOwnershipIdsAsync<MstOrganization>(
+                new[] { organizationId },
+                applicationId
+            );
+        }
 
-            if (!applicationId.HasValue)
-                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin user.");
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidDepartmentOwnershipAsync(
+            Guid departmentId,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstDepartment>(
+                new[] { departmentId },
+                applicationId
+            );
+        }
 
-            // Validate Department
-            var dept = await _context.MstDepartments
-                .WithActiveRelations()
-                .FirstOrDefaultAsync(d => d.Id == security.DepartmentId && d.ApplicationId == applicationId);
-            if (dept == null)
-                throw new UnauthorizedAccessException("Invalid DepartmentId for this application.");
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidDistrictOwnershipAsync(
+            Guid districtId,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstDistrict>(
+                new[] { districtId },
+                applicationId
+            );
+        }
 
-            // Validate District
-            var district = await _context.MstDistricts
-                .WithActiveRelations()
-                .FirstOrDefaultAsync(d => d.Id == security.DistrictId && d.ApplicationId == applicationId);
-            if (district == null)
-                throw new UnauthorizedAccessException("Invalid DistrictId for this application.");
+        // Helper methods for import operations - simple data access only
+        public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstOrganizations
+                .Where(b => b.Id == id && b.Status != 0);
+            query = query.WithActiveRelations();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
 
-            // Validate Organization
-            var org = await _context.MstOrganizations
-             .WithActiveRelations()
-                .FirstOrDefaultAsync(o => o.Id == security.OrganizationId && o.ApplicationId == applicationId);
-            if (org == null)
-                throw new UnauthorizedAccessException("Invalid OrganizationId for this application.");
+        public async Task<MstDistrict?> GetDistrictByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDistricts
+                .Where(b => b.Id == id && b.Status != 0);
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+
+        public async Task<MstDepartment?> GetDepartmentByIdAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.MstDepartments
+                .Where(b => b.Id == id && b.Status != 0);
+            query = query.WithActiveRelations();
+            return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
         }
     }
 }

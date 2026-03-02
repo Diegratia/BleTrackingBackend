@@ -74,6 +74,7 @@ builder.Services.AddAutoMapper(typeof(MstSecurityProfile));
 builder.Services.AddScoped<IMstMemberService, MstMemberService>();
 builder.Services.AddScoped<IMstSecurityService, MstSecurityService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddScoped<IEncryptService, EncryptService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddSingleton<MqttPubQueue>();

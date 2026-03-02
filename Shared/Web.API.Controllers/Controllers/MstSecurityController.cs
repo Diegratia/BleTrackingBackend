@@ -75,17 +75,6 @@ namespace Web.API.Controllers.Controllers
                 return Ok(ApiResponse.Success("Security deleted successfully"));
         }
 
-
-        [HttpPost("filter-datatables")]
-        public async Task<IActionResult> FilterDataTables([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ApiResponse.BadRequest("Invalid filter parameters"));
-
-            var result = await _MstSecurityService.FilterAsync(request);
-            return Ok(ApiResponse.Paginated("Securities filtered successfully", result));
-        }
-
         [HttpPost("filter")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {

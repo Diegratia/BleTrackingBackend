@@ -15,13 +15,12 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Drawing;
-using Bogus.DataSets;
 using Shared.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using BusinessLogic.Services.Extension.FileStorageService;
-using DataView;
 using Shared.Contracts.Read;
+using DataView;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -32,38 +31,38 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly string[] _allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
         private const long MaxFileSize = 5 * 1024 * 1024; // Max 5 MB
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<MstSecurityService> _logger;
         private readonly IMqttPubQueue _mqttQueue;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IAuditEmitter _audit;
 
-        public MstSecurityService(MstSecurityRepository repository,
-        IMapper mapper,
-        IHttpContextAccessor httpContextAccessor,
-        CardRepository cardRepository,
-        ILogger<MstSecurityService> logger,
-        IMqttPubQueue mqttQueue,
-        IFileStorageService fileStorageService
-        ) : base(httpContextAccessor)
+        public MstSecurityService(
+            MstSecurityRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            CardRepository cardRepository,
+            ILogger<MstSecurityService> logger,
+            IMqttPubQueue mqttQueue,
+            IFileStorageService fileStorageService,
+            IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
             _cardRepository = cardRepository;
             _logger = logger;
             _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
+            _audit = audit;
         }
 
-        public async Task<IEnumerable<MstSecurityDto>> GetAllSecuritiesAsync()
+        public async Task<IEnumerable<MstSecurityRead>> GetAllSecuritiesAsync()
         {
-            var securities = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstSecurityDto>>(securities);
+            return await _repository.GetAllAsync();
         }
+
         public async Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
-            var securities = await _repository.GetAllLookUpAsync();
-            return _mapper.Map<IEnumerable<MstSecurityLookUpRead>>(securities);
+            return await _repository.GetAllLookUpAsync();
         }
 
         public async Task<IEnumerable<OpenMstSecurityDto>> OpenGetAllSecuritiesAsync()
@@ -72,29 +71,57 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<OpenMstSecurityDto>>(securities);
         }
 
-        public async Task<MstSecurityDto> GetSecurityByIdAsync(Guid id)
+        public async Task<MstSecurityRead> GetSecurityByIdAsync(Guid id)
         {
             var security = await _repository.GetByIdAsync(id);
             if (security == null)
                 throw new NotFoundException($"Security {id} not found");
             if (security.Status == 0)
-                throw new BusinessException("Security is inactive", "BUILDING_INACTIVE");
-            return security == null ? null : _mapper.Map<MstSecurityDto>(security);
+                throw new BusinessException("Security is inactive", "SECURITY_INACTIVE");
+            return security;
         }
 
-        public async Task<MstSecurityDto> CreateSecurityAsync(MstSecurityCreateDto createDto)
+        public async Task<MstSecurityRead> CreateSecurityAsync(MstSecurityCreateDto createDto)
         {
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
-            var username = UsernameFormToken;
+
+            // Ownership validation
+            if (createDto.OrganizationId.HasValue)
+            {
+                var invalidOrgIds = await _repository.CheckInvalidOrganizationOwnershipAsync(
+                    createDto.OrganizationId.Value, AppId);
+                if (invalidOrgIds.Any())
+                    throw new UnauthorizedException(
+                        $"OrganizationId does not belong to this Application: {string.Join(", ", invalidOrgIds)}");
+            }
+
+            if (createDto.DepartmentId.HasValue)
+            {
+                var invalidDeptIds = await _repository.CheckInvalidDepartmentOwnershipAsync(
+                    createDto.DepartmentId.Value, AppId);
+                if (invalidDeptIds.Any())
+                    throw new UnauthorizedException(
+                        $"DepartmentId does not belong to this Application: {string.Join(", ", invalidDeptIds)}");
+            }
+
+            if (createDto.DistrictId.HasValue)
+            {
+                var invalidDistrictIds = await _repository.CheckInvalidDistrictOwnershipAsync(
+                    createDto.DistrictId.Value, AppId);
+                if (invalidDistrictIds.Any())
+                    throw new UnauthorizedException(
+                        $"DistrictId does not belong to this Application: {string.Join(", ", invalidDistrictIds)}");
+            }
+
             var card = await _cardRepository.GetByIdEntityAsync(createDto.CardId!.Value);
             if (card == null)
                 throw new NotFoundException($"Card {createDto.CardId} not found.");
 
             var existingSecurity = await _repository.GetAllQueryable()
-            .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
-                                     b.IdentityId == createDto.IdentityId ||
-                                     b.PersonId == createDto.PersonId);
+                .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
+                                         b.IdentityId == createDto.IdentityId ||
+                                         b.PersonId == createDto.PersonId);
 
             if (existingSecurity != null)
             {
@@ -106,65 +133,39 @@ namespace BusinessLogic.Services.Implementation
                     throw new BusinessException($"Security with PersonId {createDto.PersonId} already exists.");
             }
 
-
             if (card.IsUsed == true)
-                throw new BusinessException("Card already checked in by another visitor.");
-            // if (card == null)
-            //     throw new InvalidOperationException("Card not found.");
-
-            // Validasi relasi
-            // var department = await _repository.GetDepartmentByIdAsync(createDto.DepartmentId);
-            // if (department == null)
-            //     throw new ArgumentException($"Department with ID {createDto.DepartmentId} not found.");
-
-            // var organization = await _repository.GetOrganizationByIdAsync(createDto.OrganizationId);
-            // if (organization == null)
-            //     throw new ArgumentException($"Organization with ID {createDto.OrganizationId} not found.");
-
-            // var district = await _repository.GetDistrictByIdAsync(createDto.DistrictId);
-            // if (district == null)
-            //     throw new ArgumentException($"District with ID {createDto.DistrictId} not found.");
+                throw new BusinessException("Card already checked in by another security.");
 
             var security = _mapper.Map<MstSecurity>(createDto);
+            security.ApplicationId = AppId;
 
-            // Tangani upload gambar
+            // Handle image upload
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
                 try
                 {
-                    
                     security.FaceImage = await _fileStorageService
                         .SaveImageAsync(createDto.FaceImage, "SecurityFaceImages", MaxFileSize, ImagePurpose.Photo);
-                    
-
-                        security.UploadFr = 1; // Sukses
-                        security.UploadFrError = "Upload successful";
+                    security.UploadFr = 1;
+                    security.UploadFrError = "Upload successful";
                 }
-                    catch (Exception ex)
-                    {
-                        security.UploadFr = 2; // Gagal
-                        security.UploadFrError = ex.Message;
-                        security.FaceImage = null;
-                    }
+                catch (Exception ex)
+                {
+                    security.UploadFr = 2;
+                    security.UploadFrError = ex.Message;
+                    security.FaceImage = null;
+                }
             }
             else
             {
-                security.UploadFr = 0; 
+                security.UploadFr = 0;
                 security.UploadFrError = "No file uploaded";
                 security.FaceImage = null;
             }
 
-            security.Id = Guid.NewGuid();
-            security.Status = 1;
-            security.CreatedBy = username;
-            security.CreatedAt = DateTime.UtcNow;
-            security.UpdatedBy = username;
-            security.UpdatedAt = DateTime.UtcNow;
+            SetCreateAudit(security);
             security.BleCardNumber = card.Dmac;
             security.CardNumber = card.CardNumber;
-
-            // security.JoinDate = createDto.JoinDate;
-            // security.BirthDate = createDto.BirthDate;
 
             using var transaction = await _repository.BeginTransactionAsync();
             try
@@ -179,7 +180,7 @@ namespace BusinessLogic.Services.Implementation
 
                 await transaction.CommitAsync();
                 _mqttQueue.Enqueue("engine/refresh/card-related", "");
-
+                _audit.Created("Security", security.Id, $"Security {security.Name} created");
             }
             catch
             {
@@ -187,31 +188,54 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstSecurityDto>(security);
+            return await _repository.GetByIdAsync(security.Id);
         }
 
-        public async Task<MstSecurityDto> UpdateSecurityAsync(Guid id, MstSecurityUpdateDto updateDto)
+        public async Task<MstSecurityRead> UpdateSecurityAsync(Guid id, MstSecurityUpdateDto updateDto)
         {
-            // if (updateDto == null)
-            //     throw new ArgumentNullException(nameof(updateDto));
-
-            var security = await _repository.GetByIdAsync(id);
+            var security = await _repository.GetByIdEntityAsync(id);
             if (security == null)
                 throw new NotFoundException($"Security with ID {id} not found or has been deleted.");
+
+            // Ownership validation for updated values
+            if (updateDto.OrganizationId.HasValue && updateDto.OrganizationId != security.OrganizationId)
+            {
+                var invalidOrgIds = await _repository.CheckInvalidOrganizationOwnershipAsync(
+                    updateDto.OrganizationId.Value, AppId);
+                if (invalidOrgIds.Any())
+                    throw new UnauthorizedException(
+                        $"OrganizationId does not belong to this Application: {string.Join(", ", invalidOrgIds)}");
+            }
+
+            if (updateDto.DepartmentId.HasValue && updateDto.DepartmentId != security.DepartmentId)
+            {
+                var invalidDeptIds = await _repository.CheckInvalidDepartmentOwnershipAsync(
+                    updateDto.DepartmentId.Value, AppId);
+                if (invalidDeptIds.Any())
+                    throw new UnauthorizedException(
+                        $"DepartmentId does not belong to this Application: {string.Join(", ", invalidDeptIds)}");
+            }
+
+            if (updateDto.DistrictId.HasValue && updateDto.DistrictId != security.DistrictId)
+            {
+                var invalidDistrictIds = await _repository.CheckInvalidDistrictOwnershipAsync(
+                    updateDto.DistrictId.Value, AppId);
+                if (invalidDistrictIds.Any())
+                    throw new UnauthorizedException(
+                        $"DistrictId does not belong to this Application: {string.Join(", ", invalidDistrictIds)}");
+            }
 
             var cardId = updateDto.CardId ?? Guid.Empty;
             var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdEntityAsync(cardId) : null;
             if (updateDto.CardId.HasValue && card == null)
                 throw new NotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
+            // Handle image upload
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {
                 try
                 {
-                     await _fileStorageService.DeleteAsync(security.FaceImage!);
-
+                    await _fileStorageService.DeleteAsync(security.FaceImage!);
                     security.FaceImage = await _fileStorageService
                         .SaveImageAsync(updateDto.FaceImage, "SecurityFaceImages", MaxFileSize, ImagePurpose.Photo);
                     security.UploadFr = 1;
@@ -221,20 +245,13 @@ namespace BusinessLogic.Services.Implementation
                 {
                     security.UploadFr = 2;
                     security.UploadFrError = ex.Message;
-                    // security.FaceImage = null;
                 }
-            }
-            else
-            {
-                security.UploadFr = 0;
-                security.UploadFrError = "No file uploaded";
-                // security.FaceImage = null;
             }
 
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                // Reset card lama (jika beda dengan card baru)
+                // Reset old card if different from new card
                 var oldCard = await _cardRepository.GetAllQueryable()
                     .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
 
@@ -247,7 +264,7 @@ namespace BusinessLogic.Services.Implementation
                     await _cardRepository.UpdateAsync(oldCard);
                 }
 
-                // Assign card baru
+                // Assign new card
                 if (updateDto.CardId.HasValue)
                 {
                     if (card!.SecurityId.HasValue && card.SecurityId != security.Id)
@@ -261,20 +278,16 @@ namespace BusinessLogic.Services.Implementation
                     await _cardRepository.UpdateAsync(card);
                 }
 
-                // Update security
+                SetUpdateAudit(security);
                 _mapper.Map(updateDto, security);
-                security.BleCardNumber = card!.Dmac;
-                security.CardNumber = card.CardNumber;
-                security.UpdatedBy = username;
-                security.UpdatedAt = DateTime.UtcNow;
-
-                
+                security.BleCardNumber = card?.Dmac;
+                security.CardNumber = card?.CardNumber;
 
                 await _repository.UpdateAsync(security);
 
                 await transaction.CommitAsync();
                 _mqttQueue.Enqueue("engine/refresh/card-related", "");
-
+                _audit.Updated("Security", security.Id, $"Security {security.Name} updated");
             }
             catch
             {
@@ -282,98 +295,36 @@ namespace BusinessLogic.Services.Implementation
                 throw;
             }
 
-            return _mapper.Map<MstSecurityDto>(security);
+            return await _repository.GetByIdAsync(security.Id);
         }
-
 
         public async Task DeleteSecurityAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var security = await _repository.GetByIdAsync(id);
+            var security = await _repository.GetByIdEntityAsync(id);
             if (security == null)
                 throw new NotFoundException($"Security {id} not found");
-            security.UpdatedBy = username;
-            security.UpdatedAt = DateTime.UtcNow;
-            security.Status = 0;
-            security.CardNumber = null;
-            security.BleCardNumber = null;
+
+            // Multi-tenancy validation - service layer responsibility
+            var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
+            if (!isSystemAdmin && security.ApplicationId != applicationId)
+                throw new UnauthorizedException("Cannot delete Security from a different application.");
 
             var oldCard = await _cardRepository.GetAllQueryable()
-                    .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
-            // oldCard.IsUsed = false;
-            // oldCard.SecurityId = null;
-            // oldCard.CheckinAt = null;
-            // await _cardRepository.UpdateAsync(oldCard);
-                if (oldCard != null)
-                        {
-                            oldCard.IsUsed = false;
-                            oldCard.CardStatus = CardStatus.Available;
-                            oldCard.SecurityId = null;
-                            oldCard.CheckinAt = null;
-                            await _cardRepository.UpdateAsync(oldCard);
-                        }
+                .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
 
-
-
-            await _repository.DeleteAsync(id);
-            _mqttQueue.Enqueue("engine/refresh/card-related", "");
-
-        }
-
-        
-
-        // public async Task<MstSecurityDto> SecurityBlacklistAsync(Guid id, BlacklistReasonDto dto)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var Security = await _repository.GetByIdAsync(id);
-
-        //     _mapper.Map(dto, Security);
-        //     Security.UpdatedBy = username;
-        //     Security.BlacklistAt = DateTime.UtcNow;
-        //     Security.IsBlacklist = true;
-        //     Security.UpdatedAt = DateTime.UtcNow;
-
-        //     await _repository.UpdateAsync(Security);
-        //     _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
-        //     return _mapper.Map<MstSecurityDto>(Security);
-        // }
-
-        // public async Task UnBlacklistSecurityAsync(Guid id)
-        // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-        //     var security = await _repository.GetByIdAsync(id);
-        //     if (security == null)
-        //         throw new KeyNotFoundException($"Security with ID {id} not found.");
-
-        //     security.UpdatedBy = username ?? "System";
-        //     security.UpdatedAt = DateTime.UtcNow;
-        //     security.IsBlacklist = false;
-
-        //     await _repository.UpdateAsync(security);
-        //     _mqttQueue.Enqueue("engine/refresh/blacklist-related", "");
-        // }
-
-        public async Task<object> FilterAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryable().AsNoTracking();
-
-            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            if (oldCard != null)
             {
-                { "Gender", typeof(Gender) },
-                { "IdentityType", typeof(IdentityType) }
-            };
+                oldCard.IsUsed = false;
+                oldCard.CardStatus = CardStatus.Available;
+                oldCard.SecurityId = null;
+                oldCard.CheckinAt = null;
+                await _cardRepository.UpdateAsync(oldCard);
+            }
 
-            var searchableColumns = new[] { "Name", "Organization.Name", "Department.Name", "District.Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Name", "Organization.Name", "Department.Name", "District.Name", "CreatedAt", "BirthDate", "JoinDate", "ExitDate", "StatusEmployee", "HeadSecurity1", "HeadSecurity2", "Status", "Brand.Name", "CardNumber" };
-
-            var filterService = new GenericDataTableService<MstSecurity, MstSecurityDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
-
-            return await filterService.FilterAsync(request);
+            SetDeleteAudit(security);
+            await _repository.DeleteAsync(security);
+            _mqttQueue.Enqueue("engine/refresh/card-related", "");
+            _audit.Deleted("Security", id, $"Security {security.Name} deleted");
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, SecurityFilter filter)
@@ -384,7 +335,6 @@ namespace BusinessLogic.Services.Implementation
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 
-            // Map Date Filters (Generic Dictionary -> Specific Prop)
             if (request.DateFilters != null)
             {
                 if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
@@ -425,7 +375,6 @@ namespace BusinessLogic.Services.Implementation
 
                     page.Content().Table(table =>
                     {
-                        // Define columns
                         table.ColumnsDefinition(columns =>
                         {
                             columns.ConstantColumn(35);
@@ -440,22 +389,8 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
                         });
 
-                        // Table header
                         table.Header(header =>
                         {
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
@@ -468,49 +403,23 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Name").SemiBold();
                             header.Cell().Element(CellStyle).Text("Phone").SemiBold();
                             header.Cell().Element(CellStyle).Text("Email").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Gender").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Address").SemiBold();
-                            header.Cell().Element(CellStyle).Text("FaceImage").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UploadFr").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UploadFrError").SemiBold();
-                            header.Cell().Element(CellStyle).Text("BirthDate").SemiBold();
-                            header.Cell().Element(CellStyle).Text("JoinDate").SemiBold();
-                            header.Cell().Element(CellStyle).Text("ExitDate").SemiBold();
-                            header.Cell().Element(CellStyle).Text("HeadSecurity1").SemiBold();
-                            header.Cell().Element(CellStyle).Text("HeadSecurity2").SemiBold();
-                            header.Cell().Element(CellStyle).Text("StatusEmployee").SemiBold();
-                            header.Cell().Element(CellStyle).Text("CreatedBy").SemiBold();
-                            header.Cell().Element(CellStyle).Text("CreatedAt").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UpdatedBy").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UpdatedAt").SemiBold();
                             header.Cell().Element(CellStyle).Text("Status").SemiBold();
                         });
 
-                        // Table body
                         int index = 1;
                         foreach (var security in securities)
                         {
                             table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(security.PersonId);
-                            table.Cell().Element(CellStyle).Text(security.Organization.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(security.Department.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(security.District.Name ?? "-");
-                            table.Cell().Element(CellStyle).Text(security.IdentityId);
-                            table.Cell().Element(CellStyle).Text(security.CardNumber);
+                            table.Cell().Element(CellStyle).Text(security.PersonId ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Organization?.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Department?.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.District?.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.IdentityId ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.CardNumber ?? "-");
                             table.Cell().Element(CellStyle).Text(security.Name);
-                            table.Cell().Element(CellStyle).Text(security.Phone);
-                            table.Cell().Element(CellStyle).Text(security.Email);
-                            table.Cell().Element(CellStyle).Text(security.Gender.ToString() ?? "-");
-                            table.Cell().Element(CellStyle).Text(security.Address);
-                            table.Cell().Element(CellStyle).Text(security.FaceImage);
-                            table.Cell().Element(CellStyle).Text(security.UploadFr.ToString());
-                            table.Cell().Element(CellStyle).Text(security.UploadFrError);
-                            table.Cell().Element(CellStyle).Text(security.BirthDate?.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(security.JoinDate?.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(security.ExitDate?.ToString("yyyy-MM-dd"));
-                            // table.Cell().Element(CellStyle).Text(security.HeadSecurity1);
-                            table.Cell().Element(CellStyle).Text(security.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(security.CreatedBy ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Phone ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Email ?? "-");
+                            table.Cell().Element(CellStyle).Text(security.Status == 1 ? "Active" : "Inactive");
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -533,6 +442,7 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
+
         public async Task<byte[]> ExportExcelAsync()
         {
             var securities = await _repository.GetAllExportAsync();
@@ -540,8 +450,6 @@ namespace BusinessLogic.Services.Implementation
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Securities");
 
-
-            // Header
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "PersonId";
             worksheet.Cell(1, 3).Value = "Organization";
@@ -553,21 +461,7 @@ namespace BusinessLogic.Services.Implementation
             worksheet.Cell(1, 9).Value = "Phone";
             worksheet.Cell(1, 10).Value = "Email";
             worksheet.Cell(1, 11).Value = "Gender";
-            worksheet.Cell(1, 12).Value = "Address";
-            worksheet.Cell(1, 13).Value = "FaceImage";
-            worksheet.Cell(1, 14).Value = "UploadFr";
-            worksheet.Cell(1, 15).Value = "UploadFrError";
-            worksheet.Cell(1, 16).Value = "BirthDate";
-            worksheet.Cell(1, 17).Value = "JoinDate";
-            worksheet.Cell(1, 18).Value = "ExitDate";
-            worksheet.Cell(1, 19).Value = "HeadSecurity1";
-            worksheet.Cell(1, 20).Value = "HeadSecurity2";
-            worksheet.Cell(1, 21).Value = "StatusEmployee";
-            worksheet.Cell(1, 22).Value = "CreatedBy";
-            worksheet.Cell(1, 23).Value = "CreatedAt";
-            worksheet.Cell(1, 24).Value = "UpdatedBy";
-            worksheet.Cell(1, 25).Value = "UpdatedAt";
-            worksheet.Cell(1, 26).Value = "Status";
+            worksheet.Cell(1, 12).Value = "Status";
 
             int row = 2;
             int no = 1;
@@ -585,21 +479,7 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 9).Value = security.Phone;
                 worksheet.Cell(row, 10).Value = security.Email;
                 worksheet.Cell(row, 11).Value = security.Gender.ToString() ?? "-";
-                worksheet.Cell(row, 12).Value = security.Address;
-                worksheet.Cell(row, 13).Value = security.FaceImage;
-                worksheet.Cell(row, 14).Value = security.UploadFr;
-                worksheet.Cell(row, 15).Value = security.UploadFrError;
-                worksheet.Cell(row, 16).Value = security.BirthDate?.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 17).Value = security.JoinDate?.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 18).Value = security.ExitDate?.ToString("yyyy-MM-dd");
-                // worksheet.Cell(row, 19).Value = security.HeadSecurity1;
-                // worksheet.Cell(row, 20).Value = security.HeadSecurity2;
-                worksheet.Cell(row, 21).Value = security.StatusEmployee.ToString() ?? "-";
-                worksheet.Cell(row, 22).Value = security.CreatedBy ?? "-";
-                worksheet.Cell(row, 23).Value = security.CreatedAt.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 24).Value = security.UpdatedBy ?? "-";
-                worksheet.Cell(row, 25).Value = security.UpdatedAt.ToString("yyyy-MM-dd");
-                worksheet.Cell(row, 26).Value = security.Status == 1 ? "Active" : "Inactive";
+                worksheet.Cell(row, 12).Value = security.Status == 1 ? "Active" : "Inactive";
                 row++;
             }
 
@@ -613,17 +493,15 @@ namespace BusinessLogic.Services.Implementation
         public async Task<IEnumerable<MstSecurityDto>> ImportAsync(IFormFile file)
         {
             var securities = new List<MstSecurity>();
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             using var stream = file.OpenReadStream();
             using var workbook = new XLWorkbook(stream);
             var worksheet = workbook.Worksheets.Worksheet(1);
-            var rows = worksheet.RowsUsed().Skip(1); // skip header
+            var rows = worksheet.RowsUsed().Skip(1);
 
-            int rowNumber = 2; // start dari baris ke 2
+            int rowNumber = 2;
             foreach (var row in rows)
             {
-                // validasi
                 var organizationIdStr = row.Cell(1).GetValue<string>();
                 if (!Guid.TryParse(organizationIdStr, out var organizationId))
                     throw new ArgumentException($"Invalid Organization Id format at row {rowNumber}");
@@ -654,17 +532,14 @@ namespace BusinessLogic.Services.Implementation
                     OrganizationId = organizationId,
                     DepartmentId = departmentId,
                     DistrictId = districtId,
+                    ApplicationId = AppId,
                     Name = row.Cell(4).GetValue<string>(),
                     PersonId = row.Cell(5).GetValue<string>(),
                     CardNumber = row.Cell(6).GetValue<string>(),
-                    Gender = (Gender)Enum.Parse(typeof(Gender), row.Cell(7).GetValue<string>(), ignoreCase: true),
-                    CreatedBy = username,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = username,
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = 1
+                    Gender = (Gender)Enum.Parse(typeof(Gender), row.Cell(7).GetValue<string>(), ignoreCase: true)
                 };
 
+                SetCreateAudit(security);
                 securities.Add(security);
                 rowNumber++;
             }
@@ -674,9 +549,8 @@ namespace BusinessLogic.Services.Implementation
                 await _repository.AddAsync(security);
             }
 
+            _audit.Created("Security", securities.Count, $"Imported {securities.Count} securities");
             return _mapper.Map<IEnumerable<MstSecurityDto>>(securities);
         }
-
-
     }
 }
