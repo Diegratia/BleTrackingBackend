@@ -1,14 +1,15 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels.ResponseHelper;
+using DataView;
 using Microsoft.AspNetCore.Authorization;
-using Entities.Models;
+using Microsoft.AspNetCore.Mvc;
+using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -27,64 +28,15 @@ namespace Web.API.Controllers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var cardRecords = await _cardGroupService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Records retrieved successfully",
-                    collection = new { data = cardRecords },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var cardGroups = await _cardGroupService.GetAllAsync();
+            return Ok(ApiResponse.Success("Card Groups retrieved successfully", cardGroups));
         }
 
-        // GET: api/MstBleReader/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var cardRecord = await _cardGroupService.GetByIdAsync(id);
-                if (cardRecord == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "CardGroup Record not found",
-                        collection = new { data = (object?)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = " Card Group retrieved successfully",
-                    collection = new { data = cardRecord },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var cardGroup = await _cardGroupService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success("Card Group retrieved successfully", cardGroup));
         }
 
         [HttpPost]
@@ -93,84 +45,11 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                var createdCardRecord = await _cardGroupService.CreateAsync(createDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Card Group created successfully",
-                    collection = new { data = createdCardRecord },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
-        }
-
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var result = await _cardGroupService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Group filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var createdCardGroup = await _cardGroupService.CreateAsync(createDto);
+            return StatusCode(201, ApiResponse.Created("Card Group created successfully", createdCardGroup));
         }
 
         [HttpPut("{id}")]
@@ -179,84 +58,33 @@ namespace Web.API.Controllers.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            try
-            {
-                await _cardGroupService.UpdateAsync(id, dto);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card updated successfully",
-                    collection = new { data = (object?)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Card not found",
-                    collection = new { data = (object?)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            await _cardGroupService.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success("Card Group updated successfully"));
         }
 
-        // DELETE: api/MstBleReader/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _cardGroupService.DeleteAsync(id);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Card Group deleted successfully",
-                    collection = new { data = (object?)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Card Group not found",
-                    collection = new { data = (object?)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            await _cardGroupService.DeleteAsync(id);
+            return Ok(ApiResponse.NoContent("Card Group deleted successfully"));
         }
 
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
+        {
+            var filter = new CardGroupFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
+            {
+                filter = JsonSerializer.Deserialize<CardGroupFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new CardGroupFilter();
+            }
+
+            var result = await _cardGroupService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Success("Card Groups filtered successfully", result));
+        }
     }
 }
