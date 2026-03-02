@@ -136,7 +136,6 @@ namespace Repositories.Repository
 
         public async Task<IEnumerable<PatrolCaseRead>> GetAllAsync()
         {
-            // return await ProjectToRead(BaseEntityQuery()).ToListAsync();
             var query = BaseEntityQuery();
             return await ProjectToRead(query).ToListAsync();
         }

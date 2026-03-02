@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Shared.Contracts;
 using BusinessLogic.Services.Extension.RootExtension;
 using System.Text.Json;
+using Shared.Contracts.Reporting;
 
 namespace Web.API.Controllers.Controllers
 {
@@ -108,23 +109,70 @@ namespace Web.API.Controllers.Controllers
             if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(ApiResponse.BadRequest("Only .xlsx files are allowed"));
 
-            var buildings = await _service.ImportAsync(file);
-            return Ok(ApiResponse.Success("Buildings imported successfully", buildings));
+            var importResult = await _service.ImportAsync(file);
+
+            if (importResult.Errors.Any())
+            {
+                return BadRequest(ApiResponse.BadRequest(
+                    $"Import completed with {importResult.FailureCount} errors out of {importResult.TotalRows} rows",
+                    new
+                    {
+                        importResult.SuccessCount,
+                        importResult.FailureCount,
+                        importResult.TotalRows,
+                        Errors = importResult.Errors.Take(10) // Return first 10 errors
+                    }));
+            }
+
+            return Ok(ApiResponse.Success(
+                $"Buildings imported successfully ({importResult.SuccessCount} rows)",
+                new
+                {
+                    importResult.SuccessCount,
+                    importResult.FailureCount,
+                    importResult.TotalRows,
+                    Data = importResult.ImportedData
+                }));
         }
         [HttpGet("export/pdf")]
         [AllowAnonymous]
-        public async Task<IActionResult> ExportPdf()
+        public async Task<IActionResult> ExportPdf(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10000,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDir = null)
         {
-            var pdfBytes = await _service.ExportPdfAsync();
-            return File(pdfBytes, "application/pdf", "MstBuilding_Report.pdf");
+            var request = new ReportExportRequest
+            {
+                Page = page,
+                PageSize = pageSize,
+                SortColumn = sortColumn,
+                SortDir = sortDir
+            };
+
+            var pdfBytes = await _service.ExportPdfAsync(request);
+            return File(pdfBytes, "application/pdf", $"MstBuilding_Report_page{page}.pdf");
         }
 
         [HttpGet("export/excel")]
         [AllowAnonymous]
-        public async Task<IActionResult> ExportExcel()
+        public async Task<IActionResult> ExportExcel(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10000,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDir = null)
         {
-            var excelBytes = await _service.ExportExcelAsync();
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MstBuilding_Report.xlsx");
+            var request = new ReportExportRequest
+            {
+                Page = page,
+                PageSize = pageSize,
+                SortColumn = sortColumn,
+                SortDir = sortDir
+            };
+
+            var excelBytes = await _service.ExportExcelAsync(request);
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"MstBuilding_Report_page{page}.xlsx");
         }
         
         [AllowAnonymous]

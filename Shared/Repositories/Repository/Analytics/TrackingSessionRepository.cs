@@ -29,57 +29,6 @@ namespace Repositories.Repository.Analytics
                 _logger = logger;
             }
 
-
-            private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
-            {
-                if (string.IsNullOrWhiteSpace(timeReport)) return null;
-
-                var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-                var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-
-                return timeReport.Trim().ToLower() switch
-                {
-                    "daily" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    "weekly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
-                                .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    "monthly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month, 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month,
-                                DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
-                            .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    _ => null
-                };
-            }
-
-
             // === GET TABLE NAMES IN RANGE (WIB) ===
             private List<string> GetTableNamesInRange(DateTime fromUtc, DateTime toUtc)
             {
@@ -491,26 +440,17 @@ namespace Repositories.Repository.Analytics
             sessions = request.SortDir?.ToLower() == "asc"
                 ? sessions.OrderBy(x => x.EnterTime).ToList()
                 : sessions.OrderByDescending(x => x.EnterTime).ToList();
-
-            // NO PAGINATION here - pagination is done at person level in service
-            // Return all sessions for proper person grouping
             return (sessions, raw.Count, raw.Count);
         }
 
-        /// <summary>
-        /// Get alarm triggers in date range for incident matching
-        /// Uses projection to avoid N+1 queries with Include/ThenInclude
-        /// </summary>
         private async Task<List<AlarmTriggerDto>> GetAlarmTriggersInRangeAsync(
             DateTime fromUtc,
             DateTime toUtc,
             TrackingAnalyticsFilter request)
         {
-            // Build base query with filters
             var query = _context.AlarmTriggers
                 .Where(at => at.TriggerTime >= fromUtc && at.TriggerTime <= toUtc);
 
-            // Filter by person type
             var type = (request.Type ?? "visitor").ToLowerInvariant();
             if (type == "visitor" && request.VisitorId.HasValue)
             {
@@ -521,7 +461,6 @@ namespace Repositories.Repository.Analytics
                 query = query.Where(at => at.MemberId == request.MemberId);
             }
 
-            // Use projection to only load needed fields
             var alarmData = await query
                 .Select(at => new
                 {

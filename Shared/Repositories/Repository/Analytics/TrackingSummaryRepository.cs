@@ -35,8 +35,6 @@ namespace Repositories.Repository.Analytics
             return $"tracking_transaction_{wibDate:yyyyMMdd}";
         }
 
-        // apply time tange
-
         // area sum
         public async Task<List<TrackingAreaRead>> GetAreaSummaryAsync(TrackingAnalyticsFilter request)
         {

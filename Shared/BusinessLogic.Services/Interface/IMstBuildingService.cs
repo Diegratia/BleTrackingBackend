@@ -6,6 +6,7 @@ using Data.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Shared.Contracts;
 using Shared.Contracts.Read;
+using Shared.Contracts.Reporting;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -17,10 +18,10 @@ namespace BusinessLogic.Services.Interface
         Task<IEnumerable<OpenMstBuildingDto>> OpenGetAllAsync();
         Task<MstBuildingDto> UpdateAsync(Guid id, MstBuildingUpdateDto dto);
         Task DeleteAsync(Guid id);
-        Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file);
-        Task<object> FilterAsync(DataTablesProjectedRequest request, MstBuildingFilter filter); 
-        Task<byte[]> ExportPdfAsync();
-        Task<byte[]> ExportExcelAsync();
-        
+        Task<ImportResult<MstBuildingDto>> ImportAsync(IFormFile file);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, MstBuildingFilter filter);
+        Task<byte[]> ExportPdfAsync(ReportExportRequest request);
+        Task<byte[]> ExportExcelAsync(ReportExportRequest request);
+
     }
 }

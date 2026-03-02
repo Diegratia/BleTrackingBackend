@@ -1,5 +1,4 @@
 using System;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Repositories.DbContexts;
 using Repositories.Repository.RepoModel;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Repositories.Repository
 {
@@ -18,85 +20,120 @@ namespace Repositories.Repository
         {
         }
 
-        public async Task<PatrolCaseAttachment?> GetByIdAsync(Guid id)
-        {
-            return await GetAllQueryable()
-           .Where(a => a.Id == id && a.Status != 0)
-           .FirstOrDefaultAsync();
-        }
-
-        public async Task<IEnumerable<PatrolCaseAttachment>> GetAllAsync()
-        {
-            return await GetAllQueryable().ToListAsync();
-        }
-
-        public async Task<PatrolCaseAttachment> AddAsync(PatrolCaseAttachment attachment)
+        public IQueryable<PatrolCaseAttachment> BaseEntityQuery()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            if (!isSystemAdmin)
+            var query = _context.PatrolCaseAttachments
+                .Include(d => d.PatrolCase)
+                .Where(d => d.Status != 0);
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+        }
+
+        private IQueryable<PatrolAttachmentRead> ProjectToRead(IQueryable<PatrolCaseAttachment> query)
+        {
+            return query.Select(x => new PatrolAttachmentRead
             {
-                if (!applicationId.HasValue)
-                    throw new UnauthorizedAccessException("ApplicationId not found in context");
+                // BaseRead properties
+                Id = x.Id,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedBy = x.UpdatedBy,
+                UpdatedAt = x.UpdatedAt,
+                Status = x.Status,
+                ApplicationId = x.ApplicationId,
 
-                attachment.ApplicationId = applicationId.Value;
-            }
-            else if (attachment.ApplicationId == Guid.Empty)
+                // PatrolAttachment-specific properties
+                PatrolCaseId = x.PatrolCaseId,
+                FileUrl = x.FileUrl,
+                FileType = x.FileType,
+                MimeType = x.MimeType,
+                UploadedAt = x.UploadedAt
+            });
+        }
+
+        public async Task<PatrolAttachmentRead?> GetByIdAsync(Guid id)
+        {
+            return await ProjectToRead(BaseEntityQuery())
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<PatrolCaseAttachment?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery()
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<IEnumerable<PatrolAttachmentRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        public async Task<(List<PatrolAttachmentRead> Data, int Total, int Filtered)> FilterAsync(
+            PatrolAttachmentFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            // Apply filters
+            if (filter.PatrolCaseId.HasValue)
+                query = query.Where(x => x.PatrolCaseId == filter.PatrolCaseId.Value);
+
+            if (filter.FileType.HasValue)
+                query = query.Where(x => x.FileType == filter.FileType.Value);
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
             {
-                throw new ArgumentException("System admin must provide a valid ApplicationId");
+                var search = filter.Search.ToLower();
+                query = query.Where(x => x.FileUrl != null && x.FileUrl.ToLower().Contains(search));
             }
 
-            await ValidateApplicationIdAsync(attachment.ApplicationId);
-            ValidateApplicationIdForEntity(attachment, applicationId, isSystemAdmin);
+            var total = await query.CountAsync();
+            var filtered = await query.CountAsync();
 
-            _context.PatrolCaseAttachments.Add(attachment);
+            // Apply sorting and paging using extension methods
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+
+            // Apply default ordering if still not ordered
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderByDescending(x => x.UpdatedAt);
+            }
+
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            // Use ProjectToRead for single source of truth
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
+        public async Task AddAsync(PatrolCaseAttachment attachment)
+        {
+            await _context.PatrolCaseAttachments.AddAsync(attachment);
             await _context.SaveChangesAsync();
-            return attachment;
         }
 
         public async Task UpdateAsync(PatrolCaseAttachment attachment)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            await ValidateApplicationIdAsync(attachment.ApplicationId);
-            ValidateApplicationIdForEntity(attachment, applicationId, isSystemAdmin);
-
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(PatrolCaseAttachment attachment)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.PatrolCaseAttachments
-                .Where(d => d.Id == id && d.Status != 0);
-
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            var attachment = await query.FirstOrDefaultAsync();
-
-            if (attachment == null)
-                return;
-
+            _context.PatrolCaseAttachments.Remove(attachment);
             await _context.SaveChangesAsync();
         }
-
 
         public IQueryable<PatrolCaseAttachment> GetAllQueryable()
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-
-            var query = _context.PatrolCaseAttachments
-            .Include(d => d.PatrolCase)
-            .Where(d => d.Status != 0);
-
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+            return BaseEntityQuery();
         }
-        
-            public async Task<List<PatrolCaseAttachment>> GetByPatrolCaseIdAsync(Guid caseId)
+
+        public async Task<List<PatrolAttachmentRead>> GetByPatrolCaseIdAsync(Guid caseId)
         {
-            return await _context.PatrolCaseAttachments
-                .Where(ma => ma.PatrolCaseId == caseId && ma.Status != 0)
+            return await ProjectToRead(BaseEntityQuery())
+                .Where(x => x.PatrolCaseId == caseId)
                 .ToListAsync();
         }
 
@@ -105,6 +142,5 @@ namespace Repositories.Repository
             return await _context.PatrolCases
                 .AnyAsync(f => f.Id == caseId && f.Status != 0);
         }
-
     }
 }

@@ -27,57 +27,6 @@
                 _logger = logger;
             }
 
-
-            private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
-            {
-                if (string.IsNullOrWhiteSpace(timeReport)) return null;
-
-                var wibZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-                var wibNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, wibZone);
-
-                return timeReport.Trim().ToLower() switch
-                {
-                    "daily" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(wibNow.Date, wibZone),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    "weekly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(-(int)wibNow.DayOfWeek + 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            wibNow.Date.AddDays(7 - (int)wibNow.DayOfWeek)
-                                .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    "monthly" =>
-                    (
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month, 1),
-                            wibZone
-                        ),
-                        TimeZoneInfo.ConvertTimeToUtc(
-                            new DateTime(wibNow.Year, wibNow.Month,
-                                DateTime.DaysInMonth(wibNow.Year, wibNow.Month))
-                            .AddDays(1).AddTicks(-1),
-                            wibZone
-                        )
-                    ),
-
-                    _ => null
-                };
-            }
-
-
             // === GET TABLE NAMES IN RANGE (WIB) ===
             private List<string> GetTableNamesInRange(DateTime fromUtc, DateTime toUtc)
             {

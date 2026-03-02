@@ -25,6 +25,7 @@ using DataView;
 using BusinessLogic.Services.Extension.FileStorageService;
 using Shared.Contracts;
 using Shared.Contracts.Read;
+using Shared.Contracts.Reporting;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -42,6 +43,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDatabase _redis;
         private readonly IAuditEmitter _audit;
         private readonly ILogger<MstBuilding> _logger;
+        private readonly IReportExportService _reportExportService;
+        private readonly IReportImportService _reportImportService;
         private bool cacheDisabled = false;
 
         public MstBuildingService(
@@ -55,7 +58,9 @@ namespace BusinessLogic.Services.Implementation
             ILogger<MstBuilding> logger,
             IMqttPubQueue mqttQueue,
             IFileStorageService fileStorageService,
-            IAuditEmitter audit
+            IAuditEmitter audit,
+            IReportExportService reportExportService,
+            IReportImportService reportImportService
             ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -69,6 +74,8 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _fileStorageService = fileStorageService;
             _audit = audit;
+            _reportExportService = reportExportService;
+            _reportImportService = reportImportService;
         }
 
         private bool IsRedisAlive()
@@ -229,45 +236,44 @@ namespace BusinessLogic.Services.Implementation
             _mqttQueue.Enqueue("engine/refresh/area-related", "");
         }
 
-        public async Task<IEnumerable<MstBuildingDto>> ImportAsync(IFormFile file)
+        public async Task<ImportResult<MstBuildingDto>> ImportAsync(IFormFile file)
         {
-            var buildings = new List<MstBuilding>();
             var username = UsernameFormToken;
-            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
-
-            using var stream = file.OpenReadStream();
-            using var workbook = new XLWorkbook(stream);
-            var worksheet = workbook.Worksheets.Worksheet(1);
-            var rows = worksheet.RowsUsed().Skip(1);
-
-            int rowNumber = 2;
-            foreach (var row in rows)
+            var mappings = new List<ImportColumnMapping>
             {
+                new() { ColumnIndex = 0, PropertyName = "Name", Required = true, PropertyType = typeof(string), DisplayName = "Name" },
+                new() { ColumnIndex = 1, PropertyName = "Image", Required = false, PropertyType = typeof(string), DisplayName = "Image" }
+            };
 
-                var building = new MstBuilding
+            var importResult = await _reportImportService.ImportFromExcelAsync<MstBuildingCreateDto>(
+                file, mappings, headerRow: 0, dataStartRow: 1);
+
+            if (importResult.Errors.Any())
+            {
+                return new ImportResult<MstBuildingDto>
                 {
-                    Id = Guid.NewGuid(),
-                    Name = row.Cell(1).GetValue<string>(),
-                    Image = row.Cell(2).GetValue<string>(),
-                    ApplicationId = Guid.Parse(userApplicationId),
-                    CreatedBy = username,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedBy = username,
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = 1
+                    Errors = importResult.Errors,
+                    FailureCount = importResult.FailureCount,
+                    TotalRows = importResult.TotalRows,
+                    SuccessCount = 0
                 };
-
-                buildings.Add(building);
-                rowNumber++;
             }
 
-            // Simpan ke database
-            foreach (var building in buildings)
+            var result = new List<MstBuildingDto>();
+            foreach (var dto in importResult.ImportedData)
             {
-                await _repository.AddAsync(building);
+                var created = await CreateAsync(dto);
+                result.Add(created);
             }
 
-            return _mapper.Map<IEnumerable<MstBuildingDto>>(buildings);
+            return new ImportResult<MstBuildingDto>
+            {
+                ImportedData = result,
+                SuccessCount = result.Count,
+                FailureCount = importResult.FailureCount,
+                TotalRows = importResult.TotalRows,
+                Errors = importResult.Errors
+            };
         }
 
         public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstBuildingFilter filter)
@@ -301,124 +307,110 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        public async Task<byte[]> ExportPdfAsync()
+        public async Task<byte[]> ExportPdfAsync(ReportExportRequest request)
         {
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var buildings = await _repository.GetAllExportAsync();
+            request = _reportExportService.ApplyDefaultPagination(request);
 
-            var document = Document.Create(container =>
-            {
-                container.Page(page =>
+            var buildings = await _repository.GetPaginatedExportAsync(
+                request.Page,
+                request.PageSize);
+
+            var readDtos = await _repository.GetAllQueryable()
+                .OrderBy(x => x.Name)
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new MstBuildingRead
                 {
-                    page.Margin(30);
-                    page.Size(PageSizes.A4.Landscape());
-                    page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(10));
+                    Id = x.Id,
+                    Name = x.Name,
+                    Image = x.Image,
+                    CreatedAt = x.CreatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedBy = x.UpdatedBy,
+                    Status = x.Status,
+                    ApplicationId = x.ApplicationId
+                })
+                .ToListAsync();
 
-                    page.Header()
-                        .Text("Master Building Report")
-                        .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
+            var metadata = new ReportMetadata
+            {
+                Title = _reportExportService.GenerateReportTitle(
+                    "Master Building Report",
+                    null,
+                    request.TimeRange),
+                FilterInfo = _reportExportService.GenerateFilterInfo(new ReportFilterInfo
+                {
+                    From = request.DateFrom,
+                    To = request.DateTo,
+                    Search = request.Search,
+                    Status = request.Status
+                }),
+                TotalRecords = readDtos.Count,
+                Columns = GetBuildingReportColumns(),
+                Orientation = ReportOrientation.Landscape,
+                IncludePageNumbers = true
+            };
 
-                    page.Content().Table(table =>
-                    {
-                        // Define columns
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.ConstantColumn(35);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                        });
-
-                        // Table header
-                        table.Header(header =>
-                        {
-                            header.Cell().Element(CellStyle).Text("#").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Name").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Image").SemiBold();
-                            header.Cell().Element(CellStyle).Text("CreatedBy").SemiBold();
-                            header.Cell().Element(CellStyle).Text("CreatedAt").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UpdatedBy").SemiBold();
-                            header.Cell().Element(CellStyle).Text("UpdatedAt").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Status").SemiBold();
-                        });
-
-                        // Table body
-                        int index = 1;
-                        foreach (var building in buildings)
-                        {
-                            table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(building.Name);
-                            table.Cell().Element(CellStyle).Text(building.Image);
-                            table.Cell().Element(CellStyle).Text(building.CreatedBy);
-                            table.Cell().Element(CellStyle).Text(building.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                            table.Cell().Element(CellStyle).Text(building.UpdatedBy);
-                            table.Cell().Element(CellStyle).Text(building.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                            table.Cell().Element(CellStyle).Text(building.Status.ToString());
-                        }
-
-                        static IContainer CellStyle(IContainer container) =>
-                            container
-                                .BorderBottom(1)
-                                .BorderColor(Colors.Grey.Lighten2)
-                                .PaddingVertical(4)
-                                .PaddingHorizontal(6);
-                    });
-
-                    page.Footer()
-                        .AlignRight()
-                        .Text(txt =>
-                        {
-                            txt.Span("Generated at: ").SemiBold();
-                            txt.Span(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
-                        });
-                });
-            });
-
-            return document.GeneratePdf();
+            return await _reportExportService.ExportToPdfAsync(readDtos, metadata);
         }
 
-        public async Task<byte[]> ExportExcelAsync()
+        public async Task<byte[]> ExportExcelAsync(ReportExportRequest request)
         {
-            var buildings = await _repository.GetAllExportAsync();
+            request = _reportExportService.ApplyDefaultPagination(request);
 
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Buildings");
+            var readDtos = await _repository.GetAllQueryable()
+                .OrderBy(x => x.Name)
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new MstBuildingRead
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Image = x.Image,
+                    CreatedAt = x.CreatedAt,
+                    CreatedBy = x.CreatedBy,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedBy = x.UpdatedBy,
+                    Status = x.Status,
+                    ApplicationId = x.ApplicationId
+                })
+                .ToListAsync();
 
-            // Header
-            worksheet.Cell(1, 1).Value = "#";
-            worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "Image";
-            worksheet.Cell(1, 4).Value = "Created By";
-            worksheet.Cell(1, 5).Value = "Created At";
-            worksheet.Cell(1, 6).Value = "Updated By";
-            worksheet.Cell(1, 7).Value = "Updated At";
-            worksheet.Cell(1, 8).Value = "Status";
-
-            int row = 2;
-            int no = 1;
-
-            foreach (var building in buildings)
+            var metadata = new ReportMetadata
             {
-                worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = building.Name;
-                worksheet.Cell(row, 3).Value = building.Image;
-                worksheet.Cell(row, 4).Value = building.CreatedBy;
-                worksheet.Cell(row, 5).Value = building.CreatedAt;
-                worksheet.Cell(row, 6).Value = building.UpdatedBy;
-                worksheet.Cell(row, 7).Value = building.UpdatedAt;
-                worksheet.Cell(row, 8).Value = building.Status;
-                row++;
-            }
+                Title = _reportExportService.GenerateReportTitle(
+                    "Master Building Report",
+                    null,
+                    request.TimeRange),
+                FilterInfo = _reportExportService.GenerateFilterInfo(new ReportFilterInfo
+                {
+                    From = request.DateFrom,
+                    To = request.DateTo,
+                    Search = request.Search,
+                    Status = request.Status
+                }),
+                TotalRecords = readDtos.Count,
+                Columns = GetBuildingReportColumns(),
+                Orientation = ReportOrientation.Landscape,
+                IncludePageNumbers = false
+            };
 
-            worksheet.Columns().AdjustToContents();
+            return await _reportExportService.ExportToExcelAsync(readDtos, metadata);
+        }
 
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            return stream.ToArray();
+        private static List<ReportColumn> GetBuildingReportColumns()
+        {
+            return new()
+            {
+                new() { Header = "Name", PropertyName = "Name", Width = 2 },
+                new() { Header = "Image", PropertyName = "Image", Width = 2 },
+                new() { Header = "CreatedBy", PropertyName = "CreatedBy", Width = 2 },
+                new() { Header = "CreatedAt", PropertyName = "CreatedAt", Format = "yyyy-MM-dd HH:mm:ss", Width = 2 },
+                new() { Header = "UpdatedBy", PropertyName = "UpdatedBy", Width = 2 },
+                new() { Header = "UpdatedAt", PropertyName = "UpdatedAt", Format = "yyyy-MM-dd HH:mm:ss", Width = 2 },
+                new() { Header = "Status", PropertyName = "Status", Width = 1 }
+            };
         }
     }
 }

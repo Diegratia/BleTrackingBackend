@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace Shared.Contracts.Read
 {
-    public class MstSecurityRead
+    public class MstSecurityRead : BaseRead
     {
-        public Guid Id { get; set; }
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }
         public Guid? DepartmentId { get; set; }
@@ -31,9 +30,7 @@ namespace Shared.Contracts.Read
         public bool? IsBlacklist { get; set; }
         public DateTime? BlacklistAt { get; set; }
         public string? BlacklistReason { get; set; }
-        public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; }
-        public int Status { get; set; }
         public bool? IsHead { get; set; }
         public OrganizationRead? Organization { get; set; }
         public DepartmentRead? Department { get; set; }
@@ -41,9 +38,8 @@ namespace Shared.Contracts.Read
     }
 
 
-    public class MstSecurityLookUpRead
+    public class MstSecurityLookUpRead : BaseRead
     {
-        public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? PersonId { get; set; }
         public string? CardNumber { get; set; }
@@ -57,9 +53,8 @@ namespace Shared.Contracts.Read
         public bool? IsHead { get; set; }
     }
 
-     public class SecurityListRead
+     public class SecurityListRead : BaseRead
         {
-            public Guid? Id { get; set; }
             public string? Name { get; set; }
             public string? CardNumber { get; set; }
             public string? IdentityId { get; set; }

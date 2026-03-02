@@ -71,6 +71,8 @@ builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IReportExportService, ReportExportService>();
+builder.Services.AddScoped<IReportImportService, ReportImportService>();
 builder.Services.AddScoped<MstBuildingRepository>();
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();
