@@ -86,7 +86,6 @@ namespace BusinessLogic.Services.Implementation
             if (createDto == null)
                 throw new ArgumentNullException(nameof(createDto));
 
-            // Ownership validation
             if (createDto.OrganizationId.HasValue)
             {
                 var invalidOrgIds = await _repository.CheckInvalidOrganizationOwnershipAsync(
@@ -139,7 +138,6 @@ namespace BusinessLogic.Services.Implementation
             var security = _mapper.Map<MstSecurity>(createDto);
             security.ApplicationId = AppId;
 
-            // Handle image upload
             if (createDto.FaceImage != null && createDto.FaceImage.Length > 0)
             {
                 try
@@ -197,7 +195,6 @@ namespace BusinessLogic.Services.Implementation
             if (security == null)
                 throw new NotFoundException($"Security with ID {id} not found or has been deleted.");
 
-            // Ownership validation for updated values
             if (updateDto.OrganizationId.HasValue && updateDto.OrganizationId != security.OrganizationId)
             {
                 var invalidOrgIds = await _repository.CheckInvalidOrganizationOwnershipAsync(
@@ -230,7 +227,6 @@ namespace BusinessLogic.Services.Implementation
             if (updateDto.CardId.HasValue && card == null)
                 throw new NotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
 
-            // Handle image upload
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {
                 try
@@ -251,7 +247,6 @@ namespace BusinessLogic.Services.Implementation
             using var transaction = await _repository.BeginTransactionAsync();
             try
             {
-                // Reset old card if different from new card
                 var oldCard = await _cardRepository.GetAllQueryable()
                     .FirstOrDefaultAsync(c => c.SecurityId == security.Id && c.StatusCard != 0);
 
@@ -264,7 +259,6 @@ namespace BusinessLogic.Services.Implementation
                     await _cardRepository.UpdateAsync(oldCard);
                 }
 
-                // Assign new card
                 if (updateDto.CardId.HasValue)
                 {
                     if (card!.SecurityId.HasValue && card.SecurityId != security.Id)
@@ -304,7 +298,6 @@ namespace BusinessLogic.Services.Implementation
             if (security == null)
                 throw new NotFoundException($"Security {id} not found");
 
-            // Multi-tenancy validation - service layer responsibility
             var (applicationId, isSystemAdmin) = _repository.GetApplicationIdAndRole();
             if (!isSystemAdmin && security.ApplicationId != applicationId)
                 throw new UnauthorizedException("Cannot delete Security from a different application.");

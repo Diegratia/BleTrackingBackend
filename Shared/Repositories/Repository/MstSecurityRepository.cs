@@ -111,7 +111,6 @@ namespace Repositories.Repository
         {
             var query = BaseEntityQuery();
 
-            // Apply filters
             if (!string.IsNullOrWhiteSpace(filter.Search))
                 query = query.Where(x => x.Name.ToLower().Contains(filter.Search.ToLower()));
 
@@ -133,7 +132,6 @@ namespace Repositories.Repository
             if (filter.DistrictId.HasValue)
                 query = query.Where(x => x.DistrictId == filter.DistrictId);
 
-            // IsHead filter requires joining with User table
             if (filter.IsHead.HasValue)
             {
                 if (filter.IsHead.Value)
@@ -153,17 +151,14 @@ namespace Repositories.Repository
             var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            // Apply sorting - use ApplySorting with default fallback
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
             if (string.IsNullOrEmpty(filter.SortColumn))
             {
                 query = query.OrderByDescending(x => x.UpdatedAt);
             }
 
-            // Apply paging
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
@@ -265,7 +260,6 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-        // Ownership validation helpers for service layer
         public async Task<IReadOnlyCollection<Guid>> CheckInvalidOrganizationOwnershipAsync(
             Guid organizationId,
             Guid applicationId)
@@ -296,7 +290,6 @@ namespace Repositories.Repository
             );
         }
 
-        // Helper methods for import operations - simple data access only
         public async Task<MstOrganization?> GetOrganizationByIdAsync(Guid id)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
