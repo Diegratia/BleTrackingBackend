@@ -207,8 +207,11 @@ namespace BusinessLogic.Services.Implementation
             throw new NotFoundException("PatrolSession not found");
 
         var security = await _repo.GetSecurityByEmail();
-            if (security == null)
-        throw new UnauthorizedAccessException("You are not allowed to stop this session");
+        if (security == null)
+            throw new UnauthorizedAccessException("Security not found");
+
+        if (session.SecurityId != security.Id)
+            throw new UnauthorizedAccessException("You are not allowed to stop this session");
 
         if (session.EndedAt.HasValue)
             throw new BusinessException("PatrolSession already ended");

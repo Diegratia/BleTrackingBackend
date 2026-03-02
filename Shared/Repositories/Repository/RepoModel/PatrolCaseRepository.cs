@@ -188,6 +188,11 @@ namespace Repositories.Repository
             if (patrolCase == null)
                 return;
 
+            // Soft delete: set status to 0
+            patrolCase.Status = 0;
+            patrolCase.UpdatedAt = DateTime.UtcNow;
+            patrolCase.UpdatedBy = GetUsername();
+
             await _context.SaveChangesAsync();
         }
 

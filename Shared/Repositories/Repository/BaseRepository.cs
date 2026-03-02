@@ -153,6 +153,13 @@ namespace Repositories.Repository
                 throw new UnauthorizedAccessException("User email claim is missing.");
             return email;
         }
+        protected string GetUsername()
+        {
+            var email = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            if (string.IsNullOrWhiteSpace(email))
+                throw new UnauthorizedAccessException("Username claim is missing.");
+            return email;
+        }
 
 
         protected bool IsSuperAdmin()
