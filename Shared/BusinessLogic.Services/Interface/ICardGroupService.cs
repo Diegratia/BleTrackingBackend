@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface ICardGroupService
     {
-        Task<CardGroupDto> CreateAsync(CardGroupCreateDto dto);
+        Task<CardGroupRead> GetByIdAsync(Guid id);
+        Task<IEnumerable<CardGroupRead>> GetAllAsync();
+        Task<CardGroupRead> CreateAsync(CardGroupCreateDto dto);
         Task UpdateAsync(Guid id, CardGroupUpdateDto dto);
-        Task<IEnumerable<CardGroupDto>> GetAllAsync();
-        Task<object> FilterAsync(DataTablesRequest request);
         Task DeleteAsync(Guid id);
-        Task<CardGroupDto> GetByIdAsync(Guid id);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, CardGroupFilter filter);
     }
 }
