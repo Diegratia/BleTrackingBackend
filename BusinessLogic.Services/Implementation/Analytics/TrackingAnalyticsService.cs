@@ -5,6 +5,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using Data.ViewModels;
 using Data.ViewModels.AlarmAnalytics;
+using Helpers.Consumer;
 using Microsoft.Extensions.Logging;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
@@ -135,15 +136,33 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
         public async Task<ResponseCollection<TrackingCardSummaryRM>> GetCardSummaryAsync(TrackingAnalyticsRequestRM request)
         {
+
             try
             {
                 var data = await _repository.GetCardSummaryAsync(request);
-                return ResponseCollection<TrackingCardSummaryRM>.Ok(data, "Tracking Summary retrieved successfully");
+
+                var tz = TimezoneHelper.Resolve(request.Timezone);
+
+                if (tz.Id != TimeZoneInfo.Utc.Id)
+                {
+                    foreach (var item in data)
+                    {
+                        // item.EnterTime =
+                        //     TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
+
+                        item.LastDetectedAt  =
+                            TimezoneHelper.ConvertFromUtc(item.LastDetectedAt , tz);
+                    }
+                }
+
+                return ResponseCollection<TrackingCardSummaryRM>
+                    .Ok(data, "Tracking Summary retrieved successfully",timezone: tz.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while getting heatmap data");
-                return ResponseCollection<TrackingCardSummaryRM>.Error($"Internal server error: {ex.Message}");
+                _logger.LogError(ex, "Error in GetVisitorSessionSummaryAsync");
+                return ResponseCollection<TrackingCardSummaryRM>
+                    .Error($"Internal error: {ex.Message}");
             }
         }
 

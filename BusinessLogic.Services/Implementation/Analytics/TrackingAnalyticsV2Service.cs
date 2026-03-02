@@ -12,6 +12,7 @@ using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using System.Threading.Tasks;
 using Entities.Models;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
@@ -32,40 +33,85 @@ namespace BusinessLogic.Services.Implementation.Analytics
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request)
+        public async Task<ResponseCollection<VisitorSessionSummaryRM>>
+    GetVisitorSessionSummaryAsync(TrackingAnalyticsRequestRM request)
+{
+    try
+    {
+        var data = await _repository.GetVisitorSessionSummaryAsync(request);
+
+        var tz = TimezoneHelper.Resolve(request.Timezone);
+
+        if (tz.Id != TimeZoneInfo.Utc.Id)
         {
-            try
+            foreach (var item in data)
             {
-                var data = await _repository.GetVisitorSessionSummaryAsync(request);
-                return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetVisitorSessionSummaryAsync");
-                return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+                item.EnterTime =
+                    TimezoneHelper.ConvertFromUtc(item.EnterTime, tz);
+
+                item.ExitTime =
+                    TimezoneHelper.ConvertFromUtc(item.ExitTime, tz);
             }
         }
-            public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId)
+
+        return ResponseCollection<VisitorSessionSummaryRM>
+            .Ok(data, "Visitor session summary retrieved successfully",timezone: tz.Id);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error in GetVisitorSessionSummaryAsync");
+        return ResponseCollection<VisitorSessionSummaryRM>
+            .Error($"Internal error: {ex.Message}");
+    }
+}
+
+        //     public async Task<ResponseCollection<VisitorSessionSummaryRM>> GetVisitorSessionSummaryByPresetAsync(Guid presetId)
+        // {
+        //     try
+        //     {
+        //         // 1. Get analytics request from preset
+        //         var analyticsRequest = await _presetService.ApplyPresetAsync(presetId);
+
+        //         // 2. Use existing method to get data
+        //         var data = await _repository.GetVisitorSessionSummaryAsync(analyticsRequest);
+
+        //         return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary from preset");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
+        //         return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+        //     }
+        // }
+        
+        public async Task<ResponseCollection<VisitorSessionSummaryRM>>
+            GetVisitorSessionSummaryByPresetAsync(Guid presetId, TrackingAnalyticsRequestRM overrideRequest)
         {
             try
             {
-                // 1. Get analytics request from preset
-                var analyticsRequest = await _presetService.ApplyPresetAsync(presetId);
-                
-                // 2. Use existing method to get data
-                var data = await _repository.GetVisitorSessionSummaryAsync(analyticsRequest);
-                
-                return ResponseCollection<VisitorSessionSummaryRM>.Ok(data, "Visitor session summary from preset");
+                var request = await _presetService.ApplyPresetAsync(presetId);
+                request.Timezone = overrideRequest.Timezone;
+                request.PersonType = overrideRequest.PersonType;
+                if (overrideRequest.From.HasValue)
+                    request.From = overrideRequest.From;
+
+                if (overrideRequest.To.HasValue)
+                    request.To = overrideRequest.To;
+
+
+                return await GetVisitorSessionSummaryAsync(request);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetVisitorSessionSummaryByPresetAsync");
-                return ResponseCollection<VisitorSessionSummaryRM>.Error($"Internal error: {ex.Message}");
+                return ResponseCollection<VisitorSessionSummaryRM>
+                    .Error($"Internal error: {ex.Message}");
             }
         }
+
         
         
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsRequestRM request)
@@ -317,11 +363,12 @@ namespace BusinessLogic.Services.Implementation.Analytics
             
             return title;
         }
+        
 
         private string GenerateFilterInfo(TrackingAnalyticsRequestRM request)
         {
             var filters = new List<string>();
-            
+
             if (request.From.HasValue && request.To.HasValue)
             {
                 filters.Add($"Period: {request.From.Value:yyyy-MM-dd} to {request.To.Value:yyyy-MM-dd}");
@@ -330,28 +377,28 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 filters.Add($"Time Range: {request.TimeRange}");
             }
-            
+
             // Tambahkan filter lain sesuai kebutuhan
             if (request.BuildingId.HasValue)
             {
                 filters.Add($"Building Filtered");
             }
-            
+
             if (request.FloorId.HasValue)
             {
                 filters.Add($"Floor Filtered");
             }
-            
+
             if (request.AreaId.HasValue)
             {
                 filters.Add($"Area Filtered");
             }
-            
+
             if (request.VisitorId.HasValue)
             {
                 filters.Add($"Visitor Filtered");
             }
-            
+
             return filters.Any() ? string.Join(" | ", filters) : "All Data";
         }
 

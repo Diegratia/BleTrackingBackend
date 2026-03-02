@@ -346,8 +346,10 @@ namespace Repositories.Repository.Analytics
             var raw = await query
                 .Select(t => new
                 {
+                    IdentityId = t.Visitor.IdentityId ?? t.Member.IdentityId,
                     t.CardId,
                     CardName = t.Card.Name,
+                    t.Card.CardNumber,
                     t.Card.VisitorId,
                     VisitorName = t.Card.Visitor != null ? t.Card.Visitor.Name : null,
                     t.Card.MemberId,
@@ -355,8 +357,8 @@ namespace Repositories.Repository.Analytics
                     t.TransTime,
                     t.CoordinateX,
                     t.CoordinateY,
-                    MaskedAreaId = t.FloorplanMaskedArea.Id,
-                    MaskedAreaName = t.FloorplanMaskedArea.Name,
+                    AreaId = t.FloorplanMaskedArea.Id,
+                    AreaName = t.FloorplanMaskedArea.Name,
                     FloorplanId = t.FloorplanMaskedArea.Floorplan.Id,
                     FloorplanName = t.FloorplanMaskedArea.Floorplan.Name,
                     FloorId = t.FloorplanMaskedArea.Floorplan.Floor.Id,
@@ -374,8 +376,10 @@ namespace Repositories.Repository.Analytics
             var grouped = raw
                 .GroupBy(x => new
                 {
+                    x.IdentityId,
                     x.CardId,
                     x.CardName,
+                    x.CardNumber,
                     x.VisitorId,
                     x.VisitorName,
                     x.MemberId,
@@ -388,15 +392,17 @@ namespace Repositories.Repository.Analytics
 
                     return new TrackingCardSummaryRM
                     {
+                        IdentityId = g.Key.IdentityId,
                         CardId = g.Key.CardId,
                         CardName = g.Key.CardName,
+                        CardNumber = g.Key.CardNumber,
                         VisitorId = g.Key.VisitorId,
                         VisitorName = g.Key.VisitorName,
                         MemberId = g.Key.MemberId,
                         MemberName = g.Key.MemberName,
                         // TotalRecords = g.Count(),
-                        EnterTime = first.TransTime,
-                        ExitTime = last.TransTime,
+                        // EnterTime = first.TransTime,
+                        LastDetectedAt = last.TransTime,
 
                         // Lokasi terakhir
                         BuildingId = last.BuildingId,
@@ -406,13 +412,13 @@ namespace Repositories.Repository.Analytics
                         FloorplanId = last.FloorplanId,
                         FloorplanName = last.FloorplanName,
                         FloorplanImage = last.FloorplanImage,
-                        MaskedAreaId = last.MaskedAreaId,
-                        MaskedAreaName = last.MaskedAreaName,
+                        AreaId = last.AreaId,
+                        AreaName = last.AreaName,
                         LastX = (float)Math.Round(last.CoordinateX ?? 0),
                         LastY = (float)Math.Round(last.CoordinateY ?? 0)
                     };
                 })
-                .OrderByDescending(x => x.ExitTime)
+                .OrderByDescending(x => x.LastDetectedAt)
                 .ToList();
 
             return grouped;
@@ -872,6 +878,19 @@ namespace Repositories.Repository.Analytics
 
             if (request.ReaderId.HasValue)
                 query = query.Where(a => a.ReaderId == request.ReaderId);
+
+            if (!string.IsNullOrEmpty(request.IdentityId))
+            {
+                var cardIds = _context.Set<Card>()
+                    .Where(c =>
+                        (c.Visitor != null && c.Visitor.IdentityId == request.IdentityId) ||
+                        (c.Member != null && c.Member.IdentityId == request.IdentityId)
+                    )
+                    .Select(c => c.Id);
+
+                query = query.Where(t =>
+                    t.CardId.HasValue && cardIds.Contains(t.CardId.Value));
+            }
 
             return query;
         }

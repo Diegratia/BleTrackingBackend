@@ -1,654 +1,334 @@
-using AutoMapper;
-using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
+using System.Linq;
 using System.Threading.Tasks;
-using Data.ViewModels;
 using Entities.Models;
-using Helpers.Consumer;
-using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
-using LicenseType = QuestPDF.Infrastructure.LicenseType;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using  Data.ViewModels.Dto.Helpers.MinimalDto;
-using Helpers.Consumer.Mqtt;
-using Microsoft.Extensions.Logging;
-// using Data.ViewModels.Dto.Helpers.MinimalDto;
-// using Helpers.Consumer.Mqtt;
+using Repositories.DbContexts;
+using Helpers.Consumer;
+using System.Security.Claims;
+// using Data.ViewModels.MinimalDto;
+using Data.ViewModels.Dto.Helpers.MinimalDto;
 
-
-namespace BusinessLogic.Services.Implementation
+namespace Repositories.Repository
 {
-    public class TrxVisitorService : ITrxVisitorService
+    public class TrxVisitorRepository : BaseRepository
     {
-        private readonly TrxVisitorRepository _repository;
-        private readonly ICardRecordService _cardRecordService;
-        private readonly CardRepository _cardRepository;
-        private readonly CardRecordRepository _cardRecordRepository;
-        private readonly VisitorRepository _visitorRepository;
-        private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<TrxVisitor> _logger;
-        private readonly IMqttClientService _mqttClient;
-
-        public TrxVisitorService(
-            TrxVisitorRepository repository,
-            CardRecordRepository cardRecordRepository,
-            CardRepository cardRepository,
-            VisitorRepository visitorRepository,
-            ICardRecordService cardRecordService,
-            // IMqttClientService mqttClientService,
-            IMapper mapper,
-            IHttpContextAccessor httpContextAccessor,
-            ILogger<TrxVisitor> logger,
-            IMqttClientService mqttClient)
+        public TrxVisitorRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+            : base(context, httpContextAccessor)
         {
-            _repository = repository;
-            _cardRecordRepository = cardRecordRepository;
-            _cardRecordService = cardRecordService;
-            _visitorRepository = visitorRepository;
-            _cardRepository = cardRepository;
-            // _mqttClientService = mqttClientService;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
-            _mqttClient = mqttClient;
         }
 
-        public async Task<IEnumerable<TrxVisitorDto>> GetAllTrxVisitorsAsync()
+        public async Task<TrxVisitor?> GetByIdAsync(Guid id)
         {
-            var trxvisitors = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<TrxVisitorDto>>(trxvisitors);
-        }  
-
-              public async Task<IEnumerable<OpenTrxVisitorDto>> OpenGetAllTrxVisitorsAsync()
-        {
-            var trxvisitors = await _repository.OpenGetAllAsync();
-            return _mapper.Map<IEnumerable<OpenTrxVisitorDto>>(trxvisitors);
-        }     
-
-        public async Task<IEnumerable<TrxVisitorDtoz>> GetAllTrxVisitorsAsyncMinimal()
-        {
-            return await _repository.GetAllQueryableMinimal().ToListAsync();
+            return await GetAllQueryable()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
         }
 
-
-        public async Task<TrxVisitorDto> GetTrxVisitorByIdAsync(Guid id)
+                public async Task<TrxVisitor?> OpenGetByIdAsync(Guid id)
         {
-            var trxvisitor = await _repository.GetByIdAsync(id);
-            return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
+            return await GetAllQueryableRaw()
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
+        }
+                public async Task<TrxVisitor?> OpenGetByTrxIdAsync(Guid trxVisitorId)
+        {
+            return await GetAllQueryableRaw()
+                .Where(v => v.Id == trxVisitorId)
+                .FirstOrDefaultAsync();
         }
 
-            public async Task<TrxVisitorDto> GetTrxVisitorByPublicIdAsync(Guid id)
+        public async Task<TrxVisitor?> GetByPublicIdAsync(Guid id)
         {
-            var trxvisitor = await _repository.GetByPublicIdAsync(id);
-            return trxvisitor == null ? null : _mapper.Map<TrxVisitorDto>(trxvisitor);
+            return await _context.TrxVisitors
+                .Where(v => v.Id == id)
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<TrxVisitorDto> CreateTrxVisitorAsync(TrxVisitorCreateDto createDto)
+        public async Task<IEnumerable<TrxVisitor>> GetAllAsync()
         {
-            if (createDto == null) throw new ArgumentNullException(nameof(createDto));
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var trxvisitor = _mapper.Map<TrxVisitor>(createDto);
-            trxvisitor.Id = Guid.NewGuid();
-
-            trxvisitor.Status = VisitorStatus.Checkin;
-            trxvisitor.CheckinBy = username;
-            trxvisitor.CheckedInAt = DateTime.UtcNow;
-
-            await _repository.AddAsync(trxvisitor);
-            return _mapper.Map<TrxVisitorDto>(trxvisitor);
+            return await GetAllQueryable().ToListAsync();
+        }
+        
+              public async Task<IEnumerable<TrxVisitor>> OpenGetAllAsync()
+        {
+            return await GetAllQueryableRaw().ToListAsync();
         }
 
-        public async Task UpdateTrxVisitorAsync(Guid id, TrxVisitorUpdateDto updateDto)
-        {
-            if (updateDto == null) throw new ArgumentNullException(nameof(updateDto));
-
-            var trxvisitor = await _repository.GetByIdAsync(id);
-            if (trxvisitor == null)
-                throw new KeyNotFoundException($"trxvisitor with ID {id} not found.");
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-
-            // if (updateDto.Status == "Checkout")
-            // {
-            //     trxvisitor.CheckoutBy = username;
-            //     trxvisitor.CheckedOutAt = DateTime.UtcNow;
-            // }
-            // else if (updateDto.Status == "Deny")
-            // {
-            //     trxvisitor.DenyBy = username;
-            //     trxvisitor.DenyAt = DateTime.UtcNow;
-            // }
-            // else if (updateDto.Status == "Block")
-            // {
-            //     trxvisitor.BlockBy = username;
-            //     trxvisitor.BlockAt = DateTime.UtcNow;
-            // }
-            // else if (updateDto.Status == "Unblock")
-            // {
-            //     trxvisitor.UnblockAt = DateTime.UtcNow;
-            // }
-
-            trxvisitor.UpdatedBy = username;
-            trxvisitor.UpdatedAt = DateTime.UtcNow;
-
-
-            _mapper.Map(updateDto, trxvisitor);
-            await _repository.UpdateAsync(trxvisitor);     
-        }
-
-        public async Task CheckinVisitorAsync(TrxVisitorCheckinDto dto)
-        {
-            if (dto.TrxVisitorId == Guid.Empty)
-                throw new ArgumentException("TrxVisitorId is required.");
-            if (dto.CardId == Guid.Empty)
-                throw new ArgumentException("CardId is required.");
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.GetByIdAsync(dto.TrxVisitorId);
-            var card = await _cardRepository.GetByIdAsync(dto.CardId);
-
-            if (trx == null)
-                throw new Exception("No active session found");
-
-            if (trx.Status == VisitorStatus.Checkin)
-                throw new InvalidOperationException("Already checked in");
-
-            if (!trx.VisitorId.HasValue)
-                throw new InvalidOperationException("VisitorId is null");
-
-            var allowedStatuses = new[] { VisitorStatus.Precheckin, VisitorStatus.Waiting }.Cast<VisitorStatus>().ToList();
-            if (!allowedStatuses.Contains(trx.Status.Value))
-                throw new InvalidOperationException($"Visitor status is not valid for checkin. Current status: {trx.Status}. Allowed statuses: {string.Join(", ", allowedStatuses)}.");
-
-            var activeTrx = await _repository.GetAllQueryable()
-                .Where(t => t.VisitorId == trx.VisitorId && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null && t.Id != trx.Id)
-                .AnyAsync();
-            if (activeTrx)
-                throw new InvalidOperationException("Visitor already has an active transaction");
-
-            using IDbContextTransaction transaction = await _repository.BeginTransactionAsync();
-            try
-            {
-                // Update TrxVisitor
-                trx.CheckedInAt = DateTime.UtcNow;
-                trx.CheckinBy = username;
-                trx.Status = VisitorStatus.Checkin;
-                trx.VisitorActiveStatus = VisitorActiveStatus.Active;
-                trx.UpdatedAt = DateTime.UtcNow;
-                trx.UpdatedBy = username;
-                trx.CardNumber = card?.CardNumber;
-
-                await _repository.UpdateAsync(trx);
-
-                var createDto = new CardRecordCreateDto
-                {
-                    CardId = dto.CardId,
-                    VisitorId = trx.VisitorId,
-                    // TrxVisitorId = dto.TrxVisitorId 
-                };
-
-                await _cardRecordService.CreateAsync(createDto);
-
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-        }
-
-        // public async Task CheckinVisitorAsync(TrxVisitorCheckinDto dto)
+        // public IQueryable<TrxVisitor> GetAllQueryable()
         // {
-        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-        //     var trx = await _repository.GetByIdAsync(dto.TrxVisitorId);
+        //     var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-        //     if (trx == null)
-        //         throw new Exception("No active session found");
+        //     var query = _context.TrxVisitors
+        //         .Include(v => v.Application)
+        //         .Include(v => v.Visitor)
+        //         .Include(v => v.MaskedArea)
+        //         .Include(v => v.Member);
 
-        //     if (trx.Status == VisitorStatus.Checkin)
-        //         throw new InvalidOperationException("Already checked in");
 
-        //     // Validasi multiple TrxVisitor aktif
-        //     var activeTrx = await _repository.GetAllQueryable()
-        //         .Where(t => t.VisitorId == trx.VisitorId && t.Status == VisitorStatus.Checkin && t.CheckedOutAt == null && t.Id != trx.Id)
-        //         .AnyAsync();
-        //     if (activeTrx)
-        //         throw new InvalidOperationException("Visitor already has an active transaction");
-
-        //     // Update TrxVisitor
-        //     trx.CheckedInAt = DateTime.UtcNow;
-        //     trx.CheckinBy = username;
-        //     trx.Status = VisitorStatus.Checkin;
-        //     trx.VisitorActiveStatus = VisitorActiveStatus.Active;
-        //     trx.UpdatedAt = DateTime.UtcNow;
-        //     trx.UpdatedBy = username;
-
-        //     await _repository.UpdateAsync(trx);
-
-        //     // Create CardRecord
-        //     var createDto = new CardRecordCreateDto
-        //     {
-        //         CardId = dto.CardId,
-        //         VisitorId = trx.VisitorId
-        //     };
-
-        //     await _cardRecordService.CreateAsync(createDto);
+        //     return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         // }
 
-        public async Task CheckoutVisitorAsync(Guid trxVisitorId)
+        public IQueryable<TrxVisitor> GetAllQueryable()
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
-            // var trx = await _repository.GetByIdAsync(trxVisitorId);
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+            var isPrimary = IsPrimary();
 
-            if (trx == null)
-                throw new Exception("No active session found");
+            var query = _context.TrxVisitors
+                .Include(v => v.Application)
+                .Include(v => v.Visitor)
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member)
+                .AsQueryable();
 
-            var allowedStatuses = new[] { VisitorStatus.Checkin, VisitorStatus.Unblock, VisitorStatus.Block }.Cast<VisitorStatus>().ToList();
-            if (!allowedStatuses.Contains(trx.Status.Value))
-                throw new InvalidOperationException($"Visitor status is not valid for checkout. Current status: {trx.Status}. Allowed statuses: {string.Join(", ", allowedStatuses)}.");
-
-            // if (trx.Status != VisitorStatus.Checkin || trx.Status !=VisitorStatus.Block ||  trx.Status !=VisitorStatus.Denied || trx.Status !=VisitorStatus.Unblock)
-            //     throw new InvalidOperationException("Visitor Status are not valid, can't checkout, visitor status now are " + trx.Status);
-
-            if (!trx.VisitorId.HasValue)
-                throw new InvalidOperationException("VisitorId is null");
-
-            using IDbContextTransaction transaction = await _repository.BeginTransactionAsync();
-            try
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin && !isPrimary)
             {
-
-                trx.CheckedOutAt = DateTime.UtcNow;
-                trx.CheckoutBy = username;
-                trx.Status = VisitorStatus.Checkout;
-                trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
-                trx.UpdatedAt = DateTime.UtcNow;
-                trx.UpdatedBy = username;
-
-                await _repository.UpdateAsync(trx);
-
-                var visitor = await _visitorRepository.GetByIdAsync(trx.VisitorId!.Value);
-                if (visitor == null)
-                    throw new KeyNotFoundException("Visitor not found");
-
-                visitor.VisitorGroupCode = null;
-                visitor.VisitorNumber = null;
-                visitor.VisitorCode = null;
-
-                await _visitorRepository.UpdateAsync(visitor);
-
-                // Find and checkout the corresponding CardRecord
-                var cardRecord = await _cardRecordRepository.GetAllQueryable()
-                        .Where(cr => cr.VisitorId == trx.VisitorId && cr.CheckoutAt == null && cr.Status == 1)
-                        .OrderByDescending(cr => cr.CheckinAt)
-                        .FirstOrDefaultAsync();
-
-                if (cardRecord != null)
+                var userRole = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
+                if (String.Equals(userRole, LevelPriority.Secondary.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
-                    await _cardRecordService.CheckoutCard(cardRecord.Id);
+                    query = query.Where(t =>
+                        _context.MstMembers.Any(m => m.Email == userEmail &&
+                            (t.PurposePerson == m.Id || (t.MemberIdentity == m.IdentityId && t.IsMember == 1))));
                 }
-                await transaction.CommitAsync();
+                else if (String.Equals(userRole, LevelPriority.UserCreated.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t =>
+                        _context.Visitors.Any(v => v.Email == userEmail && t.VisitorId == v.Id));
+                }
+                else
+                {
+                    query = query.Where(t => false); // No access for other roles
+                }
             }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
+
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 
-        public async Task CheckoutWithVisitorIdAsync(Guid visitorId)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+     public IQueryable<TrxVisitor> GetAllQueryableRaw()
+    {
+        var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // Cari transaksi aktif berdasarkan VisitorId
-            var trx = await _repository.GetAllQueryable()
-                .Where(t => t.VisitorId == visitorId &&
-                            (t.Status == VisitorStatus.Checkin ||
-                             t.Status == VisitorStatus.Block ||
-                             t.Status == VisitorStatus.Unblock))
+        var query = _context.TrxVisitors
+            // .Include(v => v.Application)
+            .Include(v => v.Visitor)
+            .Include(v => v.MaskedArea)
+            .Include(v => v.Member)
+            .AsQueryable();
+
+        return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+    }
+
+        public async Task<TrxVisitor?> GetAllActiveTrxAsync(Guid visitorId)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var activeTrx = await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId && t.CheckedOutAt == null && t.TrxStatus == 1)
                 .OrderByDescending(t => t.CheckedInAt)
                 .FirstOrDefaultAsync();
 
-            if (trx == null)
-                throw new Exception("No active transaction found for this visitor.");
+            return activeTrx;
+        }
+        
+        public async Task<TrxVisitor?> GetAllActiveCOTrxAsync(Guid visitorId)
+        {
+            return await GetAllQueryable()
+                .Where(t => t.VisitorId == visitorId 
+                            && t.CheckedOutAt == null     
+                            && t.TrxStatus == 1)          
+                .OrderByDescending(t => t.CheckedInAt)    // ambil yang paling baru di-checkin
+                .FirstOrDefaultAsync();
+        }
+        public IQueryable<TrxVisitorDtoz> GetAllQueryableMinimal()
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            if (!trx.VisitorId.HasValue)
-                throw new InvalidOperationException("VisitorId is null.");
+            var query = _context.TrxVisitors
+                .Include(v => v.MaskedArea)
+                .Include(v => v.Member)
+                .Include(v => v.Visitor)
+                .Include(v => v.Application)
+                .AsQueryable();
 
-            using IDbContextTransaction transaction = await _repository.BeginTransactionAsync();
-            try
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return query.Select(v => new TrxVisitorDtoz
             {
-                trx.CheckedOutAt = DateTime.UtcNow;
-                trx.CheckoutBy = username;
-                trx.Status = VisitorStatus.Checkout;
-                trx.VisitorActiveStatus = VisitorActiveStatus.Expired;
-                trx.UpdatedAt = DateTime.UtcNow;
-                trx.UpdatedBy = username;
-
-                await _repository.UpdateAsync(trx);
-
-                // Update visitor info
-                var visitor = await _visitorRepository.GetByIdAsync(visitorId);
-                if (visitor == null)
-                    throw new KeyNotFoundException("Visitor not found.");
-
-                visitor.VisitorGroupCode = null;
-                visitor.VisitorNumber = null;
-                visitor.VisitorCode = null;
-
-                await _visitorRepository.UpdateAsync(visitor);
-
-                // Checkout kartu yang masih aktif
-                var cardRecord = await _cardRecordRepository.GetAllQueryable()
-                    .Where(cr => cr.VisitorId == visitorId && cr.CheckoutAt == null && cr.Status == 1)
-                    .OrderByDescending(cr => cr.CheckinAt)
-                    .FirstOrDefaultAsync();
-
-                if (cardRecord != null)
+                Id = v.Id,
+                CheckedInAt = v.CheckedInAt,
+                CheckedOutAt = v.CheckedOutAt,
+                TrxStatus = v.TrxStatus,
+                VisitorId = v.VisitorId,
+                ApplicationId = v.ApplicationId,
+                VisitorActiveStatus = v.VisitorActiveStatus.ToString(),
+                Member = v.Member == null ? null : new MstMemberDto
                 {
-                    await _cardRecordService.CheckoutCard(cardRecord.Id);
+                    Id = v.Member.Id,
+                    Name = v.Member.Name,
+                    ApplicationId = v.ApplicationId,
+                },
+                Visitor = v.Visitor == null ? null : new VisitorDto
+                {
+                    Id = v.Visitor.Id,
+                    Name = v.Visitor.Name,
+                    ApplicationId = v.ApplicationId,
+                },
+                Maskedarea = v.MaskedArea == null ? null : new FloorplanMaskedAreaDto
+                {
+                    Id = v.MaskedArea.Id,
+                    Name = v.MaskedArea.Name,
+                    ApplicationId = v.ApplicationId,
                 }
-
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-}
-
-
-        public async Task DeniedVisitorAsync(Guid trxVisitorId, DenyReasonDto denyReasonDto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
-            // var trx = await _repository.GetByIdAsync(trxVisitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.VisitorGroupCode = null;
-            trx.VisitorNumber = null;
-            trx.VisitorCode = null;
-            trx.DenyAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Denied;
-            trx.VisitorActiveStatus = VisitorActiveStatus.Cancelled;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.DenyBy = username;
-            trx.UpdatedBy = username;
-
-            _mapper.Map(denyReasonDto, trx);
-            await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-        }
-
-        public async Task BlockVisitorAsync(Guid trxVisitorId, BlockReasonDto blockVisitorDto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
-            // var trx = await _repository.GetByIdAsync(trxVisitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-
-            trx.BlockAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Block;
-            trx.BlockBy = username;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = username;
-
-            _mapper.Map(blockVisitorDto, trx);
-            await _repository.UpdateAsync(trx);
-             await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-        }
-
-        public async Task UnblockVisitorAsync(Guid trxVisitorId)
-        {
-            var trx = await _repository.OpenGetByIdAsync(trxVisitorId);
-            // var trx = await _repository.GetByIdAsync(trxVisitorId);
-            if (trx == null)
-                throw new InvalidOperationException("No active session found");
-            // var visitor = await _visitorRepository.GetByIdAsync(trx.VisitorId.Value);
-            // var visitorCard = await _cardRepository.GetByCardNumberAsync(visitor.CardNumber);
-            // 
-            trx.UnblockAt = DateTime.UtcNow;
-            trx.Status = VisitorStatus.Unblock;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            // visitorCard.UpdatedAt = DateTime.UtcNow;
-            // visitorCard.UpdatedBy = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            await _repository.UpdateAsync(trx);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-        }
-
-        public async Task<object> FilterAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryable();
-
-            var enumColumns = new Dictionary<string, Type>
-            {
-                { "Status", typeof(VisitorStatus) },
-                { "Gender", typeof(Gender) },
-                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
-                { "IdentityType", typeof(IdentityType) }
-            };
-
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
-            var validSortColumns = new[] { "InvitationCreatedAt", "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType","VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
-
-            var filterService = new GenericDataTableService<TrxVisitor, TrxVisitorDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
-                
-
-            return await filterService.FilterAsync(request);
-        }
-        
-        
-        
-           public async Task<object> MinimalFilterAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryableMinimal();
-
-            var enumColumns = new Dictionary<string, Type>
-            {
-                { "Status", typeof(VisitorStatus) },
-                { "Gender", typeof(Gender) },
-                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
-                { "IdentityType", typeof(IdentityType) }
-            };
-
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
-
-            var filterService = new MinimalGenericDataTableService<TrxVisitorDtoz>(
-              query,
-              _mapper,
-              searchableColumns,
-              validSortColumns,
-              enumColumns);
-
-            return await filterService.FilterAsync(request);
-        }
-
-        public async Task<object> FilterRawAsync(DataTablesRequest request)
-        {
-            var query = _repository.GetAllQueryableRaw();
-
-            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "Status", typeof(VisitorStatus) },
-                { "Gender", typeof(Gender) },
-                { "VisitorActiveStatus", typeof(VisitorActiveStatus) },
-                { "IdentityType", typeof(IdentityType) }
-            };
-
-            var searchableColumns = new[] { "Visitor.Name", "Visitor.IdentityId", "Visitor.PersonId", "Visitor.BleCardNumber", "CardNumber" };
-            var validSortColumns = new[] { "Visitor.Name", "CheckedInAt", "CheckedOutAt", "DenyAt", "BlockAt", "UnBlockAt", "InvitationCreatedAt", "Status", "VisitorNumber", "VisitorCode", "VehiclePlateNumber", "Member.Name", "MaskedArea.Name", "VisitorActiveStatus", "Gender", "IdentityType", "VisitorActiveStatus", "EmailVerficationSendAt", "VisitorPeriodStart", "VisitorPeriodEnd" };
-
-            var filterService = new GenericDataTableService<TrxVisitor, OpenTrxVisitorDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
-
-            return await filterService.FilterAsync(request);
-        }
-
-        public async Task ExtendedVisitorTime(Guid trxVisitorId, ExtendedTimeDto dto)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-            var trx = await _repository.OpenGetByTrxIdAsync(trxVisitorId);
-            // var trx = await _repository.GetByIdAsync(trxVisitorId);
-
-            if (trx == null)
-                throw new Exception("No active session found");
-            var additionalTime = TimeSpan.FromMinutes(dto.ExtendedVisitorTime);
-            trx.ExtendedVisitorTime += dto.ExtendedVisitorTime;
-            trx.VisitorPeriodEnd = trx.VisitorPeriodEnd.Value.Add(additionalTime);
-
-            // trx.VisitorActiveStatus = VisitorActiveStatus.Extended;
-            trx.UpdatedAt = DateTime.UtcNow;
-            trx.UpdatedBy = username;
-            trx.ExtendedVisitorTime = dto.ExtendedVisitorTime;
-            await _repository.UpdateAsync(trx);
-            await _mqttClient.PublishAsync("engine/refresh/visitor-related","");
-        }
-
-        public async Task<byte[]> ExportPdfAsync()
-        {
-            QuestPDF.Settings.License = LicenseType.Community;
-            var trxvisitors = await _repository.GetAllAsync();
-
-            var document = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(30);
-                    page.Size(PageSizes.A4.Landscape());
-                    page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(10));
-
-                    page.Header()
-                        .Text("Visitor Transaction Report")
-                        .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
-
-                    page.Content().Table(table =>
-                    {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.ConstantColumn(35);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                        });
-
-                        table.Header(header =>
-                        {
-                            header.Cell().Element(CellStyle).Text("#").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Visitor Number").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Visitor Code").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Vehicle Plate").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Checked In At").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Checked Out At").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Status").SemiBold();
-                        });
-
-                        int index = 1;
-                        foreach (var visitor in trxvisitors)
-                        {
-                            table.Cell().Element(CellStyle).Text(index++.ToString());
-                            table.Cell().Element(CellStyle).Text(visitor.VisitorNumber ?? "-");
-                            table.Cell().Element(CellStyle).Text(visitor.VisitorCode ?? "-");
-                            table.Cell().Element(CellStyle).Text(visitor.VehiclePlateNumber ?? "-");
-                            table.Cell().Element(CellStyle).Text(visitor.CheckedInAt?.ToString("yyyy-MM-dd HH:mm"));
-                            table.Cell().Element(CellStyle).Text(visitor.CheckedOutAt?.ToString("yyyy-MM-dd HH:mm"));
-                            table.Cell().Element(CellStyle).Text(visitor.Status.ToString() ?? "-");
-                        }
-
-                        static IContainer CellStyle(IContainer container) =>
-                            container
-                                .BorderBottom(1)
-                                .BorderColor(Colors.Grey.Lighten2)
-                                .PaddingVertical(4)
-                                .PaddingHorizontal(6);
-                    });
-
-                    page.Footer()
-                        .AlignRight()
-                        .Text(txt =>
-                        {
-                            txt.Span("Generated at: ").SemiBold();
-                            txt.Span(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
-                        });
-                });
             });
-
-            return document.GeneratePdf();
         }
 
-        public async Task<byte[]> ExportExcelAsync()
+
+        public async Task<TrxVisitor> AddAsync(TrxVisitor trxVisitor)
         {
-            var trxvisitors = await _repository.GetAllAsync();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Visitors");
-
-            worksheet.Cell(1, 1).Value = "#";
-            worksheet.Cell(1, 2).Value = "Visitor Number";
-            worksheet.Cell(1, 3).Value = "Visitor Code";
-            worksheet.Cell(1, 4).Value = "Vehicle Plate";
-            worksheet.Cell(1, 5).Value = "Checked In At";
-            worksheet.Cell(1, 6).Value = "Checked In By";
-            worksheet.Cell(1, 7).Value = "Checked Out At";
-            worksheet.Cell(1, 8).Value = "Checked Out By";
-            worksheet.Cell(1, 9).Value = "Status";
-
-            int row = 2;
-            int no = 1;
-
-            foreach (var visitor in trxvisitors)
+            if (!isSystemAdmin)
             {
-                worksheet.Cell(row, 1).Value = no++;
-                worksheet.Cell(row, 2).Value = visitor.VisitorNumber ?? "-";
-                worksheet.Cell(row, 3).Value = visitor.VisitorCode ?? "-";
-                worksheet.Cell(row, 4).Value = visitor.VehiclePlateNumber ?? "-";
-                worksheet.Cell(row, 5).Value = visitor.CheckedInAt?.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cell(row, 6).Value = visitor.CheckinBy ?? "-";
-                worksheet.Cell(row, 7).Value = visitor.CheckedOutAt?.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cell(row, 8).Value = visitor.CheckoutBy ?? "-";
-                worksheet.Cell(row, 9).Value = visitor.Status.ToString() ?? "-";
-                row++;
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
+
+                trxVisitor.ApplicationId = applicationId.Value;
+            }
+            else if (trxVisitor.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System Admin must specify ApplicationId explicitly.");
             }
 
-            worksheet.Columns().AdjustToContents();
+            await ValidateApplicationIdAsync(trxVisitor.ApplicationId);
+            ValidateApplicationIdForEntity(trxVisitor, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(trxVisitor, applicationId, isSystemAdmin);
 
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            return stream.ToArray();
+            await _context.TrxVisitors.AddAsync(trxVisitor);
+            await _context.SaveChangesAsync();
+            return trxVisitor;
         }
+
+        public async Task UpdateAsync(TrxVisitor trxVisitor)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            await ValidateApplicationIdAsync(trxVisitor.ApplicationId);
+            ValidateApplicationIdForEntity(trxVisitor, applicationId, isSystemAdmin);
+            await ValidateRelatedEntitiesAsync(trxVisitor, applicationId, isSystemAdmin);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsyncRaw(TrxVisitor trxVisitor)
+        {
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
+            var trxVisitor = await _context.TrxVisitors.FirstOrDefaultAsync(t => t.Id == id);
+            if (trxVisitor == null)
+                throw new KeyNotFoundException("TrxVisitor not found");
+
+            ValidateApplicationIdForEntity(trxVisitor, applicationId, isSystemAdmin);
+
+            _context.TrxVisitors.Remove(trxVisitor);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> GetVisitorsAsync(Guid id)
+        {
+            return await _context.Visitors.AnyAsync(f => f.Id == id);
+        }
+
+        private async Task ValidateRelatedEntitiesAsync(TrxVisitor trxVisitor, Guid? applicationId, bool isSystemAdmin)
+        {
+            if (isSystemAdmin) return;
+
+            if (!applicationId.HasValue)
+                throw new UnauthorizedAccessException("Missing ApplicationId for non-admin.");
+
+            if (trxVisitor.VisitorId != Guid.Empty)
+            {
+                var visitor = await _context.Visitors
+                    .FirstOrDefaultAsync(v => v.Id == trxVisitor.VisitorId && v.ApplicationId == applicationId);
+
+            }
+        }
+
+        public async Task<TrxVisitor?> GetLatestUnfinishedByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.VisitorId == visitorId && t.Status != null && t.CheckedOutAt == null)
+                .OrderByDescending(t => t.CheckedInAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<int> CountByVisitorIdAsync(Guid visitorId)
+        {
+            return await _context.TrxVisitors.CountAsync(x => x.VisitorId == visitorId);
+        }
+
+
+        public async Task<TrxVisitor?> GetByInvitationCodeAsync(string invitationCode)
+        {
+            var trx = await _context.TrxVisitors
+                .Include(t => t.Visitor)
+                .FirstOrDefaultAsync(t =>
+                    t.InvitationCode == invitationCode &&
+                    t.InvitationTokenExpiredAt > DateTime.UtcNow);
+
+            return trx;
+        }
+
+        public async Task<bool> ExistsOverlappingTrxAsync(Guid visitorId, DateTime start, DateTime end)
+        {
+            return await _context.TrxVisitors
+                .Where(t =>
+                    t.VisitorId == visitorId &&
+                    t.TrxStatus != 0 &&
+                    t.CheckedOutAt == null &&
+                    t.IsInvitationAccepted == true &&
+                    (
+                        t.Status != VisitorStatus.Checkout ||
+                        t.Status != VisitorStatus.Denied
+                    )
+                )
+                .AnyAsync(t =>
+                    t.VisitorPeriodStart != null &&
+                    t.VisitorPeriodEnd != null &&
+                    start <= t.VisitorPeriodEnd &&
+                    end >= t.VisitorPeriodStart
+                //                     .AnyAsync(t =>
+                //     start == t.VisitorPeriodStart && end == t.VisitorPeriodEnd
+                // );
+
+                );
+        }
+
+        public async Task<string?> GetFloorNameByTrxIdAsync(Guid trxId)
+        {
+            return await _context.TrxVisitors
+                .Where(t => t.Id == trxId)
+                .Select(t => t.MaskedArea.Floor.Name)
+                .FirstOrDefaultAsync();
+        }
+            
+        public async Task<string?> GetBuildingNameByTrxIdAsync(Guid trxId)
+            {
+                return await _context.TrxVisitors
+                    .Where(t => t.Id == trxId )
+                    .Select(t => t.MaskedArea.Floor.Building.Name)
+                    .FirstOrDefaultAsync();
+            }
+
     }
 }

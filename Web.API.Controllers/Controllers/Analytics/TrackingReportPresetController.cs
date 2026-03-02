@@ -31,9 +31,11 @@ namespace Web.API.Controllers.Controllers.Analytics
         // 1. APPLY PRESET - Get visitor session data
         // ==============================================
         [HttpPost("apply/{presetId}")]
-        public async Task<IActionResult> ApplyPresetForVisitorSession(Guid presetId)
+        public async Task<IActionResult> ApplyPresetForVisitorSession(
+        Guid presetId,
+        TrackingAnalyticsRequestRM overrideRequest)
         {
-                    if (!ModelState.IsValid)
+                if (!ModelState.IsValid)
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
@@ -44,7 +46,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             try
 
             {
-                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId);
+                var result = await _analyticsV2Service.GetVisitorSessionSummaryByPresetAsync(presetId,  overrideRequest);
                 return Ok(result);
             }
             catch (Exception ex)

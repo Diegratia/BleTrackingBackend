@@ -252,6 +252,7 @@ var basePath = AppContext.BaseDirectory;
 var uploadsPath = Path.Combine(basePath, "Uploads", "MemberFaceImages");
 var SecurityUploadsPath = Path.Combine(basePath, "Uploads", "SecurityFaceImages");
 Directory.CreateDirectory(uploadsPath);
+Directory.CreateDirectory(SecurityUploadsPath);
 
 app.UseStaticFiles(new StaticFileOptions
 {

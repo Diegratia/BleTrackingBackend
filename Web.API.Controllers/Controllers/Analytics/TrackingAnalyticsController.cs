@@ -89,7 +89,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(result);
         }
 
-        [HttpPost("card-summary")]
+        [HttpPost("latest-position")]
         public async Task<IActionResult> GetCard([FromBody] TrackingAnalyticsRequestRM request)
         {
             var result = await _service.GetCardSummaryAsync(request);

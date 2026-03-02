@@ -11,7 +11,7 @@ using Data.ViewModels.ResponseHelper;
 
 namespace Web.API.Controllers.Controllers
 {
-    [Route("api/alarm-logs")]
+    [Route("api/alarm-record")]
     [ApiController]
     [Authorize("RequireAllAndUserCreated")]
     public class AlarmRecordTrackingController : ControllerBase

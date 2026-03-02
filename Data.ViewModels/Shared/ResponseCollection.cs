@@ -1,46 +1,104 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Data.ViewModels
 {
     public class ResponseCollection<T>
     {
         public bool Success { get; set; } = true;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Timezone { get; set; }
         public string Msg { get; set; } = "OK";
-        public IEnumerable<T>? Data { get; set; }
-        public int? TotalRecords { get; set; }
-        public int? FilteredRecords { get; set; }
+        // wrapper utama
+        public CollectionWrapper<T>? Collection { get; set; }
 
-        public static ResponseCollection<T> Ok(IEnumerable<T> data, string message = "OK")
+        // ⬇️ PASTI muncul setelah collection
+        public int Code { get; set; } = 200;
+
+        public static ResponseCollection<T> Ok(
+            IEnumerable<T> data,
+            string message = "OK",
+            string? timezone = null,
+            int code = 200)
         {
             return new ResponseCollection<T>
             {
                 Success = true,
                 Msg = message,
-                Data = data,
+                Timezone = timezone,
+                Code = code,
+                Collection = new CollectionWrapper<T>
+                {
+                    Data = data
+                }
             };
         }
 
-        public static ResponseCollection<T> Error(string message)
+        public static ResponseCollection<T> Error(
+            string message,
+            int code = 500)
         {
             return new ResponseCollection<T>
             {
                 Success = false,
                 Msg = message,
-                Data = null
+                Code = code,
+                Collection = null
             };
         }
     }
+
+    public class CollectionWrapper<T>
+    {
+        public IEnumerable<T>? Data { get; set; }
+    }
+
+    // ================= SINGLE =================
+
     public class ResponseSingle<T>
+    {
+        public bool Success { get; set; } = true;
+        public string Msg { get; set; } = "OK";
+
+        // wrapper utama
+        public SingleWrapper<T>? Collection { get; set; }
+
+        // ⬇️ sudah benar posisinya
+        public int Code { get; set; } = 200;
+
+        public static ResponseSingle<T> Ok(
+            T data,
+            string message = "Success",
+            int code = 200)
         {
-            public bool Success { get; set; }
-            public string Msg { get; set; } = "";
-            public T? Data { get; set; }
-            public int Code { get; set; }
-
-            public static ResponseSingle<T> Ok(T data, string message = "Success", int code = 200) =>
-                new ResponseSingle<T> { Success = true, Msg = message, Data = data, Code = code };
-
-            public static ResponseSingle<T> Error(string message, int code = 500) =>
-                new ResponseSingle<T> { Success = false, Msg = message, Code = code };
+            return new ResponseSingle<T>
+            {
+                Success = true,
+                Msg = message,
+                Code = code,
+                Collection = new SingleWrapper<T>
+                {
+                    Data = data
+                }
+            };
         }
+
+        public static ResponseSingle<T> Error(
+            string message,
+            int code = 500)
+        {
+            return new ResponseSingle<T>
+            {
+                Success = false,
+                Msg = message,
+                Code = code,
+                Collection = null
+            };
+        }
+    }
+
+    public class SingleWrapper<T>
+    {
+        public T? Data { get; set; }
+    }
 }
