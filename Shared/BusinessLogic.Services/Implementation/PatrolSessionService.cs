@@ -120,16 +120,30 @@ namespace BusinessLogic.Services.Implementation
                 var currentTimeOfDay = nowUtc.TimeOfDay;
 
                 // Check if there is any TimeBlock that matches the current day and time
-                var isValidTime = timeBlocks.Any(tb => 
+                var activeBlock = timeBlocks.FirstOrDefault(tb => 
                     tb.DayOfWeek == currentDayOfWeek &&
                     tb.StartTime.HasValue && tb.EndTime.HasValue &&
                     currentTimeOfDay >= tb.StartTime.Value && 
                     currentTimeOfDay <= tb.EndTime.Value
                 );
 
-                if (!isValidTime)
+                if (activeBlock == null)
                 {
                     throw new BusinessException("Current time is outside the scheduled Time Group for this assignment.");
+                }
+
+                // Verify if user already patrolled THIS specific time block for today
+                var hasPatrolledBlock = await _repo.HasPatrolledTimeBlockAsync(
+                    security.Id, 
+                    assignment.Id, 
+                    nowUtc, 
+                    activeBlock.StartTime!.Value, 
+                    activeBlock.EndTime!.Value
+                );
+
+                if (hasPatrolledBlock)
+                {
+                    throw new BusinessException("You have already completed a patrol session for this scheduled shift today.");
                 }
             }
 
@@ -137,6 +151,12 @@ namespace BusinessLogic.Services.Implementation
             var hasActiveSession = await _repo.HasActiveSessionAsync(security.Id, assignment.Id);
             if (hasActiveSession)
                 throw new BusinessException("You already have an active patrol session for this assignment. Please complete it first.");
+
+            var routeAreas = await _repo.GetPatrolRouteAreasAsync(assignment.PatrolRouteId!.Value);
+
+            // 4. Validate Route Areas (Checkpoints must not be empty)
+            if (routeAreas == null || !routeAreas.Any())
+                throw new BusinessException("Cannot start patrol: The assigned Route does not have any active checkpoints mapped.");
 
             var patrolSession = new PatrolSession
             {
@@ -154,11 +174,9 @@ namespace BusinessLogic.Services.Implementation
                 SecurityIdentityIdSnap = security.IdentityId,
                 SecurityCardNumberSnap = security.CardNumber,
 
-                StartedAt = DateTime.UtcNow,
+                StartedAt = nowUtc,
             };
             patrolSession = await _repo.AddAsync(patrolSession);
-
-            var routeAreas = await _repo.GetPatrolRouteAreasAsync(patrolSession.PatrolRouteId);
 
             var checkpointLogs = routeAreas.Select(area => new PatrolCheckpointLog
             {

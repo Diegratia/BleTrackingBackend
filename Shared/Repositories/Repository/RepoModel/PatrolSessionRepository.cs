@@ -360,5 +360,27 @@ namespace Repositories.Repository
                     && s.EndedAt == null);
         }
 
+        /// <summary>
+        /// Check if security has already completed a patrol session within the specific TimeBlock limits for today
+        /// </summary>
+        public async Task<bool> HasPatrolledTimeBlockAsync(Guid securityId, Guid patrolAssignmentId, DateTime currentDateUtc, TimeSpan blockStart, TimeSpan blockEnd)
+        {
+            var startOfDay = currentDateUtc.Date; // 00:00:00 of the current day
+            var endOfDay = startOfDay.AddDays(1).AddTicks(-1); // 23:59:59
+
+            var sessionsToday = await BaseEntityQuery()
+                .Where(s => s.SecurityId == securityId
+                    && s.PatrolAssignmentId == patrolAssignmentId
+                    && s.StartedAt >= startOfDay
+                    && s.StartedAt <= endOfDay
+                    && s.EndedAt != null)
+                .ToListAsync();
+
+            // We evaluate in memory because evaluating TimeSpan logic across StartedAt inside DB provider varies
+            return sessionsToday.Any(s => 
+                s.StartedAt.TimeOfDay >= blockStart && 
+                s.StartedAt.TimeOfDay <= blockEnd
+            );
+        }
     }
 }
