@@ -155,7 +155,6 @@ namespace Repositories.Repository.Analytics
         // alarm per day
         public async Task<List<AlarmDailyRead>> GetDailySummaryAsync(AlarmAnalyticsFilter request)
         {
-            // 🕒 Gunakan helper untuk override from-to
             var range = GetTimeRange(request.TimeRange ?? "weekly");
             var from = range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7);
             var to = range?.to ?? request.To ?? DateTime.UtcNow;
@@ -187,9 +186,6 @@ namespace Repositories.Repository.Analytics
 
             return grouped;
         }
-
-
-
 
         // alarm per status
         public async Task<List<AlarmStatusRead>> GetStatusSummaryAsync(AlarmAnalyticsFilter request)
@@ -244,14 +240,13 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-
-
         // alarm per visitor
         public async Task<List<AlarmVisitorRead>> GetVisitorSummaryAsync(AlarmAnalyticsFilter request)
         {
+            var range = GetTimeRange(request.TimeRange);
             var (from, to) = (
-                request.From ?? DateTime.UtcNow.AddDays(-7),
-                request.To ?? DateTime.UtcNow
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
             );
 
             var query = _context.AlarmRecordTrackings
@@ -292,7 +287,11 @@ namespace Repositories.Repository.Analytics
         // alarm per building
         public async Task<List<AlarmBuildingRead>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
         {
-            var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
+            var range = GetTimeRange(request.TimeRange);
+            var (from, to) = (
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
+            );
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -394,39 +393,6 @@ namespace Repositories.Repository.Analytics
     return fullDay;
 }
 
-
-
-        //    public async Task<List<(Guid BuildingId, string BuildingName, int Total)>> GetBuildingSummaryAsync(AlarmAnalyticsFilter request)
-        //         {
-        //             var (from, to) = (request.From ?? DateTime.UtcNow.AddDays(-7), request.To ?? DateTime.UtcNow);
-
-        //             var query = _context.AlarmRecordTrackings
-        //                 .AsNoTracking()
-        //                 .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
-        //                 .Where(a => a.Timestamp >= from && a.Timestamp <= to);
-
-        //             query = ApplyFilters(query, request);
-
-        //             var incidents = await query
-        //                 .Select(a => new
-        //                 {
-        //                     a.AlarmTriggersId,
-        //                     BuildingId = a.FloorplanMaskedArea.Floorplan.Floor.Building.Id,
-        //                     BuildingName = a.FloorplanMaskedArea.Floorplan.Floor.Building.Name
-        //                 })
-        //                 .Distinct()
-        //                 .ToListAsync();
-
-        //             return incidents
-        //                 .GroupBy(x => new { x.BuildingId, x.BuildingName })
-        //                 .Select(g => (g.Key.BuildingId, g.Key.BuildingName, g.Count()))
-        //                 .ToList();
-        // }
-
-
-        // ===================================================================
-        // 6️⃣ Helper Filter
-        // ===================================================================
         private IQueryable<AlarmRecordTracking> ApplyFilters(IQueryable<AlarmRecordTracking> query, AlarmAnalyticsFilter request)
         {
             if (request.BuildingId.HasValue)
