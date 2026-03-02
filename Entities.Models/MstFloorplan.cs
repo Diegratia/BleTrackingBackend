@@ -57,6 +57,7 @@ namespace Entities.Models
         public MstEngine? Engine { get; set; }
         public ICollection<FloorplanDevice> FloorplanDevices { get; set; } = new List<FloorplanDevice>();
         public ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
+        public ICollection<PatrolArea> PatrolAreas { get; set; } = new List<PatrolArea>();
     }
 }
 

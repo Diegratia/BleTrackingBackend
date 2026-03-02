@@ -30,14 +30,17 @@ namespace BusinessLogic.Services.Implementation
         private readonly MstBleReaderRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
         // private readonly IHttpClientFactory _httpClientFactory;
 
-        public MstBleReaderService(MstBleReaderRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstBleReaderService(MstBleReaderRepository repository,
+        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _audit = audit; 
             // _httpClientFactory = httpClientFactory;
         }
 
@@ -78,6 +81,12 @@ namespace BusinessLogic.Services.Implementation
             bleReader.Status = 1;
 
             var createdBleReader = await _repository.AddAsync(bleReader);
+            await _audit.Created(
+                "BLE Reader",
+                createdBleReader.Id,
+                "Created BLE Reader",
+                new { createdBleReader.Name }
+            );
             return _mapper.Map<MstBleReaderDto>(createdBleReader);
         }
 
@@ -96,8 +105,14 @@ namespace BusinessLogic.Services.Implementation
                 bleReader.Status = 1;
 
                 await _repository.AddAsync(bleReader);
+                await _audit.Created(
+                    "BLE Reader",
+                    bleReader.Id,
+                    "Created BLE Reader in batch",
+                    new { bleReader.Name }
+                );
                 result.Add(_mapper.Map<MstBleReaderDto>(bleReader));
-                }
+            }
             return result;
         }
 
@@ -113,6 +128,12 @@ namespace BusinessLogic.Services.Implementation
             bleReader.UpdatedBy = username ?? "";
             bleReader.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(bleReader);
+            await _audit.Updated(
+                "BLE Reader",
+                bleReader.Id,
+                "Updated BLE Reader",
+                new { bleReader.Name }
+            );
         }
 
         public async Task DeleteAsync(Guid id)
@@ -127,6 +148,12 @@ namespace BusinessLogic.Services.Implementation
             bleReader.Status = 0;
 
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "BLE Reader",
+                bleReader.Id,
+                "Deleted BLE Reader",
+                new { bleReader.Name }
+            );
         }
 
         public async Task<IEnumerable<MstBleReaderDto>> ImportAsync(IFormFile file)

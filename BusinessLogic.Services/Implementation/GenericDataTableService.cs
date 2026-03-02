@@ -150,8 +150,24 @@ namespace BusinessLogic.Services.Implementation
                         || (m.Floorplan != null && m.Floorplan.Application != null && m.Floorplan.Application.ApplicationStatus != 0)
                         || (m.FloorplanMaskedArea != null && m.FloorplanMaskedArea.Status != 0)
                         || (m.Floorplan != null && m.Floorplan.Floor != null && m.Floorplan.Floor.Building.Status != 0)
+                    ),
+                    PatrolAreaCount = f.PatrolAreas.Count(m =>
+                        m.Status != 0
+                        || (m.Floorplan != null && m.Floorplan.Status != 0)
+                        || (m.Floorplan != null && m.Floorplan.Application != null && m.Floorplan.Application.ApplicationStatus != 0)
+                        || (m.Floorplan != null && m.Floorplan.Floor != null && m.Floorplan.Floor.Building.Status != 0)
                     )
-
+                    });
+            }
+            else if (typeof(TModel) == typeof(PatrolRoute))
+            {
+                projectionQuery = query.Cast<PatrolRoute>()
+                    .Select(f => new
+                    {
+                    Entity = f,
+                    PatrolAreaCount = f.PatrolRouteAreas.Count(m =>
+                        m.PatrolRouteId == f.Id
+                    )
                     });
             }
             else
@@ -209,8 +225,10 @@ namespace BusinessLogic.Services.Implementation
                     var dto = dtos.ElementAt(i);
                     var maskedAreaCount = (int)d.GetType().GetProperty("MaskedAreaCount")!.GetValue(d)!;
                     var deviceCount = (int)d.GetType().GetProperty("DeviceCount")!.GetValue(d)!;
+                    var patrolAreaCount = (int)d.GetType().GetProperty("PatrolAreaCount")!.GetValue(d)!;
                     dto.GetType().GetProperty("MaskedAreaCount")?.SetValue(dto, maskedAreaCount);
                     dto.GetType().GetProperty("DeviceCount")?.SetValue(dto, deviceCount);
+                    dto.GetType().GetProperty("PatrolAreaCount")?.SetValue(dto, patrolAreaCount);
                     return dto;
                 }).ToList();
                 dtos = dtosWithCount;

@@ -39,6 +39,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
         private bool cacheDisabled = false;
+        private readonly IAuditEmitter _audit;
 
         public FloorplanDeviceService(FloorplanDeviceRepository repository,
         IMapper mapper,
@@ -49,7 +50,8 @@ namespace BusinessLogic.Services.Implementation
         ILogger<FloorplanDevice> logger,
         IDistributedCache cache,
         IConnectionMultiplexer redis,
-        IMqttClientService mqttClient
+        IMqttClientService mqttClient,
+        IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -62,6 +64,7 @@ namespace BusinessLogic.Services.Implementation
             _redis = redis?.GetDatabase();
             _cache = cache;
             _mqttClient = mqttClient;
+            _audit = audit;
         }
         
         private bool IsRedisAlive()
@@ -233,6 +236,12 @@ namespace BusinessLogic.Services.Implementation
 
                 await SetDeviceAssignmentAsync(dto.ReaderId, dto.AccessCctvId, dto.AccessControlId, true, username);
                 await _repository.AddAsync(device);
+                await _audit.Created(
+                    "Floorplan Device",
+                    device.Id,
+                    "Created floorplan device",
+                    new { device.Name }
+                );
                 await transaction.CommitAsync();
                 return _mapper.Map<FloorplanDeviceDto>(device);
             } 
@@ -273,6 +282,12 @@ namespace BusinessLogic.Services.Implementation
 
                 await transaction.CommitAsync();
                 await _repository.UpdateAsync(device);
+                await _audit.Updated(
+                    "Floorplan Device",
+                    device.Id,
+                    "Updated floorplan device",
+                    new { device.Name }
+                );
             }
             catch
             {
@@ -283,36 +298,109 @@ namespace BusinessLogic.Services.Implementation
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
-        // ===========================================================
-        // 🔹 DELETE (Soft Delete)
-        // ===========================================================
-        public async Task DeleteAsync(Guid id)
-        {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-
-            using var transaction = await _repository.BeginTransactionAsync();
-            try
+        //     // ===========================================================
+        //     // 🔹 DELETE (Soft Delete)
+        //     // ===========================================================
+            public async Task DeleteAsync(Guid id)
             {
+                var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
                 var device = await _repository.GetByIdAsync(id);
-                if (device == null)
-                    throw new KeyNotFoundException("FloorplanDevice not found");
+                using var transaction = await _repository.BeginTransactionAsync();
+                try
+                {
+                    if (device == null)
+                        throw new KeyNotFoundException("FloorplanDevice not found");
 
-                await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
+                    await SetDeviceAssignmentAsync(device.ReaderId, device.AccessCctvId, device.AccessControlId, false, username);
 
-                device.UpdatedBy = username;
-                device.UpdatedAt = DateTime.UtcNow;
-                device.Status = 0;
+                    device.UpdatedBy = username;
+                    device.UpdatedAt = DateTime.UtcNow;
+                    device.Status = 0;
 
-                await _repository.SoftDeleteAsync(id);
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            await RemoveGroupAsync();
-            await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+                    await _repository.SoftDeleteAsync(id);
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+                await _audit.Deleted(
+                        "Floorplan Device",
+                        device.Id,
+                        "Deleted floorplan device",
+                        new { device.Name }
+                    );
+                await RemoveGroupAsync();
+                await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        }
+    
+
+      // ============================================================
+    // USER ACTION DELETE
+    // ============================================================
+    // public async Task DeleteAsync(Guid id)
+    // {
+    //     var username = _httpContextAccessor.HttpContext?
+    //         .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+    //     var device = await _repository.GetByIdAsync(id);
+    //     if (device == null)
+    //         throw new KeyNotFoundException("Floorplan device not found");
+
+    //     await _repository.ExecuteInTransactionAsync(async () =>
+    //     {
+    //         await SetDeviceAssignmentAsync(
+    //             device.ReaderId,
+    //             device.AccessCctvId,
+    //             device.AccessControlId,
+    //             false,
+    //             username
+    //         );
+
+    //         device.Status = 0;
+    //         device.UpdatedBy = username;
+    //         device.UpdatedAt = DateTime.UtcNow;
+
+    //         await _repository.SoftDeleteAsync(id);
+    //     });
+
+    //     await _audit.Deleted(
+    //         "Floorplan Device",
+    //         device.Id,
+    //         "Deleted floorplan device",
+    //         new { device.Name }
+    //     );
+    //     await RemoveGroupAsync();
+    //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+    // }
+
+    // ============================================================
+    // INTERNAL CASCADE DELETE
+    // ============================================================
+    public async Task CascadeDeleteAsync(Guid id, string username)
+    {
+        var device = await _repository.GetByIdAsync(id);
+        if (device == null) return;
+
+        await SetDeviceAssignmentAsync(
+            device.ReaderId,
+            device.AccessCctvId,
+            device.AccessControlId,
+            false,
+            username
+        );
+
+        device.Status = 0;
+        device.UpdatedBy = username;
+        device.UpdatedAt = DateTime.UtcNow;
+
+        await _repository.SoftDeleteAsync(device.Id);
+
+        // ❌ NO TRANSACTION
+        // ❌ NO AUDIT
+        // ❌ NO MQTT
     }
 
         // public async Task<FloorplanDeviceDto> CreateAsync(FloorplanDeviceCreateDto dto)
@@ -618,6 +706,7 @@ namespace BusinessLogic.Services.Implementation
 
             return _mapper.Map<IEnumerable<FloorplanDeviceDto>>(devices);
         }
+
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {

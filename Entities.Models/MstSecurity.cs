@@ -80,5 +80,34 @@ namespace Entities.Models
         public ICollection<CardRecord> CardRecords { get; set; } = new List<CardRecord>();
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();
         public ICollection<AlarmTriggers> AlarmTriggers { get; set; } = new List<AlarmTriggers>();
+        public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
+        public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
+        public ICollection<PatrolCase> SecuritiesPatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolCase> HeadPatrolCases { get; set; } = new List<PatrolCase>();
+        public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
     }
+    //SecurityGroup
+    public class SecurityGroup : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("name")]
+        public string? Name { get; set; }
+        [Column("description")]
+        public string? Description { get; set; }
+        public MstApplication? Application { get; set; }
+        public ICollection<SecurityGroupMember> SecurityGroupMembers { get; set; } = new List<SecurityGroupMember>();
+
+    }
+
+    //SecurityGroupMember
+    public class SecurityGroupMember : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("security_group_id")]
+        public Guid? SecurityGroupId { get; set; }
+        [Column("security_id")]
+        public Guid? SecurityId { get; set; }
+        public MstApplication? Application { get; set; }
+        public SecurityGroup? SecurityGroup { get; set; }
+        public MstSecurity? Security { get; set; }
+    }
+    
 }

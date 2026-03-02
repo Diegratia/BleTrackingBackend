@@ -8,23 +8,23 @@ using Helpers.Consumer;
 
 namespace Entities.Models
 {
-    public class MstFloor : BaseModelWithTimeInt ,IApplicationEntity
+    public class MstFloor : BaseModelWithTimeInt, IApplicationEntity
     {
         [ForeignKey("Building")]
         [Column("building_id")]
         public Guid BuildingId { get; set; }
 
         [Column("name")]
-        public string Name { get; set; } 
+        public string Name { get; set; }
 
         // [Column("floor_image")]
         // public string FloorImage { get; set; }
 
-   
+
         // [Column("pixel_x")]
         // public float PixelX { get; set; }
 
-    
+
         // [Column("pixel_y")]
         // public float PixelY { get; set; }
 
@@ -40,7 +40,7 @@ namespace Entities.Models
         // [Column("meter_per_px")]
         // public float MeterPerPx { get; set; }
 
-    
+
         // [Column("engine_floor_id")]
         // public long EngineFloorId { get; set; }
 
@@ -52,10 +52,11 @@ namespace Entities.Models
         [Column("application_id")]
         public Guid ApplicationId { get; set; }
 
-        public MstApplication Application{ get; set; }
+        public MstApplication Application { get; set; }
         public MstBuilding Building { get; set; }
         public ICollection<FloorplanMaskedArea> FloorplanMaskedAreas { get; set; } = new List<FloorplanMaskedArea>();
         public ICollection<MstFloorplan> Floorplans { get; set; } = new List<MstFloorplan>();
+        public ICollection<PatrolArea> PatrolAreas { get; set; } = new List<PatrolArea>();
        
     }
 }

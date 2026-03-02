@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Helpers.Consumer
 {
     public enum OrganizationType
@@ -56,13 +58,13 @@ namespace Helpers.Consumer
         CardAccess,
         Face,
         NDA,
-        Other,
+        Other,
     }
 
-        public enum SwapType
+    public enum SwapType
     {
-        EnterArea,  
-        ExitArea 
+        EnterArea,
+        ExitArea
     }
 
     public enum PersonType
@@ -99,6 +101,13 @@ namespace Helpers.Consumer
         Other
     }
 
+    public enum ImagePurpose
+    {
+        Photo,
+        Floorplan
+    }
+
+
     public enum ApiTypeAuth
     {
         Basic,
@@ -112,6 +121,11 @@ namespace Helpers.Consumer
         Female,
         // Otther
         RatherNotSay
+    }
+    public enum ScheduleType
+    {
+        Shift,
+        Patrol,
     }
 
     public enum StatusEmployee
@@ -202,10 +216,48 @@ namespace Helpers.Consumer
         Low
     }
 
+    public enum LevelPriority
+    {
+        System,
+        SuperAdmin,
+        PrimaryAdmin, // operator or security head
+        Primary, //security
+        Secondary, // member /employee
+        UserCreated // visitor
+    }
+
     public enum BoundaryType
     {
         Both, // 0
         AtoB, // 1
         BtoA // 2
+    }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum CaseStatus
+    {
+        Open,
+        Submitted,
+        Approved,
+        Rejected,
+        Closed
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum CaseType
+    {
+        Incident,
+        Hazard,
+        Damage,
+        Theft,
+        Report,
+        PatrolSummary
+    }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum FileType
+    {
+        Photo,
+        Video,
+        Document
     }
 }

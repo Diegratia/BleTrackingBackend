@@ -22,12 +22,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly OverpopulatingRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public OverpopulatingService(OverpopulatingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public OverpopulatingService(OverpopulatingRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
         public async Task<OverpopulatingDto> GetByIdAsync(Guid id)
@@ -55,6 +57,12 @@ namespace BusinessLogic.Services.Implementation
             overpopulating.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(overpopulating);
+            await _audit.Created(
+                "Overpopulating",
+                overpopulating.Id,
+                "Created Overpopulating",
+                new { overpopulating.Name }
+            );
             return _mapper.Map<OverpopulatingDto>(overpopulating);
         }
 
@@ -70,6 +78,12 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, overpopulating);
             await _repository.UpdateAsync(overpopulating);
+            await _audit.Updated(
+                "Overpopulating",
+                overpopulating.Id,
+                "Updated Overpopulating",
+                new { overpopulating.Name }
+            );
         }
 
         public async Task DeleteAsync(Guid id)
@@ -85,6 +99,12 @@ namespace BusinessLogic.Services.Implementation
             overpopulating.Status = 0;
             overpopulating.IsActive = 0;
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "Overpopulating",
+                overpopulating.Id,
+                "Deleted Overpopulating",
+                new { overpopulating.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
 using Helpers.Consumer;
 using Microsoft.EntityFrameworkCore.Storage;
+using Repositories.TenantContexts;
 
 namespace Repositories.Repository
 {
@@ -15,11 +16,16 @@ namespace Repositories.Repository
     {
         protected readonly BleTrackingDbContext _context;
         protected readonly IHttpContextAccessor _httpContextAccessor;
+        // protected readonly TenantContext _tenantContext;
 
-        protected BaseRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
+        protected BaseRepository(BleTrackingDbContext context,
+         IHttpContextAccessor httpContextAccessor
+        //   TenantContext tenantContext
+          )
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            // _tenantContext = tenantContext;
         }
 
         protected (Guid? ApplicationId, bool IsSystemAdmin) GetApplicationIdAndRole()
@@ -111,6 +117,31 @@ namespace Repositories.Repository
             }
         }
 
+        /// <summary>
+        /// Query default untuk entity bertenant
+        /// </summary>
+        // protected IQueryable<T> Query<T>() where T : class, IApplicationEntity
+        // {
+        //     var query = _context.Set<T>().AsQueryable();
+
+        //     if (!_tenantContext.IsSystemAdmin)
+        //         query = query.Where(x => x.ApplicationId == _tenantContext.ApplicationId);
+
+        //     return query;
+        // }
+
+        // /// <summary>
+        // /// Dipanggil sebelum INSERT / UPDATE
+        // /// </summary>
+        // protected void PrepareForSave<T>(T entity) where T : class, IApplicationEntity
+        // {
+        //     if (!_tenantContext.IsSystemAdmin)
+        //     {
+        //         entity.ApplicationId = _tenantContext.ApplicationId!.Value;
+        //     }
+        //     // SystemAdmin: ApplicationId HARUS sudah di-set dari service
+        // }
+
 
         protected string GetUserEmail()
         {
@@ -136,26 +167,65 @@ namespace Repositories.Repository
             return _httpContextAccessor.HttpContext?.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == LevelPriority.PrimaryAdmin.ToString()) ?? false;
         }
 
-        protected (DateTime from, DateTime to)? ResolveTimeRange(string? timeReport)
+
+        protected (DateTime from, DateTime to)? GetTimeRange(string? TimeRange)
         {
-            if (string.IsNullOrWhiteSpace(timeReport))
+            if (string.IsNullOrWhiteSpace(TimeRange))
                 return null;
 
             var now = DateTime.UtcNow;
-
-            return timeReport.Trim().ToLower() switch
+            return TimeRange.Trim().ToLower() switch
             {
                 "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
-                "weekly" => (now.Date.AddDays(-(int)now.DayOfWeek + 1),
-                            now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)),
-                "monthly" => (new DateTime(now.Year, now.Month, 1),
-                            new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
-                                .AddDays(1).AddTicks(-1)),
-                "yearly" => (new DateTime(now.Year, 1, 1),
-                            new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)),
+                "weekly" => (
+                    now.Date.AddDays(-(int)now.DayOfWeek + 1),
+                    now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)
+                ),
+                "last_week" => (
+                    now.Date.AddDays(-(int)now.DayOfWeek - 6),
+                    now.Date.AddDays(-(int)now.DayOfWeek).AddDays(1).AddTicks(-1)
+                ),
+                "monthly" => (
+                    new DateTime(now.Year, now.Month, 1),
+                    new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month))
+                        .AddDays(1).AddTicks(-1)
+                ),
+                "last_month" => (
+                    new DateTime(now.Year, now.Month, 1).AddMonths(-1),
+                    new DateTime(now.Year, now.Month, 1).AddTicks(-1)
+                ),
+                // "yearly" => (
+                //     new DateTime(now.Year, 1, 1),
+                //     new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
+                // ),  
                 _ => null
             };
         }
+
+public async Task<IReadOnlyCollection<Guid>> GetInvalidOwnershipIdsAsync<TEntity>(
+    IEnumerable<Guid> ids,
+    Guid applicationId
+)
+    where TEntity : class, IApplicationEntity
+{
+    var idList = ids.Distinct().ToList();
+    if (!idList.Any())
+        return Array.Empty<Guid>();
+
+    var validIds = await _context.Set<TEntity>()
+        .Where(e =>
+            idList.Contains(EF.Property<Guid>(e, "Id")) &&
+            e.ApplicationId == applicationId
+        )
+        .Select(e => EF.Property<Guid>(e, "Id"))
+        .ToListAsync();
+
+    return idList.Except(validIds).ToList();
+}
+
+
+
+
     }
 }
 

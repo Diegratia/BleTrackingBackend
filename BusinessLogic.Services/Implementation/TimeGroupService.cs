@@ -7,6 +7,7 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using Data.ViewModels;
 using Entities.Models;
+using Helpers.Consumer;
 using Helpers.Consumer.DtoHelpers.MinimalDto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -447,13 +448,19 @@ namespace BusinessLogic.Services.Implementation
             var query = _repository.MinimalGetAllQueryable();
 
             var searchableColumns = new[] { "Name" };
-            var validSortColumns = new[] { "UpdatedAt", "Status", "Name" };
+            var validSortColumns = new[] { "UpdatedAt", "Status", "Name", "ScheduleType" };
+
+            var enumColumns = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "ScheduleType", typeof(ScheduleType) }
+            };
 
             var filterService = new MinimalGenericDataTableService<TimeGroupMinimalDto>(
                 query,
                 _mapper,
                 searchableColumns,
-                validSortColumns);
+                validSortColumns,
+                enumColumns);
 
             return await filterService.FilterAsync(request);
         }

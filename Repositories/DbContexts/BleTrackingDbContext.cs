@@ -29,7 +29,6 @@ namespace Repositories.DbContexts
         public DbSet<MstFloorplan> MstFloorplans { get; set; }
         public DbSet<MstBuilding> MstBuildings { get; set; }
         public DbSet<FloorplanDevice> FloorplanDevices { get; set; }
-        public DbSet<BleReaderNode> BleReaderNodes { get; set; }
         public DbSet<MstEngine> MstEngines { get; set; }
         public DbSet<CardRecord> CardRecords{ get; set; }
         public DbSet<TrxVisitor> TrxVisitors{ get; set; }
@@ -48,7 +47,22 @@ namespace Repositories.DbContexts
         public DbSet<TimeGroup> TimeGroups{ get; set; }
         public DbSet<MonitoringConfig> MonitoringConfigs{ get; set; }
         public DbSet<Geofence> Geofences{ get; set; }
-        public DbSet<StayOnArea> StayOnAreas{ get; set; }
+        //patrol
+        public DbSet<PatrolArea> PatrolAreas{ get; set; }
+        public DbSet<PatrolRoute> PatrolRoutes{ get; set; }
+        public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
+        public DbSet<PatrolRouteTimeGroups> PatrolRouteTimeGroups{ get; set; }
+        public DbSet<PatrolAssignment> PatrolAssignments{ get; set; }
+        public DbSet<PatrolAssignmentSecurity> PatrolAssignmentSecurities{ get; set; }
+        public DbSet<SecurityGroup> SecurityGroups{ get; set; }
+        public DbSet<SecurityGroupMember> SecurityGroupMembers{ get; set; }
+        
+        public DbSet<PatrolCase> PatrolCases { get; set; }
+        public DbSet<PatrolSession> PatrolSessions{ get; set; }
+        public DbSet<PatrolCheckpointLog> PatrolCheckpointLogs{ get; set; }    
+        public DbSet<PatrolCaseAttachment> PatrolCaseAttachments{ get; set; }    
+        //
+        public DbSet<StayOnArea> StayOnAreas { get; set; }
         public DbSet<Boundary> Boundarys{ get; set; }
         public DbSet<Overpopulating> Overpopulatings{ get; set; }
         public DbSet<TrackingReportPreset> TrackingReportPresets{ get; set; }
@@ -82,18 +96,27 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<AlarmRecordTracking>().ToTable("alarm_record_tracking");
             modelBuilder.Entity<MstFloorplan>().ToTable("mst_floorplan");
             modelBuilder.Entity<MstBuilding>().ToTable("mst_building");
-            modelBuilder.Entity<BleReaderNode>().ToTable("ble_reader_node");
             modelBuilder.Entity<MstEngine>().ToTable("mst_engine");
             modelBuilder.Entity<CardRecord>().ToTable("card_record");
             modelBuilder.Entity<TrxVisitor>().ToTable("trx_visitor");
             modelBuilder.Entity<Card>().ToTable("card");
             modelBuilder.Entity<Geofence>().ToTable("geofence");
+            modelBuilder.Entity<PatrolArea>().ToTable("patrol_area");
+            modelBuilder.Entity<PatrolRoute>().ToTable("patrol_route");
+            modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
+            modelBuilder.Entity<PatrolRouteTimeGroups>().ToTable("patrol_route_time_groups");
+            modelBuilder.Entity<PatrolAssignment>().ToTable("patrol_assignment");
+            modelBuilder.Entity<PatrolAssignmentSecurity>().ToTable("patrol_assignment_security");
+            modelBuilder.Entity<PatrolCase>().ToTable("patrol_case");
+            modelBuilder.Entity<PatrolSession>().ToTable("patrol_session");
+            modelBuilder.Entity<PatrolCheckpointLog>().ToTable("patrol_checkpoint_log");
+            modelBuilder.Entity<PatrolCaseAttachment>().ToTable("patrol_case_attachment");
+            modelBuilder.Entity<SecurityGroup>().ToTable("security_group");
+            modelBuilder.Entity<SecurityGroupMember>().ToTable("security_group_member");
             modelBuilder.Entity<StayOnArea>().ToTable("stay_on_area");
             modelBuilder.Entity<Overpopulating>().ToTable("overpopulating");
             modelBuilder.Entity<Boundary>().ToTable("boundary");
             modelBuilder.Entity<MonitoringConfig>().ToTable("monitoring_config");
-            // modelBuilder.Entity<MstTrackingLog>().ToTable("mst_tracking_log");
-            // modelBuilder.Entity<RecordTrackingLog>().ToTable("record_tracking_log");
             modelBuilder.Entity<User>().ToTable("user");
             modelBuilder.Entity<UserGroup>().ToTable("user_group");
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_token");
@@ -131,44 +154,44 @@ namespace Repositories.DbContexts
                         .HasDefaultValue(1);
                 });
 
-                modelBuilder.Entity<MstApplication>()
-                    .HasQueryFilter(m => m.ApplicationStatus != 0);
-                modelBuilder.Entity<MstIntegration>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstAccessControl>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstAccessCctv>()
-                    .HasQueryFilter(m => m.Status != 0);
-    //            modelBuilder.Entity<AlarmRecordTracking>()
-    // .HasQueryFilter(m => m.FloorplanMaskedAreaId != null   // pakai FK, bukan nav
-    //               && m.ReaderId != null                    // kalau ada FK-nya
-    //               && m.VisitorId != null);
-                modelBuilder.Entity<FloorplanMaskedArea>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstBleReader>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstBrand>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstDepartment>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstDistrict>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstFloor>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstMember>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstSecurity>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstOrganization>()
-                    .HasQueryFilter(m => m.Status != 0 );
-                modelBuilder.Entity<MstFloorplan>()
-                    .HasQueryFilter(m => m.Status != 0);
-                modelBuilder.Entity<MstEngine>()
-                    .HasQueryFilter(m => m.Status != 0); ;
+            modelBuilder.Entity<MstApplication>()
+                .HasQueryFilter(m => m.ApplicationStatus != 0);
+            modelBuilder.Entity<MstIntegration>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstAccessControl>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstAccessCctv>()
+                .HasQueryFilter(m => m.Status != 0);
+            //            modelBuilder.Entity<AlarmRecordTracking>()
+            // .HasQueryFilter(m => m.FloorplanMaskedAreaId != null   // pakai FK, bukan nav
+            //               && m.ReaderId != null                    // kalau ada FK-nya
+            //               && m.VisitorId != null);
+            modelBuilder.Entity<FloorplanMaskedArea>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstBleReader>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstBrand>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstDepartment>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstDistrict>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstFloor>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstMember>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstSecurity>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstOrganization>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstFloorplan>()
+                .HasQueryFilter(m => m.Status != 0);
+            modelBuilder.Entity<MstEngine>()
+                .HasQueryFilter(m => m.Status != 0); ;
             // modelBuilder.Entity<VisitorCard>()
             //     .HasQueryFilter(m => m.Status != 0);
 
-   
+
 
             // MstIntegration
             modelBuilder.Entity<MstIntegration>(entity =>
@@ -310,7 +333,7 @@ namespace Repositories.DbContexts
                     .HasDefaultValue(1);
             });
 
-             // MonitoringConfig
+            // MonitoringConfig
             modelBuilder.Entity<MonitoringConfig>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
@@ -321,7 +344,7 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
-             // TrackingReportPreset
+            // TrackingReportPreset
             modelBuilder.Entity<TrackingReportPreset>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
@@ -382,6 +405,7 @@ namespace Repositories.DbContexts
                 entity.HasIndex(m => m.PersonId);
                 entity.HasIndex(m => m.Email);
             });
+
             // MstSecurity
             modelBuilder.Entity<MstSecurity>(entity =>
             {
@@ -424,6 +448,16 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.DistrictId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                entity.HasMany(m => m.PatrolAssignmentSecurities)
+                    .WithOne(m => m.Security)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(m => m.SecurityGroupMembers)
+                    .WithOne(m => m.Security)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.Property(m => m.Status)
                     .IsRequired()
                     .HasDefaultValue(1);
@@ -451,7 +485,12 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.BuildingId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+                entity.HasMany(f => f.PatrolAreas)
+                    .WithOne()
+                    .HasForeignKey(f => f.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+
             });
 
             // FloorplanMaskedArea
@@ -588,7 +627,7 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(t => t.FloorplanMaskedAreaId)
                     .OnDelete(DeleteBehavior.NoAction);
-                    
+
                 entity.HasOne(t => t.Card)
                     .WithMany()
                     .HasForeignKey(t => t.CardId)
@@ -626,7 +665,7 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(a => a.VisitorId)
                     .OnDelete(DeleteBehavior.NoAction);
-                
+
                 entity.HasOne(a => a.Member)
                     .WithMany(b => b.AlarmRecordTrackings)
                     .HasForeignKey(a => a.MemberId)
@@ -730,6 +769,8 @@ namespace Repositories.DbContexts
                 entity.HasOne(f => f.Engine).WithMany(f => f.Floorplans).HasForeignKey(f => f.EngineId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(f => f.Application).WithMany().HasForeignKey(f => f.ApplicationId).OnDelete(DeleteBehavior.NoAction);
 
+                entity.HasMany(f => f.PatrolAreas).WithOne().HasForeignKey(f => f.FloorplanId).OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasIndex(f => f.Generate).IsUnique();
                 entity.HasQueryFilter(f => f.Status != 0);
 
@@ -748,37 +789,13 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<UserGroup>()
                .ToTable("user_group");
 
-            modelBuilder.Entity<BleReaderNode>(entity =>
-            {
-                entity.ToTable("ble_reader_node");
-                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ReaderId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(255);
-                entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-
-                entity.HasOne(t => t.Reader)
-                     .WithMany()
-                     .HasForeignKey(t => t.ReaderId)
-                     .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(m => m.Application)
-                     .WithMany()
-                     .HasForeignKey(m => m.ApplicationId)
-                     .OnDelete(DeleteBehavior.NoAction);
-
-
-                entity.HasIndex(f => f.Generate).IsUnique();
-
-            });
-
             // MstEngine
             modelBuilder.Entity<MstEngine>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
                 entity.Property(e => e.EngineTrackingId).HasMaxLength(255);
-                entity.Property(e => e.Status); 
-                entity.Property(e => e.IsLive); 
+                entity.Property(e => e.Status);
+                entity.Property(e => e.IsLive);
                 entity.Property(e => e.LastLive);
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
@@ -797,7 +814,7 @@ namespace Repositories.DbContexts
                     .HasConversion(
                         v => v.ToString().ToLower(),
                         v => (ServiceStatus)Enum.Parse(typeof(ServiceStatus), v, true)
-                
+
                     );
             });
             // Geofence
@@ -812,7 +829,7 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
-                
+
                 entity.HasOne(m => m.Floor)
                     .WithMany()
                     .HasForeignKey(m => m.FloorId)
@@ -823,9 +840,258 @@ namespace Repositories.DbContexts
                     .HasForeignKey(m => m.FloorplanId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
+            // PatrolArea
+            modelBuilder.Entity<PatrolArea>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.FloorId).HasMaxLength(36);
+                entity.Property(e => e.FloorplanId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAreas)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floor)
+                    .WithMany(m => m.PatrolAreas)
+                    .HasForeignKey(m => m.FloorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Floorplan)
+                    .WithMany(m => m.PatrolAreas)
+                    .HasForeignKey(m => m.FloorplanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.PatrolRouteAreas)
+                    .WithOne(e => e.PatrolArea)
+                    .HasForeignKey(e => e.PatrolAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // PatrolRoute
+            modelBuilder.Entity<PatrolRoute>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolRoutes)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasMany(e => e.PatrolRouteAreas)
+                    .WithOne(e => e.PatrolRoute)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasMany(e => e.PatrolRouteTimeGroups)
+                    .WithOne(e => e.PatrolRoutes)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+            });
+
+            // PatrolRouteAreas
+            modelBuilder.Entity<PatrolRouteAreas>(entity =>
+            {
+                entity.ToTable("patrol_route_areas");
+
+                entity.HasKey(e => new { e.PatrolAreaId, e.PatrolRouteId });
+
+                entity.HasOne(e => e.PatrolArea)
+                    .WithMany(e => e.PatrolRouteAreas)
+                    .HasForeignKey(e => e.PatrolAreaId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.PatrolRoute)
+                    .WithMany(ma => ma.PatrolRouteAreas)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //PatrolAssignment
+            modelBuilder.Entity<PatrolAssignment>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.PatrolRoute)
+                    .WithMany(m => m.PatrolAssignments)
+                    .HasForeignKey(m => m.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(e => e.PatrolAssignmentSecurities)
+                    .WithOne(e => e.PatrolAssignment)
+                    .HasForeignKey(e => e.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+            });
+            //PatrolAssignmentSecurity
+            modelBuilder.Entity<PatrolAssignmentSecurity>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolAssignmentId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.PatrolAssignment)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.PatrolAssignmentSecurities)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //SecurityGroupMember
+            modelBuilder.Entity<SecurityGroupMember>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.SecurityGroupId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.SecurityGroup)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.SecurityGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.SecurityGroupMembers)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //SecurityGroup
+            modelBuilder.Entity<SecurityGroup>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.SecurityGroups)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(m => m.SecurityGroupMembers)
+                    .WithOne(m => m.SecurityGroup)
+                    .HasForeignKey(m => m.SecurityGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+            });
+            //PatrolCase
+            modelBuilder.Entity<PatrolCase>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolSessionId).HasMaxLength(36);
+                entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.Property(e => e.ApprovedByHeadId).HasMaxLength(36);
+
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolCases)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolSession)
+                    .WithMany(m => m.PatrolCases)
+                    .HasForeignKey(m => m.PatrolSessionId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolRoute)
+                    .WithMany(m => m.PatrolCases)
+                    .HasForeignKey(m => m.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.SecuritiesPatrolCases)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.ApprovedByHead)
+                    .WithMany(m => m.HeadPatrolCases)
+                    .HasForeignKey(m => m.ApprovedByHeadId)
+                    .OnDelete(DeleteBehavior.NoAction);
+        });
+
+            //PatrolSession
+            modelBuilder.Entity<PatrolSession>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolRouteId).HasMaxLength(36);
+                entity.Property(e => e.PatrolAssignmentId).HasMaxLength(36);
+                entity.Property(e => e.SecurityId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolSessions)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolRoute)
+                    .WithMany(m => m.PatrolSessions)
+                    .HasForeignKey(m => m.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolAssignment)
+                    .WithMany(m => m.PatrolSessions)
+                    .HasForeignKey(m => m.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.Security)
+                    .WithMany(m => m.PatrolSessions)
+                    .HasForeignKey(m => m.SecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            //PatrolCheckpointLog
+            modelBuilder.Entity<PatrolCheckpointLog>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolSessionId).HasMaxLength(36);
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolCheckpointLogs)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolSession)
+                    .WithMany(m => m.PatrolCheckpointLogs)
+                    .HasForeignKey(m => m.PatrolSessionId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+
+            //PatrolCaseAttachment
+            modelBuilder.Entity<PatrolCaseAttachment>(entity =>
+            {
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.PatrolCaseId).HasMaxLength(36);
+                entity.Property(e => e.FileType)
+                    .HasColumnName("file_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (FileType)Enum.Parse(typeof(FileType), v, true)
+                    );
+                entity.HasOne(m => m.Application)
+                    .WithMany(m => m.PatrolCaseAttachments)
+                    .HasForeignKey(m => m.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(m => m.PatrolCase)
+                    .WithMany(m => m.PatrolCaseAttachments)
+                    .HasForeignKey(m => m.PatrolCaseId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
 
              // Boundary
-            modelBuilder.Entity<Boundary>(entity =>
+                modelBuilder.Entity<Boundary>(entity =>
             {
                 entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
 
@@ -1026,7 +1292,14 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(m => m.ApplicationId)
                     .OnDelete(DeleteBehavior.NoAction);
-
+                    
+                entity.Property(e => e.ScheduleType)
+                .HasColumnName("schedule_type")
+                    .HasColumnType("nvarchar(255)")
+                    .HasConversion(
+                        v => v.ToString().ToLower(),
+                        v => (ScheduleType)Enum.Parse(typeof(ScheduleType), v, true)
+                    );
                 entity.HasMany(e => e.CardAccessTimeGroups)
                     .WithOne(e => e.TimeGroup)
                     .HasForeignKey(e => e.TimeGroupId)
@@ -1348,6 +1621,23 @@ namespace Repositories.DbContexts
 
                 entity.HasOne(e => e.TimeGroup)
                     .WithMany(ma => ma.CardAccessTimeGroups)
+                    .HasForeignKey(e => e.TimeGroupId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+             // PatrolRouteTimeGroups (pivot PatrolRoute <-> TimeGroups)
+            modelBuilder.Entity<PatrolRouteTimeGroups>(entity =>
+            {
+                entity.ToTable("patrol_route_time_groups");
+
+                entity.HasKey(e => new { e.PatrolRouteId, e.TimeGroupId });
+
+                entity.HasOne(e => e.PatrolRoutes)
+                    .WithMany(e => e.PatrolRouteTimeGroups)
+                    .HasForeignKey(e => e.PatrolRouteId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.TimeGroup)
+                    .WithMany(ma => ma.PatrolRouteTimeGroups)
                     .HasForeignKey(e => e.TimeGroupId)
                     .OnDelete(DeleteBehavior.NoAction);
             });

@@ -26,7 +26,6 @@ namespace Web.API.Controllers.Controllers.Analytics
             _presetService = presetService;
             _analyticsV2Service = analyticsV2Service;
         }
-
         // ==============================================
         // 1. APPLY PRESET - Get visitor session data
         // ==============================================

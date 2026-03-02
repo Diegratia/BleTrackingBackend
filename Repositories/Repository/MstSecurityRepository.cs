@@ -132,12 +132,14 @@ namespace Repositories.Repository
         //     return await q.CountAsync();
         // }
 
-          public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
+        public async Task<List<MstSecurityLookUpRM>> GetAllLookUpAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
             .AsNoTracking()
             .Where(fd => fd.Status != 0 && fd.CardNumber != null);
+
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
             var projected = query.Select(t => new MstSecurityLookUpRM
             {
@@ -177,7 +179,7 @@ namespace Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-                   public async Task<User> GetByIdAsyncRaw(Guid id)
+        public async Task<User> GetByIdAsyncRaw(Guid id)
         {
             var query = _context.Users
                 .Include(u => u.Group)
@@ -246,8 +248,7 @@ namespace Repositories.Repository
                 .Include(x => x.Organization)
                 .Where(x => x.Status != 0);
 
-                query = query.WithActiveRelations();
-
+            query = query.WithActiveRelations();
             return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
 

@@ -13,6 +13,8 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 try
 {
@@ -158,6 +160,9 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
 builder.Services.AddScoped<GeofenceRepository>();

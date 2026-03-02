@@ -50,7 +50,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<int?>("IsEnabled")
@@ -401,82 +402,6 @@ namespace Repositories.Migrations
                     b.ToTable("alarm_triggers", (string)null);
                 });
 
-            modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("ApplicationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("application_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("created_by");
-
-                    b.Property<float>("Distance")
-                        .HasColumnType("real")
-                        .HasColumnName("distance");
-
-                    b.Property<float>("DistancePx")
-                        .HasColumnType("real")
-                        .HasColumnName("distance_px");
-
-                    b.Property<string>("EndPos")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("end_pos");
-
-                    b.Property<long>("Generate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("_generate");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Generate"));
-
-                    b.Property<Guid?>("ReaderId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("ble_reader_id");
-
-                    b.Property<string>("StartPos")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("start_pos");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("Generate")
-                        .IsUnique();
-
-                    b.HasIndex("ReaderId");
-
-                    b.ToTable("ble_reader_node", (string)null);
-                });
-
             modelBuilder.Entity("Entities.Models.Boundary", b =>
                 {
                     b.Property<Guid>("Id")
@@ -708,7 +633,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Name")
@@ -829,7 +755,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Name")
@@ -1302,7 +1229,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
@@ -1947,7 +1875,8 @@ namespace Repositories.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("EngineTrackingId")
@@ -2725,6 +2654,639 @@ namespace Repositories.Migrations
                     b.ToTable("overpopulating", (string)null);
                 });
 
+            modelBuilder.Entity("Entities.Models.PatrolArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<string>("AreaShape")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("area_shape");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("FloorId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floor_id");
+
+                    b.Property<Guid?>("FloorplanId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("floorplan_id");
+
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remarks");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("FloorId");
+
+                    b.HasIndex("FloorplanId");
+
+                    b.ToTable("patrol_area", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("PatrolRouteId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_route_id");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("start_date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolRouteId");
+
+                    b.ToTable("patrol_assignment", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolAssignmentSecurity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("PatrolAssignmentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_assignment_id");
+
+                    b.Property<Guid>("SecurityId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolAssignmentId");
+
+                    b.HasIndex("SecurityId");
+
+                    b.ToTable("patrol_assignment_security", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<Guid?>("ApprovedByHeadId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("approved_by_head_id");
+
+                    b.Property<int>("CaseStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("case_status");
+
+                    b.Property<int>("CaseType")
+                        .HasColumnType("int")
+                        .HasColumnName("case_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid?>("PatrolAssignmentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_assignment_id");
+
+                    b.Property<Guid?>("PatrolRouteId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_route_id");
+
+                    b.Property<Guid?>("PatrolSessionId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_session_id");
+
+                    b.Property<Guid?>("SecurityId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("ApprovedByHeadId");
+
+                    b.HasIndex("PatrolAssignmentId");
+
+                    b.HasIndex("PatrolRouteId");
+
+                    b.HasIndex("PatrolSessionId");
+
+                    b.HasIndex("SecurityId");
+
+                    b.ToTable("patrol_case", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCaseAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("file_type");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("file_url");
+
+                    b.Property<string>("MimeType")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("mime_type");
+
+                    b.Property<Guid?>("PatrolCaseId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_case_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("uploaded_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolCaseId");
+
+                    b.ToTable("patrol_case_attachment", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCheckpointLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime?>("ArrivedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("arrived_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DistanceFromPrev")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("distance_from_prev");
+
+                    b.Property<DateTime?>("LeftAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("left_at");
+
+                    b.Property<int?>("OrderIndex")
+                        .HasColumnType("int")
+                        .HasColumnName("order_index");
+
+                    b.Property<Guid?>("PatrolAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_area_id");
+
+                    b.Property<Guid?>("PatrolSessionId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_session_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolAreaId");
+
+                    b.HasIndex("PatrolSessionId");
+
+                    b.ToTable("patrol_checkpoint_log", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRoute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("patrol_route", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRouteAreas", b =>
+                {
+                    b.Property<Guid>("PatrolAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_area_id");
+
+                    b.Property<Guid>("PatrolRouteId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_route_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("EndAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("end_area_id");
+
+                    b.Property<float>("EstimatedDistance")
+                        .HasColumnType("real")
+                        .HasColumnName("estimated_distance");
+
+                    b.Property<int>("EstimatedTime")
+                        .HasColumnType("int")
+                        .HasColumnName("estimated_time");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int")
+                        .HasColumnName("order_index");
+
+                    b.Property<Guid?>("StartAreaId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("start_area_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("PatrolAreaId", "PatrolRouteId");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolAreaId");
+
+                    b.HasIndex("PatrolRouteId");
+
+                    b.ToTable("patrol_route_areas", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRouteTimeGroups", b =>
+                {
+                    b.Property<Guid>("PatrolRouteId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_route_id");
+
+                    b.Property<Guid>("TimeGroupId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("time_group_id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("PatrolRouteId", "TimeGroupId");
+
+                    b.HasIndex("TimeGroupId");
+
+                    b.ToTable("patrol_route_time_groups", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ended_at");
+
+                    b.Property<Guid>("PatrolAssignmentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_assignment_id");
+
+                    b.Property<Guid>("PatrolRouteId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("patrol_route_id");
+
+                    b.Property<Guid>("SecurityId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_id");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("started_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("PatrolAssignmentId");
+
+                    b.HasIndex("PatrolRouteId");
+
+                    b.HasIndex("SecurityId");
+
+                    b.ToTable("patrol_session", (string)null);
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2754,6 +3316,110 @@ namespace Repositories.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("refresh_token", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.SecurityGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("security_group", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.SecurityGroupMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("application_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("SecurityGroupId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_group_id");
+
+                    b.Property<Guid?>("SecurityId")
+                        .HasMaxLength(36)
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("security_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("SecurityGroupId");
+
+                    b.HasIndex("SecurityId");
+
+                    b.ToTable("security_group_member", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.StayOnArea", b =>
@@ -2924,6 +3590,11 @@ namespace Repositories.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
+
+                    b.Property<string>("ScheduleType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("schedule_type");
 
                     b.Property<int>("Status")
                         .HasColumnType("int")
@@ -3198,6 +3869,10 @@ namespace Repositories.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("deny_reason");
 
+                    b.Property<int?>("ExtendedVisitorTime")
+                        .HasColumnType("int")
+                        .HasColumnName("extended_visitor_time");
+
                     b.Property<string>("InvitationCode")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("invitation_code");
@@ -3319,9 +3994,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VisitorId", "Status");
 
-                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd")
-                        .IsUnique()
-                        .HasFilter("[visitor_id] IS NOT NULL AND [visitor_period_start] IS NOT NULL AND [visitor_period_end] IS NOT NULL");
+                    b.HasIndex("VisitorId", "VisitorPeriodStart", "VisitorPeriodEnd");
 
                     b.ToTable("trx_visitor", (string)null);
                 });
@@ -3722,25 +4395,6 @@ namespace Repositories.Migrations
                     b.Navigation("Security");
 
                     b.Navigation("Visitor");
-                });
-
-            modelBuilder.Entity("Entities.Models.BleReaderNode", b =>
-                {
-                    b.HasOne("Entities.Models.MstApplication", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.MstBleReader", "Reader")
-                        .WithMany()
-                        .HasForeignKey("ReaderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Application");
-
-                    b.Navigation("Reader");
                 });
 
             modelBuilder.Entity("Entities.Models.Boundary", b =>
@@ -4405,6 +5059,255 @@ namespace Repositories.Migrations
                     b.Navigation("Floorplan");
                 });
 
+            modelBuilder.Entity("Entities.Models.PatrolArea", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolAreas")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstFloor", "Floor")
+                        .WithMany("PatrolAreas")
+                        .HasForeignKey("FloorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstFloorplan", "Floorplan")
+                        .WithMany("PatrolAreas")
+                        .HasForeignKey("FloorplanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Floor");
+
+                    b.Navigation("Floorplan");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolAssignment", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolAssignments")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolRoute", "PatrolRoute")
+                        .WithMany("PatrolAssignments")
+                        .HasForeignKey("PatrolRouteId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolRoute");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolAssignmentSecurity", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolAssignmentSecurities")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolAssignment", "PatrolAssignment")
+                        .WithMany("PatrolAssignmentSecurities")
+                        .HasForeignKey("PatrolAssignmentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstSecurity", "Security")
+                        .WithMany("PatrolAssignmentSecurities")
+                        .HasForeignKey("SecurityId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolAssignment");
+
+                    b.Navigation("Security");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCase", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolCases")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstSecurity", "ApprovedByHead")
+                        .WithMany("HeadPatrolCases")
+                        .HasForeignKey("ApprovedByHeadId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.PatrolAssignment", "PatrolAssignment")
+                        .WithMany()
+                        .HasForeignKey("PatrolAssignmentId");
+
+                    b.HasOne("Entities.Models.PatrolRoute", "PatrolRoute")
+                        .WithMany("PatrolCases")
+                        .HasForeignKey("PatrolRouteId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.PatrolSession", "PatrolSession")
+                        .WithMany("PatrolCases")
+                        .HasForeignKey("PatrolSessionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstSecurity", "Security")
+                        .WithMany("SecuritiesPatrolCases")
+                        .HasForeignKey("SecurityId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("ApprovedByHead");
+
+                    b.Navigation("PatrolAssignment");
+
+                    b.Navigation("PatrolRoute");
+
+                    b.Navigation("PatrolSession");
+
+                    b.Navigation("Security");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCaseAttachment", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolCaseAttachments")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolCase", "PatrolCase")
+                        .WithMany("PatrolCaseAttachments")
+                        .HasForeignKey("PatrolCaseId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolCase");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCheckpointLog", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolCheckpointLogs")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolArea", "PatrolArea")
+                        .WithMany()
+                        .HasForeignKey("PatrolAreaId");
+
+                    b.HasOne("Entities.Models.PatrolSession", "PatrolSession")
+                        .WithMany("PatrolCheckpointLogs")
+                        .HasForeignKey("PatrolSessionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolArea");
+
+                    b.Navigation("PatrolSession");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRoute", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolRoutes")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRouteAreas", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolArea", "PatrolArea")
+                        .WithMany("PatrolRouteAreas")
+                        .HasForeignKey("PatrolAreaId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolRoute", "PatrolRoute")
+                        .WithMany("PatrolRouteAreas")
+                        .HasForeignKey("PatrolRouteId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolArea");
+
+                    b.Navigation("PatrolRoute");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRouteTimeGroups", b =>
+                {
+                    b.HasOne("Entities.Models.PatrolRoute", "PatrolRoutes")
+                        .WithMany("PatrolRouteTimeGroups")
+                        .HasForeignKey("PatrolRouteId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
+                        .WithMany("PatrolRouteTimeGroups")
+                        .HasForeignKey("TimeGroupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("PatrolRoutes");
+
+                    b.Navigation("TimeGroup");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolSession", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("PatrolSessions")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolAssignment", "PatrolAssignment")
+                        .WithMany("PatrolSessions")
+                        .HasForeignKey("PatrolAssignmentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.PatrolRoute", "PatrolRoute")
+                        .WithMany("PatrolSessions")
+                        .HasForeignKey("PatrolRouteId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.MstSecurity", "Security")
+                        .WithMany("PatrolSessions")
+                        .HasForeignKey("SecurityId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("PatrolAssignment");
+
+                    b.Navigation("PatrolRoute");
+
+                    b.Navigation("Security");
+                });
+
             modelBuilder.Entity("Entities.Models.RefreshToken", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -4414,6 +5317,42 @@ namespace Repositories.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Entities.Models.SecurityGroup", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("SecurityGroups")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+                });
+
+            modelBuilder.Entity("Entities.Models.SecurityGroupMember", b =>
+                {
+                    b.HasOne("Entities.Models.MstApplication", "Application")
+                        .WithMany("SecurityGroupMembers")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.SecurityGroup", "SecurityGroup")
+                        .WithMany("SecurityGroupMembers")
+                        .HasForeignKey("SecurityGroupId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Entities.Models.MstSecurity", "Security")
+                        .WithMany("SecurityGroupMembers")
+                        .HasForeignKey("SecurityId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Security");
+
+                    b.Navigation("SecurityGroup");
                 });
 
             modelBuilder.Entity("Entities.Models.StayOnArea", b =>
@@ -4684,6 +5623,26 @@ namespace Repositories.Migrations
 
                     b.Navigation("Organizations");
 
+                    b.Navigation("PatrolAreas");
+
+                    b.Navigation("PatrolAssignmentSecurities");
+
+                    b.Navigation("PatrolAssignments");
+
+                    b.Navigation("PatrolCaseAttachments");
+
+                    b.Navigation("PatrolCases");
+
+                    b.Navigation("PatrolCheckpointLogs");
+
+                    b.Navigation("PatrolRoutes");
+
+                    b.Navigation("PatrolSessions");
+
+                    b.Navigation("SecurityGroupMembers");
+
+                    b.Navigation("SecurityGroups");
+
                     b.Navigation("Visitors");
                 });
 
@@ -4716,6 +5675,8 @@ namespace Repositories.Migrations
                     b.Navigation("FloorplanMaskedAreas");
 
                     b.Navigation("Floorplans");
+
+                    b.Navigation("PatrolAreas");
                 });
 
             modelBuilder.Entity("Entities.Models.MstFloorplan", b =>
@@ -4723,6 +5684,8 @@ namespace Repositories.Migrations
                     b.Navigation("FloorplanDevices");
 
                     b.Navigation("FloorplanMaskedAreas");
+
+                    b.Navigation("PatrolAreas");
                 });
 
             modelBuilder.Entity("Entities.Models.MstMember", b =>
@@ -4744,11 +5707,65 @@ namespace Repositories.Migrations
                     b.Navigation("AlarmTriggers");
 
                     b.Navigation("CardRecords");
+
+                    b.Navigation("HeadPatrolCases");
+
+                    b.Navigation("PatrolAssignmentSecurities");
+
+                    b.Navigation("PatrolSessions");
+
+                    b.Navigation("SecuritiesPatrolCases");
+
+                    b.Navigation("SecurityGroupMembers");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolArea", b =>
+                {
+                    b.Navigation("PatrolRouteAreas");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolAssignment", b =>
+                {
+                    b.Navigation("PatrolAssignmentSecurities");
+
+                    b.Navigation("PatrolSessions");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolCase", b =>
+                {
+                    b.Navigation("PatrolCaseAttachments");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolRoute", b =>
+                {
+                    b.Navigation("PatrolAssignments");
+
+                    b.Navigation("PatrolCases");
+
+                    b.Navigation("PatrolRouteAreas");
+
+                    b.Navigation("PatrolRouteTimeGroups");
+
+                    b.Navigation("PatrolSessions");
+                });
+
+            modelBuilder.Entity("Entities.Models.PatrolSession", b =>
+                {
+                    b.Navigation("PatrolCases");
+
+                    b.Navigation("PatrolCheckpointLogs");
+                });
+
+            modelBuilder.Entity("Entities.Models.SecurityGroup", b =>
+                {
+                    b.Navigation("SecurityGroupMembers");
                 });
 
             modelBuilder.Entity("Entities.Models.TimeGroup", b =>
                 {
                     b.Navigation("CardAccessTimeGroups");
+
+                    b.Navigation("PatrolRouteTimeGroups");
 
                     b.Navigation("TimeBlocks");
                 });

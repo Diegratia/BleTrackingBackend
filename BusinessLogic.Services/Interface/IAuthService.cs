@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using BusinessLogic.Services.Implementation;
 using Bogus.DataSets;
+using Helpers.Consumer;
+using Helpers.Consumer.Mqtt;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -57,6 +59,9 @@ namespace BusinessLogic.Services.Interface
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEmailService _emailService;
+        private readonly IAuditEmitter _audit;
+
+
 
         public AuthService(
             UserRepository userRepository,
@@ -66,6 +71,7 @@ namespace BusinessLogic.Services.Interface
             IMapper mapper,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
+            IAuditEmitter audit,
             IEmailService emailService)
         {
             _userRepository = userRepository;
@@ -76,6 +82,7 @@ namespace BusinessLogic.Services.Interface
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
             _emailService = emailService;
+            _audit = audit;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -114,6 +121,16 @@ namespace BusinessLogic.Services.Interface
             };
 
             await _refreshTokenRepository.SaveRefreshTokenAsync(refreshTokenEntity);
+
+            await _audit.Action(
+                AuditEmitter.AuditAction.LOGIN,
+                "User",
+                "User login successfully",
+                new {
+                    username = user.Username,
+                    ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString()
+                }
+            );
 
             return new AuthResponseDto
             {
@@ -458,7 +475,8 @@ namespace BusinessLogic.Services.Interface
                 new Claim("groupId", user.GroupId.ToString()),
                 new Claim("ApplicationId", user.Group.ApplicationId.ToString()),
                 new Claim("groupName", user.Group.Name),
-                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString())
+                new Claim(ClaimTypes.Role, user.Group.LevelPriority.ToString()),
+                new Claim("level", ((int)user.Group.LevelPriority).ToString())
             };
 
             var token = new JwtSecurityToken(
@@ -563,8 +581,6 @@ namespace BusinessLogic.Services.Interface
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
                 return;
-
-            await _refreshTokenRepository.DeleteRefreshTokenAsync(refreshToken);
         }
 
 

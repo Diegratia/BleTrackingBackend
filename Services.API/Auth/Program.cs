@@ -15,6 +15,8 @@ using DotNetEnv;
 using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 
 try
@@ -62,7 +64,6 @@ builder.Configuration
 builder.Services.AddControllers();
 
 // Registrasi otomatis validasi FluentValidation
-// Scan semua validator di assembly yang mengandung BrandValidator
 builder.Services.AddValidatorExtensions();
 
 // Konfigurasi DbContext
@@ -85,6 +86,9 @@ builder.Services.AddHttpContextAccessor();
 
 // Registrasi Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();

@@ -15,6 +15,7 @@ using DotNetEnv;
 using StackExchange.Redis;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension.FileStorageService;
 
 try
 {
@@ -204,6 +205,9 @@ builder.Services.AddScoped<IMstFloorService, MstFloorService>();
 builder.Services.AddScoped<IMstFloorplanService, MstFloorplanService>();
 builder.Services.AddScoped<IFloorplanMaskedAreaService, FloorplanMaskedAreaService>();
 builder.Services.AddScoped<IFloorplanDeviceService, FloorplanDeviceService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+
 
 builder.Services.AddScoped<MstFloorRepository>();
 builder.Services.AddScoped<MstFloorplanRepository>();
@@ -218,6 +222,7 @@ builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
+builder.Services.AddScoped<IPatrolAreaService, PatrolAreaService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 
 
@@ -226,6 +231,7 @@ builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
+builder.Services.AddScoped<PatrolAreaRepository>();
 
 
 

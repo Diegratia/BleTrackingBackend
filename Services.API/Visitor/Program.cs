@@ -14,6 +14,7 @@ using Repositories.Seeding;
 using DotNetEnv;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension.FileStorageService;
 // using Helpers.Consumer.Mqtt;
 
 try
@@ -114,8 +115,8 @@ builder.Services.AddAuthorization(options =>
     });
     options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminOrSecondaryRole", policy =>
  {
-     policy.RequireAssertion(context =>
-         context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
+    policy.RequireAssertion(context =>
+        context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Secondary"));
  });
     options.AddPolicy("RequireAll", policy =>
      {
@@ -172,6 +173,7 @@ builder.Services.AddScoped<IVisitorService, VisitorService>();
 builder.Services.AddScoped<VisitorRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<ICardRecordService, CardRecordService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddScoped<TrxVisitorRepository>();

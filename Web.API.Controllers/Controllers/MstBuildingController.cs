@@ -8,10 +8,13 @@ using BusinessLogic.Services.Interface;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Helpers.Consumer;
+using BusinessLogic.Services.Extension.RootExtension;
 
 
 namespace Web.API.Controllers.Controllers
 {
+    [MinLevel(LevelPriority.PrimaryAdmin)]
     [Route("api/[controller]")]
     [ApiController]
     public class MstBuildingController : ControllerBase
@@ -88,7 +91,7 @@ namespace Web.API.Controllers.Controllers
     }
 
 
-        [Authorize("RequirePrimaryAdminOrSystemOrSuperAdminRole")]
+
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromForm] IFormFile file)
         {

@@ -183,7 +183,7 @@ public class VisitorService : IVisitorService
                 {
                     try
                     {
-                        visitor.FaceImage = await _fileStorageService.SaveImageAsync(createDto.FaceImage, "visitorFaceImages", MaxFileSize);
+                        visitor.FaceImage = await _fileStorageService.SaveImageAsync(createDto.FaceImage, "visitorFaceImages", MaxFileSize, ImagePurpose.Photo);
                         visitor.UploadFr = 1;
                         visitor.UploadFrError = "Upload successful";
                     }
@@ -645,7 +645,7 @@ public class VisitorService : IVisitorService
                 try
                 {
                     await _fileStorageService.DeleteAsync(visitor.FaceImage);
-                    visitor.FaceImage = await _fileStorageService.SaveImageAsync(updateDto.FaceImage, "visitorFaceImages", MaxFileSize);
+                    visitor.FaceImage = await _fileStorageService.SaveImageAsync(updateDto.FaceImage, "visitorFaceImages", MaxFileSize, ImagePurpose.Photo);
                     visitor.UploadFr = 1;
                     visitor.UploadFrError = "Upload successful";
                 }

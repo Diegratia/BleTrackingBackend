@@ -27,5 +27,6 @@ namespace Entities.Models
 
         public MstApplication Application { get; set; }
         // public ICollection<MstFloor> Floors { get; set; } = new List<MstFloor>();
+
     }
 }

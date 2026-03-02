@@ -23,6 +23,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Extension.FileStorageService;
+using Helpers.Consumer;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -36,12 +37,14 @@ namespace BusinessLogic.Services.Implementation
         private readonly IFloorplanMaskedAreaService _maskedAreaService;
         private readonly IGeofenceService _geofenceService;
         private readonly IStayOnAreaService _stayOnAreaService;
+        private readonly IPatrolAreaService _patrolAreaService;
         private readonly IOverpopulatingService _overpopulatingService;
         private readonly IBoundaryService _boundaryService;
         private readonly GeofenceRepository _geofenceRepository;
         private readonly StayOnAreaRepository _stayOnAreaRepository;
         private readonly OverpopulatingRepository _overpopulatingRepository;
         private readonly BoundaryRepository _boundaryRepository;
+        private readonly PatrolAreaRepository _patrolAreaRepository;
         private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
         private readonly ILogger<MstFloorplan> _logger;
         private readonly IDistributedCache _cache;
@@ -49,6 +52,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMqttClientService _mqttClient;
         private bool cacheDisabled = false;
         private IFileStorageService _fileStorageService;
+        private readonly IAuditEmitter _audit;
 
 
         public MstFloorplanService(
@@ -59,10 +63,12 @@ namespace BusinessLogic.Services.Implementation
             GeofenceRepository geofenceRepository,
             StayOnAreaRepository stayOnAreaRepository,
             OverpopulatingRepository overpopulatingRepository,
+            PatrolAreaRepository patrolAreaRepository,
             BoundaryRepository boundaryRepository,
             IGeofenceService geofenceService,
             IStayOnAreaService stayOnAreaService,
             IOverpopulatingService overpopulatingService,
+            IPatrolAreaService patrolAreaService,
             IBoundaryService boundaryService,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
@@ -70,7 +76,8 @@ namespace BusinessLogic.Services.Implementation
             IDistributedCache cache,
             IConnectionMultiplexer redis,
             IMqttClientService mqttClient,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            IAuditEmitter audit
 
             ) : base(httpContextAccessor)
         {
@@ -81,11 +88,13 @@ namespace BusinessLogic.Services.Implementation
             _stayOnAreaRepository = stayOnAreaRepository;
             _overpopulatingRepository = overpopulatingRepository;
             _boundaryRepository = boundaryRepository;
+            _patrolAreaRepository = patrolAreaRepository;
             _maskedAreaService = maskedAreaService;
             _geofenceService = geofenceService;
             _stayOnAreaService = stayOnAreaService;
             _overpopulatingService = overpopulatingService;
             _boundaryService = boundaryService;
+            _patrolAreaService = patrolAreaService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
@@ -93,6 +102,7 @@ namespace BusinessLogic.Services.Implementation
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
             _fileStorageService = fileStorageService;
+            _audit = audit;
         }
         
         private bool IsRedisAlive()
@@ -204,7 +214,7 @@ namespace BusinessLogic.Services.Implementation
             if (createDto.FloorplanImage != null)
             {
                 floorplan.FloorplanImage = await _fileStorageService
-                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize);
+                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
             }
 
             floorplan.Id = Guid.NewGuid();
@@ -217,6 +227,12 @@ namespace BusinessLogic.Services.Implementation
             var createdFloorplan = await _repository.AddAsync(floorplan);
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+            await _audit.Created(
+                "Floorplan",
+                createdFloorplan.Id,
+                "Created floorplan",
+                new { createdFloorplan.Name }
+            );
             return _mapper.Map<MstFloorplanDto>(createdFloorplan);
         }
 
@@ -232,7 +248,7 @@ namespace BusinessLogic.Services.Implementation
                 await _fileStorageService.DeleteAsync(floorplan.FloorplanImage);
 
                 floorplan.FloorplanImage = await _fileStorageService
-                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize);
+                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
             }
 
             floorplan.UpdatedBy = username;
@@ -240,6 +256,12 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, floorplan);
             await _repository.UpdateAsync(floorplan);
+            await _audit.Updated(
+                "Floorplan",
+                floorplan.Id,
+                "Updated floorplan",
+                new { floorplan.Name }
+            );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
@@ -258,6 +280,7 @@ namespace BusinessLogic.Services.Implementation
             var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
             var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
             var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
             //redis cache
             foreach (var maskedArea in maskedAreas)
             {
@@ -279,22 +302,128 @@ namespace BusinessLogic.Services.Implementation
             {
                 await _overpopulatingService.DeleteAsync(overpopulating.Id);
             }
+            foreach (var patrolArea in patrolAreas)
+            {
+                await _patrolAreaService.DeleteAsync(patrolArea.Id);
+            }
             floorplan.UpdatedBy = username;
             floorplan.UpdatedAt = DateTime.UtcNow;
             floorplan.Status = 0;
             await _repository.DeleteAsync(id);
         });
+            await _audit.Deleted (
+                "Floorplan",
+                floorplan.Id,
+                "Deleted floorplan",
+                new { floorplan.Name }
+            );
             await RemoveGroupAsync();
             await _maskedAreaService.RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
+
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         await CascadeDeleteAsync(id);
+        //     });
+
+        //     await _audit.Deleted(
+        //         "Floorplan",
+        //         id,
+        //         "Deleted floorplan"
+        //     );
+        //     await RemoveGroupAsync();
+        //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+        // }
+
+        
+        public async Task CascadeDeleteAsync(Guid id)
+        {
+            var username =
+                _httpContextAccessor.HttpContext?.User
+                    .FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var floorplan = await _repository.GetByIdAsync(id);
+            if (floorplan == null) return;
+
+            // ==== CHILD ENTITIES (NO SERVICE DeleteAsync) ====
+
+            var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var ma in maskedAreas)
+            {
+                ma.Status = 0;
+                ma.UpdatedBy = username;
+                ma.UpdatedAt = DateTime.UtcNow;
+                await _maskedAreaService.CascadeDeleteAsync(ma.Id, username);
+            }
+
+            var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+            foreach (var g in geofences)
+            {
+                g.Status = 0;
+                g.UpdatedBy = username;
+                g.UpdatedAt = DateTime.UtcNow;
+                await _geofenceRepository.DeleteAsync(g.Id);
+            }
+
+            var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var s in stayOnAreas)
+            {
+                s.Status = 0;
+                s.UpdatedBy = username;
+                s.UpdatedAt = DateTime.UtcNow;
+                await _stayOnAreaRepository.DeleteAsync(s.Id);
+            }
+
+            var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+            foreach (var b in boundaries)
+            {
+                b.Status = 0;
+                b.UpdatedBy = username;
+                b.UpdatedAt = DateTime.UtcNow;
+                await _boundaryRepository.DeleteAsync(b.Id);
+            }
+
+            var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            foreach (var o in overpopulatings)
+            {
+                o.Status = 0;
+                o.UpdatedBy = username;
+                o.UpdatedAt = DateTime.UtcNow;
+                await _overpopulatingRepository.DeleteAsync(o.Id);
+            }
+
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var p in patrolAreas)
+            {
+                p.Status = 0;
+                p.UpdatedBy = username;
+                p.UpdatedAt = DateTime.UtcNow;
+                await _patrolAreaRepository.DeleteAsync(p.Id);
+            }
+
+            // ==== FLOORPLAN ITSELF ====
+
+            floorplan.Status = 0;
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.DeleteAsync(id);
+
+            // ❌ NO AUDIT
+            // ❌ NO MQTT
+            // ❌ NO CACHE CLEAR
+        }
+
 
         public async Task<object> FilterAsync(DataTablesRequest request)
         {
             var query = _repository.GetAllQueryable();
 
             var searchableColumns = new[] { "Name", "Floor.Name" };
-            var validSortColumns = new[] {  "UpdatedAt", "Name", "CreatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
+            var validSortColumns = new[] { "UpdatedAt", "Name", "CreatedAt", "Floor.Name", "Status", "MaskedAreaCount", "DeviceCount" };
             var enumColumns = new Dictionary<string, Type> { { "Status", typeof(int) } };
 
             var filterService = new GenericDataTableService<MstFloorplan, MstFloorplanDto>(
@@ -360,7 +489,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var floorplans = await _repository.GetAllExportAsync();
             var dtos = _mapper.Map<IEnumerable<MstFloorplanDto>>(floorplans);
 

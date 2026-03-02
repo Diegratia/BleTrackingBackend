@@ -26,6 +26,7 @@ namespace Data.ViewModels
         public int Status { get; set; }
         public int MaskedAreaCount { get; set; }
         public int DeviceCount { get; set; }
+        public int? PatrolAreaCount { get; set; }
         public MstFloorDto Floor { get; set; }
         public MstEngineDto Engine { get; set; }
 

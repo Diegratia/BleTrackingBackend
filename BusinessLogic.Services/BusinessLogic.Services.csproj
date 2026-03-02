@@ -11,6 +11,7 @@
     <!-- PackageReferences tanpa versi: dikontrol lewat Directory.Packages.props -->
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
     <PackageReference Include="Bogus" />
+    <PackageReference Include="CsvHelper" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.AspNetCore" />
     <PackageReference Include="Quartz" />
@@ -19,6 +20,12 @@
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="System.Linq.Dynamic.Core" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />

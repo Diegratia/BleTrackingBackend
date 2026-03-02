@@ -21,5 +21,6 @@ namespace BusinessLogic.Services.Interface
         Task<byte[]> ExportPdfAsync();
         Task<byte[]> ExportExcelAsync();
         Task RemoveGroupAsync();
+        Task CascadeDeleteAsync(Guid id);
     }
 }

@@ -33,6 +33,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IDistributedCache _cache;
         private readonly IDatabase _redis;
         private readonly IMqttClientService _mqttClient;
+        private readonly IAuditEmitter _audit;
         private bool cacheDisabled = false;
 
         public FloorplanMaskedAreaService(
@@ -44,7 +45,8 @@ namespace BusinessLogic.Services.Implementation
             ILogger<FloorplanMaskedArea> logger,
             IDistributedCache cache,
             IConnectionMultiplexer redis,
-            IMqttClientService mqttClient
+            IMqttClientService mqttClient,
+            IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
             _repository = repository;
@@ -56,6 +58,7 @@ namespace BusinessLogic.Services.Implementation
             _cache = cache;
             _redis = redis?.GetDatabase();
             _mqttClient = mqttClient;
+            _audit = audit;
         }
 
         // Redis safety wrapper
@@ -193,6 +196,12 @@ namespace BusinessLogic.Services.Implementation
             area.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(area);
+            await _audit.Created(
+                "Masked Area",
+                area.Id,
+                "Created masked area",
+                new { area.Name }
+            );
 
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
@@ -223,6 +232,12 @@ namespace BusinessLogic.Services.Implementation
 
             await RemoveGroupAsync();
             await _repository.UpdateAsync(area);
+            await _audit.Updated(
+                "Masked Area",
+                area.Id,
+                "Updated masked area",
+                new { area.Name }
+            );
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
 
@@ -290,10 +305,81 @@ namespace BusinessLogic.Services.Implementation
                     a.readerId, a.cctvId, a.accessId, 
                     false, username);
             }
-
+            await _audit.Deleted(
+                "Masked Area",
+                area.Id,
+                "Deleted masked area",
+                new { area.Name }
+            );
             await RemoveGroupAsync();
             await _mqttClient.PublishAsync("engine/refresh/area-related", "");
         }
+
+    //     public async Task SoftDeleteAsync(Guid id)
+    // {
+    //     var username = _httpContextAccessor.HttpContext?
+    //         .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+    //     var area = await _repository.GetByIdAsync(id);
+    //     if (area == null)
+    //         throw new KeyNotFoundException("Masked area not found");
+
+    //     List<Guid> deviceIds = new();
+
+    //     await _repository.ExecuteInTransactionAsync(async () =>
+    //     {
+    //         area.Status = 0;
+    //         area.UpdatedBy = username;
+    //         area.UpdatedAt = DateTime.UtcNow;
+    //         await _repository.SoftDeleteAsync(id);
+
+    //         var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+    //         foreach (var d in devices)
+    //         {
+    //             deviceIds.Add(d.Id);
+    //         }
+    //     });
+
+    //     // 🔥 side effect SETELAH commit
+    //     foreach (var deviceId in deviceIds)
+    //     {
+    //         await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
+    //     }
+
+    //     await _audit.Deleted(
+    //         "Masked Area",
+    //         area.Id,
+    //         "Deleted masked area",
+    //         new { area.Name }
+    //     );
+    //     await RemoveGroupAsync();
+    //     await _mqttClient.PublishAsync("engine/refresh/area-related", "");
+    // }
+
+    // ============================================================
+    // INTERNAL CASCADE DELETE
+    // ============================================================
+    public async Task CascadeDeleteAsync(Guid id, string username)
+    {
+        var area = await _repository.GetByIdAsync(id);
+        if (area == null) return;
+
+        area.Status = 0;
+        area.UpdatedBy = username;
+        area.UpdatedAt = DateTime.UtcNow;
+
+        await _repository.SoftDeleteAsync(id);
+
+        var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+        foreach (var d in devices)
+        {
+            await _floorplanDeviceService.CascadeDeleteAsync(d.Id, username);
+        }
+
+        // ❌ NO TRANSACTION
+        // ❌ NO AUDIT
+        // ❌ NO MQTT
+    }
 
 
 

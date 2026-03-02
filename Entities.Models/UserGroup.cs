@@ -8,15 +8,15 @@ using Helpers.Consumer;
 
 namespace Entities.Models 
 {
-    public enum LevelPriority
-    {
-        System,
-        SuperAdmin,
-        PrimaryAdmin,
-        Primary,
-        Secondary,
-        UserCreated
-    }
+    // public enum LevelPriority
+    // {
+    //     System,
+    //     SuperAdmin,
+    //     PrimaryAdmin,
+    //     Primary,
+    //     Secondary,
+    //     UserCreated
+    // }
 
     public class UserGroup : BaseModel, IApplicationEntity
     {

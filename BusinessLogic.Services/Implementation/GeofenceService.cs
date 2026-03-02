@@ -22,12 +22,15 @@ namespace BusinessLogic.Services.Implementation
         private readonly GeofenceRepository _repository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public GeofenceService(GeofenceRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public GeofenceService(GeofenceRepository repository, 
+        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
         public async Task<GeofenceDto> GetByIdAsync(Guid id)
@@ -55,6 +58,12 @@ namespace BusinessLogic.Services.Implementation
             geofence.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(geofence);
+            await _audit.Created(
+                "Geofence",
+                geofence.Id,
+                "Created geofence",
+                new { geofence.Name }
+            );
             return _mapper.Map<GeofenceDto>(geofence);
         }
 
@@ -70,6 +79,12 @@ namespace BusinessLogic.Services.Implementation
 
             _mapper.Map(updateDto, geofence);
             await _repository.UpdateAsync(geofence);
+            await _audit.Updated(
+                "Geofence",
+                geofence.Id,
+                "Updated geofence",
+                new { geofence.Name }
+            );
         }
 
         public async Task DeleteAsync(Guid id)
@@ -85,6 +100,12 @@ namespace BusinessLogic.Services.Implementation
             geofence.UpdatedBy = username;
             geofence.UpdatedAt = DateTime.UtcNow;
             await _repository.DeleteAsync(id);
+            await _audit.Deleted(
+                "Geofence",
+                geofence.Id,
+                "Deleted geofence",
+                new { geofence.Name }
+            );
         }
 
         public async Task<object> FilterAsync(DataTablesRequest request)

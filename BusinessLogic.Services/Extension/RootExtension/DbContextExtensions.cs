@@ -9,8 +9,7 @@ namespace BusinessLogic.Services.Extension.RootExtension
     {
         public static IServiceCollection AddDbContextExtension(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("BleTrackingDbConnection")
-                                ?? "Server=localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True";
+            var connectionString = configuration.GetConnectionString("BleTrackingDbConnection");
 
             services.AddDbContext<BleTrackingDbContext>(options =>
                 options.UseSqlServer(connectionString));
