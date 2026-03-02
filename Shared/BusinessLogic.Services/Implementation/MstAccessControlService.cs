@@ -2,121 +2,152 @@ using AutoMapper;
 using BusinessLogic.Services.Interface;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
+using DataView;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using ClosedXML.Excel;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstAccessControlService : IMstAccessControlService
+    public class MstAccessControlService : BaseService, IMstAccessControlService
     {
         private readonly MstAccessControlRepository _repository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public MstAccessControlService(MstAccessControlRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstAccessControlService(
+            MstAccessControlRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            IAuditEmitter audit) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
-        public async Task<MstAccessControlDto> GetByIdAsync(Guid id)
+        public async Task<MstAccessControlRead> GetByIdAsync(Guid id)
         {
             var accessControl = await _repository.GetByIdAsync(id);
-            return accessControl == null ? null : _mapper.Map<MstAccessControlDto>(accessControl);
+            if (accessControl == null)
+                throw new NotFoundException($"Access Control with id {id} not found");
+            return accessControl;
         }
 
-        public async Task<IEnumerable<MstAccessControlDto>> GetAllAsync()
+        public async Task<IEnumerable<MstAccessControlRead>> GetAllAsync()
         {
-            var accessControls = await _repository
-            .GetAllAsync();
-            return _mapper.Map<IEnumerable<MstAccessControlDto>>(accessControls);
+            return await _repository.GetAllAsync();
         }
-        public async Task<IEnumerable<MstAccessControlDto>> GetAllUnassignedAsync()
+
+        public async Task<IEnumerable<MstAccessControlRead>> GetAllUnassignedAsync()
         {
-            var accessControls = await _repository
-            .GetAllUnassignedAsync();
-            return _mapper.Map<IEnumerable<MstAccessControlDto>>(accessControls);
+            return await _repository.GetAllUnassignedAsync();
         }
-                public async Task<IEnumerable<OpenMstAccessControlDto>> OpenGetAllAsync()
+
+        public async Task<IEnumerable<OpenMstAccessControlDto>> OpenGetAllAsync()
         {
-            var accessControls = await _repository
-            .GetAllAsync();
+            var accessControls = await _repository.GetAllAsync();
             return _mapper.Map<IEnumerable<OpenMstAccessControlDto>>(accessControls);
         }
 
-        public async Task<MstAccessControlDto> CreateAsync(MstAccessControlCreateDto createDto)
+        public async Task<MstAccessControlRead> CreateAsync(MstAccessControlCreateDto createDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var accessControl = _mapper.Map<MstAccessControl>(createDto);
+            var invalidBrandIds = await _repository.CheckInvalidBrandOwnershipAsync(
+                createDto.BrandId, AppId);
+            if (invalidBrandIds.Any())
+                throw new UnauthorizedException($"BrandId does not belong to this Application");
 
-            accessControl.Id = Guid.NewGuid();
+            if (createDto.IntegrationId.HasValue)
+            {
+                var invalidIntegrationIds = await _repository.CheckInvalidIntegrationOwnershipAsync(
+                    createDto.IntegrationId.Value, AppId);
+                if (invalidIntegrationIds.Any())
+                    throw new UnauthorizedException($"IntegrationId does not belong to this Application");
+            }
+
+            var accessControl = _mapper.Map<MstAccessControl>(createDto);
+            accessControl.ApplicationId = AppId;
+            SetCreateAudit(accessControl);
             accessControl.Status = 1;
-            accessControl.CreatedBy = username;
-            accessControl.CreatedAt = DateTime.UtcNow;
-            accessControl.UpdatedBy = username;
-            accessControl.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(accessControl);
-            return _mapper.Map<MstAccessControlDto>(accessControl);
+            _audit.Created("AccessControl", accessControl.Id, $"AccessControl {accessControl.Name} created");
+
+            return await _repository.GetByIdAsync(accessControl.Id);
         }
 
         public async Task UpdateAsync(Guid id, MstAccessControlUpdateDto updateDto)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var accessControl = await _repository.GetByIdAsync(id);
+            var accessControl = await _repository.GetByIdEntityAsync(id);
             if (accessControl == null)
-                throw new KeyNotFoundException("Access Control not found");
+                throw new NotFoundException($"Access Control not found");
 
-            accessControl.UpdatedBy = username;
-            accessControl.UpdatedAt = DateTime.UtcNow;
+            if (updateDto.BrandId != accessControl.BrandId)
+            {
+                var invalidBrandIds = await _repository.CheckInvalidBrandOwnershipAsync(
+                    updateDto.BrandId, AppId);
+                if (invalidBrandIds.Any())
+                    throw new UnauthorizedException($"BrandId does not belong to this Application");
+            }
 
+            if (updateDto.IntegrationId.HasValue && updateDto.IntegrationId != accessControl.IntegrationId)
+            {
+                var invalidIntegrationIds = await _repository.CheckInvalidIntegrationOwnershipAsync(
+                    updateDto.IntegrationId.Value, AppId);
+                if (invalidIntegrationIds.Any())
+                    throw new UnauthorizedException($"IntegrationId does not belong to this Application");
+            }
+
+            SetUpdateAudit(accessControl);
             _mapper.Map(updateDto, accessControl);
             await _repository.UpdateAsync(accessControl);
+            _audit.Updated("AccessControl", accessControl.Id, $"AccessControl {accessControl.Name} updated");
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var accessControl = await _repository.GetByIdAsync(id);
-            if (accessControl == null) throw new KeyNotFoundException("Access Control not found");
-            accessControl.UpdatedBy = username;
-            accessControl.UpdatedAt = DateTime.UtcNow;
-            accessControl.Status = 0;
-            await _repository.SoftDeleteAsync(id);
+            var accessControl = await _repository.GetByIdEntityAsync(id);
+            if (accessControl == null)
+                throw new NotFoundException("Access Control not found");
+
+            SetDeleteAudit(accessControl);
+            await _repository.DeleteAsync(accessControl);
+            _audit.Deleted("AccessControl", id, $"AccessControl {accessControl.Name} deleted");
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstAccessControlFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Name", "Brand.Name", "Integration.Name" };
-            var validSortColumns = new[] { "UpdatedAt","CreatedAt", "Name", "Brand.Name", "Type", "Channel", "DoorId", "Integration.Name", "Status" };
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<MstAccessControl, MstAccessControlDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
-        
-            public async Task<byte[]> ExportPdfAsync()
-        {
-            var accessControls = await _repository.GetAllExportAsync();
 
-            var document = QuestPDF.Fluent.Document.Create(container =>
+        public async Task<byte[]> ExportPdfAsync()
+        {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            var accessControls = await _repository.GetAllQueryable().ToListAsync();
+
+            var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
@@ -143,7 +174,6 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
                         });
 
                         table.Header(header =>
@@ -158,7 +188,6 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Brand").SemiBold();
                             header.Cell().Element(CellStyle).Text("Status").SemiBold();
                             header.Cell().Element(CellStyle).Text("Created At").SemiBold();
-                            header.Cell().Element(CellStyle).Text("Created By").SemiBold();
                         });
 
                         int index = 1;
@@ -171,10 +200,9 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(control.Channel);
                             table.Cell().Element(CellStyle).Text(control.DoorId);
                             table.Cell().Element(CellStyle).Text(control.Raw);
-                            table.Cell().Element(CellStyle).Text(control.Brand?.Name);
+                            table.Cell().Element(CellStyle).Text(control.Brand?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(control.Status.ToString());
-                            table.Cell().Element(CellStyle).Text(control?.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(control?.CreatedBy);
+                            table.Cell().Element(CellStyle).Text(control.CreatedAt.ToString("yyyy-MM-dd"));
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -200,7 +228,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<byte[]> ExportExcelAsync()
         {
-            var accessControls = await _repository.GetAllExportAsync();
+            var accessControls = await _repository.GetAllQueryable().ToListAsync();
 
             using var workbook = new ClosedXML.Excel.XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Access Controls");
@@ -208,14 +236,13 @@ namespace BusinessLogic.Services.Implementation
             worksheet.Cell(1, 1).Value = "#";
             worksheet.Cell(1, 2).Value = "Name";
             worksheet.Cell(1, 3).Value = "Type";
-            worksheet.Cell(1, 3).Value = "Description";
-            worksheet.Cell(1, 4).Value = "Channel";
-            worksheet.Cell(1, 5).Value = "Door ID";
-            worksheet.Cell(1, 6).Value = "Raw";
-            worksheet.Cell(1, 7).Value = "Brand";
-            worksheet.Cell(1, 8).Value = "Status";
-            worksheet.Cell(1, 9).Value = "Created At";
-            worksheet.Cell(1, 10).Value = "Created By";
+            worksheet.Cell(1, 4).Value = "Description";
+            worksheet.Cell(1, 5).Value = "Channel";
+            worksheet.Cell(1, 6).Value = "Door ID";
+            worksheet.Cell(1, 7).Value = "Raw";
+            worksheet.Cell(1, 8).Value = "Brand";
+            worksheet.Cell(1, 9).Value = "Status";
+            worksheet.Cell(1, 10).Value = "Created At";
 
             int row = 2;
             int no = 1;
@@ -225,14 +252,13 @@ namespace BusinessLogic.Services.Implementation
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = control.Name;
                 worksheet.Cell(row, 3).Value = control.Type;
-                worksheet.Cell(row, 3).Value = control.Description;
-                worksheet.Cell(row, 4).Value = control.Channel;
-                worksheet.Cell(row, 5).Value = control.DoorId;
-                worksheet.Cell(row, 6).Value = control.Raw;
-                worksheet.Cell(row, 7).Value = control.Brand?.Name;
-                worksheet.Cell(row, 8).Value = control.Status;
-                worksheet.Cell(row, 9).Value = control.CreatedAt;
-                worksheet.Cell(row, 10).Value = control.CreatedBy;
+                worksheet.Cell(row, 4).Value = control.Description;
+                worksheet.Cell(row, 5).Value = control.Channel;
+                worksheet.Cell(row, 6).Value = control.DoorId;
+                worksheet.Cell(row, 7).Value = control.Raw;
+                worksheet.Cell(row, 8).Value = control.Brand?.Name ?? "-";
+                worksheet.Cell(row, 9).Value = control.Status;
+                worksheet.Cell(row, 10).Value = control.CreatedAt.ToString("yyyy-MM-dd");
                 row++;
             }
 

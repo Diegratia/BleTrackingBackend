@@ -35,7 +35,6 @@ namespace Repositories.Repository
         {
             return query.Select(x => new PatrolAttachmentRead
             {
-                // BaseRead properties
                 Id = x.Id,
                 CreatedBy = x.CreatedBy,
                 CreatedAt = x.CreatedAt,
@@ -43,8 +42,6 @@ namespace Repositories.Repository
                 UpdatedAt = x.UpdatedAt,
                 Status = x.Status,
                 ApplicationId = x.ApplicationId,
-
-                // PatrolAttachment-specific properties
                 PatrolCaseId = x.PatrolCaseId,
                 FileUrl = x.FileUrl,
                 FileType = x.FileType,
@@ -75,7 +72,6 @@ namespace Repositories.Repository
         {
             var query = BaseEntityQuery();
 
-            // Apply filters
             if (filter.PatrolCaseId.HasValue)
                 query = query.Where(x => x.PatrolCaseId == filter.PatrolCaseId.Value);
 
@@ -91,10 +87,8 @@ namespace Repositories.Repository
             var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
-            // Apply sorting and paging using extension methods
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
 
-            // Apply default ordering if still not ordered
             if (string.IsNullOrEmpty(filter.SortColumn))
             {
                 query = query.OrderByDescending(x => x.UpdatedAt);
@@ -102,7 +96,6 @@ namespace Repositories.Repository
 
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);
