@@ -99,9 +99,9 @@ namespace Data.ViewModels
     public class AlarmInvestigationResultDto
     {
         [Required]
-        public InvestigatedResult Result { get; set; }
+        public InvestigatedResult InvestigatedResult { get; set; }
         [MaxLength(4000)]
-        public string? Notes { get; set; }
+        public string? InvestigationNotes { get; set; }
     }
 
 }

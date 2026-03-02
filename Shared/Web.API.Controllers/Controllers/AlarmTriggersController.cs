@@ -143,8 +143,7 @@ namespace Web.API.Controllers.Controllers
             {
                 return BadRequest(ApiResponse.BadRequest("Request body is required"));
             }
-
-            await _service.DoneInvestigatedAsync(id, dto.Result, dto.Notes);
+            await _service.DoneInvestigatedAsync(id, dto.InvestigatedResult, dto.InvestigationNotes);
             return Ok(ApiResponse.Success("Investigation completed successfully"));
         }
 
