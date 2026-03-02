@@ -29,6 +29,12 @@ namespace Web.API.Controllers.Controllers.Analytics
             var response = await _service.GetAreaSummaryAsync(request);
             return Ok(response);
         }
+        [HttpPost("area-chart")]
+        public async Task<IActionResult> GetAreaChartSummaryAsync([FromBody] AlarmAnalyticsRequestRM request)
+        {
+            var response = await _service.GetAreaChartSummaryAsync(request);
+            return Ok(response);
+        }
 
         // ===================================================================
         // 2️⃣ Daily Summary (Incident-level)

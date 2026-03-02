@@ -24,7 +24,7 @@ namespace Repositories.Repository.Analytics
         // total alarm per area
         public async Task<List<AlarmAreaSummaryRM>> GetAreaSummaryAsync(AlarmAnalyticsRequestRM request)
         {
-            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var range = GetTimeRange(request.TimeRange);
             var (from, to) = (range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7), range?.to ?? request.To ?? DateTime.UtcNow);
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
@@ -59,6 +59,36 @@ namespace Repositories.Repository.Analytics
 
             return data;
         }
+        //area incident chart
+        public async Task<List<AlarmAreaIncidentRM>> GetAreaIncidentAsync(
+            AlarmAnalyticsRequestRM request)
+        {
+            var range = GetTimeRange(request.TimeRange ?? "weekly");
+            var (from, to) = (
+                range?.from ?? request.From ?? DateTime.UtcNow.AddDays(-7),
+                range?.to ?? request.To ?? DateTime.UtcNow
+            );
+
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Include(a => a.FloorplanMaskedArea)
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            return await query
+                .Select(a => new AlarmAreaIncidentRM
+                {
+                    Date = a.Timestamp!.Value.Date,
+                    AlarmTriggerId = a.AlarmTriggersId.Value,
+                    AreaId = a.FloorplanMaskedAreaId,
+                    AreaName = a.FloorplanMaskedArea.Name,
+                    AlarmStatus = a.Alarm.ToString() ?? "Unknown",
+                })
+                .Distinct() // 1 incident = 1 hit
+                .ToListAsync();
+        }
+
 
         // alarm per day
         public async Task<List<AlarmDailySummaryRM>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)

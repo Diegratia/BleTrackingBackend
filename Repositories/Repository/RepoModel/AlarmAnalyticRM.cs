@@ -46,6 +46,17 @@ namespace Repositories.Repository.RepoModel
         public int Total { get; set; }
     }
 
+    // alarm incident area chart
+    public class AlarmAreaIncidentRM
+    {
+        public DateTime Date { get; set; }
+        public Guid AlarmTriggerId { get; set; }
+        public Guid? AreaId { get; set; }
+        public string AreaName { get; set; } = "";
+        public string AlarmStatus { get; set; } = string.Empty;
+    }
+
+
     public class AlarmVisitorSummaryRM
     {
         public Guid? VisitorId { get; set; }

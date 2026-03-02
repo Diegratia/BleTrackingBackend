@@ -42,6 +42,73 @@ namespace BusinessLogic.Services.Implementation.Analytics
             }
         }
 
+        public async Task<ResponseCollection<object>>
+            GetAreaChartSummaryAsync(AlarmAnalyticsRequestRM request)
+        {
+            try
+            {
+                var incidents = await _repository.GetAreaIncidentAsync(request);
+
+                // 1️⃣ labels (tanggal)
+                var labels = incidents
+                    .Select(x => x.Date)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(x => x.ToString("yyyy-MM-dd"))
+                    .ToList();
+
+                // 2️⃣ areas
+                var areas = incidents
+                    .GroupBy(x => new { x.AreaId, x.AreaName })
+                    .Select(areaGroup =>
+                    {
+                        var series = areaGroup
+                            .GroupBy(x => x.AlarmStatus)
+                            .Select(statusGroup => new AlarmAreaStatusSeriesDto
+                            {
+                                Name = statusGroup.Key?.ToString() ?? "Unknown",
+                                Data = labels.Select(label =>
+                                {
+                                    var date = DateTime.Parse(label);
+                                    return statusGroup.Count(x => x.Date == date);
+                                }).ToList()
+                            })
+                            .ToList();
+
+                        return new AlarmAreaChartAreaDto
+                        {
+                            AreaId = areaGroup.Key.AreaId.Value,
+                            AreaName = areaGroup.Key.AreaName,
+                            Series = series
+                        };
+                    })
+                    .ToList();
+
+                // 3️⃣ bungkus sesuai format kamu
+                var response = new AlarmAreaChartCollectionDto
+                {
+                    Chart = new AlarmAreaChartDto
+                    {
+                        Labels = labels,
+                        Areas = areas
+                    }
+                };
+
+                return ResponseCollection<object>.Ok(
+                    new[] { response }, // <- tetap IEnumerable
+                    "Incident area summary retrieved successfully"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting incident area summary");
+                return ResponseCollection<object>.Error(
+                    $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+
         public async Task<ResponseCollection<AlarmDailySummaryDto>> GetDailySummaryAsync(AlarmAnalyticsRequestRM request)
         {
             try
