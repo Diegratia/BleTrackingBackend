@@ -1,161 +1,59 @@
-
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Text;
-using Repositories.DbContexts;
-using BusinessLogic.Services.Extension;
-using BusinessLogic.Services.Implementation;
-using Microsoft.Extensions.FileProviders;
-using BusinessLogic.Services.Interface;
-using Repositories.Repository;
-using Entities.Models;
-using Repositories.Seeding;
-using DotNetEnv;
-using Helpers.Consumer.Mqtt;
+using Shared.Config;
+using System.Threading.RateLimiting;
 using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Extension;
+using BusinessLogic.Services.Extension.RootExtension;
+using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Interface;
+using Data.ViewModels.Shared.ExceptionHelper;
+using Helpers.Consumer.Mqtt;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Repositories.DbContexts;
+using Repositories.Repository;
+using Serilog;
 
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
-        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
-        "/app/.env"                                                   // path dalam Docker container
-    };
-
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-    if (envFile != null)
-    {
-        Console.WriteLine($"Loading env file: {envFile}");
-        Env.Load(envFile);
-    }
-    else
-    {
-        Console.WriteLine("No .env file found — skipping load");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
-
+// 1. Load Env
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
+
+// 2. Setup Serilog & Host
+builder.UseSerilogExtension();
 builder.Host.UseWindowsService();
+builder.Host.UseSerilog();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
+// 3. Setup Services
+builder.Services.AddCorsExtension();
+builder.Services.AddDbContextExtension(builder.Configuration);
+// builder.Services.AddRedisExtension(builder.Configuration); 
+
+// 4. Setup Controllers
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        policy.AllowAnyOrigin() 
-              .AllowAnyMethod() 
-              .AllowAnyHeader(); 
-    });
-});
-
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
-
-builder.Services.AddControllers();
-
-builder.Services.AddDbContext<BleTrackingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BleTrackingDbConnection") ));
-
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-    options.AddPolicy("RequiredSystemUser", policy =>
-        policy.RequireRole("System"));
-    options.AddPolicy("RequirePrimaryRole", policy =>
-        policy.RequireRole("Primary"));
-    options.AddPolicy("RequireSuperAdminRole", policy =>
-        policy.RequireRole("SuperAdmin"));
+builder.Services.AddValidatorExtensions();
+builder.Services.AddMemoryCache();
 
-    options.AddPolicy("RequireSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin"));
-    });
+// 5. Auth & Swagger
+builder.Services.AddJwtAuthExtension(builder.Configuration);
+builder.Services.AddAuthorizationNewPolicies();
+builder.Services.AddSwaggerExtension();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
-    options.AddPolicy("RequirePrimaryOrSystemOrPrimaryAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("Primary"));
-    });
-    options.AddPolicy("RequirePrimaryAdminOrSystemOrSuperAdminRole", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin"));
-    });
-   options.AddPolicy("RequireAll", policy =>
-    {
-        policy.RequireAssertion(context =>
-            context.User.IsInRole("System") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("PrimaryAdmin") || context.User.IsInRole("Primary" ) || context.User.IsInRole("Secondary" ));
-    });
-    options.AddPolicy("RequireUserCreatedRole", policy =>
-        policy.RequireRole("UserCreated"));
-});
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BleTracking API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
+// 6. Application Services & Repos
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddAutoMapper(typeof(GeofenceProfile));
 builder.Services.AddAutoMapper(typeof(BoundaryProfile));
 builder.Services.AddAutoMapper(typeof(StayOnAreaProfile));
 builder.Services.AddAutoMapper(typeof(OverpopulatingProfile));
-// Registrasi Services
+
 builder.Services.AddScoped<IGeofenceService, GeofenceService>();
 builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
@@ -163,60 +61,40 @@ builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
-// builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 
 builder.Services.AddScoped<GeofenceRepository>();
 builder.Services.AddScoped<OverpopulatingRepository>();
 builder.Services.AddScoped<BoundaryRepository>();
 builder.Services.AddScoped<StayOnAreaRepository>();
 
-var port = Environment.GetEnvironmentVariable("GEOFENCE_PORT") ?? "5030" ??
-           builder.Configuration["Ports:GeofenceService"];
-var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-var host = env == "Production" ? "0.0.0.0" : "localhost";
-builder.WebHost.UseUrls($"http://{host}:{port}");
-
-    var app = builder.Build();
-
-        app.MapGet("/hc", async (IServiceProvider sp) =>
+// 7. Rate Limit
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("fixed", opt =>
     {
-        var db = sp.GetRequiredService<BleTrackingDbContext>();
-        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 150;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync("SELECT 1"); // cek koneksi DB
-            return Results.Ok(new
-            {
-                code = 200,
-                msg = "Healthy",
-                details = new
-                {
-                    database = "Connected"
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Health check failed");
-            return Results.Problem("Database unreachable", statusCode: 500);
-        }
-    })
-    .AllowAnonymous();
+// 8. Port config
+builder.UseDefaultHostExtension("GEOFENCE_PORT", "5030");
+
+var app = builder.Build();
+
+// 9. Pipeline
+app.UseHealthCheckExtension();
 
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    try
-    {
-        // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
-        throw;
-    }
+    // context.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment())
@@ -225,25 +103,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = string.Empty;
     });
 }
 
 app.UseCors("AllowAll");
-// app.UseHttpsRedirection();
+
+// Middleware
+app.UseMiddleware<CustomExceptionMiddleware>();
+
 app.UseRouting();
+app.UseSerilogRequestLoggingExtension();
+
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+app.MapControllers().RequireRateLimiting("fixed");
+
 app.Run();
-
-
-
-
-
-
-
-
-
-

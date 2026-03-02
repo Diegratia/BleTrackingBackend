@@ -1,3 +1,4 @@
+using Shared.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -42,6 +43,7 @@ catch (Exception ex)
 
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.Host.UseWindowsService();
 
 builder.Services.AddCors(options =>

@@ -1,0 +1,673 @@
+
+using AutoMapper;
+using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Interface;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Data.ViewModels;
+using Entities.Models;
+using Microsoft.AspNetCore.Http;
+using Repositories.Repository;
+using System.ComponentModel.DataAnnotations;
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+
+using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using BusinessLogic.Services.Extension.FileStorageService;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using DataView;
+
+
+namespace BusinessLogic.Services.Implementation
+{
+    public class MstFloorplanService : BaseService, IMstFloorplanService
+    {
+        private readonly MstFloorplanRepository _repository;
+        private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        // private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly FloorplanMaskedAreaRepository _maskedAreaRepository;
+        private readonly IFloorplanMaskedAreaService _maskedAreaService;
+        private readonly IGeofenceService _geofenceService;
+        private readonly IStayOnAreaService _stayOnAreaService;
+        private readonly IPatrolAreaService _patrolAreaService;
+        private readonly IOverpopulatingService _overpopulatingService;
+        private readonly IBoundaryService _boundaryService;
+        private readonly GeofenceRepository _geofenceRepository;
+        private readonly StayOnAreaRepository _stayOnAreaRepository;
+        private readonly OverpopulatingRepository _overpopulatingRepository;
+        private readonly BoundaryRepository _boundaryRepository;
+        private readonly PatrolAreaRepository _patrolAreaRepository;
+        private const long MaxFileSize = 50 * 1024 * 1024; // Maksimal 50 MB
+        private readonly ILogger<MstFloorplan> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
+        private readonly IMqttPubQueue _mqttQueue;
+        private bool cacheDisabled = false;
+        private IFileStorageService _fileStorageService;
+        private readonly IAuditEmitter _audit;
+
+
+        public MstFloorplanService(
+            MstFloorplanRepository repository,
+            // FloorplanDeviceRepository floorplanDeviceRepository,
+            FloorplanMaskedAreaRepository maskedAreaRepository,
+            IFloorplanMaskedAreaService maskedAreaService,
+            GeofenceRepository geofenceRepository,
+            StayOnAreaRepository stayOnAreaRepository,
+            OverpopulatingRepository overpopulatingRepository,
+            PatrolAreaRepository patrolAreaRepository,
+            BoundaryRepository boundaryRepository,
+            IGeofenceService geofenceService,
+            IStayOnAreaService stayOnAreaService,
+            IOverpopulatingService overpopulatingService,
+            IPatrolAreaService patrolAreaService,
+            IBoundaryService boundaryService,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<MstFloorplan> logger,
+            IDistributedCache cache,
+            IConnectionMultiplexer redis,
+            IMqttPubQueue mqttQueue,
+            IFileStorageService fileStorageService,
+            IAuditEmitter audit
+
+            ) : base(httpContextAccessor)
+        {
+            _repository = repository;
+            // _floorplanDeviceRepository = floorplanDeviceRepository;
+            _maskedAreaRepository = maskedAreaRepository;
+            _geofenceRepository = geofenceRepository;
+            _stayOnAreaRepository = stayOnAreaRepository;
+            _overpopulatingRepository = overpopulatingRepository;
+            _boundaryRepository = boundaryRepository;
+            _patrolAreaRepository = patrolAreaRepository;
+            _maskedAreaService = maskedAreaService;
+            _geofenceService = geofenceService;
+            _stayOnAreaService = stayOnAreaService;
+            _overpopulatingService = overpopulatingService;
+            _boundaryService = boundaryService;
+            _patrolAreaService = patrolAreaService;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _cache = cache;
+            _redis = redis?.GetDatabase();
+            _mqttQueue = mqttQueue;
+            _fileStorageService = fileStorageService;
+            _audit = audit;
+        }
+        
+        private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
+
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string Key(string key)
+            => $"cache:mstfloorplan:{AppId}:{key}";
+        private string GroupKey 
+            => $"cache:mstfloorplan:group:{AppId}";
+        
+        public async Task RemoveGroupAsync()
+        {
+            if (!IsRedisAlive()) return;
+
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;  
+            }
+        }
+
+        public async Task<MstFloorplanRead> GetByIdAsync(Guid id)
+        {
+            var floorplan = await _repository.GetByIdAsync(id);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with id {id} not found");
+            return floorplan;
+        }
+
+        public async Task<IEnumerable<MstFloorplanRead>> GetAllAsync()
+        {
+            var cacheKey = Key("getall");
+
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<MstFloorplanRead>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
+            }
+            _logger.LogInformation($"Cache miss: {cacheKey}");
+
+            var floors = await _repository.GetAllAsync();
+
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(floors),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
+
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
+            return floors;
+        }
+                public async Task<IEnumerable<MstFloorplanRead>> OpenGetAllAsync()
+        {
+            var floorplans = await _repository.GetAllAsync();
+            return floorplans;
+        }
+
+        public async Task<MstFloorplanRead> CreateAsync(MstFloorplanCreateDto createDto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floorplan = _mapper.Map<MstFloorplan>(createDto);
+
+            if (!await _repository.FloorExistsAsync(createDto.FloorId))
+                throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
+
+            var invalidFloorId =
+                await _repository.CheckInvalidFloorOwnershipAsync(createDto.FloorId, AppId);
+            if (invalidFloorId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}"
+                );
+            }
+
+            var floor = await _repository.GetFloorByIdAsync(createDto.FloorId);
+            if (floor == null)
+                throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
+            floorplan.FloorId = floor.Id;
+            floorplan.ApplicationId = floor.ApplicationId;
+
+            if (createDto.FloorplanImage != null)
+            {
+                floorplan.FloorplanImage = await _fileStorageService
+                    .SaveImageAsync(createDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
+            }
+
+            floorplan.Id = Guid.NewGuid();
+            floorplan.Status = 1;
+            floorplan.CreatedBy = username;
+            floorplan.UpdatedBy = username;
+            floorplan.CreatedAt = DateTime.UtcNow;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+
+            var createdFloorplan = await _repository.AddAsync(floorplan);
+            await RemoveGroupAsync();
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+             _audit.Created(
+                "Floorplan",
+                createdFloorplan.Id,
+                "Created floorplan",
+                new { createdFloorplan.Name }
+            );
+            var result = await _repository.GetByIdAsync(createdFloorplan.Id);
+            return result!;
+        }
+
+        public async Task UpdateAsync(Guid id, MstFloorplanUpdateDto updateDto)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floorplan = await _repository.GetByIdEntityAsync(id);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with id {id} not found");
+
+            if (updateDto.FloorId.HasValue && updateDto.FloorId.Value != floorplan.FloorId)
+            {
+                if (!await _repository.FloorExistsAsync(updateDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+
+                var invalidFloorId =
+                    await _repository.CheckInvalidFloorOwnershipAsync(updateDto.FloorId.Value, AppId);
+                if (invalidFloorId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorId does not belong to this Application: {string.Join(", ", invalidFloorId)}"
+                    );
+                }
+
+                var floor = await _repository.GetFloorByIdAsync(updateDto.FloorId.Value);
+                if (floor == null)
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+                floorplan.FloorId = floor.Id;
+            }
+
+            if (updateDto.FloorplanImage != null)
+            {
+                await _fileStorageService.DeleteAsync(floorplan.FloorplanImage);
+
+                floorplan.FloorplanImage = await _fileStorageService
+                    .SaveImageAsync(updateDto.FloorplanImage, "FloorplanImages", MaxFileSize, ImagePurpose.Floorplan);
+            }
+
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+
+            _mapper.Map(updateDto, floorplan);
+            await _repository.UpdateAsync(floorplan);
+             _audit.Updated(
+                "Floorplan",
+                floorplan.Id,
+                "Updated floorplan",
+                new { floorplan.Name }
+            );
+            await RemoveGroupAsync();
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var floorplan = await _repository.GetByIdEntityAsync(id);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with id {id} not found");
+
+            await _repository.ExecuteInTransactionAsync(async () =>
+        {
+            var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+            var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+            var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+            var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+            var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
+            //redis cache
+            foreach (var maskedArea in maskedAreas)
+            {
+                await _maskedAreaService.SoftDeleteAsync(maskedArea.Id);
+            }
+            foreach (var geofence in geofences)
+            {
+                await _geofenceService.DeleteAsync(geofence.Id);
+            }
+            foreach (var stayOnArea in stayOnAreas)
+            {
+                await _stayOnAreaService.DeleteAsync(stayOnArea.Id);
+            }
+            foreach (var boundary in boundaries)
+            {
+                await _boundaryService.DeleteAsync(boundary.Id);
+            }
+            foreach (var overpopulating in overpopulatings)
+            {
+                await _overpopulatingService.DeleteAsync(overpopulating.Id);
+            }
+            foreach (var patrolArea in patrolAreas)
+            {
+                await _patrolAreaService.DeleteAsync(patrolArea.Id);
+            }
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+            floorplan.Status = 0;
+            await _repository.DeleteAsync(id);
+        });
+             _audit.Deleted (
+                "Floorplan",
+                floorplan.Id,
+                "Deleted floorplan",
+                new { floorplan.Name }
+            );
+            await RemoveGroupAsync();
+            await _maskedAreaService.RemoveGroupAsync();
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        }
+
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         await CascadeDeleteAsync(id);
+        //     });
+
+        //      _audit.Deleted(
+        //         "Floorplan",
+        //         id,
+        //         "Deleted floorplan"
+        //     );
+        //     await RemoveGroupAsync();
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        // }
+
+        
+        public async Task CascadeDeleteAsync(Guid id)
+        {
+            var username =
+                _httpContextAccessor.HttpContext?.User
+                    .FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var floorplan = await _repository.GetByIdEntityAsync(id);
+            if (floorplan == null) return;
+
+            // ==== CHILD ENTITIES (NO SERVICE DeleteAsync) ====
+
+            var maskedAreas = await _maskedAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var ma in maskedAreas)
+            {
+                ma.Status = 0;
+                ma.UpdatedBy = username;
+                ma.UpdatedAt = DateTime.UtcNow;
+                await _maskedAreaService.CascadeDeleteAsync(ma.Id, username);
+            }
+
+            var geofences = await _geofenceRepository.GetByFloorplanIdAsync(id);
+            foreach (var g in geofences)
+            {
+                g.Status = 0;
+                g.UpdatedBy = username;
+                g.UpdatedAt = DateTime.UtcNow;
+                await _geofenceRepository.DeleteAsync(g.Id);
+            }
+
+            var stayOnAreas = await _stayOnAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var s in stayOnAreas)
+            {
+                s.Status = 0;
+                s.UpdatedBy = username;
+                s.UpdatedAt = DateTime.UtcNow;
+                await _stayOnAreaRepository.SoftDeleteAsync(s.Id);
+            }
+
+            var boundaries = await _boundaryRepository.GetByFloorplanIdAsync(id);
+            foreach (var b in boundaries)
+            {
+                b.Status = 0;
+                b.UpdatedBy = username;
+                b.UpdatedAt = DateTime.UtcNow;
+                await _boundaryRepository.SoftDeleteAsync(b.Id);
+            }
+
+            var overpopulatings = await _overpopulatingRepository.GetByFloorplanIdAsync(id);
+            foreach (var o in overpopulatings)
+            {
+                o.Status = 0;
+                o.UpdatedBy = username;
+                o.UpdatedAt = DateTime.UtcNow;
+                await _overpopulatingRepository.SoftDeleteAsync(o.Id);
+            }
+
+            var patrolAreas = await _patrolAreaRepository.GetByFloorplanIdAsync(id);
+            foreach (var p in patrolAreas)
+            {
+                p.Status = 0;
+                p.UpdatedBy = username;
+                p.UpdatedAt = DateTime.UtcNow;
+                await _patrolAreaRepository.DeleteAsync(p.Id);
+            }
+
+            // ==== FLOORPLAN ITSELF ====
+
+            floorplan.Status = 0;
+            floorplan.UpdatedBy = username;
+            floorplan.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.DeleteAsync(id);
+
+            // ❌ NO AUDIT
+            // ❌ NO MQTT
+            // ❌ NO CACHE CLEAR
+        }
+
+
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            MstFloorplanFilter filter
+        )
+        {
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
+        }
+
+        public async Task<IEnumerable<MstFloorplanRead>> ImportAsync(IFormFile file)
+        {
+            var floorplans = new List<MstFloorplan>();
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var userApplicationId = _httpContextAccessor.HttpContext?.User.FindFirst("ApplicationId")?.Value;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // Lewati header
+
+            int rowNumber = 2;
+            foreach (var row in rows)
+            {
+                var floorIdStr = row.Cell(2).GetValue<string>();
+                if (!Guid.TryParse(floorIdStr, out var floorId))
+                    throw new ArgumentException($"Invalid FloorId format at row {rowNumber}");
+
+                var floor = await _repository.GetFloorByIdAsync(floorId);
+                if (floor == null)
+                    throw new ArgumentException($"FloorId {floorId} not found at row {rowNumber}");
+
+                var name = row.Cell(2).GetValue<string>();
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException($"Name is required at row {rowNumber}");
+
+                var floorplan = new MstFloorplan
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    FloorId = floorId,
+                    ApplicationId = floor.ApplicationId,
+                    CreatedBy = username,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedBy = username,
+                    UpdatedAt = DateTime.UtcNow,
+                    Status = 1
+                };
+
+                floorplans.Add(floorplan);
+                rowNumber++;
+            }
+
+            foreach (var floorplan in floorplans)
+            {
+                await _repository.AddAsync(floorplan);
+            }
+
+            return floorplans.Select(fp => new MstFloorplanRead
+            {
+                Id = fp.Id,
+                Name = fp.Name,
+                FloorId = fp.FloorId,
+                FloorplanImage = fp.FloorplanImage,
+                PixelX = fp.PixelX,
+                PixelY = fp.PixelY,
+                FloorX = fp.FloorX,
+                FloorY = fp.FloorY,
+                MeterPerPx = fp.MeterPerPx,
+                EngineId = fp.EngineId,
+                Status = fp.Status ?? 0,
+                ApplicationId = fp.ApplicationId,
+                CreatedBy = fp.CreatedBy,
+                CreatedAt = fp.CreatedAt,
+                UpdatedBy = fp.UpdatedBy,
+                UpdatedAt = fp.UpdatedAt
+            }).ToList();
+        }
+
+        public async Task<byte[]> ExportPdfAsync()
+        {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            var floorplans = await _repository.GetAllExportAsync();
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Size(PageSizes.A4.Landscape());
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    page.Header()
+                        .Text("Master Floorplan Report")
+                        .SemiBold().FontSize(16).FontColor(Colors.Black).AlignCenter();
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(35);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("#").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Floor").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Name").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Masked Areas").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Created At").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Created By").SemiBold();
+                        });
+
+                        int index = 1;
+                        foreach (var dto in floorplans)
+                        {
+                            table.Cell().Element(CellStyle).Text(index++.ToString());
+                            table.Cell().Element(CellStyle).Text(dto.Floor?.Name ?? "-");
+                            table.Cell().Element(CellStyle).Text(dto.Name);
+                            table.Cell().Element(CellStyle).Text(dto.MaskedAreaCount.ToString());
+                            table.Cell().Element(CellStyle).Text(dto.CreatedAt.ToString("yyyy-MM-dd"));
+                            table.Cell().Element(CellStyle).Text(dto.CreatedBy ?? "-");
+                        }
+
+                        static IContainer CellStyle(IContainer container) =>
+                            container
+                                .BorderBottom(1)
+                                .BorderColor(Colors.Grey.Lighten2)
+                                .PaddingVertical(4)
+                                .PaddingHorizontal(6);
+                    });
+
+                    page.Footer()
+                        .AlignRight()
+                        .Text(txt =>
+                        {
+                            txt.Span("Generated at: ").SemiBold();
+                            txt.Span(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
+                        });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        public async Task<byte[]> ExportExcelAsync()
+        {
+            var floorplans = await _repository.GetAllExportAsync();
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Floorplans");
+
+            worksheet.Cell(1, 1).Value = "No";
+            worksheet.Cell(1, 2).Value = "Floor";
+            worksheet.Cell(1, 3).Value = "Name";
+            worksheet.Cell(1, 4).Value = "Masked Areas";
+            worksheet.Cell(1, 5).Value = "Created By";
+            worksheet.Cell(1, 6).Value = "Created At";
+            worksheet.Cell(1, 7).Value = "Status";
+
+            int row = 2;
+            int no = 1;
+
+            foreach (var dto in floorplans)
+            {
+                worksheet.Cell(row, 1).Value = no++;
+                worksheet.Cell(row, 2).Value = dto.Floor?.Name ?? "-";
+                worksheet.Cell(row, 3).Value = dto.Name;
+                worksheet.Cell(row, 4).Value = dto.MaskedAreaCount;
+                worksheet.Cell(row, 5).Value = dto.CreatedBy;
+                worksheet.Cell(row, 6).Value = dto.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                worksheet.Cell(row, 7).Value = dto.Status == 1 ? "Active" : "Inactive";
+                row++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+    }
+}

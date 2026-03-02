@@ -184,6 +184,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+test-publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml
@@ -271,6 +272,7 @@ ServiceFabricBackup/
 *.mdf
 *.ldf
 *.ndf
+*.bak
 
 # Business Intelligence projects
 *.rdl.data
@@ -492,3 +494,14 @@ obj/
 *.http
 build/
 doc
+
+# Auto Claude data directory
+.auto-claude/
+
+# Auto Claude generated files
+.auto-claude-security.json
+.auto-claude-status
+.claude_settings.json
+.worktrees/
+.security-key
+logs/security/

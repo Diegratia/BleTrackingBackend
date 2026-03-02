@@ -1,0 +1,121 @@
+using AutoMapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Entities.Models;
+using Data.ViewModels;
+using Helpers.Consumer;
+using Repositories.Repository.RepoModel;
+using Shared.Contracts.Read;
+
+namespace BusinessLogic.Services.Extension
+{
+    public class PatrolAreaProfile : Profile
+    {
+        public PatrolAreaProfile()
+        {
+            CreateMap<PatrolArea, PatrolAreaDto>();
+            CreateMap<PatrolAreaRM, PatrolAreaDto>();
+            CreateMap<PatrolAreaLookUpRM, PatrolAreaLookUpDto>();
+            CreateMap<PatrolAreaCreateDto, PatrolArea>();
+            CreateMap<PatrolAreaUpdateDto, PatrolArea>();
+        }
+    }
+
+    public class PatrolRouteProfile : Profile
+    {
+        public PatrolRouteProfile()
+        {
+            // CreateMap<PatrolRoute, PatrolRouteRead>()
+            // .ForMember(dest => dest.PatrolAreas,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .OrderBy(x => x.OrderIndex)
+            //             .Select(x => new PatrolRouteAreaReadDto
+            //             {
+            //                 PatrolAreaId = x.PatrolAreaId,
+            //                 OrderIndex = x.OrderIndex,
+            //                 EstimatedDistance = x.EstimatedDistance,
+            //                 EstimatedTime = x.EstimatedTime,
+            //                 StartAreaId = x.StartAreaId,
+            //                 EndAreaId = x.EndAreaId
+            //             })
+            //             .ToList()
+            //     ))
+            // .ForMember(dest => dest.PatrolAreaCount,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas.Count(x => x.status != 0)))
+            // .ForMember(dest => dest.StartAreaName,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .Where(x => x.status != 0)
+            //             .OrderBy(x => x.OrderIndex)
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
+            //     ))
+            // .ForMember(dest => dest.EndAreaName,
+            //     opt => opt.MapFrom(src =>
+            //         src.PatrolRouteAreas
+            //             .Where(x => x.status != 0)
+            //             .OrderByDescending(x => x.OrderIndex)
+            //             .Select(x => x.PatrolArea.Name)
+            //             .FirstOrDefault()
+            //     ));
+            CreateMap<PatrolRouteCreateDto, PatrolRoute>();
+            CreateMap<PatrolRouteUpdateDto, PatrolRoute>();
+        }
+    }
+
+     public class PatrolSessionProfile : Profile
+    {
+        public PatrolSessionProfile()
+        {
+            CreateMap<PatrolSessionStartDto, PatrolRoute>();
+        }
+    }
+
+    public class PatrolAssignmentProfile : Profile
+    {
+        public PatrolAssignmentProfile()
+        {
+            CreateMap<PatrolAssignmentCreateDto, PatrolAssignment>()
+                .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore());
+
+            CreateMap<PatrolAssignmentUpdateDto, PatrolAssignment>()
+                .ForMember(d => d.PatrolAssignmentSecurities, opt => opt.Ignore());
+            CreateMap<PatrolAssignment, PatrolAssignmentRead>();
+
+        }
+    }
+    
+    public class PatrolCaseProfile : Profile
+    {
+        public PatrolCaseProfile()
+        {
+            CreateMap<PatrolCase, PatrolCaseRead>();
+            // Create DTO -> Entity
+            CreateMap<PatrolCaseCreateDto, PatrolCase>()
+                .ForMember(dest => dest.PatrolCaseAttachments, opt => opt.Ignore());
+            // Update DTO -> Entity
+            CreateMap<PatrolCaseUpdateDto, PatrolCase>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        }
+    }
+
+    public class PatrolCaseAttachmentProfile : Profile
+    {
+        public PatrolCaseAttachmentProfile()
+        {
+            CreateMap<PatrolCaseAttachment, PatrolAttachmentDto>();
+            
+            // Create DTO -> Entity
+            CreateMap<PatrolAttachmentCreateDto, PatrolCaseAttachment>();
+
+            // Update DTO -> Entity
+            CreateMap<PatrolAttachmentUpdateDto, PatrolCaseAttachment>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+        }
+    }
+}

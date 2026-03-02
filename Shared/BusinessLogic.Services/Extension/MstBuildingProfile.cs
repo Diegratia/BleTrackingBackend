@@ -1,0 +1,48 @@
+using AutoMapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Entities.Models;
+using Data.ViewModels;
+using Shared.Contracts.Read;
+
+namespace BusinessLogic.Services.Extension
+{
+    public class MstBuildingProfile : Profile
+    {
+        public MstBuildingProfile()
+        {
+            // Mapping dari Domain ke DTO
+            CreateMap<MstBuilding, MstBuildingDto>();
+
+            // Mapping dari Read DTO ke DTO (untuk repository yang mengembalikan Read DTO)
+            CreateMap<MstBuildingRead, MstBuildingDto>();
+
+            CreateMap<MstBuilding, OpenMstBuildingDto>();
+
+            // Mapping dari Read DTO ke Open DTO
+            CreateMap<MstBuildingRead, OpenMstBuildingDto>();
+        // .ForMember(dest => dest.buildingId, opt => opt.MapFrom(src => src.id));
+
+            // Mapping dari Create DTO ke Domain
+            CreateMap<MstBuildingCreateDto, MstBuilding>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.Image, opt => opt.Ignore());
+
+            // Mapping dari Update DTO ke Domain
+            CreateMap<MstBuildingUpdateDto, MstBuilding>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Generate, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.Image, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+        }
+    }
+}

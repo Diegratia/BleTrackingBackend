@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Shared.Config</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embed config files as resources -->
+    <EmbeddedResource Include="..\..\.env"
+                      Condition="Exists('..\..\.env')"
+                      Link=".env" />
+    <EmbeddedResource Include="..\..\appsettings.json"
+                      Condition="Exists('..\..\appsettings.json')"
+                      Link="appsettings.json" />
+  </ItemGroup>
+
+</Project>

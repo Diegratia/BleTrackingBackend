@@ -1,3 +1,4 @@
+using Shared.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,8 +8,10 @@ using System.Text.Json;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
+using BusinessLogic.Services.Implementation.Analytics;
 using Microsoft.Extensions.FileProviders;
 using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Interface.Analytics;
 using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
@@ -21,11 +24,13 @@ using Serilog;
 using Serilog.Events;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using Microsoft.AspNetCore.Authorization;
 
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();   
 builder.Host.UseWindowsService();
 builder.Host.UseSerilog();
@@ -40,9 +45,16 @@ builder.Configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;           
-        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow; 
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+        options.JsonSerializerOptions.Converters.Add(
+            new UtcDateTimeConverter()
+        );
     });
 
 builder.Services.AddValidatorExtensions();  
@@ -64,10 +76,16 @@ builder.Services.AddScoped<IBoundaryService, BoundaryService>();
 builder.Services.AddScoped<IStayOnAreaService, StayOnAreaService>();
 builder.Services.AddScoped<IOverpopulatingService, OverpopulatingService>();
 builder.Services.AddScoped<IPatrolCaseService, PatrolCaseService>();
+builder.Services.AddScoped<IPatrolSessionService, PatrolSessionService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPatrolSessionAnalyticsService, PatrolSessionAnalyticsService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
-
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 
@@ -83,6 +101,9 @@ builder.Services.AddScoped<PatrolAssignmentRepository>();
 builder.Services.AddScoped<TimeGroupRepository>();
 builder.Services.AddScoped<PatrolCaseRepository>();
 builder.Services.AddScoped<MstSecurityRepository>();
+builder.Services.AddScoped<PatrolSessionRepository>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserGroupRepository>();
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
 builder.Host.UseWindowsService();

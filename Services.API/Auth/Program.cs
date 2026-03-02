@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Shared.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
@@ -17,39 +19,15 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
+using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 
 
-try
-{
-    var possiblePaths = new[]
-    {
-        Path.Combine(Directory.GetCurrentDirectory(), ".env"),         // lokal root service
-        Path.Combine(Directory.GetCurrentDirectory(), "../../.env"),   // lokal di subfolder Services.API
-        Path.Combine(AppContext.BaseDirectory, ".env"),                // hasil publish
-        "/app/.env"                                                   // path dalam Docker container
-    };
-
-    var envFile = possiblePaths.FirstOrDefault(File.Exists);
-
-    if (envFile != null)
-    {
-        Console.WriteLine($"Loading env file: {envFile}");
-        Env.Load(envFile);
-    }
-    else
-    {
-        Console.WriteLine("No .env file found — skipping load");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to load .env file: {ex.Message}");
-}
-
-
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
-
+    builder.Configuration.AddAppsettings();
+builder.UseSerilogExtension();
 
 // Konfigurasi CORS
 builder.Services.AddCorsExtension();
@@ -61,7 +39,20 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Konfigurasi Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+        options.JsonSerializerOptions.Converters.Add(
+            new UtcDateTimeConverter()
+        );
+    });
 
 // Registrasi otomatis validasi FluentValidation
 builder.Services.AddValidatorExtensions();
@@ -76,7 +67,7 @@ builder.Services.AddAutoMapper(typeof(BusinessLogic.Services.Extension.AuthProfi
 builder.Services.AddJwtAuthExtension(builder.Configuration);
 
 // Konfigurasi Otorisasi
-builder.Services.AddAuthorizationPolicies();
+builder.Services.AddAuthorizationNewPolicies();
 
 // Konfigurasi Swagger
 builder.Services.AddSwaggerExtension();
@@ -87,12 +78,24 @@ builder.Services.AddHttpContextAccessor();
 // Registrasi Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserGroupService, UserGroupService>();
+builder.Services.AddScoped<IUserBuildingAccessService, UserBuildingAccessService>();
+builder.Services.AddScoped<IGroupBuildingAccessService, GroupBuildingAccessService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+
 
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
+builder.Services.AddScoped<UserBuildingAccessRepository>();
+builder.Services.AddScoped<GroupBuildingAccessRepository>();
+builder.Services.AddScoped<MstBuildingRepository>();
 builder.Services.AddScoped<MstIntegrationRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
 
@@ -113,8 +116,13 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
     try
     {
-        // context.Database.Migrate(); 
-        // DatabaseSeeder.Seed(context); 
+        // Jalankan Seeding hanya jika ada flag --seed-db
+        if (args.Contains("--seed-db"))
+        {
+            Console.WriteLine("Applying Database Seeding...");
+            DatabaseSeeder.Seed(context);
+            Console.WriteLine("Database Seeding Completed.");
+        }
     }
     catch (Exception ex)
     {
@@ -137,6 +145,7 @@ app.UseCors("AllowAll");
 // // app.UseHttpsRedirection();
 app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
+app.UseSerilogRequestLoggingExtension();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
 app.UseAuthorization();

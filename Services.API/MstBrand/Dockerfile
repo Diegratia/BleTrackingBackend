@@ -9,12 +9,13 @@ COPY global.json ./
 
 
 COPY Services.API/MstBrand/MstBrand.csproj Services.API/MstBrand/
-COPY BusinessLogic.Services/BusinessLogic.Services.csproj BusinessLogic.Services/
-COPY Data.ViewModels/Data.ViewModels.csproj Data.ViewModels/
-COPY Entities.Models/Entities.Models.csproj Entities.Models/
-COPY Helpers.Consumer/Helpers.Consumer.csproj Helpers.Consumer/
-COPY Repositories/Repositories.csproj Repositories/
-COPY Web.API.Controllers/Web.API.Controllers.csproj Web.API.Controllers/
+  COPY Shared/BusinessLogic.Services/BusinessLogic.Services.csproj Shared/BusinessLogic.Services/
+  COPY Shared/Shared.Contracts/Shared.Contracts.csproj Shared/Shared.Contracts/
+  COPY Shared/Data.ViewModels/Data.ViewModels.csproj Shared/Data.ViewModels/
+  COPY Shared/Entities.Models/Entities.Models.csproj Shared/Entities.Models/
+  COPY Shared/Helpers.Consumer/Helpers.Consumer.csproj Shared/Helpers.Consumer/
+  COPY Shared/Repositories/Repositories.csproj Shared/Repositories/
+  COPY Shared/Web.API.Controllers/Web.API.Controllers.csproj Shared/Web.API.Controllers/
 
 # # WORKDIR /app/Services.API/MstBrand
 # RUN dotnet restore

@@ -1,0 +1,561 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Claims;
+using System.Text.Json;
+using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Interface;
+using ClosedXML.Excel;
+using Data.ViewModels;
+using DataView;
+using Entities.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using StackExchange.Redis;
+
+namespace BusinessLogic.Services.Implementation
+{
+    public class FloorplanMaskedAreaService : BaseService, IFloorplanMaskedAreaService
+    {
+        private readonly FloorplanMaskedAreaRepository _repository;
+        private readonly FloorplanDeviceRepository _floorplanDeviceRepository;
+        private readonly IFloorplanDeviceService _floorplanDeviceService;
+        private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<FloorplanMaskedArea> _logger;
+        private readonly IDistributedCache _cache;
+        private readonly IDatabase _redis;
+        private readonly IMqttPubQueue _mqttQueue;
+        private readonly IAuditEmitter _audit;
+        private bool cacheDisabled = false;
+
+        public FloorplanMaskedAreaService(
+            FloorplanMaskedAreaRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            FloorplanDeviceRepository floorplanDeviceRepository,
+            IFloorplanDeviceService floorplanDeviceService,
+            ILogger<FloorplanMaskedArea> logger,
+            IDistributedCache cache,
+            IConnectionMultiplexer redis,
+            IMqttPubQueue mqttQueue,
+            IAuditEmitter audit
+        ) : base(httpContextAccessor)
+        {
+            _repository = repository;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
+            _floorplanDeviceRepository = floorplanDeviceRepository;
+            _floorplanDeviceService = floorplanDeviceService;
+            _logger = logger;
+            _cache = cache;
+            _redis = redis?.GetDatabase();
+            _mqttQueue = mqttQueue;
+            _audit = audit;
+        }
+
+        // Redis safety wrapper
+        private bool IsRedisAlive()
+        {
+            if (cacheDisabled) return false;
+
+            try
+            {
+                return _redis?.Multiplexer.IsConnected ?? false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string Key(string key) =>
+            $"cache:area:{AppId}:{key}";
+
+        private string GroupKey =>
+            $"cache:area:group:{AppId}";
+
+
+        // ============================================================
+        // GROUP CACHE REMOVAL
+        // ============================================================
+        public async Task RemoveGroupAsync()
+        {
+            if (!IsRedisAlive()) return;
+
+            try
+            {
+                var keys = await _redis.SetMembersAsync(GroupKey);
+
+                foreach (var k in keys)
+                {
+                    try { await _cache.RemoveAsync(k!); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Redis remove failed"); }
+                }
+
+                await _redis.KeyDeleteAsync(GroupKey);
+            }
+            catch
+            {
+                cacheDisabled = true;   // matikan redis cache total
+            }
+        }
+
+
+        // ============================================================
+        // GET BY ID
+        // ============================================================
+        public async Task<FloorplanMaskedAreaRead> GetByIdAsync(Guid id)
+        {
+            var area = await _repository.GetByIdAsync(id);
+            if (area == null)
+                throw new NotFoundException($"Masked Area with id {id} not found");
+            return area;
+        }
+
+        public async Task<IEnumerable<FloorplanMaskedAreaRead>> GetAllAsync()
+        {
+            var cacheKey = Key("getall");
+
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    var cached = await _cache.GetStringAsync(cacheKey);
+                    if (cached != null)
+                    {
+                        _logger.LogInformation($"Cache hit: {cacheKey}");
+                        return JsonSerializer.Deserialize<IEnumerable<FloorplanMaskedAreaRead>>(cached)!;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Redis get failed → fallback to DB");
+                    cacheDisabled = true;
+                }
+            }
+
+            _logger.LogInformation($"Cache miss: {cacheKey}");
+
+            var data = await _repository.GetAllAsync();
+
+            if (IsRedisAlive())
+            {
+                try
+                {
+                    await _cache.SetStringAsync(
+                        cacheKey,
+                        JsonSerializer.Serialize(data),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        }
+                    );
+
+                    await _redis.SetAddAsync(GroupKey, cacheKey);
+                }
+                catch
+                {
+                    cacheDisabled = true;
+                }
+            }
+
+            return data;
+        }
+
+        public async Task<IEnumerable<OpenFloorplanMaskedAreaDto>> OpenGetAllAsync()
+        {
+            var areas = await _repository.GetAllExportAsync();
+            return _mapper.Map<IEnumerable<OpenFloorplanMaskedAreaDto>>(areas);
+        }
+
+
+        // ============================================================
+        // CREATE
+        // ============================================================
+        public async Task<FloorplanMaskedAreaRead> CreateAsync(FloorplanMaskedAreaCreateDto createDto)
+        {
+            var floor = await _repository.GetFloorByIdAsync(createDto.FloorId);
+            if (floor == null)
+                throw new NotFoundException($"Floor with ID {createDto.FloorId} not found.");
+
+            var floorplan = await _repository.GetFloorplanByIdAsync(createDto.FloorplanId);
+            if (floorplan == null)
+                throw new NotFoundException($"Floorplan with ID {createDto.FloorplanId} not found.");
+
+            var invalidFloorplanId =
+                await _repository.CheckInvalidFloorplanOwnershipAsync(createDto.FloorplanId, AppId);
+            if (invalidFloorplanId.Any())
+            {
+                throw new UnauthorizedException(
+                    $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                );
+            }
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            var area = _mapper.Map<FloorplanMaskedArea>(createDto);
+            area.ApplicationId = floorplan.ApplicationId;
+            area.Id = Guid.NewGuid();
+            area.Status = 1;
+            area.CreatedBy = username;
+            area.CreatedAt = DateTime.UtcNow;
+            area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.AddAsync(area);
+             _audit.Created(
+                "Masked Area",
+                area.Id,
+                "Created masked area",
+                new { area.Name }
+            );
+
+            await RemoveGroupAsync();
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+
+            var result = await _repository.GetByIdAsync(area.Id);
+            return result!;
+        }
+
+
+        // ============================================================
+        // UPDATE
+        // ============================================================
+        public async Task UpdateAsync(Guid id, FloorplanMaskedAreaUpdateDto updateDto)
+        {
+            var area = await _repository.GetByIdEntityAsync(id);
+            if (area == null)
+                throw new NotFoundException($"Masked Area with id {id} not found");
+
+            var floor = await _repository.GetFloorByIdAsync(updateDto.FloorId);
+            if (floor == null)
+                throw new NotFoundException($"Floor with ID {updateDto.FloorId} not found.");
+
+            if (updateDto.FloorplanId != area.FloorplanId)
+            {
+                var floorplan = await _repository.GetFloorplanByIdAsync(updateDto.FloorplanId);
+                if (floorplan == null)
+                    throw new NotFoundException($"Floorplan with ID {updateDto.FloorplanId} not found.");
+
+                var invalidFloorplanId =
+                    await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId, AppId);
+                if (invalidFloorplanId.Any())
+                {
+                    throw new UnauthorizedException(
+                        $"FloorplanId does not belong to this Application: {string.Join(", ", invalidFloorplanId)}"
+                    );
+                }
+            }
+
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            _mapper.Map(updateDto, area);
+
+            area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+
+            await RemoveGroupAsync();
+            await _repository.UpdateAsync(area);
+             _audit.Updated(
+                "Masked Area",
+                area.Id,
+                "Updated masked area",
+                new { area.Name }
+            );
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        }
+
+
+        // ============================================================
+        // DELETE
+        // ============================================================
+        // public async Task DeleteAsync(Guid id)
+        // {
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null) throw new KeyNotFoundException("Area not found");
+
+        //     var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+        //     area.Status = 0;
+        //     area.UpdatedBy = username;
+        //     area.UpdatedAt = DateTime.UtcNow;
+
+        //     await RemoveGroupAsync();
+        //     await _repository.SoftDeleteAsync(id);
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        // }
+
+
+        // ============================================================
+        // SOFT DELETE WITH CHILDREN
+        // ============================================================
+        public async Task SoftDeleteAsync(Guid id)
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+            var area = await _repository.GetByIdEntityAsync(id);
+            if (area == null)
+                throw new NotFoundException($"Masked Area with id {id} not found");
+
+            List<(Guid? readerId, Guid? cctvId, Guid? accessId)> deviceAssignments = new();
+
+            await _repository.ExecuteInTransactionAsync(async () =>
+            {
+                area.Status = 0;
+                area.UpdatedBy = username;
+                area.UpdatedAt = DateTime.UtcNow;
+
+                await _repository.SoftDeleteAsync(id);
+
+                var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+
+                foreach (var d in devices)
+                {
+                    // kumpulkan assignment dulu (tidak memanggil service!)
+                    deviceAssignments.Add((d.ReaderId, d.AccessCctvId, d.AccessControlId));
+
+                    d.Status = 0;
+                    d.UpdatedBy = username;
+                    d.UpdatedAt = DateTime.UtcNow;
+
+                    await _floorplanDeviceRepository.SoftDeleteAsync(d.Id);
+                }
+            });
+
+            // 🔥 setelah transaction selesai, baru panggil service lain
+            foreach (var a in deviceAssignments)
+            {
+                await _floorplanDeviceService.SetDeviceAssignmentAsync(
+                    a.readerId, a.cctvId, a.accessId,
+                    false, username);
+            }
+             _audit.Deleted(
+                "Masked Area",
+                area.Id,
+                "Deleted masked area",
+                new { area.Name }
+            );
+            await RemoveGroupAsync();
+            _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        }
+
+        //     public async Task SoftDeleteAsync(Guid id)
+        // {
+        //     var username = _httpContextAccessor.HttpContext?
+        //         .User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+
+        //     var area = await _repository.GetByIdAsync(id);
+        //     if (area == null)
+        //         throw new KeyNotFoundException("Masked area not found");
+
+        //     List<Guid> deviceIds = new();
+
+        //     await _repository.ExecuteInTransactionAsync(async () =>
+        //     {
+        //         area.Status = 0;
+        //         area.UpdatedBy = username;
+        //         area.UpdatedAt = DateTime.UtcNow;
+        //         await _repository.SoftDeleteAsync(id);
+
+        //         var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+        //         foreach (var d in devices)
+        //         {
+        //             deviceIds.Add(d.Id);
+        //         }
+        //     });
+
+        //     // 🔥 side effect SETELAH commit
+        //     foreach (var deviceId in deviceIds)
+        //     {
+        //         await _floorplanDeviceService.CascadeDeleteAsync(deviceId, username);
+        //     }
+
+        //      _audit.Deleted(
+        //         "Masked Area",
+        //         area.Id,
+        //         "Deleted masked area",
+        //         new { area.Name }
+        //     );
+        //     await RemoveGroupAsync();
+        //     _mqttQueue.Enqueue("engine/refresh/area-related", "");
+        // }
+
+        // ============================================================
+        // INTERNAL CASCADE DELETE
+        // ============================================================
+        public async Task CascadeDeleteAsync(Guid id, string username)
+        {
+            var area = await _repository.GetByIdEntityAsync(id);
+            if (area == null) return;
+
+            area.Status = 0;
+            area.UpdatedBy = username;
+            area.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.SoftDeleteAsync(id);
+
+            var devices = await _floorplanDeviceRepository.GetByAreaIdAsync(id);
+            foreach (var d in devices)
+            {
+                await _floorplanDeviceService.CascadeDeleteAsync(d.Id, username);
+            }
+
+            // ❌ NO TRANSACTION
+            // ❌ NO AUDIT
+            // ❌ NO MQTT
+        }
+
+
+
+        // ============================================================
+        // FILTER DATATABLE
+        // ============================================================
+        public async Task<object> FilterAsync(
+            DataTablesProjectedRequest request,
+            FloorplanMaskedAreaFilter filter
+        )
+        {
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            if (request.DateFilters != null)
+            {
+                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
+                {
+                    filter.DateFrom = dateFilter.DateFrom;
+                    filter.DateTo = dateFilter.DateTo;
+                }
+            }
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
+        }
+
+
+        // ============================================================
+        // EXPORT PDF
+        // ============================================================
+        public async Task<byte[]> ExportPdfAsync()
+        {
+            var areas = await _repository.GetAllExportAsync();
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Size(PageSizes.A4.Landscape());
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    page.Header().Text("Floorplan Masked Area Report")
+                        .SemiBold().FontSize(16).AlignCenter();
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(35);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("#").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Name").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Floor").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Floorplan").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Restricted").SemiBold();
+                            header.Cell().Element(CellStyle).Text("Created").SemiBold();
+                            header.Cell().Element(CellStyle).Text("By").SemiBold();
+                        });
+
+                        int i = 1;
+
+                        foreach (var area in areas)
+                        {
+                            table.Cell().Element(CellStyle).Text(i++.ToString());
+                            table.Cell().Element(CellStyle).Text(area.Name);
+                            table.Cell().Element(CellStyle).Text(area.Floor?.Name);
+                            table.Cell().Element(CellStyle).Text(area.Floorplan?.Name);
+                            table.Cell().Element(CellStyle).Text(area.RestrictedStatus.ToString());
+                            table.Cell().Element(CellStyle).Text(area.CreatedAt.ToString());
+                            table.Cell().Element(CellStyle).Text(area.CreatedBy);
+                        }
+
+                        static IContainer CellStyle(IContainer container) =>
+                            container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(4);
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+
+        // ============================================================
+        // EXPORT EXCEL
+        // ============================================================
+        public async Task<byte[]> ExportExcelAsync()
+        {
+            var areas = await _repository.GetAllExportAsync();
+
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Masked Areas");
+
+            ws.Cell(1, 1).Value = "#";
+            ws.Cell(1, 2).Value = "Name";
+            ws.Cell(1, 3).Value = "Floor";
+            ws.Cell(1, 4).Value = "Floorplan";
+            ws.Cell(1, 5).Value = "Restricted";
+            ws.Cell(1, 6).Value = "CreatedAt";
+            ws.Cell(1, 7).Value = "CreatedBy";
+
+            int r = 2;
+            int n = 1;
+
+            foreach (var a in areas)
+            {
+                ws.Cell(r, 1).Value = n++;
+                ws.Cell(r, 2).Value = a.Name;
+                ws.Cell(r, 3).Value = a.Floor?.Name;
+                ws.Cell(r, 4).Value = a.Floorplan?.Name;
+                ws.Cell(r, 5).Value = a.RestrictedStatus.ToString();
+                ws.Cell(r, 6).Value = a.CreatedAt;
+                ws.Cell(r, 7).Value = a.CreatedBy;
+                r++;
+            }
+
+            ws.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+    }
+}

@@ -1,0 +1,88 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Data.ViewModels.ResponseHelper;
+
+namespace BusinessLogic.Services.Extension.RootExtension
+{
+    public static class AuthExtensions
+    {
+        public static IServiceCollection AddJwtAuthExtension(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidAudience = configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                    };
+                })
+                .AddNegotiate();
+            services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
+            return services;
+        }
+    }
+
+
+
+
+    public class AuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
+    {
+        private readonly AuthorizationMiddlewareResultHandler _defaultHandler = new();
+
+        public async Task HandleAsync(
+            RequestDelegate next,
+            HttpContext context,
+            AuthorizationPolicy policy,
+            PolicyAuthorizationResult authorizeResult)
+        {
+            if (authorizeResult.Challenged)
+            {
+                await _defaultHandler.HandleAsync(next, context, policy, authorizeResult);
+                
+                // Set Custom error Message logic ONLY if we haven't started sending response AND the response doesn't contain a WWW-Authenticate header (e.g., from Negotiate/NTLM)
+                if (!context.Response.HasStarted && 
+                    !context.Request.Path.Value.Contains("/login-sso", StringComparison.OrdinalIgnoreCase) &&
+                    !context.Response.Headers.ContainsKey("WWW-Authenticate"))
+                {
+                    context.Response.ContentType = "application/json";
+                    var result = ApiResponse.Unauthorized(
+                        "Unauthorized: Token or API Key is missing or invalid"
+                    );
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+                }
+                return;
+            }
+
+            if (authorizeResult.Forbidden)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+                var result = ApiResponse.Forbidden(
+                    "Forbidden: You do not have permission to access this resource"
+                );
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+                return;
+            }
+
+            await _defaultHandler.HandleAsync(next, context, policy, authorizeResult);
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(dotnet ef:*)",
+      "Skill(glm-plan-usage:usage-query-skill)",
+      "Bash(dotnet build:*)",
+      "Bash(powershell:*)",
+      "Skill(glm-plan-usage:usage-query)",
+      "Bash(where:*)",
+      "Bash(code:*)",
+      "Bash(Select-String:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(findstr:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git -C \"C:\\\\Migrasi\\\\Projects\\\\Projects\\\\BleTrackingBackend\" status:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)"
+    ]
+  }
+}

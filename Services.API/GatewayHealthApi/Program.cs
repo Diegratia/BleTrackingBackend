@@ -1,13 +1,23 @@
+using Shared.Config;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
+
+// Load .env with proper error handling
+EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseWindowsService();
+    builder.Configuration.AddAppsettings();
+builder.UseSerilogExtension();
 
 builder.Services.AddHttpClient();
 builder.Services.AddLogging();
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// Configure Windows Service
+builder.Host.UseWindowsService();
 
 var app = builder.Build();
 

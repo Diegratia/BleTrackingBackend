@@ -1,0 +1,16 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Shared.Contracts -> E:\g\A\BleTrackingBackend\Shared\Shared.Contracts\bin\Debug\net8.0\Shared.Contracts.dll
+  Helpers.Consumer -> E:\g\A\BleTrackingBackend\Shared\Helpers.Consumer\bin\Debug\net8.0\Helpers.Consumer.dll
+  Entities.Models -> E:\g\A\BleTrackingBackend\Shared\Entities.Models\bin\Debug\net8.0\Entities.Models.dll
+  Data.ViewModels -> E:\g\A\BleTrackingBackend\Shared\Data.ViewModels\bin\Debug\net8.0\Data.ViewModels.dll
+  Repositories -> E:\g\A\BleTrackingBackend\Shared\Repositories\bin\Debug\net8.0\Repositories.dll
+E:\g\A\BleTrackingBackend\Shared\BusinessLogic.Services\Implementation\MstBuildingService.cs(466,1): error CS1022: Type or namespace definition, or end-of-file expected [E:\g\A\BleTrackingBackend\Shared\BusinessLogic.Services\BusinessLogic.Services.csproj]
+
+Build FAILED.
+
+E:\g\A\BleTrackingBackend\Shared\BusinessLogic.Services\Implementation\MstBuildingService.cs(466,1): error CS1022: Type or namespace definition, or end-of-file expected [E:\g\A\BleTrackingBackend\Shared\BusinessLogic.Services\BusinessLogic.Services.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.75

@@ -1,0 +1,196 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using AutoMapper;
+using BusinessLogic.Services.Background;
+using BusinessLogic.Services.Interface;
+using Data.ViewModels;
+using DataView;
+using Entities.Models;
+using Helpers.Consumer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+
+namespace BusinessLogic.Services.Implementation
+{
+    public class EvacuationAssemblyPointService : BaseService, IEvacuationAssemblyPointService
+    {
+        private readonly EvacuationAssemblyPointRepository _repository;
+        private readonly IMapper _mapper;
+        private readonly IAuditEmitter _audit;
+        private readonly IMqttPubQueue _mqttPubQueue;
+        private readonly ILogger<EvacuationAssemblyPointService> _logger;
+
+        public EvacuationAssemblyPointService(
+            EvacuationAssemblyPointRepository repository,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            IAuditEmitter audit,
+            IMqttPubQueue mqttPubQueue,
+            ILogger<EvacuationAssemblyPointService> logger) : base(httpContextAccessor)
+        {
+            _repository = repository;
+            _mapper = mapper;
+            _audit = audit;
+            _mqttPubQueue = mqttPubQueue;
+            _logger = logger;
+        }
+
+        private void PublishAssemblyPointsRefresh()
+        {
+            // Publish empty payload to trigger engine refresh
+            var topic = "engine/refresh/evacuation-assembly-points";
+            var payload = "{}"; // Empty payload - engine will fetch from DB
+            _mqttPubQueue.Enqueue(topic, payload);
+            _logger.LogInformation($"[Evacuation] Published assembly points refresh to {topic}");
+        }
+
+        public async Task<EvacuationAssemblyPointRead> GetByIdAsync(Guid id)
+        {
+            var assemblyPoint = await _repository.GetByIdAsync(id);
+            if (assemblyPoint == null)
+                throw new NotFoundException($"Evacuation Assembly Point with id {id} not found");
+            return assemblyPoint;
+        }
+
+        public async Task<IEnumerable<EvacuationAssemblyPointRead>> GetAllAsync()
+        {
+            return await _repository.GetAllAsync();
+        }
+
+        public async Task<EvacuationAssemblyPointRead> CreateAsync(EvacuationAssemblyPointCreateDto createDto)
+        {
+            if (createDto.FloorId.HasValue)
+            {
+                if (!await _repository.FloorExistsAsync(createDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {createDto.FloorId} not found");
+
+                var invalidFloorIds = await _repository.CheckInvalidFloorOwnershipAsync(createDto.FloorId.Value, AppId);
+                if (invalidFloorIds.Any())
+                    throw new UnauthorizedException($"FloorId does not belong to this Application");
+            }
+
+            if (createDto.FloorplanId.HasValue)
+            {
+                if (!await _repository.FloorplanExistsAsync(createDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {createDto.FloorplanId} not found");
+
+                var invalidFloorplanIds = await _repository.CheckInvalidFloorplanOwnershipAsync(createDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanIds.Any())
+                    throw new UnauthorizedException($"FloorplanId does not belong to this Application");
+            }
+
+            var assemblyPoint = _mapper.Map<EvacuationAssemblyPoint>(createDto);
+            SetCreateAudit(assemblyPoint);
+            assemblyPoint.Status = 1;
+            assemblyPoint.ApplicationId = AppId;
+
+            await _repository.AddAsync(assemblyPoint);
+
+            PublishAssemblyPointsRefresh();
+
+            _audit.Created(
+                "EvacuationAssemblyPoint",
+                assemblyPoint.Id,
+                "Created evacuation assembly point",
+                new { assemblyPoint.Name }
+            );
+
+            return _mapper.Map<EvacuationAssemblyPointRead>(assemblyPoint);
+        }
+
+        public async Task UpdateAsync(Guid id, EvacuationAssemblyPointUpdateDto updateDto)
+        {
+            var assemblyPoint = await _repository.GetByIdEntityAsync(id);
+            if (assemblyPoint == null)
+                throw new KeyNotFoundException("Evacuation Assembly Point not found");
+
+            // Validate floor ownership
+            if (updateDto.FloorId.HasValue && updateDto.FloorId != assemblyPoint.FloorId)
+            {
+                if (!await _repository.FloorExistsAsync(updateDto.FloorId.Value))
+                    throw new NotFoundException($"Floor with id {updateDto.FloorId} not found");
+
+                var invalidFloorIds = await _repository.CheckInvalidFloorOwnershipAsync(updateDto.FloorId.Value, AppId);
+                if (invalidFloorIds.Any())
+                    throw new UnauthorizedException($"FloorId does not belong to this Application");
+            }
+
+            // Validate floorplan ownership
+            if (updateDto.FloorplanId.HasValue && updateDto.FloorplanId != assemblyPoint.FloorplanId)
+            {
+                if (!await _repository.FloorplanExistsAsync(updateDto.FloorplanId.Value))
+                    throw new NotFoundException($"Floorplan with id {updateDto.FloorplanId} not found");
+
+                var invalidFloorplanIds = await _repository.CheckInvalidFloorplanOwnershipAsync(updateDto.FloorplanId.Value, AppId);
+                if (invalidFloorplanIds.Any())
+                    throw new UnauthorizedException($"FloorplanId does not belong to this Application");
+            }
+
+            SetUpdateAudit(assemblyPoint);
+            _mapper.Map(updateDto, assemblyPoint);
+            await _repository.UpdateAsync(assemblyPoint);
+
+            PublishAssemblyPointsRefresh();
+
+            _audit.Updated(
+                "EvacuationAssemblyPoint",
+                assemblyPoint.Id,
+                "Updated evacuation assembly point",
+                new { assemblyPoint.Name }
+            );
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var assemblyPoint = await _repository.GetByIdEntityAsync(id);
+            if (assemblyPoint == null)
+            {
+                throw new KeyNotFoundException("Evacuation Assembly Point not found");
+            }
+
+            SetDeleteAudit(assemblyPoint);
+            assemblyPoint.Status = 0;
+
+            await _repository.DeleteAsync(id);
+
+            PublishAssemblyPointsRefresh();
+
+            _audit.Deleted(
+                "EvacuationAssemblyPoint",
+                assemblyPoint.Id,
+                "Deleted evacuation assembly point",
+                new { assemblyPoint.Name }
+            );
+        }
+
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, EvacuationAssemblyPointFilter filter)
+        {
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
+
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
+
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
+        }
+
+        public async Task<List<EvacuationAssemblyPointRead>> GetByFloorplanIdAsync(Guid floorplanId)
+        {
+            return await _repository.GetByFloorplanIdAsync(floorplanId);
+        }
+    }
+}
