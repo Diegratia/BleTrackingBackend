@@ -1,105 +1,109 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using ClosedXML.Excel;
 using Data.ViewModels;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using System.Linq.Dynamic.Core;
-using ClosedXML.Excel;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Repositories.Repository;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstIntegrationService : IMstIntegrationService
+    public class MstIntegrationService : BaseService, IMstIntegrationService
     {
         private readonly MstIntegrationRepository _repository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
-        public MstIntegrationService(MstIntegrationRepository repository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public MstIntegrationService(
+            MstIntegrationRepository repository,
+            IMapper mapper,
+            IAuditEmitter audit,
+            IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
-        public async Task<MstIntegrationDto> GetByIdAsync(Guid id)
+        public async Task<MstIntegrationRead?> GetByIdAsync(Guid id)
         {
-            var integration = await _repository.GetByIdAsync(id);
-            return integration == null ? null! : _mapper.Map<MstIntegrationDto>(integration);
+            return await _repository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<MstIntegrationDto>> GetAllAsync()
+        public async Task<IEnumerable<MstIntegrationRead>> GetAllAsync()
         {
-            var integrations = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstIntegrationDto>>(integrations);
+            return await _repository.GetAllAsync();
         }
 
         public async Task<MstIntegrationDto> CreateAsync(MstIntegrationCreateDto createDto)
         {
-            // Validasi BrandId
             var brand = await _repository.GetBrandByIdAsync(createDto.BrandId);
             if (brand == null)
                 throw new ArgumentException($"Brand with ID {createDto.BrandId} not found.");
 
-            // Validasi ApplicationId
             var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var integration = _mapper.Map<MstIntegration>(createDto);
             integration.Id = Guid.NewGuid();
             integration.Status = 1;
-            integration.CreatedBy = username;
+            integration.CreatedBy = UsernameFormToken;
             integration.CreatedAt = DateTime.UtcNow;
-            integration.UpdatedBy = username;
+            integration.UpdatedBy = UsernameFormToken;
             integration.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(integration);
-            return _mapper.Map<MstIntegrationDto>(integration);
+
+            _audit.Created("MstIntegration", integration.Id, $"Integration created");
+
+            var result = await _repository.GetByIdAsync(integration.Id);
+            return _mapper.Map<MstIntegrationDto>(result);
         }
 
         public async Task<MstIntegrationDto> CreateRawAsync(MstIntegrationCreateDto createDto)
         {
-            // Validasi BrandId
             var brand = await _repository.GetBrandByIdAsync(createDto.BrandId);
             if (brand == null)
                 throw new ArgumentException($"Brand with ID {createDto.BrandId} not found.");
 
-            // Validasi ApplicationId
             var application = await _repository.GetApplicationByIdAsync(createDto.ApplicationId);
             if (application == null)
                 throw new ArgumentException($"Application with ID {createDto.ApplicationId} not found.");
 
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             var integration = _mapper.Map<MstIntegration>(createDto);
             integration.Id = Guid.NewGuid();
             integration.Status = 1;
-            integration.CreatedBy = username;
+            integration.CreatedBy = UsernameFormToken;
             integration.CreatedAt = DateTime.UtcNow;
-            integration.UpdatedBy = username;
+            integration.UpdatedBy = UsernameFormToken;
             integration.UpdatedAt = DateTime.UtcNow;
 
             await _repository.AddAsync(integration);
-            return _mapper.Map<MstIntegrationDto>(integration);
+
+            _audit.Created("MstIntegration", integration.Id, $"Integration created");
+
+            var result = await _repository.GetByIdAsync(integration.Id);
+            return _mapper.Map<MstIntegrationDto>(result);
         }
 
         public async Task UpdateAsync(Guid id, MstIntegrationUpdateDto updateDto)
         {
-            var integration = await _repository.GetByIdAsync(id);
+            var integration = await _repository.GetByIdEntityAsync(id);
             if (integration == null)
                 throw new KeyNotFoundException("Integration not found");
 
-            // Validasi BrandId jika berubah
             if (integration.BrandId != updateDto.BrandId)
             {
                 var brand = await _repository.GetBrandByIdAsync(updateDto.BrandId);
@@ -108,53 +112,51 @@ namespace BusinessLogic.Services.Implementation
                 integration.BrandId = updateDto.BrandId;
             }
 
-            // Validasi ApplicationId jika berubah
-            // if (integration.ApplicationId != updateDto.ApplicationId)
-            // {
-            //     var application = await _repository.GetApplicationByIdAsync(updateDto.ApplicationId);
-            //     if (application == null)
-            //         throw new ArgumentException($"Application with ID {updateDto.ApplicationId} not found.");
-            //     integration.ApplicationId = updateDto.ApplicationId;
-            // }
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            integration.UpdatedBy = username;
+            integration.UpdatedBy = UsernameFormToken;
             integration.UpdatedAt = DateTime.UtcNow;
             _mapper.Map(updateDto, integration);
 
             await _repository.UpdateAsync(integration);
+
+            _audit.Updated("MstIntegration", id, $"Integration updated");
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
-            var integration = await _repository.GetByIdAsync(id);
-            if (integration == null) throw new KeyNotFoundException("Integration not found");
-            integration.UpdatedBy = username;
+            var integration = await _repository.GetByIdEntityAsync(id);
+            if (integration == null)
+                throw new KeyNotFoundException("Integration not found");
+
+            integration.UpdatedBy = UsernameFormToken;
             integration.UpdatedAt = DateTime.UtcNow;
-            await _repository.SoftDeleteAsync(id);
+            await _repository.SoftDeleteAsync(integration);
+
+            _audit.Deleted("MstIntegration", id, $"Integration deleted");
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstIntegrationFilter filter)
         {
-            var query = _repository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "UpdatedAt";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "Brand.Name" };
-            var validSortColumns = new[] { "CreatedAt", "UpdatedAt", "Status", "Brand.Name", "IntegrationType", "ApiTypeAuth", "ApiAuthUsername", "ApiAuthPassword" };
+            var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<MstIntegration, MstIntegrationDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
         public async Task<byte[]> ExportPdfAsync()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
-            var integrations = await _repository.GetAllAsync();
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            var integrations = await _repository.GetAllExportAsync();
 
             var document = Document.Create(container =>
             {
@@ -171,7 +173,6 @@ namespace BusinessLogic.Services.Implementation
 
                     page.Content().Table(table =>
                     {
-                        // Define columns
                         table.ColumnsDefinition(columns =>
                         {
                             columns.ConstantColumn(35);
@@ -185,10 +186,9 @@ namespace BusinessLogic.Services.Implementation
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
                             columns.RelativeColumn(2);
-                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(2);
                         });
 
-                        // Table header
                         table.Header(header =>
                         {
                             header.Cell().Element(CellStyle).Text("#").SemiBold();
@@ -205,7 +205,6 @@ namespace BusinessLogic.Services.Implementation
                             header.Cell().Element(CellStyle).Text("Updated At").SemiBold();
                         });
 
-                        // Table body
                         int index = 1;
                         foreach (var integration in integrations)
                         {
@@ -213,13 +212,13 @@ namespace BusinessLogic.Services.Implementation
                             table.Cell().Element(CellStyle).Text(integration.Brand?.Name ?? "-");
                             table.Cell().Element(CellStyle).Text(integration.IntegrationType.ToString() ?? "-");
                             table.Cell().Element(CellStyle).Text(integration.ApiTypeAuth.ToString() ?? "-");
-                            table.Cell().Element(CellStyle).Text(integration.ApiUrl);
-                            table.Cell().Element(CellStyle).Text(integration.ApiAuthUsername);
-                            table.Cell().Element(CellStyle).Text(integration.ApiAuthPasswd);
-                            table.Cell().Element(CellStyle).Text(integration.ApiKeyField);
-                            table.Cell().Element(CellStyle).Text(integration.ApiKeyValue);
+                            table.Cell().Element(CellStyle).Text(integration.ApiUrl ?? "-");
+                            table.Cell().Element(CellStyle).Text(integration.ApiAuthUsername ?? "-");
+                            table.Cell().Element(CellStyle).Text(integration.ApiAuthPasswd ?? "-");
+                            table.Cell().Element(CellStyle).Text(integration.ApiKeyField ?? "-");
+                            table.Cell().Element(CellStyle).Text(integration.ApiKeyValue ?? "-");
                             table.Cell().Element(CellStyle).Text(integration.CreatedAt.ToString("yyyy-MM-dd"));
-                            table.Cell().Element(CellStyle).Text(integration.CreatedBy ?? "-");
+                            table.Cell().Element(CellStyle).Text(integration.UpdatedAt.ToString("yyyy-MM-dd"));
                         }
 
                         static IContainer CellStyle(IContainer container) =>
@@ -242,14 +241,14 @@ namespace BusinessLogic.Services.Implementation
 
             return document.GeneratePdf();
         }
-            public async Task<byte[]> ExportExcelAsync()
+
+        public async Task<byte[]> ExportExcelAsync()
         {
             var integrations = await _repository.GetAllExportAsync();
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Integrations");
 
-            // Header
             worksheet.Cell(1, 1).Value = "No";
             worksheet.Cell(1, 2).Value = "Brand";
             worksheet.Cell(1, 3).Value = "Name";
@@ -269,8 +268,6 @@ namespace BusinessLogic.Services.Implementation
 
             foreach (var integration in integrations)
             {
-                await _repository.GetAllExportAsync(); 
-
                 worksheet.Cell(row, 1).Value = no++;
                 worksheet.Cell(row, 2).Value = integration.Brand?.Name ?? "-";
                 worksheet.Cell(row, 3).Value = integration.IntegrationType.ToString();
@@ -292,6 +289,5 @@ namespace BusinessLogic.Services.Implementation
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
-
     }
 }

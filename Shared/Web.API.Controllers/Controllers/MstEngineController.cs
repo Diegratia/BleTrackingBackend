@@ -92,7 +92,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _mstEngineService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Engines filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Engines filtered successfully", result));
         }
 
         /// <summary>

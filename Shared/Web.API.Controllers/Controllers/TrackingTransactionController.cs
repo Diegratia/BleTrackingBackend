@@ -44,7 +44,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _trackingTransactionService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Tracking transactions filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Tracking transactions filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]

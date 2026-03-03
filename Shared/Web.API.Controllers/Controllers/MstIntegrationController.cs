@@ -1,11 +1,11 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Data.ViewModels;
-using BusinessLogic.Services.Implementation;
-using BusinessLogic.Services.Interface;
-using System.Linq;
+using Data.ViewModels.ResponseHelper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension.RootExtension;
 using Shared.Contracts;
 
@@ -23,285 +23,74 @@ namespace Web.API.Controllers.Controllers
             _mstIntegrationService = mstIntegrationService;
         }
 
-        // GET: api/MstIntegration
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var integrations = await _mstIntegrationService.GetAllAsync();
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Integrations retrieved successfully",
-                    collection = new { data = integrations },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var integrations = await _mstIntegrationService.GetAllAsync();
+            return Ok(ApiResponse.Success("Integrations retrieved successfully", integrations));
         }
 
-        // GET: api/MstIntegration/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            try
-            {
-                var integration = await _mstIntegrationService.GetByIdAsync(id);
-                if (integration == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        msg = "Integration not found",
-                        collection = new { data = (object?)null },
-                        code = 404
-                    });
-                }
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Integration retrieved successfully",
-                    collection = new { data = integration },
-                    code = 200
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var integration = await _mstIntegrationService.GetByIdAsync(id);
+            if (integration == null)
+                return NotFound(ApiResponse.NotFound("Integration not found"));
+            return Ok(ApiResponse.Success("Integration retrieved successfully", integration));
         }
 
-        // POST: api/MstIntegration
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MstIntegrationCreateDto mstIntegrationDto)
+        public async Task<IActionResult> Create([FromBody] MstIntegrationCreateDto createDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                var createdIntegration = await _mstIntegrationService.CreateAsync(mstIntegrationDto);
-                return StatusCode(201, new
-                {
-                    success = true,
-                    msg = "Integration created successfully",
-                    collection = new { data = createdIntegration },
-                    code = 201
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var createdIntegration = await _mstIntegrationService.CreateAsync(createDto);
+            return StatusCode(201, ApiResponse.Created("Integration created successfully", createdIntegration));
         }
 
-        // PUT: api/MstIntegration/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] MstIntegrationUpdateDto mstIntegrationDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] MstIntegrationUpdateDto updateDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
-            }
-
-            try
-            {
-                await _mstIntegrationService.UpdateAsync(id, mstIntegrationDto); // No var assignment
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Integration updated successfully",
-                    collection = new { data = (object?)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Integration not found",
-                    collection = new { data = (object?)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            await _mstIntegrationService.UpdateAsync(id, updateDto);
+            return Ok(ApiResponse.NoContent("Integration updated successfully"));
         }
 
-        // DELETE: api/MstIntegration/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _mstIntegrationService.DeleteAsync(id); // No var assignment
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Integration deleted successfully",
-                    collection = new { data = (object?)null },
-                    code = 204
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    msg = "Integration not found",
-                    collection = new { data = (object?)null },
-                    code = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            await _mstIntegrationService.DeleteAsync(id);
+            return Ok(ApiResponse.NoContent("Integration deleted successfully"));
         }
 
-        [HttpPost("{filter}")]
-        public async Task<IActionResult> Filter([FromBody] DataTablesRequest request)
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)
         {
-            if (!ModelState.IsValid)
+            var filter = new MstIntegrationFilter();
+
+            if (request.Filters.ValueKind == JsonValueKind.Object)
             {
-                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = "Validation failed: " + string.Join(", ", errors),
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
+                filter = JsonSerializer.Deserialize<MstIntegrationFilter>(request.Filters.GetRawText(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new MstIntegrationFilter();
             }
 
-            try
-            {
-                var result = await _mstIntegrationService.FilterAsync(request);
-                return Ok(new
-                {
-                    success = true,
-                    msg = "Integrations filtered successfully",
-                    collection = result,
-                    code = 200
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    msg = ex.Message,
-                    collection = new { data = (object?)null },
-                    code = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Internal server error: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var result = await _mstIntegrationService.FilterAsync(request, filter);
+            return Ok(ApiResponse.Paginated("Integrations filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportPdf()
         {
-            try
-            {
-                var pdfBytes = await _mstIntegrationService.ExportPdfAsync();
-                return File(pdfBytes, "application/pdf", "MstIntegration_Report.pdf");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate PDF: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var pdfBytes = await _mstIntegrationService.ExportPdfAsync();
+            return File(pdfBytes, "application/pdf", "MstIntegration_Report.pdf");
         }
 
         [HttpGet("export/excel")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> ExportExcel()
         {
-            try
-            {
-                var excelBytes = await _mstIntegrationService.ExportExcelAsync();
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "MstIntegration_Report.xlsx");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    msg = $"Failed to generate Excel: {ex.Message}",
-                    collection = new { data = (object?)null },
-                    code = 500
-                });
-            }
+            var excelBytes = await _mstIntegrationService.ExportExcelAsync();
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MstIntegration_Report.xlsx");
         }
     }
 }

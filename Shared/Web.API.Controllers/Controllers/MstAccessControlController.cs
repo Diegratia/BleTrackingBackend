@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _mstAccessControlService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Access Control filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Access Control filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]

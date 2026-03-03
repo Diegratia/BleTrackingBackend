@@ -102,7 +102,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _cardRecordService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Card Record filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Card Record filtered successfully", result));
         }
 
         // ============================

@@ -84,7 +84,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _cardGroupService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Card Groups filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Card Groups filtered successfully", result));
         }
     }
 }

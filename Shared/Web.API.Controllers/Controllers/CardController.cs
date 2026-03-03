@@ -177,7 +177,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _service.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Card filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Card filtered successfully", result));
         }
 
         [HttpGet("export/pdf")]
