@@ -299,27 +299,6 @@ namespace BusinessLogic.Services.Implementation
                 data
             };
         }
-
-         public async Task<object> ProjectionFilterAsync(DataTablesRequest request)
-            {
-                var (data, total, filtered) = await _repository.GetPagedResultAsync(
-                    request.Filters,
-                     request.DateFilters.ToRepositoryDateFilters(),
-                     request.TimeReport,  
-                    request.SortColumn ?? "UpdatedAt" ?? "TimeStamp",
-                    request.SortDir,
-                    request.Start,
-                    request.Length
-                );
-
-                return new
-                {
-                    draw = request.Draw,
-                    recordsTotal = total,
-                    recordsFiltered = filtered,
-                    data
-                };
-            }
         
         public async Task<byte[]> ExportPdfAsync()
         {

@@ -16,7 +16,8 @@ namespace Shared.Contracts
 
         public Guid? SecurityId { get; set; }
         public Guid? PatrolAssignmentId { get; set; }
-        
+
         public DateTime? EndedAt { get; set; }
+        public string? TimeRange { get; set; }
     }
 }

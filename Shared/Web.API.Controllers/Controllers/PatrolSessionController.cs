@@ -83,9 +83,9 @@ namespace Web.API.Controllers.Controllers
                 filter = JsonSerializer.Deserialize<PatrolSessionFilter>(request.Filters.GetRawText(),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new PatrolSessionFilter();
             }
-            
+
             var result = await _PatrolSessionService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Paginated("Patrol Assignment filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Patrol Session filtered successfully", result));
         }
 
     }

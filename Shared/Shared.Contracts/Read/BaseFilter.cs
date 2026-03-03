@@ -16,8 +16,5 @@ namespace Shared.Contracts.Read
         // Date range filters
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
-
-        // TimeReport preset (daily, weekly, monthly, etc.) - overrides DateFrom/DateTo
-        public string? TimeRange { get; set; }
     }
 }

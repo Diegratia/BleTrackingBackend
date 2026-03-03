@@ -75,11 +75,11 @@ namespace BusinessLogic.Services.Implementation
             // ✅ Override: jika DateFilters ada isinya, anggap CustomDate
             if (request.DateFilters != null && request.DateFilters.Any())
             {
-                request.TimeReport = "CustomDate";
+                request.TimeRange = "CustomDate";
             }
-            if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
+            if (!string.IsNullOrEmpty(request.TimeRange) && request.TimeRange != "CustomDate")
             {
-                var timeRange = GetTimeRange(request.TimeReport);
+                var timeRange = GetTimeRange(request.TimeRange);
                 if (timeRange.HasValue)
                 {
                     var timeColumn = _validSortColumns.Contains(request.SortColumn)

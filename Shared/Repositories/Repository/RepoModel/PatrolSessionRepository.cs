@@ -208,6 +208,7 @@ namespace Repositories.Repository
                     query = query.Where(x => x.StartedAt <= filter.DateTo.Value);
             }
 
+            // Hitung total AWAL (sebelum filter diterapkan)
             var total = await query.CountAsync();
 
             if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -296,6 +297,9 @@ namespace Repositories.Repository
                     query = query.Where(s => s.StartedAt <= filter.DateTo.Value);
             }
 
+            // Hitung total AWAL (sebelum filter diterapkan)
+            var total = await query.CountAsync();
+
             // Apply search from BaseFilter
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
@@ -349,7 +353,6 @@ namespace Repositories.Repository
                 .Include(s => s.PatrolAssignment)
                 .Include(s => s.Security);
 
-            var total = await query.CountAsync();
             var filtered = await query.CountAsync();
 
             var data = await query.ToListAsync();

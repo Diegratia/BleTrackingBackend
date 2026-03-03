@@ -41,26 +41,12 @@ namespace BusinessLogic.Services.Implementation
             PatrolSessionFilter filter
         )
         {
-
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
             filter.SortColumn = request.SortColumn;
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
-
-            if (!string.IsNullOrEmpty(request.TimeReport))
-            {
-
-            }
-
-            if (request.DateFilters != null)
-            {
-                if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
-                {
-                    filter.DateFrom = dateFilter.DateFrom;
-                    filter.DateTo = dateFilter.DateTo;
-                }
-            }
+            filter.TimeRange = request.TimeRange;
 
             var (data, total, filtered) = await _repo.FilterAsync(filter);
             return new

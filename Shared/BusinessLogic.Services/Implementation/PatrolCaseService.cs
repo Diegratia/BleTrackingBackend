@@ -53,7 +53,7 @@ namespace BusinessLogic.Services.Implementation
             filter.Search = request.SearchValue;
 
             // 2. Map Time Report (Shortcut for DateRange)
-            if (!string.IsNullOrEmpty(request.TimeReport))
+            if (!string.IsNullOrEmpty(request.TimeRange))
             {
                 // Helper to calculate date range based on "Daily", "Weekly", etc.
                 // We can reuse the logic from BaseProjectionRepository or simple switch here.

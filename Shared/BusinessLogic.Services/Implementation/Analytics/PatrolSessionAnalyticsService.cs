@@ -48,15 +48,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             filter.SortColumn = request.SortColumn ?? "StartedAt";
             filter.SortDir = request.SortDir ?? "desc";
             filter.Search = request.SearchValue;
-
-            if (request.DateFilters != null)
-            {
-                if (request.DateFilters.TryGetValue("StartedAt", out var dateFilter))
-                {
-                    filter.DateFrom = dateFilter.DateFrom;
-                    filter.DateTo = dateFilter.DateTo;
-                }
-            }
+            filter.TimeRange = request.TimeRange;
 
             // 1. Get raw data from repository (UTC from database)
             var (sessions, total, filtered) = await _repository.GetAnalyticsDataAsync(filter);

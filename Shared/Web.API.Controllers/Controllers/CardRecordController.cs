@@ -114,13 +114,5 @@ namespace Web.API.Controllers.Controllers
             var result = await _cardRecordService.GetCardUsageHistoryAsync(request);
             return Ok(ApiResponse.Success("Card usage history retrieved", result));
         }
-
-        [HttpPost("open/{filter}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> OpenFilter([FromBody] DataTablesRequest request)
-        {
-            var result = await _cardRecordService.ProjectionFilterAsync(request);
-            return Ok(ApiResponse.Success("Card Records filtered successfully", result));
-        }
     }
 }

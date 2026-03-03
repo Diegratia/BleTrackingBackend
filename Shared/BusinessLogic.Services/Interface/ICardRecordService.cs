@@ -26,8 +26,5 @@ namespace BusinessLogic.Services.Interface
         Task<byte[]> ExportExcelAsync();
         Task<IEnumerable<CardUsageSummaryRM>> GetCardUsageSummaryAsync();
         Task<IEnumerable<CardUsageHistoryRM>> GetCardUsageHistoryAsync(CardRecordRequestRM request);
-
-        // Keep old ProjectionFilterAsync for backward compatibility
-        Task<object> ProjectionFilterAsync(DataTablesRequest request);
     }
 }

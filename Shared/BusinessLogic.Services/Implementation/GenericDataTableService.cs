@@ -60,11 +60,11 @@ namespace BusinessLogic.Services.Implementation
             // ✅ Override: jika DateFilters ada isinya, anggap CustomDate
             if (request.DateFilters != null && request.DateFilters.Any())
             {
-                request.TimeReport = "CustomDate";
+                request.TimeRange = "CustomDate";
             }
-            if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
+            if (!string.IsNullOrEmpty(request.TimeRange) && request.TimeRange != "CustomDate")
             {
-                var timeRange = GetTimeRange(request.TimeReport);
+                var timeRange = GetTimeRange(request.TimeRange);
                 if (timeRange.HasValue)
                 {
                     var timeColumn = _validSortColumns.Contains(request.SortColumn)
@@ -547,13 +547,13 @@ namespace BusinessLogic.Services.Implementation
             return propMatch?.Name ?? key;
         }
 
-    private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+    private (DateTime from, DateTime to)? GetTimeRange(string? TimeRange)
         {
-            if (string.IsNullOrEmpty(timeReport))
+            if (string.IsNullOrEmpty(TimeRange))
                 return null;
 
             var now = DateTime.UtcNow;
-            return timeReport.ToLower() switch
+            return TimeRange.ToLower() switch
             {
                 "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
                 "weekly" => (
@@ -640,13 +640,13 @@ namespace BusinessLogic.Services.Implementation
 //             // Hitung total records sebelum filter
 //             long totalRecords = await query.LongCountAsync();
 
-//             // Apply TimeReport jika tidak CustomDate
+//             // Apply TimeRange jika tidak CustomDate
 //             if (request.DateFilters != null && request.DateFilters.Any())
-//                 request.TimeReport = "CustomDate";
+//                 request.TimeRange = "CustomDate";
 
-//             if (!string.IsNullOrEmpty(request.TimeReport) && request.TimeReport != "CustomDate")
+//             if (!string.IsNullOrEmpty(request.TimeRange) && request.TimeRange != "CustomDate")
 //             {
-//                 var timeRange = GetTimeRange(request.TimeReport);
+//                 var timeRange = GetTimeRange(request.TimeRange);
 //                 if (timeRange.HasValue)
 //                 {
 //                     var timeColumn = _validSortColumns.Contains(request.SortColumn)
@@ -941,13 +941,13 @@ namespace BusinessLogic.Services.Implementation
 //             return query;
 //         }
 
-//             private (DateTime from, DateTime to)? GetTimeRange(string? timeReport)
+//             private (DateTime from, DateTime to)? GetTimeRange(string? TimeRange)
 //         {
-//             if (string.IsNullOrEmpty(timeReport))
+//             if (string.IsNullOrEmpty(TimeRange))
 //                 return null;
 
 //             var now = DateTime.UtcNow;
-//             return timeReport.ToLower() switch
+//             return TimeRange.ToLower() switch
 //             {
 //                 "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
 //                 "weekly" => (

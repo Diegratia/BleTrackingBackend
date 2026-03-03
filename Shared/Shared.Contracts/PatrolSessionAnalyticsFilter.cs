@@ -25,5 +25,6 @@ namespace Shared.Contracts
         // =====================================================
 
         public string? ReportTitle { get; set; }
+        public string? TimeRange { get; set; }
     }
 }
