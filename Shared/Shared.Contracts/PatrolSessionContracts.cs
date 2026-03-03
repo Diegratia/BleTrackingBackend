@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Shared.Contracts.Read;
 
 namespace Shared.Contracts
 {
 
-    public class PatrolSessionFilter
+    public class PatrolSessionFilter : BaseFilter
     {
-        // 🔎 Global search (Name / Description)
-        public string? Search { get; set; }
+
 
         // 🔗 Foreign Keys
         public Guid? PatrolRouteId { get; set; }
@@ -17,18 +17,6 @@ namespace Shared.Contracts
         public Guid? SecurityId { get; set; }
         public Guid? PatrolAssignmentId { get; set; }
         
-
-        // 📅 Date range
-        public DateTime? DateFrom { get; set; }
-        public DateTime? DateTo { get; set; }
         public DateTime? EndedAt { get; set; }
-
-        // 📄 Paging
-        public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
-
-        // ↕ Sorting
-        public string? SortColumn { get; set; }
-        public string? SortDir { get; set; }
     }
 }

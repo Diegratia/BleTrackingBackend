@@ -188,6 +188,8 @@ namespace Repositories.Repository
             return TimeRange.Trim().ToLower() switch
             {
                 "daily" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
+                "today" => (now.Date, now.Date.AddDays(1).AddTicks(-1)),
+                "yesterday" => (now.Date.AddDays(-1), now.Date.AddTicks(-1)),
                 "weekly" => (
                     now.Date.AddDays(-(int)now.DayOfWeek + 1),
                     now.Date.AddDays(7 - (int)now.DayOfWeek).AddDays(1).AddTicks(-1)
@@ -205,10 +207,26 @@ namespace Repositories.Repository
                     new DateTime(now.Year, now.Month, 1).AddMonths(-1),
                     new DateTime(now.Year, now.Month, 1).AddTicks(-1)
                 ),
-                // "yearly" => (
-                //     new DateTime(now.Year, 1, 1),
-                //     new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
-                // ),  
+                "yearly" => (
+                    new DateTime(now.Year, 1, 1),
+                    new DateTime(now.Year, 12, 31).AddDays(1).AddTicks(-1)
+                ),
+                "last_year" => (
+                    new DateTime(now.Year - 1, 1, 1),
+                    new DateTime(now.Year, 1, 1).AddTicks(-1)
+                ),
+                "last_7_days" => (
+                    now.Date.AddDays(-7),
+                    now.Date.AddDays(1).AddTicks(-1)
+                ),
+                "last_30_days" => (
+                    now.Date.AddDays(-30),
+                    now.Date.AddDays(1).AddTicks(-1)
+                ),
+                "last_90_days" => (
+                    now.Date.AddDays(-90),
+                    now.Date.AddDays(1).AddTicks(-1)
+                ),
                 _ => null
             };
         }

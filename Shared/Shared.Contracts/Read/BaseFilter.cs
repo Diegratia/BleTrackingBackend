@@ -12,8 +12,12 @@ namespace Shared.Contracts.Read
         public int PageSize { get; set; } = 10;
         public string? SortColumn { get; set; }
         public string? SortDir { get; set; }
-        // Entity-specific filters
+
+        // Date range filters
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
+
+        // TimeReport preset (daily, weekly, monthly, etc.) - overrides DateFrom/DateTo
+        public string? TimeRange { get; set; }
     }
 }

@@ -192,15 +192,32 @@ namespace Repositories.Repository
         {
             var query = BaseEntityQuery();
 
+            // Apply TimeRange preset (overrides DateFrom/DateTo)
+            var timeRange = GetTimeRange(filter.TimeRange);
+            if (timeRange.HasValue)
+            {
+                query = query.Where(x => x.StartedAt >= timeRange.Value.from && x.StartedAt <= timeRange.Value.to);
+            }
+            else
+            {
+                // Use manual DateFrom/DateTo if TimeRange not specified
+                if (filter.DateFrom.HasValue)
+                    query = query.Where(x => x.StartedAt >= filter.DateFrom.Value);
+
+                if (filter.DateTo.HasValue)
+                    query = query.Where(x => x.StartedAt <= filter.DateTo.Value);
+            }
+
             var total = await query.CountAsync();
 
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 var search = filter.Search.ToLower();
-                // query = query.Where(x =>
-                //     x.Title.ToLower().Contains(search) ||
-                //     x.Description.ToLower().Contains(search)
-                // );
+                query = query.Where(x =>
+                    (x.SecurityNameSnap != null && x.SecurityNameSnap.ToLower().Contains(search)) ||
+                    (x.PatrolRouteNameSnap != null && x.PatrolRouteNameSnap.ToLower().Contains(search)) ||
+                    (x.PatrolAssignmentNameSnap != null && x.PatrolAssignmentNameSnap.ToLower().Contains(search))
+                );
             }
 
             if (filter.SecurityId.HasValue)
@@ -212,11 +229,8 @@ namespace Repositories.Repository
             if (filter.PatrolRouteId.HasValue)
                 query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId.Value);
 
-            if (filter.DateFrom.HasValue)
-                query = query.Where(x => x.UpdatedAt >= filter.DateFrom.Value);
-
-            if (filter.DateTo.HasValue)
-                query = query.Where(x => x.UpdatedAt <= filter.DateTo.Value);
+            if (filter.EndedAt.HasValue)
+                query = query.Where(x => x.EndedAt <= filter.EndedAt.Value);
 
             var filtered = await query.CountAsync();
 
@@ -266,12 +280,21 @@ namespace Repositories.Repository
         {
             IQueryable<PatrolSession> query = BaseEntityQuery();
 
-            // Apply time filters from BaseFilter (DateFrom, DateTo)
-            if (filter.DateFrom.HasValue)
-                query = query.Where(s => s.StartedAt >= filter.DateFrom.Value);
+            // Apply TimeRange preset (overrides DateFrom/DateTo)
+            var timeRange = GetTimeRange(filter.TimeRange);
+            if (timeRange.HasValue)
+            {
+                query = query.Where(s => s.StartedAt >= timeRange.Value.from && s.StartedAt <= timeRange.Value.to);
+            }
+            else
+            {
+                // Apply time filters from BaseFilter (DateFrom, DateTo)
+                if (filter.DateFrom.HasValue)
+                    query = query.Where(s => s.StartedAt >= filter.DateFrom.Value);
 
-            if (filter.DateTo.HasValue)
-                query = query.Where(s => s.StartedAt <= filter.DateTo.Value);
+                if (filter.DateTo.HasValue)
+                    query = query.Where(s => s.StartedAt <= filter.DateTo.Value);
+            }
 
             // Apply search from BaseFilter
             if (!string.IsNullOrWhiteSpace(filter.Search))
