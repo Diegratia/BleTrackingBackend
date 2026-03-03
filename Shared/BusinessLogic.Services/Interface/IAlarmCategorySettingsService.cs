@@ -1,17 +1,18 @@
+using Data.ViewModels;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Data.ViewModels;
 
 namespace BusinessLogic.Services.Interface
 {
     public interface IAlarmCategorySettingsService
     {
-        Task<IEnumerable<AlarmCategorySettingsDto>> GetAllAsync();
-        Task<AlarmCategorySettingsDto> GetByIdAsync(Guid id);
+        Task<IEnumerable<AlarmCategorySettingsRead>> GetAllAsync();
+        Task<AlarmCategorySettingsRead?> GetByIdAsync(Guid id);
         Task UpdateAsync(Guid id, AlarmCategorySettingsUpdateDto updateDto);
         Task DeleteAsync(Guid id);
-        Task<object> FilterAsync(DataTablesRequest request);
+        Task<object> FilterAsync(DataTablesProjectedRequest request, AlarmCategorySettingsFilter filter);
     }
 }

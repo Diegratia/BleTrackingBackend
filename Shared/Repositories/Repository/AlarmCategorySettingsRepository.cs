@@ -1,46 +1,103 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Entities.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repositories.DbContexts;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+using Repositories.Extensions;
+using Shared.Contracts;
+using Shared.Contracts.Read;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Repositories.Repository
 {
     public class AlarmCategorySettingsRepository : BaseRepository
     {
+        private readonly BleTrackingDbContext _context;
+
         public AlarmCategorySettingsRepository(BleTrackingDbContext context, IHttpContextAccessor httpContextAccessor)
             : base(context, httpContextAccessor)
         {
+            _context = context;
         }
 
-        public async Task<AlarmCategorySettings> GetByIdAsync(Guid id)
+        private IQueryable<AlarmCategorySettings> BaseEntityQuery()
         {
-
-            return await GetAllQueryable().Where(x => x.Id == id)
-            .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Category not found");
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var query = _context.AlarmCategorySettings;
+            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
         }
+
+        private IQueryable<AlarmCategorySettingsRead> ProjectToRead(IQueryable<AlarmCategorySettings> query)
+        {
+            return query.AsNoTracking().Select(x => new AlarmCategorySettingsRead
+            {
+                Id = x.Id,
+                AlarmCategory = x.AlarmCategory.ToString(),
+                Remarks = x.Remarks,
+                AlarmColor = x.AlarmColor,
+                AlarmLevelPriority = x.AlarmLevelPriority.ToString(),
+                NotifyIntervalSec = x.NotifyIntervalSec,
+                IsEnabled = x.IsEnabled
+            });
+        }
+
+        public async Task<AlarmCategorySettingsRead?> GetByIdAsync(Guid id)
+        {
+            return await ProjectToRead(BaseEntityQuery()).FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<AlarmCategorySettings?> GetByIdEntityAsync(Guid id)
+        {
+            return await BaseEntityQuery().FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<List<AlarmCategorySettingsRead>> GetAllAsync()
+        {
+            return await ProjectToRead(BaseEntityQuery()).ToListAsync();
+        }
+
+        public async Task<(List<AlarmCategorySettingsRead> Data, int Total, int Filtered)> FilterAsync(AlarmCategorySettingsFilter filter)
+        {
+            var query = BaseEntityQuery();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+                query = query.Where(x =>
+                    (x.Remarks != null && x.Remarks.ToLower().Contains(filter.Search.ToLower())));
+
+            if (filter.IsEnabled.HasValue)
+                query = query.Where(x => x.IsEnabled == filter.IsEnabled.Value);
+
+            var total = await query.CountAsync();
+            var filtered = total;
+
+            query = query.ApplySorting(filter.SortColumn, filter.SortDir);
+            query = query.ApplyPaging(filter.Page, filter.PageSize);
+
+            var data = await ProjectToRead(query).ToListAsync();
+
+            return (data, total, filtered);
+        }
+
         public async Task<AlarmCategorySettings> AddAsync(AlarmCategorySettings category)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-                // non system ambil dari claim
-                if (!isSystemAdmin)
-                {
-                    if (!applicationId.HasValue)
-                        throw new UnauthorizedAccessException("ApplicationId not found in context");
-                    category.ApplicationId = applicationId.Value;
-                }
-                // admin set applciation di body
-                else if (category.ApplicationId == Guid.Empty)
-                {
-                    throw new ArgumentException("System admin must provide a valid ApplicationId");
-                }
+            if (!isSystemAdmin)
+            {
+                if (!applicationId.HasValue)
+                    throw new UnauthorizedAccessException("ApplicationId not found in context");
+                category.ApplicationId = applicationId.Value;
+            }
+            else if (category.ApplicationId == Guid.Empty)
+            {
+                throw new ArgumentException("System admin must provide a valid ApplicationId");
+            }
+
             await ValidateApplicationIdAsync(category.ApplicationId);
             ValidateApplicationIdForEntity(category, applicationId, isSystemAdmin);
-            
+
             _context.AlarmCategorySettings.Add(category);
             await _context.SaveChangesAsync();
             return category;
@@ -51,51 +108,18 @@ namespace Repositories.Repository
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             await ValidateApplicationIdAsync(category.ApplicationId);
             ValidateApplicationIdForEntity(category, applicationId, isSystemAdmin);
-
-            // _context.MstDistricts.Update(district);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(AlarmCategorySettings category)
         {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.AlarmCategorySettings
-                .Where(d => d.Id == id);
-            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-
-            var category = await query.FirstOrDefaultAsync();
-            if (category == null)
-                throw new KeyNotFoundException("category not found");
-
             _context.AlarmCategorySettings.Remove(category);
             await _context.SaveChangesAsync();
         }
 
-          public async Task<IEnumerable<AlarmCategorySettings>> GetAllAsync()
+        public async Task<List<AlarmCategorySettings>> GetAllExportAsync()
         {
-            return await GetAllQueryable()
-                .ToListAsync();
-        }
-
-        public IQueryable<AlarmCategorySettings> GetAllQueryable()
-        {
-            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
-            var query = _context.AlarmCategorySettings;
-
-            return ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
-        }
-
-        public async Task<IEnumerable<AlarmCategorySettings>> GetAllExportAsync()
-        {
-            return await GetAllQueryable()
-                .ToListAsync();
+            return await BaseEntityQuery().ToListAsync();
         }
     }
 }
-
-
-
-
-
-
-
