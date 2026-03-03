@@ -65,7 +65,7 @@ namespace Web.API.Controllers.Controllers
             }
 
             var result = await _alarmCategorySettingsService.FilterAsync(request, filter);
-            return Ok(ApiResponse.Success("Alarm Categories filtered successfully", result));
+            return Ok(ApiResponse.Paginated("Alarm Categories filtered successfully", result));
         }
     }
 }
