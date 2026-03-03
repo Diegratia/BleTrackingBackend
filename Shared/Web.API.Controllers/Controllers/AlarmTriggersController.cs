@@ -159,9 +159,13 @@ namespace Web.API.Controllers.Controllers
         /// Flow: Acknowledged → PostponeInvestigated
         /// </summary>
         [HttpPut("{id}/postpone-investigated")]
-        public async Task<IActionResult> PostponeInvestigated(Guid id)
+        public async Task<IActionResult> PostponeInvestigated(Guid id, [FromBody] AlarmPostponeInvestigatedDto dto)
         {
-            await _service.PostponeInvestigatedAsync(id);
+            if (dto == null)
+            {
+                return BadRequest(ApiResponse.BadRequest("Request body is required"));
+            }
+            await _service.PostponeInvestigatedAsync(id, dto);
             return Ok(ApiResponse.Success("Alarm investigation postponed"));
         }
 

@@ -83,6 +83,10 @@ namespace Data.ViewModels
         public Guid? AssignedSecurityId { get; set; }
         public InvestigatedResult? InvestigatedResult { get; set; }
         public string? InvestigatedNotes { get; set; }
+
+        // New fields for postpone
+        public DateTime? PostponedUntilDate { get; set; }
+        public string? PostponeReason { get; set; }
     }
 
     public class AlarmTriggersSummary
@@ -102,6 +106,15 @@ namespace Data.ViewModels
         public InvestigatedResult InvestigatedResult { get; set; }
         [MaxLength(4000)]
         public string? InvestigationNotes { get; set; }
+    }
+
+    public class AlarmPostponeInvestigatedDto
+    {
+        [Required]
+        public DateTime PostponedUntilDate { get; set; }
+
+        [MaxLength(4000)]
+        public string? PostponeReason { get; set; }
     }
 
 }

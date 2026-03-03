@@ -64,7 +64,7 @@ namespace BusinessLogic.Services.Interface
         /// Operator postpones investigation - alarm stays active
         /// Flow: Acknowledged → PostponeInvestigated
         /// </summary>
-        Task PostponeInvestigatedAsync(Guid id);
+        Task PostponeInvestigatedAsync(Guid id, AlarmPostponeInvestigatedDto dto);
 
         /// <summary>
         /// Operator cancels alarm without action - alarm becomes inactive

@@ -106,6 +106,11 @@ namespace Repositories.Repository
                     AcceptedBy = b.AcceptedBy,
                     InvestigatedDoneBy = b.InvestigatedDoneBy,
                     InvestigatedResult = b.InvestigatedResult,
+                    InvestigatedNotes = b.InvestigatedNotes,
+                    PostponedUntilDate = b.PostponedUntilDate,
+                    PostponedAt = b.PostponedAt,
+                    PostponedBy = b.PostponedBy,
+                    PostponeReason = b.PostponeReason,
                     ApplicationId = b.ApplicationId,
 
                     // Navigation properties

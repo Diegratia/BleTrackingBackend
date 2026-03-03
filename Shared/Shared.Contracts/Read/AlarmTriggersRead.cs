@@ -55,6 +55,12 @@ namespace Shared.Contracts.Read
         public InvestigatedResult? InvestigatedResult { get; set; }
         public string? InvestigatedNotes { get; set; }
 
+        // Postpone fields
+        public DateTime? PostponedUntilDate { get; set; }
+        public DateTime? PostponedAt { get; set; }
+        public string? PostponedBy { get; set; }
+        public string? PostponeReason { get; set; }
+
         public Guid ApplicationId { get; set; }
 
         // Navigation properties

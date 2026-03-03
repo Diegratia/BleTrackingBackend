@@ -56,11 +56,10 @@ namespace Shared.Contracts.Analytics
         public string Stage { get; set; }       // "started", "checkpoint_1", "checkpoint_2", ..., "completed"
         public string StageName { get; set; }   // "Started Patrol", "Checkpoint: Lobby", etc.
         public DateTime Timestamp { get; set; }
-        public int? DurationSeconds { get; set; }
-        public string? DurationFormatted { get; set; }
-        public bool IsDelayed { get; set; }
-        public int? DelaySeconds { get; set; }
-        public string? Notes { get; set; }
+        public int? TravelTimeSeconds { get; set; }
+        public string? TravelTimeFormatted { get; set; }
+        public int? DwellTimeSeconds { get; set; }
+        public string? DwellTimeFormatted { get; set; }
     }
 
     /// <summary>

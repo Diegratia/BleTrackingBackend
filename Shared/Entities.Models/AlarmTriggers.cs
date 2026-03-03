@@ -145,6 +145,21 @@ namespace Entities.Models
         [MaxLength(50)]
         public string? InvestigatedDoneBy { get; set; }
 
+        // Operator postpones investigation
+        [Column("postponed_until_date")]
+        public DateTime? PostponedUntilDate { get; set; }
+
+        [Column("postponed_at")]
+        public DateTime? PostponedAt { get; set; }
+
+        [Column("postponed_by")]
+        [MaxLength(50)]
+        public string? PostponedBy { get; set; }
+
+        [Column("postpone_reason")]
+        [MaxLength(4000)]
+        public string? PostponeReason { get; set; }
+
         [Required]
         [ForeignKey("Application")]
         [Column("application_id")]

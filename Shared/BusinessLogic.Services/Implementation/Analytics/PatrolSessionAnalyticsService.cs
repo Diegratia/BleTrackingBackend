@@ -199,17 +199,23 @@ namespace BusinessLogic.Services.Implementation.Analytics
             {
                 if (!log.ArrivedAt.HasValue) continue;
 
-                var duration = previousTimestamp.HasValue
+                // 1. Calculate Travel Time (from previous point to this arrival)
+                int? travelTimeSeconds = previousTimestamp.HasValue
                     ? (int?)(log.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds
                     : null;
+                
+                string? travelTimeFormatted = travelTimeSeconds.HasValue
+                    ? FormatDuration(TimeSpan.FromSeconds(travelTimeSeconds.Value))
+                    : null;
 
-                int? durationSeconds = null;
-                string? durationFormatted = null;
+                // 2. Calculate Dwell Time (how long they stayed at this point)
+                int? dwellTimeSeconds = null;
+                string? dwellTimeFormatted = null;
 
                 if (log.LeftAt.HasValue)
                 {
-                    durationSeconds = (int)(log.LeftAt.Value - log.ArrivedAt.Value).TotalSeconds;
-                    durationFormatted = FormatDuration(log.LeftAt.Value - log.ArrivedAt.Value);
+                    dwellTimeSeconds = (int)(log.LeftAt.Value - log.ArrivedAt.Value).TotalSeconds;
+                    dwellTimeFormatted = FormatDuration(log.LeftAt.Value - log.ArrivedAt.Value);
                 }
 
                 timeline.Add(new PatrolTimelineEvent
@@ -217,19 +223,20 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     Stage = $"checkpoint_{log.OrderIndex}",
                     StageName = $"Checkpoint: {log.AreaNameSnap}",
                     Timestamp = log.ArrivedAt.Value,  // UTC
-                    DurationSeconds = durationSeconds ?? duration,
-                    DurationFormatted = durationFormatted,
-                    IsDelayed = false,  // TODO: Calculate delay based on estimated time
-                    DelaySeconds = null
+                    TravelTimeSeconds = travelTimeSeconds,
+                    TravelTimeFormatted = travelTimeFormatted,
+                    DwellTimeSeconds = dwellTimeSeconds,
+                    DwellTimeFormatted = dwellTimeFormatted
                 });
 
-                previousTimestamp = log.ArrivedAt.Value;
+                // Set arrival or departure as previous point for next calculation
+                previousTimestamp = log.LeftAt ?? log.ArrivedAt.Value;
             }
 
             // 3. Completed event
             if (session.EndedAt.HasValue)
             {
-                var duration = previousTimestamp.HasValue
+                int? finalTravelSeconds = previousTimestamp.HasValue
                     ? (int?)(session.EndedAt.Value - previousTimestamp.Value).TotalSeconds
                     : null;
 
@@ -238,8 +245,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     Stage = "completed",
                     StageName = "Patrol Completed",
                     Timestamp = session.EndedAt.Value,  // UTC
-                    DurationSeconds = duration,
-                    DurationFormatted = duration.HasValue ? FormatDuration(TimeSpan.FromSeconds(duration.Value)) : null
+                    TravelTimeSeconds = finalTravelSeconds,
+                    TravelTimeFormatted = finalTravelSeconds.HasValue ? FormatDuration(TimeSpan.FromSeconds(finalTravelSeconds.Value)) : null
                 });
             }
 

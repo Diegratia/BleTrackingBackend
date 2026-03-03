@@ -83,16 +83,16 @@ namespace BusinessLogic.Services.Implementation
                 // New workflow actions
                 case "ack":
                 case "acknowledge":
-                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Idle)
+                    if (alarmTriggers.Action != ActionStatus.Idle)
                         throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {alarmTriggers.Action}");
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Acknowledged;
+                    alarmTriggers.Action = ActionStatus.Acknowledged;
                     alarmTriggers.AcknowledgedAt = DateTime.UtcNow;
                     alarmTriggers.AcknowledgedBy = username;
                     alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
                     break;
 
                 case "dispatch":
-                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                    if (alarmTriggers.Action != ActionStatus.Acknowledged)
                         throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarmTriggers.Action}");
                     if (!dto.AssignedSecurityId.HasValue)
                         throw new BusinessException("SecurityId is required for dispatch");
@@ -102,7 +102,7 @@ namespace BusinessLogic.Services.Implementation
                     var security = await _repository.GetSecurityByIdAsync(dto.AssignedSecurityId.Value);
                     if (security == null)
                         throw new BusinessException("Assigned security not found");
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Dispatched;
+                    alarmTriggers.Action = ActionStatus.Dispatched;
                     alarmTriggers.SecurityId = security.Id;
                     alarmTriggers.DispatchedAt = DateTime.UtcNow;
                     alarmTriggers.DispatchedBy = username;
@@ -110,9 +110,9 @@ namespace BusinessLogic.Services.Implementation
                     break;
 
                 case "waiting":
-                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.Acknowledged)
+                    if (alarmTriggers.Action != ActionStatus.Acknowledged)
                         throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {alarmTriggers.Action}");
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Waiting;
+                    alarmTriggers.Action = ActionStatus.Waiting;
                     alarmTriggers.IsActive = false;
                     alarmTriggers.WaitingBy = username;
                     alarmTriggers.WaitingTimestamp = DateTime.UtcNow;
@@ -121,11 +121,11 @@ namespace BusinessLogic.Services.Implementation
 
                 case "done":
                 case "resolve":
-                    if (alarmTriggers.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
+                    if (alarmTriggers.Action != ActionStatus.DoneInvestigated)
                         throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarmTriggers.Action}");
                     if (!alarmTriggers.InvestigatedResult.HasValue)
                         throw new BusinessException("Cannot resolve: no investigation result found");
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.Done;
+                    alarmTriggers.Action = ActionStatus.Done;
                     alarmTriggers.IsActive = false;
                     alarmTriggers.DoneBy = username;
                     alarmTriggers.DoneTimestamp = DateTime.UtcNow;
@@ -134,13 +134,17 @@ namespace BusinessLogic.Services.Implementation
 
                 // Legacy actions
                 case "postponeinvestigated":
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.PostponeInvestigated;
+                    alarmTriggers.Action = ActionStatus.PostponeInvestigated;
                     alarmTriggers.IsActive = true;
+                    alarmTriggers.PostponedUntilDate = dto.PostponedUntilDate;
+                    alarmTriggers.PostponedAt = DateTime.UtcNow;
+                    alarmTriggers.PostponedBy = username;
+                    alarmTriggers.PostponeReason = dto.PostponeReason;
                     alarmTriggers.ActionUpdatedAt = DateTime.UtcNow;
                     break;
 
                 case "noaction":
-                    alarmTriggers.Action = Shared.Contracts.ActionStatus.NoAction;
+                    alarmTriggers.Action = ActionStatus.NoAction;
                     alarmTriggers.IsActive = false;
                     alarmTriggers.CancelBy = username;
                     alarmTriggers.CancelTimestamp = DateTime.UtcNow;
@@ -207,10 +211,10 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Idle)
+            if (alarm.Action != ActionStatus.Idle)
                 throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {alarm.Action}");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Acknowledged;
+            alarm.Action = ActionStatus.Acknowledged;
             alarm.AcknowledgedAt = DateTime.UtcNow;
             alarm.AcknowledgedBy = username;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
@@ -238,7 +242,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+            if (alarm.Action != ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {alarm.Action}");
 
             var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(assignedSecurityId, AppId);
@@ -249,7 +253,7 @@ namespace BusinessLogic.Services.Implementation
             if (security == null)
                 throw new BusinessException("Assigned security not found");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Dispatched;
+            alarm.Action = ActionStatus.Dispatched;
             alarm.SecurityId = security.Id;
             alarm.DispatchedAt = DateTime.UtcNow;
             alarm.DispatchedBy = username;
@@ -270,10 +274,10 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+            if (alarm.Action != ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {alarm.Action}");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Waiting;
+            alarm.Action = ActionStatus.Waiting;
             alarm.IsActive = false;
             alarm.WaitingBy = username;
             alarm.WaitingTimestamp = DateTime.UtcNow;
@@ -294,7 +298,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Dispatched)
+            if (alarm.Action != ActionStatus.Dispatched)
                 throw new BusinessException($"Cannot accept: alarm must be dispatched first. Current: {alarm.Action}");
 
             if (alarm.SecurityId == null)
@@ -304,7 +308,7 @@ namespace BusinessLogic.Services.Implementation
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId.Value)
                 throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Accepted;
+            alarm.Action = ActionStatus.Accepted;
             alarm.AcceptedAt = DateTime.UtcNow;
             alarm.AcceptedBy = username;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
@@ -324,14 +328,14 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Accepted)
+            if (alarm.Action != ActionStatus.Accepted)
                 throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {alarm.Action}");
 
             var currentSecurityId = await GetCurrentSecurityIdAsync();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Arrived;
+            alarm.Action = ActionStatus.Arrived;
             alarm.ArrivedAt = DateTime.UtcNow;
             alarm.ArrivedBy = username;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
@@ -351,14 +355,14 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            // if (alarm.Action != Shared.Contracts.ActionStatus.Arrived)
+            // if (alarm.Action != ActionStatus.Arrived)
             //     throw new BusinessException($"Cannot complete investigation: alarm must be arrived first. Current: {alarm.Action}");
 
             var currentSecurityId = await GetCurrentSecurityIdAsync();
             if (currentSecurityId == null || currentSecurityId != alarm.SecurityId)
                 throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
 
-            alarm.Action = Shared.Contracts.ActionStatus.DoneInvestigated;
+            alarm.Action = ActionStatus.DoneInvestigated;
             alarm.InvestigatedResult = result;
             alarm.InvestigatedNotes = notes;
             alarm.InvestigatedDoneAt = DateTime.UtcNow;
@@ -387,13 +391,13 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.DoneInvestigated)
+            if (alarm.Action != ActionStatus.DoneInvestigated)
                 throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {alarm.Action}");
 
             if (!alarm.InvestigatedResult.HasValue)
                 throw new BusinessException("Cannot resolve: no investigation result found");
 
-            alarm.Action = Shared.Contracts.ActionStatus.Done;
+            alarm.Action = ActionStatus.Done;
             alarm.IsActive = false;
             alarm.DoneBy = username;
             alarm.DoneTimestamp = DateTime.UtcNow;
@@ -407,7 +411,7 @@ namespace BusinessLogic.Services.Implementation
         /// Operator postpones investigation - alarm stays active
         /// Flow: Acknowledged → PostponeInvestigated
         /// </summary>
-        public async Task PostponeInvestigatedAsync(Guid id)
+        public async Task PostponeInvestigatedAsync(Guid id, AlarmPostponeInvestigatedDto dto)
         {
             var currentUser = await _userService.GetFromTokenAsync();
             if (currentUser == null)
@@ -421,15 +425,22 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            if (alarm.Action != Shared.Contracts.ActionStatus.Acknowledged)
+            if (alarm.Action != ActionStatus.Acknowledged)
                 throw new BusinessException($"Cannot postpone: alarm must be acknowledged first. Current: {alarm.Action}");
 
-            alarm.Action = Shared.Contracts.ActionStatus.PostponeInvestigated;
+            if (dto.PostponedUntilDate <= DateTime.UtcNow)
+                throw new BusinessException("Postpone date must be in the future");
+
+            alarm.Action = ActionStatus.PostponeInvestigated;
             alarm.IsActive = true;
+            alarm.PostponedUntilDate = dto.PostponedUntilDate;
+            alarm.PostponedAt = DateTime.UtcNow;
+            alarm.PostponedBy = username;
+            alarm.PostponeReason = dto.PostponeReason;
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-            _audit.Updated("AlarmTriggers", id, $"Alarm investigation postponed by {username}");
+            _audit.Updated("AlarmTriggers", id, $"Alarm investigation postponed by {username} until {dto.PostponedUntilDate:yyyy-MM-dd HH:mm}");
         }
 
         /// <summary>
@@ -450,7 +461,7 @@ namespace BusinessLogic.Services.Implementation
             if (alarm == null)
                 throw new NotFoundException($"Alarm with ID {id} not found");
 
-            alarm.Action = Shared.Contracts.ActionStatus.NoAction;
+            alarm.Action = ActionStatus.NoAction;
             alarm.IsActive = false;
             alarm.CancelBy = username;
             alarm.CancelTimestamp = DateTime.UtcNow;
