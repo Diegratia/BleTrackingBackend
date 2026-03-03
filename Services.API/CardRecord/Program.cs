@@ -75,6 +75,7 @@ builder.Services.AddSingleton<MqttPubQueue>();
 builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
 builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 // builder.Services.AddScoped<ITrxVisitorService, TrxVisitorService>();
 // builder.Services.AddScoped<ICardService, CardService>();
 
