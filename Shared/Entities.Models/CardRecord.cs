@@ -53,7 +53,7 @@ namespace Entities.Models
         [Column("checkin_masked_area")]
         public Guid? CheckinMaskedArea { get; set; }
 
-        [Column("visitor_active_status")]
+        [Column("visitor_type")]
         public VisitorActiveStatus? VisitorActiveStatus { get; set; }
 
         [Column("status")]
