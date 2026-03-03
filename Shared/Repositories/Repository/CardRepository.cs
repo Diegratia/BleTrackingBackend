@@ -195,7 +195,6 @@ namespace Repositories.Repository
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 
-            // Query langsung tanpa include untuk performa
             var q = _context.Cards
                 .AsNoTracking()
                 .Include(c => c.RegisteredMaskedArea)
@@ -203,10 +202,7 @@ namespace Repositories.Repository
                         .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0 && c.IsUsed == true);
 
-            // Apply application filter jika perlu (gemstone: ApplyApplicationIdFilter menerima IQueryable<Card>)
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
-
-            // Apply building filter untuk PrimaryAdmin
             var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
             if (accessibleBuildingIds.Any())
             {
@@ -267,7 +263,6 @@ namespace Repositories.Repository
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
-            // Apply building filter untuk PrimaryAdmin
             var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
             if (accessibleBuildingIds.Any())
             {
@@ -405,7 +400,6 @@ namespace Repositories.Repository
                     query = query.Where(c => c.MemberId.HasValue && memberIds.Contains(c.MemberId.Value));
             }
 
-            // Filter by VisitorId (supports both single Guid and Guid array)
             if (filter.VisitorId.ValueKind != JsonValueKind.Undefined && filter.VisitorId.ValueKind != JsonValueKind.Null)
             {
                 var visitorIds = ExtractIds(filter.VisitorId);
@@ -413,7 +407,13 @@ namespace Repositories.Repository
                     query = query.Where(c => c.VisitorId.HasValue && visitorIds.Contains(c.VisitorId.Value));
             }
 
-            // Filter by CardGroupId (supports both single Guid and Guid array)
+            if (filter.SecurityId.ValueKind != JsonValueKind.Undefined && filter.SecurityId.ValueKind != JsonValueKind.Null)
+            {
+                var securityIds = ExtractIds(filter.SecurityId);
+                if (securityIds.Any())
+                    query = query.Where(c => c.SecurityId.HasValue && securityIds.Contains(c.SecurityId.Value));
+            }
+
             if (filter.CardGroupId.ValueKind != JsonValueKind.Undefined && filter.CardGroupId.ValueKind != JsonValueKind.Null)
             {
                 var cardGroupIds = ExtractIds(filter.CardGroupId);
@@ -421,7 +421,6 @@ namespace Repositories.Repository
                     query = query.Where(c => c.CardGroupId.HasValue && cardGroupIds.Contains(c.CardGroupId.Value));
             }
 
-            // Date filters for UpdatedAt
             if (filter.DateFrom.HasValue)
                 query = query.Where(c => c.UpdatedAt >= filter.DateFrom.Value);
 
@@ -430,11 +429,8 @@ namespace Repositories.Repository
 
             var filtered = await query.CountAsync();
 
-            // Apply sorting and paging using extension methods
-            // IMPORTANT: Always ensure ordering before paging when using AsSplitQuery()
             query = query.ApplySorting(filter.SortColumn, filter.SortDir);
 
-            // Apply default ordering if still not ordered (prevents EF Core error with Skip + AsSplitQuery)
             if (string.IsNullOrEmpty(filter.SortColumn))
             {
                 query = query.OrderByDescending(c => c.UpdatedAt);
@@ -442,7 +438,6 @@ namespace Repositories.Repository
 
             query = query.ApplyPaging(filter.Page, filter.PageSize);
 
-            // Use ProjectToRead for single source of truth
             var data = await ProjectToRead(query).ToListAsync();
 
             return (data, total, filtered);

@@ -9,6 +9,7 @@ namespace Shared.Contracts
     {
         public JsonElement MemberId { get; set; }
         public JsonElement VisitorId { get; set; }
+        public JsonElement SecurityId { get; set; }
         public JsonElement CardGroupId { get; set; }
         public string? CardNumber { get; set; }
         public string? Dmac { get; set; }

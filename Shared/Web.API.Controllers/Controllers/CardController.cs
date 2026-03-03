@@ -27,7 +27,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpGet("v2")]
+        [HttpGet()]
         public async Task<IActionResult> GetAll()
         {
             var cards = await _service.GetAllAsync();

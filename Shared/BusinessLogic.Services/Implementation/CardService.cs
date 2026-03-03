@@ -243,7 +243,6 @@ namespace BusinessLogic.Services.Implementation
                 result.Add(card);
             }
 
-            // Single MQTT & audit after all
             _mqttQueue.Enqueue("engine/refresh/card-related", "");
             _audit.Created("Card", result.Count, $"Bulk created {result.Count} cards");
 
@@ -611,14 +610,12 @@ namespace BusinessLogic.Services.Implementation
             DataTablesProjectedRequest request,
             CardFilter filter)
         {
-            // 1. Map Standard DataTables params
             filter.Page = (request.Start / request.Length) + 1;
             filter.PageSize = request.Length;
             filter.SortColumn = request.SortColumn ?? "UpdatedAt";
             filter.SortDir = request.SortDir;
             filter.Search = request.SearchValue;
 
-            // 2. Map Date Filters (Shortcut for DateRange)
             if (request.DateFilters != null)
             {
                 if (request.DateFilters.TryGetValue("UpdatedAt", out var dateFilter))
@@ -628,7 +625,6 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            // 3. Call repository FilterAsync (yang menggunakan ProjectToRead)
             var (data, total, filtered) = await _repository.FilterAsync(filter);
 
             return new
