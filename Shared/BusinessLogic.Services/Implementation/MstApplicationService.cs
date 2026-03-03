@@ -1,25 +1,25 @@
 using AutoMapper;
 using BusinessLogic.Services.Interface;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using ClosedXML.Excel;
 using Data.ViewModels;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Repositories.Repository;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
+using Microsoft.EntityFrameworkCore.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
+using Repositories.Repository;
 using Shared.Contracts;
+using Shared.Contracts.Read;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BusinessLogic.Services.Implementation
 {
-    public class MstApplicationService : IMstApplicationService
+    public class MstApplicationService : BaseService, IMstApplicationService
     {
         private readonly MstApplicationRepository _applicationRepository;
         private readonly UserGroupRepository _userGroupRepository;
@@ -27,7 +27,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMstIntegrationService _integrationService;
         private readonly IMstBrandService _brandService;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuditEmitter _audit;
 
         public MstApplicationService(
             MstApplicationRepository applicationRepository,
@@ -36,7 +36,9 @@ namespace BusinessLogic.Services.Implementation
             IMstIntegrationService integrationService,
             IMstBrandService brandService,
             IMapper mapper,
+            IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _applicationRepository = applicationRepository;
             _userGroupRepository = userGroupRepository;
@@ -44,19 +46,17 @@ namespace BusinessLogic.Services.Implementation
             _integrationService = integrationService;
             _brandService = brandService;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _audit = audit;
         }
 
-        public async Task<IEnumerable<MstApplicationDto>> GetAllApplicationsAsync()
+        public async Task<IEnumerable<MstApplicationRead>> GetAllApplicationsAsync()
         {
-            var applications = await _applicationRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MstApplicationDto>>(applications);
+            return await _applicationRepository.GetAllAsync();
         }
 
-        public async Task<MstApplicationDto> GetApplicationByIdAsync(Guid id)
+        public async Task<MstApplicationRead?> GetApplicationByIdAsync(Guid id)
         {
-            var application = await _applicationRepository.GetByIdAsync(id);
-            return application == null ? null : _mapper.Map<MstApplicationDto>(application);
+            return await _applicationRepository.GetByIdAsync(id);
         }
 
         public string RandomApiKeyGenerator(int length = 32)
@@ -72,39 +72,16 @@ namespace BusinessLogic.Services.Implementation
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
             var application = _mapper.Map<MstApplication>(dto);
-
             var genetateApplicationId = Guid.NewGuid();
             application.Id = genetateApplicationId;
-
             application.ApplicationStatus = 1;
 
             var createdApplication = await _applicationRepository.AddAsync(application);
 
-            // var userGroup = await _userGroupRepository.GetByApplicationIdAndPriorityAsync(
-            //     createdApplication.Id, LevelPriority.Primary);
-
-            var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+            var username = UsernameFormToken;
             using var transaction = await _applicationRepository.BeginTransactionAsync();
             try
             {
-
-                // if (userGroup == null)
-                // {
-                //     userGroup = new UserGroup
-                //     {
-                //         Id = Guid.NewGuid(),
-                //         Name = $"Primary Group for {createdApplication.Id}",
-                //         LevelPriority = LevelPriority.Primary,
-                //         ApplicationId = createdApplication.Id,
-                //         CreatedBy = username,
-                //         CreatedAt = DateTime.UtcNow,
-                //         UpdatedBy = username,
-                //         UpdatedAt = DateTime.UtcNow,
-                //         Status = 1
-                //     };
-                //     await _userGroupRepository.AddAsync(userGroup);
-                // }
-
                 var createdBrand = new MstBrandCreateDto
                 {
                     ApplicationId = createdApplication.Id,
@@ -126,7 +103,6 @@ namespace BusinessLogic.Services.Implementation
                     ApiKeyValue = RandomApiKeyGenerator(32),
                     ApplicationId = createdApplication.Id,
                 };
-
 
                 var userGroups = new List<UserGroup>
             {
@@ -184,6 +160,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     await _userGroupRepository.AddAsyncRaw(group);
                 }
+
                 var users = new List<User>
             {
                 new User
@@ -199,7 +176,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     Status = 1,
-                    GroupId = userGroups[0].Id, // Super Admin
+                    GroupId = userGroups[0].Id,
                     ApplicationId = userGroups[0].ApplicationId
                 },
                 new User
@@ -215,7 +192,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     Status = 1,
-                    GroupId = userGroups[1].Id, // Operator
+                    GroupId = userGroups[1].Id,
                     ApplicationId = userGroups[1].ApplicationId
                 },
                 new User
@@ -231,7 +208,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     Status = 1,
-                    GroupId = userGroups[2].Id, // Security
+                    GroupId = userGroups[2].Id,
                     ApplicationId = userGroups[2].ApplicationId
                 },
                 new User
@@ -247,7 +224,7 @@ namespace BusinessLogic.Services.Implementation
                     EmailConfirmationAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow,
                     Status = 1,
-                    GroupId = userGroups[3].Id, // other primary
+                    GroupId = userGroups[3].Id,
                     ApplicationId = userGroups[3].ApplicationId
                 }
             };
@@ -255,15 +232,13 @@ namespace BusinessLogic.Services.Implementation
                 foreach (var user in users)
                 {
                     await _userRepository.AddRawAsync(user);
-                    // await _userRepository.AddAsync(user);
                 }
 
-
-
-                // await _applicationRepository.AddAsync(application);
                 await _integrationService.CreateAsync(createIntegration);
-                // await _brandService.CreateAsync(createdBrand);
                 await transaction.CommitAsync();
+
+                _audit.Created("MstApplication", createdApplication.Id, $"Application created: {createdApplication.ApplicationName}");
+
                 return _mapper.Map<MstApplicationDto>(createdApplication);
             }
             catch
@@ -271,50 +246,58 @@ namespace BusinessLogic.Services.Implementation
                 await transaction.RollbackAsync();
                 throw;
             }
-            
         }
 
         public async Task UpdateApplicationAsync(Guid id, MstApplicationUpdateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var application = await _applicationRepository.GetByIdAsync(id);
+            var application = await _applicationRepository.GetByIdEntityAsync(id);
             if (application == null)
                 throw new KeyNotFoundException($"Application with ID {id} not found");
 
             _mapper.Map(dto, application);
-
             await _applicationRepository.UpdateAsync(application);
+
+            _audit.Updated("MstApplication", id, $"Application updated: {application.ApplicationName}");
         }
 
         public async Task DeleteApplicationAsync(Guid id)
         {
-            await _applicationRepository.DeleteAsync(id);
+            var application = await _applicationRepository.GetByIdEntityAsync(id);
+            if (application == null)
+                throw new KeyNotFoundException($"Application with ID {id} not found");
+
+            await _applicationRepository.DeleteAsync(application);
+
+            _audit.Deleted("MstApplication", id, $"Application deleted: {application.ApplicationName}");
         }
 
-        public async Task<object> FilterAsync(DataTablesRequest request)
+        public async Task<object> FilterAsync(DataTablesProjectedRequest request, MstApplicationFilter filter)
         {
-            var query = _applicationRepository.GetAllQueryable();
+            filter.Page = (request.Start / request.Length) + 1;
+            filter.PageSize = request.Length;
+            filter.SortColumn = request.SortColumn ?? "ApplicationName";
+            filter.SortDir = request.SortDir;
+            filter.Search = request.SearchValue;
 
-            var searchableColumns = new[] { "ApplicationName" };
-            var validSortColumns = new[] { "ApplicationName", "ApplicationType", "OrganizationType" ,"ApplicationRegistered", "ApplicationExpired", "ApplicationStatus", "HostName", "HostAddress", "ApplicationCustomName", "ApplicationCustomDomain", "LicenseCode" };
-            var enumColumns = new Dictionary<string, Type> { { "ApplicationType", typeof(ApplicationType) } };
+            var (data, total, filtered) = await _applicationRepository.FilterAsync(filter);
 
-            var filterService = new GenericDataTableService<MstApplication, MstApplicationDto>(
-                query,
-                _mapper,
-                searchableColumns,
-                validSortColumns,
-                enumColumns);
-
-            return await filterService.FilterAsync(request);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = total,
+                recordsFiltered = filtered,
+                data
+            };
         }
 
-          public async Task<byte[]> ExportPdfAsync()
+        public async Task<byte[]> ExportPdfAsync()
         {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var applications = await _applicationRepository.GetAllExportAsync();
 
-            var document = QuestPDF.Fluent.Document.Create(container =>
+            var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
@@ -388,7 +371,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var applications = await _applicationRepository.GetAllExportAsync();
 
-            using var workbook = new ClosedXML.Excel.XLWorkbook();
+            using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Applications");
 
             worksheet.Cell(1, 1).Value = "#";
