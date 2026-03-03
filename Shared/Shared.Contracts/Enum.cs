@@ -308,6 +308,7 @@ namespace Shared.Contracts
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ThreatLevel
     {
+        None,
         Low, // without approval
         Medium, // or
         High, // and
@@ -332,8 +333,10 @@ namespace Shared.Contracts
         Damage,
         Theft,
         Report, // other
-        PatrolSummary
+        PatrolSummary,
+        NoCase
     }
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum FileType
     {

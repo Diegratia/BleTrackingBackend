@@ -142,6 +142,7 @@ namespace BusinessLogic.Services.Implementation
                     // Rule 3: Assignment is ByThreatLevel - resolve from ThreatLevel
                     resolvedApprovalType = dto.ThreatLevel.Value switch
                     {
+                        ThreatLevel.None => PatrolApprovalType.WithoutApproval,
                         ThreatLevel.Low => PatrolApprovalType.WithoutApproval,
                         ThreatLevel.Medium => PatrolApprovalType.Or,
                         ThreatLevel.High => PatrolApprovalType.And,
