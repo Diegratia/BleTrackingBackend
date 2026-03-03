@@ -27,7 +27,7 @@ namespace Web.API.Controllers.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("v2")]
         public async Task<IActionResult> GetAll()
         {
             var cards = await _service.GetAllAsync();
@@ -88,7 +88,7 @@ namespace Web.API.Controllers.Controllers
             await _service.UpdatesAsync(id, dto);
             return Ok(ApiResponse.NoContent("Assign member successfully"));
         }
-        
+
         [HttpPost("bulk")]
         public async Task<IActionResult> BulkAdd([FromBody] List<CardAddDto> dtos)
         {
