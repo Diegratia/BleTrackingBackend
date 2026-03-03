@@ -548,6 +548,17 @@ namespace Repositories.Repository
             );
         }
 
+        // Batch version for bulk operations
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidMemberOwnershipAsync(
+            IEnumerable<Guid> memberIds,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<MstMember>(
+                memberIds,
+                applicationId
+            );
+        }
+
         public async Task<IReadOnlyCollection<Guid>> CheckInvalidVisitorOwnershipAsync(
             Guid visitorId,
             Guid applicationId)
@@ -558,12 +569,34 @@ namespace Repositories.Repository
             );
         }
 
+        // Batch version for bulk operations
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidVisitorOwnershipAsync(
+            IEnumerable<Guid> visitorIds,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<Visitor>(
+                visitorIds,
+                applicationId
+            );
+        }
+
         public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardGroupOwnershipAsync(
             Guid cardGroupId,
             Guid applicationId)
         {
             return await CheckInvalidOwnershipIdsAsync<CardGroup>(
                 new[] { cardGroupId },
+                applicationId
+            );
+        }
+
+        // Batch version for bulk operations
+        public async Task<IReadOnlyCollection<Guid>> CheckInvalidCardGroupOwnershipAsync(
+            IEnumerable<Guid> cardGroupIds,
+            Guid applicationId)
+        {
+            return await CheckInvalidOwnershipIdsAsync<CardGroup>(
+                cardGroupIds,
                 applicationId
             );
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Data.ViewModels
 {
@@ -193,5 +194,30 @@ namespace Data.ViewModels
         public string Dmac { get; set; }
         public string CardNumber { get; set; }
 
+    }
+
+    public class CardBulkAddDto
+    {
+        public List<CardAddDto> Cards { get; set; } = new();
+    }
+
+    public class CardBulkResultItem
+    {
+        public int Index { get; set; }
+        public CardAddDto Request { get; set; }
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public CardRead Data { get; set; }
+        public string ErrorCode { get; set; }
+    }
+
+    public class CardBulkAddResponse
+    {
+        public int TotalRequested { get; set; }
+        public int TotalSucceeded { get; set; }
+        public int TotalFailed { get; set; }
+        public List<CardBulkResultItem> Results { get; set; } = new();
+        public List<CardRead> SucceededCards { get; set; } = new();
+        public List<CardBulkResultItem> FailedItems { get; set; } = new();
     }
 }

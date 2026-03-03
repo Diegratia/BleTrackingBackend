@@ -64,8 +64,8 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Card created successfully", createdCard));
         }
 
-        [HttpPost("minimal")]
-        public async Task<IActionResult> CreateMinimal([FromBody] CardAddDto cardDto)
+        [HttpPost("v2")]
+        public async Task<IActionResult> CreateWithAccess([FromBody] CardAddDto cardDto)
         {
             if (!ModelState.IsValid)
             {
@@ -75,6 +75,37 @@ namespace Web.API.Controllers.Controllers
 
             var createdCard = await _service.CreateMinimalAsync(cardDto);
             return StatusCode(201, ApiResponse.Created("Card created successfully", createdCard));
+        }
+        [HttpPut("v2/{id}")]
+        public async Task<IActionResult> UpdateWithAccess(Guid id, [FromBody] CardEditDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            await _service.UpdatesAsync(id, dto);
+            return Ok(ApiResponse.NoContent("Assign member successfully"));
+        }
+        
+        [HttpPost("bulk")]
+        public async Task<IActionResult> BulkAdd([FromBody] CardBulkAddDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value!.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            if (dto.Cards == null || !dto.Cards.Any())
+                return BadRequest(ApiResponse.BadRequest("No cards provided in bulk request"));
+
+            var result = await _service.BulkAddAsync(dto);
+
+            return StatusCode(201, ApiResponse.Created(
+                $"Bulk add completed: {result.TotalSucceeded} succeeded, {result.TotalFailed} failed",
+                result));
         }
 
         [HttpPut("assign-member/{id}")]
