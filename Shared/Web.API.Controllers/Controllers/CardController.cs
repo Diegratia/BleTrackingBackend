@@ -90,7 +90,7 @@ namespace Web.API.Controllers.Controllers
         }
         
         [HttpPost("bulk")]
-        public async Task<IActionResult> BulkAdd([FromBody] CardBulkAddDto dto)
+        public async Task<IActionResult> BulkAdd([FromBody] List<CardAddDto> dtos)
         {
             if (!ModelState.IsValid)
             {
@@ -98,14 +98,11 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
             }
 
-            if (dto.Cards == null || !dto.Cards.Any())
-                return BadRequest(ApiResponse.BadRequest("No cards provided in bulk request"));
+            if (dtos == null || !dtos.Any())
+                return BadRequest(ApiResponse.BadRequest("No cards provided"));
 
-            var result = await _service.BulkAddAsync(dto);
-
-            return StatusCode(201, ApiResponse.Created(
-                $"Bulk add completed: {result.TotalSucceeded} succeeded, {result.TotalFailed} failed",
-                result));
+            var result = await _service.BulkAddAsync(dtos);
+            return StatusCode(201, ApiResponse.Created($"Bulk add completed: {result.Count()} cards", result));
         }
 
         [HttpPut("assign-member/{id}")]
