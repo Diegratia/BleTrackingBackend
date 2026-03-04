@@ -108,7 +108,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     statusCode = 400;
                     var dbMessage = "Database error";
 
-                    if (_env.IsDevelopment())
+                    if (_env.IsProduction())
                     {
                         dbMessage =
                             ex.InnerException?.InnerException?.Message ??
@@ -124,7 +124,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     statusCode = 400;
                     var jsonMessage = "Invalid format or unrecognized filter value";
 
-                    if (_env.IsDevelopment())
+                    if (_env.IsProduction())
                     {
                         jsonMessage = ex.Message; // Detail error muncul saat development
                     }
@@ -135,8 +135,8 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
                     default:
                         statusCode = 500;
-                        var message = _env.IsDevelopment() ? exception.Message : "Internal server error";
-                        if (_env.IsDevelopment())
+                        var message = _env.IsProduction() ? exception.Message : "Internal server error";
+                        if (_env.IsProduction())
                             {
                                 message = exception.Message + " | Location: " + exception.StackTrace;; // Detail error muncul saat development
                             }
