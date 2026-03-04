@@ -25,19 +25,20 @@ namespace Web.API.Controllers.Controllers
         }
 
         [HttpGet]
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         public async Task<IActionResult> GetAll()
         {
             var members = await _mstMemberService.GetAllMembersAsync();
             return Ok(ApiResponse.Success("Members retrieved successfully", members));
         }
-
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()
         {
             var members = await _mstMemberService.GetAllLookUpAsync();
             return Ok(ApiResponse.Success("Members retrieved successfully", members));
         }
-
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -60,7 +61,7 @@ namespace Web.API.Controllers.Controllers
             await _mstMemberService.MemberBlacklistAsync(id, dto);
             return Ok(ApiResponse.NoContent("Member blacklisted successfully"));
         }
-
+        [MinLevel(LevelPriority.PrimaryAdmin)]
         [HttpPost("{id}/unblacklist")]
         public async Task<IActionResult> UnBlacklistMember(Guid id)
         {
