@@ -268,6 +268,21 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<PatrolCheckpointLog?> GetActiveCheckpointLogAsync(Guid logId, Guid areaId)
+        {
+            return await _context.PatrolCheckpointLogs
+                .FirstOrDefaultAsync(l => l.Id == logId 
+                                       && l.PatrolAreaId == areaId 
+                                       && l.ArrivedAt != null 
+                                       && l.LeftAt == null);
+        }
+
+        public async Task UpdateCheckpointLogAsync(PatrolCheckpointLog log)
+        {
+            _context.PatrolCheckpointLogs.Update(log);
+            await _context.SaveChangesAsync();
+        }
+
         // =====================================================
         // ANALYTICS METHODS
         // =====================================================

@@ -22,5 +22,6 @@ namespace BusinessLogic.Services.Interface
         Task<PatrolSessionRead?> GetByIdAsync(Guid id);
         Task<IEnumerable<PatrolSessionRead>> GetAllAsync();
         Task<PatrolSessionRead> StopAsync(Guid sessionId);
+        Task<object> SubmitCheckpointActionAsync(PatrolCheckpointActionDto dto);
     }
 }

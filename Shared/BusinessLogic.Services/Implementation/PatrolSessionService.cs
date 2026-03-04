@@ -23,16 +23,19 @@ namespace BusinessLogic.Services.Implementation
     public class PatrolSessionService : BaseService, IPatrolSessionService
     {
         private readonly PatrolSessionRepository _repo;
+        private readonly IPatrolCaseService _caseService;
         private readonly IAuditEmitter _audit;
         private readonly IMqttPubQueue _mqttQueue;
 
         public PatrolSessionService(
             PatrolSessionRepository repo,
+            IPatrolCaseService caseService,
             IAuditEmitter audit,
             IMqttPubQueue mqttQueue,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
+            _caseService = caseService;
             _audit = audit;
             _mqttQueue = mqttQueue;
         }
@@ -202,26 +205,34 @@ namespace BusinessLogic.Services.Implementation
                 ?? throw new Exception("Failed to load created PatrolSession");
         }
        // MASIH KURANG PENGECEKAN PATROL CASE - KARENA WAJIB BUAT PATROL CASE TIAP SELESAI 
-    public async Task<PatrolSessionRead> StopAsync(Guid sessionId)
+    public async Task<PatrolSessionRead> StopAsync(Guid id)
     {
+        var session = await _repo.GetByIdEntityAsync(id)
+            ?? throw new NotFoundException($"Patrol Session with id {id} not found");
 
-        var session = await _repo.GetByIdEntityAsync(sessionId);
-
-        if (session == null)
-            throw new NotFoundException("PatrolSession not found");
-
-        var security = await _repo.GetSecurityByEmail();
-        if (security == null)
-            throw new UnauthorizedAccessException("Security not found");
+        var security = await _repo.GetSecurityByEmail()
+            ?? throw new UnauthorizedAccessException("Security not found");
 
         if (session.SecurityId != security.Id)
             throw new UnauthorizedAccessException("You are not allowed to stop this session");
 
-        if (session.EndedAt.HasValue)
-            throw new BusinessException("PatrolSession already ended");
+        if (session.EndedAt != null)
+            throw new BusinessException($"Patrol Session with id {id} already stopped");
+
+        // Automatically mark all untouched checkpoints as Missed
+        var unhandledLogs = session.PatrolCheckpointLogs
+            .Where(log => log.CheckpointStatus == PatrolCheckpointStatus.AutoDetected)
+            .ToList();
+
+        foreach (var log in unhandledLogs)
+        {
+            log.CheckpointStatus = PatrolCheckpointStatus.Missed;
+            // ClearedAt remains null because the security guard never interacted with this checkpoint
+        }
 
         session.EndedAt = DateTime.UtcNow;
 
+        SetUpdateAudit(session);
         await _repo.UpdateAsync(session);
         _audit.Action(
                 AuditEmitter.AuditAction.SESSION_STOP,
@@ -238,7 +249,63 @@ namespace BusinessLogic.Services.Implementation
         return await _repo.GetByIdAsync(session.Id)
             ?? throw new Exception("Failed to load stopped PatrolSession");
     }
-}
 
+    public async Task<object> SubmitCheckpointActionAsync(PatrolCheckpointActionDto dto)
+    {
+        // 1. Validate active checkpoint presence
+        var log = await _repo.GetActiveCheckpointLogAsync(dto.PatrolCheckpointLogId, dto.PatrolAreaId);
+        if (log == null)
+        {
+            throw new BusinessException("Valid Checkpoint Log not found. Security might not have arrived, or has already left this area.");
+        }
 
+        // 1.5 Dwell Time validation: Ensure guard has been at checkpoint for a minimum time
+        int minimumDwellSeconds = 30; // configurable based on further requirements
+        if (log.ArrivedAt.HasValue && (DateTime.UtcNow - log.ArrivedAt.Value).TotalSeconds < minimumDwellSeconds)
+        {
+            throw new BusinessException($"Dwell time requirement not met. Security must stay at the checkpoint for at least {minimumDwellSeconds} seconds.");
+        }
+
+        // 2. Mark the log as handled
+        log.Notes = dto.SecurityNote;
+        log.ClearedAt = DateTime.UtcNow;
+
+        if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.Cleared) 
+        {
+            log.CheckpointStatus = PatrolCheckpointStatus.Cleared;
+        }
+        else if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.HasCase) 
+        {
+            log.CheckpointStatus = PatrolCheckpointStatus.HasCase;
+            
+            if (dto.CaseDetails != null) 
+            {
+                // Assign session and location dynamically 
+                dto.CaseDetails.PatrolSessionId = log.PatrolSessionId;
+                dto.CaseDetails.PatrolAreaId = log.PatrolAreaId;
+                
+                // Directly pass frontend's native case details to Case Service (1-action flow)
+                await _caseService.CreateAsync(dto.CaseDetails);
+            }
+        }
+        else 
+        {
+            throw new BusinessException("Invalid ActionStatus provided.");
+        }
+
+        await _repo.UpdateCheckpointLogAsync(log);
+
+        _audit.Action(
+            AuditEmitter.AuditAction.ACTION,
+            "PatrolCheckpointLog",
+            $"Checkpoint {log.CheckpointStatus}",
+            new {
+                checkpointLogId = log.Id,
+                status = log.CheckpointStatus.ToString()
+            }
+        );
+
+        return new { success = true, CheckpointStatus = log.CheckpointStatus.ToString() };
     }
+}
+}

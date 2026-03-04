@@ -118,7 +118,19 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolAssignmentSecurity>().ToTable("patrol_assignment_security");
             modelBuilder.Entity<PatrolCase>().ToTable("patrol_case");
             modelBuilder.Entity<PatrolSession>().ToTable("patrol_session");
-            modelBuilder.Entity<PatrolCheckpointLog>().ToTable("patrol_checkpoint_log");
+            modelBuilder.Entity<PatrolCheckpointLog>(entity =>
+            {
+                entity.ToTable("patrol_checkpoint_log");
+                entity.Property(e => e.CheckpointStatus)
+                    .HasColumnName("checkpoint_status")
+                    .HasColumnType("nvarchar(255)")
+                    .IsRequired()
+                    .HasDefaultValue(PatrolCheckpointStatus.AutoDetected)
+                    .HasConversion(
+                        v => v == PatrolCheckpointStatus.AutoDetected ? "" : v.ToString().ToLower(),
+                        v => string.IsNullOrEmpty(v) ? PatrolCheckpointStatus.AutoDetected : (PatrolCheckpointStatus)Enum.Parse(typeof(PatrolCheckpointStatus), v, true)
+                    );
+            });
             modelBuilder.Entity<PatrolCaseAttachment>().ToTable("patrol_case_attachment");
             modelBuilder.Entity<SecurityGroup>().ToTable("security_group");
             modelBuilder.Entity<SecurityGroupMember>().ToTable("security_group_member");

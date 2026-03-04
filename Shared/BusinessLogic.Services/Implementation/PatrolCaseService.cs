@@ -127,7 +127,7 @@ namespace BusinessLogic.Services.Implementation
                     ? PatrolApprovalType.Or  // Auto OR for PatrolSummary
                     : assignmentApprovalType;
 
-                patrolCase.ThreatLevel = null; // PatrolSummary doesn't use ThreatLevel
+                patrolCase.ThreatLevel = ThreatLevel.None; // PatrolSummary doesn't use ThreatLevel
             }
             else
             {

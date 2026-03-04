@@ -70,6 +70,21 @@ namespace Web.API.Controllers.Controllers
             return StatusCode(201, ApiResponse.Created("Patrol Session created successfully", session));
         }
 
+        [HttpPost("checkpoint-action")]
+        public async Task<IActionResult> SubmitCheckpointAction([FromBody] PatrolCheckpointActionDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+            var result = await _PatrolSessionService.SubmitCheckpointActionAsync(dto);
+            return Ok(ApiResponse.Success("Checkpoint action submitted successfully", result));
+        }
+
 
         [HttpPost("{filter}")]
         public async Task<IActionResult> Filter([FromBody] DataTablesProjectedRequest request)

@@ -57,6 +57,12 @@ namespace Entities.Models
         public DateTime? ArrivedAt { get; set; }
         [Column("left_at")]
         public DateTime? LeftAt { get; set; }
+        [Column("cleared_at")]
+        public DateTime? ClearedAt { get; set; }
+        [Column("checkpoint_status")]
+        public PatrolCheckpointStatus CheckpointStatus { get; set; } = PatrolCheckpointStatus.AutoDetected;
+        [Column("notes")]
+        public string? Notes { get; set; }
 
         [Column("distance_from_prev_meters")]
         public double? DistanceFromPrevMeters { get; set; }
@@ -152,6 +158,10 @@ namespace Entities.Models
         public CaseStatus CaseStatus { get; set; }
         [Column("threat_level")]
         public ThreatLevel? ThreatLevel { get; set; }
+        [Column("patrol_area_id")]
+        public Guid? PatrolAreaId { get; set; }
+        [Column("patrol_area_name_snap")]
+        public string? PatrolAreaNameSnap { get; set; }
         [Column("patrol_session_id")]
         public Guid? PatrolSessionId { get; set; }
         [Column("security_id")]
@@ -180,6 +190,7 @@ namespace Entities.Models
         public MstSecurity? SecurityHead2 { get; set; }
         public MstSecurity? ApprovedByHead1 { get; set; }
         public MstSecurity? ApprovedByHead2 { get; set; }
+        public PatrolArea? PatrolArea { get; set; }
         public PatrolSession? PatrolSession { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
         public MstApplication? Application { get; set; }

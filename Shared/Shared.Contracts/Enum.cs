@@ -333,8 +333,7 @@ namespace Shared.Contracts
         Damage,
         Theft,
         Report, // other
-        PatrolSummary,
-        NoCase
+        PatrolSummary 
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -392,5 +391,14 @@ namespace Shared.Contracts
         Member,
         Visitor,
         Security
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolCheckpointStatus
+    {
+        AutoDetected = 0,
+        Cleared = 1,
+        HasCase = 2,
+        Missed = 3
     }
 }
