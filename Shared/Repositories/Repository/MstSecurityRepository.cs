@@ -106,6 +106,10 @@ namespace Repositories.Repository
         {
             return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
+        // public async Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadAsync()
+        // {
+        //     return await ProjectToRead(BaseEntityQuery()).ToListAsync(x => x.IsHead == true);
+        // }
 
         public async Task<(List<MstSecurityRead> Data, int Total, int Filtered)> FilterAsync(SecurityFilter filter)
         {

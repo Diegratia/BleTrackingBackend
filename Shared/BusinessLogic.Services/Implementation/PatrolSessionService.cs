@@ -174,12 +174,15 @@ namespace BusinessLogic.Services.Implementation
                 AreaNameSnap = area.PatrolArea?.Name,
                 OrderIndex = area.OrderIndex,
                 DistanceFromPrevMeters = area.EstimatedDistance,
+                CheckpointStatus = PatrolCheckpointStatus.AutoDetected,
                 ArrivedAt = null,
                 LeftAt = null,
                 ApplicationId = patrolSession.ApplicationId,
                 Status = 1,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                CreatedBy = UsernameFormToken,
+                UpdatedBy = UsernameFormToken
             }).ToList();
 
             
@@ -264,6 +267,16 @@ namespace BusinessLogic.Services.Implementation
         if (log.ArrivedAt.HasValue && (DateTime.UtcNow - log.ArrivedAt.Value).TotalSeconds < minimumDwellSeconds)
         {
             throw new BusinessException($"Dwell time requirement not met. Security must stay at the checkpoint for at least {minimumDwellSeconds} seconds.");
+        }
+
+        // 1.8 Sequence Validation: Ensure no previous checkpoints were skipped
+        if (log.OrderIndex.HasValue && log.PatrolSessionId.HasValue)
+        {
+            bool hasUncleared = await _repo.HasUnclearedPreviousCheckpointsAsync(log.PatrolSessionId.Value, log.OrderIndex.Value);
+            if (hasUncleared)
+            {
+                throw new BusinessException("Sequence validation failed. You must complete the previous checkpoints in this patrol route before submitting this one.");
+            }
         }
 
         // 2. Mark the log as handled

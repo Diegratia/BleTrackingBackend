@@ -277,6 +277,15 @@ namespace Repositories.Repository
                                        && l.LeftAt == null);
         }
 
+        public async Task<bool> HasUnclearedPreviousCheckpointsAsync(Guid sessionId, int currentOrderIndex)
+        {
+            return await _context.PatrolCheckpointLogs
+                .AnyAsync(l => l.PatrolSessionId == sessionId 
+                            && l.OrderIndex != null
+                            && l.OrderIndex < currentOrderIndex 
+                            && l.ClearedAt == null);
+        }
+
         public async Task UpdateCheckpointLogAsync(PatrolCheckpointLog log)
         {
             _context.PatrolCheckpointLogs.Update(log);
