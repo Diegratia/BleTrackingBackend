@@ -401,4 +401,24 @@ namespace Shared.Contracts
         HasCase = 2,
         Missed = 3
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolDurationType
+    {
+        NoDuration = 0,
+        WithDuration = 1
+    }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolStartType
+    {
+        Manual = 0,
+        AutoStart = 1
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolCycleType
+    {
+        HalfCycle = 0, // A-B-C -> C-B-A 2 cycle
+        FullCycle = 1  // A-B-C -> C-B-A 1 cycle
+    }
 }

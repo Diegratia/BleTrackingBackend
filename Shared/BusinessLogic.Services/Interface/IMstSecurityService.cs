@@ -13,6 +13,7 @@ namespace BusinessLogic.Services.Interface
     {
         // Use Read DTO for query operations (direct return from repository)
         Task<IEnumerable<MstSecurityRead>> GetAllSecuritiesAsync();
+        Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadsAsync();
         Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync();
         Task<MstSecurityRead> GetSecurityByIdAsync(Guid id);
 

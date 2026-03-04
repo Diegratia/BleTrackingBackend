@@ -66,6 +66,28 @@ namespace BusinessLogic.Services.Implementation
             if (!await _repository.CheckTimeGroupPatrolType(createDto.TimeGroupId!.Value))
                 throw new NotFoundException($"TimeGroup should be Patrol Type");
 
+            // Check for schedule overlap for each security
+            if (createDto.TimeGroupId.HasValue && createDto.SecurityIds?.Any() == true)
+            {
+                foreach (var securityId in createDto.SecurityIds)
+                {
+                    var conflictingIds = await _repository.HasScheduleOverlapAsync(
+                        securityId,
+                        createDto.TimeGroupId.Value,
+                        createDto.StartDate,
+                        createDto.EndDate,
+                        excludeAssignmentId: null  // New assignment, no exclude
+                    );
+
+                    if (conflictingIds.Any())
+                    {
+                        throw new BusinessException(
+                            $"Security with ID '{securityId}' already has conflicting patrol assignments " +
+                            $"(IDs: {string.Join(", ", conflictingIds)}). Please adjust the schedule.");
+                    }
+                }
+            }
+
             var invalidSecurityIds =
             await _repository.GetInvalidSecurityIdsByApplicationAsync(createDto.SecurityIds, AppId);
             if (invalidSecurityIds.Any())
@@ -149,6 +171,39 @@ namespace BusinessLogic.Services.Implementation
                 !await _repository.TimeGroupExistsAsync(dto.TimeGroupId!.Value))
                 throw new NotFoundException($"TimeGroup with id {dto.TimeGroupId} not found");
 
+            // Check for schedule overlap when updating schedule or securities
+            var newSecurityIds = dto.SecurityIds?
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList() ?? new List<Guid>();
+
+            if ((dto.TimeGroupId.HasValue || dto.StartDate.HasValue || dto.EndDate.HasValue) &&
+                newSecurityIds.Any())
+            {
+                var timeGroupId = dto.TimeGroupId ?? assignment.TimeGroupId;
+                var startDate = dto.StartDate ?? assignment.StartDate;
+                var endDate = dto.EndDate ?? assignment.EndDate;
+
+                foreach (var securityId in newSecurityIds)
+                {
+                    var conflictingIds = await _repository.HasScheduleOverlapAsync(
+                        securityId,
+                        timeGroupId!.Value,
+                        startDate,
+                        endDate,
+                        excludeAssignmentId: id  // Exclude current assignment
+                    );
+
+                    if (conflictingIds.Any())
+                    {
+                        throw new BusinessException(
+                            $"Security with ID '{securityId}' already has conflicting patrol assignments " +
+                            $"(IDs: {string.Join(", ", conflictingIds)}). Please adjust the schedule.");
+                    }
+                }
+            }
+
             if (dto.PatrolRouteId.HasValue)
             {
                 var invalidRouteId =
@@ -173,13 +228,7 @@ namespace BusinessLogic.Services.Implementation
                 }
             }
 
-            var newSecurityIds = dto.SecurityIds?
-                .Where(x => x.HasValue)
-                .Select(x => x!.Value)
-                .Distinct()
-                .ToList() ?? new List<Guid>();
-
-            var missing =
+            var missing = await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
                 await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
 
             if (missing.Count > 0)

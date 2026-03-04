@@ -128,6 +128,18 @@ namespace Entities.Models
         public DateTime? StartDate { get; set; }
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
+        [Column("duration_type")]
+        public PatrolDurationType DurationType { get; set; } = PatrolDurationType.WithDuration;
+        [Column("start_type")]
+        public PatrolStartType StartType { get; set; } = PatrolStartType.Manual;
+        [Column("cycle_count")]
+        public int CycleCount { get; set; } = 1;
+        [Column("cycle_type")]
+        public PatrolCycleType CycleType { get; set; } = PatrolCycleType.HalfCycle;
+        [Column("min_dwell_time")]
+        public int? MinDwellTime { get; set; }
+        [Column("max_dwell_time")]
+        public int? MaxDwellTime { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
         public TimeGroup? TimeGroup { get; set; }
         public MstApplication? Application { get; set; }

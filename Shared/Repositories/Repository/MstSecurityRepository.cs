@@ -106,10 +106,17 @@ namespace Repositories.Repository
         {
             return await ProjectToRead(BaseEntityQuery()).ToListAsync();
         }
-        // public async Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadAsync()
-        // {
-        //     return await ProjectToRead(BaseEntityQuery()).ToListAsync(x => x.IsHead == true);
-        // }
+
+        public async Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadAsync()
+        {
+            // Filter securities where the associated User has IsHead = true
+            var query = BaseEntityQuery()
+                .Where(s => _context.Users
+                    .Include(u => u.Group)
+                    .Any(u => u.Email.ToLower() == s.Email.ToLower() && u.Group.IsHead == true));
+
+            return await ProjectToRead(query).ToListAsync();
+        }
 
         public async Task<(List<MstSecurityRead> Data, int Total, int Filtered)> FilterAsync(SecurityFilter filter)
         {

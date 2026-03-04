@@ -381,5 +381,103 @@ namespace Repositories.Repository
                 applicationId
             );
         }
+
+        /// <summary>
+        /// Check if a security has conflicting patrol assignments (overlapping schedule)
+        /// </summary>
+        /// <param name="securityId">Security to check</param>
+        /// <param name="timeGroupId">TimeGroup of new assignment</param>
+        /// <param name="startDate">Start date of new assignment</param>
+        /// <param name="endDate">End date of new assignment</param>
+        /// <param name="excludeAssignmentId">Exclude current assignment (for update)</param>
+        /// <returns>List of conflicting assignment IDs</returns>
+        public async Task<List<Guid>> HasScheduleOverlapAsync(
+            Guid securityId,
+            Guid timeGroupId,
+            DateTime? startDate,
+            DateTime? endDate,
+            Guid? excludeAssignmentId = null)
+        {
+            // Get TimeBlocks for the new assignment's TimeGroup
+            var newTimeBlocks = await _context.TimeBlocks
+                .Where(tb => tb.TimeGroupId == timeGroupId && tb.Status != 0)
+                .ToListAsync();
+
+            if (!newTimeBlocks.Any())
+                return new List<Guid>();
+
+            // Query existing assignments for the same security
+            var query = _context.PatrolAssignmentSecurities
+                .Where(pas => pas.SecurityId == securityId && pas.Status != 0)
+                .Include(pas => pas.PatrolAssignment)
+                    .ThenInclude(pa => pa.TimeGroup)
+                        .ThenInclude(tg => tg.TimeBlocks)
+                .Where(pas => pas.PatrolAssignment.Status != 0)
+                .Where(pas => pas.PatrolAssignment.TimeGroupId != null);
+
+            // Exclude current assignment (for update scenario)
+            if (excludeAssignmentId.HasValue)
+                query = query.Where(pas => pas.PatrolAssignmentId != excludeAssignmentId.Value);
+
+            // Filter by date range overlap
+            if (startDate.HasValue)
+                query = query.Where(pas => pas.PatrolAssignment.EndDate == null ||
+                                          pas.PatrolAssignment.EndDate >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(pas => pas.PatrolAssignment.StartDate == null ||
+                                          pas.PatrolAssignment.StartDate <= endDate.Value);
+
+            var existingAssignments = await query.ToListAsync();
+            var conflictingIds = new List<Guid>();
+
+            foreach (var existing in existingAssignments)
+            {
+                if (existing.PatrolAssignment?.TimeGroup?.TimeBlocks == null)
+                    continue;
+
+                // Check if any TimeBlock overlaps
+                foreach (var newBlock in newTimeBlocks)
+                {
+                    foreach (var existingBlock in existing.PatrolAssignment.TimeGroup.TimeBlocks)
+                    {
+                        // Skip if existing block is inactive
+                        if (existingBlock.Status == 0)
+                            continue;
+
+                        // Same day of week?
+                        if (newBlock.DayOfWeek != existingBlock.DayOfWeek)
+                            continue;
+
+                        // Check time overlap
+                        if (HasTimeOverlap(
+                            newBlock.StartTime, newBlock.EndTime,
+                            existingBlock.StartTime, existingBlock.EndTime))
+                        {
+                            conflictingIds.Add(existing.PatrolAssignmentId);
+                            break;
+                        }
+                    }
+
+                    if (conflictingIds.Contains(existing.PatrolAssignmentId))
+                        break;
+                }
+            }
+
+            return conflictingIds.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// Check if two time ranges overlap
+        /// </summary>
+        private static bool HasTimeOverlap(TimeSpan? start1, TimeSpan? end1,
+                                             TimeSpan? start2, TimeSpan? end2)
+        {
+            if (!start1.HasValue || !end1.HasValue || !start2.HasValue || !end2.HasValue)
+                return false;
+
+            // Two ranges overlap if: start1 < end2 AND end1 > start2
+            return start1.Value < end2.Value && end1.Value > start2.Value;
+        }
     }
 }

@@ -60,6 +60,11 @@ namespace BusinessLogic.Services.Implementation
             return await _repository.GetAllAsync();
         }
 
+        public async Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadsAsync()
+        {
+            return await _repository.GetAllSecurityHeadAsync();
+        }
+
         public async Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync()
         {
             return await _repository.GetAllLookUpAsync();

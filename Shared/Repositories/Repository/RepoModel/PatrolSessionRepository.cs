@@ -70,7 +70,9 @@ namespace Repositories.Repository
         public async Task<PatrolSession?> GetByIdEntityAsync(Guid id)
         {
             var query = BaseEntityQuery()
-            .Where(x => x.Id == id);
+                .Include(s => s.PatrolCheckpointLogs)
+                .Include(s => s.PatrolCases)
+                .Where(x => x.Id == id);
             return await query.FirstOrDefaultAsync();
         }
 
@@ -271,6 +273,8 @@ namespace Repositories.Repository
         public async Task<PatrolCheckpointLog?> GetActiveCheckpointLogAsync(Guid logId, Guid areaId)
         {
             return await _context.PatrolCheckpointLogs
+                .Include(l => l.PatrolSession)
+                    .ThenInclude(s => s.PatrolAssignment)
                 .FirstOrDefaultAsync(l => l.Id == logId 
                                        && l.PatrolAreaId == areaId 
                                        && l.ArrivedAt != null 

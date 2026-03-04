@@ -165,25 +165,53 @@ namespace BusinessLogic.Services.Implementation
 
                 StartedAt = nowUtc,
             };
-            patrolSession = await _repo.AddAsync(patrolSession);
+            // -------------------------------------------------------------
+            // CYCLE & TRIP CALCULATION LOGIC
+            // -------------------------------------------------------------
+            var checkpointLogs = new List<PatrolCheckpointLog>();
+            int inputCycles = assignment.CycleCount > 0 ? assignment.CycleCount : 1;
+            
+            // Calculate actual physical trips (perjalanan fisik) through the route areas
+            // - FullCycle (1): 1 Cycle = 1 Round Trip (Berangkat A-B-C & Pulang C-B-A) -> 2 Trips
+            // - HalfCycle (0): 1 Cycle = 1 One-Way Trip (Berangkat A-B-C saja)       -> 1 Trip
+            int totalTrips = assignment.CycleType == PatrolCycleType.FullCycle 
+                             ? inputCycles * 2 
+                             : inputCycles;
 
-            var checkpointLogs = routeAreas.Select(area => new PatrolCheckpointLog
+            int globalOrderIndex = 1;
+
+            for (int currentTrip = 1; currentTrip <= totalTrips; currentTrip++)
             {
-                PatrolSessionId = patrolSession.Id,
-                PatrolAreaId = area.PatrolAreaId,
-                AreaNameSnap = area.PatrolArea?.Name,
-                OrderIndex = area.OrderIndex,
-                DistanceFromPrevMeters = area.EstimatedDistance,
-                CheckpointStatus = PatrolCheckpointStatus.AutoDetected,
-                ArrivedAt = null,
-                LeftAt = null,
-                ApplicationId = patrolSession.ApplicationId,
-                Status = 1,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                CreatedBy = UsernameFormToken,
-                UpdatedBy = UsernameFormToken
-            }).ToList();
+                // Pengecekan Arah Jalan (Direction): 
+                // Trip Ganjil (1, 3, 5) = Jalan Maju (Ascending: A-B-C)
+                // Trip Genap  (2, 4, 6) = Jalan Mundur (Descending / Reversed: C-B-A)
+                bool isReturnTrip = (currentTrip % 2 == 0);
+                
+                var orderedAreas = isReturnTrip 
+                    ? routeAreas.OrderByDescending(x => x.OrderIndex) 
+                    : routeAreas.OrderBy(x => x.OrderIndex);
+
+                foreach (var area in orderedAreas)
+                {
+                    checkpointLogs.Add(new PatrolCheckpointLog
+                    {
+                        PatrolSessionId = patrolSession.Id,
+                        PatrolAreaId = area.PatrolAreaId,
+                        AreaNameSnap = area.PatrolArea?.Name,
+                        OrderIndex = globalOrderIndex++,
+                        DistanceFromPrevMeters = area.EstimatedDistance,
+                        CheckpointStatus = PatrolCheckpointStatus.AutoDetected,
+                        ArrivedAt = null,
+                        LeftAt = null,
+                        ApplicationId = patrolSession.ApplicationId,
+                        Status = 1,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        CreatedBy = UsernameFormToken,
+                        UpdatedBy = UsernameFormToken
+                    });
+                }
+            }
 
             
 
@@ -207,7 +235,6 @@ namespace BusinessLogic.Services.Implementation
             return await _repo.GetByIdAsync(patrolSession.Id)
                 ?? throw new Exception("Failed to load created PatrolSession");
         }
-       // MASIH KURANG PENGECEKAN PATROL CASE - KARENA WAJIB BUAT PATROL CASE TIAP SELESAI 
     public async Task<PatrolSessionRead> StopAsync(Guid id)
     {
         var session = await _repo.GetByIdEntityAsync(id)
@@ -263,10 +290,19 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // 1.5 Dwell Time validation: Ensure guard has been at checkpoint for a minimum time
-        int minimumDwellSeconds = 30; // configurable based on further requirements
-        if (log.ArrivedAt.HasValue && (DateTime.UtcNow - log.ArrivedAt.Value).TotalSeconds < minimumDwellSeconds)
+        // Only enforce if the assignment is configured with duration requirement
+        if (log.PatrolSession?.PatrolAssignment?.DurationType == PatrolDurationType.WithDuration)
         {
-            throw new BusinessException($"Dwell time requirement not met. Security must stay at the checkpoint for at least {minimumDwellSeconds} seconds.");
+            // Use MinDwellTime from Assignment if configured, otherwise default to 30 seconds
+            int minimumDwellSeconds = log.PatrolSession.PatrolAssignment.MinDwellTime ?? 30;
+            
+            if (log.ArrivedAt.HasValue && (DateTime.UtcNow - log.ArrivedAt.Value).TotalSeconds < minimumDwellSeconds)
+            {
+                throw new BusinessException($"Dwell time requirement not met. Security must stay at the checkpoint for at least {minimumDwellSeconds} seconds.");
+            }
+            
+            // Note: MaxDwellTime logic is deliberately omitted from throwing runtime exceptions. 
+            // It is strictly intended as an indicator flag for analytics/reporting at the end of the session.
         }
 
         // 1.8 Sequence Validation: Ensure no previous checkpoints were skipped
@@ -283,25 +319,28 @@ namespace BusinessLogic.Services.Implementation
         log.Notes = dto.SecurityNote;
         log.ClearedAt = DateTime.UtcNow;
 
-        if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.Cleared) 
+        if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.Cleared)
         {
             log.CheckpointStatus = PatrolCheckpointStatus.Cleared;
         }
-        else if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.HasCase) 
+        else if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.HasCase)
         {
-            log.CheckpointStatus = PatrolCheckpointStatus.HasCase;
-            
-            if (dto.CaseDetails != null) 
+            // FIX: Require CaseDetails when HasCase status is selected
+            if (dto.CaseDetails == null)
             {
-                // Assign session and location dynamically 
-                dto.CaseDetails.PatrolSessionId = log.PatrolSessionId;
-                dto.CaseDetails.PatrolAreaId = log.PatrolAreaId;
-                
-                // Directly pass frontend's native case details to Case Service (1-action flow)
-                await _caseService.CreateAsync(dto.CaseDetails);
+                throw new BusinessException("CaseDetails are required when submitting a checkpoint with HasCase status.");
             }
+
+            log.CheckpointStatus = PatrolCheckpointStatus.HasCase;
+
+            // Assign session and location dynamically
+            dto.CaseDetails.PatrolSessionId = log.PatrolSessionId;
+            dto.CaseDetails.PatrolAreaId = log.PatrolAreaId;
+
+            // Directly pass frontend's native case details to Case Service (1-action flow)
+            await _caseService.CreateAsync(dto.CaseDetails);
         }
-        else 
+        else
         {
             throw new BusinessException("Invalid ActionStatus provided.");
         }

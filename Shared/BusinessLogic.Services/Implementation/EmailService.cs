@@ -123,7 +123,6 @@ public class EmailService : IEmailService
             Credentials = new NetworkCredential(smtpUsername, smtpPassword),
             EnableSsl = true
         };
-
         await client.SendMailAsync(message);
     }
 

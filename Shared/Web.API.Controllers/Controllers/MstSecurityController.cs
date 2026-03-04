@@ -33,6 +33,15 @@ namespace Web.API.Controllers.Controllers
             var securities = await _MstSecurityService.GetAllSecuritiesAsync();
             return Ok(ApiResponse.Success("Securities retrieved successfully", securities));
         }
+
+        // GET: api/MstSecurity/heads
+        [HttpGet("heads")]
+        public async Task<IActionResult> GetAllHeads()
+        {
+            var securities = await _MstSecurityService.GetAllSecurityHeadsAsync();
+            return Ok(ApiResponse.Success("Security heads retrieved successfully", securities));
+        }
+
         // GET: api/MstSecurity
         [HttpGet("lookup")]
         public async Task<IActionResult> GetAllLookUpAsync()

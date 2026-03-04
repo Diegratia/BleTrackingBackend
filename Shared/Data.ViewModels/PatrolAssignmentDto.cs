@@ -15,6 +15,12 @@ namespace Data.ViewModels
         public PatrolApprovalType? ApprovalType { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public PatrolDurationType? DurationType { get; set; }
+        public PatrolStartType? StartType { get; set; }
+        public PatrolCycleType? CycleType { get; set; }
+        public int? CycleCount { get; set; }
+        public int? MinDwellTime { get; set; }
+        public int? MaxDwellTime { get; set; }
         public List<Guid> SecurityIds { get; set; } = new();
     }
 
@@ -27,8 +33,12 @@ namespace Data.ViewModels
         public PatrolApprovalType? ApprovalType { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public PatrolDurationType? DurationType { get; set; }
+        public PatrolStartType? StartType { get; set; }
+        public PatrolCycleType? CycleType { get; set; }
+        public int? CycleCount { get; set; }
+        public int? MinDwellTime { get; set; }
+        public int? MaxDwellTime { get; set; }
         public List<Guid?> SecurityIds { get; set; } = new();
     }
-
-
 }
