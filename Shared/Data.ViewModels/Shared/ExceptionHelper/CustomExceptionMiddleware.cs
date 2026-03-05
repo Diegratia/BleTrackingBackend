@@ -108,7 +108,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     statusCode = 400;
                     var dbMessage = "Database error";
 
-                    if (_env.IsProduction())
+                    if (_env.IsDevelopment())
                     {
                         dbMessage =
                             ex.InnerException?.InnerException?.Message ??

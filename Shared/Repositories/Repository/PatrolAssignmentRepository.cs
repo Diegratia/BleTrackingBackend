@@ -220,7 +220,7 @@ namespace Repositories.Repository
 
             if(filter.DurationType.HasValue)
                 query = query.Where(x => x.DurationType == filter.DurationType);
-                
+
             if(filter.ApprovalType.HasValue)
                 query = query.Where(x => x.ApprovalType == filter.ApprovalType);
 
@@ -299,6 +299,7 @@ namespace Repositories.Repository
                 ShiftReplacements = pa.PatrolShiftReplacements
                     .Select(r => new PatrolShiftReplacementRead
                     {
+                        Id = r.Id,
                         PatrolAssignmentId = r.PatrolAssignmentId,
                         OriginalSecurity = r.OriginalSecurity == null ? null : new SecurityListRead
                         {
@@ -306,6 +307,9 @@ namespace Repositories.Repository
                             Name = r.OriginalSecurity.Name,
                             CardNumber = r.OriginalSecurity.CardNumber,
                             IdentityId = r.OriginalSecurity.IdentityId,
+                            OrganizationName = r.OriginalSecurity.Organization.Name,
+                            DepartmentName = r.OriginalSecurity.Department.Name,
+                            DistrictName = r.OriginalSecurity.District.Name
                         },
                         SubstituteSecurity = r.SubstituteSecurity == null ? null : new SecurityListRead
                         {
@@ -313,6 +317,9 @@ namespace Repositories.Repository
                             Name = r.SubstituteSecurity.Name,
                             CardNumber = r.SubstituteSecurity.CardNumber,
                             IdentityId = r.SubstituteSecurity.IdentityId,
+                            OrganizationName = r.OriginalSecurity.Organization.Name,
+                            DepartmentName = r.OriginalSecurity.Department.Name,
+                            DistrictName = r.OriginalSecurity.District.Name,
                         },
                         ReplacementStartDate = r.ReplacementStartDate,
                         ReplacementEndDate = r.ReplacementEndDate,

@@ -193,7 +193,15 @@ namespace BusinessLogic.Services.Implementation
                 SecurityCardNumberSnap = security.CardNumber,
 
                 StartedAt = nowUtc,
+                ApplicationId = AppId,
+                CreatedBy = UsernameFormToken,
+                CreatedAt = nowUtc,
+                UpdatedBy = UsernameFormToken,
+                UpdatedAt = nowUtc
             };
+
+            await _repo.AddAsync(patrolSession);
+
             // -------------------------------------------------------------
             // CYCLE & TRIP CALCULATION LOGIC
             // -------------------------------------------------------------
