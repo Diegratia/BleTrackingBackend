@@ -122,6 +122,23 @@ namespace BusinessLogic.Services.Implementation
             if (card == null)
                 throw new NotFoundException($"Card {createDto.CardId} not found.");
 
+            // Validate SecurityHead1Id and SecurityHead2Id must be heads
+            var securityHeadIds = new List<Guid?>();
+            if (createDto.SecurityHead1Id.HasValue)
+                securityHeadIds.Add(createDto.SecurityHead1Id);
+            if (createDto.SecurityHead2Id.HasValue)
+                securityHeadIds.Add(createDto.SecurityHead2Id);
+
+            if (securityHeadIds.Any())
+            {
+                var invalidHeadIds = await _repository.ValidateSecurityHeadsAsync(securityHeadIds);
+                if (invalidHeadIds.Any())
+                {
+                    throw new BusinessException(
+                        $"The following SecurityHead IDs are not valid heads (IsHead = false): {string.Join(", ", invalidHeadIds)}");
+                }
+            }
+
             var existingSecurity = await _repository.GetAllQueryable()
                 .FirstOrDefaultAsync(b => b.Email == createDto.Email ||
                                          b.IdentityId == createDto.IdentityId ||
@@ -231,6 +248,23 @@ namespace BusinessLogic.Services.Implementation
             var card = updateDto.CardId.HasValue ? await _cardRepository.GetByIdEntityAsync(cardId) : null;
             if (updateDto.CardId.HasValue && card == null)
                 throw new NotFoundException($"Card with ID {updateDto.CardId} not found or has been deleted.");
+
+            // Validate SecurityHead1Id and SecurityHead2Id must be heads
+            var securityHeadIds = new List<Guid?>();
+            if (updateDto.SecurityHead1Id.HasValue)
+                securityHeadIds.Add(updateDto.SecurityHead1Id);
+            if (updateDto.SecurityHead2Id.HasValue)
+                securityHeadIds.Add(updateDto.SecurityHead2Id);
+
+            if (securityHeadIds.Any())
+            {
+                var invalidHeadIds = await _repository.ValidateSecurityHeadsAsync(securityHeadIds);
+                if (invalidHeadIds.Any())
+                {
+                    throw new BusinessException(
+                        $"The following SecurityHead IDs are not valid heads (IsHead = false): {string.Join(", ", invalidHeadIds)}");
+                }
+            }
 
             if (updateDto.FaceImage != null && updateDto.FaceImage.Length > 0)
             {

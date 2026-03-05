@@ -23,6 +23,8 @@ namespace BusinessLogic.Services.Extension.RootExtension
             services.AddValidatorsFromAssemblyContaining<PatrolCaseUpdateValidator>();
             services.AddValidatorsFromAssemblyContaining<PatrolAttachmentCreateValidator>();
             services.AddValidatorsFromAssemblyContaining<PatrolAttachmentUpdateValidator>();
+            services.AddValidatorsFromAssemblyContaining<MstSecurityCreateValidator>();
+            services.AddValidatorsFromAssemblyContaining<MstSecurityUpdateValidator>();
             return services;
         }
     }

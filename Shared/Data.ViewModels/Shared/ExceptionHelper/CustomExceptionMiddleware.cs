@@ -116,7 +116,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                             ex.Message;
                     }
 
-                    result = ApiResponse.BadRequest(dbMessage ?? "Database error");  // ✅ Now available
+                    result = ApiResponse.BadRequest(dbMessage ?? "Database error"); 
                     _logger.LogError(ex, "Database error");
                     break;
 

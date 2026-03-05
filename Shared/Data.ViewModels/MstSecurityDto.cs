@@ -104,13 +104,13 @@ namespace Data.ViewModels
         public string? UploadFrError { get; set; }
         public DateOnly? BirthDate { get; set; }
         public DateOnly? JoinDate { get; set; }
-        public string? HeadMember1 { get; set; }
-        public string? HeadMember2 { get; set; }
+        public Guid? SecurityHead1Id { get; set; }
+        public Guid? SecurityHead2Id { get; set; }
         public Guid ApplicationId { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 
-     public class MstSecurityUpdateDto 
+     public class MstSecurityUpdateDto
     {
         public string? PersonId { get; set; }
         public Guid? OrganizationId { get; set; }
@@ -126,8 +126,8 @@ namespace Data.ViewModels
         public DateOnly? BirthDate { get; set; }
         public DateOnly? JoinDate { get; set; }
         public Guid? CardId { get; set; }
-        public string? HeadMember1 { get; set; }
-        public string? HeadMember2 { get; set; }
+        public Guid? SecurityHead1Id { get; set; }
+        public Guid? SecurityHead2Id { get; set; }
         public string? StatusEmployee { get; set; } // Enum sebagai string
     }
 }

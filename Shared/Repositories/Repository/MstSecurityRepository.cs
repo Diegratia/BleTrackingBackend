@@ -34,6 +34,8 @@ namespace Repositories.Repository
         private IQueryable<MstSecurityRead> ProjectToRead(IQueryable<MstSecurity> query)
         {
             return query
+                .Include(s => s.SecurityHead1)
+                .Include(s => s.SecurityHead2)
                 .GroupJoin(
                     _context.Users.Include(u => u.Group),
                     s => s.Email,
@@ -65,8 +67,8 @@ namespace Repositories.Repository
                     BirthDate = x.s.BirthDate,
                     JoinDate = x.s.JoinDate,
                     ExitDate = x.s.ExitDate,
-                    HeadMember1 = x.s.SecurityHead1Id.ToString(),
-                    HeadMember2 = x.s.SecurityHead2Id.ToString(),
+                    SecurityHead1 = x.s.SecurityHead1 != null ? x.s.SecurityHead1.Name : null,
+                    SecurityHead2 = x.s.SecurityHead2 != null ? x.s.SecurityHead2.Name : null,
                     IsBlacklist = null,
                     BlacklistAt = null,
                     BlacklistReason = null,
@@ -325,6 +327,46 @@ namespace Repositories.Repository
                 .Where(b => b.Id == id && b.Status != 0);
             query = query.WithActiveRelations();
             return await ApplyApplicationIdFilter(query, applicationId, isSystemAdmin).FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Check if a security is a head (has User account with IsHead = true)
+        /// </summary>
+        /// <param name="securityId">Security ID to check</param>
+        /// <returns>True if the security has a User account belonging to a head group</returns>
+        public async Task<bool> IsSecurityHeadAsync(Guid securityId)
+        {
+            var security = await _context.MstSecurities
+                .FirstOrDefaultAsync(s => s.Id == securityId && s.Status != 0);
+
+            if (security == null || string.IsNullOrEmpty(security.Email))
+                return false;
+
+            return await _context.Users
+                .Include(u => u.Group)
+                .AnyAsync(u => u.Email.ToLower() == security.Email.ToLower()
+                              && u.Group != null
+                              && u.Group.IsHead == true);
+        }
+
+        /// <summary>
+        /// Validate that the specified security IDs are heads (IsHead = true)
+        /// </summary>
+        /// <param name="securityHeadIds">List of security IDs to validate</param>
+        /// <returns>List of invalid security IDs (those that are not heads)</returns>
+        public async Task<List<Guid>> ValidateSecurityHeadsAsync(List<Guid?> securityHeadIds)
+        {
+            var invalidIds = new List<Guid>();
+
+            foreach (var headId in securityHeadIds.Where(x => x.HasValue))
+            {
+                if (!await IsSecurityHeadAsync(headId.Value))
+                {
+                    invalidIds.Add(headId.Value);
+                }
+            }
+
+            return invalidIds;
         }
     }
 }

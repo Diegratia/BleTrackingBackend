@@ -25,8 +25,8 @@ namespace Shared.Contracts.Read
         public DateOnly? BirthDate { get; set; }
         public DateOnly? JoinDate { get; set; }
         public DateOnly? ExitDate { get; set; }
-        public string? HeadMember1 { get; set; }
-        public string? HeadMember2 { get; set; }
+        public string? SecurityHead1 { get; set; }
+        public string? SecurityHead2 { get; set; }
         public bool? IsBlacklist { get; set; }
         public DateTime? BlacklistAt { get; set; }
         public string? BlacklistReason { get; set; }

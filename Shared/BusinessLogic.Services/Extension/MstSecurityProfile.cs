@@ -27,7 +27,9 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) // Ditangani manual
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
-                .ForMember(dest => dest.UploadFrError, opt => opt.Ignore());
+                .ForMember(dest => dest.UploadFrError, opt => opt.Ignore())
+                .ForMember(dest => dest.SecurityHead1Id, opt => opt.MapFrom(src => src.SecurityHead1Id))
+                .ForMember(dest => dest.SecurityHead2Id, opt => opt.MapFrom(src => src.SecurityHead2Id));
 
             CreateMap<MstSecurityUpdateDto, MstSecurity>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -39,6 +41,8 @@ namespace BusinessLogic.Services.Extension
                 .ForMember(dest => dest.FaceImage, opt => opt.Ignore()) // Ditangani manual
                 .ForMember(dest => dest.UploadFr, opt => opt.Ignore())
                 .ForMember(dest => dest.UploadFrError, opt => opt.Ignore())
+                .ForMember(dest => dest.SecurityHead1Id, opt => opt.MapFrom(src => src.SecurityHead1Id))
+                .ForMember(dest => dest.SecurityHead2Id, opt => opt.MapFrom(src => src.SecurityHead2Id))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<MstSecurityDto, MstSecurity>();
