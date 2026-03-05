@@ -35,11 +35,13 @@ namespace BusinessLogic.Services.Implementation
         {
             var entity = _mapper.Map<PatrolRoute>(dto);
 
-            var areaIds = dto.PatrolAreaIds
-                .Where(x => x.HasValue)
-                .Select(x => x!.Value)
-                .Distinct()
+            var validRequests = dto.RouteAreas
+                .Where(x => x != null && x.PatrolAreaId != Guid.Empty)
+                .GroupBy(x => x.PatrolAreaId) // Ensure distinct by AreaId 
+                .Select(g => g.First())
                 .ToList();
+
+            var areaIds = validRequests.Select(x => x.PatrolAreaId).ToList();
 
                 var missingAreaIds = await _repo
                 .GetMissingAreaIdsAsync(areaIds);
@@ -55,15 +57,17 @@ namespace BusinessLogic.Services.Implementation
             var areasLookup = await _repo.GetAreasWithShapeAsync(areaIds);
 
             // 2. Create route areas
-            foreach (var (areaId, index) in areaIds.Select((id, i) => (id, i)))
+            foreach (var (req, index) in validRequests.Select((r, i) => (r, i)))
             {
                 entity.PatrolRouteAreas.Add(new PatrolRouteAreas
                 {
-                    PatrolAreaId = areaId,
+                    PatrolAreaId = req.PatrolAreaId,
                     ApplicationId = AppId,
                     OrderIndex = index + 1,
                     EstimatedDistance = 0,  // Temporary, will be calculated
                     EstimatedTime = 0,
+                    MinDwellTime = req.MinDwellTime,
+                    MaxDwellTime = req.MaxDwellTime,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     CreatedBy = UsernameFormToken,
@@ -103,12 +107,13 @@ namespace BusinessLogic.Services.Implementation
                 // =====================================================
                 // 🔥 REPLACE ALL AREAS
                 // =====================================================
-                var newAreaIds = dto.PatrolAreaIds?
-                    .Where(x => x.HasValue)
-                    .Select(x => x!.Value)
-                    .Distinct()
-                    .ToList() ?? new List<Guid>();
+                var validRequests = dto.RouteAreas?
+                    .Where(x => x != null && x.PatrolAreaId != Guid.Empty)
+                    .GroupBy(x => x.PatrolAreaId) // Ensure distinct by AreaId
+                    .Select(g => g.First())
+                    .ToList() ?? new List<PatrolRouteAreaRequestDto>();
                 
+                var newAreaIds = validRequests.Select(x => x.PatrolAreaId).ToList();
 
                 foreach (var old in route.PatrolRouteAreas.ToList())
                 {
@@ -120,15 +125,18 @@ namespace BusinessLogic.Services.Implementation
                 var areasLookup = await _repo.GetAreasWithShapeAsync(newAreaIds);
 
                 // 2. Create new route areas
-                for (int i = 0; i < newAreaIds.Count; i++)
+                for (int i = 0; i < validRequests.Count; i++)
                 {
+                    var req = validRequests[i];
                     route.PatrolRouteAreas.Add(new PatrolRouteAreas
                     {
                         PatrolRouteId = route.Id,
-                        PatrolAreaId = newAreaIds[i],
+                        PatrolAreaId = req.PatrolAreaId,
                         OrderIndex = i + 1,
                         EstimatedDistance = 0,  // Temporary, will be calculated
                         EstimatedTime = 0,
+                        MinDwellTime = req.MinDwellTime,
+                        MaxDwellTime = req.MaxDwellTime,
                         status = 1,
                         ApplicationId = route.ApplicationId,
                         CreatedAt = DateTime.UtcNow,

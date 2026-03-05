@@ -55,6 +55,7 @@ namespace Repositories.DbContexts
         public DbSet<PatrolRouteAreas> PatrolRouteAreas{ get; set; }
         public DbSet<PatrolAssignment> PatrolAssignments{ get; set; }
         public DbSet<PatrolAssignmentSecurity> PatrolAssignmentSecurities{ get; set; }
+        public DbSet<PatrolShiftReplacement> PatrolShiftReplacements { get; set; }
         public DbSet<SecurityGroup> SecurityGroups{ get; set; }
         public DbSet<SecurityGroupMember> SecurityGroupMembers{ get; set; }
         
@@ -116,6 +117,22 @@ namespace Repositories.DbContexts
             modelBuilder.Entity<PatrolRouteAreas>().ToTable("patrol_route_areas");
             modelBuilder.Entity<PatrolAssignment>().ToTable("patrol_assignment");
             modelBuilder.Entity<PatrolAssignmentSecurity>().ToTable("patrol_assignment_security");
+            modelBuilder.Entity<PatrolShiftReplacement>(entity =>
+            {
+                entity.ToTable("patrol_shift_replacement");
+                entity.HasOne(e => e.OriginalSecurity)
+                    .WithMany()
+                    .HasForeignKey(e => e.OriginalSecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(e => e.SubstituteSecurity)
+                    .WithMany()
+                    .HasForeignKey(e => e.SubstituteSecurityId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(e => e.PatrolAssignment)
+                    .WithMany(pa => pa.PatrolShiftReplacements)
+                    .HasForeignKey(e => e.PatrolAssignmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
             modelBuilder.Entity<PatrolCase>().ToTable("patrol_case");
             modelBuilder.Entity<PatrolSession>().ToTable("patrol_session");
             modelBuilder.Entity<PatrolCheckpointLog>(entity =>

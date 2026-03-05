@@ -164,8 +164,12 @@ namespace BusinessLogic.Services.Implementation
             var creatorSecurity = await _repo.GetSecurityByIdAsync(session.SecurityId)
                 ?? throw new NotFoundException($"Security with id {session.SecurityId} not found");
 
-            patrolCase.SecurityHead1Id = creatorSecurity.SecurityHead1Id;
-            patrolCase.SecurityHead2Id = creatorSecurity.SecurityHead2Id;
+            // Priority:
+            // 1. Take from PatrolAssignment
+            // 2. Fallback to MstSecurity (reporter)
+            patrolCase.SecurityHead1Id = session.PatrolAssignment?.SecurityHead1Id ?? creatorSecurity.SecurityHead1Id;
+            patrolCase.SecurityHead2Id = session.PatrolAssignment?.SecurityHead2Id ?? creatorSecurity.SecurityHead2Id;
+
             patrolCase.CaseStatus = resolvedApprovalType == PatrolApprovalType.WithoutApproval
                 ? CaseStatus.Approved
                 : CaseStatus.Submitted;

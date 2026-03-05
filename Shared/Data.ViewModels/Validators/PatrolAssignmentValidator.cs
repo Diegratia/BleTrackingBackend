@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using FluentValidation;
+using Shared.Contracts;
 
 namespace Data.ViewModels.Validators
 {
@@ -16,6 +17,14 @@ namespace Data.ViewModels.Validators
 
             RuleFor(x => x.SecurityIds)
                 .NotEmpty().WithMessage("SecurityIds is required.");
+
+            RuleFor(x => x.SecurityHead1Id)
+                .NotEmpty().WithMessage("SecurityHead1Id is required.");
+
+            RuleFor(x => x.SecurityHead2Id)
+                .NotEmpty().WithMessage("SecurityHead2Id is required.")
+                .Must((dto, head2Id) => dto.ApprovalType != PatrolApprovalType.Sequential || dto.SecurityHead1Id != head2Id)
+                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.");
 
             RuleFor(x => x.Name)
                 .MaximumLength(255).WithMessage("Name cannot exceed 255 characters.")
@@ -47,9 +56,47 @@ namespace Data.ViewModels.Validators
                 .NotEmpty().WithMessage("SecurityIds cannot contain empty values.")
                 .When(x => x.SecurityIds != null && x.SecurityIds.Any());
 
+            RuleFor(x => x.SecurityHead1Id)
+                .NotEmpty().WithMessage("SecurityHead1Id is required.");
+
+            RuleFor(x => x.SecurityHead2Id)
+                .NotEmpty().WithMessage("SecurityHead2Id is required.")
+                .Must((dto, head2Id) => dto.ApprovalType != PatrolApprovalType.Sequential || dto.SecurityHead1Id != head2Id)
+                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.");
+
             RuleFor(x => x)
                 .Must(x => !x.StartDate.HasValue || !x.EndDate.HasValue || x.StartDate <= x.EndDate)
                 .WithMessage("StartDate must be earlier than or equal to EndDate.");
+        }
+    }
+
+    public class PatrolShiftReplacementCreateValidator : AbstractValidator<PatrolShiftReplacementCreateDto>
+    {
+        public PatrolShiftReplacementCreateValidator()
+        {
+            RuleFor(x => x.PatrolAssignmentId)
+                .NotEmpty().WithMessage("PatrolAssignmentId is required.");
+            RuleFor(x => x.OriginalSecurityId)
+                .NotEmpty().WithMessage("OriginalSecurityId is required.");
+            RuleFor(x => x.SubstituteSecurityId)
+                .NotEmpty().WithMessage("SubstituteSecurityId is required.");
+            RuleFor(x => x.ReplacementStartDate)
+                .NotEmpty().WithMessage("ReplacementStartDate is required.");
+            RuleFor(x => x.ReplacementEndDate)
+                .NotEmpty().WithMessage("ReplacementEndDate is required.");
+            RuleFor(x => x)
+                .Must(x => x.ReplacementStartDate <= x.ReplacementEndDate)
+                .WithMessage("ReplacementStartDate must be earlier than or equal to ReplacementEndDate.");
+        }
+    }
+
+    public class PatrolShiftReplacementUpdateValidator : AbstractValidator<PatrolShiftReplacementUpdateDto>
+    {
+        public PatrolShiftReplacementUpdateValidator()
+        {
+            RuleFor(x => x)
+                .Must(x => !x.ReplacementStartDate.HasValue || !x.ReplacementEndDate.HasValue || x.ReplacementStartDate <= x.ReplacementEndDate)
+                .WithMessage("ReplacementStartDate must be earlier than or equal to ReplacementEndDate.");
         }
     }
 }

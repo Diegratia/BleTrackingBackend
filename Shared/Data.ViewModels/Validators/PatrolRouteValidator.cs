@@ -10,8 +10,8 @@ namespace Data.ViewModels.Validators
     {
         public PatrolRouteCreateValidator()
         {
-            RuleFor(patrolRoute => patrolRoute.PatrolAreaIds)
-                .NotEmpty().WithMessage("PatrolAreaIds is required.");
+            RuleFor(patrolRoute => patrolRoute.RouteAreas)
+                .NotEmpty().WithMessage("RouteAreas is required.");
             RuleFor(patrolRoute => patrolRoute.Name)
                 .MaximumLength(255).WithMessage("Name cannot exceed 255 characters.")
                 .When(x => x.Name != null);

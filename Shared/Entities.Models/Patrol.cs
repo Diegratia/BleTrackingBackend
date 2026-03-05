@@ -53,6 +53,12 @@ namespace Entities.Models
         public string? AreaNameSnap { get; set; }
         [Column("order_index")]
         public int? OrderIndex { get; set; }
+        [Column("min_dwell_time")]
+        public int? MinDwellTime { get; set; }
+        [Column("max_dwell_time")]
+        public int? MaxDwellTime { get; set; }
+        [Column("distance_from_prev_meters")]
+        public double? DistanceFromPrevMeters { get; set; }
         [Column("arrived_at")]
         public DateTime? ArrivedAt { get; set; }
         [Column("left_at")]
@@ -64,8 +70,6 @@ namespace Entities.Models
         [Column("notes")]
         public string? Notes { get; set; }
 
-        [Column("distance_from_prev_meters")]
-        public double? DistanceFromPrevMeters { get; set; }
         public PatrolSession? PatrolSession { get; set; }
         public PatrolArea? PatrolArea { get; set; }
         public MstApplication? Application { get; set; }
@@ -101,6 +105,10 @@ namespace Entities.Models
         public float EstimatedDistance { get; set; }
         [Column("estimated_time")]
         public int EstimatedTime { get; set; }
+        [Column("min_dwell_time")]
+        public int? MinDwellTime { get; set; }
+        [Column("max_dwell_time")]
+        public int? MaxDwellTime { get; set; }
         [Column("start_area_id")]
         public Guid? StartAreaId { get; set; }
         [Column("end_area_id")]
@@ -140,11 +148,18 @@ namespace Entities.Models
         public int? MinDwellTime { get; set; }
         [Column("max_dwell_time")]
         public int? MaxDwellTime { get; set; }
+        [Column("security_head_1")]
+        public Guid? SecurityHead1Id { get; set; }
+        [Column("security_head_2")]
+        public Guid? SecurityHead2Id { get; set; }
         public PatrolRoute? PatrolRoute { get; set; }
         public TimeGroup? TimeGroup { get; set; }
         public MstApplication? Application { get; set; }
+        public MstSecurity? SecurityHead1 { get; set; }
+        public MstSecurity? SecurityHead2 { get; set; }
         public ICollection<PatrolAssignmentSecurity> PatrolAssignmentSecurities { get; set; } = new List<PatrolAssignmentSecurity>();
         public ICollection<PatrolSession> PatrolSessions { get; set; } = new List<PatrolSession>();
+        public ICollection<PatrolShiftReplacement> PatrolShiftReplacements { get; set; } = new List<PatrolShiftReplacement>();
     }
     //PatrolAssignmentSecurity
     public class PatrolAssignmentSecurity : BaseModelWithTimeApp, IApplicationEntity
@@ -258,6 +273,33 @@ namespace Entities.Models
         [Column("uploaded_at")]
         public DateTime? UploadedAt { get; set; }
         public PatrolCase? PatrolCase { get; set; }
+        public MstApplication? Application { get; set; }
+    }
+
+    //PatrolShiftReplacement
+    public class PatrolShiftReplacement : BaseModelWithTimeApp, IApplicationEntity
+    {
+        [Column("patrol_assignment_id")]
+        public Guid PatrolAssignmentId { get; set; }
+        
+        [Column("original_security_id")]
+        public Guid OriginalSecurityId { get; set; }
+        
+        [Column("substitute_security_id")]
+        public Guid SubstituteSecurityId { get; set; }
+        
+        [Column("replacement_start_date")]
+        public DateTime ReplacementStartDate { get; set; }
+        
+        [Column("replacement_end_date")]
+        public DateTime ReplacementEndDate { get; set; }
+        
+        [Column("reason")]
+        public string? Reason { get; set; }
+        
+        public PatrolAssignment? PatrolAssignment { get; set; }
+        public MstSecurity? OriginalSecurity { get; set; }
+        public MstSecurity? SubstituteSecurity { get; set; }
         public MstApplication? Application { get; set; }
     }
 }

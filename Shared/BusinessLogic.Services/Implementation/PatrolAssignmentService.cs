@@ -126,6 +126,18 @@ namespace BusinessLogic.Services.Implementation
 
 
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
+            
+            // Validate and assign Security Heads
+            if (createDto.SecurityHead1Id.HasValue && createDto.SecurityHead2Id.HasValue)
+            {
+                // Optional: Validate if the selected heads are valid for the selected securities
+                // var isValidHeads = await _repository.ValidateSecurityHeadsAsync(createDto.SecurityIds, createDto.SecurityHead1Id.Value, createDto.SecurityHead2Id.Value);
+                // if (!isValidHeads) throw new BusinessException("Selected Security Heads are not valid for the selected Security personnel.");
+                
+                patrolAssignment.SecurityHead1Id = createDto.SecurityHead1Id.Value;
+                patrolAssignment.SecurityHead2Id = createDto.SecurityHead2Id.Value;
+            }
+
             if (!createDto.ApprovalType.HasValue)
                 patrolAssignment.ApprovalType = PatrolApprovalType.ByThreatLevel;
             SetCreateAudit(patrolAssignment);
@@ -163,6 +175,13 @@ namespace BusinessLogic.Services.Implementation
                 ?? throw new NotFoundException($"PatrolAssignment {id} not found");
 
             // ================= VALIDASI =================
+            
+            // PREVENT UPDATE IF THERE ARE ACTIVE SESSIONS
+            var hasActiveSessions = await _repository.HasActiveSessionsAsync(id);
+            if (hasActiveSessions)
+            {
+                throw new BusinessException($"Cannot update Patrol Assignment {id} because there are active patrol sessions running. Please complete or abort them first.");
+            }
 
             if (dto.PatrolRouteId.HasValue &&
                 !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
@@ -265,6 +284,12 @@ namespace BusinessLogic.Services.Implementation
 
             // 2. Update parent scalar only
             _mapper.Map(dto, assignment);
+            if (dto.SecurityHead1Id.HasValue && dto.SecurityHead2Id.HasValue)
+            {
+                 assignment.SecurityHead1Id = dto.SecurityHead1Id.Value;
+                 assignment.SecurityHead2Id = dto.SecurityHead2Id.Value;
+            }
+
             if (!dto.ApprovalType.HasValue)
                 assignment.ApprovalType = PatrolApprovalType.WithoutApproval;
             SetUpdateAudit(assignment);
@@ -284,6 +309,14 @@ namespace BusinessLogic.Services.Implementation
             var patrolAssignment = await _repository.GetByIdWithTrackingAsync(id);
             if (patrolAssignment == null)
                 throw new NotFoundException($"PatrolAssignment with id {id} not found");
+
+            // PREVENT DELETE IF THERE ARE ACTIVE SESSIONS
+            var hasActiveSessions = await _repository.HasActiveSessionsAsync(id);
+            if (hasActiveSessions)
+            {
+                throw new BusinessException($"Cannot delete Patrol Assignment {id} because there are active patrol sessions running. Please complete or abort them first.");
+            }
+
             await _repository.ExecuteInTransactionAsync(async () =>
             {
                 SetDeleteAudit(patrolAssignment);
@@ -320,9 +353,6 @@ namespace BusinessLogic.Services.Implementation
 
             var (data, total, filtered) = await _repository.FilterAsync(filter);
 
-            // RM → DTO
-            // var dto = _mapper.Map<List<PatrolAssignmentRead>>(data);
-
             return new
             {
                 draw = request.Draw,
@@ -332,6 +362,86 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        
+        public async Task<PatrolShiftReplacementRead> AddShiftReplacementAsync(PatrolShiftReplacementCreateDto createDto)
+        {
+            var assignment = await _repository.GetByIdWithTrackingAsync(createDto.PatrolAssignmentId);
+            if (assignment == null)
+                throw new NotFoundException($"PatrolAssignment {createDto.PatrolAssignmentId} not found");
+
+            // TODO: Ensure OriginalSecurity is assigned to this assignment
+            // TODO: Validate dates, etc.
+
+            var entity = new PatrolShiftReplacement
+            {
+                PatrolAssignmentId = createDto.PatrolAssignmentId,
+                OriginalSecurityId = createDto.OriginalSecurityId,
+                SubstituteSecurityId = createDto.SubstituteSecurityId,
+                ReplacementStartDate = createDto.ReplacementStartDate,
+                ReplacementEndDate = createDto.ReplacementEndDate,
+                Reason = createDto.Reason,
+                ApplicationId = AppId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                CreatedBy = UsernameFormToken,
+                UpdatedBy = UsernameFormToken
+            };
+
+            await _repository.AddShiftReplacementAsync(entity);
+            
+            _audit.Created(
+                "Shift Replacement",
+                entity.Id,
+                "Created shift replacement",
+                new { assignment.Name, OriginalSecurityId = createDto.OriginalSecurityId, SubstituteSecurityId = createDto.SubstituteSecurityId }
+            );
+
+            // Fetch to return DTO properly
+            var saved = await _repository.GetShiftReplacementByIdAsync(entity.Id);
+            return new PatrolShiftReplacementRead
+            {
+                Id = saved!.Id,
+                PatrolAssignmentId = saved.PatrolAssignmentId,
+                OriginalSecurity = saved.OriginalSecurity == null ? null : new SecurityListRead
+                {
+                    Id = saved.OriginalSecurity.Id,
+                    Name = saved.OriginalSecurity.Name,
+                    CardNumber = saved.OriginalSecurity.CardNumber,
+                    IdentityId = saved.OriginalSecurity.IdentityId,
+                },
+                SubstituteSecurity = saved.SubstituteSecurity == null ? null : new SecurityListRead
+                {
+                    Id = saved.SubstituteSecurity.Id,
+                    Name = saved.SubstituteSecurity.Name,
+                    CardNumber = saved.SubstituteSecurity.CardNumber,
+                    IdentityId = saved.SubstituteSecurity.IdentityId,
+                },
+                ReplacementStartDate = saved.ReplacementStartDate,
+                ReplacementEndDate = saved.ReplacementEndDate,
+                Reason = saved.Reason
+            };
+        }
+
+        public async Task RemoveShiftReplacementAsync(Guid id)
+        {
+            var entity = await _repository.GetShiftReplacementByIdAsync(id);
+            if (entity == null)
+                throw new NotFoundException($"PatrolShiftReplacement {id} not found");
+
+            // Prevent deletion if replacement date has started
+            if (DateTime.UtcNow.Date >= entity.ReplacementStartDate.Date)
+            {
+                throw new BusinessException($"Cannot delete shift replacement because the replacement date has already started or passed.");
+            }
+
+            await _repository.RemoveShiftReplacementAsync(entity);
+
+            _audit.Deleted(
+                "Shift Replacement",
+                id,
+                "Deleted shift replacement",
+                new { entity.PatrolAssignmentId }
+            );
+        }
+
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305015112_AddPatrolShiftReplacement")]
+    partial class AddPatrolShiftReplacement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3363,14 +3366,6 @@ namespace Repositories.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("patrol_route_id");
 
-                    b.Property<Guid?>("SecurityHead1Id")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("security_head_1");
-
-                    b.Property<Guid?>("SecurityHead2Id")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("security_head_2");
-
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("start_date");
@@ -3401,10 +3396,6 @@ namespace Repositories.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("PatrolRouteId");
-
-                    b.HasIndex("SecurityHead1Id");
-
-                    b.HasIndex("SecurityHead2Id");
 
                     b.HasIndex("TimeGroupId");
 
@@ -3720,14 +3711,6 @@ namespace Repositories.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("left_at");
 
-                    b.Property<int?>("MaxDwellTime")
-                        .HasColumnType("int")
-                        .HasColumnName("max_dwell_time");
-
-                    b.Property<int?>("MinDwellTime")
-                        .HasColumnType("int")
-                        .HasColumnName("min_dwell_time");
-
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("notes");
@@ -3855,14 +3838,6 @@ namespace Repositories.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<int?>("MaxDwellTime")
-                        .HasColumnType("int")
-                        .HasColumnName("max_dwell_time");
-
-                    b.Property<int?>("MinDwellTime")
-                        .HasColumnType("int")
-                        .HasColumnName("min_dwell_time");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int")
@@ -6130,14 +6105,6 @@ namespace Repositories.Migrations
                         .HasForeignKey("PatrolRouteId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead1")
-                        .WithMany()
-                        .HasForeignKey("SecurityHead1Id");
-
-                    b.HasOne("Entities.Models.MstSecurity", "SecurityHead2")
-                        .WithMany()
-                        .HasForeignKey("SecurityHead2Id");
-
                     b.HasOne("Entities.Models.TimeGroup", "TimeGroup")
                         .WithMany("PatrolAssignments")
                         .HasForeignKey("TimeGroupId")
@@ -6146,10 +6113,6 @@ namespace Repositories.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("PatrolRoute");
-
-                    b.Navigation("SecurityHead1");
-
-                    b.Navigation("SecurityHead2");
 
                     b.Navigation("TimeGroup");
                 });

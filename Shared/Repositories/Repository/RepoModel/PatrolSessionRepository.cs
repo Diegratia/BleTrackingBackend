@@ -64,6 +64,7 @@ namespace Repositories.Repository
                 .Include(x => x.PatrolAssignmentSecurities)
                 .Include(x => x.TimeGroup)
                     .ThenInclude(tg => tg.TimeBlocks)
+                .Include(x => x.PatrolShiftReplacements)
             .FirstOrDefaultAsync(x => x.Id == id);
             return query;
         }
@@ -180,9 +181,14 @@ namespace Repositories.Repository
                         PatrolAreaId = c.PatrolAreaId,
                         AreaNameSnap = c.AreaNameSnap,
                         OrderIndex = c.OrderIndex,
+                        CheckpointStatus = c.CheckpointStatus,
                         ArrivedAt = c.ArrivedAt,
                         LeftAt = c.LeftAt,
-                        DistanceFromPrevMeters = c.DistanceFromPrevMeters
+                        ClearedAt = c.ClearedAt,
+                        MinDwellTime = c.MinDwellTime,
+                        MaxDwellTime = c.MaxDwellTime,
+                        DistanceFromPrevMeters = c.DistanceFromPrevMeters,
+                        Notes = c.Notes
                     }).ToList()
             });
             return projected;

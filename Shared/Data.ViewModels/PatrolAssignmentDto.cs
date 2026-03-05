@@ -22,6 +22,8 @@ namespace Data.ViewModels
         public int? MinDwellTime { get; set; }
         public int? MaxDwellTime { get; set; }
         public List<Guid> SecurityIds { get; set; } = new();
+        public Guid? SecurityHead1Id { get; set; }
+        public Guid? SecurityHead2Id { get; set; }
     }
 
     public class PatrolAssignmentUpdateDto
@@ -40,5 +42,7 @@ namespace Data.ViewModels
         public int? MinDwellTime { get; set; }
         public int? MaxDwellTime { get; set; }
         public List<Guid?> SecurityIds { get; set; } = new();
+        public Guid? SecurityHead1Id { get; set; }
+        public Guid? SecurityHead2Id { get; set; }
     }
 }

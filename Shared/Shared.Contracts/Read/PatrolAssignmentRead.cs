@@ -19,6 +19,9 @@ namespace Shared.Contracts.Read
         public PatrolRouteLookUpRead? PatrolRoute { get; set; }
         public AssignmentTimeGroupRead? TimeGroup { get; set; }
         public List<SecurityListRead>? Securities { get; set; } = new();
+        public List<PatrolShiftReplacementRead>? ShiftReplacements { get; set; } = new();
+        public SecurityListRead? SecurityHead1 { get; set; }
+        public SecurityListRead? SecurityHead2 { get; set; }
     }
         public class PatrolAssignmentLookUpRead
         {

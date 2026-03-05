@@ -122,10 +122,18 @@ namespace Repositories.Repository
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
+                var today = DateTime.UtcNow.Date;
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
                         pas.Security != null &&
                         pas.Security.Email == userEmail
+                    ) ||
+                    pa.PatrolShiftReplacements.Any(psr =>
+                        psr.SubstituteSecurity != null &&
+                        psr.SubstituteSecurity.Email == userEmail &&
+                        psr.ReplacementStartDate.Date <= today &&
+                        psr.ReplacementEndDate.Date >= today &&
+                        psr.Status != 0
                     )
                 );
             }
@@ -164,9 +172,17 @@ namespace Repositories.Repository
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
+                var today = DateTime.UtcNow.Date;
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
                         pas.Security.Email == userEmail
+                    ) ||
+                    pa.PatrolShiftReplacements.Any(psr =>
+                        psr.SubstituteSecurity != null &&
+                        psr.SubstituteSecurity.Email == userEmail &&
+                        psr.ReplacementStartDate.Date <= today &&
+                        psr.ReplacementEndDate.Date >= today &&
+                        psr.Status != 0
                     )
                 );
             }
@@ -265,8 +281,65 @@ namespace Repositories.Repository
                         DepartmentName = x.Security.Department.Name,
                         DistrictName = x.Security.District.Name
                     })
-                    .ToList()
+                    .ToList(),
+                ShiftReplacements = pa.PatrolShiftReplacements
+                    .Select(r => new PatrolShiftReplacementRead
+                    {
+                        PatrolAssignmentId = r.PatrolAssignmentId,
+                        OriginalSecurity = r.OriginalSecurity == null ? null : new SecurityListRead
+                        {
+                            Id = r.OriginalSecurity.Id,
+                            Name = r.OriginalSecurity.Name,
+                            CardNumber = r.OriginalSecurity.CardNumber,
+                            IdentityId = r.OriginalSecurity.IdentityId,
+                        },
+                        SubstituteSecurity = r.SubstituteSecurity == null ? null : new SecurityListRead
+                        {
+                            Id = r.SubstituteSecurity.Id,
+                            Name = r.SubstituteSecurity.Name,
+                            CardNumber = r.SubstituteSecurity.CardNumber,
+                            IdentityId = r.SubstituteSecurity.IdentityId,
+                        },
+                        ReplacementStartDate = r.ReplacementStartDate,
+                        ReplacementEndDate = r.ReplacementEndDate,
+                        Reason = r.Reason
+                    }).ToList(),
+                SecurityHead1 = pa.SecurityHead1 == null ? null : new SecurityListRead
+                {
+                    Id = pa.SecurityHead1.Id,
+                    Name = pa.SecurityHead1.Name,
+                    CardNumber = pa.SecurityHead1.CardNumber,
+                    IdentityId = pa.SecurityHead1.IdentityId
+                },
+                SecurityHead2 = pa.SecurityHead2 == null ? null : new SecurityListRead
+                {
+                    Id = pa.SecurityHead2.Id,
+                    Name = pa.SecurityHead2.Name,
+                    CardNumber = pa.SecurityHead2.CardNumber,
+                    IdentityId = pa.SecurityHead2.IdentityId
+                }
             });
+        }
+
+        public async Task<PatrolShiftReplacement> AddShiftReplacementAsync(PatrolShiftReplacement entity)
+        {
+            await _context.PatrolShiftReplacements.AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<PatrolShiftReplacement?> GetShiftReplacementByIdAsync(Guid id)
+        {
+            return await _context.PatrolShiftReplacements
+                .Include(r => r.OriginalSecurity)
+                .Include(r => r.SubstituteSecurity)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task RemoveShiftReplacementAsync(PatrolShiftReplacement entity)
+        {
+            _context.PatrolShiftReplacements.Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
 
@@ -330,6 +403,19 @@ namespace Repositories.Repository
                 .AnyAsync(f => f.Id == timeGroupId && f.Status != 0 && f.ScheduleType == ScheduleType.Patrol);
         }
 
+        public async Task<bool> ValidateSecurityHeadsAsync(IEnumerable<Guid> securityIds, Guid head1Id, Guid head2Id)
+        {
+            var validHeads = await _context.MstSecurities
+                .Where(x => securityIds.Contains(x.Id) && x.Status != 0)
+                .SelectMany(x => new[] { x.SecurityHead1Id, x.SecurityHead2Id })
+                .Where(h => h.HasValue)
+                .Select(h => h!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            return validHeads.Contains(head1Id) && validHeads.Contains(head2Id);
+        }
+
         public async Task RemoveAssignmentSecurities(Guid patrolAssignmentId)
         {
             var rows = _context.PatrolAssignmentSecurities
@@ -380,6 +466,12 @@ namespace Repositories.Repository
                 new[] { timeGroupId },
                 applicationId
             );
+        }
+
+        public async Task<bool> HasActiveSessionsAsync(Guid assignmentId)
+        {
+            return await _context.PatrolSessions
+                .AnyAsync(s => s.PatrolAssignmentId == assignmentId && s.EndedAt == null && s.Status != 0);
         }
 
         /// <summary>

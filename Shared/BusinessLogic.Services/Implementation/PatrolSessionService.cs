@@ -94,6 +94,35 @@ namespace BusinessLogic.Services.Implementation
 
             var nowUtc = DateTime.UtcNow;
 
+            // 0. Validate Security Assignment Access (Original or Substitute)
+            bool isOriginalAssignee = assignment.PatrolAssignmentSecurities != null && 
+                                      assignment.PatrolAssignmentSecurities.Any(s => s.SecurityId == security.Id);
+            
+            bool isActiveSubstitute = assignment.PatrolShiftReplacements != null &&
+                                      assignment.PatrolShiftReplacements.Any(r => 
+                                          r.SubstituteSecurityId == security.Id && 
+                                          nowUtc.Date >= r.ReplacementStartDate.Date && 
+                                          nowUtc.Date <= r.ReplacementEndDate.Date &&
+                                          r.Status != 0); // Assuming Status != 0 for active
+
+            if (!isOriginalAssignee && !isActiveSubstitute)
+            {
+                throw new UnauthorizedAccessException("You are not assigned to this patrol assignment today.");
+            }
+
+            // Also: if Original Assignee is substituted today, they shouldn't be allowed
+            bool isCurrentlyReplaced = assignment.PatrolShiftReplacements != null &&
+                                       assignment.PatrolShiftReplacements.Any(r => 
+                                           r.OriginalSecurityId == security.Id &&
+                                           nowUtc.Date >= r.ReplacementStartDate.Date && 
+                                           nowUtc.Date <= r.ReplacementEndDate.Date &&
+                                           r.Status != 0);
+
+            if (isOriginalAssignee && isCurrentlyReplaced)
+            {
+                throw new BusinessException("You have been substituted for this assignment today. You cannot start the patrol.");
+            }
+
             // 1. Validate Date Range (StartDate and EndDate)
             if (assignment.StartDate.HasValue && nowUtc < assignment.StartDate.Value)
                 throw new BusinessException($"Patrol Assignment has not started yet. Starts at: {assignment.StartDate.Value:yyyy-MM-dd HH:mm} UTC");
@@ -200,6 +229,8 @@ namespace BusinessLogic.Services.Implementation
                         AreaNameSnap = area.PatrolArea?.Name,
                         OrderIndex = globalOrderIndex++,
                         DistanceFromPrevMeters = area.EstimatedDistance,
+                        MinDwellTime = area.MinDwellTime,
+                        MaxDwellTime = area.MaxDwellTime,
                         CheckpointStatus = PatrolCheckpointStatus.AutoDetected,
                         ArrivedAt = null,
                         LeftAt = null,
@@ -293,8 +324,8 @@ namespace BusinessLogic.Services.Implementation
         // Only enforce if the assignment is configured with duration requirement
         if (log.PatrolSession?.PatrolAssignment?.DurationType == PatrolDurationType.WithDuration)
         {
-            // Use MinDwellTime from Assignment if configured, otherwise default to 30 seconds
-            int minimumDwellSeconds = log.PatrolSession.PatrolAssignment.MinDwellTime ?? 30;
+            // Use MinDwellTime from the Checkpoint Log (which was copied from the Route Area), otherwise default to 30 seconds
+            int minimumDwellSeconds = log.MinDwellTime ?? 30;
             
             if (log.ArrivedAt.HasValue && (DateTime.UtcNow - log.ArrivedAt.Value).TotalSeconds < minimumDwellSeconds)
             {

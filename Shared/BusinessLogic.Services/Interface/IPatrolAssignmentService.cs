@@ -20,6 +20,9 @@ namespace BusinessLogic.Services.Interface
             PatrolAssignmentFilter filter
         );
         Task<IEnumerable<PatrolAssignmentLookUpRead>> GetAllLookUpAsync();
+        Task<PatrolShiftReplacementRead> AddShiftReplacementAsync(PatrolShiftReplacementCreateDto createDto);
+        Task RemoveShiftReplacementAsync(Guid id);
+
 
     }
 }
