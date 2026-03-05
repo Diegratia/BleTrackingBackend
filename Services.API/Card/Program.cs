@@ -85,11 +85,8 @@ builder.Services.AddScoped<CardAccessRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<CardSwapTransactionRepository>();
 
-var port = Environment.GetEnvironmentVariable("CARD_PORT") ??
-           builder.Configuration["Ports:CardService"] ?? "5026";
-var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-var host = env == "Production" ? "0.0.0.0" : "localhost";
-builder.WebHost.UseUrls($"http://{host}:{port}");
+
+builder.UseDefaultHostExtension("CARD_PORT", "5026");
 
 var app = builder.Build();
 

@@ -21,7 +21,7 @@ namespace BusinessLogic.Services.Extension.RootExtension
             var port = envPort ?? configPort ?? defaultPort;
 
             var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var host = envName == "Production" ? "0.0.0.0" : "localhost";
+            var host = envName == "Development" ? "localhost" : "0.0.0.0";
 
             builder.WebHost.UseUrls($"http://{host}:{port}");
 

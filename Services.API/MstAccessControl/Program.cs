@@ -13,6 +13,7 @@ using Repositories.Repository;
 using Entities.Models;
 using Repositories.Seeding;
 using DotNetEnv;
+using BusinessLogic.Services.Extension.RootExtension;
 
 try
 {
@@ -158,11 +159,9 @@ builder.Services.AddScoped<IMstAccessControlService, MstAccessControlService>();
 
 builder.Services.AddScoped<MstAccessControlRepository>();
 
-var port = Environment.GetEnvironmentVariable("MST_ACCESS_CONTROL_PORT") ?? "5006" ??
-           builder.Configuration["Ports:MstAccessControlService"];
-var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-var host = env == "Production" ? "0.0.0.0" : "localhost";
-builder.WebHost.UseUrls($"http://{host}:{port}");
+
+builder.UseDefaultHostExtension("MST_ACCESS_CONTROL_PORT", "5006");
+
 
     var app = builder.Build();
 

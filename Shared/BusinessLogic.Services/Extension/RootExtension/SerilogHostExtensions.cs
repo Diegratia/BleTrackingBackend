@@ -17,7 +17,8 @@ namespace BusinessLogic.Services.Extension.RootExtension
         {
             var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-            var minimumLevel = envName.Equals("Development", StringComparison.OrdinalIgnoreCase)
+            var minimumLevel = (envName.Equals("Development", StringComparison.OrdinalIgnoreCase) ||
+                                envName.Equals("Staging", StringComparison.OrdinalIgnoreCase))
                 ? LogEventLevel.Information
                 : LogEventLevel.Warning;
 

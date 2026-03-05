@@ -108,7 +108,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     statusCode = 400;
                     var dbMessage = "Database error";
 
-                    if (_env.IsDevelopment())
+                    if (!_env.IsProduction())
                     {
                         dbMessage =
                             ex.InnerException?.InnerException?.Message ??
@@ -116,7 +116,7 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                             ex.Message;
                     }
 
-                    result = ApiResponse.BadRequest(dbMessage ?? "Database error"); 
+                    result = ApiResponse.BadRequest(dbMessage ?? "Database error");
                     _logger.LogError(ex, "Database error");
                     break;
 
@@ -124,9 +124,9 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
                     statusCode = 400;
                     var jsonMessage = "Invalid format or unrecognized filter value";
 
-                    if (_env.IsProduction())
+                    if (!_env.IsProduction())
                     {
-                        jsonMessage = ex.Message; // Detail error muncul saat development
+                        jsonMessage = ex.Message; // Detail error muncul saat non-production (development/staging)
                     }
 
                     result = ApiResponse.BadRequest(jsonMessage);
@@ -135,10 +135,10 @@ namespace Data.ViewModels.Shared.ExceptionHelper  // ✅ Pastikan namespace sama
 
                     default:
                         statusCode = 500;
-                        var message = _env.IsProduction() ? exception.Message : "Internal server error";
-                        if (_env.IsProduction())
+                        var message = "Internal server error";
+                        if (!_env.IsProduction())
                             {
-                                message = exception.Message + " | Location: " + exception.StackTrace;; // Detail error muncul saat development
+                                message = exception.Message + " | Location: " + exception.StackTrace; // Detail error muncul saat non-production (development/staging)
                             }
                         result = ApiResponse.InternalError(message);  // ✅ Now available
                         _logger.LogError(exception, "Unhandled exception");
