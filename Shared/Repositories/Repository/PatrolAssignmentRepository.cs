@@ -363,6 +363,12 @@ namespace Repositories.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateShiftReplacementAsync(PatrolShiftReplacement entity)
+        {
+            _context.PatrolShiftReplacements.Update(entity);
+            await _context.SaveChangesAsync();
+        }
+
 
 
         //Helpers
@@ -487,6 +493,12 @@ namespace Repositories.Repository
                 new[] { timeGroupId },
                 applicationId
             );
+        }
+
+        public async Task<bool> IsSecurityAssignedToAssignmentAsync(Guid assignmentId, Guid securityId)
+        {
+            return await _context.PatrolAssignmentSecurities
+                .AnyAsync(pas => pas.PatrolAssignmentId == assignmentId && pas.SecurityId == securityId && pas.Status != 0);
         }
 
         public async Task<bool> HasActiveSessionsAsync(Guid assignmentId)

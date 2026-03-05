@@ -133,5 +133,22 @@ namespace Web.API.Controllers.Controllers
             await _PatrolAssignmentService.RemoveShiftReplacementAsync(id);
             return StatusCode(204, ApiResponse.NoContent("Shift Replacement deleted successfully"));
         }
+
+        // PUT: api/patrol-assignment/replacement/{id}
+        [HttpPut("replacement/{id}")]
+        public async Task<IActionResult> UpdateShiftReplacement(Guid id, [FromBody] PatrolShiftReplacementUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(ApiResponse.BadRequest("Validation failed", errors));
+            }
+
+            var replacement = await _PatrolAssignmentService.UpdateShiftReplacementAsync(id, dto);
+            return Ok(ApiResponse.Success("Shift Replacement updated successfully", replacement));
+        }
     }
 }

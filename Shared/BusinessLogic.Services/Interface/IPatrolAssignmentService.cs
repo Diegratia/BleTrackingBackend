@@ -21,6 +21,7 @@ namespace BusinessLogic.Services.Interface
         );
         Task<IEnumerable<PatrolAssignmentLookUpRead>> GetAllLookUpAsync();
         Task<PatrolShiftReplacementRead> AddShiftReplacementAsync(PatrolShiftReplacementCreateDto createDto);
+        Task<PatrolShiftReplacementRead> UpdateShiftReplacementAsync(Guid id, PatrolShiftReplacementUpdateDto updateDto);
         Task RemoveShiftReplacementAsync(Guid id);
 
 

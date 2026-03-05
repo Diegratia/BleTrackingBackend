@@ -368,8 +368,13 @@ namespace BusinessLogic.Services.Implementation
             if (assignment == null)
                 throw new NotFoundException($"PatrolAssignment {createDto.PatrolAssignmentId} not found");
 
-            // TODO: Ensure OriginalSecurity is assigned to this assignment
-            // TODO: Validate dates, etc.
+            await ValidateShiftReplacementAsync(
+                assignment, 
+                createDto.OriginalSecurityId, 
+                createDto.SubstituteSecurityId, 
+                createDto.ReplacementStartDate, 
+                createDto.ReplacementEndDate
+            );
 
             var entity = new PatrolShiftReplacement
             {
@@ -441,6 +446,115 @@ namespace BusinessLogic.Services.Implementation
                 "Deleted shift replacement",
                 new { entity.PatrolAssignmentId }
             );
+        }
+
+        public async Task<PatrolShiftReplacementRead> UpdateShiftReplacementAsync(Guid id, PatrolShiftReplacementUpdateDto dto)
+        {
+            var entity = await _repository.GetShiftReplacementByIdAsync(id);
+            if (entity == null)
+                throw new NotFoundException($"PatrolShiftReplacement {id} not found");
+
+            // Prevent update if replacement date has started
+            if (DateTime.UtcNow.Date >= entity.ReplacementStartDate.Date)
+            {
+                throw new BusinessException($"Cannot update shift replacement because the replacement date has already started or passed.");
+            }
+
+            var assignment = await _repository.GetByIdWithTrackingAsync(entity.PatrolAssignmentId);
+            
+            var originalSecurityId = dto.OriginalSecurityId ?? entity.OriginalSecurityId;
+            var substituteSecurityId = dto.SubstituteSecurityId ?? entity.SubstituteSecurityId;
+            var startDate = dto.ReplacementStartDate ?? entity.ReplacementStartDate;
+            var endDate = dto.ReplacementEndDate ?? entity.ReplacementEndDate;
+
+            await ValidateShiftReplacementAsync(
+                assignment!, 
+                originalSecurityId, 
+                substituteSecurityId, 
+                startDate, 
+                endDate, 
+                id
+            );
+
+            _mapper.Map(dto, entity);
+            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedBy = UsernameFormToken;
+
+            await _repository.UpdateShiftReplacementAsync(entity);
+
+            _audit.Updated(
+                "Shift Replacement",
+                id,
+                "Updated shift replacement",
+                new { entity.PatrolAssignmentId }
+            );
+
+            // Fetch to return DTO properly
+            var saved = await _repository.GetShiftReplacementByIdAsync(entity.Id);
+            return new PatrolShiftReplacementRead
+            {
+                Id = saved!.Id,
+                PatrolAssignmentId = saved.PatrolAssignmentId,
+                OriginalSecurity = saved.OriginalSecurity == null ? null : new SecurityListRead
+                {
+                    Id = saved.OriginalSecurity.Id,
+                    Name = saved.OriginalSecurity.Name,
+                    CardNumber = saved.OriginalSecurity.CardNumber,
+                    IdentityId = saved.OriginalSecurity.IdentityId,
+                },
+                SubstituteSecurity = saved.SubstituteSecurity == null ? null : new SecurityListRead
+                {
+                    Id = saved.SubstituteSecurity.Id,
+                    Name = saved.SubstituteSecurity.Name,
+                    CardNumber = saved.SubstituteSecurity.CardNumber,
+                    IdentityId = saved.SubstituteSecurity.IdentityId,
+                },
+                ReplacementStartDate = saved.ReplacementStartDate,
+                ReplacementEndDate = saved.ReplacementEndDate,
+                Reason = saved.Reason
+            };
+        }
+
+        private async Task ValidateShiftReplacementAsync(
+            PatrolAssignment assignment, 
+            Guid originalSecurityId, 
+            Guid substituteSecurityId, 
+            DateTime startDate, 
+            DateTime endDate,
+            Guid? excludeReplacementId = null)
+        {
+            // 1. Ensure OriginalSecurity is assigned to this assignment
+            var isAssigned = await _repository.IsSecurityAssignedToAssignmentAsync(assignment.Id, originalSecurityId);
+            if (!isAssigned)
+                throw new BusinessException("Original Security is not assigned to this patrol assignment.");
+
+            // 2. Validate dates are within assignment range
+            if ((assignment.StartDate.HasValue && startDate.Date < assignment.StartDate.Value.Date) || 
+                (assignment.EndDate.HasValue && endDate.Date > assignment.EndDate.Value.Date))
+            {
+                var startDateStr = assignment.StartDate?.ToString("yyyy-MM-dd") ?? "N/A";
+                var endDateStr = assignment.EndDate.HasValue ? assignment.EndDate.Value.ToString("yyyy-MM-dd") : "Open Ended";
+                throw new BusinessException($"Replacement dates must be within assignment date range ({startDateStr} to {endDateStr}).");
+            }
+
+            // 3. Check for schedule overlap for Substitute Security
+            if (assignment.TimeGroupId.HasValue)
+            {
+                var conflictingIds = await _repository.HasScheduleOverlapAsync(
+                    substituteSecurityId,
+                    assignment.TimeGroupId.Value,
+                    startDate,
+                    endDate,
+                    excludeAssignmentId: null // We check against OTHER assignments
+                );
+
+                if (conflictingIds.Any())
+                {
+                    throw new BusinessException(
+                        $"Substitute Security already has conflicting patrol assignments " +
+                        $"(IDs: {string.Join(", ", conflictingIds)}) during the requested replacement period.");
+                }
+            }
         }
 
     }
