@@ -104,6 +104,12 @@ namespace BusinessLogic.Services.Implementation
             {
                 var route = await _repo.GetByIdWithTrackingAsync(id)
                     ?? throw new NotFoundException($"PatrolRoute with id {id} not found");
+
+                if (await _repo.HasActiveSessionsAsync(id))
+                {
+                    throw new BusinessException($"Cannot update Patrol Route {id} because there are active patrol sessions using it.");
+                }
+
                 // =====================================================
                 // 🔥 REPLACE ALL AREAS
                 // =====================================================
@@ -179,6 +185,11 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repo.GetByIdWithTrackingAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolRoute with id {id} not found");
+
+            if (await _repo.HasActiveSessionsAsync(id))
+            {
+                throw new BusinessException($"Cannot delete Patrol Route {id} because there are active patrol sessions using it.");
+            }
 
             await _repo.ExecuteInTransactionAsync(async () =>
             {

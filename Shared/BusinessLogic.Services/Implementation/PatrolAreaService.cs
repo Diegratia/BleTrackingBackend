@@ -138,6 +138,12 @@ namespace BusinessLogic.Services.Implementation
             var patrolArea = await _repository.GetByIdEntityAsync(id);
             if (patrolArea == null)
                 throw new NotFoundException($"PatrolArea with id {id} not found");
+
+            if (await _repository.IsAreaInActiveSessionAsync(id))
+            {
+                throw new BusinessException($"Cannot delete Patrol Area {id} because it is currently being used in an active patrol session.");
+            }
+
             // var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
             patrolArea.Status = 0;
             patrolArea.IsActive = 0;

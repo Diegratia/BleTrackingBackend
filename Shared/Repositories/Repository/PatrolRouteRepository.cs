@@ -240,5 +240,13 @@ namespace Repositories.Repository
                 x => new PatrolArea { Id = x.Id, AreaShape = x.AreaShape }
             );
         }
+
+        public async Task<bool> HasActiveSessionsAsync(Guid routeId)
+        {
+            return await _context.PatrolSessions
+                .AnyAsync(s => s.PatrolAssignment.PatrolRouteId == routeId 
+                               && s.EndedAt == null 
+                               && s.Status != 0);
+        }
     }
 }

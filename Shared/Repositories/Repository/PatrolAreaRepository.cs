@@ -248,5 +248,14 @@ namespace Repositories.Repository
                 ApplicationId = t.ApplicationId
             });
         }
+
+        public async Task<bool> IsAreaInActiveSessionAsync(Guid areaId)
+        {
+            return await _context.PatrolCheckpointLogs
+                .AnyAsync(l => l.PatrolAreaId == areaId 
+                               && l.PatrolSession.EndedAt == null 
+                               && l.PatrolSession.Status != 0 
+                               && l.Status != 0);
+        }
     }
 }
