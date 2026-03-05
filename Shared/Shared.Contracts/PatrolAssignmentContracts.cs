@@ -26,5 +26,9 @@ namespace Shared.Contracts
         // ↕ Sorting
         public string? SortColumn { get; set; }
         public string? SortDir { get; set; }
+        public PatrolCycleType? CycleType { get; set; }
+        public PatrolDurationType? DurationType { get; set; }
+        public PatrolStartType? StartType { get; set; }
+        public PatrolApprovalType? ApprovalType { get; set; }
     }
 }

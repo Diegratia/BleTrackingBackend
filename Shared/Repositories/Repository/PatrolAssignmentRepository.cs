@@ -212,6 +212,18 @@ namespace Repositories.Repository
             if (filter.PatrolRouteId.HasValue)
                 query = query.Where(x => x.PatrolRouteId == filter.PatrolRouteId);
 
+            if(filter.CycleType.HasValue)
+                query = query.Where(x => x.CycleType == filter.CycleType);
+            
+            if(filter.StartType.HasValue)
+                query = query.Where(x => x.StartType == filter.StartType);
+
+            if(filter.DurationType.HasValue)
+                query = query.Where(x => x.DurationType == filter.DurationType);
+                
+            if(filter.ApprovalType.HasValue)
+                query = query.Where(x => x.ApprovalType == filter.ApprovalType);
+
             if (filter.TimeGroupId.HasValue)
                 query = query.Where(x => x.TimeGroupId == filter.TimeGroupId);
 
