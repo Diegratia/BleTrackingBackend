@@ -222,11 +222,24 @@ namespace BusinessLogic.Services.Implementation
                 // Pengecekan Arah Jalan (Direction): 
                 // Trip Ganjil (1, 3, 5) = Jalan Maju (Ascending: A-B-C)
                 // Trip Genap  (2, 4, 6) = Jalan Mundur (Descending / Reversed: C-B-A)
+                // Pengecekan Arah Jalan (Direction): 
+                // Trip Ganjil (1, 3, 5) = Jalan Maju (Ascending: A-B-C)
+                // Trip Genap  (2, 4, 6) = Jalan Mundur (Descending / Reversed: C-B-A)
+                // Keduanya (Half/Full) tetap bolak-balik arahnya
                 bool isReturnTrip = (currentTrip % 2 == 0);
                 
                 var orderedAreas = isReturnTrip 
-                    ? routeAreas.OrderByDescending(x => x.OrderIndex) 
-                    : routeAreas.OrderBy(x => x.OrderIndex);
+                    ? routeAreas.OrderByDescending(x => x.OrderIndex).ToList() 
+                    : routeAreas.OrderBy(x => x.OrderIndex).ToList();
+
+                // Perkecualian: Untuk semua tipe Cycle, jika bukan trip pertama (Trip 2, 3, dst), 
+                // kita skip titik pertama rute ini karena merupakan titik "Turnaround" (ujung) 
+                // yang sudah di-cover oleh titik akhir trip sebelumnya.
+                // Hasilnya: A-B-C (Trip 1) -> B-A (Trip 2) -> B-C (Trip 3), dst. (Tanpa submit ganda di ujung)
+                if (currentTrip > 1 && orderedAreas.Any())
+                {
+                    orderedAreas = orderedAreas.Skip(1).ToList();
+                }
 
                 foreach (var area in orderedAreas)
                 {
