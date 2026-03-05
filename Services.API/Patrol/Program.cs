@@ -79,6 +79,7 @@ builder.Services.AddScoped<IPatrolCaseService, PatrolCaseService>();
 builder.Services.AddScoped<IPatrolSessionService, PatrolSessionService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPatrolValidationService, PatrolValidationService>();
 builder.Services.AddScoped<IPatrolSessionAnalyticsService, PatrolSessionAnalyticsService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();

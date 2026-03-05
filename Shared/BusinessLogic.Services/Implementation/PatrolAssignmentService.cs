@@ -18,6 +18,7 @@ using DataView;
 using BusinessLogic.Services.Extension;
 using Shared.Contracts;
 using Shared.Contracts.Read;
+using BusinessLogic.Services.ServiceValidators;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -27,19 +28,22 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
+        private readonly IPatrolValidationService _validationService;
 
 
         public PatrolAssignmentService(
             PatrolAssignmentRepository repository,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IAuditEmitter audit
+            IAuditEmitter audit,
+            IPatrolValidationService validationService
             ) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _audit = audit;
+            _validationService = validationService;
         }
 
         public async Task<PatrolAssignmentRead?> GetByIdAsync(Guid id)
@@ -58,82 +62,13 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolAssignmentRead> CreateAsync(PatrolAssignmentCreateDto createDto)
         {
-
-            if (!await _repository.PatrolRouteExistsAsync(createDto.PatrolRouteId!.Value))
-                throw new NotFoundException($"PatrolRoute with id {createDto.PatrolRouteId} not found");
-            if (!await _repository.TimeGroupExistsAsync(createDto.TimeGroupId!.Value))
-                throw new NotFoundException($"TimeGroup with id {createDto.TimeGroupId} not found");
-            if (!await _repository.CheckTimeGroupPatrolType(createDto.TimeGroupId!.Value))
-                throw new NotFoundException($"TimeGroup should be Patrol Type");
-
-            // Check for schedule overlap for each security
-            if (createDto.TimeGroupId.HasValue && createDto.SecurityIds?.Any() == true)
-            {
-                foreach (var securityId in createDto.SecurityIds)
-                {
-                    var conflictingIds = await _repository.HasScheduleOverlapAsync(
-                        securityId,
-                        createDto.TimeGroupId.Value,
-                        createDto.StartDate,
-                        createDto.EndDate,
-                        excludeAssignmentId: null  // New assignment, no exclude
-                    );
-
-                    if (conflictingIds.Any())
-                    {
-                        throw new BusinessException(
-                            $"Security with ID '{securityId}' already has conflicting patrol assignments " +
-                            $"(IDs: {string.Join(", ", conflictingIds)}). Please adjust the schedule.");
-                    }
-                }
-            }
-
-            var invalidSecurityIds =
-            await _repository.GetInvalidSecurityIdsByApplicationAsync(createDto.SecurityIds, AppId);
-            if (invalidSecurityIds.Any())
-            {
-                throw new UnauthorizedException(
-                    $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
-                );
-            }
-            var invalidRouteId =
-            await _repository.CheckInvalidRouteOwnershipAsync(createDto.PatrolRouteId.Value, AppId);
-            if (invalidRouteId.Any())
-            {
-                throw new UnauthorizedException(
-                    $"Some PatrolRouteId do not belong to this Application: {string.Join(", ", invalidRouteId)}"
-                );
-            }
-            var invalidTimeGroupIdd =
-            await _repository.CheckInvalidTGOwnershipAsync(createDto.TimeGroupId.Value, AppId);
-            if (invalidTimeGroupIdd.Any())
-            {
-                throw new UnauthorizedException(
-                    $"Some TimeGroupId do not belong to this Application: {string.Join(", ", invalidTimeGroupIdd)}"
-                );
-            }
-
-
-            var missingSecurityIds = await _repository
-                .GetMissingSecurityIdsAsync(createDto.SecurityIds ?? new List<Guid>());
-
-            if (missingSecurityIds.Count > 0)
-            {
-                throw new NotFoundException(
-                    $"Security not found: {string.Join(", ", missingSecurityIds)}"
-                );
-            }
-
+            await _validationService.ValidateAssignmentCreateAsync(createDto, AppId);
 
             var patrolAssignment = _mapper.Map<PatrolAssignment>(createDto);
             
             // Validate and assign Security Heads
             if (createDto.SecurityHead1Id.HasValue && createDto.SecurityHead2Id.HasValue)
-            {
-                // Optional: Validate if the selected heads are valid for the selected securities
-                // var isValidHeads = await _repository.ValidateSecurityHeadsAsync(createDto.SecurityIds, createDto.SecurityHead1Id.Value, createDto.SecurityHead2Id.Value);
-                // if (!isValidHeads) throw new BusinessException("Selected Security Heads are not valid for the selected Security personnel.");
-                
+            {   
                 patrolAssignment.SecurityHead1Id = createDto.SecurityHead1Id.Value;
                 patrolAssignment.SecurityHead2Id = createDto.SecurityHead2Id.Value;
             }
@@ -174,94 +109,13 @@ namespace BusinessLogic.Services.Implementation
             var assignment = await _repository.GetByIdWithTrackingAsync(id)
                 ?? throw new NotFoundException($"PatrolAssignment {id} not found");
 
-            // ================= VALIDASI =================
-            
-            // PREVENT UPDATE IF THERE ARE ACTIVE SESSIONS
-            var hasActiveSessions = await _repository.HasActiveSessionsAsync(id);
-            if (hasActiveSessions)
-            {
-                throw new BusinessException($"Cannot update Patrol Assignment {id} because there are active patrol sessions running. Please complete or abort them first.");
-            }
+            await _validationService.ValidateAssignmentUpdateAsync(id, dto, AppId, assignment);
 
-            if (dto.PatrolRouteId.HasValue &&
-                !await _repository.PatrolRouteExistsAsync(dto.PatrolRouteId.Value))
-                throw new NotFoundException($"PatrolRoute not found");
-            if (dto.TimeGroupId.HasValue &&
-                !await _repository.TimeGroupExistsAsync(dto.TimeGroupId!.Value))
-                throw new NotFoundException($"TimeGroup with id {dto.TimeGroupId} not found");
-
-            // Check for schedule overlap when updating schedule or securities
             var newSecurityIds = dto.SecurityIds?
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value)
                 .Distinct()
                 .ToList() ?? new List<Guid>();
-
-            if ((dto.TimeGroupId.HasValue || dto.StartDate.HasValue || dto.EndDate.HasValue) &&
-                newSecurityIds.Any())
-            {
-                var timeGroupId = dto.TimeGroupId ?? assignment.TimeGroupId;
-                var startDate = dto.StartDate ?? assignment.StartDate;
-                var endDate = dto.EndDate ?? assignment.EndDate;
-
-                foreach (var securityId in newSecurityIds)
-                {
-                    var conflictingIds = await _repository.HasScheduleOverlapAsync(
-                        securityId,
-                        timeGroupId!.Value,
-                        startDate,
-                        endDate,
-                        excludeAssignmentId: id  // Exclude current assignment
-                    );
-
-                    if (conflictingIds.Any())
-                    {
-                        throw new BusinessException(
-                            $"Security with ID '{securityId}' already has conflicting patrol assignments " +
-                            $"(IDs: {string.Join(", ", conflictingIds)}). Please adjust the schedule.");
-                    }
-                }
-            }
-
-            if (dto.PatrolRouteId.HasValue)
-            {
-                var invalidRouteId =
-                    await _repository.CheckInvalidRouteOwnershipAsync(dto.PatrolRouteId.Value, AppId);
-                if (invalidRouteId.Any())
-                {
-                    throw new UnauthorizedException(
-                        $"Some PatrolRouteId do not belong to this Application: {string.Join(", ", invalidRouteId)}"
-                    );
-                }
-            }
-
-            if (dto.TimeGroupId.HasValue)
-            {
-                var invalidTimeGroupId =
-                    await _repository.CheckInvalidTGOwnershipAsync(dto.TimeGroupId.Value, AppId);
-                if (invalidTimeGroupId.Any())
-                {
-                    throw new UnauthorizedException(
-                        $"Some TimeGroupId do not belong to this Application: {string.Join(", ", invalidTimeGroupId)}"
-                    );
-                }
-            }
-
-            var missing = await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
-                await _repository.GetMissingSecurityIdsAsync(newSecurityIds);
-
-            if (missing.Count > 0)
-                throw new NotFoundException(
-                    $"Security not found: {string.Join(", ", missing)}");
-
-            var invalidSecurityIds =
-                await _repository.GetInvalidSecurityIdsByApplicationAsync(newSecurityIds, AppId);
-            if (invalidSecurityIds.Any())
-            {
-                throw new UnauthorizedException(
-                    $"Some SecurityIds do not belong to this Application: {string.Join(", ", invalidSecurityIds)}"
-                );
-            }
 
 
             // 1. Replace all child (SQL-style)
@@ -310,12 +164,7 @@ namespace BusinessLogic.Services.Implementation
             if (patrolAssignment == null)
                 throw new NotFoundException($"PatrolAssignment with id {id} not found");
 
-            // PREVENT DELETE IF THERE ARE ACTIVE SESSIONS
-            var hasActiveSessions = await _repository.HasActiveSessionsAsync(id);
-            if (hasActiveSessions)
-            {
-                throw new BusinessException($"Cannot delete Patrol Assignment {id} because there are active patrol sessions running. Please complete or abort them first.");
-            }
+            await _validationService.EnsureNoActiveSessionsAsync(id);
 
             await _repository.ExecuteInTransactionAsync(async () =>
             {
@@ -368,7 +217,7 @@ namespace BusinessLogic.Services.Implementation
             if (assignment == null)
                 throw new NotFoundException($"PatrolAssignment {createDto.PatrolAssignmentId} not found");
 
-            await ValidateShiftReplacementAsync(
+            await _validationService.ValidateShiftReplacementAsync(
                 assignment, 
                 createDto.OriginalSecurityId, 
                 createDto.SubstituteSecurityId, 
@@ -467,7 +316,7 @@ namespace BusinessLogic.Services.Implementation
             var startDate = dto.ReplacementStartDate ?? entity.ReplacementStartDate;
             var endDate = dto.ReplacementEndDate ?? entity.ReplacementEndDate;
 
-            await ValidateShiftReplacementAsync(
+            await _validationService.ValidateShiftReplacementAsync(
                 assignment!, 
                 originalSecurityId, 
                 substituteSecurityId, 
@@ -515,47 +364,6 @@ namespace BusinessLogic.Services.Implementation
             };
         }
 
-        private async Task ValidateShiftReplacementAsync(
-            PatrolAssignment assignment, 
-            Guid originalSecurityId, 
-            Guid substituteSecurityId, 
-            DateOnly startDate, 
-            DateOnly endDate,
-            Guid? excludeReplacementId = null)
-        {
-            // 1. Ensure OriginalSecurity is assigned to this assignment
-            var isAssigned = await _repository.IsSecurityAssignedToAssignmentAsync(assignment.Id, originalSecurityId);
-            if (!isAssigned)
-                throw new BusinessException("Original Security is not assigned to this patrol assignment.");
-
-            // 2. Validate dates are within assignment range
-            if ((assignment.StartDate.HasValue && startDate < assignment.StartDate.Value) || 
-                (assignment.EndDate.HasValue && endDate > assignment.EndDate.Value))
-            {
-                var startDateStr = assignment.StartDate?.ToString("yyyy-MM-dd") ?? "N/A";
-                var endDateStr = assignment.EndDate.HasValue ? assignment.EndDate.Value.ToString("yyyy-MM-dd") : "Open Ended";
-                throw new BusinessException($"Replacement dates must be within assignment date range ({startDateStr} to {endDateStr}).");
-            }
-
-            // 3. Check for schedule overlap for Substitute Security
-            if (assignment.TimeGroupId.HasValue)
-            {
-                var conflictingIds = await _repository.HasScheduleOverlapAsync(
-                    substituteSecurityId,
-                    assignment.TimeGroupId.Value,
-                    startDate,
-                    endDate,
-                    excludeAssignmentId: null // We check against OTHER assignments
-                );
-
-                if (conflictingIds.Any())
-                {
-                    throw new BusinessException(
-                        $"Substitute Security already has conflicting patrol assignments " +
-                        $"(IDs: {string.Join(", ", conflictingIds)}) during the requested replacement period.");
-                }
-            }
-        }
 
     }
 }
