@@ -181,6 +181,7 @@ namespace Repositories.Repository
                         PatrolAreaId = c.PatrolAreaId,
                         AreaNameSnap = c.AreaNameSnap,
                         OrderIndex = c.OrderIndex,
+                        CycleIndex = c.CycleIndex,
                         CheckpointStatus = c.CheckpointStatus,
                         ArrivedAt = c.ArrivedAt,
                         LeftAt = c.LeftAt,

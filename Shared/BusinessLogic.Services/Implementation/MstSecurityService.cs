@@ -65,9 +65,9 @@ namespace BusinessLogic.Services.Implementation
             return await _repository.GetAllSecurityHeadAsync();
         }
 
-        public async Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync()
+        public async Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync(bool? headsOnly = null)
         {
-            return await _repository.GetAllLookUpAsync();
+            return await _repository.GetAllLookUpAsync(headsOnly);
         }
 
         public async Task<IEnumerable<OpenMstSecurityDto>> OpenGetAllSecuritiesAsync()

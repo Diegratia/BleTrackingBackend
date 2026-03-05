@@ -9,6 +9,7 @@ namespace Shared.Contracts.Read
         public Guid? PatrolAreaId { get; set; }
         public string? AreaNameSnap { get; set; }
         public int? OrderIndex { get; set; }
+        public int CycleIndex { get; set; }
         public PatrolCheckpointStatus CheckpointStatus { get; set; }
         public DateTime? ArrivedAt { get; set; }
         public DateTime? LeftAt { get; set; }

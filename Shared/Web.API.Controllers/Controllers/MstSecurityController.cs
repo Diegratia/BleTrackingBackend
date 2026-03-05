@@ -42,11 +42,11 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Security heads retrieved successfully", securities));
         }
 
-        // GET: api/MstSecurity
+        // GET: api/MstSecurity/lookup?headsOnly=true
         [HttpGet("lookup")]
-        public async Task<IActionResult> GetAllLookUpAsync()
+        public async Task<IActionResult> GetAllLookUpAsync([FromQuery] bool? headsOnly)
         {
-            var securities = await _MstSecurityService.GetAllLookUpAsync();
+            var securities = await _MstSecurityService.GetAllLookUpAsync(headsOnly);
             return Ok(ApiResponse.Success("Securities retrieved successfully", securities));
         }
 

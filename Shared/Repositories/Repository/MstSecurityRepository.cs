@@ -177,7 +177,7 @@ namespace Repositories.Repository
             return (data, total, filtered);
         }
 
-        public async Task<List<MstSecurityLookUpRead>> GetAllLookUpAsync()
+        public async Task<List<MstSecurityLookUpRead>> GetAllLookUpAsync(bool? headsOnly = null)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
             var query = _context.MstSecurities
@@ -186,19 +186,34 @@ namespace Repositories.Repository
 
             query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
 
-            var projected = query.Select(t => new MstSecurityLookUpRead
+            var projected = query.GroupJoin(
+                    _context.Users.Include(u => u.Group),
+                    s => s.Email,
+                    u => u.Email,
+                    (s, users) => new { s, user = users.FirstOrDefault() })
+                .Select(x => new MstSecurityLookUpRead
+                {
+                    Id = x.s.Id,
+                    Name = x.s.Name,
+                    PersonId = x.s.PersonId,
+                    CardNumber = x.s.CardNumber,
+                    OrganizationId = x.s.OrganizationId,
+                    DepartmentId = x.s.DepartmentId,
+                    DistrictId = x.s.DistrictId,
+                    OrganizationName = x.s.Organization.Name,
+                    DepartmentName = x.s.Department.Name,
+                    DistrictName = x.s.District.Name,
+                    Email = x.s.Email,
+                    IsHead = x.user != null && x.user.Group != null ? x.user.Group.IsHead : null,
+                    ApplicationId = x.s.ApplicationId,
+                    Status = x.s.Status
+                });
+
+            if (headsOnly.HasValue)
             {
-                Id = t.Id,
-                Name = t.Name,
-                PersonId = t.PersonId,
-                CardNumber = t.CardNumber,
-                OrganizationId = t.OrganizationId,
-                DepartmentId = t.DepartmentId,
-                DistrictId = t.DistrictId,
-                OrganizationName = t.Organization.Name,
-                DepartmentName = t.Department.Name,
-                DistrictName = t.District.Name,
-            });
+                projected = projected.Where(x => x.IsHead == headsOnly.Value);
+            }
+
             return await projected.ToListAsync();
         }
 

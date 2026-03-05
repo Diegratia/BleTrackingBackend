@@ -14,7 +14,7 @@ namespace BusinessLogic.Services.Interface
         // Use Read DTO for query operations (direct return from repository)
         Task<IEnumerable<MstSecurityRead>> GetAllSecuritiesAsync();
         Task<IEnumerable<MstSecurityRead>> GetAllSecurityHeadsAsync();
-        Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync();
+        Task<IEnumerable<MstSecurityLookUpRead>> GetAllLookUpAsync(bool? headsOnly = null);
         Task<MstSecurityRead> GetSecurityByIdAsync(Guid id);
 
         // Open API endpoints still use DTOs for external integration

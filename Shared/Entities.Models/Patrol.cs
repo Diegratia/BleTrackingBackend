@@ -67,6 +67,8 @@ namespace Entities.Models
         public DateTime? ClearedAt { get; set; }
         [Column("checkpoint_status")]
         public PatrolCheckpointStatus CheckpointStatus { get; set; } = PatrolCheckpointStatus.AutoDetected;
+        [Column("cycle_index")]
+        public int CycleIndex { get; set; }
         [Column("notes")]
         public string? Notes { get; set; }
 

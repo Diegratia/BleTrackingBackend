@@ -207,10 +207,6 @@ namespace BusinessLogic.Services.Implementation
             // -------------------------------------------------------------
             var checkpointLogs = new List<PatrolCheckpointLog>();
             int inputCycles = assignment.CycleCount > 0 ? assignment.CycleCount : 1;
-            
-            // Calculate actual physical trips (perjalanan fisik) through the route areas
-            // - FullCycle (1): 1 Cycle = 1 Round Trip (Berangkat A-B-C & Pulang C-B-A) -> 2 Trips
-            // - HalfCycle (0): 1 Cycle = 1 One-Way Trip (Berangkat A-B-C saja)       -> 1 Trip
             int totalTrips = assignment.CycleType == PatrolCycleType.FullCycle 
                              ? inputCycles * 2 
                              : inputCycles;
@@ -219,13 +215,6 @@ namespace BusinessLogic.Services.Implementation
 
             for (int currentTrip = 1; currentTrip <= totalTrips; currentTrip++)
             {
-                // Pengecekan Arah Jalan (Direction): 
-                // Trip Ganjil (1, 3, 5) = Jalan Maju (Ascending: A-B-C)
-                // Trip Genap  (2, 4, 6) = Jalan Mundur (Descending / Reversed: C-B-A)
-                // Pengecekan Arah Jalan (Direction): 
-                // Trip Ganjil (1, 3, 5) = Jalan Maju (Ascending: A-B-C)
-                // Trip Genap  (2, 4, 6) = Jalan Mundur (Descending / Reversed: C-B-A)
-                // Keduanya (Half/Full) tetap bolak-balik arahnya
                 bool isReturnTrip = (currentTrip % 2 == 0);
                 
                 var orderedAreas = isReturnTrip 
@@ -241,6 +230,13 @@ namespace BusinessLogic.Services.Implementation
                     orderedAreas = orderedAreas.Skip(1).ToList();
                 }
 
+                // Calculate CycleIndex:
+                // - FullCycle: Cycle 1 is Trip 1 & 2, Cycle 2 is Trip 3 & 4, etc.
+                // - HalfCycle: Cycle 1 is Trip 1, Cycle 2 is Trip 2, etc. (as user requested)
+                int cycleIndex = assignment.CycleType == PatrolCycleType.FullCycle
+                    ? (currentTrip + 1) / 2
+                    : currentTrip;
+
                 foreach (var area in orderedAreas)
                 {
                     checkpointLogs.Add(new PatrolCheckpointLog
@@ -249,6 +245,7 @@ namespace BusinessLogic.Services.Implementation
                         PatrolAreaId = area.PatrolAreaId,
                         AreaNameSnap = area.PatrolArea?.Name,
                         OrderIndex = globalOrderIndex++,
+                        CycleIndex = cycleIndex,
                         DistanceFromPrevMeters = area.EstimatedDistance,
                         MinDwellTime = area.MinDwellTime,
                         MaxDwellTime = area.MaxDwellTime,
@@ -264,8 +261,6 @@ namespace BusinessLogic.Services.Implementation
                     });
                 }
             }
-
-            
 
             await _repo.AddCheckpointLogsAsync(checkpointLogs);
             _audit.Action(
