@@ -25,6 +25,7 @@ using Serilog.Events;
 using Helpers.Consumer.Mqtt;
 using BusinessLogic.Services.Background;
 using Microsoft.AspNetCore.Authorization;
+using BusinessLogic.Services.ServiceValidators;
 
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
