@@ -98,11 +98,12 @@ namespace BusinessLogic.Services.Implementation
             bool isOriginalAssignee = assignment.PatrolAssignmentSecurities != null && 
                                       assignment.PatrolAssignmentSecurities.Any(s => s.SecurityId == security.Id);
             
+            var today = DateOnly.FromDateTime(nowUtc);
             bool isActiveSubstitute = assignment.PatrolShiftReplacements != null &&
                                       assignment.PatrolShiftReplacements.Any(r => 
                                           r.SubstituteSecurityId == security.Id && 
-                                          nowUtc.Date >= r.ReplacementStartDate.Date && 
-                                          nowUtc.Date <= r.ReplacementEndDate.Date &&
+                                          today >= r.ReplacementStartDate && 
+                                          today <= r.ReplacementEndDate &&
                                           r.Status != 0); // Assuming Status != 0 for active
 
             if (!isOriginalAssignee && !isActiveSubstitute)
@@ -114,8 +115,8 @@ namespace BusinessLogic.Services.Implementation
             bool isCurrentlyReplaced = assignment.PatrolShiftReplacements != null &&
                                        assignment.PatrolShiftReplacements.Any(r => 
                                            r.OriginalSecurityId == security.Id &&
-                                           nowUtc.Date >= r.ReplacementStartDate.Date && 
-                                           nowUtc.Date <= r.ReplacementEndDate.Date &&
+                                           today >= r.ReplacementStartDate && 
+                                           today <= r.ReplacementEndDate &&
                                            r.Status != 0);
 
             if (isOriginalAssignee && isCurrentlyReplaced)
@@ -124,11 +125,11 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // 1. Validate Date Range (StartDate and EndDate)
-            if (assignment.StartDate.HasValue && nowUtc < assignment.StartDate.Value)
-                throw new BusinessException($"Patrol Assignment has not started yet. Starts at: {assignment.StartDate.Value:yyyy-MM-dd HH:mm} UTC");
-
-            if (assignment.EndDate.HasValue && nowUtc > assignment.EndDate.Value)
-                throw new BusinessException($"Patrol Assignment has expired. Ended at: {assignment.EndDate.Value:yyyy-MM-dd HH:mm} UTC");
+            if (assignment.StartDate.HasValue && today < assignment.StartDate.Value)
+                throw new BusinessException($"Patrol Assignment has not started yet. Starts at: {assignment.StartDate.Value:yyyy-MM-dd}");
+            
+            if (assignment.EndDate.HasValue && today > assignment.EndDate.Value)
+                throw new BusinessException($"Patrol Assignment has expired. Ended at: {assignment.EndDate.Value:yyyy-MM-dd}");
 
             // 2. Validate TimeGroup and TimeBlocks
             if (assignment.TimeGroup != null && assignment.TimeGroup.TimeBlocks != null && assignment.TimeGroup.TimeBlocks.Any())

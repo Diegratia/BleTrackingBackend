@@ -135,9 +135,9 @@ namespace Entities.Models
         [Column("approval_type")]
         public PatrolApprovalType ApprovalType { get; set; } = PatrolApprovalType.ByThreatLevel;
         [Column("start_date")]
-        public DateTime? StartDate { get; set; }
+        public DateOnly? StartDate { get; set; }
         [Column("end_date")]
-        public DateTime? EndDate { get; set; }
+        public DateOnly? EndDate { get; set; }
         [Column("duration_type")]
         public PatrolDurationType DurationType { get; set; } = PatrolDurationType.WithDuration;
         [Column("start_type")]
@@ -287,10 +287,10 @@ namespace Entities.Models
         public Guid SubstituteSecurityId { get; set; }
         
         [Column("replacement_start_date")]
-        public DateTime ReplacementStartDate { get; set; }
+        public DateOnly ReplacementStartDate { get; set; }
         
         [Column("replacement_end_date")]
-        public DateTime ReplacementEndDate { get; set; }
+        public DateOnly ReplacementEndDate { get; set; }
         
         [Column("reason")]
         public string? Reason { get; set; }

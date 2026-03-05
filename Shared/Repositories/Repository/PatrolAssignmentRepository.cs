@@ -122,7 +122,7 @@ namespace Repositories.Repository
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                var today = DateTime.UtcNow.Date;
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
                         pas.Security != null &&
@@ -131,8 +131,8 @@ namespace Repositories.Repository
                     pa.PatrolShiftReplacements.Any(psr =>
                         psr.SubstituteSecurity != null &&
                         psr.SubstituteSecurity.Email == userEmail &&
-                        psr.ReplacementStartDate.Date <= today &&
-                        psr.ReplacementEndDate.Date >= today &&
+                        psr.ReplacementStartDate <= today &&
+                        psr.ReplacementEndDate >= today &&
                         psr.Status != 0
                     )
                 );
@@ -172,7 +172,7 @@ namespace Repositories.Repository
 
             if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
             {
-                var today = DateTime.UtcNow.Date;
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 query = query.Where(pa =>
                     pa.PatrolAssignmentSecurities.Any(pas =>
                         pas.Security.Email == userEmail
@@ -180,8 +180,8 @@ namespace Repositories.Repository
                     pa.PatrolShiftReplacements.Any(psr =>
                         psr.SubstituteSecurity != null &&
                         psr.SubstituteSecurity.Email == userEmail &&
-                        psr.ReplacementStartDate.Date <= today &&
-                        psr.ReplacementEndDate.Date >= today &&
+                        psr.ReplacementStartDate <= today &&
+                        psr.ReplacementEndDate >= today &&
                         psr.Status != 0
                     )
                 );
@@ -519,8 +519,8 @@ namespace Repositories.Repository
         public async Task<List<Guid>> HasScheduleOverlapAsync(
             Guid securityId,
             Guid timeGroupId,
-            DateTime? startDate,
-            DateTime? endDate,
+            DateOnly? startDate,
+            DateOnly? endDate,
             Guid? excludeAssignmentId = null)
         {
             // Get TimeBlocks for the new assignment's TimeGroup

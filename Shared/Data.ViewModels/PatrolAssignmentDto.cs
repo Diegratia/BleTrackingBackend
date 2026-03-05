@@ -13,8 +13,8 @@ namespace Data.ViewModels
         public Guid? PatrolRouteId { get; set; }
         public Guid? TimeGroupId { get; set; }
         public PatrolApprovalType? ApprovalType { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? EndDate { get; set; }
         public PatrolDurationType? DurationType { get; set; }
         public PatrolStartType? StartType { get; set; }
         public PatrolCycleType? CycleType { get; set; }
@@ -31,8 +31,8 @@ namespace Data.ViewModels
         public Guid? PatrolRouteId { get; set; }
         public Guid? TimeGroupId { get; set; }
         public PatrolApprovalType? ApprovalType { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? EndDate { get; set; }
         public PatrolDurationType? DurationType { get; set; }
         public PatrolStartType? StartType { get; set; }
         public PatrolCycleType? CycleType { get; set; }

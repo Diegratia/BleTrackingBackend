@@ -10,8 +10,8 @@ namespace Data.ViewModels
         public Guid PatrolAssignmentId { get; set; }
         public Guid OriginalSecurityId { get; set; }
         public Guid SubstituteSecurityId { get; set; }
-        public DateTime ReplacementStartDate { get; set; }
-        public DateTime ReplacementEndDate { get; set; }
+        public DateOnly ReplacementStartDate { get; set; }
+        public DateOnly ReplacementEndDate { get; set; }
         public string? Reason { get; set; }
     }
 
@@ -19,8 +19,8 @@ namespace Data.ViewModels
     {
         public Guid? OriginalSecurityId { get; set; }
         public Guid? SubstituteSecurityId { get; set; }
-        public DateTime? ReplacementStartDate { get; set; }
-        public DateTime? ReplacementEndDate { get; set; }
+        public DateOnly? ReplacementStartDate { get; set; }
+        public DateOnly? ReplacementEndDate { get; set; }
         public string? Reason { get; set; }
     }
 }

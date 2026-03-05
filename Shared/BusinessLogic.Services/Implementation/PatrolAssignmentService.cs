@@ -433,7 +433,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new NotFoundException($"PatrolShiftReplacement {id} not found");
 
             // Prevent deletion if replacement date has started
-            if (DateTime.UtcNow.Date >= entity.ReplacementStartDate.Date)
+            if (DateOnly.FromDateTime(DateTime.UtcNow) >= entity.ReplacementStartDate)
             {
                 throw new BusinessException($"Cannot delete shift replacement because the replacement date has already started or passed.");
             }
@@ -453,9 +453,9 @@ namespace BusinessLogic.Services.Implementation
             var entity = await _repository.GetShiftReplacementByIdAsync(id);
             if (entity == null)
                 throw new NotFoundException($"PatrolShiftReplacement {id} not found");
-
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             // Prevent update if replacement date has started
-            if (DateTime.UtcNow.Date >= entity.ReplacementStartDate.Date)
+            if (today >= entity.ReplacementStartDate)
             {
                 throw new BusinessException($"Cannot update shift replacement because the replacement date has already started or passed.");
             }
@@ -519,8 +519,8 @@ namespace BusinessLogic.Services.Implementation
             PatrolAssignment assignment, 
             Guid originalSecurityId, 
             Guid substituteSecurityId, 
-            DateTime startDate, 
-            DateTime endDate,
+            DateOnly startDate, 
+            DateOnly endDate,
             Guid? excludeReplacementId = null)
         {
             // 1. Ensure OriginalSecurity is assigned to this assignment
@@ -529,8 +529,8 @@ namespace BusinessLogic.Services.Implementation
                 throw new BusinessException("Original Security is not assigned to this patrol assignment.");
 
             // 2. Validate dates are within assignment range
-            if ((assignment.StartDate.HasValue && startDate.Date < assignment.StartDate.Value.Date) || 
-                (assignment.EndDate.HasValue && endDate.Date > assignment.EndDate.Value.Date))
+            if ((assignment.StartDate.HasValue && startDate < assignment.StartDate.Value) || 
+                (assignment.EndDate.HasValue && endDate > assignment.EndDate.Value))
             {
                 var startDateStr = assignment.StartDate?.ToString("yyyy-MM-dd") ?? "N/A";
                 var endDateStr = assignment.EndDate.HasValue ? assignment.EndDate.Value.ToString("yyyy-MM-dd") : "Open Ended";
