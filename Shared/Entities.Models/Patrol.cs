@@ -144,10 +144,6 @@ namespace Entities.Models
         public int CycleCount { get; set; } = 1;
         [Column("cycle_type")]
         public PatrolCycleType CycleType { get; set; } = PatrolCycleType.HalfCycle;
-        [Column("min_dwell_time")]
-        public int? MinDwellTime { get; set; }
-        [Column("max_dwell_time")]
-        public int? MaxDwellTime { get; set; }
         [Column("security_head_1")]
         public Guid? SecurityHead1Id { get; set; }
         [Column("security_head_2")]

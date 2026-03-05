@@ -228,7 +228,6 @@ namespace Repositories.Repository
                 IQueryable<PatrolAssignment> query
             )
         {
-            // 🔥 FULL PROJECTION
             return query.AsNoTracking().Select(pa => new PatrolAssignmentRead
             {
                 Id = pa.Id,
@@ -237,6 +236,9 @@ namespace Repositories.Repository
                 PatrolRouteId = pa.PatrolRouteId,
                 TimeGroupId = pa.TimeGroupId,
                 ApprovalType = pa.ApprovalType,
+                DurationType = pa.DurationType,
+                StartType = pa.StartType,
+                CycleType = pa.CycleType,
                 StartDate = pa.StartDate,
                 EndDate = pa.EndDate,
                 ApplicationId = pa.ApplicationId,

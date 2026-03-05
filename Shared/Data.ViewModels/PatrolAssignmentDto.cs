@@ -19,8 +19,6 @@ namespace Data.ViewModels
         public PatrolStartType? StartType { get; set; }
         public PatrolCycleType? CycleType { get; set; }
         public int? CycleCount { get; set; }
-        public int? MinDwellTime { get; set; }
-        public int? MaxDwellTime { get; set; }
         public List<Guid> SecurityIds { get; set; } = new();
         public Guid? SecurityHead1Id { get; set; }
         public Guid? SecurityHead2Id { get; set; }
@@ -39,8 +37,6 @@ namespace Data.ViewModels
         public PatrolStartType? StartType { get; set; }
         public PatrolCycleType? CycleType { get; set; }
         public int? CycleCount { get; set; }
-        public int? MinDwellTime { get; set; }
-        public int? MaxDwellTime { get; set; }
         public List<Guid?> SecurityIds { get; set; } = new();
         public Guid? SecurityHead1Id { get; set; }
         public Guid? SecurityHead2Id { get; set; }
