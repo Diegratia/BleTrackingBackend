@@ -11,11 +11,11 @@ using Repositories.Repository;
 
 namespace BusinessLogic.Services.ServiceValidators
 {
-    public class PatrolValidationService : IPatrolValidationService
+    public class PatrolAssignmentValidatorService : IPatrolAssignmentValidatorService
     {
         private readonly PatrolAssignmentRepository _repository;
 
-        public PatrolValidationService(PatrolAssignmentRepository repository)
+        public PatrolAssignmentValidatorService(PatrolAssignmentRepository repository)
         {
             _repository = repository;
         }

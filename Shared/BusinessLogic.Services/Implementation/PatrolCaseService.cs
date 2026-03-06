@@ -17,6 +17,7 @@ using Repositories.Repository;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using Shared.Contracts.Read;
+using BusinessLogic.Services.ServiceValidators;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -26,19 +27,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IAuditEmitter _audit;
         private readonly IUserService _userService;
-
+        private readonly IPatrolCaseValidatorService _validationService;
 
         public PatrolCaseService(
             PatrolCaseRepository repo,
             IMapper mapper,
             IAuditEmitter audit,
             IHttpContextAccessor httpContextAccessor,
-            IUserService userService) : base(httpContextAccessor)
+            IUserService userService,
+            IPatrolCaseValidatorService validationService) : base(httpContextAccessor)
         {
             _repo = repo;
             _mapper = mapper;
             _audit = audit;
             _userService = userService;
+            _validationService = validationService;
         }
         public async Task<object> FilterAsync(
             DataTablesProjectedRequest request,
@@ -100,9 +103,8 @@ namespace BusinessLogic.Services.Implementation
         // EF STYLE
         public async Task<PatrolCaseRead> CreateAsync(PatrolCaseCreateDto dto)
         {
-            var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId!.Value)
-                ?? throw new NotFoundException(
-                    $"PatrolSession with id {dto.PatrolSessionId} not found");
+            var session = await _repo.GetPatrolSessionAsync(dto.PatrolSessionId!.Value);
+            await _validationService.ValidateCreateAsync(dto, session);
 
             var patrolCase = _mapper.Map<PatrolCase>(dto);
 
@@ -133,9 +135,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 // Rule 2: Operational cases (Incident, Hazard, Damage, Theft, Report)
                 // ThreatLevel is REQUIRED for all operational cases
-                if (!dto.ThreatLevel.HasValue)
-                    throw new BusinessException(
-                        "ThreatLevel is required for operational cases (Incident, Hazard, Damage, Theft, Report)");
+                // (Already validated in _validationService)
 
                 if (assignmentApprovalType == PatrolApprovalType.ByThreatLevel)
                 {
@@ -165,10 +165,25 @@ namespace BusinessLogic.Services.Implementation
                 ?? throw new NotFoundException($"Security with id {session.SecurityId} not found");
 
             // Priority:
-            // 1. Take from PatrolAssignment
-            // 2. Fallback to MstSecurity (reporter)
-            patrolCase.SecurityHead1Id = session.PatrolAssignment?.SecurityHead1Id ?? creatorSecurity.SecurityHead1Id;
-            patrolCase.SecurityHead2Id = session.PatrolAssignment?.SecurityHead2Id ?? creatorSecurity.SecurityHead2Id;
+            // Absolute source of truth is PatrolAssignment
+            patrolCase.SecurityHead1Id = session.PatrolAssignment?.SecurityHead1Id;
+            patrolCase.SecurityHead2Id = session.PatrolAssignment?.SecurityHead2Id;
+
+            // Graceful Downgrade Logic for ApprovalType
+            // If the ThreatLevel or Assignment dictated a 2-step approval (And / Sequential),
+            // but the assignment only has 1 Head, we must downgrade it to Or so it doesn't get stuck.
+            if (resolvedApprovalType == PatrolApprovalType.And || resolvedApprovalType == PatrolApprovalType.Sequential)
+            {
+                int availableHeads = (patrolCase.SecurityHead1Id.HasValue ? 1 : 0) +
+                                     (patrolCase.SecurityHead2Id.HasValue ? 1 : 0);
+
+                if (availableHeads == 1)
+                {
+                    resolvedApprovalType = PatrolApprovalType.Or;
+                    patrolCase.ApprovalType = resolvedApprovalType;
+                }
+                // If availableHeads == 0, it stays Sequential/And and will be escalated to PrimaryAdmin per ApproveAsync logic
+            }
 
             patrolCase.CaseStatus = resolvedApprovalType == PatrolApprovalType.WithoutApproval
                 ? CaseStatus.Approved
@@ -220,10 +235,7 @@ namespace BusinessLogic.Services.Implementation
                 // =====================================================
                 // 🔹 VALIDASI STATUS - HANYA SUBMITTED/REJECTED YG BOLEH EDIT
                 // =====================================================
-                if (patrolCase.CaseStatus != CaseStatus.Submitted &&
-                    patrolCase.CaseStatus != CaseStatus.Rejected)
-                    throw new BusinessException(
-                        $"Only Submitted or Rejected cases can be updated. Current status: {patrolCase.CaseStatus}");
+                await _validationService.ValidateUpdateAsync(patrolCase);
 
                 // =====================================================
                 // 🔹 UPDATE SCALAR (MANUAL, BIAR JELAS)
@@ -321,13 +333,7 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
-                if (patrolCase.ApprovalType == PatrolApprovalType.WithoutApproval)
-                    throw new BusinessException("This case does not require approval.");
-
-                // Validate status - only Submitted can be approved
-                if (patrolCase.CaseStatus != CaseStatus.Submitted)
-                    throw new BusinessException(
-                        $"Only Submitted cases can be approved. Current status: {patrolCase.CaseStatus}");
+                await _validationService.ValidateApproveAsync(patrolCase, currentSecurityId, isPrimaryAdmin);
 
                 var head1Id = patrolCase.SecurityHead1Id;
                 var head2Id = patrolCase.SecurityHead2Id;
@@ -337,9 +343,6 @@ namespace BusinessLogic.Services.Implementation
 
                 if (headsMissing)
                 {
-                    if (!isPrimaryAdmin)
-                        throw new UnauthorizedException("Only PrimaryAdmin can approve cases without assigned heads.");
-
                     patrolCase.CaseStatus = CaseStatus.Approved;
                     patrolCase.ApprovedByHead1Id ??= currentSecurityId;
                     patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
@@ -350,16 +353,6 @@ namespace BusinessLogic.Services.Implementation
 
                 var isHead1 = head1Id.HasValue && head1Id.Value == currentSecurityId;
                 var isHead2 = head2Id.HasValue && head2Id.Value == currentSecurityId;
-
-                if (!isHead1 && !isHead2)
-                    throw new UnauthorizedException("Only assigned heads can approve this case.");
-
-                if (patrolCase.ApprovalType == PatrolApprovalType.Sequential
-                    && isHead2
-                    && !patrolCase.ApprovedByHead1Id.HasValue)
-                {
-                    throw new BusinessException("Head 1 must approve before Head 2.");
-                }
 
                 if (isHead1)
                 {
@@ -414,10 +407,6 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<PatrolCaseRead> RejectAsync(Guid id, PatrolCaseApprovalDto dto)
         {
-            // Validate reason is required
-            if (string.IsNullOrEmpty(dto.Reason))
-                throw new BusinessException("Reason is required when rejecting a case");
-
             // Get current user's security ID
             var currentUserEmail = EmailFormToken;
             var currentSecurityId = await _repo.GetSecurityIdByEmailAsync(currentUserEmail);
@@ -431,13 +420,7 @@ namespace BusinessLogic.Services.Implementation
                 patrolCase = await _repo.GetByIdEntityForApprovalAsync(id)
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
-                if (patrolCase.ApprovalType == PatrolApprovalType.WithoutApproval)
-                    throw new BusinessException("This case does not require approval.");
-
-                // Validate status - only Submitted can be rejected
-                if (patrolCase.CaseStatus != CaseStatus.Submitted)
-                    throw new BusinessException(
-                        $"Only Submitted cases can be rejected. Current status: {patrolCase.CaseStatus}");
+                await _validationService.ValidateRejectAsync(patrolCase, dto, currentSecurityId, isPrimaryAdmin);
 
                 var head1Id = patrolCase.SecurityHead1Id;
                 var head2Id = patrolCase.SecurityHead2Id;
@@ -447,9 +430,6 @@ namespace BusinessLogic.Services.Implementation
 
                 if (headsMissing)
                 {
-                    if (!isPrimaryAdmin)
-                        throw new UnauthorizedException("Only PrimaryAdmin can reject cases without assigned heads.");
-
                     patrolCase.CaseStatus = CaseStatus.Rejected;
                     patrolCase.ApprovedByHead1Id ??= currentSecurityId;
                     patrolCase.ApprovedByHead1At ??= DateTime.UtcNow;
@@ -460,9 +440,6 @@ namespace BusinessLogic.Services.Implementation
 
                 var isHead1 = head1Id.HasValue && head1Id.Value == currentSecurityId;
                 var isHead2 = head2Id.HasValue && head2Id.Value == currentSecurityId;
-
-                if (!isHead1 && !isHead2)
-                    throw new UnauthorizedException("Only assigned heads can reject this case.");
 
                 patrolCase.CaseStatus = CaseStatus.Rejected;
                 if (isHead1)
@@ -510,9 +487,7 @@ namespace BusinessLogic.Services.Implementation
                     ?? throw new NotFoundException($"PatrolCase with id {id} not found");
 
                 // Validate status
-                if (patrolCase.CaseStatus != CaseStatus.Approved)
-                    throw new BusinessException(
-                        $"Only Approved cases can be closed. Current status: {patrolCase.CaseStatus}");
+                await _validationService.ValidateCloseAsync(patrolCase);
 
                 // Update status
                 patrolCase.CaseStatus = CaseStatus.Closed;
@@ -535,13 +510,10 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task DeleteAttachmentAsync(Guid caseId, Guid attachmentId)
         {
-            var patrolCase = await _repo.GetByIdAsync(caseId)
+            var patrolCase = await _repo.GetByIdEntityAsync(caseId)
                 ?? throw new NotFoundException($"PatrolCase with id {caseId} not found");
 
-            // Only allow attachment deletion for Submitted or Rejected cases
-            if (patrolCase.CaseStatus != CaseStatus.Submitted && patrolCase.CaseStatus != CaseStatus.Rejected)
-                throw new BusinessException(
-                    $"Cannot delete attachment. Case status is {patrolCase.CaseStatus}");
+            await _validationService.ValidateDeleteAttachmentAsync(patrolCase);
 
             var deleted = await _repo.DeleteAttachmentAsync(caseId, attachmentId);
 

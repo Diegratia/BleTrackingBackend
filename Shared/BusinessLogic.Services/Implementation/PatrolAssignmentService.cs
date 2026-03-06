@@ -28,7 +28,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
-        private readonly IPatrolValidationService _validationService;
+        private readonly IPatrolAssignmentValidatorService _validationService;
 
 
         public PatrolAssignmentService(
@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.Implementation
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IAuditEmitter audit,
-            IPatrolValidationService validationService
+            IPatrolAssignmentValidatorService validationService
             ) : base(httpContextAccessor)
         {
             _repository = repository;

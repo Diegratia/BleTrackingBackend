@@ -5,7 +5,7 @@ using Entities.Models;
 
 namespace BusinessLogic.Services.ServiceValidators
 {
-    public interface IPatrolValidationService
+    public interface IPatrolAssignmentValidatorService
     {
         Task ValidateAssignmentCreateAsync(PatrolAssignmentCreateDto dto, Guid appId);
         Task ValidateAssignmentUpdateAsync(Guid id, PatrolAssignmentUpdateDto dto, Guid appId, PatrolAssignment currentAssignment);

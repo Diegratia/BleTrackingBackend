@@ -19,12 +19,12 @@ namespace Data.ViewModels.Validators
                 .NotEmpty().WithMessage("SecurityIds is required.");
 
             RuleFor(x => x.SecurityHead1Id)
-                .NotEmpty().WithMessage("SecurityHead1Id is required.");
+                .NotEmpty().WithMessage("At least 1 Security Head (SecurityHead1Id) is required.");
 
             RuleFor(x => x.SecurityHead2Id)
-                .NotEmpty().WithMessage("SecurityHead2Id is required.")
                 .Must((dto, head2Id) => dto.ApprovalType != PatrolApprovalType.Sequential || dto.SecurityHead1Id != head2Id)
-                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.");
+                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.")
+                .When(x => x.SecurityHead2Id.HasValue);
 
             RuleFor(x => x.Name)
                 .MaximumLength(255).WithMessage("Name cannot exceed 255 characters.")
@@ -57,12 +57,12 @@ namespace Data.ViewModels.Validators
                 .When(x => x.SecurityIds != null && x.SecurityIds.Any());
 
             RuleFor(x => x.SecurityHead1Id)
-                .NotEmpty().WithMessage("SecurityHead1Id is required.");
+                .NotEmpty().WithMessage("At least 1 Security Head (SecurityHead1Id) is required.");
 
             RuleFor(x => x.SecurityHead2Id)
-                .NotEmpty().WithMessage("SecurityHead2Id is required.")
                 .Must((dto, head2Id) => dto.ApprovalType != PatrolApprovalType.Sequential || dto.SecurityHead1Id != head2Id)
-                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.");
+                .WithMessage("SecurityHead1 and SecurityHead2 cannot be the same when ApprovalType is Sequential.")
+                .When(x => x.SecurityHead2Id.HasValue);
 
             RuleFor(x => x)
                 .Must(x => !x.StartDate.HasValue || !x.EndDate.HasValue || x.StartDate <= x.EndDate)
