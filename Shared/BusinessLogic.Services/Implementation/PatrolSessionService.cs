@@ -405,6 +405,13 @@ namespace BusinessLogic.Services.Implementation
             }
         );
 
+        if (log.PatrolSessionId.HasValue)
+        {
+            _mqttQueue.Enqueue("patrol/checkpoint/cleared", JsonSerializer.Serialize(new {
+                sessionId = log.PatrolSessionId.Value.ToString()
+            }));
+        }
+
         return new { success = true, CheckpointStatus = log.CheckpointStatus.ToString() };
     }
 }
