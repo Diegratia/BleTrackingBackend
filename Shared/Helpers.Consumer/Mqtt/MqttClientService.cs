@@ -21,7 +21,7 @@ namespace Helpers.Consumer.Mqtt
             _logger = logger;
             _mqttClient = new MqttFactory().CreateMqttClient();
 
-            var host = config["Mqtt:Host"]??Environment.GetEnvironmentVariable("MQTT_HOST");;
+            var host = config["Mqtt:Host"]??Environment.GetEnvironmentVariable("MQTT_HOST");
             var port = int.Parse(config["Mqtt:Port"]?? Environment.GetEnvironmentVariable("MQTT_PORT"));
             var username = config["Mqtt:Username"]?? Environment.GetEnvironmentVariable("MQTT_USERNAME");
             var password = config["Mqtt:Password"]?? Environment.GetEnvironmentVariable("MQTT_PASSWORD");
