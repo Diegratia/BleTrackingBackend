@@ -14,8 +14,6 @@ namespace Shared.Contracts.Read
         public string? StartAreaName { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? EndAreaName { get; set; }
-        public int? MinDwellTime { get; set; }
-        public int? MaxDwellTime { get; set; }
         public int PatrolAreaCount { get; set; }
         
         // List detail area dalam route
