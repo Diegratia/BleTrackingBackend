@@ -48,6 +48,8 @@ namespace Repositories.Repository
                         OrderIndex = pra.OrderIndex,
                         EstimatedDistance = pra.EstimatedDistance,
                         EstimatedTime = pra.EstimatedTime,
+                        MinDwellTime = pra.MinDwellTime,
+                        MaxDwellTime = pra.MaxDwellTime,
                         StartAreaId = pra.StartAreaId,
                         EndAreaId = pra.EndAreaId
                     }).ToList(),
