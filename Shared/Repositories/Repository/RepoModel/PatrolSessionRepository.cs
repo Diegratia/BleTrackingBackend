@@ -285,7 +285,7 @@ namespace Repositories.Repository
                 .FirstOrDefaultAsync(l => l.Id == logId 
                                        && l.PatrolAreaId == areaId 
                                        && l.ArrivedAt != null 
-                                       && l.LeftAt == null);
+                                       && l.ClearedAt == null);
         }
 
         public async Task<bool> HasUnclearedPreviousCheckpointsAsync(Guid sessionId, int currentOrderIndex)

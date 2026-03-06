@@ -366,6 +366,7 @@ namespace BusinessLogic.Services.Implementation
         // 2. Mark the log as handled
         log.Notes = dto.SecurityNote;
         log.ClearedAt = DateTime.UtcNow;
+        log.LeftAt = DateTime.UtcNow; // Overwrite LeftAt with the actual manual submission time
 
         if (dto.PatrolCheckpointStatus == PatrolCheckpointStatus.Cleared)
         {
