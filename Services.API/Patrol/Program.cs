@@ -84,6 +84,7 @@ builder.Services.AddScoped<IPatrolAssignmentValidatorService, PatrolAssignmentVa
 builder.Services.AddScoped<IPatrolCaseValidatorService, PatrolCaseValidatorService>();
 builder.Services.AddScoped<IPatrolSessionAnalyticsService, PatrolSessionAnalyticsService>();
 builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
+builder.Services.AddScoped<IMstBrandService, MstBrandService>();
 builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
@@ -111,6 +112,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<MstApplicationRepository>();
 builder.Services.AddScoped<MstIntegrationRepository>();
+builder.Services.AddScoped<MstBrandRepository>();
 
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
