@@ -472,6 +472,287 @@ namespace BusinessLogic.Services.Implementation
         }
 
         // =====================================================
+        // NEW WORKFLOW METHODS PER BEACON
+        // =====================================================
+
+        private async Task<List<AlarmTriggers>> GetGroupedAlarmsAsync(Guid id)
+        {
+            var alarm = await _repository.GetByIdEntityAsync(id);
+            if (alarm == null) throw new NotFoundException($"Alarm with ID {id} not found");
+
+            if (string.IsNullOrEmpty(alarm.BeaconId))
+                return new List<AlarmTriggers> { alarm };
+
+            var activeAlarms = await _repository.GetByDmacAsync(alarm.BeaconId);
+            
+            if (!activeAlarms.Any(a => a.Id == id))
+                activeAlarms.Add(alarm);
+
+            return activeAlarms;
+        }
+
+        public async Task AcknowledgeByBeaconAsync(Guid id)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null) throw new UnauthorizedException("User not found");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+            if (sourceAlarm.Action != ActionStatus.Idle)
+                throw new BusinessException($"Cannot acknowledge: alarm is not in Idle status. Current: {sourceAlarm.Action}");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Idle || alarm.Id == id) 
+                {
+                    alarm.Action = ActionStatus.Acknowledged;
+                    alarm.AcknowledgedAt = DateTime.UtcNow;
+                    alarm.AcknowledgedBy = username;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} acknowledged by {username}");
+        }
+
+        public async Task DispatchByBeaconAsync(Guid id, Guid assignedSecurityId)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null) throw new UnauthorizedException("User not found");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot dispatch: alarm must be acknowledged first. Current: {sourceAlarm.Action}");
+
+            var invalidSecurityIds = await _repository.CheckInvalidSecurityOwnershipAsync(assignedSecurityId, AppId);
+            if (invalidSecurityIds.Any())
+                throw new UnauthorizedException($"SecurityId does not belong to this Application");
+
+            var security = await _repository.GetSecurityByIdAsync(assignedSecurityId);
+            if (security == null) throw new BusinessException("Assigned security not found");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Acknowledged || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.Dispatched;
+                    alarm.SecurityId = security.Id;
+                    alarm.DispatchedAt = DateTime.UtcNow;
+                    alarm.DispatchedBy = username;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} dispatched to {security.Name} by {username}");
+        }
+
+        public async Task WaitingByBeaconAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot put in waiting: alarm must be acknowledged first. Current: {sourceAlarm.Action}");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Acknowledged || alarm.Action == ActionStatus.Idle || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.Waiting;
+                    alarm.IsActive = false;
+                    alarm.WaitingBy = username;
+                    alarm.WaitingTimestamp = DateTime.UtcNow;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} put in waiting queue by {username}");
+        }
+
+        public async Task AcceptByBeaconAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.Dispatched)
+                throw new BusinessException($"Cannot accept: alarm must be dispatched first. Current: {sourceAlarm.Action}");
+            if (sourceAlarm.SecurityId == null)
+                throw new BusinessException("Cannot accept: alarm has no assigned security");
+
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != sourceAlarm.SecurityId.Value)
+                throw new UnauthorizedException("Cannot accept: you are not the assigned security for this alarm");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Dispatched || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.Accepted;
+                    alarm.AcceptedAt = DateTime.UtcNow;
+                    alarm.AcceptedBy = username;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} accepted by security {username}");
+        }
+
+        public async Task ArrivedByBeaconAsync(Guid id)
+        {
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.Accepted)
+                throw new BusinessException($"Cannot mark arrived: alarm must be accepted first. Current: {sourceAlarm.Action}");
+
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != sourceAlarm.SecurityId)
+                throw new UnauthorizedException("Cannot mark arrived: you are not the assigned security for this alarm");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Accepted || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.Arrived;
+                    alarm.ArrivedAt = DateTime.UtcNow;
+                    alarm.ArrivedBy = username;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location for beacon {sourceAlarm.BeaconId}");
+        }
+
+        public async Task DoneInvestigatedByBeaconAsync(Guid id, InvestigatedResult result, string? notes = null)
+        {
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            var currentSecurityId = await GetCurrentSecurityIdAsync();
+            if (currentSecurityId == null || currentSecurityId != sourceAlarm.SecurityId)
+                throw new UnauthorizedException("Cannot complete investigation: you are not the assigned security for this alarm");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Arrived || alarm.Action == ActionStatus.Accepted || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.DoneInvestigated;
+                    alarm.InvestigatedResult = result;
+                    alarm.InvestigatedNotes = notes;
+                    alarm.InvestigatedDoneAt = DateTime.UtcNow;
+                    alarm.InvestigatedDoneBy = username;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Investigation completed for beacon {sourceAlarm.BeaconId} by {username}. Result: {result}");
+        }
+
+        public async Task ResolveByBeaconAsync(Guid id)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null) throw new UnauthorizedException("User not found");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("User does not have alarm action permission");
+
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.DoneInvestigated)
+                throw new BusinessException($"Cannot resolve: alarm must have investigation completed first. Current: {sourceAlarm.Action}");
+            if (!sourceAlarm.InvestigatedResult.HasValue)
+                throw new BusinessException("Cannot resolve: no investigation result found");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.DoneInvestigated || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.Done;
+                    alarm.IsActive = false;
+                    alarm.DoneBy = username;
+                    alarm.DoneTimestamp = DateTime.UtcNow;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} resolved by {username}");
+        }
+
+        public async Task PostponeInvestigatedByBeaconAsync(Guid id, AlarmPostponeInvestigatedDto dto)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null) throw new UnauthorizedException("User not found");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("User does not have alarm action permission");
+
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            if (sourceAlarm.Action != ActionStatus.Acknowledged)
+                throw new BusinessException($"Cannot postpone: alarm must be acknowledged first. Current: {sourceAlarm.Action}");
+            if (dto.PostponedUntilDate <= DateTime.UtcNow)
+                throw new BusinessException("Postpone date must be in the future");
+
+            foreach (var alarm in alarms)
+            {
+                if (alarm.Action == ActionStatus.Acknowledged || alarm.Action == ActionStatus.Idle || alarm.Id == id)
+                {
+                    alarm.Action = ActionStatus.PostponeInvestigated;
+                    alarm.IsActive = true;
+                    alarm.PostponedUntilDate = dto.PostponedUntilDate;
+                    alarm.PostponedAt = DateTime.UtcNow;
+                    alarm.PostponedBy = username;
+                    alarm.PostponeReason = dto.PostponeReason;
+                    alarm.ActionUpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} postponed by {username} until {dto.PostponedUntilDate:yyyy-MM-dd HH:mm}");
+        }
+
+        public async Task NoActionByBeaconAsync(Guid id)
+        {
+            var currentUser = await _userService.GetFromTokenAsync();
+            if (currentUser == null) throw new UnauthorizedException("User not found");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("User does not have alarm action permission");
+
+            var username = UsernameFormToken;
+            var alarms = await GetGroupedAlarmsAsync(id);
+            var sourceAlarm = alarms.FirstOrDefault(a => a.Id == id) ?? alarms.First();
+
+            foreach (var alarm in alarms)
+            {
+                alarm.Action = ActionStatus.NoAction;
+                alarm.IsActive = false;
+                alarm.CancelBy = username;
+                alarm.CancelTimestamp = DateTime.UtcNow;
+                alarm.ActionUpdatedAt = DateTime.UtcNow;
+            }
+
+            await _repository.UpdateBatchAsync(alarms);
+            _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} cancelled (no action) by {username}");
+        }
+
+        // =====================================================
         // HELPER METHODS
         // =====================================================
 

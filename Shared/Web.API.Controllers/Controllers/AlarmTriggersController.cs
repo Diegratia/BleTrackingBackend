@@ -99,7 +99,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}/acknowledge")]
         public async Task<IActionResult> Acknowledge(Guid id)
         {
-            await _service.AcknowledgeAsync(id);
+            await _service.AcknowledgeByBeaconAsync(id);
             return Ok(ApiResponse.Success("Alarm acknowledged successfully"));
         }
 
@@ -111,28 +111,28 @@ namespace Web.API.Controllers.Controllers
                 return BadRequest(ApiResponse.BadRequest("SecurityId is required"));
             }
 
-            await _service.DispatchAsync(id, dto.AssignedSecurityId);
+            await _service.DispatchByBeaconAsync(id, dto.AssignedSecurityId);
             return Ok(ApiResponse.Success("Security dispatched to location"));
         }
 
         [HttpPut("{id}/waiting")]
         public async Task<IActionResult> Waiting(Guid id)
         {
-            await _service.WaitingAsync(id);
+            await _service.WaitingByBeaconAsync(id);
             return Ok(ApiResponse.Success("Alarm put in waiting queue"));
         }
 
         [HttpPut("{id}/accept")]
         public async Task<IActionResult> Accept(Guid id)
         {
-            await _service.AcceptAsync(id);
+            await _service.AcceptByBeaconAsync(id);
             return Ok(ApiResponse.Success("Dispatch accepted successfully"));
         }
 
         [HttpPut("{id}/arrived")]
         public async Task<IActionResult> Arrived(Guid id)
         {
-            await _service.ArrivedAsync(id);
+            await _service.ArrivedByBeaconAsync(id);
             return Ok(ApiResponse.Success("Security arrived at location"));
         }
 
@@ -143,14 +143,14 @@ namespace Web.API.Controllers.Controllers
             {
                 return BadRequest(ApiResponse.BadRequest("Request body is required"));
             }
-            await _service.DoneInvestigatedAsync(id, dto.InvestigatedResult, dto.InvestigationNotes);
+            await _service.DoneInvestigatedByBeaconAsync(id, dto.InvestigatedResult, dto.InvestigationNotes);
             return Ok(ApiResponse.Success("Investigation completed successfully"));
         }
 
         [HttpPut("{id}/resolve")]
         public async Task<IActionResult> Resolve(Guid id)
         {
-            await _service.ResolveAsync(id);
+            await _service.ResolveByBeaconAsync(id);
             return Ok(ApiResponse.Success("Alarm resolved successfully"));
         }
 
@@ -165,7 +165,7 @@ namespace Web.API.Controllers.Controllers
             {
                 return BadRequest(ApiResponse.BadRequest("Request body is required"));
             }
-            await _service.PostponeInvestigatedAsync(id, dto);
+            await _service.PostponeInvestigatedByBeaconAsync(id, dto);
             return Ok(ApiResponse.Success("Alarm investigation postponed"));
         }
 
@@ -176,7 +176,7 @@ namespace Web.API.Controllers.Controllers
         [HttpPut("{id}/no-action")]
         public async Task<IActionResult> NoAction(Guid id)
         {
-            await _service.NoActionAsync(id);
+            await _service.NoActionByBeaconAsync(id);
             return Ok(ApiResponse.Success("Alarm cancelled successfully"));
         }
     }

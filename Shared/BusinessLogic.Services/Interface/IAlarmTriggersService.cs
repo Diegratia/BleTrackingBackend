@@ -71,5 +71,15 @@ namespace BusinessLogic.Services.Interface
         /// Flow: Any → NoAction (final state)
         /// </summary>
         Task NoActionAsync(Guid id);
+
+        Task AcknowledgeByBeaconAsync(Guid id);
+        Task DispatchByBeaconAsync(Guid id, Guid assignedSecurityId);
+        Task WaitingByBeaconAsync(Guid id);
+        Task AcceptByBeaconAsync(Guid id);
+        Task ArrivedByBeaconAsync(Guid id);
+        Task DoneInvestigatedByBeaconAsync(Guid id, InvestigatedResult result, string? notes = null);
+        Task ResolveByBeaconAsync(Guid id);
+        Task PostponeInvestigatedByBeaconAsync(Guid id, AlarmPostponeInvestigatedDto dto);
+        Task NoActionByBeaconAsync(Guid id);
     }
 }
