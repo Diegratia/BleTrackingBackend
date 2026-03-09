@@ -189,10 +189,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             foreach (var log in checkpoints)
             {
-                if (!log.ArrivedAt.HasValue) continue;
-
                 // 1. Calculate Travel Time (from previous point to this arrival)
-                int? travelTimeSeconds = previousTimestamp.HasValue
+                int? travelTimeSeconds = (log.ArrivedAt.HasValue && previousTimestamp.HasValue)
                     ? (int?)(log.ArrivedAt.Value - previousTimestamp.Value).TotalSeconds
                     : null;
                 
@@ -204,7 +202,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 int? dwellTimeSeconds = null;
                 string? dwellTimeFormatted = null;
 
-                if (log.LeftAt.HasValue)
+                if (log.ArrivedAt.HasValue && log.LeftAt.HasValue)
                 {
                     dwellTimeSeconds = (int)(log.LeftAt.Value - log.ArrivedAt.Value).TotalSeconds;
                     dwellTimeFormatted = FormatDuration(log.LeftAt.Value - log.ArrivedAt.Value);
@@ -214,15 +212,21 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 {
                     Stage = $"checkpoint_{log.OrderIndex}",
                     StageName = $"Checkpoint: {log.AreaNameSnap}",
-                    Timestamp = log.ArrivedAt.Value,  // UTC
+                    Timestamp = log.ArrivedAt,  // UTC
                     TravelTimeSeconds = travelTimeSeconds,
                     TravelTimeFormatted = travelTimeFormatted,
                     DwellTimeSeconds = dwellTimeSeconds,
-                    DwellTimeFormatted = dwellTimeFormatted
+                    DwellTimeFormatted = dwellTimeFormatted,
+                    IsArrived = log.ArrivedAt.HasValue,
+                    IsCleared = log.ClearedAt.HasValue,
+                    OrderIndex = log.OrderIndex ?? 0
                 });
 
-                // Set arrival or departure as previous point for next calculation
-                previousTimestamp = log.LeftAt ?? log.ArrivedAt.Value;
+                // Set arrival or departure as previous point for next calculation if arrived
+                if (log.ArrivedAt.HasValue)
+                {
+                    previousTimestamp = log.LeftAt ?? log.ArrivedAt.Value;
+                }
             }
 
             // 3. Completed event
@@ -249,7 +253,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
         {
             var checkpoints = session.PatrolCheckpointLogs.Where(l => l.Status != 0).ToList();
             var totalCheckpoints = checkpoints.Count;
-            var completedCheckpoints = checkpoints.Count(l => l.LeftAt != null);
+            // AS REQUESTED: Count based on ClearedAt (satisfied dwell time)
+            var completedCheckpoints = checkpoints.Count(l => l.ClearedAt != null);
             var completionPercentage = totalCheckpoints > 0
                 ? (completedCheckpoints * 100 / totalCheckpoints)
                 : 0;

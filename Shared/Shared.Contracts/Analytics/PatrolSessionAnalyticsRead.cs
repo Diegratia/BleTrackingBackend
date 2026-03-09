@@ -55,11 +55,14 @@ namespace Shared.Contracts.Analytics
     {
         public string Stage { get; set; }       // "started", "checkpoint_1", "checkpoint_2", ..., "completed"
         public string StageName { get; set; }   // "Started Patrol", "Checkpoint: Lobby", etc.
-        public DateTime Timestamp { get; set; }
+        public DateTime? Timestamp { get; set; } // Null if skipped
         public int? TravelTimeSeconds { get; set; }
         public string? TravelTimeFormatted { get; set; }
         public int? DwellTimeSeconds { get; set; }
         public string? DwellTimeFormatted { get; set; }
+        public bool IsArrived { get; set; }
+        public bool IsCleared { get; set; }
+        public int OrderIndex { get; set; }
     }
 
     /// <summary>
