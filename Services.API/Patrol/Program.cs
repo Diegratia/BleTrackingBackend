@@ -84,6 +84,7 @@ builder.Services.AddScoped<IPatrolAssignmentValidatorService, PatrolAssignmentVa
 builder.Services.AddScoped<IPatrolCaseValidatorService, PatrolCaseValidatorService>();
 builder.Services.AddScoped<IPatrolSessionAnalyticsService, PatrolSessionAnalyticsService>();
 builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
+builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
 builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<MqttPubQueue>();
