@@ -225,6 +225,14 @@ namespace Repositories.DbContexts
                             v => v == ApplicationType.Empty ? "" : v.ToString().ToLower(),
                             v => string.IsNullOrEmpty(v) ? ApplicationType.Empty : (ApplicationType)Enum.Parse(typeof(ApplicationType), v, true)
                         );
+                    entity.Property(e => e.PatrolTrackingMode)
+                        .HasColumnType("nvarchar(255)")
+                        .IsRequired()
+                        .HasDefaultValue(PatrolTrackingMode.Auto)
+                        .HasConversion(
+                            v => v == PatrolTrackingMode.Auto ? "" : v.ToString().ToLower(),
+                            v => string.IsNullOrEmpty(v) ? PatrolTrackingMode.Auto : (PatrolTrackingMode)Enum.Parse(typeof(PatrolTrackingMode), v, true)
+                        );
                     entity.Property(e => e.LicenseType)
                         .HasColumnType("nvarchar(255)")
                         .IsRequired()

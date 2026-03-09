@@ -27,17 +27,21 @@ namespace BusinessLogic.Services.Implementation
         private readonly IAuditEmitter _audit;
         private readonly IMqttPubQueue _mqttQueue;
 
+        private readonly IMstApplicationService _applicationService;
+
         public PatrolSessionService(
             PatrolSessionRepository repo,
             IPatrolCaseService caseService,
             IAuditEmitter audit,
             IMqttPubQueue mqttQueue,
+            IMstApplicationService applicationService,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _repo = repo;
             _caseService = caseService;
             _audit = audit;
             _mqttQueue = mqttQueue;
+            _applicationService = applicationService;
         }
         public async Task<object> FilterAsync(
             DataTablesProjectedRequest request,
@@ -273,10 +277,13 @@ namespace BusinessLogic.Services.Implementation
                     security = security.Name
                 }
             );
+            var trackingMode = await GetPatrolTrackingModeAsync();
+
             _mqttQueue.Enqueue("patrol/session/started", JsonSerializer.Serialize(new {
-            sessionId = patrolSession.Id.ToString(),
-            securityId = security.Id.ToString()
-        }));
+                sessionId = patrolSession.Id.ToString(),
+                securityId = security.Id.ToString(),
+                patrolTrackingMode = trackingMode.ToString()
+            }));
             
 
 
@@ -328,8 +335,26 @@ namespace BusinessLogic.Services.Implementation
             ?? throw new Exception("Failed to load stopped PatrolSession");
     }
 
+    private async Task<PatrolTrackingMode> GetPatrolTrackingModeAsync()
+    {
+        var application = await _applicationService.GetApplicationByIdAsync(AppId);
+        if (application == null)
+            return PatrolTrackingMode.Auto;
+
+        return application.PatrolTrackingMode;
+    }
+
     public async Task<object> SubmitCheckpointActionAsync(PatrolCheckpointActionDto dto)
     {
+        // 0. Check if application is in Auto mode - manual submission not allowed
+        var trackingMode = await GetPatrolTrackingModeAsync();
+        if (trackingMode == PatrolTrackingMode.Auto)
+        {
+            throw new BusinessException(
+                "Manual checkpoint submission is not allowed in Auto tracking mode. " +
+                "The BLE tracking engine handles checkpoint detection automatically.");
+        }
+
         // 1. Validate active checkpoint presence
         var log = await _repo.GetActiveCheckpointLogAsync(dto.PatrolCheckpointLogId, dto.PatrolAreaId);
         if (log == null)

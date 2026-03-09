@@ -1,4 +1,6 @@
 using System;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace Data.ViewModels
 {
@@ -22,6 +24,7 @@ namespace Data.ViewModels
         public string LicenseCode { get; set; }
         public string LicenseType { get; set; }
         public int? ApplicationStatus { get; set; }
+        public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
     }
 
     public class MstApplicationCreateDto
@@ -41,6 +44,7 @@ namespace Data.ViewModels
         public string ApplicationCustomPort { get; set; }
         public string LicenseCode { get; set; }
         public string LicenseType { get; set; }
+        public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
     }
 
     public class MstApplicationUpdateDto
@@ -60,5 +64,6 @@ namespace Data.ViewModels
         public string ApplicationCustomPort { get; set; }
         public string LicenseCode { get; set; }
         public string LicenseType { get; set; }
+        public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
     }
 }

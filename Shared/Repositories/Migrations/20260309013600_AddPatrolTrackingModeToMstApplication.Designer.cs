@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DbContexts;
 
@@ -11,9 +12,11 @@ using Repositories.DbContexts;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(BleTrackingDbContext))]
-    partial class BleTrackingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309013600_AddPatrolTrackingModeToMstApplication")]
+    partial class AddPatrolTrackingModeToMstApplication
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2086,11 +2089,8 @@ namespace Repositories.Migrations
                         .HasDefaultValue("Single")
                         .HasColumnName("organization_type");
 
-                    b.Property<string>("PatrolTrackingMode")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(255)")
-                        .HasDefaultValue("")
+                    b.Property<int>("PatrolTrackingMode")
+                        .HasColumnType("int")
                         .HasColumnName("patrol_tracking_mode");
 
                     b.HasKey("Id");

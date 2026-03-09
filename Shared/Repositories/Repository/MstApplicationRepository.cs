@@ -50,7 +50,8 @@ namespace Repositories.Repository
                 ApplicationCustomPort = x.ApplicationCustomPort,
                 LicenseCode = x.LicenseCode,
                 LicenseType = x.LicenseType.ToString(),
-                ApplicationStatus = x.ApplicationStatus ?? 1
+                ApplicationStatus = x.ApplicationStatus ?? 1,
+                PatrolTrackingMode = x.PatrolTrackingMode
             });
         }
 

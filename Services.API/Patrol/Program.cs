@@ -107,6 +107,9 @@ builder.Services.AddScoped<MstSecurityRepository>();
 builder.Services.AddScoped<PatrolSessionRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
+builder.Services.AddScoped<MstApplicationRepository>();
+builder.Services.AddScoped<IMstApplicationService, MstApplicationService>();
+
 
 builder.UseDefaultHostExtension("PATROL_PORT", "5020");
 builder.Host.UseWindowsService();

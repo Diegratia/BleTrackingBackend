@@ -85,7 +85,11 @@ namespace Entities.Models
         [Column("application_status")]
         public int? ApplicationStatus { get; set; } = 1;
 
+        [Column("patrol_tracking_mode")]
+        public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
+
         //relasi antar domain table database
+
         //mstapplication many to ... terhadap table dibawah ini
 
         public ICollection<AlarmRecordTracking> AlarmRecordTrackings { get; set; } = new List<AlarmRecordTracking>();

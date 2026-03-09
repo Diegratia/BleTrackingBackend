@@ -421,4 +421,11 @@ namespace Shared.Contracts
         HalfCycle = 0, // A-B-C -> C-B-A 2 cycle
         FullCycle = 1  // A-B-C -> C-B-A 1 cycle
     }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum PatrolTrackingMode
+    {
+        Auto = 0,     // BLE engine tracks automatically
+        Manual = 1  // Default - requires manual checkpoint submission
+    }
 }
