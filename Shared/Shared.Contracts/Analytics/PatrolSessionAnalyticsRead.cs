@@ -60,6 +60,9 @@ namespace Shared.Contracts.Analytics
         public string? TravelTimeFormatted { get; set; }
         public int? DwellTimeSeconds { get; set; }
         public string? DwellTimeFormatted { get; set; }
+        public int? MinDwellTimeSeconds { get; set; }
+        public int? MaxDwellTimeSeconds { get; set; }
+        public string DwellTimeStatus { get; set; } = "Normal"; // Normal, Under, Over
         public bool IsArrived { get; set; }
         public bool IsCleared { get; set; }
         public int OrderIndex { get; set; }

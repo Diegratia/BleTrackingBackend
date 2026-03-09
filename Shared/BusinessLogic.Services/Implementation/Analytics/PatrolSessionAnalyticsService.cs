@@ -198,14 +198,24 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     ? FormatDuration(TimeSpan.FromSeconds(travelTimeSeconds.Value))
                     : null;
 
-                // 2. Calculate Dwell Time (how long they stayed at this point)
+                // 2. Calculate Dwell Time status
                 int? dwellTimeSeconds = null;
                 string? dwellTimeFormatted = null;
+                string dwellTimeStatus = "Normal";
 
                 if (log.ArrivedAt.HasValue && log.LeftAt.HasValue)
                 {
                     dwellTimeSeconds = (int)(log.LeftAt.Value - log.ArrivedAt.Value).TotalSeconds;
                     dwellTimeFormatted = FormatDuration(log.LeftAt.Value - log.ArrivedAt.Value);
+
+                    if (log.MaxDwellTime.HasValue && log.MaxDwellTime > 0 && dwellTimeSeconds > log.MaxDwellTime)
+                    {
+                        dwellTimeStatus = "Over";
+                    }
+                    else if (log.MinDwellTime.HasValue && log.MinDwellTime > 0 && dwellTimeSeconds < log.MinDwellTime && !log.ClearedAt.HasValue)
+                    {
+                        dwellTimeStatus = "Under";
+                    }
                 }
 
                 timeline.Add(new PatrolTimelineEvent
@@ -217,6 +227,9 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     TravelTimeFormatted = travelTimeFormatted,
                     DwellTimeSeconds = dwellTimeSeconds,
                     DwellTimeFormatted = dwellTimeFormatted,
+                    MinDwellTimeSeconds = log.MinDwellTime,
+                    MaxDwellTimeSeconds = log.MaxDwellTime,
+                    DwellTimeStatus = dwellTimeStatus,
                     IsArrived = log.ArrivedAt.HasValue,
                     IsCleared = log.ClearedAt.HasValue,
                     OrderIndex = log.OrderIndex ?? 0
