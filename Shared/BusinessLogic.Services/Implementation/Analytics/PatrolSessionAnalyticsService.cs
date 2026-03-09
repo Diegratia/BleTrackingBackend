@@ -222,7 +222,10 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 {
                     Stage = $"checkpoint_{log.OrderIndex}",
                     StageName = $"Checkpoint: {log.AreaNameSnap}",
-                    Timestamp = log.ArrivedAt,  // UTC
+                    Timestamp = log.ArrivedAt,  // Legacy UTC
+                    ArrivedAt = log.ArrivedAt,  // UTC Arrival
+                    LeftAt = log.LeftAt,        // UTC Departure
+                    ClearedAt = log.ClearedAt,  // UTC Clearing (Dwell met)
                     TravelTimeSeconds = travelTimeSeconds,
                     TravelTimeFormatted = travelTimeFormatted,
                     DwellTimeSeconds = dwellTimeSeconds,
