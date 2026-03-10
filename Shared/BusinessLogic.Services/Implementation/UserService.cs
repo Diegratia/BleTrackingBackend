@@ -91,7 +91,7 @@ namespace BusinessLogic.Services.Implementation
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hash password
                 IsCreatedPassword = 1,  // Password already set
                 IsEmailConfirmation = 1, // Auto-confirmed
-                EmailConfirmationCode = null,
+                EmailConfirmationCode = "direct",
                 EmailConfirmationExpiredAt = DateTime.UtcNow, // Set to current time since already confirmed
                 EmailConfirmationAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.MinValue,
