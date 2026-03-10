@@ -63,7 +63,7 @@ namespace BusinessLogic.Services.Implementation
             return _mapper.Map<IEnumerable<UserRead>>(users);
         }
 
-        public async Task<UserDto> CreateAsync(CreateUserDto dto)
+        public async Task<UserRead> CreateAsync(CreateUserDto dto)
         {
             var currentUser = await _repository.GetByIdEntityAsync(UserIdFromToken);
             if (currentUser == null)
@@ -115,7 +115,7 @@ namespace BusinessLogic.Services.Implementation
             );
 
             var result = await _repository.GetByIdAsync(newUser.Id);
-            return _mapper.Map<UserDto>(result);
+            return result;  // Direct return pattern - repository already returns UserRead
         }
 
         public async Task UpdateAsync(Guid id, UpdateUserDto dto)
