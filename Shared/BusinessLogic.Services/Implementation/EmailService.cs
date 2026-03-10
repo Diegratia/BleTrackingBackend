@@ -54,9 +54,8 @@ public interface IEmailService
         string? confirmationCode,
         string invitationUrl);
 
-    
-                
-    // Task SendVisitorInvitationEmailAsync(string toEmail, string name, string confirmationCode);
+    Task SendPasswordResetEmailAsync(string toEmail, string username, string resetToken);
+
 
 }
 
@@ -300,6 +299,38 @@ public class EmailService : IEmailService
             EnableSsl = true
         };
 
+        await client.SendMailAsync(message);
+    }
+
+    public async Task SendPasswordResetEmailAsync(string toEmail, string username, string resetToken)
+    {
+        var smtpHost = _configuration["Email:SmtpHost"];
+        var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+        var smtpUsername = _configuration["Email:SmtpUsername"];
+        var smtpPassword = _configuration["Email:SmtpPassword"];
+        var fromEmail = _configuration["Email:FromEmail"];
+        var fromName = _configuration["Email:FromName"];
+
+        var template = await LoadEmailTemplateAsync("PasswordReset.html");
+
+        var bodyHtml = template
+            .Replace("%username%", username)
+            .Replace("%resetToken%", resetToken);
+
+        var message = new MailMessage
+        {
+            From = new MailAddress(fromEmail, fromName),
+            Subject = "Password Reset Request",
+            Body = bodyHtml,
+            IsBodyHtml = true
+        };
+        message.To.Add(toEmail);
+
+        using var client = new SmtpClient(smtpHost, smtpPort)
+        {
+            Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+            EnableSsl = true
+        };
         await client.SendMailAsync(message);
     }
 }

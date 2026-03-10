@@ -161,6 +161,25 @@ namespace Data.ViewModels
         public Guid GroupId { get; set; }
     }
 
+    /// <summary>
+    /// DTO for forgot password request
+    /// </summary>
+    public class ForgotPasswordDto
+    {
+        public string Email { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for reset password with token
+    /// </summary>
+    public class ResetPasswordDto
+    {
+        public string Email { get; set; }
+        public string ResetToken { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
 }
 
 

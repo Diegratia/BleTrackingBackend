@@ -138,5 +138,33 @@ namespace Web.API.Controllers.Controllers
             await _authService.SetPasswordAsync(dto);
             return Ok(ApiResponse.Success("Password set successfully, you can now login"));
         }
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            await _authService.ForgotPasswordAsync(dto);
+            return Ok(ApiResponse.Success("If an account with this email exists, a password reset link has been sent"));
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            await _authService.ResetPasswordAsync(dto);
+            return Ok(ApiResponse.Success("Password reset successfully, you can now login"));
+        }
     }
 }

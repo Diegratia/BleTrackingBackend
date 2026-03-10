@@ -81,5 +81,13 @@ namespace Entities.Models
 
         [Column("can_update_monitoring_config")]
         public bool? CanUpdateMonitoringConfig { get; set; }
+
+        // Password Reset fields
+        [Column("password_reset_token")]
+        [StringLength(255)]
+        public string? PasswordResetToken { get; set; }
+
+        [Column("password_reset_token_expires_at")]
+        public DateTime? PasswordResetTokenExpiresAt { get; set; }
     }
 }

@@ -65,7 +65,9 @@ namespace BusinessLogic.Services.Implementation
             ALARM,
             ACTION,
             SESSION_START,
-            SESSION_STOP
+            SESSION_STOP,
+            FORGOT_PASSWORD,
+            RESET_PASSWORD
         }
 
         public void Created(string entity, object id, string details, object? meta = null)

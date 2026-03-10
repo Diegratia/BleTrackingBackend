@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json;
+using System.IO;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
@@ -142,6 +143,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+var basePath = AppContext.BaseDirectory;
+var uploadsPath = Path.Combine(basePath, "Uploads", "visitorFaceImages");
+Directory.CreateDirectory(uploadsPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads/visitorFaceImages"
+});
 
 // // app.UseHttpsRedirection();
 app.UseMiddleware<CustomExceptionMiddleware>();

@@ -37,10 +37,8 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto);
         Task<AuthResponseDto> IntegrationLoginAsync(IntegrationLoginDto dto);
         Task<AuthResponseDto> LoginSsoAsync(string windowsUsername);
-        
-
-        
-            // Task ConfirmVisitorInvitationAsync(string email); 
+        Task ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task ResetPasswordAsync(ResetPasswordDto dto);
     }
     public class AuthService : IAuthService
     {
@@ -551,6 +549,64 @@ namespace BusinessLogic.Services.Interface
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
                 return;
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            // Find user by email (use Raw to avoid application filter for this operation)
+            var user = await _userRepository.GetByEmailConfirmPasswordAsync(dto.Email.ToLower());
+
+            // Always return success to prevent email enumeration
+            if (user == null)
+                return;
+
+            // Generate reset token (6-character code)
+            var resetToken = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+
+            await _userRepository.UpdatePasswordResetAsync(user);
+
+            // Send email with reset token
+            await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, resetToken);
+
+            _audit.Action(
+                AuditEmitter.AuditAction.FORGOT_PASSWORD,
+                user.Username,
+                "Password reset requested",
+                new { email = user.Email, username = user.Username }
+            );
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new ArgumentException("Passwords do not match");
+
+            // Validate reset token
+            var user = await _userRepository.GetByPasswordResetTokenAsync(dto.ResetToken);
+
+            if (user == null)
+                throw new UnauthorizedAccessException("Invalid or expired reset token");
+
+            if (user.Email.ToLower() != dto.Email.ToLower())
+                throw new UnauthorizedAccessException("Email does not match reset token");
+
+            // Hash new password
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.IsCreatedPassword = 1;
+            user.PasswordResetToken = null; // Clear reset token
+            user.PasswordResetTokenExpiresAt = null;
+
+            await _userRepository.UpdatePasswordResetAsync(user);
+
+            _audit.Action(
+                AuditEmitter.AuditAction.RESET_PASSWORD,
+                user.Username,
+                "Password reset successfully",
+                new { email = user.Email, username = user.Username }
+            );
         }
     }
 }

@@ -274,6 +274,30 @@ namespace Repositories.Repository
             return await query.AnyAsync();
         }
 
+        // ============ PASSWORD RESET METHODS ============
+
+        public async Task<User> GetByPasswordResetTokenAsync(string resetToken)
+        {
+            return await _context.Users
+                .Include(u => u.Group)
+                .Where(u => u.PasswordResetToken == resetToken && u.PasswordResetTokenExpiresAt > DateTime.UtcNow && u.Status != 0)
+                .FirstOrDefaultAsync() ?? throw new KeyNotFoundException("Invalid or expired reset token");
+        }
+
+        public async Task UpdatePasswordResetAsync(User user)
+        {
+            var existingUser = await _context.Users.FindAsync(user.Id);
+            if (existingUser == null)
+                throw new KeyNotFoundException("User not found");
+
+            existingUser.PasswordResetToken = user.PasswordResetToken;
+            existingUser.PasswordResetTokenExpiresAt = user.PasswordResetTokenExpiresAt;
+            existingUser.Password = user.Password;
+            existingUser.IsCreatedPassword = user.IsCreatedPassword;
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<User> AddAsync(User user)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
