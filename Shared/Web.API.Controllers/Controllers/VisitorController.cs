@@ -13,7 +13,7 @@ namespace Web.API.Controllers.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MinLevel(LevelPriority.SuperAdmin)]
+    [MinLevel(LevelPriority.UserCreated)]
 
     public class VisitorController : ControllerBase
     {

@@ -16,6 +16,7 @@ using Shared.Contracts;
 using Shared.Contracts.Read;
 using DataView;
 using System.Text.Json;
+using BusinessLogic.Services.Background;
 
 namespace BusinessLogic.Services.Implementation
 {
@@ -26,6 +27,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IAuditEmitter _audit;
         private readonly IUserService _userService;
         private readonly MstSecurityRepository _securityRepository;
+        private readonly IMqttPubQueue _mqttQueue;
 
         public AlarmTriggersService(
             AlarmTriggersRepository repository,
@@ -33,12 +35,14 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor,
             IAuditEmitter audit,
             IUserService userService,
+            IMqttPubQueue mqttQueue,
             MstSecurityRepository securityRepository) : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _audit = audit;
             _userService = userService;
+            _mqttQueue = mqttQueue;
             _securityRepository = securityRepository;
         }
 
@@ -156,6 +160,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateAsync(alarmTriggers);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", alarmTriggers.Id, $"Alarm {alarmTriggers.BeaconId} updated with action: {action}");
         }
 
@@ -220,7 +225,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Alarm acknowledged by {username}");
         }
 
         /// <summary>
@@ -260,7 +266,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Alarm dispatched to {security.Name} by {username}");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Alarm dispatched to {security.Name} by {username}");
         }
 
         /// <summary>
@@ -284,7 +291,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Alarm put in waiting queue by {username}");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Alarm put in waiting queue by {username}");
         }
 
         /// <summary>
@@ -314,7 +322,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Alarm accepted by security {username}");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Alarm accepted by security {username}");
         }
 
         /// <summary>
@@ -341,7 +350,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location");
         }
 
         /// <summary>
@@ -370,7 +380,8 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
-             _audit.Updated("AlarmTriggers", id, $"Investigation completed by {username}. Result: {result}");
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
+            _audit.Updated("AlarmTriggers", id, $"Investigation completed by {username}. Result: {result}");
         }
 
         /// <summary>
@@ -404,6 +415,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarm resolved by {username}");
         }
 
@@ -440,6 +452,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarm investigation postponed by {username} until {dto.PostponedUntilDate:yyyy-MM-dd HH:mm}");
         }
 
@@ -468,6 +481,7 @@ namespace BusinessLogic.Services.Implementation
             alarm.ActionUpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(alarm);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarm cancelled (no action) by {username}");
         }
 
@@ -516,6 +530,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} acknowledged by {username}");
         }
 
@@ -552,6 +567,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} dispatched to {security.Name} by {username}");
         }
 
@@ -577,6 +593,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} put in waiting queue by {username}");
         }
 
@@ -607,6 +624,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} accepted by security {username}");
         }
 
@@ -635,6 +653,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Security {username} arrived at location for beacon {sourceAlarm.BeaconId}");
         }
 
@@ -662,6 +681,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Investigation completed for beacon {sourceAlarm.BeaconId} by {username}. Result: {result}");
         }
 
@@ -693,6 +713,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} resolved by {username}");
         }
 
@@ -726,6 +747,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} postponed by {username} until {dto.PostponedUntilDate:yyyy-MM-dd HH:mm}");
         }
 
@@ -749,6 +771,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             await _repository.UpdateBatchAsync(alarms);
+            _mqttQueue.Enqueue("engine/refresh/alarm-related", "");
             _audit.Updated("AlarmTriggers", id, $"Alarms for beacon {sourceAlarm.BeaconId} cancelled (no action) by {username}");
         }
 

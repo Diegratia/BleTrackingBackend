@@ -235,6 +235,8 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     DwellTimeStatus = dwellTimeStatus,
                     IsArrived = log.ArrivedAt.HasValue,
                     IsCleared = log.ClearedAt.HasValue,
+                    PatrolCheckpointStatus = log.CheckpointStatus,
+                    CycleIndex = log.CycleIndex,
                     OrderIndex = log.OrderIndex ?? 0
                 });
 

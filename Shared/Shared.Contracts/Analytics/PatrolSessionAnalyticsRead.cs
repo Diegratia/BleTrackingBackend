@@ -68,6 +68,8 @@ namespace Shared.Contracts.Analytics
         public string DwellTimeStatus { get; set; } = "Normal"; // Normal, Under, Over
         public bool IsArrived { get; set; }
         public bool IsCleared { get; set; }
+        public PatrolCheckpointStatus PatrolCheckpointStatus;
+        public int CycleIndex { get; set; }
         public int OrderIndex { get; set; }
     }
 

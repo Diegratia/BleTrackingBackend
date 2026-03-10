@@ -75,12 +75,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserGroupService, UserGroupService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAlarmCategorySettingsService, AlarmCategorySettingsService>();
-builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
-builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<MqttPubQueue>();
 builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
 builder.Services.AddHostedService<MqttPubBackgroundService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<AlarmCategorySettingsRepository>();
