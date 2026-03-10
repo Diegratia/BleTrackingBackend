@@ -38,6 +38,9 @@ namespace BusinessLogic.Services.Implementation.Analytics
         {
             var rows = await _repository.GetAreaDailySummaryAsync(request, groupByMode);
 
+            // Filter out rows with null dates or null alarm status (data integrity issues)
+            rows = rows.Where(r => r.Date != default && !string.IsNullOrWhiteSpace(r.AlarmStatus)).ToList();
+
             // labels (dates)
             var dates = rows
                 .Select(r => r.Date)
@@ -56,6 +59,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 {
                     var statuses = entityGroup
                         .Select(x => x.AlarmStatus)
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
                         .Distinct();
 
                     var series = statuses.Select(status => new global::Shared.Contracts.ChartSeriesDto
@@ -72,7 +76,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     return new AlarmAreaSeriesRead
                     {
                         EntityId = entityGroup.Key.EntityId,
-                        Name = entityGroup.Key.Name,
+                        Name = entityGroup.Key.Name ?? "Unknown",
                         Series = series
                     };
                 })

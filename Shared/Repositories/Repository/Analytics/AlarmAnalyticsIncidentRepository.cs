@@ -74,12 +74,31 @@ namespace Repositories.Repository.Analytics
 
             var query = _context.AlarmRecordTrackings
                 .AsNoTracking()
-                .Include(a => a.FloorplanMaskedArea.Floorplan.Floor.Building)
+                .Include(a => a.FloorplanMaskedArea)
                 .Where(a => a.Timestamp >= from && a.Timestamp <= to);
 
             query = ApplyFilters(query, request);
 
-            // Get raw data first, then group in memory based on mode
+            // Filter based on group mode to avoid null navigation issues
+            // Only include records where the required master data exists
+            query = groupByMode switch
+            {
+                AlarmGroupByMode.Building => query
+                    .Where(a => a.FloorplanMaskedArea != null
+                        && a.FloorplanMaskedArea.Floorplan != null
+                        && a.FloorplanMaskedArea.Floorplan.Floor != null
+                        && a.FloorplanMaskedArea.Floorplan.Floor.Building != null),
+                AlarmGroupByMode.Floor => query
+                    .Where(a => a.FloorplanMaskedArea != null
+                        && a.FloorplanMaskedArea.Floorplan != null
+                        && a.FloorplanMaskedArea.Floorplan.Floor != null),
+                AlarmGroupByMode.Floorplan => query
+                    .Where(a => a.FloorplanMaskedArea != null
+                        && a.FloorplanMaskedArea.Floorplan != null),
+                _ => query.Where(a => a.FloorplanMaskedArea != null)
+            };
+
+            // Get raw data - only select what we need to avoid null navigation issues
             var rawData = await query
                 .Where(a => a.Timestamp.HasValue)
                 .Select(a => new
@@ -99,7 +118,7 @@ namespace Repositories.Repository.Analytics
                 .ToListAsync();
 
             // Group by entity based on mode
-            var grouped = groupByMode switch
+            IEnumerable<AlarmAreaDailyAggregateRM> grouped = groupByMode switch
             {
                 AlarmGroupByMode.Building => rawData
                     .GroupBy(x => new { x.Date, x.BuildingId, x.BuildingName, x.Alarm })
