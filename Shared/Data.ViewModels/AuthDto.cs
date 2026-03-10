@@ -180,6 +180,16 @@ namespace Data.ViewModels
         public string ConfirmPassword { get; set; }
     }
 
+    /// <summary>
+    /// DTO for changing password while logged in
+    /// </summary>
+    public class ChangePasswordDto
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
 }
 
 

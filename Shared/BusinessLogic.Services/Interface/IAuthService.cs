@@ -39,6 +39,7 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> LoginSsoAsync(string windowsUsername);
         Task ForgotPasswordAsync(ForgotPasswordDto dto);
         Task ResetPasswordAsync(ResetPasswordDto dto);
+        Task ChangePasswordAsync(ChangePasswordDto dto, Guid userId);
     }
     public class AuthService : IAuthService
     {
@@ -547,8 +548,10 @@ namespace BusinessLogic.Services.Interface
 
         public async Task LogoutAsync(string refreshToken)
         {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-                return;
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await _refreshTokenRepository.DeleteRefreshTokenAsync(refreshToken);
+            }
         }
 
         public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
@@ -605,6 +608,38 @@ namespace BusinessLogic.Services.Interface
                 AuditEmitter.AuditAction.RESET_PASSWORD,
                 user.Username,
                 "Password reset successfully",
+                new { email = user.Email, username = user.Username }
+            );
+        }
+
+        public async Task ChangePasswordAsync(ChangePasswordDto dto, Guid userId)
+        {
+            // Validate passwords match
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new ArgumentException("New password and confirmation password do not match");
+
+            // Get user
+            var user = await _userRepository.GetByIdAsyncRaw(userId);
+            if (user == null)
+                throw new UnauthorizedAccessException("User not found");
+
+            // Verify current password
+            if (string.IsNullOrEmpty(user.Password) || !BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.Password))
+                throw new UnauthorizedAccessException("Current password is incorrect");
+
+            // Hash new password
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.IsCreatedPassword = 1;
+
+            await _userRepository.UpdateRawAsync(user);
+
+            // Invalidate all refresh tokens for security
+            await _refreshTokenRepository.DeleteAllByUserIdAsync(userId);
+
+            _audit.Action(
+                AuditEmitter.AuditAction.RESET_PASSWORD,
+                user.Username,
+                "Password changed successfully",
                 new { email = user.Email, username = user.Username }
             );
         }

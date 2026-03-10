@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Data.ViewModels;
 using BusinessLogic.Services.Implementation;
@@ -165,6 +166,24 @@ namespace Web.API.Controllers.Controllers
 
             await _authService.ResetPasswordAsync(dto);
             return Ok(ApiResponse.Success("Password reset successfully, you can now login"));
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(ApiResponse.Unauthorized("User not authenticated"));
+
+            await _authService.ChangePasswordAsync(dto, Guid.Parse(userId));
+            return Ok(ApiResponse.Success("Password changed successfully"));
         }
     }
 }
