@@ -98,11 +98,11 @@ namespace BusinessLogic.Services.Implementation
                 Status = 1, // Active
                 ApplicationId = userGroup.ApplicationId,
                 GroupId = dto.GroupId,
-                // Permission flags - default null (inherit dari Group)
-                CanApprovePatrol = null,
-                CanAlarmAction = null,
-                CanCreateMonitoringConfig = null,
-                CanUpdateMonitoringConfig = null
+                // Permission flags dari DTO (bukan hardcoded null)
+                CanApprovePatrol = dto.CanApprovePatrol,
+                CanAlarmAction = dto.CanAlarmAction,
+                CanCreateMonitoringConfig = dto.CanCreateMonitoringConfig,
+                CanUpdateMonitoringConfig = dto.CanUpdateMonitoringConfig
             };
 
             await _repository.AddAsync(newUser);

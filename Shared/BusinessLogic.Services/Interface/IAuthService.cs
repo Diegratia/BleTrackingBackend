@@ -348,7 +348,12 @@ namespace BusinessLogic.Services.Interface
                 LastLoginAt = DateTime.MinValue,
                 Status = 0,
                 ApplicationId = (await _userGroupRepository.GetByIdAsync(dto.GroupId)).ApplicationId,
-                GroupId = dto.GroupId
+                GroupId = dto.GroupId,
+                // Permission flags dari DTO
+                CanApprovePatrol = dto.CanApprovePatrol,
+                CanAlarmAction = dto.CanAlarmAction,
+                CanCreateMonitoringConfig = dto.CanCreateMonitoringConfig,
+                CanUpdateMonitoringConfig = dto.CanUpdateMonitoringConfig
             };
 
             await _userRepository.AddAsync(newUser);

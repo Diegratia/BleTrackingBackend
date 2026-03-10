@@ -54,6 +54,26 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string Email { get; set; }
         public Guid GroupId { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanApprovePatrol { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanAlarmAction { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanCreateMonitoringConfig { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanUpdateMonitoringConfig { get; set; }
     }
 
     public class ConfirmEmailDto
@@ -159,6 +179,26 @@ namespace Data.ViewModels
         public string Email { get; set; }
         public string Password { get; set; }  // Required for direct creation
         public Guid GroupId { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanApprovePatrol { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanAlarmAction { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanCreateMonitoringConfig { get; set; }
+
+        /// <summary>
+        /// Permission override: null = inherit dari Group.IsHead, true/false = override
+        /// </summary>
+        public bool? CanUpdateMonitoringConfig { get; set; }
     }
 
     /// <summary>
