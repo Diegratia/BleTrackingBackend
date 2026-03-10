@@ -332,8 +332,9 @@ namespace BusinessLogic.Services.Interface
                 await _userGroupRepository.ValidateGroupRoleAsync(dto.GroupId, LevelPriority.UserCreated, LevelPriority.Primary, LevelPriority.PrimaryAdmin);
             }
 
-            // var confirmationCode = Guid.NewGuid().ToString();
-            var confirmationCode = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+            // Generate secure confirmation token (full GUID instead of 6-character code)
+            var confirmationCode = Guid.NewGuid().ToString("N"); // 32-character secure token
+
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
@@ -358,8 +359,12 @@ namespace BusinessLogic.Services.Interface
 
             await _userRepository.AddAsync(newUser);
 
+            // Build confirmation URL with frontend base URL from configuration
+            var frontendBaseUrl = _configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
+            var confirmationUrl = $"{frontendBaseUrl}/user-form?type=confirm&token={confirmationCode}";
+
             // Kirim email konfirmasi
-            await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationCode);
+            await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationUrl);
 
             return new AuthResponseDto
             {

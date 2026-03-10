@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 
 public interface IEmailService
 {
-    Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode);
+    Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationUrl);
     Task SendVisitorInvitationEmailAsync(
     string toEmail,
     string name,
@@ -93,7 +93,7 @@ public class EmailService : IEmailService
         return await File.ReadAllTextAsync(templatePath);
     }
 
-    public async Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationCode)
+    public async Task SendConfirmationEmailAsync(string toEmail, string username, string confirmationUrl)
     {
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
@@ -106,7 +106,7 @@ public class EmailService : IEmailService
 
         var bodyHtml = template
             .Replace("%username%", username)
-            .Replace("%code%", confirmationCode);
+            .Replace("%confirmationUrl%", confirmationUrl);
 
         var message = new MailMessage
         {
