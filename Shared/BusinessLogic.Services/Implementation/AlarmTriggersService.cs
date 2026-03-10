@@ -209,7 +209,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new UnauthorizedException("User not found");
 
             if (!currentUser.HasAlarmActionPermission())
-                throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+                throw new UnauthorizedException("You dont have access for alarm action");
 
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
@@ -241,7 +241,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new UnauthorizedException("User not found");
 
             if (!currentUser.HasAlarmActionPermission())
-                throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+                throw new UnauthorizedException("You dont have access for alarm action");
 
             var username = UsernameFormToken;
             var alarm = await _repository.GetByIdEntityAsync(id);
@@ -509,7 +509,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var currentUser = await _userService.GetFromTokenAsync();
             if (currentUser == null) throw new UnauthorizedException("User not found");
-            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("You dont have access for alarm action");
 
             var username = UsernameFormToken;
             var alarms = await GetGroupedAlarmsAsync(id);
@@ -538,7 +538,7 @@ namespace BusinessLogic.Services.Implementation
         {
             var currentUser = await _userService.GetFromTokenAsync();
             if (currentUser == null) throw new UnauthorizedException("User not found");
-            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("Anda tidak memiliki akses alarm action");
+            if (!currentUser.HasAlarmActionPermission()) throw new UnauthorizedException("You dont have access for alarm action");
 
             var username = UsernameFormToken;
             var alarms = await GetGroupedAlarmsAsync(id);

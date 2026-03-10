@@ -56,7 +56,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new UnauthorizedException("User not found");
 
             if (!currentUser.HasCreateMonitoringConfigPermission())
-                throw new UnauthorizedException("Anda tidak memiliki akses create monitoring config");
+                throw new UnauthorizedException("You dont have access to create monitoring config");
 
             var config = _mapper.Map<MonitoringConfig>(createDto);
             SetCreateAudit(config);
@@ -76,7 +76,7 @@ namespace BusinessLogic.Services.Implementation
                 throw new UnauthorizedException("User not found");
 
             if (!currentUser.HasUpdateMonitoringConfigPermission())
-                throw new UnauthorizedException("Anda tidak memiliki akses update monitoring config");
+                throw new UnauthorizedException("You dont have access to update monitoring config");
 
             var config = await _repository.GetByIdEntityAsync(id);
             if (config == null)
