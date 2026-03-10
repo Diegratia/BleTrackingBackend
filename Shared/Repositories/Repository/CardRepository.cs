@@ -217,16 +217,31 @@ namespace Repositories.Repository
         public async Task<CardUsageCountRM> CardUsageCountAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+
             var q = _context.Cards
                 .AsNoTracking()
+                .Include(c => c.RegisteredMaskedArea)
+                    .ThenInclude(ma => ma.Floorplan)
+                        .ThenInclude(fp => fp.Floor)
                 .Where(c => c.StatusCard != 0);
+
+            // Apply ApplicationId filter BEFORE counting
+            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(c => c.RegisteredMaskedArea != null
+                    && c.RegisteredMaskedArea.Floorplan != null
+                    && c.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(c.RegisteredMaskedArea.Floorplan.Floor.BuildingId));
+            }
 
             var visitorUse = await q.Where(c => c.VisitorId != null && c.IsUsed == true).CountAsync();
             var memberUse = await q.Where(c => c.MemberId != null && c.IsUsed == true).CountAsync();
             var totalCard = await q.CountAsync();
             var totalUse = visitorUse + memberUse;
-
-            q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
 
             return new CardUsageCountRM
             {
@@ -237,7 +252,7 @@ namespace Repositories.Repository
             };
         }
 
-         public async Task<int> GetCountEachIdAsync()
+        public async Task<int> GetCountEachIdAsync()
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
 

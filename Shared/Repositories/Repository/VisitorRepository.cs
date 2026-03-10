@@ -68,9 +68,27 @@ namespace Repositories.Repository
 
             var q = _context.Visitors
                 .AsNoTracking()
+                .Include(v => v.CardRecords)
+                    .ThenInclude(cr => cr.Card)
+                        .ThenInclude(c => c.RegisteredMaskedArea)
+                            .ThenInclude(ma => ma.Floorplan)
+                                .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0 && c.IsBlacklist == true);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(v => v.CardRecords.Any(cr =>
+                    cr.Card != null
+                    && cr.Card.RegisteredMaskedArea != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(cr.Card.RegisteredMaskedArea.Floorplan.Floor.BuildingId)
+                ));
+            }
 
             return await q.CountAsync();
         }

@@ -275,9 +275,27 @@ namespace Repositories.Repository
             // === Query MEMBER ===
             var memberQuery = _context.MstMembers
                 .AsNoTracking()
+                .Include(m => m.CardRecords)
+                    .ThenInclude(cr => cr.Card)
+                        .ThenInclude(c => c.RegisteredMaskedArea)
+                            .ThenInclude(ma => ma.Floorplan)
+                                .ThenInclude(fp => fp.Floor)
                 .Where(x => x.Status != 0 && x.IsBlacklist == true);
 
             memberQuery = ApplyApplicationIdFilter(memberQuery, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                memberQuery = memberQuery.Where(m => m.CardRecords.Any(cr =>
+                    cr.Card != null
+                    && cr.Card.RegisteredMaskedArea != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(cr.Card.RegisteredMaskedArea.Floorplan.Floor.BuildingId)
+                ));
+            }
 
             var memberLogs = await memberQuery
                 .Select(t => new BlacklistLogRM
@@ -295,9 +313,26 @@ namespace Repositories.Repository
             // === Query VISITOR ===
             var visitorQuery = _context.Visitors
                 .AsNoTracking()
+                .Include(v => v.CardRecords)
+                    .ThenInclude(cr => cr.Card)
+                        .ThenInclude(c => c.RegisteredMaskedArea)
+                            .ThenInclude(ma => ma.Floorplan)
+                                .ThenInclude(fp => fp.Floor)
                 .Where(x => x.Status != 0 && x.IsBlacklist == true);
 
             visitorQuery = ApplyApplicationIdFilter(visitorQuery, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk operator
+            if (accessibleBuildingIds.Any())
+            {
+                visitorQuery = visitorQuery.Where(v => v.CardRecords.Any(cr =>
+                    cr.Card != null
+                    && cr.Card.RegisteredMaskedArea != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(cr.Card.RegisteredMaskedArea.Floorplan.Floor.BuildingId)
+                ));
+            }
 
             var visitorLogs = await visitorQuery
                 .Select(t => new BlacklistLogRM
@@ -326,9 +361,27 @@ namespace Repositories.Repository
 
             var q = _context.MstMembers
                 .AsNoTracking()
+                .Include(m => m.CardRecords)
+                    .ThenInclude(cr => cr.Card)
+                        .ThenInclude(c => c.RegisteredMaskedArea)
+                            .ThenInclude(ma => ma.Floorplan)
+                                .ThenInclude(fp => fp.Floor)
                 .Where(c => c.Status != 0 && c.IsBlacklist == true);
 
             q = ApplyApplicationIdFilter(q, applicationId, isSystemAdmin);
+
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                q = q.Where(m => m.CardRecords.Any(cr =>
+                    cr.Card != null
+                    && cr.Card.RegisteredMaskedArea != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan != null
+                    && cr.Card.RegisteredMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(cr.Card.RegisteredMaskedArea.Floorplan.Floor.BuildingId)
+                ));
+            }
 
             return await q.CountAsync();
         }
