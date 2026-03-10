@@ -568,16 +568,20 @@ namespace BusinessLogic.Services.Interface
             if (user == null)
                 return;
 
-            // Generate reset token (6-character code)
-            var resetToken = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+            // Generate secure reset token (full GUID instead of 6-character code)
+            var resetToken = Guid.NewGuid().ToString("N"); // 32-character secure token
 
             user.PasswordResetToken = resetToken;
             user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
 
             await _userRepository.UpdatePasswordResetAsync(user);
 
-            // Send email with reset token
-            await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, resetToken);
+            // Build reset URL with frontend base URL from configuration
+            var frontendBaseUrl = _configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
+            var resetUrl = $"{frontendBaseUrl}/user-form?type=reset&token={resetToken}";
+
+            // Send email with reset URL
+            await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, resetUrl);
 
             _audit.Action(
                 AuditEmitter.AuditAction.FORGOT_PASSWORD,

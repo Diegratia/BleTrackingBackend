@@ -24,7 +24,7 @@ namespace Shared.Contracts
         /// Frontend can use this to maintain consistent colors for specific series.
         /// Example: "#FF5733", "rgba(255, 87, 51, 1)"
         /// </summary>
-        // public string? Color { get; set; }
+        public string? Color { get; set; }
 
         // /// <summary>
         // /// Optional: Chart type override for this specific series.

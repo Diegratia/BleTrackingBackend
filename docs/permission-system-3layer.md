@@ -372,7 +372,7 @@ public async Task<AlarmTriggerRead> AcknowledgeAsync(Guid triggerId)
 
     // Cek permission menggunakan extension method
     if (!currentUser.CanAlarmAction())
-        throw new UnauthorizedException("Anda tidak memiliki akses action alarm");
+        throw new UnauthorizedException("You dont have access for alarm action");
 
     // ... rest of logic
 }

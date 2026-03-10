@@ -54,7 +54,7 @@ public interface IEmailService
         string? confirmationCode,
         string invitationUrl);
 
-    Task SendPasswordResetEmailAsync(string toEmail, string username, string resetToken);
+    Task SendPasswordResetEmailAsync(string toEmail, string username, string resetUrl);
 
 
 }
@@ -302,7 +302,7 @@ public class EmailService : IEmailService
         await client.SendMailAsync(message);
     }
 
-    public async Task SendPasswordResetEmailAsync(string toEmail, string username, string resetToken)
+    public async Task SendPasswordResetEmailAsync(string toEmail, string username, string resetUrl)
     {
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
@@ -315,7 +315,7 @@ public class EmailService : IEmailService
 
         var bodyHtml = template
             .Replace("%username%", username)
-            .Replace("%resetToken%", resetToken);
+            .Replace("%resetUrl%", resetUrl);
 
         var message = new MailMessage
         {

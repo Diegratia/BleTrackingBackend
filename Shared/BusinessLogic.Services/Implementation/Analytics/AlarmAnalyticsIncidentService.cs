@@ -7,27 +7,32 @@ using BusinessLogic.Services.Interface.Analytics;
 using BusinessLogic.Services.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Repositories.Repository;
 using Repositories.Repository.Analytics;
 using Repositories.Repository.RepoModel;
 using Shared.Contracts;
 using Shared.Contracts.Analytics;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Implementation.Analytics
 {
     public class AlarmAnalyticsIncidentService : BaseService, IAlarmAnalyticsIncidentService
     {
         private readonly AlarmAnalyticsIncidentRepository _repository;
+        private readonly AlarmCategorySettingsRepository _alarmCategorySettingsRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AlarmAnalyticsIncidentService> _logger;
 
         public AlarmAnalyticsIncidentService(
             AlarmAnalyticsIncidentRepository repository,
+            AlarmCategorySettingsRepository alarmCategorySettingsRepository,
             IMapper mapper,
             IAuditEmitter audit,
             IHttpContextAccessor http,
             ILogger<AlarmAnalyticsIncidentService> logger) : base(http)
         {
             _repository = repository;
+            _alarmCategorySettingsRepository = alarmCategorySettingsRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -40,6 +45,12 @@ namespace BusinessLogic.Services.Implementation.Analytics
 
             // Filter out rows with null dates or null alarm status (data integrity issues)
             rows = rows.Where(r => r.Date != default && !string.IsNullOrWhiteSpace(r.AlarmStatus)).ToList();
+
+            // Get alarm category settings for colors
+            var alarmCategorySettings = await _alarmCategorySettingsRepository.GetAllAsync();
+            var colorMap = alarmCategorySettings
+                .Where(x => !string.IsNullOrWhiteSpace(x.AlarmCategory) && !string.IsNullOrWhiteSpace(x.AlarmColor))
+                .ToDictionary(x => x.AlarmCategory!, x => x.AlarmColor!);
 
             // labels (dates)
             var dates = rows
@@ -65,6 +76,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                     var series = statuses.Select(status => new global::Shared.Contracts.ChartSeriesDto
                     {
                         Name = status,
+                        Color = colorMap.TryGetValue(status, out var color) ? color : null,
                         Data = dates.Select(date =>
                             entityGroup.FirstOrDefault(r =>
                                 r.Date == date &&

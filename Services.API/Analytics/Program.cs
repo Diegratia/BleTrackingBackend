@@ -81,6 +81,7 @@ builder.Services.AddScoped<VisitorRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<FloorplanDeviceRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
+builder.Services.AddScoped<AlarmCategorySettingsRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<TrackingReportPresetRepository>();
 
