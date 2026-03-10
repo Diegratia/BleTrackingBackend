@@ -339,7 +339,7 @@ namespace BusinessLogic.Services.Interface
                 Id = Guid.NewGuid(),
                 Username = dto.Username.ToLower(),
                 Email = dto.Email.ToLower(),
-                Password = null!,
+                Password = "",
                 IsCreatedPassword = 0,
                 IsEmailConfirmation = 0,
                 EmailConfirmationCode = confirmationCode,
