@@ -85,6 +85,8 @@ builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPub
 builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<TrxVisitorRepository>();
+builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+
 
 
 // builder.Services.AddScoped<IMstBleReaderService, MstBleReaderService>();
