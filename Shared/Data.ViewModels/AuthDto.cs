@@ -145,7 +145,7 @@ namespace Data.ViewModels
     public class UpdateUserDto
     {
         public string Username { get; set; }
-        public string Password { get; set; }
+        public string? Password { get; set; }
         public string Email { get; set; }
         public Guid GroupId { get; set; }
 
