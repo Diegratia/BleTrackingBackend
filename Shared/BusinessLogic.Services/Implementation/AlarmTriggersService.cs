@@ -930,7 +930,7 @@ namespace BusinessLogic.Services.Implementation
                     ActorId = alarm.SecurityId,
                     DurationInSeconds = duration,
                     DurationFormatted = duration.HasValue ? FormatDuration(duration.Value) : null,
-                    Description = $"Dispatched to {alarm.AcceptedBy ?? "Security"} by {alarm.DispatchedBy ?? "Operator"}",
+                    Description = $"Dispatched to {alarm.Security?.Name ?? "Security"} by {alarm.DispatchedBy ?? "Operator"}",
                 });
 
                 previousTimestamp = alarm.DispatchedAt.Value;
