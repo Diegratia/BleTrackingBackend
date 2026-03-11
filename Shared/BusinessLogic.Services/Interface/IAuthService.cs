@@ -483,7 +483,7 @@ namespace BusinessLogic.Services.Interface
                 throw new Exception("Password already set");
 
             // Validate confirmation token
-            if (user.EmailConfirmationCode.Trim() != dto.Token.Trim().ToUpper())
+            if (user.EmailConfirmationCode.Trim().ToUpper() != dto.Token.Trim().ToUpper())
                 throw new Exception("Invalid confirmation token");
             if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
                 throw new Exception("Confirmation token expired");
