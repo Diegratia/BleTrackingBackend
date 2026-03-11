@@ -835,6 +835,16 @@ namespace Repositories.Repository.Analytics
             var parameters = new List<object> { fromUtc, toUtc };
             int paramIndex = startParamIndex + 2;
 
+            // Apply building filter dari token untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any() && !request.BuildingId.HasValue)
+            {
+                // Hanya apply jika tidak ada manual BuildingId di request
+                sql += $" AND EXISTS (SELECT 1 FROM floorplan f WHERE f.id = ma.floorplan_id AND f.floor_id IN (SELECT id FROM mst_floor WHERE building_id = ANY(@accessibleBuildingIds))) ";
+                parameters.Add(accessibleBuildingIds.ToArray());
+                paramIndex++;
+            }
+
             if (request.BuildingId.HasValue)
             {
                 sql += $" AND b.id = @p{paramIndex++}";

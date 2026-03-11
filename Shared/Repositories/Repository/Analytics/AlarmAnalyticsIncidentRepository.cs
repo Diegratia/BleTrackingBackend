@@ -79,6 +79,16 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(a => a.FloorplanMaskedArea != null
+                    && a.FloorplanMaskedArea.Floorplan != null
+                    && a.FloorplanMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(a.FloorplanMaskedArea.Floorplan.Floor.BuildingId));
+            }
+
             // Filter based on group mode to avoid null navigation issues
             // Only include records where the required master data exists
             query = groupByMode switch
@@ -475,6 +485,15 @@ namespace Repositories.Repository.Analytics
             if (!string.IsNullOrWhiteSpace(request.OperatorName))
             {
                 query = query.Where(a => a.DoneBy == request.OperatorName);
+            }
+
+            // Apply building filter dari token untuk operator (tambahan ke manual filter)
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(t => t.Floorplan != null
+                    && t.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(t.Floorplan.Floor.BuildingId));
             }
 
             var incidents = await query

@@ -126,6 +126,9 @@ namespace Repositories.Repository.Analytics
             var parameters = new List<object>();
             int pIndex = 0;
 
+            // Get accessible building IDs for operator filtering
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+
             foreach (var table in tableNames)
             {
                 string pFrom = $"@p{pIndex++}";
@@ -138,16 +141,32 @@ namespace Repositories.Repository.Analytics
                 var (filterSql, filterParams) = BuildSqlFilters(request, ref pIndex);
                 parameters.AddRange(filterParams);
 
+                // Add building filter parameters if needed
+                if (accessibleBuildingIds.Any() && !request.BuildingId.HasValue)
+                {
+                    string pBuildingFilterEnabled = $"@p{pIndex++}";
+                    string pAccessibleBuildingIds = $"@p{pIndex++}";
+                    parameters.Add(1);  // buildingFilterEnabled = true
+                    parameters.Add(accessibleBuildingIds.ToArray());
+                    filterSql += $" AND ({pBuildingFilterEnabled} = 0 OR EXISTS (SELECT 1 FROM floorplan f JOIN mst_floor fl ON fl.id = f.floor_id WHERE f.id = t.floorplan_masked_area_id AND fl.building_id = ANY({pAccessibleBuildingIds}))) ";
+                }
+                else
+                {
+                    // Add disabled parameter to keep parameter count consistent
+                    parameters.Add(0);  // buildingFilterEnabled = false
+                }
+
                 unionParts.Add($@"
-                    SELECT 
+                    SELECT
                         CAST(t.trans_time AS DATE)        AS [Date],
                         a.restricted_status               AS RestrictedStatus,
                         COUNT(DISTINCT t.floorplan_masked_area_id) AS Total
                     FROM [dbo].[{table}] t
-                    LEFT JOIN floorplan_masked_area a 
+                    LEFT JOIN floorplan_masked_area a
                         ON a.id = t.floorplan_masked_area_id
                     WHERE t.trans_time >= {pFrom}
                     AND t.trans_time <= {pTo}
+                    {filterSql}
                     GROUP BY CAST(t.trans_time AS DATE), a.restricted_status
                 ");
             }
