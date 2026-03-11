@@ -151,7 +151,7 @@ namespace Repositories.Repository.Analytics
                         parameters.Add(id);
                         return paramName;
                     }).ToArray();
-                    filterSql += $" AND EXISTS (SELECT 1 FROM floorplan f JOIN mst_floor fl ON fl.id = f.floor_id WHERE f.id = t.floorplan_masked_area_id AND fl.building_id IN ({string.Join(", ", buildingParams)})) ";
+                    filterSql += $" AND EXISTS (SELECT 1 FROM floorplan_masked_area fma JOIN mst_floorplan fp ON fp.id = fma.floorplan_id JOIN mst_floor fl ON fl.id = fp.floor_id WHERE fma.id = t.floorplan_masked_area_id AND fl.building_id IN ({string.Join(", ", buildingParams)})) ";
                 }
 
                 unionParts.Add($@"
