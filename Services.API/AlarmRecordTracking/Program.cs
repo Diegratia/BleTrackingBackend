@@ -82,6 +82,8 @@ builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<MqttPubQueue>();
 builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
 builder.Services.AddHostedService<MqttPubBackgroundService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddScoped<AlarmRecordTrackingRepository>();
 builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<MstSecurityRepository>();

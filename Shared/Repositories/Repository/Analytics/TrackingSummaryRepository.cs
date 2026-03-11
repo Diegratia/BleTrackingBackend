@@ -144,16 +144,14 @@ namespace Repositories.Repository.Analytics
                 // Add building filter parameters if needed
                 if (accessibleBuildingIds.Any() && !request.BuildingId.HasValue)
                 {
-                    string pBuildingFilterEnabled = $"@p{pIndex++}";
-                    string pAccessibleBuildingIds = $"@p{pIndex++}";
-                    parameters.Add(1);  // buildingFilterEnabled = true
-                    parameters.Add(accessibleBuildingIds.ToArray());
-                    filterSql += $" AND ({pBuildingFilterEnabled} = 0 OR EXISTS (SELECT 1 FROM floorplan f JOIN mst_floor fl ON fl.id = f.floor_id WHERE f.id = t.floorplan_masked_area_id AND fl.building_id = ANY({pAccessibleBuildingIds}))) ";
-                }
-                else
-                {
-                    // Add disabled parameter to keep parameter count consistent
-                    parameters.Add(0);  // buildingFilterEnabled = false
+                    // SQL Server requires IN clause with individual parameters
+                    var buildingParams = accessibleBuildingIds.Select((id, i) =>
+                    {
+                        var paramName = $"@p{pIndex++}";
+                        parameters.Add(id);
+                        return paramName;
+                    }).ToArray();
+                    filterSql += $" AND EXISTS (SELECT 1 FROM floorplan f JOIN mst_floor fl ON fl.id = f.floor_id WHERE f.id = t.floorplan_masked_area_id AND fl.building_id IN ({string.Join(", ", buildingParams)})) ";
                 }
 
                 unionParts.Add($@"

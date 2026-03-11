@@ -840,9 +840,14 @@ namespace Repositories.Repository.Analytics
             if (accessibleBuildingIds.Any() && !request.BuildingId.HasValue)
             {
                 // Hanya apply jika tidak ada manual BuildingId di request
-                sql += $" AND EXISTS (SELECT 1 FROM floorplan f WHERE f.id = ma.floorplan_id AND f.floor_id IN (SELECT id FROM mst_floor WHERE building_id = ANY(@accessibleBuildingIds))) ";
-                parameters.Add(accessibleBuildingIds.ToArray());
-                paramIndex++;
+                // SQL Server requires IN clause with individual parameters
+                var buildingParams = accessibleBuildingIds.Select((id, i) =>
+                {
+                    var paramName = $"@p{paramIndex++}";
+                    parameters.Add(id);
+                    return paramName;
+                }).ToArray();
+                sql += $" AND fl.building_id IN ({string.Join(", ", buildingParams)})";
             }
 
             if (request.BuildingId.HasValue)
