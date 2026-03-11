@@ -231,6 +231,16 @@ namespace Repositories.Repository.Analytics
 
             query = ApplyFilters(query, request);
 
+            // Apply building filter untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
+            {
+                query = query.Where(a => a.FloorplanMaskedArea != null
+                    && a.FloorplanMaskedArea.Floorplan != null
+                    && a.FloorplanMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(a.FloorplanMaskedArea.Floorplan.Floor.BuildingId));
+            }
+
             // Ambil data unik berdasarkan kombinasi AlarmTrigger + Status
             var incidents = await query
                 .Select(a => new
