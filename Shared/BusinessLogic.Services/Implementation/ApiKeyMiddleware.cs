@@ -40,6 +40,8 @@ public static class ApiKeyMiddlewareExtensions
                 path.Contains("/login-sso", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/hc", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/integration-login", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/confirm-account", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("/reset-password", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("/fill-invitation-form", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
