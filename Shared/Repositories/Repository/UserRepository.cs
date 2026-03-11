@@ -240,6 +240,12 @@ namespace Repositories.Repository
                 .Include(u => u.Group)
             .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailConfirmation == 0 && u.Status == 0);
         }
+        public async Task<User> GetByEmailConfirmPassword(string email)
+        {
+            return await _context.Users
+                .Include(u => u.Group)
+            .FirstOrDefaultAsync(u => u.Email == email && u.Status == 1);
+        }
 
         public async Task<User> GetByEmailSetPasswordAsync(string email)
         {

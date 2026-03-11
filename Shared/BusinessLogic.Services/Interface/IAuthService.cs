@@ -473,7 +473,8 @@ namespace BusinessLogic.Services.Interface
             if (dto.Password != dto.ConfirmPassword)
                 throw new ArgumentException("Passwords do not match");
 
-            var user = await _userRepository.GetByEmailConfirmPasswordAsyncRaw(dto.Email.ToLower());
+            // Use GetByEmailConfirmPasswordAsync (no status filter) to find user regardless of confirmation status
+            var user = await _userRepository.GetByEmailConfirmPasswordAsync(dto.Email.ToLower());
             if (user == null)
                 throw new Exception("User not found");
             if (user.IsEmailConfirmation == 1)
