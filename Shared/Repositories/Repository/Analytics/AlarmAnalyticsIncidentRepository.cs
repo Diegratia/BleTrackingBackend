@@ -462,7 +462,7 @@ namespace Repositories.Repository.Analytics
 
             var query = _context.AlarmTriggers
                 .AsNoTracking()
-                .Where(a => a.TriggerTime >= from && a.TriggerTime <= to);
+                .Where(a => a.ActionUpdatedAt >= from && a.ActionUpdatedAt <= to);
 
             if (request.BuildingId.HasValue)
             {
