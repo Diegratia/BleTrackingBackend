@@ -362,7 +362,7 @@ namespace BusinessLogic.Services.Interface
 
             // Build confirmation URL with frontend base URL from configuration
             var frontendBaseUrl = _configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
-            var confirmationUrl = $"{frontendBaseUrl}/user-form?type=confirm&token={confirmationCode}";
+            var confirmationUrl = $"{frontendBaseUrl}/user-form?type=confirm&token={confirmationCode}&email={newUser.Email}";
 
             // Kirim email konfirmasi
             await _emailService.SendConfirmationEmailAsync(newUser.Email, newUser.Username, confirmationUrl);
