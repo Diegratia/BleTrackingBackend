@@ -32,6 +32,7 @@ namespace BusinessLogic.Services.Interface
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task ConfirmEmailAsync(ConfirmEmailDto dto);
         Task SetPasswordAsync(SetPasswordDto dto);
+        Task ConfirmAndSetPasswordAsync(ConfirmAndSetPasswordDto dto);
         Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
          Task LogoutAsync(string refreshToken);
         Task<AuthResponseDto> LoginVisitorAsync(LoginVisitorDto dto);
@@ -467,6 +468,34 @@ namespace BusinessLogic.Services.Interface
             await _userRepository.UpdateConfirmAsync(user);
         }
 
+        public async Task ConfirmAndSetPasswordAsync(ConfirmAndSetPasswordDto dto)
+        {
+            if (dto.Password != dto.ConfirmPassword)
+                throw new ArgumentException("Passwords do not match");
+
+            var user = await _userRepository.GetByEmailConfirmPasswordAsyncRaw(dto.Email.ToLower());
+            if (user == null)
+                throw new Exception("User not found");
+            if (user.IsEmailConfirmation == 1)
+                throw new Exception("Email already confirmed");
+            if (user.IsCreatedPassword == 1)
+                throw new Exception("Password already set");
+
+            // Validate confirmation token
+            if (user.EmailConfirmationCode.Trim() != dto.Token.Trim().ToUpper())
+                throw new Exception("Invalid confirmation token");
+            if (user.EmailConfirmationExpiredAt < DateTime.UtcNow)
+                throw new Exception("Confirmation token expired");
+
+            // Confirm email and set password in one atomic operation
+            user.IsEmailConfirmation = 1;
+            user.EmailConfirmationAt = DateTime.UtcNow;
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            user.IsCreatedPassword = 1;
+            user.Status = 1;
+            await _userRepository.UpdateConfirmAsync(user);
+        }
+
 
         public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
         {
@@ -512,7 +541,6 @@ namespace BusinessLogic.Services.Interface
                 new Claim("isHead", user.Group.IsHead.ToString())
             };
 
-            // Add accessible buildings claim for non-System and non-SuperAdmin users
             if (user.Group.LevelPriority != LevelPriority.System && user.Group.LevelPriority != LevelPriority.SuperAdmin)
             {
                 var accessibleBuildingIds = await _groupBuildingAccessRepository.GetAccessibleBuildingIdsAsync(user.GroupId);
@@ -573,19 +601,16 @@ namespace BusinessLogic.Services.Interface
             if (user == null)
                 return;
 
-            // Generate secure reset token (full GUID instead of 6-character code)
-            var resetToken = Guid.NewGuid().ToString("N"); // 32-character secure token
+            var resetToken = Guid.NewGuid().ToString("N"); 
 
             user.PasswordResetToken = resetToken;
-            user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+            user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1); 
 
             await _userRepository.UpdatePasswordResetAsync(user);
 
-            // Build reset URL with frontend base URL from configuration
             var frontendBaseUrl = _configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
-            var resetUrl = $"{frontendBaseUrl}/user-form?type=reset&token={resetToken}";
+            var resetUrl = $"{frontendBaseUrl}/user-form?type=reset&token={resetToken}&email={user.Email}";
 
-            // Send email with reset URL
             await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, resetUrl);
 
             _audit.Action(

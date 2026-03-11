@@ -140,6 +140,20 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Password set successfully, you can now login"));
         }
 
+        [HttpPost("confirm-account")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmAndSetPassword([FromBody] ConfirmAndSetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage);
+                return BadRequest(ApiResponse.BadRequest("Validation failed: " + string.Join(", ", errors)));
+            }
+
+            await _authService.ConfirmAndSetPasswordAsync(dto);
+            return Ok(ApiResponse.Success("Email confirmed and password set successfully, you can now login"));
+        }
+
         [HttpPost("forgot-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)

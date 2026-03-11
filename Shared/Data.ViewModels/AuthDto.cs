@@ -230,6 +230,17 @@ namespace Data.ViewModels
         public string ConfirmPassword { get; set; }
     }
 
+    /// <summary>
+    /// DTO for confirming email and setting password in one operation (URL-based flow)
+    /// </summary>
+    public class ConfirmAndSetPasswordDto
+    {
+        public string Email { get; set; }
+        public string Token { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
 }
 
 
