@@ -811,12 +811,11 @@ namespace Repositories.Repository.Analytics
             };
 
             // SQL to count visitors per hour per area/building/floor/floorplan
-            // Uses DATEADD(HOUR, DATEDIFF(HOUR, 0, t.trans_time), 0) to group by hour
-            // Adjusts for WIB timezone (UTC+7) by adding 7 hours before extracting hour
+            // Returns UTC hours - frontend will convert to user's timezone
             var sql = $@"
             SELECT
                 {groupByColumn} AS Name,
-                (DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))) AS Hour,
+                (DATEPART(HOUR, t.trans_time)) AS Hour,
                 COUNT(DISTINCT COALESCE(v.id, m.id)) AS Count
             FROM [dbo].[{tableName}] t
             LEFT JOIN card c ON t.card_id = c.id
@@ -888,7 +887,7 @@ namespace Repositories.Repository.Analytics
                 }
             }
 
-            sql += $"\nGROUP BY {groupByColumn}, DATEPART(HOUR, DATEADD(HOUR, 7, t.trans_time))";
+            sql += $"\nGROUP BY {groupByColumn}, DATEPART(HOUR, t.trans_time)";
 
             return (sql, parameters);
         }

@@ -362,85 +362,85 @@ namespace Repositories.Repository.Analytics
             return grouped;
         }
 
-       public async Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
-{
-    // Range penuh 1 hari
-    var date = request.From?.Date ?? DateTime.UtcNow.Date;
-
-    var from = date;                              // 00:00
-    var to = date.AddDays(1).AddTicks(-1);        // 23:59:59.9999999
-
-    var query = _context.AlarmRecordTrackings
-        .AsNoTracking()
-        .Where(a => a.Timestamp >= from && a.Timestamp <= to);
-
-    query = ApplyFilters(query, request);
-
-    // Apply building filter dari token untuk operator
-    var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
-    if (accessibleBuildingIds.Any())
-    {
-        query = query.Where(a => a.FloorplanMaskedArea != null
-            && a.FloorplanMaskedArea.Floorplan != null
-            && a.FloorplanMaskedArea.Floorplan.Floor != null
-            && accessibleBuildingIds.Contains(a.FloorplanMaskedArea.Floorplan.Floor.BuildingId));
-    }
-
-    // STEP 1: Ambil *alarm pertama* dari setiap AlarmTriggersId dalam 1 hari
-    var incidents = await query
-        .GroupBy(a => a.AlarmTriggersId)
-        .Select(g => new
+            public async Task<List<AlarmHourlyStatusRead>> GetHourlyStatusSummaryAsync(AlarmAnalyticsFilter request)
         {
-            AlarmTriggersId = g.Key,
-            FirstTimestamp = g.Min(x => x.Timestamp),   // ambil jam pertama
-            Status = g.OrderBy(x => x.Timestamp)
-                      .First().Alarm.ToString() ?? "Unknown"
-        })
-        .ToListAsync();
+            // Range penuh 1 hari
+            var date = request.From?.Date ?? DateTime.UtcNow.Date;
 
-    // STEP 2: Konversi ke hour
-    var flattened = incidents
-        .Select(x => new
-        {
-            Hour = x.FirstTimestamp.Value.Hour,
-            x.Status
-        })
-        .ToList();
+            var from = date;                              // 00:00
+            var to = date.AddDays(1).AddTicks(-1);        // 23:59:59.9999999
 
-    // STEP 3: Grouping by hour + status
-    var groupedHours = flattened
-        .GroupBy(x => x.Hour)
-        .ToDictionary(
-            g => g.Key,
-            g => new AlarmHourlyStatusRead
+            var query = _context.AlarmRecordTrackings
+                .AsNoTracking()
+                .Where(a => a.Timestamp >= from && a.Timestamp <= to);
+
+            query = ApplyFilters(query, request);
+
+            // Apply building filter dari token untuk operator
+            var accessibleBuildingIds = GetAccessibleBuildingsFromToken();
+            if (accessibleBuildingIds.Any())
             {
-                Hour = g.Key,
-                HourLabel = g.Key.ToString("00") + ".00",
-                Status = g.GroupBy(x => x.Status)
-                            .ToDictionary(
-                                s => s.Key,
-                                s => s.Count()
-                            )
+                query = query.Where(a => a.FloorplanMaskedArea != null
+                    && a.FloorplanMaskedArea.Floorplan != null
+                    && a.FloorplanMaskedArea.Floorplan.Floor != null
+                    && accessibleBuildingIds.Contains(a.FloorplanMaskedArea.Floorplan.Floor.BuildingId));
             }
-        );
 
-    // STEP 4: Pastikan output 24 hours lengkap
-    var fullDay = Enumerable.Range(0, 24)
-        .Select(hour =>
-            groupedHours.ContainsKey(hour)
-                ? groupedHours[hour]
-                : new AlarmHourlyStatusRead
+            // STEP 1: Ambil *alarm pertama* dari setiap AlarmTriggersId dalam 1 hari
+            var incidents = await query
+                .GroupBy(a => a.AlarmTriggersId)
+                .Select(g => new
                 {
-                    Hour = hour,
-                    HourLabel = hour.ToString("00") + ".00",
-                    Status = new Dictionary<string, int>()
-                }
-        )
-        .OrderBy(x => x.Hour)
-        .ToList();
+                    AlarmTriggersId = g.Key,
+                    FirstTimestamp = g.Min(x => x.Timestamp),   // ambil jam pertama
+                    Status = g.OrderBy(x => x.Timestamp)
+                            .First().Alarm.ToString() ?? "Unknown"
+                })
+                .ToListAsync();
 
-    return fullDay;
-}
+            // STEP 2: Konversi ke hour
+            var flattened = incidents
+                .Select(x => new
+                {
+                    Hour = x.FirstTimestamp.Value.Hour,
+                    x.Status
+                })
+                .ToList();
+
+            // STEP 3: Grouping by hour + status
+            var groupedHours = flattened
+                .GroupBy(x => x.Hour)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new AlarmHourlyStatusRead
+                    {
+                        Hour = g.Key,
+                        HourLabel = g.Key.ToString("00") + ".00",
+                        Status = g.GroupBy(x => x.Status)
+                                    .ToDictionary(
+                                        s => s.Key,
+                                        s => s.Count()
+                                    )
+                    }
+                );
+
+            // STEP 4: Pastikan output 24 hours lengkap
+            var fullDay = Enumerable.Range(0, 24)
+                .Select(hour =>
+                    groupedHours.ContainsKey(hour)
+                        ? groupedHours[hour]
+                        : new AlarmHourlyStatusRead
+                        {
+                            Hour = hour,
+                            HourLabel = hour.ToString("00") + ".00",
+                            Status = new Dictionary<string, int>()
+                        }
+                )
+                .OrderBy(x => x.Hour)
+                .ToList();
+
+            return fullDay;
+        }
 
         private IQueryable<AlarmRecordTracking> ApplyFilters(IQueryable<AlarmRecordTracking> query, AlarmAnalyticsFilter request)
         {
