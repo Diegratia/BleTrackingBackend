@@ -617,8 +617,44 @@ namespace Repositories.Repository.Analytics
 
             return incidents;
         }
+
+        public async Task<int> GetActiveAlarmInvestigationCountAsync(DateTime from, DateTime to)
+        {
+            return await _context.AlarmTriggers
+                .Where(a => a.TriggerTime >= from && a.TriggerTime <= to)
+                .Where(a => a.IsActive == true && (a.Action == null || (a.Action != ActionStatus.Done && a.Action != ActionStatus.Waiting)))
+                .CountAsync();
+        }
+
+        public async Task<int> GetActivePatrolAssignmentCountAsync()
+        {
+
+            return await _context.PatrolAssignments
+                .Where(p => p.Status == 1)
+                .CountAsync();
+        }
+
+        public async Task<NextPatrolRead> GetNextPatrolAssignmentAsync()
+        {
+            var nextAssignment = await _context.PatrolAssignments
+                .Include(p => p.TimeGroup)
+                .ThenInclude(tg => tg.TimeBlocks)
+                .Where(p => p.Status == 1) // basic active
+                .OrderByDescending(p => p.CreatedAt) // sorting by creation date for now, could be improved to sort by schedule
+                .FirstOrDefaultAsync();
+
+            if (nextAssignment == null) return null;
+
+            var firstBlock = nextAssignment.TimeGroup?.TimeBlocks?.FirstOrDefault();
+            return new NextPatrolRead 
+            {
+                AssignmentId = nextAssignment.Id,
+                AssignmentName = nextAssignment.Name ?? "Unknown",
+                TimeGroupName = nextAssignment.TimeGroup?.Name ?? "-",
+                ScheduleStart = firstBlock?.StartTime?.ToString(@"hh\:mm") ?? "-",
+                ScheduleEnd = firstBlock?.EndTime?.ToString(@"hh\:mm") ?? "-"
+            };
+        }
     }
-    
-    
 }
 

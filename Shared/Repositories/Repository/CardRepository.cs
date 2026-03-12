@@ -354,6 +354,42 @@ namespace Repositories.Repository
             return card;
         }
 
+        /// <summary>
+        /// Adds multiple cards in a single transaction for all-or-nothing semantics.
+        /// This method ensures atomicity - either all cards are saved or none are.
+        /// </summary>
+        public async Task<List<Card>> AddRangeTransactionallyAsync(IEnumerable<Card> cards)
+        {
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var cardList = cards.ToList();
+
+            await ExecuteInTransactionAsync(async () =>
+            {
+                foreach (var card in cardList)
+                {
+                    // Set ApplicationId if not already set
+                    if (!isSystemAdmin)
+                    {
+                        if (!applicationId.HasValue)
+                            throw new UnauthorizedAccessException("ApplicationId required for non-admin user.");
+                        card.ApplicationId = applicationId.Value;
+                    }
+                    else if (card.ApplicationId == Guid.Empty)
+                    {
+                        throw new ArgumentException("System Admin must specify ApplicationId explicitly.");
+                    }
+
+                    await ValidateApplicationIdAsync(card.ApplicationId);
+                    ValidateApplicationIdForEntity(card, applicationId, isSystemAdmin);
+                }
+
+                _context.Cards.AddRange(cardList);
+                await _context.SaveChangesAsync();
+            });
+
+            return cardList;
+        }
+
         public async Task UpdateAsync(Card card)
         {
             var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();

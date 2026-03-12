@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using BusinessLogic.Services.Interface.Analytics;
 using BusinessLogic.Services.Interface;
@@ -135,76 +136,125 @@ namespace BusinessLogic.Services.Implementation.Analytics
         {
             var incidents = await _repository.GetRawIncidentDurationsAsync(request);
 
-            if (!incidents.Any())
-                return new List<AlarmDurationAnalyticsRead>();
+            // Instead of returning early, we provide 0-values for all enum categories
+            // if (!incidents.Any())
+            //     return new List<AlarmDurationAnalyticsRead>();
 
             var groupedIncidents = incidents.GroupBy(x => x.AlarmStatus);
             var resultList = new List<AlarmDurationAnalyticsRead>();
 
-            foreach (var group in groupedIncidents)
+            var allStatuses = Enum.GetNames(typeof(Shared.Contracts.AlarmRecordStatus));
+
+            foreach (var status in allStatuses)
             {
-                var totalDurations = new List<double>();
-                var responseDurations = new List<double>();
-                var resolutionDurations = new List<double>();
+                var group = groupedIncidents.FirstOrDefault(g => g.Key == status);
 
-                foreach (var incident in group)
+                if (group != null)
                 {
-                    if (!incident.TriggerTime.HasValue) continue;
+                    var totalDurations = new List<double>();
+                    var responseDurations = new List<double>();
+                    var resolutionDurations = new List<double>();
 
-                    var triggerTime = incident.TriggerTime.Value;
-
-                    // Gather all potential subsequent event timestamps
-                    var allEventTimes = new List<DateTime?> {
-                        incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp,
-                        incident.AcceptedAt, incident.ArrivedAt, incident.InvestigatedDoneAt,
-                        incident.DoneTimestamp, incident.CancelTimestamp
-                    };
-                    
-                    var validAllEventTimes = allEventTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
-                    
-                    DateTime? firstActionTime = null;
-                    DateTime? lastEventTime = null;
-
-                    if (validAllEventTimes.Any())
+                    foreach (var incident in group)
                     {
-                        var sortedEvents = validAllEventTimes.OrderBy(t => t).ToList();
-                        firstActionTime = sortedEvents.First(); // This acts as timeline.Skip(1).First() since TriggerTime is excluded
-                        lastEventTime = sortedEvents.Last();    // This acts as timeline.OrderByDescending(t => t.Timestamp).First()
-                    }
+                        if (!incident.TriggerTime.HasValue) continue;
 
-                    if (lastEventTime.HasValue)
-                    {
-                        totalDurations.Add((lastEventTime.Value - triggerTime).TotalSeconds);
-                    }
+                        var triggerTime = incident.TriggerTime.Value;
 
-                    if (firstActionTime.HasValue)
-                    {
-                        responseDurations.Add((firstActionTime.Value - triggerTime).TotalSeconds);
+                        // Gather all potential subsequent event timestamps
+                        var allEventTimes = new List<DateTime?> {
+                            incident.AcknowledgedAt, incident.DispatchedAt, incident.WaitingTimestamp,
+                            incident.AcceptedAt, incident.ArrivedAt, incident.InvestigatedDoneAt,
+                            incident.DoneTimestamp, incident.CancelTimestamp
+                        };
                         
-                        if (lastEventTime.HasValue && lastEventTime > firstActionTime)
+                        var validAllEventTimes = allEventTimes.Where(t => t.HasValue).Select(t => t.Value).ToList();
+                        
+                        DateTime? firstActionTime = null;
+                        DateTime? lastEventTime = null;
+
+                        if (validAllEventTimes.Any())
                         {
-                            resolutionDurations.Add((lastEventTime.Value - firstActionTime.Value).TotalSeconds);
+                            var sortedEvents = validAllEventTimes.OrderBy(t => t).ToList();
+                            firstActionTime = sortedEvents.First(); // This acts as timeline.Skip(1).First() since TriggerTime is excluded
+                            lastEventTime = sortedEvents.Last();    // This acts as timeline.OrderByDescending(t => t.Timestamp).First()
+                        }
+
+                        if (lastEventTime.HasValue)
+                        {
+                            totalDurations.Add((lastEventTime.Value - triggerTime).TotalSeconds);
+                        }
+
+                        if (firstActionTime.HasValue)
+                        {
+                            responseDurations.Add((firstActionTime.Value - triggerTime).TotalSeconds);
+                            
+                            if (lastEventTime.HasValue && lastEventTime > firstActionTime)
+                            {
+                                resolutionDurations.Add((lastEventTime.Value - firstActionTime.Value).TotalSeconds);
+                            }
                         }
                     }
+
+                    var avgTotalSeconds = totalDurations.Any() ? totalDurations.Average() : 0;
+                    var avgResponseSeconds = responseDurations.Any() ? responseDurations.Average() : 0;
+                    var avgResolutionSeconds = resolutionDurations.Any() ? resolutionDurations.Average() : 0;
+
+                    resultList.Add(new AlarmDurationAnalyticsRead
+                    {
+                        AlarmStatus = status,
+                        TotalSeconds = avgTotalSeconds,
+                        TotalFormatted = FormatDuration(avgTotalSeconds),
+                        ResponseTimeSeconds = avgResponseSeconds,
+                        ResponseTimeFormatted = FormatDuration(avgResponseSeconds),
+                        ResolutionTimeSeconds = avgResolutionSeconds,
+                        ResolutionTimeFormatted = FormatDuration(avgResolutionSeconds)
+                    });
                 }
-
-                var avgTotalSeconds = totalDurations.Any() ? totalDurations.Average() : 0;
-                var avgResponseSeconds = responseDurations.Any() ? responseDurations.Average() : 0;
-                var avgResolutionSeconds = resolutionDurations.Any() ? resolutionDurations.Average() : 0;
-
-                resultList.Add(new AlarmDurationAnalyticsRead
+                else
                 {
-                    AlarmStatus = group.Key,
-                    TotalSeconds = avgTotalSeconds,
-                    TotalFormatted = FormatDuration(avgTotalSeconds),
-                    ResponseTimeSeconds = avgResponseSeconds,
-                    ResponseTimeFormatted = FormatDuration(avgResponseSeconds),
-                    ResolutionTimeSeconds = avgResolutionSeconds,
-                    ResolutionTimeFormatted = FormatDuration(avgResolutionSeconds)
-                });
+                    resultList.Add(new AlarmDurationAnalyticsRead
+                    {
+                        AlarmStatus = status,
+                        TotalSeconds = 0,
+                        TotalFormatted = "0 seconds",
+                        ResponseTimeSeconds = 0,
+                        ResponseTimeFormatted = "0 seconds",
+                        ResolutionTimeSeconds = 0,
+                        ResolutionTimeFormatted = "0 seconds"
+                    });
+                }
             }
 
             return resultList;
+        }
+
+        public async Task<SecurityHeadDashboardSummaryRead> GetSecurityHeadDashboardSummaryAsync(AlarmAnalyticsFilter request)
+        {
+            var summary = new SecurityHeadDashboardSummaryRead();
+
+            // 1. Average Response Time
+            var durationResult = await GetAverageDurationSummaryAsync(request);
+            if (durationResult != null && durationResult.Any())
+            {
+                var avgResponse = durationResult.Average(d => d.ResponseTimeSeconds);
+                summary.AvgResponseTimeMetric = FormatDuration(avgResponse ?? 0);
+            }
+
+            // Get base time limit
+            var from = request.From ?? DateTime.UtcNow.AddDays(-7);
+            var to = request.To ?? DateTime.UtcNow;
+
+            // 2. Count Alarm to Investigate 
+            summary.CountAlarmToInvestigate = await _repository.GetActiveAlarmInvestigationCountAsync(from, to);
+
+            // 3. Count Patrol Assignment
+            summary.CountPatrolAssignment = await _repository.GetActivePatrolAssignmentCountAsync();
+
+            // 4. List 1 Next Patrol
+            summary.NextPatrol = await _repository.GetNextPatrolAssignmentAsync();
+
+            return summary;
         }
 
         private string FormatDuration(double seconds)

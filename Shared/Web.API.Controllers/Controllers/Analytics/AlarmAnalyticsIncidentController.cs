@@ -106,5 +106,14 @@ namespace Web.API.Controllers.Controllers.Analytics
             var response = await _service.GetAverageDurationSummaryAsync(request);
             return Ok(ApiResponse.Success("Average duration summary retrieved successfully", response));
         }
+        // ===================================================================
+        // 9️⃣ Security Head Dashboard Summary
+        // ===================================================================
+        [HttpPost("security-head-dashboard")]
+        public async Task<IActionResult> GetSecurityHeadDashboardSummaryAsync([FromBody] AlarmAnalyticsFilter request)
+        {
+            var response = await _service.GetSecurityHeadDashboardSummaryAsync(request);
+            return Ok(ApiResponse.Success("Security head dashboard summary retrieved successfully", response));
+        }
     }
 }

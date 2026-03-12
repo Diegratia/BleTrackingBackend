@@ -17,4 +17,5 @@ public interface IAlarmAnalyticsIncidentService
     Task<AlarmAreaChartResponseRead> GetAreaSummaryChartAsync(
         AlarmAnalyticsFilter request,
         AlarmGroupByMode groupByMode = AlarmGroupByMode.Area);
+    Task<SecurityHeadDashboardSummaryRead> GetSecurityHeadDashboardSummaryAsync(AlarmAnalyticsFilter request);
 }

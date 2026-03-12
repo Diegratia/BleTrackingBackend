@@ -106,8 +106,8 @@ namespace BusinessLogic.Services.Implementation
                 throw new UnauthorizedAccessException("Current user not found");
 
             var currentUserRole = currentUser.Group?.LevelPriority;
-            if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.System)
-                throw new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Update groups");
+            if (currentUserRole != LevelPriority.Primary && currentUserRole != LevelPriority.PrimaryAdmin && currentUserRole != LevelPriority.SuperAdmin && currentUserRole != LevelPriority.System)
+                throw  new UnauthorizedAccessException("Only System, SuperAdmin, or PrimaryAdmin roles can Update groups");
 
             if (!Enum.TryParse<LevelPriority>(dto.LevelPriority!.ToString(), out var targetPriority))
                 throw new ArgumentException("Invalid level priority");

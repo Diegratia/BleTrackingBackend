@@ -233,18 +233,114 @@ namespace BusinessLogic.Services.Implementation
             return await _repository.GetByIdAsync(result.Id);
         }
 
+        /// <summary>
+        /// Bulk insert cards with transactional all-or-nothing semantics.
+        /// Either all cards are created successfully, or none are saved.
+        /// </summary>
         public async Task<IEnumerable<CardRead>> BulkAddAsync(List<CardAddDto> dtos)
         {
-            var result = new List<CardRead>();
+            var entities = new List<Card>();
+            var cardNumbers = new HashSet<string>();
+            var dmacs = new HashSet<string>();
 
+            // Phase 1: Prepare all entities and validate upfront (no saving yet)
             foreach (var dto in dtos)
             {
-                var card = await CreateMinimalAsync(dto);
-                result.Add(card);
+                // Check for duplicates within the batch
+                if (!string.IsNullOrEmpty(dto.CardNumber) && !cardNumbers.Add(dto.CardNumber))
+                    throw new ArgumentException($"Duplicate CardNumber in batch: {dto.CardNumber}");
+                if (!string.IsNullOrEmpty(dto.Dmac) && !dmacs.Add(dto.Dmac))
+                    throw new ArgumentException($"Duplicate Dmac in batch: {dto.Dmac}");
+
+                // Check for duplicates in database
+                var existingCard = await _repository.BaseEntityQuery()
+                    .FirstOrDefaultAsync(b =>
+                        b.CardNumber == dto.CardNumber ||
+                        b.Dmac == dto.Dmac);
+
+                if (existingCard != null)
+                {
+                    if (existingCard.CardNumber == dto.CardNumber)
+                        throw new ArgumentException($"Card with Number {dto.CardNumber} already exists.");
+                    else if (existingCard.Dmac == dto.Dmac)
+                        throw new ArgumentException($"Card with Mac {dto.Dmac} already exists.");
+                }
+
+                var entity = _mapper.Map<Card>(dto);
+                SetCreateAudit(entity);
+                entity.StatusCard = 1;
+                entity.ApplicationId = AppId;
+                entity.IsUsed = false;
+                entity.CardStatus = CardStatus.Available;
+
+                // Ownership validation
+                if (dto.MemberId.HasValue)
+                {
+                    var invalidMemberIds = await _repository.CheckInvalidMemberOwnershipAsync(dto.MemberId.Value, AppId);
+                    if (invalidMemberIds.Any())
+                        throw new UnauthorizedException($"MemberId does not belong to this Application: {string.Join(", ", invalidMemberIds)}");
+                }
+
+                if (dto.VisitorId.HasValue)
+                {
+                    var invalidVisitorIds = await _repository.CheckInvalidVisitorOwnershipAsync(dto.VisitorId.Value, AppId);
+                    if (invalidVisitorIds.Any())
+                        throw new UnauthorizedException($"VisitorId does not belong to this Application: {string.Join(", ", invalidVisitorIds)}");
+                }
+
+                if (dto.CardGroupId.HasValue)
+                {
+                    var invalidCardGroupIds = await _repository.CheckInvalidCardGroupOwnershipAsync(dto.CardGroupId.Value, AppId);
+                    if (invalidCardGroupIds.Any())
+                        throw new UnauthorizedException($"CardGroupId does not belong to this Application: {string.Join(", ", invalidCardGroupIds)}");
+                }
+
+                // Process CardAccessIds
+                if (dto.CardAccessIds.Any())
+                {
+                    // Filter out null values for the actual query
+                    var validAccessIds = dto.CardAccessIds.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+                    var accesses = await _cardAccessRepository.GetAllQueryable()
+                        .Where(c => validAccessIds.Contains(c.Id))
+                        .ToListAsync();
+
+                    if (accesses.Count != validAccessIds.Count)
+                    {
+                        var foundIds = accesses.Select(a => a.Id).ToList();
+                        var missingIds = validAccessIds.Except(foundIds);
+                        throw new KeyNotFoundException($"Card Access with id(s) {string.Join(", ", missingIds)} not found");
+                    }
+
+                    foreach (var access in accesses)
+                    {
+                        entity.CardCardAccesses.Add(new CardCardAccess
+                        {
+                            CardId = entity.Id,
+                            CardAccessId = access.Id,
+                            ApplicationId = entity.ApplicationId
+                        });
+                    }
+                }
+
+                entities.Add(entity);
             }
 
+            // Phase 2: Save all entities in a single transaction
+            await _repository.AddRangeTransactionallyAsync(entities);
+
+            // Phase 3: Emit MQTT and audit (only after successful transaction)
             _mqttQueue.Enqueue("engine/refresh/card-related", "");
-            _audit.Created("Card", result.Count, $"Bulk created {result.Count} cards");
+            _audit.Created("Card", entities.Count, $"Bulk created {entities.Count} cards");
+
+            // Return the created cards
+            var result = new List<CardRead>();
+            foreach (var entity in entities)
+            {
+                var cardRead = await _repository.GetByIdAsync(entity.Id);
+                if (cardRead != null)
+                    result.Add(cardRead);
+            }
 
             return result;
         }

@@ -39,8 +39,9 @@ namespace Shared.Contracts
 
     public enum LicenseType
     {
-        Perpetual,
-        Annual
+        Trial, // trial 7 hari
+        Perpetual, // permanent
+        Annual // tahunan
     }
 
     public enum VisitorActiveStatus
