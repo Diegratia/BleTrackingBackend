@@ -261,7 +261,7 @@
 
         public async Task<List<VisitorSessionSummaryExportRM>> GetVisitorSessionSummaryExportAsync(TrackingAnalyticsRequestRM request)
         {
-            var sessions = await GetVisitorSessionSummaryAsync(request);
+            var sessions = await GetVisitorSessionSummaryAsyncLegacy(request);
             
             return sessions.Select(s => new VisitorSessionSummaryExportRM
             {
