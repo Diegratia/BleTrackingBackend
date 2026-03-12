@@ -39,14 +39,14 @@ namespace BusinessLogic.Services.Implementation.Analytics
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         }
 
-        public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(
+        public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsyncLegacy(
             TrackingAnalyticsFilter request)
         {
             // Convert to V2 filter format
             var v2Request = ConvertToV2Filter(request);
 
             // Get data from repository (returns flat list)
-            var data = await _repository.GetVisitorSessionSummaryAsync(v2Request);
+            var data = await _repository.GetVisitorSessionSummaryAsyncLegacy(v2Request);
 
             // Apply timezone conversion if needed
             var tz = TimezoneHelper.Resolve(request.Timezone);
@@ -79,7 +79,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
             if (overrideRequest.To.HasValue)
                 request.To = overrideRequest.To;
 
-            return await GetVisitorSessionSummaryAsync(request);
+            return await GetVisitorSessionSummaryAsyncLegacy(request);
         }
 
         public async Task<byte[]> ExportVisitorSessionSummaryToPdfAsync(TrackingAnalyticsFilter request)
@@ -90,7 +90,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 var v2Request = ConvertToV2Filter(request);
 
                 // Get data from repository
-                var sessions = await _repository.GetVisitorSessionSummaryAsync(v2Request);
+                var sessions = await _repository.GetVisitorSessionSummaryAsyncLegacy(v2Request);
 
                 // Generate report title based on filter
                 string reportTitle = GenerateReportTitle(request);
@@ -213,7 +213,7 @@ namespace BusinessLogic.Services.Implementation.Analytics
                 var v2Request = ConvertToV2Filter(request);
 
                 // Get data from repository
-                var sessions = await _repository.GetVisitorSessionSummaryAsync(v2Request);
+                var sessions = await _repository.GetVisitorSessionSummaryAsyncLegacy(v2Request);
 
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Visitor Sessions");

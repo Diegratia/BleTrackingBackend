@@ -20,6 +20,7 @@ namespace Web.API.Controllers.Controllers.Analytics
     public class TrackingAnalyticsController : ControllerBase
     {
         private readonly ITrackingSummaryService _summaryService;
+        private readonly ITrackingAnalyticsV2Service _reportService;
         private readonly ITrackingSessionService _sessionService;
 
         public TrackingAnalyticsController(
@@ -95,6 +96,19 @@ namespace Web.API.Controllers.Controllers.Analytics
         public async Task<IActionResult> GetAreaAccessedSummaryAsyncV3([FromBody] TrackingAnalyticsFilter request)
         {
             var result = await _summaryService.GetAreaAccessedSummaryAsyncV3(request);
+            return Ok(ApiResponse.Success("Area accessed summary retrieved successfully", result));
+        }
+
+        [HttpPost("visitor-report")]
+        public async Task<IActionResult> GetVisitorReport([FromBody] TrackingAnalyticsFilter request)
+        {
+            var result = await _reportService.GetVisitorSessionSummaryAsyncLegacy(request);
+            return Ok(ApiResponse.Success(" Visitor Report retrieved successfully", result));
+        }
+        [HttpPost("preset-report")]
+        public async Task<IActionResult> GetVisitorSessionSummaryByPresetAsync([FromBody] Guid presetId, TrackingAnalyticsFilter overrideRequest)
+        {
+            var result = await _reportService.GetVisitorSessionSummaryByPresetAsync(presetId, overrideRequest);
             return Ok(ApiResponse.Success("Area accessed summary retrieved successfully", result));
         }
 

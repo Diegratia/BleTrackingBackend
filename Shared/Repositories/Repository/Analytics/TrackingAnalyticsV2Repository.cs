@@ -169,7 +169,7 @@
             }
 
             // === MAIN METHOD: Get Visitor Session Summary ===
-        public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(
+        public async Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsyncLegacy(
             TrackingAnalyticsRequestRM request)
         {
             var range = GetTimeRange(request.TimeRange);

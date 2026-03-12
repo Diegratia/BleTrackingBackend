@@ -17,7 +17,7 @@ namespace BusinessLogic.Services.Interface.Analytics
         /// Get visitor session summary as flat list
         /// Returns List<VisitorSessionSummaryRM> instead of grouped format
         /// </summary>
-        Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsync(TrackingAnalyticsFilter request);
+        Task<List<VisitorSessionSummaryRM>> GetVisitorSessionSummaryAsyncLegacy(TrackingAnalyticsFilter request);
 
         /// <summary>
         /// Get visitor session summary by preset with override options
