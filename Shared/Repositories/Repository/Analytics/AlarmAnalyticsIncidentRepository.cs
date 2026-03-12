@@ -620,26 +620,101 @@ namespace Repositories.Repository.Analytics
 
         public async Task<int> GetActiveAlarmInvestigationCountAsync(DateTime from, DateTime to)
         {
-            return await _context.AlarmTriggers
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.AlarmTriggers
                 .Where(a => a.TriggerTime >= from && a.TriggerTime <= to)
-                .Where(a => a.IsActive == true && (a.Action == null || (a.Action != ActionStatus.Done && a.Action != ActionStatus.Waiting)))
-                .CountAsync();
+                .Where(a => a.IsActive == true && (a.Action == null || (a.Action != ActionStatus.Done && a.Action != ActionStatus.Waiting)));
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                query = query.Where(pc =>
+                    (pc.Security != null && pc.Security.Email == userEmail)
+                    || _context.MstSecurities.Any(pas =>
+                        pas.Id == pc.SecurityId
+                        && pas.Email == userEmail
+                    )
+                );
+            }
+            
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.CountAsync();
         }
 
         public async Task<int> GetActivePatrolAssignmentCountAsync()
         {
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+            
+            var query = _context.PatrolAssignments
+                .Where(p => p.Status == 1);
 
-            return await _context.PatrolAssignments
-                .Where(p => p.Status == 1)
-                .CountAsync();
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security != null &&
+                        pas.Security.Email == userEmail
+                    ) ||
+                    pa.PatrolShiftReplacements.Any(psr =>
+                        psr.SubstituteSecurity != null &&
+                        psr.SubstituteSecurity.Email == userEmail &&
+                        psr.ReplacementStartDate <= today &&
+                        psr.ReplacementEndDate >= today &&
+                        psr.Status != 0
+                    ) || 
+                    (pa.SecurityHead1 != null && pa.SecurityHead1.Email == userEmail) ||
+                    (pa.SecurityHead2 != null && pa.SecurityHead2.Email == userEmail)
+                );
+            }
+            
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            return await query.CountAsync();
         }
 
         public async Task<NextPatrolRead> GetNextPatrolAssignmentAsync()
         {
-            var nextAssignment = await _context.PatrolAssignments
+            var userEmail = GetUserEmail();
+            var (applicationId, isSystemAdmin) = GetApplicationIdAndRole();
+            var isSuperAdmin = IsSuperAdmin();
+            var isPrimaryAdmin = IsPrimaryAdmin();
+
+            var query = _context.PatrolAssignments
                 .Include(p => p.TimeGroup)
                 .ThenInclude(tg => tg.TimeBlocks)
-                .Where(p => p.Status == 1) // basic active
+                .Where(p => p.Status == 1); // basic active
+
+            if (!isSystemAdmin && !isSuperAdmin && !isPrimaryAdmin)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                query = query.Where(pa =>
+                    pa.PatrolAssignmentSecurities.Any(pas =>
+                        pas.Security != null &&
+                        pas.Security.Email == userEmail
+                    ) ||
+                    pa.PatrolShiftReplacements.Any(psr =>
+                        psr.SubstituteSecurity != null &&
+                        psr.SubstituteSecurity.Email == userEmail &&
+                        psr.ReplacementStartDate <= today &&
+                        psr.ReplacementEndDate >= today &&
+                        psr.Status != 0
+                    ) || 
+                    (pa.SecurityHead1 != null && pa.SecurityHead1.Email == userEmail) ||
+                    (pa.SecurityHead2 != null && pa.SecurityHead2.Email == userEmail)
+                );
+            }
+            
+            query = ApplyApplicationIdFilter(query, applicationId, isSystemAdmin);
+
+            var nextAssignment = await query
                 .OrderByDescending(p => p.CreatedAt) // sorting by creation date for now, could be improved to sort by schedule
                 .FirstOrDefaultAsync();
 
