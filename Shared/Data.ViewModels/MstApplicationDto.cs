@@ -33,7 +33,7 @@ namespace Data.ViewModels
         public string OrganizationType { get; set; }
         public string OrganizationAddress { get; set; }
         public string ApplicationType { get; set; }
-        // public DateTime ApplicationRegistered { get; set; }
+        public DateTime ApplicationRegistered { get; set; }
         public DateTime ApplicationExpired { get; set; }
         public string HostName { get; set; }
         public string HostPhone { get; set; }
@@ -53,7 +53,7 @@ namespace Data.ViewModels
         public string OrganizationType { get; set; }
         public string OrganizationAddress { get; set; }
         public string ApplicationType { get; set; }
-        // public DateTime ApplicationRegistered { get; set; }
+        public DateTime ApplicationRegistered { get; set; }
         public DateTime ApplicationExpired { get; set; }
         public string HostName { get; set; }
         public string HostPhone { get; set; }
