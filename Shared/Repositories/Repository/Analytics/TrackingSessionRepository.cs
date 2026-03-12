@@ -816,11 +816,12 @@ namespace Repositories.Repository.Analytics
             SELECT
                 {groupByColumn} AS Name,
                 (DATEPART(HOUR, t.trans_time)) AS Hour,
-                COUNT(DISTINCT COALESCE(v.id, m.id)) AS Count
+                COUNT(DISTINCT COALESCE(v.id, m.id, s.id)) AS Count
             FROM [dbo].[{tableName}] t
             LEFT JOIN card c ON t.card_id = c.id
             LEFT JOIN visitor v ON c.visitor_id = v.id
             LEFT JOIN mst_member m ON c.member_id = m.id
+            LEFT JOIN mst_security s ON c.security_id = s.id
             LEFT JOIN floorplan_masked_area ma ON t.floorplan_masked_area_id = ma.id
             LEFT JOIN mst_floorplan fp ON ma.floorplan_id = fp.id
             LEFT JOIN mst_floor fl ON fp.floor_id = fl.id
@@ -828,7 +829,7 @@ namespace Repositories.Repository.Analytics
             WHERE t.trans_time >= @p{startParamIndex}
             AND t.trans_time <= @p{startParamIndex + 1}
             AND ma.id IS NOT NULL
-            AND (v.id IS NOT NULL OR m.id IS NOT NULL)
+            AND (v.id IS NOT NULL OR m.id IS NOT NULL OR s.id IS NOT NULL)
         ";
 
             var parameters = new List<object> { fromUtc, toUtc };
@@ -884,6 +885,10 @@ namespace Repositories.Repository.Analytics
                 else if (type == "member")
                 {
                     sql += $" AND m.id IS NOT NULL";
+                }
+                else if (type == "security")
+                {
+                    sql += $" AND s.id IS NOT NULL";
                 }
             }
 
