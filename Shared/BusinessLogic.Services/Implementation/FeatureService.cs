@@ -7,10 +7,9 @@ using BusinessLogic.Services.Interface;
 using BusinessLogic.Services.Extension;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Repositories.DbContexts;
 using Repositories.Repository;
+using Shared.Contracts.Read;
 using Shared.BusinessLogic.Services.Feature;
 
 namespace BusinessLogic.Services.Implementation
@@ -20,19 +19,15 @@ namespace BusinessLogic.Services.Implementation
     /// </summary>
     public class FeatureService : BaseService, IFeatureService
     {
-        private readonly BleTrackingDbContext _context;
-        private readonly IMemoryCache _cache;
+        private readonly MstApplicationRepository _applicationRepository;
         private readonly ILogger<FeatureService> _logger;
-        private readonly string CacheKeyPrefix = "Feature_";
 
         public FeatureService(
-            BleTrackingDbContext context,
-            IMemoryCache cache,
+            MstApplicationRepository applicationRepository,
             ILogger<FeatureService> logger,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
-            _context = context;
-            _cache = cache;
+            _applicationRepository = applicationRepository;
             _logger = logger;
         }
 
@@ -48,25 +43,12 @@ namespace BusinessLogic.Services.Implementation
             }
 
             var appId = AppId;
-            return IsFeatureEnabledAsync(featureKey, appId).GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Check if a specific feature is enabled for a specific application
-        /// </summary>
-        public async Task<bool> IsFeatureEnabledAsync(string featureKey, Guid applicationId)
-        {
-            if (!FeatureDefinition.IsValidFeature(featureKey))
-            {
-                return false;
-            }
-
-            var enabledFeatures = await GetEnabledFeaturesAsync(applicationId);
+            var enabledFeatures = GetEnabledFeaturesAsync(appId).GetAwaiter().GetResult();
             return enabledFeatures.Contains(featureKey);
         }
 
         /// <summary>
-        /// Get all enabled features for the current application
+        /// Get all enabled feature keys for the current application
         /// </summary>
         public async Task<List<string>> GetEnabledFeaturesAsync()
         {
@@ -74,151 +56,74 @@ namespace BusinessLogic.Services.Implementation
         }
 
         /// <summary>
-        /// Get all enabled features for a specific application
+        /// Get all enabled feature keys for a specific application (Internal helper)
         /// </summary>
-        public async Task<List<string>> GetEnabledFeaturesAsync(Guid applicationId)
+        private async Task<List<string>> GetEnabledFeaturesAsync(Guid applicationId)
         {
-            var cacheKey = $"{CacheKeyPrefix}{applicationId}";
-
-            if (_cache.TryGetValue(cacheKey, out List<string> cachedFeatures))
-            {
-                return cachedFeatures;
-            }
-
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId);
+            var application = await _applicationRepository.GetByIdEntityAsync(applicationId);
 
             if (application == null)
             {
                 return new List<string>();
             }
 
-            var features = ParseEnabledFeatures(application.EnabledFeatures);
-
-            // Cache for 5 minutes
-            _cache.Set(cacheKey, features, TimeSpan.FromMinutes(5));
-
-            return features;
+            return ParseEnabledFeatures(application.EnabledFeatures);
         }
 
         /// <summary>
-        /// Enable a feature for an application
+        /// Manually toggle an optional module (AD Sync or SSO)
+        /// Only possible if the license permits the feature.
         /// </summary>
-        public async Task EnableFeatureAsync(Guid applicationId, string featureKey)
+        public async Task<bool> ToggleModuleAsync(string featureKey, bool enabled)
         {
-            if (!FeatureDefinition.IsValidFeature(featureKey))
+            // 1. Only allow specific modules
+            if (featureKey != FeatureDefinition.ModuleActiveDirectory && 
+                featureKey != FeatureDefinition.ModuleSso)
             {
-                throw new ArgumentException($"Invalid feature key: {featureKey}");
+                _logger.LogWarning($"Restrict: Cannot toggle non-module feature: {featureKey}");
+                return false;
             }
 
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId);
+            var applicationId = AppId;
+            var application = await _applicationRepository.GetByIdEntityAsync(applicationId);
+            if (application == null) return false;
 
-            if (application == null)
+            // 2. Check if permitted by license
+            var licensedFeatures = ParseEnabledFeatures(application.LicensedFeatures);
+            if (!licensedFeatures.Contains(featureKey))
             {
-                throw new ArgumentException($"Application not found: {applicationId}");
+                _logger.LogWarning($"Restrict: Feature {featureKey} is not permitted by the current license.");
+                return false;
             }
 
+            // 3. Update active configuration
             var currentFeatures = ParseEnabledFeatures(application.EnabledFeatures);
+            bool changed = false;
 
-            if (!currentFeatures.Contains(featureKey))
+            if (enabled && !currentFeatures.Contains(featureKey))
             {
                 currentFeatures.Add(featureKey);
-                application.EnabledFeatures = SerializeEnabledFeatures(currentFeatures);
-                await _context.SaveChangesAsync();
-
-                // Clear cache
-                RefreshCacheAsync(applicationId).GetAwaiter().GetResult();
+                changed = true;
             }
-        }
-
-        /// <summary>
-        /// Disable a feature for an application
-        /// </summary>
-        public async Task DisableFeatureAsync(Guid applicationId, string featureKey)
-        {
-            if (!FeatureDefinition.IsValidFeature(featureKey))
+            else if (!enabled && currentFeatures.Contains(featureKey))
             {
-                throw new ArgumentException($"Invalid feature key: {featureKey}");
-            }
-
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId);
-
-            if (application == null)
-            {
-                throw new ArgumentException($"Application not found: {applicationId}");
-            }
-
-            var currentFeatures = ParseEnabledFeatures(application.EnabledFeatures);
-
-            if (currentFeatures.Contains(featureKey))
-            {
-                // Don't allow disabling all core features - must have at least one
-                if (FeatureDefinition.IsCoreFeature(featureKey) && currentFeatures.Count(f => FeatureDefinition.IsCoreFeature(f)) <= 1)
-                {
-                    throw new InvalidOperationException("Cannot disable the last core feature");
-                }
-
                 currentFeatures.Remove(featureKey);
+                changed = true;
+            }
+
+            if (changed)
+            {
                 application.EnabledFeatures = SerializeEnabledFeatures(currentFeatures);
-                await _context.SaveChangesAsync();
-
-                // Clear cache
-                RefreshCacheAsync(applicationId).GetAwaiter().GetResult();
+                await _applicationRepository.UpdateAsync(application);
             }
+
+            return true;
         }
 
         /// <summary>
-        /// Set enabled features for an application (replaces all)
+        /// Get feature info (name, description, enabled status) - Private helper
         /// </summary>
-        public async Task SetEnabledFeaturesAsync(Guid applicationId, List<string> featureKeys)
-        {
-            // Validate all feature keys
-            foreach (var key in featureKeys)
-            {
-                if (!FeatureDefinition.IsValidFeature(key))
-                {
-                    throw new ArgumentException($"Invalid feature key: {key}");
-                }
-            }
-
-            // Ensure at least one core feature
-            var hasCoreFeature = featureKeys.Any(f => FeatureDefinition.IsCoreFeature(f));
-            if (!hasCoreFeature)
-            {
-                throw new ArgumentException("At least one core feature must be enabled");
-            }
-
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId);
-
-            if (application == null)
-            {
-                throw new ArgumentException($"Application not found: {applicationId}");
-            }
-
-            application.EnabledFeatures = SerializeEnabledFeatures(featureKeys);
-            await _context.SaveChangesAsync();
-
-            // Clear cache
-            RefreshCacheAsync(applicationId).GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Refresh feature cache for an application
-        /// </summary>
-        public Task RefreshCacheAsync(Guid applicationId)
-        {
-            var cacheKey = $"{CacheKeyPrefix}{applicationId}";
-            _cache.Remove(cacheKey);
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Get feature info (name, description, enabled status)
-        /// </summary>
-        public async Task<Dictionary<string, FeatureInfo>> GetFeatureInfoAsync()
+        private async Task<Dictionary<string, FeatureInfo>> GetFeatureInfoAsync()
         {
             var appId = AppId;
             var enabledFeatures = await GetEnabledFeaturesAsync(appId);
@@ -234,13 +139,37 @@ namespace BusinessLogic.Services.Implementation
                     Description = FeatureDefinition.GetDescription(featureKey),
                     IsCore = isCore,
                     IsEnabled = enabledFeatures.Contains(featureKey),
-                    Category = isCore ? "core" : "saas"
+                    Category = isCore ? "core" : "module"
                 };
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Get categorized features (core vs module)
+        /// </summary>
+        public async Task<CategorizedFeaturesRead> GetCategorizedFeaturesAsync()
+        {
+            var features = await GetFeatureInfoAsync();
+            var result = new CategorizedFeaturesRead();
+
+            foreach (var kvp in features)
+            {
+                var featureData = new FeatureItemRead
+                {
+                    Key = kvp.Value.Key,
+                    DisplayName = kvp.Value.DisplayName,
+                    Description = kvp.Value.Description,
+                    IsEnabled = kvp.Value.IsEnabled
+                };
+
+                if (kvp.Value.IsCore) result.Core[kvp.Key] = featureData;
+                else result.Modules[kvp.Key] = featureData;
+            }
+
+            return result;
+        }
         #region Private Methods
 
         private List<string> ParseEnabledFeatures(string? featuresJson)

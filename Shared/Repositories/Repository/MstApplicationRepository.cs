@@ -49,7 +49,7 @@ namespace Repositories.Repository
                 ApplicationCustomDomain = x.ApplicationCustomDomain,
                 ApplicationCustomPort = x.ApplicationCustomPort,
                 LicenseCode = x.LicenseCode,
-                LicenseType = x.LicenseType.ToString(),
+                LicenseType = x.LicenseType,
                 ApplicationStatus = x.ApplicationStatus ?? 1,
                 PatrolTrackingMode = x.PatrolTrackingMode,
                 EnabledFeatures = x.EnabledFeatures,

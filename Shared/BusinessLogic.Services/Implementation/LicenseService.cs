@@ -7,10 +7,11 @@ using BusinessLogic.Services.Extension;
 using Helpers.Consumer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Repositories.DbContexts;
-using Standard.Licensing;
+using Shared.Contracts;
+using Repositories.Repository;
+using DataView;
+using Shared.Contracts.Read;
 using Standard.Licensing.Validation;
 using LicenseFile = Standard.Licensing.License;
 
@@ -22,34 +23,38 @@ namespace BusinessLogic.Services.Implementation
     /// </summary>
     public class LicenseService : BaseService, ILicenseService
     {
-        private readonly BleTrackingDbContext _context;
+        private readonly MstApplicationRepository _applicationRepository;
+        private readonly CardRepository _cardRepository;
+        private readonly MstBleReaderRepository _readerRepository;
         private readonly IFeatureService _featureService;
-        private readonly IMemoryCache _cache;
+        private readonly IAuditEmitter _audit;
         private readonly ILogger<LicenseService> _logger;
 
         // Embedded Public Key - This key is used to verify license signatures
         // Generated once by LicenseGenerator and embedded in the application
         private const string PublicKey = @"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmBppZFeGPf2nZHkt+DfMfVKSYSrofrM4IEjYo1lrufC2LWnPHRQFrmCM3x4nTb0WSOM1SW1lqwICc6JGyJpGmQ==";
 
-        private const string CacheKeyPrefix = "LicenseInfo_";
-
         public LicenseService(
-            BleTrackingDbContext context,
+            MstApplicationRepository applicationRepository,
+            CardRepository cardRepository,
+            MstBleReaderRepository readerRepository,
             IFeatureService featureService,
-            IMemoryCache cache,
+            IAuditEmitter audit,
             ILogger<LicenseService> logger,
             IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
-            _context = context;
+            _applicationRepository = applicationRepository;
+            _cardRepository = cardRepository;
+            _readerRepository = readerRepository;
             _featureService = featureService;
-            _cache = cache;
+            _audit = audit;
             _logger = logger;
         }
 
         /// <summary>
         /// Get current license information for the application
         /// </summary>
-        public async Task<LicenseInfo> GetLicenseInfoAsync()
+        public async Task<LicenseRead> GetLicenseInfoAsync()
         {
             return await GetLicenseInfoAsync(AppId);
         }
@@ -57,54 +62,46 @@ namespace BusinessLogic.Services.Implementation
         /// <summary>
         /// Get license information for a specific application
         /// </summary>
-        public async Task<LicenseInfo> GetLicenseInfoAsync(Guid applicationId)
+        public async Task<LicenseRead> GetLicenseInfoAsync(Guid applicationId)
         {
-            var cacheKey = $"{CacheKeyPrefix}{applicationId}";
-
-            if (_cache.TryGetValue(cacheKey, out LicenseInfo cachedInfo))
-            {
-                return cachedInfo;
-            }
-
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId);
+            var application = await _applicationRepository.GetByIdEntityAsync(applicationId);
 
             if (application == null)
             {
-                return new LicenseInfo
+                return new LicenseRead
                 {
                     IsValid = false,
                     ValidationMessage = "Application not found"
                 };
             }
 
-            var info = new LicenseInfo
+            var info = new LicenseRead
             {
-                LicenseType = application.LicenseType.ToString(),
-                LicenseTier = application.LicenseTier ?? application.LicenseType.ToString().ToLower(),
+                LicenseType = (Shared.Contracts.LicenseType?)application.LicenseType,
+                LicenseTier = (Shared.Contracts.LicenseTier?)application.LicenseTier,
                 CustomerName = application.CustomerName ?? "Unknown",
+                ApplicationName = application.ApplicationName,
+                ApplicationCustomName = application.ApplicationCustomName,
+                ApplicationCustomDomain = application.ApplicationCustomDomain,
+                ApplicationRegistered = application.ApplicationRegistered,
                 ExpirationDate = application.ApplicationExpired,
-                DaysRemaining = (int?)(application.ApplicationExpired - DateTime.UtcNow).Days,
+                DaysRemaining = (int?)(application.ApplicationExpired - DateTime.UtcNow).TotalDays,
+                MaxBeacons = application.MaxBeacons,
+                MaxReaders = application.MaxReaders,
                 IsValid = await IsLicenseValidInternalAsync(application),
                 ValidationMessage = GetValidationMessage(application)
             };
 
-            // Get enabled features
-            var enabledFeatures = await _featureService.GetEnabledFeaturesAsync(applicationId);
-            info.Features = new Dictionary<string, bool>
+            // Get categorized features
+            if (info.IsValid)
             {
-                { "core.masterData", enabledFeatures.Contains("core.masterData") },
-                { "core.tracking", enabledFeatures.Contains("core.tracking") },
-                { "core.monitoring", enabledFeatures.Contains("core.monitoring") },
-                { "core.alarm", enabledFeatures.Contains("core.alarm") },
-                { "core.patrol", enabledFeatures.Contains("core.patrol") },
-                { "core.reporting", enabledFeatures.Contains("core.reporting") },
-                { "saas.activeDirectory", enabledFeatures.Contains("saas.activeDirectory") },
-                { "saas.sso", enabledFeatures.Contains("saas.sso") }
-            };
-
-            // Cache for 5 minutes
-            _cache.Set(cacheKey, info, TimeSpan.FromMinutes(5));
+                info.Features = await _featureService.GetCategorizedFeaturesAsync();
+            }
+            else
+            {
+                // Return default empty/false categorized features
+                info.Features = new CategorizedFeaturesRead();
+            }
 
             return info;
         }
@@ -112,102 +109,142 @@ namespace BusinessLogic.Services.Implementation
         /// <summary>
         /// Validate a license file without activating it
         /// </summary>
-        public async Task<(bool IsValid, string Message)> ValidateLicenseAsync(string licenseContent)
+        public async Task<(bool IsValid, string Message)> ValidateLicenseAsync(string content, bool isBase64 = false)
         {
-            if (string.IsNullOrWhiteSpace(licenseContent))
+            if (string.IsNullOrWhiteSpace(content))
             {
                 return (false, "License content is empty");
             }
 
             try
             {
-                var license = License.Load(licenseContent);
+                string licenseContent = isBase64 ? System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(content)) : content;
+                var license = LicenseFile.Load(licenseContent);
 
-                // Validate signature
-                var validationFailures = license.Validate()
-                    .Signature(PublicKey)
-                    .AssertValidLicense();
+            // Validate signature
+            var validationFailures = license.Validate()
+                .Signature(PublicKey)
+                .AssertValidLicense();
 
-                if (validationFailures.Any())
-                {
-                    var messages = string.Join("; ", validationFailures.Select(f => f.Message));
-                    return (false, $"License validation failed: {messages}");
-                }
+            if (validationFailures.Any())
+            {
+                var messages = string.Join("; ", validationFailures.Select(f => f.Message));
+                return (false, $"License validation failed: {messages}");
+            }
 
-                // Check expiration
-                if (DateTime.Now > license.Expiration)
-                {
-                    return (false, $"License expired on {license.Expiration:yyyy-MM-dd}");
-                }
+            // Check expiration
+            if (DateTime.Now > license.Expiration)
+            {
+                return (false, $"License expired on {license.Expiration:yyyy-MM-dd}");
+            }
 
-                // Verify machine ID
-                var expectedMachineId = license.AdditionalAttributes.Get("MachineID");
-                var currentMachineId = MachineIdHelper.GenerateMachineId();
+            // Verify machine ID
+            var expectedMachineId = license.AdditionalAttributes.Get("MachineID");
+            var currentMachineId = MachineIdHelper.GenerateMachineId();
 
-                if (expectedMachineId != currentMachineId)
-                {
-                    return (false, $"License is not for this machine. Expected: {expectedMachineId}, Current: {currentMachineId}");
-                }
+            if (expectedMachineId != currentMachineId)
+            {
+                return (false, $"License is not for this machine. Expected: {expectedMachineId}, Current: {currentMachineId}");
+            }
 
-                return (true, $"License is valid for {license.Customer.Name} until {license.Expiration:yyyy-MM-dd}");
+            return (true, $"License is valid for {license.Customer.Name} until {license.Expiration:yyyy-MM-dd}");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to validate license: {ex.Message}");
+                _logger.LogError(ex, "License validation error");
+                return (false, $"License validation error: {ex.Message}");
             }
         }
 
         /// <summary>
         /// Activate a license file for the current application
         /// </summary>
-        public async Task<(bool Success, string Message)> ActivateLicenseAsync(string licenseContent)
+        public async Task<(bool Success, string Message)> ActivateLicenseAsync(string content, bool isBase64 = false)
         {
-            var (isValid, validationMessage) = await ValidateLicenseAsync(licenseContent);
+            var (isValid, validationMessage) = await ValidateLicenseAsync(content, isBase64);
 
             if (!isValid)
             {
-                return (false, validationMessage);
+                throw new BusinessException(validationMessage);
             }
 
             try
             {
-                var license = License.Load(licenseContent);
-                var application = await _context.MstApplications
-                    .FirstOrDefaultAsync(a => a.Id == AppId);
+                string licenseContent = isBase64 ? System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(content)) : content;
+                var license = LicenseFile.Load(licenseContent);
+            var application = await _applicationRepository.GetByIdEntityAsync(AppId);
 
-                if (application == null)
-                {
-                    return (false, "Application not found");
-                }
+            if (application == null)
+            {
+                throw new NotFoundException("Application not found");
+            }
 
-                // Update application with license info
-                application.ApplicationExpired = license.Expiration;
-                application.ApplicationStatus = 1;
-                application.CustomerName = license.Customer.Name;
-                application.LicenseMachineId = license.AdditionalAttributes.Get("MachineID");
+            // Update application with license info
+            application.ApplicationExpired = license.Expiration;
+            application.ApplicationStatus = 1;
+            application.CustomerName = license.Customer.Name;
+            application.LicenseMachineId = license.AdditionalAttributes.Get("MachineID");
 
-                // Determine license tier
-                var licenseTier = DetermineLicenseTier(license);
+            // Sync License Type & Tier
+            var typeStr = license.AdditionalAttributes.Get("LicenseType");
+            if (Enum.TryParse<Shared.Contracts.LicenseType>(typeStr, true, out var licenseType))
+                application.LicenseType = licenseType;
+
+            var tierStr = license.AdditionalAttributes.Get("LicenseTier");
+            if (Enum.TryParse<Shared.Contracts.LicenseTier>(tierStr, true, out var licenseTier))
                 application.LicenseTier = licenseTier;
 
-                // Set default features based on license type
-                var defaultFeatures = Shared.BusinessLogic.Services.Feature.FeatureDefinition.DefaultFeatures.GetValueOrDefault(licenseTier, Shared.BusinessLogic.Services.Feature.FeatureDefinition.CoreFeatures);
-                application.EnabledFeatures = System.Text.Json.JsonSerializer.Serialize(defaultFeatures);
+            // Sync Limits
+            if (int.TryParse(license.AdditionalAttributes.Get("MaxBeacons"), out int maxBeacons))
+                application.MaxBeacons = maxBeacons;
+            
+            if (int.TryParse(license.AdditionalAttributes.Get("MaxReaders"), out int maxReaders))
+                application.MaxReaders = maxReaders;
 
-                await _context.SaveChangesAsync();
+            // Sync Features (Source of Truth is now the license file)
+            var featuresStr = license.AdditionalAttributes.Get("Features");
+            if (!string.IsNullOrEmpty(featuresStr))
+            {
+                var features = featuresStr.Split(',').Select(f => f.Trim()).ToList();
+                
+                // Always include core features in what is permitted
+                var permittedFeatures = Shared.BusinessLogic.Services.Feature.FeatureDefinition.CoreFeatures.ToList();
+                permittedFeatures.AddRange(features);
+                
+                var finalFeaturesJson = System.Text.Json.JsonSerializer.Serialize(permittedFeatures.Distinct());
+                
+                application.LicensedFeatures = finalFeaturesJson;
+                application.EnabledFeatures = finalFeaturesJson; // Initialize enabled with all licensed features
+            }
+            else
+            {
+                // Fallback to Tier-based defaults for old licenses
+                var currentTier = application.LicenseTier?.ToString() ?? "trial";
+                var defaultFeatures = Shared.BusinessLogic.Services.Feature.FeatureDefinition.DefaultFeatures.GetValueOrDefault(currentTier.ToLower(), Shared.BusinessLogic.Services.Feature.FeatureDefinition.CoreFeatures);
+                var defaultJson = System.Text.Json.JsonSerializer.Serialize(defaultFeatures);
+                
+                application.LicensedFeatures = defaultJson;
+                application.EnabledFeatures = defaultJson;
+            }
 
-                // Clear cache
-                await RefreshCacheAsync();
-                await _featureService.RefreshCacheAsync(AppId);
+            await _applicationRepository.UpdateAsync(application);
 
-                _logger.LogInformation($"License activated for application {AppId}. Customer: {license.Customer.Name}, Expires: {license.Expiration}");
+            // Audit Log
+            _audit.Updated("License", AppId, "License Activated", new { 
+                Customer = license.Customer.Name, 
+                Tier = application.LicenseTier,
+                Expires = license.Expiration 
+            });
 
-                return (true, $"License activated successfully for {license.Customer.Name}. Valid until {license.Expiration:yyyy-MM-dd}");
+            _logger.LogInformation($"License activated for application {AppId}. Customer: {license.Customer.Name}, Expires: {license.Expiration}");
+
+            return (true, $"License activated successfully for {license.Customer.Name}. Valid until {license.Expiration:yyyy-MM-dd}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to activate license: {ex.Message}");
-                return (false, $"Failed to activate license: {ex.Message}");
+                _logger.LogError(ex, $"Error activating license for application {AppId}");
+                if (ex is BusinessException || ex is NotFoundException) throw;
+                throw new BusinessException($"License activation failed: {ex.Message}");
             }
         }
 
@@ -224,8 +261,7 @@ namespace BusinessLogic.Services.Implementation
         /// </summary>
         public async Task<bool> IsLicenseValidAsync()
         {
-            var application = await _context.MstApplications
-                .FirstOrDefaultAsync(a => a.Id == AppId);
+            var application = await _applicationRepository.GetByIdEntityAsync(AppId);
 
             if (application == null)
             {
@@ -252,13 +288,31 @@ namespace BusinessLogic.Services.Implementation
         }
 
         /// <summary>
-        /// Refresh license cache
+        /// Validate if adding a new resource is allowed under the current license
         /// </summary>
-        public async Task RefreshCacheAsync()
+        public async Task ValidateUsageAsync(string resourceType)
         {
-            var cacheKey = $"{CacheKeyPrefix}{AppId}";
-            _cache.Remove(cacheKey);
-            await Task.CompletedTask;
+            var application = await _applicationRepository.GetByIdEntityAsync(AppId);
+
+            if (application == null) throw new NotFoundException("Application not found");
+
+            if (resourceType.ToLower() == "beacon")
+            {
+                var cardCount = await _cardRepository.GetCountEachIdAsync(); // This check already applies AppId filter
+
+                if (cardCount >= application.MaxBeacons)
+                {
+                    throw new BusinessException($"License limit reached. Maximum Beacons allowed: {application.MaxBeacons}");
+                }
+            }
+            else if (resourceType.ToLower() == "reader")
+            {
+                var readerCount = await _readerRepository.GetAllQueryable().CountAsync(); // This check already applies AppId filter
+                if (readerCount >= application.MaxReaders)
+                {
+                    throw new BusinessException($"License limit reached. Maximum Readers allowed: {application.MaxReaders}");
+                }
+            }
         }
 
         #region Private Methods
@@ -278,7 +332,7 @@ namespace BusinessLogic.Services.Implementation
             }
 
             // Check if license tier is set
-            if (string.IsNullOrWhiteSpace(application.LicenseTier))
+            if (application.LicenseTier == null)
             {
                 // Fallback: check LicenseType enum
                 if (application.LicenseType == Shared.Contracts.LicenseType.Trial)
@@ -316,25 +370,6 @@ namespace BusinessLogic.Services.Implementation
             }
 
             return "License is valid";
-        }
-
-        private string DetermineLicenseTier(LicenseFile license)
-        {
-            // Determine tier based on expiration date
-            var daysUntilExpiration = (license.Expiration - DateTime.Now).TotalDays;
-
-            if (daysUntilExpiration > 365 * 10) // More than 10 years = perpetual
-            {
-                return "perpetual";
-            }
-            else if (daysUntilExpiration > 30) // More than 30 days = annual
-            {
-                return "annual";
-            }
-            else // 30 days or less = trial
-            {
-                return "trial";
-            }
         }
 
         #endregion

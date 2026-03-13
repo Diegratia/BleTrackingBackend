@@ -764,7 +764,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstMemberDto>> ImportCsvAsync(IFormFile file)
         {
-            if (!await _featureService.IsFeatureEnabledAsync(Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasActiveDirectory, AppId))
+            if (!_featureService.IsFeatureEnabled(Shared.BusinessLogic.Services.Feature.FeatureDefinition.ModuleActiveDirectory))
             {
                 throw new UnauthorizedException("Active Directory sync module is not enabled for this application.");
             }

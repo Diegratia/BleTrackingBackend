@@ -3,9 +3,9 @@ using System.Collections.Generic;
 namespace Shared.BusinessLogic.Services.Feature
 {
     /// <summary>
-    /// Feature flag definitions for SaaS modules
+    /// Feature flag definitions for modules
     /// Core features are always available with base license
-    /// SaaS features require specific module licensing
+    /// Module features require specific module licensing
     /// </summary>
     public static class FeatureDefinition
     {
@@ -17,9 +17,9 @@ namespace Shared.BusinessLogic.Services.Feature
         public const string CorePatrol = "core.patrol";
         public const string CoreReporting = "core.reporting";
 
-        // SaaS Modules (add-on features)
-        public const string SaasActiveDirectory = "saas.activeDirectory";
-        public const string SaasSso = "saas.sso";
+        // Module Features (add-on features)
+        public const string ModuleActiveDirectory = "module.activeDirectory";
+        public const string ModuleSso = "module.sso";
 
         // All core features list
         public static readonly string[] CoreFeatures = new[]
@@ -32,11 +32,11 @@ namespace Shared.BusinessLogic.Services.Feature
             CoreReporting
         };
 
-        // All SaaS features list
-        public static readonly string[] SaasFeatures = new[]
+        // All Module features list
+        public static readonly string[] ModuleFeatures = new[]
         {
-            SaasActiveDirectory,
-            SaasSso
+            ModuleActiveDirectory,
+            ModuleSso
         };
 
         // All features
@@ -48,8 +48,8 @@ namespace Shared.BusinessLogic.Services.Feature
             CoreAlarm,
             CorePatrol,
             CoreReporting,
-            SaasActiveDirectory,
-            SaasSso
+            ModuleActiveDirectory,
+            ModuleSso
         };
 
         // Feature display names
@@ -61,8 +61,8 @@ namespace Shared.BusinessLogic.Services.Feature
             { CoreAlarm, "Alarm & Notification" },
             { CorePatrol, "Patrol Management" },
             { CoreReporting, "Reports & Analytics" },
-            { SaasActiveDirectory, "Active Directory Sync" },
-            { SaasSso, "Single Sign-On (SSO)" }
+            { ModuleActiveDirectory, "Active Directory Sync" },
+            { ModuleSso, "Single Sign-On (SSO)" }
         };
 
         // Feature descriptions
@@ -74,8 +74,8 @@ namespace Shared.BusinessLogic.Services.Feature
             { CoreAlarm, "Alarm triggers, notifications, and alert management" },
             { CorePatrol, "Patrol route management and checkpoint tracking" },
             { CoreReporting, "Reports, analytics, and data export" },
-            { SaasActiveDirectory, "Automatic employee synchronization with Active Directory" },
-            { SaasSso, "Windows authentication and Single Sign-On integration" }
+            { ModuleActiveDirectory, "Automatic employee synchronization with Active Directory" },
+            { ModuleSso, "Windows authentication and Single Sign-On integration" }
         };
 
         // Default features for each license type
@@ -134,11 +134,11 @@ namespace Shared.BusinessLogic.Services.Feature
         }
 
         /// <summary>
-        /// Check if a feature is a SaaS feature
+        /// Check if a feature is a module feature
         /// </summary>
-        public static bool IsSaasFeature(string featureKey)
+        public static bool IsModuleFeature(string featureKey)
         {
-            return ((IList<string>)SaasFeatures).Contains(featureKey);
+            return ((IList<string>)ModuleFeatures).Contains(featureKey);
         }
 
         /// <summary>

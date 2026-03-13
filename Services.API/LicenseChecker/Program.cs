@@ -166,16 +166,43 @@ namespace LicenseChecker
                     Environment.Exit(1);
                 }
 
-                // Update Status and Expiration
+                // Update Application with full license metadata
                 app.ApplicationStatus = 1;
                 app.ApplicationExpired = license.Expiration;
-                // app.LicenseCode = license.AdditionalAttributes.Get("MachineID");
+                app.CustomerName = license.Customer.Name;
+                app.LicenseMachineId = license.AdditionalAttributes.Get("MachineID");
+
+                // Sync License Type & Tier
+                var typeStr = license.AdditionalAttributes.Get("LicenseType");
+                if (Enum.TryParse<Shared.Contracts.LicenseType>(typeStr, true, out var licenseType))
+                    app.LicenseType = licenseType;
+
+                var tierStr = license.AdditionalAttributes.Get("LicenseTier");
+                if (Enum.TryParse<Shared.Contracts.LicenseTier>(tierStr, true, out var licenseTier))
+                    app.LicenseTier = licenseTier;
+
+                // Sync Limits
+                if (int.TryParse(license.AdditionalAttributes.Get("MaxBeacons"), out int maxBeacons))
+                    app.MaxBeacons = maxBeacons;
                 
+                if (int.TryParse(license.AdditionalAttributes.Get("MaxReaders"), out int maxReaders))
+                    app.MaxReaders = maxReaders;
+
+                // Sync Features
+                var featuresStr = license.AdditionalAttributes.Get("Features");
+                if (!string.IsNullOrEmpty(featuresStr))
+                {
+                    var features = featuresStr.Split(',').Select(f => f.Trim()).Distinct().ToList();
+                    app.EnabledFeatures = System.Text.Json.JsonSerializer.Serialize(features);
+                }
+
                 context.SaveChanges();
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"✅ License validated and activated successfully!");
                 Console.WriteLine($"Customer       : {license.Customer.Name}");
+                Console.WriteLine($"Tier           : {app.LicenseTier} ({app.LicenseType})");
+                Console.WriteLine($"Limits         : {app.MaxBeacons} Beacons, {app.MaxReaders} Readers");
                 Console.WriteLine($"Active Until   : {app.ApplicationExpired:yyyy-MM-dd}");
                 Console.WriteLine($"Database MstApp: Updated (Status = {app.ApplicationStatus})");
                 Console.ResetColor();

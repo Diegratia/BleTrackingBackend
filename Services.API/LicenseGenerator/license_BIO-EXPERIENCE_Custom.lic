@@ -1,0 +1,18 @@
+<License>
+  <Id>f5e7b5cc-2bbe-4bda-b03f-65f2359b55f9</Id>
+  <Type>Standard</Type>
+  <Expiration>Wed, 13 Mar 2126 08:03:36 GMT</Expiration>
+  <LicenseAttributes>
+    <Attribute name="MachineID">1d2a4b8397ba9f73bc1fbb9a695fca84f90a1ff5429161b6182d965e605e8786</Attribute>
+    <Attribute name="LicenseType">Perpetual</Attribute>
+    <Attribute name="LicenseTier">Custom</Attribute>
+    <Attribute name="MaxBeacons">20</Attribute>
+    <Attribute name="MaxReaders">5</Attribute>
+    <Attribute name="Features">module.activeDirectory,module.sso</Attribute>
+  </LicenseAttributes>
+  <Customer>
+    <Name>BIO-EXPERIENCE</Name>
+    <Email>info@customer.com</Email>
+  </Customer>
+  <Signature>MEYCIQCSLh6O0RsD67DHqPwMfDWbL35EBXEBziqgOgEMejJoPAIhAO9AugKE4SzcG4gAXEupjnfsRKwYRoB29bErFPpi4wRn</Signature>
+</License>

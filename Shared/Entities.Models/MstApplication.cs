@@ -79,7 +79,7 @@ namespace Entities.Models
 
         [Required]
         [Column("license_type")]
-        public LicenseType LicenseType { get; set; }
+        public LicenseType? LicenseType { get; set; }
 
         [Required]
         [Column("application_status")]
@@ -88,32 +88,35 @@ namespace Entities.Models
         [Column("patrol_tracking_mode")]
         public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
 
-        // SaaS License & Feature Management
+        // Module License & Feature Management
         /// <summary>
         /// JSON string containing enabled features/modules
-        /// Example: ["core.masterData", "core.tracking", "core.monitoring", "core.alarm", "saas.activeDirectory", "saas.sso"]
+        /// Example: ["core.masterData", "core.tracking", "core.monitoring", "core.alarm", "module.activeDirectory", "module.sso"]
         /// </summary>
         [Column("enabled_features")]
         public string? EnabledFeatures { get; set; }
 
         /// <summary>
-        /// License tier for display purposes (actual validation from license file)
-        /// Values: "trial", "annual", "perpetual"
+        /// JSON string containing features permitted by the license
+        /// Used to validate if a module can be manually toggled ON
         /// </summary>
-        [StringLength(50)]
-        [Column("license_tier")]
-        public string? LicenseTier { get; set; }
+        [Column("licensed_features")]
+        public string? LicensedFeatures { get; set; }
 
-        /// <summary>
-        /// Customer name from license file for reference
-        /// </summary>
+        [Column("license_tier")]
+        public LicenseTier? LicenseTier { get; set; }
+
+        [Column("max_beacons")]
+        public int MaxBeacons { get; set; } = 20; // Default Core
+
+        [Column("max_readers")]
+        public int MaxReaders { get; set; } = 5; // Default Core
+
+
         [StringLength(255)]
         [Column("customer_name")]
         public string? CustomerName { get; set; }
 
-        /// <summary>
-        /// Machine ID this license is tied to
-        /// </summary>
         [StringLength(255)]
         [Column("license_machine_id")]
         public string? LicenseMachineId { get; set; }

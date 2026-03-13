@@ -42,24 +42,18 @@ namespace Web.API.Controllers.Controllers
 
         /// <summary>
         /// Windows SSO Login endpoint
-        /// Requires saas.sso feature to be enabled
+        /// Requires module.sso feature to be enabled
         /// </summary>
         [HttpGet("login-sso")]
         [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
         public async Task<IActionResult> LoginSso()
         {
             // Check if SSO feature is enabled
-            var applicationIdClaim = User.FindFirst("ApplicationId")?.Value;
-            if (!string.IsNullOrEmpty(applicationIdClaim) && Guid.TryParse(applicationIdClaim, out var applicationId))
-            {
-                var isSsoEnabled = await _featureService.IsFeatureEnabledAsync(
-                    Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasSso,
-                    applicationId);
+            var isSsoEnabled = _featureService.IsFeatureEnabled(Shared.BusinessLogic.Services.Feature.FeatureDefinition.ModuleSso);
 
-                if (!isSsoEnabled)
-                {
-                    return Unauthorized(ApiResponse.Forbidden("Single Sign-On (SSO) module is not enabled for this application"));
-                }
+            if (!isSsoEnabled)
+            {
+                return Unauthorized(ApiResponse.Forbidden("Single Sign-On (SSO) module is not enabled for this application"));
             }
 
             var windowsUsername = User.Identity?.Name;
@@ -87,14 +81,12 @@ namespace Web.API.Controllers.Controllers
                 }));
             }
 
-            var isSsoEnabled = await _featureService.IsFeatureEnabledAsync(
-                Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasSso,
-                applicationId);
+            var isSsoEnabled = _featureService.IsFeatureEnabled(Shared.BusinessLogic.Services.Feature.FeatureDefinition.ModuleSso);
 
             return Ok(ApiResponse.Success("SSO status retrieved", new
             {
                 isEnabled = isSsoEnabled,
-                featureKey = "saas.sso",
+                featureKey = "module.sso",
                 featureName = "Single Sign-On (SSO)"
             }));
         }

@@ -38,7 +38,7 @@ namespace Shared.Contracts.Read
         [JsonPropertyOrder(14)]
         public string LicenseCode { get; set; }
         [JsonPropertyOrder(15)]
-        public string LicenseType { get; set; }
+        public LicenseType? LicenseType { get; set; }
         [JsonPropertyOrder(16)]
         public int ApplicationStatus { get; set; }
         [JsonPropertyOrder(17)]
@@ -46,7 +46,7 @@ namespace Shared.Contracts.Read
         [JsonPropertyOrder(18)]
         public string EnabledFeatures { get; set; }
         [JsonPropertyOrder(19)]
-        public string LicenseTier { get; set; }
+        public LicenseTier? LicenseTier { get; set; }
         [JsonPropertyOrder(20)]
         public string CustomerName { get; set; }
     }

@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Shared.Contracts.Read;
 using Standard.Licensing;
 
 namespace BusinessLogic.Services.Interface
@@ -11,22 +13,22 @@ namespace BusinessLogic.Services.Interface
         /// <summary>
         /// Get current license information for the application
         /// </summary>
-        Task<LicenseInfo> GetLicenseInfoAsync();
+        Task<LicenseRead> GetLicenseInfoAsync();
 
         /// <summary>
         /// Get license information for a specific application
         /// </summary>
-        Task<LicenseInfo> GetLicenseInfoAsync(Guid applicationId);
+        Task<LicenseRead> GetLicenseInfoAsync(Guid applicationId);
 
         /// <summary>
         /// Validate a license file without activating it
         /// </summary>
-        Task<(bool IsValid, string Message)> ValidateLicenseAsync(string licenseContent);
+        Task<(bool IsValid, string Message)> ValidateLicenseAsync(string content, bool isBase64 = false);
 
         /// <summary>
         /// Activate a license file for the current application
         /// </summary>
-        Task<(bool Success, string Message)> ActivateLicenseAsync(string licenseContent);
+        Task<(bool Success, string Message)> ActivateLicenseAsync(string content, bool isBase64 = false);
 
         /// <summary>
         /// Get the current machine ID
@@ -49,8 +51,9 @@ namespace BusinessLogic.Services.Interface
         Task<System.Collections.Generic.List<string>> GetEnabledFeaturesAsync();
 
         /// <summary>
-        /// Refresh license cache
+        /// Validate if adding a new resource is allowed under the current license
+        /// Throws UnauthorizedException if limit reached
         /// </summary>
-        Task RefreshCacheAsync();
+        Task ValidateUsageAsync(string resourceType);
     }
 }

@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using QuestPDF.Infrastructure;
+using Shared.Contracts;
+using Shared.Contracts.Read;
 
 namespace BusinessLogic.Services.Interface
 {
@@ -9,49 +12,28 @@ namespace BusinessLogic.Services.Interface
     public interface IFeatureService
     {
         /// <summary>
-        /// Check if a specific feature is enabled for the current application
+        /// Check if a specific feature is enabled for the current application (Sync)
         /// </summary>
         bool IsFeatureEnabled(string featureKey);
 
         /// <summary>
-        /// Check if a specific feature is enabled for a specific application
-        /// </summary>
-        Task<bool> IsFeatureEnabledAsync(string featureKey, Guid applicationId);
-
-        /// <summary>
-        /// Get all enabled features for the current application
+        /// Get all enabled feature keys for the current application
         /// </summary>
         Task<List<string>> GetEnabledFeaturesAsync();
 
         /// <summary>
-        /// Get all enabled features for a specific application
+        /// Get categorized features (core vs module) for UI
         /// </summary>
-        Task<List<string>> GetEnabledFeaturesAsync(Guid applicationId);
+        Task<CategorizedFeaturesRead> GetCategorizedFeaturesAsync();
 
         /// <summary>
-        /// Enable a feature for an application
+        /// Manually toggle an optional module (AD Sync or SSO)
+        /// Only possible if the license permits the feature.
         /// </summary>
-        Task EnableFeatureAsync(Guid applicationId, string featureKey);
+        /// <param name="featureKey">The feature key (module.activeDirectory or module.sso)</param>
+        /// <param name="enabled">True to enable, false to disable</param>
+        Task<bool> ToggleModuleAsync(string featureKey, bool enabled);
 
-        /// <summary>
-        /// Disable a feature for an application
-        /// </summary>
-        Task DisableFeatureAsync(Guid applicationId, string featureKey);
-
-        /// <summary>
-        /// Set enabled features for an application (replaces all)
-        /// </summary>
-        Task SetEnabledFeaturesAsync(Guid applicationId, List<string> featureKeys);
-
-        /// <summary>
-        /// Refresh feature cache for an application
-        /// </summary>
-        Task RefreshCacheAsync(Guid applicationId);
-
-        /// <summary>
-        /// Get feature info (name, description, enabled status)
-        /// </summary>
-        Task<Dictionary<string, FeatureInfo>> GetFeatureInfoAsync();
     }
 
     /// <summary>
@@ -64,21 +46,6 @@ namespace BusinessLogic.Services.Interface
         public string Description { get; set; }
         public bool IsCore { get; set; }
         public bool IsEnabled { get; set; }
-        public string Category { get; set; } // "core" or "saas"
-    }
-
-    /// <summary>
-    /// License information DTO
-    /// </summary>
-    public class LicenseInfo
-    {
-        public string LicenseType { get; set; }
-        public string LicenseTier { get; set; }
-        public string CustomerName { get; set; }
-        public DateTime? ExpirationDate { get; set; }
-        public int? DaysRemaining { get; set; }
-        public bool IsValid { get; set; }
-        public string ValidationMessage { get; set; }
-        public Dictionary<string, bool> Features { get; set; } = new Dictionary<string, bool>();
+        public string Category { get; set; } // "core" or "module"
     }
 }

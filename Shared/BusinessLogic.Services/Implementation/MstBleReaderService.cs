@@ -31,17 +31,19 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditEmitter _audit;
+        private readonly ILicenseService _licenseService;
 
         // private readonly IHttpClientFactory _httpClientFactory;
 
         public MstBleReaderService(MstBleReaderRepository repository,
-        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit)
+        IMapper mapper, IHttpContextAccessor httpContextAccessor, IAuditEmitter audit, ILicenseService licenseService)
             : base(httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _audit = audit;
+            _licenseService = licenseService;
             // _httpClientFactory = httpClientFactory;
         }
 
@@ -72,6 +74,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<MstBleReaderRead> CreateAsync(MstBleReaderCreateDto createDto)
         {
+            await _licenseService.ValidateUsageAsync("reader");
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
             if (createDto.BrandId != Guid.Empty)
@@ -111,6 +114,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<List<MstBleReaderDto>> CreateBatchAsync(List<MstBleReaderCreateDto> createDto)
         {
+            await _licenseService.ValidateUsageAsync("reader");
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
             var result = new List<MstBleReaderDto>();
             foreach (var dto in createDto)
@@ -211,6 +215,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstBleReaderRead>> ImportAsync(IFormFile file)
         {
+            await _licenseService.ValidateUsageAsync("reader");
             var bleReaders = new List<MstBleReader>();
             var username = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 

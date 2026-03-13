@@ -38,7 +38,8 @@ namespace BusinessLogic.Services.Implementation
         private readonly ILogger<Card> _logger;
         private readonly IMqttPubQueue _mqttQueue;
         private readonly IAuditEmitter _audit;
-
+        private readonly ILicenseService _licenseService;
+ 
         public CardService(
             CardRepository repository,
             CardAccessRepository cardAccessRepository,
@@ -47,7 +48,8 @@ namespace BusinessLogic.Services.Implementation
             IHttpContextAccessor httpContextAccessor,
             ILogger<Card> logger,
             IMqttPubQueue mqttQueue,
-            IAuditEmitter audit) : base(httpContextAccessor)
+            IAuditEmitter audit,
+            ILicenseService licenseService) : base(httpContextAccessor)
         {
             _repository = repository;
             _cardAccessRepository = cardAccessRepository;
@@ -56,6 +58,7 @@ namespace BusinessLogic.Services.Implementation
             _logger = logger;
             _mqttQueue = mqttQueue;
             _audit = audit;
+            _licenseService = licenseService;
         }
 
         public async Task<CardRead?> GetByIdAsync(Guid id)
@@ -87,6 +90,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<CardRead> CreateAsync(CardCreateDto createDto)
         {
+            await _licenseService.ValidateUsageAsync("beacon");
+
             var existingCard = await _repository.BaseEntityQuery()
             .FirstOrDefaultAsync(b =>
                                 b.CardNumber == createDto.CardNumber ||
@@ -163,6 +168,8 @@ namespace BusinessLogic.Services.Implementation
         
         public async Task<CardRead> CreateMinimalAsync(CardAddDto dto)
         {
+            await _licenseService.ValidateUsageAsync("beacon");
+
             var existingCard = await _repository.BaseEntityQuery()
             .FirstOrDefaultAsync(b =>
                                 b.CardNumber == dto.CardNumber ||
@@ -239,6 +246,9 @@ namespace BusinessLogic.Services.Implementation
         /// </summary>
         public async Task<IEnumerable<CardRead>> BulkAddAsync(List<CardAddDto> dtos)
         {
+            // Simple check before loop
+            await _licenseService.ValidateUsageAsync("beacon");
+
             var entities = new List<Card>();
             var cardNumbers = new HashSet<string>();
             var dmacs = new HashSet<string>();
@@ -645,6 +655,8 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<CardRead>> ImportAsync(IFormFile file)
         {
+            await _licenseService.ValidateUsageAsync("beacon");
+
             var cards = new List<Card>();
 
             using var stream = file.OpenReadStream();

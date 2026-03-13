@@ -28,5 +28,5 @@ WORKDIR /app
 
 COPY --from=build /app/Services.API/License/out ./
 
-EXPOSE 5032
+EXPOSE 5033
 ENTRYPOINT ["dotnet", "License.dll"]

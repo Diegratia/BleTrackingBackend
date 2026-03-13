@@ -14,6 +14,8 @@ using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
 using Microsoft.AspNetCore.Authorization;
 using Shared.Contracts;
+using Helpers.Consumer.Mqtt;
+using BusinessLogic.Services.Background;
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
@@ -74,13 +76,20 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ILicenseService, LicenseService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
+builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddHostedService<MqttRecoveryService>();
+builder.Services.AddSingleton<MqttPubQueue>();
+builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
+builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<MstApplicationRepository>();
+builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
 
 // Konfigurasi port dan host
-builder.UseDefaultHostExtension("LICENSE_PORT", "5032");
+builder.UseDefaultHostExtension("LICENSE_PORT", "5033");
 builder.Host.UseWindowsService();
 
 var app = builder.Build();

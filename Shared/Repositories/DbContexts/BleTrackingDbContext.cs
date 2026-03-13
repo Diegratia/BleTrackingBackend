@@ -240,9 +240,22 @@ namespace Repositories.DbContexts
                         .IsRequired()
                         .HasConversion(
                             v => v.ToString().ToLower(),
-                            v => (LicenseType)Enum.Parse(typeof(LicenseType), v, true)
+                            v => string.IsNullOrEmpty(v) ? LicenseType.Trial : (LicenseType)Enum.Parse(typeof(LicenseType), v, true)
                         );
-
+                    entity.Property(e => e.LicenseTier)
+                        .HasColumnType("nvarchar(255)")
+                        .IsRequired()
+                        .HasConversion(
+                            v => v.ToString().ToLower(),
+                            v => string.IsNullOrEmpty(v) ? LicenseTier.Core : (LicenseTier)Enum.Parse(typeof(LicenseTier), v, true)
+                        );
+                    
+                    entity.Property(e => e.MaxBeacons)
+                        .HasDefaultValue(20);
+                    
+                    entity.Property(e => e.MaxReaders)
+                        .HasDefaultValue(5);
+ 
                     entity.Property(e => e.ApplicationStatus)
                         .IsRequired()
                         .HasDefaultValue(1);
@@ -298,14 +311,14 @@ namespace Repositories.DbContexts
                     .IsRequired()
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (IntegrationType)Enum.Parse(typeof(IntegrationType), v, true)
+                        v => string.IsNullOrEmpty(v) ? IntegrationType.Other : (IntegrationType)Enum.Parse(typeof(IntegrationType), v, true)
                     );
                 entity.Property(e => e.ApiTypeAuth)
                     .HasColumnType("nvarchar(255)")
                     .IsRequired()
                     .HasConversion(
                         v => v == ApiTypeAuth.ApiKey ? "apikey" : v.ToString().ToLower(),
-                        v => v == "apikey" ? ApiTypeAuth.ApiKey : (ApiTypeAuth)Enum.Parse(typeof(ApiTypeAuth), v, true)
+                        v => v == "apikey" ? ApiTypeAuth.ApiKey : string.IsNullOrEmpty(v) ? ApiTypeAuth.Bearer : (ApiTypeAuth)Enum.Parse(typeof(ApiTypeAuth), v, true)
                     );
 
                 entity.HasOne(m => m.Application)
@@ -679,7 +692,7 @@ namespace Repositories.DbContexts
                     .HasColumnType("nvarchar(255)")
                     .HasConversion(
                         v => v.ToString().ToLower(),
-                        v => (ReaderType)Enum.Parse(typeof(ReaderType), v, true)
+                        v => string.IsNullOrEmpty(v) ? ReaderType.Indoor : (ReaderType)Enum.Parse(typeof(ReaderType), v, true)
                     );
 
                 entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();

@@ -18,14 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\BusinessLogic.Services\BusinessLogic.Services.csproj" />
-    <ProjectReference Include="..\..\Shared\Repositories\Repositories.csproj" />
-    <ProjectReference Include="..\..\Shared\Entities.Models\Entities.Models.csproj" />
-    <ProjectReference Include="..\..\Shared\Helpers.Consumer\Helpers.Consumer.csproj" />
-    <ProjectReference Include="..\..\Shared\Shared.Config\Shared.Config.csproj" />
-    <ProjectReference Include="..\..\Shared\Shared.Contracts\Shared.Contracts.csproj" />
-    <ProjectReference Include="..\..\Shared\DataViewModels\DataViewModels.csproj" />
-    <ProjectReference Include="..\..\Shared\Web.API\Controllers\Web.API.Controllers.csproj" />
+  	<ProjectReference Include="..\..\Shared\BusinessLogic.Services\BusinessLogic.Services.csproj" />
+		<ProjectReference Include="..\..\Shared\Data.ViewModels\Data.ViewModels.csproj" />
+    <ProjectReference Include="..\..\Shared\Web.API.Controllers\Web.API.Controllers.csproj" />
   </ItemGroup>
 
 </Project>

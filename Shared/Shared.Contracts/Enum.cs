@@ -37,11 +37,20 @@ namespace Shared.Contracts
         None
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum LicenseType
     {
         Trial, // trial 7 hari
         Perpetual, // permanent
         Annual // tahunan
+    }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum LicenseTier
+    {
+        Core, // 20 beacon, 5 reader
+        Professional, // 200 beacon // 50 reader
+        Enterprise, // unlimited
+        Custom
     }
 
     public enum VisitorActiveStatus
