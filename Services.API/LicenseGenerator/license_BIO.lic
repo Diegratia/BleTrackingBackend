@@ -1,0 +1,13 @@
+<License>
+  <Id>9c18f0f0-9744-4120-bbb5-041f97cbace0</Id>
+  <Type>Standard</Type>
+  <Expiration>Mon, 13 Mar 2028 01:40:11 GMT</Expiration>
+  <LicenseAttributes>
+    <Attribute name="MachineID">e7dc6f62b200a62b8cc77b6f2290bab114f17edf3ce71e55e5eb57907731c365</Attribute>
+  </LicenseAttributes>
+  <Customer>
+    <Name>BIO</Name>
+    <Email>info@customer.com</Email>
+  </Customer>
+  <Signature>MEUCIQCk5f+69CgvO7Bn9HKnHf4/YuFr/dsyQ8TUTL2MM3l0igIgcTrBnu8h2UXeJVZqGWDHYr+OqfWOGkTeXQf2sLpGaEU=</Signature>
+</License>

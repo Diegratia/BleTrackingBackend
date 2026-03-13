@@ -11,8 +11,9 @@ namespace LicenseChecker
 {
     class Program
     {
-        // Ganti string ini dengan PublicKey hasil generate dari LicenseGenerator
-        private const string PublicKey = @""; 
+        // Embedded Public Key - This key is used to verify license signatures
+        // Generated once by LicenseGenerator and embedded in the application
+        private const string PublicKey = @"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmBppZFeGPf2nZHkt+DfMfVKSYSrofrM4IEjYo1lrufC2LWnPHRQFrmCM3x4nTb0WSOM1SW1lqwICc6JGyJpGmQ=="; 
 
         static void Main(string[] args)
         {
@@ -24,7 +25,7 @@ namespace LicenseChecker
                     Console.WriteLine("=== MACHINE ID ===");
                     Console.WriteLine(id);
                     Console.WriteLine("==================");
-                    Console.WriteLine("Kirimkan ID ini ke Provider untuk mendapatkan file lisensi.");
+                    Console.WriteLine("Send this ID to the Provider to get a license file.");
                     return;
                 }
                 else if (args[0] == "--activate" && args.Length > 1)
@@ -34,11 +35,11 @@ namespace LicenseChecker
                 }
             }
 
-            // Jika tidak ada args, tampilkan menu interaktif
+            // If no arguments provided, show interactive menu
             Console.WriteLine("=== BleTracking License Checker & Activator ===");
-            Console.WriteLine("1. Lihat Machine ID");
-            Console.WriteLine("2. Aktivasi File Lisensi (.lic)");
-            Console.Write("Pilihan (1/2): ");
+            Console.WriteLine("1. View Machine ID");
+            Console.WriteLine("2. Activate License File (.lic)");
+            Console.Write("Choice (1/2): ");
             var choice = Console.ReadLine();
 
             if (choice == "1")
@@ -47,17 +48,17 @@ namespace LicenseChecker
                 Console.WriteLine("\n=== MACHINE ID ===");
                 Console.WriteLine(id);
                 Console.WriteLine("==================");
-                Console.WriteLine("Kirimkan ID ini ke Provider untuk mendapatkan file lisensi.");
+                Console.WriteLine("Send this ID to the Provider to get a license file.");
             }
             else if (choice == "2")
             {
-                Console.Write("\nMasukkan path/nama file lisensi (contoh: license.lic): ");
+                Console.Write("\nEnter license file path/name (example: license.lic): ");
                 string filePath = Console.ReadLine() ?? "";
                 ActivateLicense(filePath);
             }
             else
             {
-                Console.WriteLine("Pilihan tidak valid.");
+                Console.WriteLine("Invalid choice.");
             }
         }
 
@@ -66,7 +67,7 @@ namespace LicenseChecker
             if (!File.Exists(licenseFilePath))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"❌ File lisensi '{licenseFilePath}' tidak ditemukan!");
+                Console.WriteLine($"❌ License file '{licenseFilePath}' not found!");
                 Console.ResetColor();
                 Environment.Exit(1);
             }
@@ -76,8 +77,8 @@ namespace LicenseChecker
                 var licenseString = File.ReadAllText(licenseFilePath);
                 var license = License.Load(licenseString);
 
-                // Jika PublicKey kosong, abaikan validasi Signature sementara (untuk development phase)
-                // Di tahap production, ini Wajib ada.
+                // If PublicKey is empty, skip signature validation temporarily (for development phase only)
+                // In production, this field is REQUIRED.
                 System.Collections.Generic.IEnumerable<IValidationFailure> validationFailures;
                 
                 if (!string.IsNullOrEmpty(PublicKey))
@@ -88,9 +89,9 @@ namespace LicenseChecker
                 }
                 else
                 {
-                    // Fallback development: no signature validation validation
+                    // Fallback for development: signature validation bypassed
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("⚠️ PERINGATAN: Public Key belum di-set. Signature Validation dilewati (Hanya mode Development).");
+                    Console.WriteLine("⚠️ WARNING: Public Key is not set. Signature Validation bypassed (Development mode only).");
                     Console.ResetColor();
                     validationFailures = Enumerable.Empty<IValidationFailure>();
                 }
@@ -98,7 +99,7 @@ namespace LicenseChecker
                 if (validationFailures.Any())
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("❌ File Lisensi Invalid atau Corrupt!");
+                    Console.WriteLine("❌ License File is Invalid or Corrupt!");
                     foreach (var failure in validationFailures)
                     {
                         Console.WriteLine($" - {failure.Message} ({failure.HowToResolve})");
@@ -107,36 +108,36 @@ namespace LicenseChecker
                     Environment.Exit(1);
                 }
 
-                // Cek Expired
+                // Check expiration
                 if (DateTime.Now > license.Expiration)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"❌ File Lisensi sudah kedaluwarsa sejak {license.Expiration:yyyy-MM-dd}");
+                    Console.WriteLine($"❌ License File expired since {license.Expiration:yyyy-MM-dd}");
                     Console.ResetColor();
                     Environment.Exit(1);
                 }
 
-                // Cek Machine ID
+                // Check Machine ID
                 string expectedMachineId = license.AdditionalAttributes.Get("MachineID");
                 string currentMachineId = MachineIdHelper.GenerateMachineId();
 
                 if (expectedMachineId != currentMachineId)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("❌ Lisensi ini bukan untuk komputer/server ini!");
-                    Console.WriteLine($"Lisensi diterbitkan untuk Machine ID: {expectedMachineId}");
-                    Console.WriteLine($"Machine ID saat ini: {currentMachineId}");
+                    Console.WriteLine("❌ This license is not for this computer/server!");
+                    Console.WriteLine($"License issued for Machine ID: {expectedMachineId}");
+                    Console.WriteLine($"Current Machine ID: {currentMachineId}");
                     Console.ResetColor();
                     Environment.Exit(1);
                 }
 
-                // Jika lolos semua validasi:
+                // If all validations passed:
                 UpdateDatabaseLicenseStatus(license);
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"❌ Gagal memproses file lisensi: {ex.Message}");
+                Console.WriteLine($"❌ Failed to process license file: {ex.Message}");
                 Console.ResetColor();
                 Environment.Exit(1);
             }
@@ -146,7 +147,7 @@ namespace LicenseChecker
         {
             var services = new ServiceCollection();
             services.AddDbContext<BleTrackingDbContext>(options =>
-                options.UseSqlServer("Server= localhost,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
+                options.UseSqlServer("Server= 192.168.1.116,1433;Database=BleTrackingDb;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True"));
             
             var serviceProvider = services.BuildServiceProvider();
 
@@ -154,29 +155,29 @@ namespace LicenseChecker
             {
                 var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
                 
-                // Mengambil MstApplication (Default ambil yang pertama karena system ini single-tenant instance di server customer)
+                // Get MstApplication (takes the first one as this is a single-tenant instance on customer server)
                 var app = context.MstApplications.FirstOrDefault();
 
                 if (app == null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("❌ Data MstApplication tidak ditemukan di database.");
+                    Console.WriteLine("❌ MstApplication data not found in database.");
                     Console.ResetColor();
                     Environment.Exit(1);
                 }
 
-                // Update Status & Expired
+                // Update Status and Expiration
                 app.ApplicationStatus = 1;
                 app.ApplicationExpired = license.Expiration;
-                app.LicenseCode = license.AdditionalAttributes.Get("MachineID");
+                // app.LicenseCode = license.AdditionalAttributes.Get("MachineID");
                 
                 context.SaveChanges();
 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"✅ Lisensi berhasil divalidasi dan diaktivasi!");
+                Console.WriteLine($"✅ License validated and activated successfully!");
                 Console.WriteLine($"Customer       : {license.Customer.Name}");
-                Console.WriteLine($"Aktif Sampai   : {app.ApplicationExpired:yyyy-MM-dd}");
-                Console.WriteLine($"Database MstApp: Diperbarui (Status = {app.ApplicationStatus})");
+                Console.WriteLine($"Active Until   : {app.ApplicationExpired:yyyy-MM-dd}");
+                Console.WriteLine($"Database MstApp: Updated (Status = {app.ApplicationStatus})");
                 Console.ResetColor();
             }
         }

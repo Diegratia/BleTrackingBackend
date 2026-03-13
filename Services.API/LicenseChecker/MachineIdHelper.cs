@@ -26,13 +26,13 @@ namespace LicenseChecker
             }
             catch (Exception)
             {
-                // Fallback jika WMI gagal/tidak punya hak akses
+                // Fallback if WMI fails or lacks access permissions
                 cpuInfo = Environment.MachineName + Environment.UserName;
             }
 
             if (string.IsNullOrEmpty(cpuInfo))
             {
-                cpuInfo = Environment.MachineName; // Default ke hostname fallback
+                cpuInfo = Environment.MachineName; // Default to hostname fallback
             }
 
             // Hash the result for a clean, consistent identifier

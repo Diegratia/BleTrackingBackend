@@ -10,10 +10,10 @@ namespace LicenseGenerator
         static void Main(string[] args)
         {
             Console.WriteLine("=== BleTracking License Generator ===");
-            Console.WriteLine("Pilih aksi:");
+            Console.WriteLine("Select action:");
             Console.WriteLine("1. Generate Key Pair (Private & Public Key)");
-            Console.WriteLine("2. Buat File Lisensi Baru");
-            Console.Write("Pilihan (1/2): ");
+            Console.WriteLine("2. Create New License File");
+            Console.Write("Choice (1/2): ");
             var choice = Console.ReadLine();
 
             if (choice == "1")
@@ -26,13 +26,13 @@ namespace LicenseGenerator
             }
             else
             {
-                Console.WriteLine("Pilihan tidak valid.");
+                Console.WriteLine("Invalid choice.");
             }
         }
 
         static void GenerateKeys()
         {
-            Console.Write("Masukkan password untuk Private Key: ");
+            Console.Write("Enter password for Private Key: ");
             var password = Console.ReadLine();
 
             var keyGenerator = Standard.Licensing.Security.Cryptography.KeyGenerator.Create();
@@ -44,30 +44,30 @@ namespace LicenseGenerator
             File.WriteAllText("PrivateKey.txt", privateKey);
             File.WriteAllText("PublicKey.txt", publicKey);
 
-            Console.WriteLine("\n[SUCCESS] Key pair berhasil dibuat!");
-            Console.WriteLine("- PrivateKey.txt (SIMPAN BAIK-BAIK, JANGAN BOCOR)");
-            Console.WriteLine("- PublicKey.txt (SIMPAN DI APLIKASI CUSTOMER)");
+            Console.WriteLine("\n[SUCCESS] Key pair created successfully!");
+            Console.WriteLine("- PrivateKey.txt (KEEP SAFE, DO NOT LEAK)");
+            Console.WriteLine("- PublicKey.txt (STORE IN CUSTOMER APPLICATION)");
         }
 
         static void GenerateLicense()
         {
             if (!File.Exists("PrivateKey.txt"))
             {
-                Console.WriteLine("Error: PrivateKey.txt tidak ditemukan. Silakan jalankan opsi 1 dulu.");
+                Console.WriteLine("Error: PrivateKey.txt not found. Please run option 1 first.");
                 return;
             }
 
-            Console.Write("Masukkan password Private Key: ");
+            Console.Write("Enter Private Key password: ");
             var password = Console.ReadLine();
             var privateKey = File.ReadAllText("PrivateKey.txt");
 
-            Console.Write("Masukkan Nama Customer / Perusahaan: ");
+            Console.Write("Enter Customer Name / Company: ");
             var customerName = Console.ReadLine();
 
-            Console.Write("Masukkan Machine ID Customer: ");
+            Console.Write("Enter Customer Machine ID: ");
             var machineId = Console.ReadLine();
 
-            Console.Write("Masa Aktif Lisensi (dalam Tahun, misal: 1): ");
+            Console.Write("License Duration (in Years, e.g., 1): ");
             if (!int.TryParse(Console.ReadLine(), out int years)) years = 1;
 
             var license = License.New()
@@ -84,7 +84,7 @@ namespace LicenseGenerator
             string fileName = $"license_{customerName?.Replace(" ", "")}.lic";
             File.WriteAllText(fileName, license.ToString());
 
-            Console.WriteLine($"\n[SUCCESS] File lisensi '{fileName}' berhasil dibuat untuk {customerName}!");
+            Console.WriteLine($"\n[SUCCESS] License file '{fileName}' created for {customerName}!");
             Console.WriteLine($"Machine ID: {machineId}");
             Console.WriteLine($"Expired: {DateTime.Now.AddYears(years):yyyy-MM-dd}");
         }

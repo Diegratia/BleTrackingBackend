@@ -4478,7 +4478,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.ToTable("tracking_report_presets");
+                    b.ToTable("tracking_report_presets", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.TrackingTransaction", b =>
