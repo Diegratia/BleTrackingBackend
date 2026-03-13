@@ -25,10 +25,12 @@ namespace Web.API.Controllers.Controllers.Analytics
 
         public TrackingAnalyticsController(
             ITrackingSummaryService summaryService,
-            ITrackingSessionService sessionService)
+            ITrackingSessionService sessionService,
+            ITrackingAnalyticsV2Service reportService)
         {
             _summaryService = summaryService;
             _sessionService = sessionService;
+            _reportService = reportService;
         }
 
         // ===================================================================
@@ -106,7 +108,7 @@ namespace Web.API.Controllers.Controllers.Analytics
             return Ok(ApiResponse.Success(" Visitor Report retrieved successfully", result));
         }
         [HttpPost("preset-report")]
-        public async Task<IActionResult> GetVisitorSessionSummaryByPresetAsync([FromBody] Guid presetId, TrackingAnalyticsFilter overrideRequest)
+        public async Task<IActionResult> GetVisitorSessionSummaryByPresetAsync([FromQuery] Guid presetId, [FromBody] TrackingAnalyticsFilter overrideRequest)
         {
             var result = await _reportService.GetVisitorSessionSummaryByPresetAsync(presetId, overrideRequest);
             return Ok(ApiResponse.Success("Area accessed summary retrieved successfully", result));

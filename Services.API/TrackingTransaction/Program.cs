@@ -74,7 +74,7 @@ builder.Services.AddAutoMapper(typeof(TrackingTransactionProfile));
 builder.Services.AddScoped<ITrackingSessionService, TrackingSessionService>();
 builder.Services.AddScoped<ITrackingTransactionService, TrackingTransactionService>();
 builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
-builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
+// builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
@@ -88,7 +88,7 @@ builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddScoped<TrackingTransactionRepository>();
 builder.Services.AddScoped<TrackingSessionRepository>();
 builder.Services.AddScoped<TrackingReportPresetRepository>();
-builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
+// builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
 
 
 // builder.Services.AddScoped<IMstIntegrationService, MstIntegrationService>();

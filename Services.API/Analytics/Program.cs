@@ -61,6 +61,7 @@ builder.Services.AddSwaggerExtension();
 
 // === Dependencies ===
 builder.Services.AddScoped<IAlarmAnalyticsIncidentService, AlarmAnalyticsIncidentService>();
+builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetService>();
 builder.Services.AddScoped<ITrackingSummaryService, TrackingSummaryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITrackingSessionService, TrackingSessionService>();
@@ -68,6 +69,7 @@ builder.Services.AddScoped<ITrackingReportPresetService, TrackingReportPresetSer
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
+builder.Services.AddScoped<ITrackingAnalyticsV2Service, TrackingAnalyticsV2Service>();
 builder.Services.AddHostedService<MqttRecoveryService>();
 builder.Services.AddSingleton<MqttPubQueue>();
 builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
@@ -84,6 +86,9 @@ builder.Services.AddScoped<AlarmTriggersRepository>();
 builder.Services.AddScoped<AlarmCategorySettingsRepository>();
 builder.Services.AddScoped<FloorplanMaskedAreaRepository>();
 builder.Services.AddScoped<TrackingReportPresetRepository>();
+builder.Services.AddScoped<TrackingAnalyticsV2Repository>();
+builder.Services.AddScoped<TrackingReportPresetRepository>();
+
 
 builder.Services.AddAutoMapper(typeof(AlarmAnalyticsProfile));
 builder.Services.AddAutoMapper(typeof(TrackingAnalyticsProfile));

@@ -22,6 +22,7 @@ namespace Web.API.Controllers.Controllers
         {
             _trackingTransactionService = trackingTransactionService;
         }
+        
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
