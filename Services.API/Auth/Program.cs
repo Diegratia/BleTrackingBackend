@@ -97,6 +97,8 @@ builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 // Registrasi Repositories
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<CardRepository>();
+builder.Services.AddScoped<MstBleReaderRepository>();
 builder.Services.AddScoped<UserGroupRepository>();
 builder.Services.AddScoped<UserBuildingAccessRepository>();
 builder.Services.AddScoped<GroupBuildingAccessRepository>();
