@@ -42,6 +42,7 @@ namespace BusinessLogic.Services.Implementation
         private readonly IMqttPubQueue _mqttQueue;
         private readonly IFileStorageService _fileStorageService;
         private readonly IEncryptService _encryptService;
+        private readonly IFeatureService _featureService;
         private readonly IAuditEmitter _audit;
 
         public MstMemberService(MstMemberRepository repository,
@@ -52,6 +53,7 @@ namespace BusinessLogic.Services.Implementation
         IMqttPubQueue mqttQueue,
         IFileStorageService fileStorageService,
         IEncryptService encryptService,
+        IFeatureService featureService,
         IAuditEmitter audit
         ) : base(httpContextAccessor)
         {
@@ -63,6 +65,7 @@ namespace BusinessLogic.Services.Implementation
             _mqttQueue = mqttQueue;
             _fileStorageService = fileStorageService;
             _encryptService = encryptService;
+            _featureService = featureService;
             _audit = audit;
         }
 
@@ -761,6 +764,11 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<IEnumerable<MstMemberDto>> ImportCsvAsync(IFormFile file)
         {
+            if (!await _featureService.IsFeatureEnabledAsync(Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasActiveDirectory, AppId))
+            {
+                throw new UnauthorizedException("Active Directory sync module is not enabled for this application.");
+            }
+
             var username = UsernameFormToken;
 
             using var reader = new StreamReader(file.OpenReadStream());

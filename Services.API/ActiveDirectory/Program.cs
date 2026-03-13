@@ -69,18 +69,18 @@ builder.Services.AddSwaggerExtension();
 builder.Services.AddHttpContextAccessor();
 
 // Registrasi Services
-builder.Services.AddScoped<IAdSyncService, AdSyncService>();
+// builder.Services.AddScoped<IAdSyncService, AdSyncService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
 // Registrasi Repositories
-builder.Services.AddScoped<ActiveDirectoryConfigRepository>();
+// builder.Services.AddScoped<ActiveDirectoryConfigRepository>();
 builder.Services.AddScoped<MstMemberRepository>();
 builder.Services.AddScoped<MstDepartmentRepository>();
 
 // Background Service for scheduled AD sync
-builder.Services.AddHostedService<AdSyncBackgroundService>();
+// builder.Services.AddHostedService<AdSyncBackgroundService>();
 
 // Konfigurasi port dan host
 builder.UseDefaultHostExtension("ACTIVE_DIRECTORY_PORT", "5033");
