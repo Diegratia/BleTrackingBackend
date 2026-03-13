@@ -1,32 +1,25 @@
 using Shared.Config;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Repositories.DbContexts;
 using BusinessLogic.Services.Extension;
 using BusinessLogic.Services.Implementation;
-using Microsoft.Extensions.FileProviders;
 using BusinessLogic.Services.Interface;
+using BusinessLogic.Services.Background;
 using Repositories.Repository;
-using Entities.Models;
-using Repositories.Seeding;
 using DotNetEnv;
 using Microsoft.Extensions.Hosting;
 using BusinessLogic.Services.Extension.RootExtension;
 using Data.ViewModels.Shared.ExceptionHelper;
-using Helpers.Consumer.Mqtt;
-using BusinessLogic.Services.Background;
 using Microsoft.AspNetCore.Authorization;
-using System.Text.RegularExpressions;
-
+using Shared.Contracts;
 
 EnvTryCatchExtension.LoadEnvWithTryCatch();
 
 var builder = WebApplication.CreateBuilder(args);
-    builder.Configuration.AddAppsettings();
+builder.Configuration.AddAppsettings();
 builder.UseSerilogExtension();
 
 // Konfigurasi CORS
@@ -75,79 +68,39 @@ builder.Services.AddSwaggerExtension();
 // Konfigurasi IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// Memory Cache for feature flags
-builder.Services.AddMemoryCache();
-
 // Registrasi Services
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdSyncService, AdSyncService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserGroupService, UserGroupService>();
-builder.Services.AddScoped<IUserBuildingAccessService, UserBuildingAccessService>();
-builder.Services.AddScoped<IGroupBuildingAccessService, GroupBuildingAccessService>();
-builder.Services.AddSingleton<IMqttClientService, MqttClientService>();
-builder.Services.AddHostedService<MqttRecoveryService>();
-builder.Services.AddSingleton<MqttPubQueue>();
-builder.Services.AddSingleton<IMqttPubQueue>(sp => sp.GetRequiredService<MqttPubQueue>());
-builder.Services.AddHostedService<MqttPubBackgroundService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinLevelHandler>();
 
-
 // Registrasi Repositories
-builder.Services.AddScoped<UserRepository>();
-builder.Services.AddScoped<UserGroupRepository>();
-builder.Services.AddScoped<UserBuildingAccessRepository>();
-builder.Services.AddScoped<GroupBuildingAccessRepository>();
-builder.Services.AddScoped<MstBuildingRepository>();
-builder.Services.AddScoped<MstIntegrationRepository>();
-builder.Services.AddScoped<RefreshTokenRepository>();
-builder.Services.AddScoped<MstApplicationRepository>();
+builder.Services.AddScoped<ActiveDirectoryConfigRepository>();
+builder.Services.AddScoped<MstMemberRepository>();
+builder.Services.AddScoped<MstDepartmentRepository>();
 
-// service email
-builder.Services.AddScoped<IEmailService, EmailService>();
+// Background Service for scheduled AD sync
+builder.Services.AddHostedService<AdSyncBackgroundService>();
+
 // Konfigurasi port dan host
-builder.UseDefaultHostExtension("AUTH_PORT", "5001");
+builder.UseDefaultHostExtension("ACTIVE_DIRECTORY_PORT", "5033");
 builder.Host.UseWindowsService();
-
 
 var app = builder.Build();
 
 app.UseHealthCheckExtension();
-
-// Inisialisasi Database (opsional: migrasi atau seeding)
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<BleTrackingDbContext>();
-    try
-    {
-        // Jalankan Seeding hanya jika ada flag --seed-db
-        if (args.Contains("--seed-db"))
-        {
-            Console.WriteLine("Applying Database Seeding...");
-            DatabaseSeeder.Seed(context);
-            Console.WriteLine("Database Seeding Completed.");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error during migration or seeding: {ex.Message}");
-        throw;
-    }
-}
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking API");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BleTracking Active Directory API");
         c.RoutePrefix = "";
     });
 }
 
 app.UseCors("AllowAll");
-// // app.UseHttpsRedirection();
 app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseRouting();
 app.UseSerilogRequestLoggingExtension();

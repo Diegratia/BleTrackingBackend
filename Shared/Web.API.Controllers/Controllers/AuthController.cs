@@ -19,10 +19,12 @@ namespace Web.API.Controllers.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IFeatureService _featureService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IFeatureService featureService)
         {
             _authService = authService;
+            _featureService = featureService;
         }
 
         [HttpPost("login")]
@@ -38,16 +40,63 @@ namespace Web.API.Controllers.Controllers
             return Ok(ApiResponse.Success("Login successful", response));
         }
 
+        /// <summary>
+        /// Windows SSO Login endpoint
+        /// Requires saas.sso feature to be enabled
+        /// </summary>
         [HttpGet("login-sso")]
         [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
         public async Task<IActionResult> LoginSso()
         {
+            // Check if SSO feature is enabled
+            var applicationIdClaim = User.FindFirst("ApplicationId")?.Value;
+            if (!string.IsNullOrEmpty(applicationIdClaim) && Guid.TryParse(applicationIdClaim, out var applicationId))
+            {
+                var isSsoEnabled = await _featureService.IsFeatureEnabledAsync(
+                    Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasSso,
+                    applicationId);
+
+                if (!isSsoEnabled)
+                {
+                    return Unauthorized(ApiResponse.Forbidden("Single Sign-On (SSO) module is not enabled for this application"));
+                }
+            }
+
             var windowsUsername = User.Identity?.Name;
             if (string.IsNullOrEmpty(windowsUsername))
                 return Unauthorized(ApiResponse.Unauthorized("Windows Identity is missing. Browser may not have passed credentials."));
 
                 var response = await _authService.LoginSsoAsync(windowsUsername);
                 return Ok(ApiResponse.Success("SSO Login successful", response));
+        }
+
+        /// <summary>
+        /// Check if SSO is enabled for the current application
+        /// </summary>
+        [HttpGet("sso/enabled")]
+        [Authorize]
+        public async Task<IActionResult> IsSsoEnabled()
+        {
+            var applicationIdClaim = User.FindFirst("ApplicationId")?.Value;
+            if (string.IsNullOrEmpty(applicationIdClaim) || !Guid.TryParse(applicationIdClaim, out var applicationId))
+            {
+                return Ok(ApiResponse.Success("SSO status retrieved", new
+                {
+                    isEnabled = false,
+                    message = "Application ID not found"
+                }));
+            }
+
+            var isSsoEnabled = await _featureService.IsFeatureEnabledAsync(
+                Shared.BusinessLogic.Services.Feature.FeatureDefinition.SaasSso,
+                applicationId);
+
+            return Ok(ApiResponse.Success("SSO status retrieved", new
+            {
+                isEnabled = isSsoEnabled,
+                featureKey = "saas.sso",
+                featureName = "Single Sign-On (SSO)"
+            }));
         }
 
         [HttpPost("logout")]

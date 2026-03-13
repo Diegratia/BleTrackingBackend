@@ -83,6 +83,9 @@ namespace Repositories.DbContexts
         public DbSet<EvacuationAlert> EvacuationAlerts { get; set; }
         public DbSet<EvacuationTransaction> EvacuationTransactions { get; set; }
 
+        // SaaS Modules
+        public DbSet<ActiveDirectoryConfig> ActiveDirectoryConfigs { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -2058,6 +2061,26 @@ namespace Repositories.DbContexts
                     .WithMany()
                     .HasForeignKey(e => e.CardId)
                     .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // SaaS Modules
+            modelBuilder.Entity<ActiveDirectoryConfig>(entity =>
+            {
+                entity.ToTable("active_directory_configs");
+                entity.Property(e => e.Id).HasMaxLength(36).IsRequired();
+                entity.Property(e => e.ApplicationId).HasMaxLength(36).IsRequired();
+
+                entity.HasOne(e => e.Application)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.DefaultDepartment)
+                    .WithMany()
+                    .HasForeignKey(e => e.DefaultDepartmentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasQueryFilter(e => e.Status != 0);
             });
 
 

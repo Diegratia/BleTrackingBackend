@@ -88,6 +88,36 @@ namespace Entities.Models
         [Column("patrol_tracking_mode")]
         public PatrolTrackingMode PatrolTrackingMode { get; set; } = PatrolTrackingMode.Auto;
 
+        // SaaS License & Feature Management
+        /// <summary>
+        /// JSON string containing enabled features/modules
+        /// Example: ["core.masterData", "core.tracking", "core.monitoring", "core.alarm", "saas.activeDirectory", "saas.sso"]
+        /// </summary>
+        [Column("enabled_features")]
+        public string? EnabledFeatures { get; set; }
+
+        /// <summary>
+        /// License tier for display purposes (actual validation from license file)
+        /// Values: "trial", "annual", "perpetual"
+        /// </summary>
+        [StringLength(50)]
+        [Column("license_tier")]
+        public string? LicenseTier { get; set; }
+
+        /// <summary>
+        /// Customer name from license file for reference
+        /// </summary>
+        [StringLength(255)]
+        [Column("customer_name")]
+        public string? CustomerName { get; set; }
+
+        /// <summary>
+        /// Machine ID this license is tied to
+        /// </summary>
+        [StringLength(255)]
+        [Column("license_machine_id")]
+        public string? LicenseMachineId { get; set; }
+
         //relasi antar domain table database
 
         //mstapplication many to ... terhadap table dibawah ini

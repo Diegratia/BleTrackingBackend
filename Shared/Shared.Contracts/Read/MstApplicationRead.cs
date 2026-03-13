@@ -43,5 +43,11 @@ namespace Shared.Contracts.Read
         public int ApplicationStatus { get; set; }
         [JsonPropertyOrder(17)]
         public PatrolTrackingMode PatrolTrackingMode { get; set; }
+        [JsonPropertyOrder(18)]
+        public string EnabledFeatures { get; set; }
+        [JsonPropertyOrder(19)]
+        public string LicenseTier { get; set; }
+        [JsonPropertyOrder(20)]
+        public string CustomerName { get; set; }
     }
 }

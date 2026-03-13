@@ -341,6 +341,26 @@ services:
     volumes:
       - ./.env:/app/.env
     restart: always
+  license:
+    build:
+      context: .
+      dockerfile: Services.API/License/Dockerfile
+    image: dev1pci2025/bletrackingbackend-license:dev
+    ports:
+      - "5032:5032"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+  active-directory:
+    build:
+      context: .
+      dockerfile: Services.API/ActiveDirectory/Dockerfile
+    image: dev1pci2025/bletrackingbackend-active-directory:dev
+    ports:
+      - "5033:5033"
+    volumes:
+      - ./.env:/app/.env
+    restart: always
 
   # license-checker:
   #   build:

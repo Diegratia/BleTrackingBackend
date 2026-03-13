@@ -51,7 +51,10 @@ namespace Repositories.Repository
                 LicenseCode = x.LicenseCode,
                 LicenseType = x.LicenseType.ToString(),
                 ApplicationStatus = x.ApplicationStatus ?? 1,
-                PatrolTrackingMode = x.PatrolTrackingMode
+                PatrolTrackingMode = x.PatrolTrackingMode,
+                EnabledFeatures = x.EnabledFeatures,
+                LicenseTier = x.LicenseTier,
+                CustomerName = x.CustomerName
             });
         }
 
