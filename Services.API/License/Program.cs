@@ -112,6 +112,7 @@ app.UseRouting();
 app.UseSerilogRequestLoggingExtension();
 app.UseApiKeyAuthentication();
 app.UseAuthentication();
+app.UseLicenseValidation();
 app.UseAuthorization();
 app.MapControllers();
 
