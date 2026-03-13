@@ -29,22 +29,17 @@ namespace BusinessLogic.Services.Extension.RootExtension
         {
             var path = context.Request.Path.Value ?? string.Empty;
 
-            // 1. Skip validation for license activation and other essential paths
-            // This allows users to activate a new license even if the current one is expired.
             if (IsExemptPath(path))
             {
                 await _next(context);
                 return;
             }
 
-            // 2. Resolve ILicenseService from the request-scoped container
-            // Middleware is singleton, but ILicenseService is Scoped.
             var licenseService = context.RequestServices.GetRequiredService<ILicenseService>();
 
-            // 3. Perform global license check
             if (!await licenseService.IsLicenseValidAsync())
             {
-                context.Response.StatusCode = 402; // Payment Required
+                context.Response.StatusCode = 402; 
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsJsonAsync(new
                 {

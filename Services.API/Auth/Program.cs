@@ -81,6 +81,7 @@ builder.Services.AddMemoryCache();
 // Registrasi Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
+builder.Services.AddScoped<ILicenseService, LicenseService>();
 builder.Services.AddScoped<IAuditEmitter, AuditEmitter>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserGroupService, UserGroupService>();
